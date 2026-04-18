@@ -1248,15 +1248,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-    if (_replyingToMessage != null) {
-      messageText = '@[${_replyingToMessage!.senderName}] $messageText';
-    }
 
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
     final encodedText = connector.isChannelCyr2LatEnabled(widget.channel.index)
         ? Cyr2Lat.encode(messageText)
         : messageText;
-    if (utf8.encode(encodedText).length > maxBytes) {
+
+    // выполним перекодировку
+    if (_replyingToMessage != null) {
+      messageText = '@[${_replyingToMessage!.senderName}] $encodedText';
+    } else {
+      messageText = encodedText;
+    }
+
+    final maxBytes = maxChannelMessageBytes(connector.selfName);
+    
+    if (utf8.encode(messageText).length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
