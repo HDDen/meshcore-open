@@ -1095,22 +1095,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       );
                     }
 
-                    final isCyr2LatEnabled = connector.isChannelCyr2LatEnabled(
-                      widget.channel.index,
-                    );
-                    final transformedText = isCyr2LatEnabled
-                        ? Cyr2Lat.encode(value.text)
-                        : value.text;
-                    final usedBytes = utf8.encode(transformedText).length;
-                    final remainingBytes = maxBytes - usedBytes;
-
                     return TextField(
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
                       inputFormatters: [
                         Utf8LengthLimitingTextInputFormatter(
                           maxBytes,
-                          transformText: isCyr2LatEnabled
+                          transformText:
+                              connector.isChannelCyr2LatEnabled(
+                                widget.channel.index,
+                              )
                               ? Cyr2Lat.encode
                               : (text) => text,
                         ),
@@ -1125,25 +1119,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           horizontal: 16,
                           vertical: 8,
                         ),
-                        suffixIcon: value.text.isEmpty
-                            ? null
-                            : Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    '$remainingBytes',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: remainingBytes < 20
-                                          ? Theme.of(context).colorScheme.error
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ),
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
