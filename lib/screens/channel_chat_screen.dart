@@ -14,6 +14,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/channel.dart';
@@ -1098,7 +1099,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
                       inputFormatters: [
-                        Utf8LengthLimitingTextInputFormatter(maxBytes),
+                        Utf8LengthLimitingTextInputFormatter(
+                          maxBytes,
+                          transformText:
+                              connector.isChannelCyr2LatEnabled(
+                                widget.channel.index,
+                              )
+                              ? Cyr2Lat.encode
+                              : (text) => text,
+                        ),
                       ],
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
@@ -1195,7 +1204,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     final maxBytes = maxChannelMessageBytes(connector.selfName);
-    if (utf8.encode(messageText).length > maxBytes) {
+    final encodedText = connector.isChannelCyr2LatEnabled(widget.channel.index)
+        ? Cyr2Lat.encode(messageText)
+        : messageText;
+    if (utf8.encode(encodedText).length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
