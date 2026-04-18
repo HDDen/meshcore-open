@@ -1102,7 +1102,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final transformedText = isCyr2LatEnabled
                         ? Cyr2Lat.encode(value.text)
                         : value.text;
-                    final usedBytes = utf8.encode(transformedText).length;
+
+                    var usedBytes = utf8.encode(transformedText).length;
+                    if (_replyingToMessage != null) {
+                      usedBytes = utf8.encode('@[${_replyingToMessage!.senderName}] $transformedText').length;
+                    }
+
                     remainingBytes = maxBytes - usedBytes;
 
                     return TextField(
@@ -1157,8 +1162,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       final transformedText = isCyr2LatEnabled
                         ? Cyr2Lat.encode(value.text)
                         : value.text;
+
                       remainingBytes =
                         maxBytes - utf8.encode(transformedText).length;
+                      if (_replyingToMessage != null) {
+                        remainingBytes =
+                        maxBytes - utf8.encode('@[${_replyingToMessage!.senderName}] $transformedText').length;
+                      }
 
                       return Text(
                         '$remainingBytes',
