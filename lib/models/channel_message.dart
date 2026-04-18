@@ -226,6 +226,8 @@ class ChannelMessage {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    DateTime? timestamp,
+    String? packetHash,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -234,13 +236,17 @@ class ChannelMessage {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       status: ChannelMessageStatus.pending,
+      repeats: const [],
+      repeatCount: 0,
       pathLength: null,
       pathBytes: Uint8List(0),
       pathVariants: const [],
       channelIndex: channelIndex,
+      messageId: null,
+      packetHash: packetHash,
     );
   }
 

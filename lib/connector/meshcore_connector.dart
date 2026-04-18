@@ -3005,18 +3005,6 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    final message = ChannelMessage.outgoing(
-      text,
-      _selfName ?? 'Me',
-      channel.index,
-      originalText: originalText,
-      translatedLanguageCode: translatedLanguageCode,
-      translationModelId: translationModelId,
-    );
-    _addChannelMessage(channel.index, message);
-    _pendingChannelSentQueue.add(message.messageId);
-    notifyListeners();
-
     final trimmed = text.trim();
     final isStructuredPayload =
         trimmed.startsWith('g:') || trimmed.startsWith('m:');
@@ -3028,9 +3016,32 @@ class MeshCoreConnector extends ChangeNotifier {
               ? Cyr2Lat.encode(text)
               : text
         : text;
+    final timestampSecs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final message = ChannelMessage.outgoing(
+      text,
+      _selfName ?? 'Me',
+      channel.index,
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampSecs * 1000),
+      packetHash: _computeContentHash(
+        channel.index,
+        timestampSecs,
+        '${_selfName ?? 'Me'}: $outboundText',
+      ),
+    );
+    _addChannelMessage(channel.index, message);
+    _pendingChannelSentQueue.add(message.messageId);
+    notifyListeners();
+
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     await sendFrame(
-      buildSendChannelTextMsgFrame(channel.index, outboundText),
+      buildSendChannelTextMsgFrame(
+        channel.index,
+        outboundText,
+        timestampSeconds: timestampSecs,
+      ),
       channelSendQueueId: message.messageId,
       expectsGenericAck: true,
     );
