@@ -16,6 +16,7 @@ import '../models/message.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -283,6 +284,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
   final Map<int, bool> _channelSmazEnabled = {};
+  final Map<int, bool> _channelCyr2LatEnabled = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactSmazEnabled = {};
@@ -603,6 +605,10 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
 
+  bool isChannelCyr2LatEnabled(int channelIndex) {
+    return _channelCyr2LatEnabled[channelIndex] ?? false;
+  }
+
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
     _ensureContactSmazSettingLoaded(contactKeyHex);
   }
@@ -682,7 +688,21 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
     _channelSmazEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
+    }
     await _channelSettingsStore.saveSmazEnabled(channelIndex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
+    _channelCyr2LatEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelSmazEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+    }
+    await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
   }
 
@@ -840,9 +860,12 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> loadChannelSettings({int? maxChannels}) async {
     _channelSmazEnabled.clear();
+    _channelCyr2LatEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
+      _channelCyr2LatEnabled[i] = await _channelSettingsStore
+          .loadCyr2LatEnabled(i);
     }
   }
 
@@ -2998,8 +3021,12 @@ class MeshCoreConnector extends ChangeNotifier {
     final isStructuredPayload =
         trimmed.startsWith('g:') || trimmed.startsWith('m:');
     final outboundText =
-        (isChannelSmazEnabled(channel.index) && !isStructuredPayload)
-        ? Smaz.encodeIfSmaller(text)
+        !isStructuredPayload
+        ? isChannelSmazEnabled(channel.index)
+              ? Smaz.encodeIfSmaller(text)
+              : isChannelCyr2LatEnabled(channel.index)
+              ? Cyr2Lat.encode(text)
+              : text
         : text;
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     await sendFrame(
