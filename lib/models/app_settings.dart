@@ -125,7 +125,7 @@ const Map<String, String> defaultCyr2latCharMap = {
   //'з': 'z',
   //'и': 'i',
   //'й': 'y',
-  'к': 'k',
+  //'к': 'k',
   //'л': 'l',
   //'м': 'm',
   //'н': 'n',
