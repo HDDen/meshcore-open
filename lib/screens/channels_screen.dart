@@ -1461,7 +1461,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Сжатие cyr2lat'),
                   subtitle: const Text(
-                    'Заменяет кириллические символы на латиницу только при отправке.',
+                    'Заменяет некоторые кириллические символы на латиницу при отправке.',
                   ),
                   value: cyr2latEnabled,
                   onChanged: (value) => setState(() {
