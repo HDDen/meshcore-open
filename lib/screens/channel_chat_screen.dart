@@ -1147,14 +1147,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
 
-                  Text(
-                    '$remainingBytes',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: remainingBytes < 0
-                          ? Colors.red
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, _) {
+                      final isCyr2LatEnabled =
+                        connector.isChannelCyr2LatEnabled(
+                      widget.channel.index,
+                      );
+                      final transformedText = isCyr2LatEnabled
+                        ? Cyr2Lat.encode(value.text)
+                        : value.text;
+                      remainingBytes =
+                        maxBytes - utf8.encode(transformedText).length;
+
+                      return Text(
+                        '$remainingBytes',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: remainingBytes < 0
+                            ? Colors.red
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
