@@ -1,5 +1,5 @@
 class Cyr2Lat {
-  static const Map<String, String> _charMap = {
+  static Map<String, String> _charMap = {
     // 'А': 'A',
     // 'Б': 'B',
     // 'В': 'V',
@@ -134,6 +134,10 @@ class Cyr2Lat {
     //'ю': 'yu',
     //'я': 'ya',
   };
+
+  static void setCharMap(Map<String, String> charMap) {
+    _charMap = Map.from(charMap);
+  }
 
   static String encode(String text) {
     if (text.isEmpty) return text;
