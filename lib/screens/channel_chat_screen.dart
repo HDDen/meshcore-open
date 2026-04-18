@@ -1008,6 +1008,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final maxBytes = maxChannelMessageBytes(connector.selfName);
     final settings = context.watch<AppSettingsService>().settings;
+    var remainingBytes = maxBytes;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1095,6 +1096,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       );
                     }
 
+                    final isCyr2LatEnabled = connector.isChannelCyr2LatEnabled(
+                      widget.channel.index,
+                    );
+                    final transformedText = isCyr2LatEnabled
+                        ? Cyr2Lat.encode(value.text)
+                        : value.text;
+                    final usedBytes = utf8.encode(transformedText).length;
+                    remainingBytes = maxBytes - usedBytes;
+
                     return TextField(
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
@@ -1102,9 +1112,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         Utf8LengthLimitingTextInputFormatter(
                           maxBytes,
                           transformText:
-                              connector.isChannelCyr2LatEnabled(
-                                widget.channel.index,
-                              )
+                              isCyr2LatEnabled
                               ? Cyr2Lat.encode
                               : (text) => text,
                         ),
@@ -1128,11 +1136,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.send),
-                tooltip: context.l10n.chat_sendMessage,
-                onPressed: _sendMessage,
-                color: Theme.of(context).colorScheme.primary,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    tooltip: context.l10n.chat_sendMessage,
+                    onPressed: _sendMessage,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+
+                  Text(
+                    '$remainingBytes',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: remainingBytes < 0
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
