@@ -3,6 +3,7 @@ import 'prefs_manager.dart';
 
 class ChannelSettingsStore {
   static const String _keyPrefix = 'channel_smaz_';
+  static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -20,7 +21,7 @@ class ChannelSettingsStore {
     final prefs = PrefsManager.instance;
     final key = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
-    bool? enabled = prefs.getBool(oldKey);
+    bool? enabled = prefs.getBool(key);
     if (enabled == null) {
       // Attempt migration from legacy unscoped key on first load
       enabled = prefs.getBool(oldKey);
@@ -44,6 +45,42 @@ class ChannelSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyFor$channelIndex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadCyr2LatEnabled(int channelIndex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel cyr2lat settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$_cyr2latKeyPrefix$publicKeyHex$channelIndex';
+    final oldKey = '$_cyr2latKeyPrefix$channelIndex';
+    bool? enabled = prefs.getBool(key);
+    if (enabled == null) {
+      enabled = prefs.getBool(oldKey);
+      prefs.remove(oldKey);
+      if (enabled != null) {
+        appLogger.info(
+          'Migrating channel cyr2lat settings from legacy key $oldKey to scoped key $key',
+        );
+        await prefs.setBool(key, enabled);
+      }
+    }
+    return enabled ?? false;
+  }
+
+  Future<void> saveCyr2LatEnabled(int channelIndex, bool enabled) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel cyr2lat settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$_cyr2latKeyPrefix$publicKeyHex$channelIndex';
     await prefs.setBool(key, enabled);
   }
 }
