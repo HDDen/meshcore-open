@@ -13,6 +13,142 @@ extension UnitSystemValue on UnitSystem {
   }
 }
 
+const Map<String, String> defaultCyr2latCharMap = {
+  // 'А': 'A',
+  // 'Б': 'B',
+  // 'В': 'V',
+  // 'Г': 'G',
+  // 'Д': 'D',
+  // 'Е': 'E',
+  // 'Ё': 'E',
+  // 'Ж': 'Zh',
+  // 'З': 'Z',
+  // 'И': 'I',
+  // 'Й': 'Y',
+  // 'К': 'K',
+  // 'Л': 'L',
+  // 'М': 'M',
+  // 'Н': 'N',
+  // 'О': 'O',
+  // 'П': 'P',
+  // 'Р': 'R',
+  // 'С': 'S',
+  // 'Т': 'T',
+  // 'У': 'U',
+  // 'Ф': 'F',
+  // 'Х': 'Kh',
+  // 'Ц': 'Ts',
+  // 'Ч': 'Ch',
+  // 'Ш': 'Sh',
+  // 'Щ': 'Sch',
+  // 'Ъ': '',
+  // 'Ы': 'Y',
+  // 'Ь': '',
+  // 'Э': 'E',
+  // 'Ю': 'Yu',
+  // 'Я': 'Ya',
+  // 'а': 'a',
+  // 'б': 'b',
+  // 'в': 'v',
+  // 'г': 'g',
+  // 'д': 'd',
+  // 'е': 'e',
+  // 'ё': 'e',
+  // 'ж': 'zh',
+  // 'з': 'z',
+  // 'и': 'i',
+  // 'й': 'y',
+  // 'к': 'k',
+  // 'л': 'l',
+  // 'м': 'm',
+  // 'н': 'n',
+  // 'о': 'o',
+  // 'п': 'p',
+  // 'р': 'r',
+  // 'с': 's',
+  // 'т': 't',
+  // 'у': 'u',
+  // 'ф': 'f',
+  // 'х': 'kh',
+  // 'ц': 'ts',
+  // 'ч': 'ch',
+  // 'ш': 'sh',
+  // 'щ': 'sch',
+  // 'ъ': '',
+  // 'ы': 'y',
+  // 'ь': '',
+  // 'э': 'e',
+  // 'ю': 'yu',
+  // 'я': 'ya',
+  // теперь идут правила незаметной транслитерации
+  'А': 'A',
+  //'Б': 'B',
+  'В': 'B',
+  //'Г': 'G',
+  //'Д': 'D',
+  'Е': 'E',
+  'Ё': 'E',
+  //'Ж': 'Zh',
+  'З': '3',
+  //'И': 'I',
+  //'Й': 'Y',
+  'К': 'K',
+  //'Л': 'L',
+  'М': 'M',
+  'Н': 'H',
+  'О': 'O',
+  //'П': 'P',
+  'Р': 'P',
+  'С': 'C',
+  'Т': 'T',
+  //'У': 'Y',
+  //'Ф': 'F',
+  'Х': 'X',
+  //'Ц': 'Ts',
+  //'Ч': 'Ch',
+  //'Ш': 'Sh',
+  //'Щ': 'Sch',
+  //'Ъ': '',
+  //'Ы': 'Y',
+  'Ь': 'b',
+  //'Э': 'E',
+  //'Ю': 'Yu',
+  //'Я': 'Ya',
+  'а': 'a',
+  'б': '6',
+  //'в': 'v',
+  //'г': 'g',
+  //'д': 'd',
+  'е': 'e',
+  'ё': 'e',
+  //'ж': 'zh',
+  //'з': 'z',
+  //'и': 'i',
+  //'й': 'y',
+  'к': 'k',
+  //'л': 'l',
+  //'м': 'm',
+  //'н': 'n',
+  'о': 'o',
+  //'п': 'p',
+  'р': 'p',
+  'с': 'c',
+  //'т': 't',
+  'у': 'y',
+  //'ф': 'f',
+  'х': 'x',
+  //'ц': 'ts',
+  //'ч': 'ch',
+  //'ш': 'sh',
+  //'щ': 'sch',
+  //'ъ': '',
+  //'ы': 'y',
+  //'ь': 'b',
+  //'э': 'e',
+  //'ю': 'yu',
+  //'я': 'ya',
+};
+
 class AppSettings {
   static const Object _unset = Object();
 
@@ -57,6 +193,7 @@ class AppSettings {
   final String? translationModelSourceUrl;
   final String? translationSelectedModelId;
   final List<TranslationModelRecord> translationDownloadedModels;
+  final Map<String, String> cyr2latCharMap;
 
   AppSettings({
     this.clearPathOnMaxRetry = false,
@@ -100,10 +237,12 @@ class AppSettings {
     this.translationModelSourceUrl,
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
+    Map<String, String>? cyr2latCharMap,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
-       translationDownloadedModels = translationDownloadedModels ?? const [];
+       translationDownloadedModels = translationDownloadedModels ?? const [],
+       cyr2latCharMap = cyr2latCharMap ?? defaultCyr2latCharMap;
 
   Map<String, dynamic> toJson() {
     return {
@@ -150,6 +289,7 @@ class AppSettings {
       'translation_downloaded_models': translationDownloadedModels
           .map((model) => model.toJson())
           .toList(),
+      'cyr2lat_char_map': cyr2latCharMap,
     };
   }
 
@@ -237,6 +377,10 @@ class AppSettings {
               )
               .toList() ??
           const [],
+      cyr2latCharMap: (json['cyr2lat_char_map'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+          ) ??
+          defaultCyr2latCharMap,
     );
   }
 
@@ -282,6 +426,7 @@ class AppSettings {
     Object? translationModelSourceUrl = _unset,
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
+    Map<String, String>? cyr2latCharMap,
   }) {
     return AppSettings(
       clearPathOnMaxRetry: clearPathOnMaxRetry ?? this.clearPathOnMaxRetry,
@@ -345,6 +490,7 @@ class AppSettings {
           : translationSelectedModelId as String?,
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
+      cyr2latCharMap: cyr2latCharMap ?? this.cyr2latCharMap,
     );
   }
 }
