@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "SMAZ-Komprimierung",
+  "channels_cyr2latCompression": "Cyr2lat-Komprimierung",
+  "channels_cyr2latCompressionDscr": "Ersetzt einige kyrillische Zeichen durch lateinische Zeichen, wenn sie gesendet werden.",
   "channels_channelUpdated": "Kanal \"{name}\" aktualisiert",
   "@channels_channelUpdated": {
     "placeholders": {

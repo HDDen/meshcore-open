@@ -403,6 +403,8 @@
     }
   },
   "channels_smazCompression": "SMAZ 压缩",
+  "channels_cyr2latCompression": "Cyr2lat 压缩",
+  "channels_cyr2latCompressionDscr": "发送时将一些西里尔字符替换为拉丁字符。",
   "channels_channelUpdated": "频道 \"{name}\" 已更新",
   "@channels_channelUpdated": {
     "placeholders": {

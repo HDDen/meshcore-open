@@ -1269,14 +1269,15 @@ class AppSettingsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              'Cyrillic to Latin', // TODO: add to l10n
+              context.l10n.channels_cyr2latSettingsHeading, 
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            )
           ),
           ListTile(
             leading: const Icon(Icons.translate),
-            title: Text('Character Map'), // TODO: add to l10n
-            subtitle: Text('Edit the mapping for Cyrillic transliteration'), // TODO: add to l10n
+
+            title: Text(context.l10n.channels_cyr2latSettingsSubheading),
+            subtitle: Text(context.l10n.channels_cyr2latSettingsDscr),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showCyr2LatDialog(context, settingsService),
           ),
@@ -1296,14 +1297,14 @@ class AppSettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Cyrillic to Latin Map'), // TODO: l10n
+        title: Text(context.l10n.channels_cyr2latSettingsDscr),
         content: SingleChildScrollView(
           child: TextField(
             controller: controller,
             maxLines: 20,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              hintText: 'JSON map of characters',
+              hintText: context.l10n.channels_cyr2latSettingsDialogHint,
             ),
           ),
         ),
@@ -1322,12 +1323,12 @@ class AppSettingsScreen extends StatelessWidget {
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Character map updated'), // TODO: l10n
+                  content: Text(context.l10n.channels_cyr2latSettingsDialogSuccess), 
                 );
               } catch (e) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Invalid JSON: $e'), // TODO: l10n
+                  content: Text(context.l10n.channels_cyr2latSettingsDialogWrongJSON(e.toString())),
                 );
               }
             },
@@ -1340,10 +1341,10 @@ class AppSettingsScreen extends StatelessWidget {
               Navigator.pop(context);
               showDismissibleSnackBar(
                 context,
-                content: Text('Reset to default'), // TODO: l10n
+                content: Text(context.l10n.channels_cyr2latSettingsDialogResetted),
               );
             },
-            child: Text('Reset'), // TODO: l10n
+            child: Text(context.l10n.channels_cyr2latSettingsDialogReset),
           ),
         ],
       ),

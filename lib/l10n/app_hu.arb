@@ -548,6 +548,8 @@
     }
   },
   "channels_smazCompression": "SMAZ kompresszió",
+  "channels_cyr2latCompression": "Cyr2lat kompresszió",
+  "channels_cyr2latCompressionDscr": "Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.",
   "channels_channelUpdated": "A {name} csatorna frissítve",
   "@channels_channelUpdated": {
     "placeholders": {

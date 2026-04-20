@@ -580,6 +580,21 @@
     }
   },
   "channels_smazCompression": "SMAZ compression",
+  "channels_cyr2latCompression": "Cyr2lat compression",
+  "channels_cyr2latCompressionDscr": "Replaces some Cyrillic characters with Latin characters when sending.",
+  "channels_cyr2latSettingsHeading": "Сyr2lat Setup",
+  "channels_cyr2latSettingsSubheading": "List of replacements",
+  "channels_cyr2latSettingsDscr": "Edit the JSON configuration of character replacement",
+  "channels_cyr2latSettingsDialogHint": "JSON replacement map",
+  "channels_cyr2latSettingsDialogSuccess": "The list of replacements has been updated",
+  "channels_cyr2latSettingsDialogWrongJSON": "Invalid JSON: {error}",
+  "@channels_cyr2latSettingsDialogWrongJSON": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "channels_cyr2latSettingsDialogReset": "Reset to default",
+  "channels_cyr2latSettingsDialogResetted": "Сyr2lat replacement settings reset to default",
   "channels_channelUpdated": "Channel \"{name}\" updated",
   "@channels_channelUpdated": {
     "placeholders": {

@@ -548,6 +548,8 @@
     }
   },
   "channels_smazCompression": "SMAZ 압축",
+  "channels_cyr2latCompression": "Cyr2lat 압축",
+  "channels_cyr2latCompressionDscr": "보낼 때 일부 키릴 문자를 라틴 문자로 바꿉니다.",
   "channels_channelUpdated": "채널 \"{name}\"이 업데이트되었습니다.",
   "@channels_channelUpdated": {
     "placeholders": {

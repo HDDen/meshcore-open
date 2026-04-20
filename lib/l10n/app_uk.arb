@@ -389,6 +389,8 @@
     }
   },
   "channels_smazCompression": "Стиснення SMAZ",
+  "channels_cyr2latCompression": "Стиснення cyr2lat",
+  "channels_cyr2latCompressionDscr": "Замінює деякі кириличні символи на латиницю при відправці.",
   "channels_channelUpdated": "Канал «{name}» оновлено",
   "@channels_channelUpdated": {
     "placeholders": {

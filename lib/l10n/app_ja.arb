@@ -548,6 +548,8 @@
     }
   },
   "channels_smazCompression": "SMAZ 圧縮",
+  "channels_cyr2latCompression": "Cyr2lat 圧縮",
+  "channels_cyr2latCompressionDscr": "送信時に一部のキリル文字をラテン文字に置き換えます。",
   "channels_channelUpdated": "チャンネル「{name}」が更新されました",
   "@channels_channelUpdated": {
     "placeholders": {

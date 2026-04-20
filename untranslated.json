@@ -1,1 +1,177 @@
-{}
+{
+  "bg": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "de": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "es": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "fr": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "hu": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "it": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "ja": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "ko": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "nl": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "pl": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "pt": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "sk": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "sl": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "sv": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "uk": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ],
+
+  "zh": [
+    "channels_cyr2latSettingsHeading",
+    "channels_cyr2latSettingsSubheading",
+    "channels_cyr2latSettingsDscr",
+    "channels_cyr2latSettingsDialogHint",
+    "channels_cyr2latSettingsDialogSuccess",
+    "channels_cyr2latSettingsDialogWrongJSON",
+    "channels_cyr2latSettingsDialogReset",
+    "channels_cyr2latSettingsDialogResetted"
+  ]
+}

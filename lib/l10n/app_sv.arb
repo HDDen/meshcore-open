@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "SMAZ-komprimering",
+  "channels_cyr2latCompression": "Cyr2lat-komprimering",
+  "channels_cyr2latCompressionDscr": "Ersätter vissa kyrilliska tecken med latinska tecken när du skickar.",
   "channels_channelUpdated": "Kanalen \"{name}\" har uppdaterats",
   "@channels_channelUpdated": {
     "placeholders": {
