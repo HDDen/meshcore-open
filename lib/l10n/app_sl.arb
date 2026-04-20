@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "Kompresija SMAZ",
+  "channels_cyr2latCompression": "Kompresija cyr2lat",
+  "channels_cyr2latCompressionDscr": "Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.",
   "channels_channelUpdated": "Kanal {name} je bil posodobljen",
   "@channels_channelUpdated": {
     "placeholders": {

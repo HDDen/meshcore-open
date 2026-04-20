@@ -1459,10 +1459,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Сжатие cyr2lat'),
-                  subtitle: const Text(
-                    'Заменяет некоторые кириллические символы на латиницу при отправке.',
-                  ),
+                  title: Text(dialogContext.l10n.channels_cyr2latCompression),
+                  subtitle: Text(dialogContext.l10n.channels_cyr2latCompressionDscr),
                   value: cyr2latEnabled,
                   onChanged: (value) => setState(() {
                     cyr2latEnabled = value;

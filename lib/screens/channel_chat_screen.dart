@@ -1261,7 +1261,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     final maxBytes = maxChannelMessageBytes(connector.selfName);
-    
     if (utf8.encode(messageText).length > maxBytes) {
       showDismissibleSnackBar(
         context,

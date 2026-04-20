@@ -3020,14 +3020,16 @@ class MeshCoreConnector extends ChangeNotifier {
     final trimmed = text.trim();
     final isStructuredPayload =
         trimmed.startsWith('g:') || trimmed.startsWith('m:');
-    final outboundText =
-        !isStructuredPayload
-        ? isChannelSmazEnabled(channel.index)
-              ? Smaz.encodeIfSmaller(text)
-              : isChannelCyr2LatEnabled(channel.index)
-              ? Cyr2Lat.encode(text)
-              : text
-        : text;
+
+    String outboundText = text;
+    if (!isStructuredPayload) {
+      if (isChannelSmazEnabled(channel.index)) {
+        outboundText = Smaz.encodeIfSmaller(text);
+      } else if (isChannelCyr2LatEnabled(channel.index)) {
+        outboundText = Cyr2Lat.encode(text);
+      }
+    }
+
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     await sendFrame(
       buildSendChannelTextMsgFrame(channel.index, outboundText),

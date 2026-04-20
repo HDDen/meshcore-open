@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "SMAZ compressie",
+  "channels_cyr2latCompression": "Cyr2lat compressie",
+  "channels_cyr2latCompressionDscr": "Vervangt sommige Cyrillische tekens door Latijnse tekens bij het verzenden.",
   "channels_channelUpdated": "Kanaal \"{name}\" is bijgewerkt",
   "@channels_channelUpdated": {
     "placeholders": {

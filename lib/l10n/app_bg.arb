@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "Компресия SMAZ",
+  "channels_cyr2latCompression": "Компресия cyr2lat",
+  "channels_cyr2latCompressionDscr": "Заменя някои кирилични символи с латиница при изпращане.",
   "channels_channelUpdated": "Каналът \"{name}\" е актуализиран",
   "@channels_channelUpdated": {
     "placeholders": {

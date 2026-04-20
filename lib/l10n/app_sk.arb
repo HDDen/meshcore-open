@@ -388,6 +388,8 @@
     }
   },
   "channels_smazCompression": "Odstránenie kompresie SMAZ",
+  "channels_cyr2latCompression": "Odstránenie kompresie cyr2lat",
+  "channels_cyr2latCompressionDscr": "Pri odosielaní nahradí niektoré znaky cyriliky latinskými znakmi.",
   "channels_channelUpdated": "Kanál \"{name}\" bol aktualizovaný",
   "@channels_channelUpdated": {
     "placeholders": {
