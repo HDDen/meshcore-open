@@ -1124,33 +1124,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '送信時に一部のキリル文字をラテン文字に置き換えます。';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'cyr2latの設定';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => '置換リスト';
 
   @override
-  String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+  String get channels_cyr2latSettingsDscr => '文字置換のJSON設定を編集する';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON置換マップ';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+  String get channels_cyr2latSettingsDialogSuccess => '置換リストが更新されました';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return '不正なJSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset => '初期設定に戻す';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'cyr2latの置換設定が初期設定に戻されました';
 
   @override
   String channels_channelUpdated(String name) {

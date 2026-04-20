@@ -1181,33 +1181,35 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sostituisce alcuni caratteri cirillici con caratteri latini durante l\'invio.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Impostazioni cyr2lat';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => 'Elenco delle sostituzioni';
 
   @override
   String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+      'Modifica la configurazione JSON delle sostituzioni dei caratteri';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint =>
+      'Mappa JSON delle sostituzioni';
 
   @override
   String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+      'Elenco delle sostituzioni aggiornato';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return 'JSON non corretto: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset =>
+      'Ripristina impostazioni predefinite';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'Le impostazioni di sostituzione cyr2lat sono state ripristinate alle impostazioni predefinite';
 
   @override
   String channels_channelUpdated(String name) {

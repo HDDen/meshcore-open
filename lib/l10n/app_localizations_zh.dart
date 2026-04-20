@@ -1106,33 +1106,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '发送时将一些西里尔字符替换为拉丁字符。';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Cyr2lat 設定';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => '替換清單';
 
   @override
-  String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+  String get channels_cyr2latSettingsDscr => '編輯 JSON 字元替換設定檔';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON 替換映射表';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+  String get channels_cyr2latSettingsDialogSuccess => '替換清單已更新';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return 'JSON 格式錯誤：$error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset => '還原為預設值';
 
   @override
-  String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+  String get channels_cyr2latSettingsDialogResetted => 'Cyr2lat 替換設定已還原為預設值';
 
   @override
   String channels_channelUpdated(String name) {

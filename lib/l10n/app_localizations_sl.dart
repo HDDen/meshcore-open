@@ -1167,33 +1167,33 @@ class AppLocalizationsSl extends AppLocalizations {
       'Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Nastavitve cyr2lat';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => 'Seznam zamenjav';
 
   @override
   String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+      'Uredi JSON-konfiguracijo zamenjav znakov';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON-tabela zamenjav';
 
   @override
   String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+      'Seznam zamenjav je posodobljen';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return 'Nepravilen JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset => 'Ponastavi na privzete';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'Nastavitve zamenjav cyr2lat so ponastavljene na privzete';
 
   @override
   String channels_channelUpdated(String name) {

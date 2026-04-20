@@ -1174,33 +1174,32 @@ class AppLocalizationsUk extends AppLocalizations {
       'Замінює деякі кириличні символи на латиницю при відправці.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Налаштування cyr2lat';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => 'Список замін';
 
   @override
   String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+      'Редагувати JSON-конфігурацію заміни символів';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON-карта замін';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+  String get channels_cyr2latSettingsDialogSuccess => 'Список замін оновлено';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return 'Некоректний JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset => 'Скинути до початкових';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'Налаштування замін cyr2lat скинуто до початкових';
 
   @override
   String channels_channelUpdated(String name) {
