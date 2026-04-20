@@ -1185,33 +1185,33 @@ class AppLocalizationsHu extends AppLocalizations {
       'Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Cyr2lat beállítások';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => 'Helyettesítési lista';
 
   @override
   String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+      'A karakterhelyettesítési JSON-konfiguráció szerkesztése';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON-csere táblázat';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+  String get channels_cyr2latSettingsDialogSuccess => 'A csere lista frissítve';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return 'Hibás JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset =>
+      'Alapértelmezett értékekre állítás';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'A cyr2lat helyettesítési beállítások alapértelmezett értékekre lettek állítva';
 
   @override
   String channels_channelUpdated(String name) {

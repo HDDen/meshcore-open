@@ -1119,33 +1119,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '보낼 때 일부 키릴 문자를 라틴 문자로 바꿉니다.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Сyr2lat Setup';
+  String get channels_cyr2latSettingsHeading => 'Cyr2lat 설정';
 
   @override
-  String get channels_cyr2latSettingsSubheading => 'List of replacements';
+  String get channels_cyr2latSettingsSubheading => '변환 목록';
 
   @override
-  String get channels_cyr2latSettingsDscr =>
-      'Edit the JSON configuration of character replacement';
+  String get channels_cyr2latSettingsDscr => '문자 변환 JSON 구성 편집';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON replacement map';
+  String get channels_cyr2latSettingsDialogHint => 'JSON 변환 맵';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'The list of replacements has been updated';
+  String get channels_cyr2latSettingsDialogSuccess => '변환 목록이 업데이트되었습니다';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'Invalid JSON: $error';
+    return '잘못된 JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => 'Reset to default';
+  String get channels_cyr2latSettingsDialogReset => '초기값으로 초기화';
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Сyr2lat replacement settings reset to default';
+      'Cyr2lat 변환 설정이 초기값으로 초기화되었습니다';
 
   @override
   String channels_channelUpdated(String name) {

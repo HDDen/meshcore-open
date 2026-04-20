@@ -390,6 +390,14 @@
   "channels_smazCompression": "SMAZ-komprimering",
   "channels_cyr2latCompression": "Cyr2lat-komprimering",
   "channels_cyr2latCompressionDscr": "Ersätter vissa kyrilliska tecken med latinska tecken när du skickar.",
+  "channels_cyr2latSettingsHeading": "Inställningar för cyr2lat",
+  "channels_cyr2latSettingsSubheading": "Ersättningslista",
+  "channels_cyr2latSettingsDscr": "Redigera JSON-konfigurationen för teckenersättning",
+  "channels_cyr2latSettingsDialogHint": "JSON-ersättningskarta",
+  "channels_cyr2latSettingsDialogSuccess": "Ersättningslistan har uppdaterats",
+  "channels_cyr2latSettingsDialogWrongJSON": "Felaktig JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Återställ till standard",
+  "channels_cyr2latSettingsDialogResetted": "Inställningarna för cyr2lat-ersättningar har återställts till standard",
   "channels_channelUpdated": "Kanalen \"{name}\" har uppdaterats",
   "@channels_channelUpdated": {
     "placeholders": {

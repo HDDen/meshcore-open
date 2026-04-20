@@ -400,6 +400,14 @@
   "channels_smazCompression": "Kompresja SMAZ",
   "channels_cyr2latCompression": "Kompresja cyr2lat",
   "channels_cyr2latCompressionDscr": "Zastępuje niektóre znaki cyrylicy alfabetem łacińskim podczas wysyłania.",
+  "channels_cyr2latSettingsHeading": "Ustawienia cyr2lat",
+  "channels_cyr2latSettingsSubheading": "Lista zamian",
+  "channels_cyr2latSettingsDscr": "Edytuj konfigurację JSON zamiany znaków",
+  "channels_cyr2latSettingsDialogHint": "Mapa zamian JSON",
+  "channels_cyr2latSettingsDialogSuccess": "Lista zamian zaktualizowana",
+  "channels_cyr2latSettingsDialogWrongJSON": "Nieprawidłowy JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Przywróć ustawienia domyślne",
+  "channels_cyr2latSettingsDialogResetted": "Ustawienia zamiany cyr2lat zostały przywrócone do wartości domyślnych",
   "channels_channelUpdated": "Kanał \"{name}\" został zaktualizowany",
   "@channels_channelUpdated": {
     "placeholders": {
