@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "Компресия SMAZ",
+  "channels_cyr2latCompression": "Компресия Cyr2Lat",
+  "channels_cyr2latCompressionDscr": "Заменя някои кирилични символи с латиница при изпращане.",
+  "channels_cyr2latSettingsHeading": "Настройки на Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Списък със замествания",
+  "channels_cyr2latSettingsDscr": "Редактиране на JSON конфигурацията за заместване на символи",
+  "channels_cyr2latSettingsDialogHint": "JSON карта за замествания",
+  "channels_cyr2latSettingsDialogSuccess": "Списъкът със замествания е актуализиран",
+  "channels_cyr2latSettingsDialogWrongJSON": "Неправилен JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Възстановяване на първоначалните настройки",
+  "channels_cyr2latSettingsDialogResetted": "Настройките за заместване на Cyr2Lat са възстановени към първоначалните",
   "channels_channelUpdated": "Каналът \"{name}\" е актуализиран",
   "@channels_channelUpdated": {
     "placeholders": {

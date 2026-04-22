@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "Compressione SMAZ",
+  "channels_cyr2latCompression": "Compressione Cyr2Lat",
+  "channels_cyr2latCompressionDscr": "Sostituisce alcuni caratteri cirillici con caratteri latini durante l'invio.",
+  "channels_cyr2latSettingsHeading": "Impostazioni Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Elenco delle sostituzioni",
+  "channels_cyr2latSettingsDscr": "Modifica la configurazione JSON delle sostituzioni dei caratteri",
+  "channels_cyr2latSettingsDialogHint": "Mappa JSON delle sostituzioni",
+  "channels_cyr2latSettingsDialogSuccess": "Elenco delle sostituzioni aggiornato",
+  "channels_cyr2latSettingsDialogWrongJSON": "JSON non corretto: {error}",
+  "channels_cyr2latSettingsDialogReset": "Ripristina impostazioni predefinite",
+  "channels_cyr2latSettingsDialogResetted": "Le impostazioni di sostituzione Cyr2Lat sono state ripristinate alle impostazioni predefinite",
   "channels_channelUpdated": "Canale \"{name}\" aggiornato",
   "@channels_channelUpdated": {
     "placeholders": {

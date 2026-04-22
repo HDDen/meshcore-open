@@ -2176,6 +2176,66 @@ abstract class AppLocalizations {
   /// **'SMAZ compression'**
   String get channels_smazCompression;
 
+  /// No description provided for @channels_cyr2latCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyr2Lat compression'**
+  String get channels_cyr2latCompression;
+
+  /// No description provided for @channels_cyr2latCompressionDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces some Cyrillic characters with Latin characters when sending.'**
+  String get channels_cyr2latCompressionDscr;
+
+  /// No description provided for @channels_cyr2latSettingsHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyr2Lat Setup'**
+  String get channels_cyr2latSettingsHeading;
+
+  /// No description provided for @channels_cyr2latSettingsSubheading.
+  ///
+  /// In en, this message translates to:
+  /// **'List of replacements'**
+  String get channels_cyr2latSettingsSubheading;
+
+  /// No description provided for @channels_cyr2latSettingsDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the JSON configuration of character replacement'**
+  String get channels_cyr2latSettingsDscr;
+
+  /// No description provided for @channels_cyr2latSettingsDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON replacement map'**
+  String get channels_cyr2latSettingsDialogHint;
+
+  /// No description provided for @channels_cyr2latSettingsDialogSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The list of replacements has been updated'**
+  String get channels_cyr2latSettingsDialogSuccess;
+
+  /// No description provided for @channels_cyr2latSettingsDialogWrongJSON.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid JSON: {error}'**
+  String channels_cyr2latSettingsDialogWrongJSON(Object error);
+
+  /// No description provided for @channels_cyr2latSettingsDialogReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get channels_cyr2latSettingsDialogReset;
+
+  /// No description provided for @channels_cyr2latSettingsDialogResetted.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyr2Lat replacement settings reset to default'**
+  String get channels_cyr2latSettingsDialogResetted;
+
   /// No description provided for @channels_channelUpdated.
   ///
   /// In en, this message translates to:

@@ -1160,6 +1160,42 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_smazCompression => 'Kompresija SMAZ';
 
   @override
+  String get channels_cyr2latCompression => 'Kompresija Cyr2Lat';
+
+  @override
+  String get channels_cyr2latCompressionDscr =>
+      'Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Nastavitve Cyr2Lat';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => 'Seznam zamenjav';
+
+  @override
+  String get channels_cyr2latSettingsDscr =>
+      'Uredi JSON-konfiguracijo zamenjav znakov';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON-tabela zamenjav';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess =>
+      'Seznam zamenjav je posodobljen';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return 'Nepravilen JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset => 'Ponastavi na privzete';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'Nastavitve zamenjav Cyr2Lat so ponastavljene na privzete';
+
+  @override
   String channels_channelUpdated(String name) {
     return 'Kanal $name je bil posodobljen';
   }

@@ -1173,6 +1173,41 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_smazCompression => 'Сжатие SMAZ';
 
   @override
+  String get channels_cyr2latCompression => 'Сжатие Cyr2Lat';
+
+  @override
+  String get channels_cyr2latCompressionDscr =>
+      'Заменяет некоторые кириллические символы на латиницу при отправке.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Настройка Cyr2Lat';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => 'Список замен';
+
+  @override
+  String get channels_cyr2latSettingsDscr =>
+      'Редактировать JSON-конфигурацию замены символов';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON-карта замен';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess => 'Список замен обновлён';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return 'Некорректный JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset => 'Сбросить к начальным';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'Настройки замен Cyr2Lat сброшены к начальным';
+
+  @override
   String channels_channelUpdated(String name) {
     return 'Канал \"$name\" обновлён';
   }

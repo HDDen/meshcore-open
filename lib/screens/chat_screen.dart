@@ -13,6 +13,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
@@ -574,9 +575,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
                     encoder:
-                        connector.isContactSmazEnabled(
-                          widget.contact.publicKeyHex,
-                        )
+                        (connector.isContactSmazEnabled(
+                              widget.contact.publicKeyHex,
+                            ) ||
+                            connector.isContactCyr2LatEnabled(
+                              widget.contact.publicKeyHex,
+                            ))
                         ? (text) => connector.prepareContactOutboundText(
                             widget.contact,
                             text,
@@ -694,6 +698,18 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       return;
     }
+
+    // This is only for cyr2lat compression - to see the message being sent in the same format as the other person will receive
+    try {
+      if (connector.isContactCyr2LatEnabled(
+        _resolveContact(connector).publicKeyHex,
+      )) {
+        outgoingText = Cyr2Lat.encode(outgoingText);
+      }
+    } catch (_) {
+      // TODO maybe log
+    }
+    // end transform
 
     _textController.clear();
     _textFieldFocusNode.requestFocus();
@@ -1196,8 +1212,12 @@ class _ChatScreenState extends State<ChatScreen> {
   void _showContactSettings(BuildContext context) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
+    bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
+      contact.publicKeyHex,
+    );
     bool teleBaseEnabled = contact.teleBaseEnabled;
     bool teleLocEnabled = contact.teleLocEnabled;
     bool teleEnvEnabled = contact.teleEnvEnabled;
@@ -1228,7 +1248,39 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       value,
                     );
-                    setDialogState(() => smazEnabled = value);
+                    connector.setContactCyr2LatEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
+                    setDialogState(() {
+                      smazEnabled = value;
+                      if (smazEnabled) {
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.channels_cyr2latCompression),
+                  subtitle: Text(context.l10n.channels_cyr2latCompressionDscr),
+                  value: cyr2latEnabled,
+                  onChanged: (value) {
+                    connector.setContactCyr2LatEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    connector.setContactSmazEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
+                    setDialogState(() {
+                      cyr2latEnabled = value;
+                      if (cyr2latEnabled) {
+                        smazEnabled = false;
+                      }
+                    });
                   },
                 ),
                 const Divider(height: 8),

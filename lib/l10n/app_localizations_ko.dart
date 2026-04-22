@@ -1113,6 +1113,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ 압축';
 
   @override
+  String get channels_cyr2latCompression => 'Cyr2Lat 압축';
+
+  @override
+  String get channels_cyr2latCompressionDscr => '보낼 때 일부 키릴 문자를 라틴 문자로 바꿉니다.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 설정';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => '변환 목록';
+
+  @override
+  String get channels_cyr2latSettingsDscr => '문자 변환 JSON 구성 편집';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON 변환 맵';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess => '변환 목록이 업데이트되었습니다';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return '잘못된 JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset => '초기값으로 초기화';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'Cyr2Lat 변환 설정이 초기값으로 초기화되었습니다';
+
+  @override
   String channels_channelUpdated(String name) {
     return '채널 \"$name\"이 업데이트되었습니다.';
   }

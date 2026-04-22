@@ -13,6 +13,31 @@ extension UnitSystemValue on UnitSystem {
   }
 }
 
+const Map<String, String> defaultCyr2LatCharMap = {
+  'А': 'A',
+  'В': 'B',
+  'Е': 'E',
+  'Ё': 'E',
+  'З': '3',
+  'К': 'K',
+  'М': 'M',
+  'Н': 'H',
+  'О': 'O',
+  'Р': 'P',
+  'С': 'C',
+  'Т': 'T',
+  'Х': 'X',
+  'Ь': 'b',
+  'а': 'a',
+  'е': 'e',
+  'ё': 'e',
+  'о': 'o',
+  'р': 'p',
+  'с': 'c',
+  'у': 'y',
+  'х': 'x',
+};
+
 class AppSettings {
   static const Object _unset = Object();
 
@@ -57,6 +82,7 @@ class AppSettings {
   final String? translationModelSourceUrl;
   final String? translationSelectedModelId;
   final List<TranslationModelRecord> translationDownloadedModels;
+  final Map<String, String> cyr2latCharMap;
 
   AppSettings({
     this.clearPathOnMaxRetry = false,
@@ -100,10 +126,12 @@ class AppSettings {
     this.translationModelSourceUrl,
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
+    Map<String, String>? cyr2latCharMap,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
-       translationDownloadedModels = translationDownloadedModels ?? const [];
+       translationDownloadedModels = translationDownloadedModels ?? const [],
+       cyr2latCharMap = cyr2latCharMap ?? defaultCyr2LatCharMap;
 
   Map<String, dynamic> toJson() {
     return {
@@ -150,6 +178,7 @@ class AppSettings {
       'translation_downloaded_models': translationDownloadedModels
           .map((model) => model.toJson())
           .toList(),
+      'cyr2lat_char_map': cyr2latCharMap,
     };
   }
 
@@ -237,6 +266,11 @@ class AppSettings {
               )
               .toList() ??
           const [],
+      cyr2latCharMap:
+          (json['cyr2lat_char_map'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+          ) ??
+          defaultCyr2LatCharMap,
     );
   }
 
@@ -282,6 +316,7 @@ class AppSettings {
     Object? translationModelSourceUrl = _unset,
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
+    Map<String, String>? cyr2latCharMap,
   }) {
     return AppSettings(
       clearPathOnMaxRetry: clearPathOnMaxRetry ?? this.clearPathOnMaxRetry,
@@ -345,6 +380,7 @@ class AppSettings {
           : translationSelectedModelId as String?,
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
+      cyr2latCharMap: cyr2latCharMap ?? this.cyr2latCharMap,
     );
   }
 }

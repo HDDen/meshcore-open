@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -59,6 +60,8 @@ class AppSettingsScreen extends StatelessWidget {
                         _buildBatteryCard(context, settingsService, connector),
                         const SizedBox(height: 16),
                         _buildMapSettingsCard(context, settingsService),
+                        const SizedBox(height: 16),
+                        _buildCyr2LatCard(context, settingsService),
                         const SizedBox(height: 16),
                         _buildDebugCard(context, settingsService),
                       ],
@@ -1253,6 +1256,116 @@ class AppSettingsScreen extends StatelessWidget {
     final sizeMb = model.fileSizeBytes / (1024 * 1024);
     final source = model.sourceUrl.isEmpty ? model.name : model.sourceUrl;
     return '${sizeMb.toStringAsFixed(1)} MB • $source';
+  }
+
+  Widget _buildCyr2LatCard(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              context.l10n.channels_cyr2latSettingsHeading,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.translate),
+
+            title: Text(context.l10n.channels_cyr2latSettingsSubheading),
+            subtitle: Text(context.l10n.channels_cyr2latSettingsDscr),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showCyr2LatDialog(context, settingsService),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCyr2LatDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: const JsonEncoder.withIndent(
+        '  ',
+      ).convert(settingsService.settings.cyr2latCharMap),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.channels_cyr2latSettingsDscr),
+        content: SingleChildScrollView(
+          child: TextField(
+            controller: controller,
+            maxLines: 20,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: context.l10n.channels_cyr2latSettingsDialogHint,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              try {
+                final json =
+                    jsonDecode(controller.text) as Map<String, dynamic>;
+                final map = json.map(
+                  (key, value) => MapEntry(key, value.toString()),
+                );
+                final newSettings = settingsService.settings.copyWith(
+                  cyr2latCharMap: map,
+                );
+                settingsService.updateSettings(newSettings);
+                Navigator.pop(context);
+                showDismissibleSnackBar(
+                  context,
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogSuccess,
+                  ),
+                );
+              } catch (e) {
+                showDismissibleSnackBar(
+                  context,
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogWrongJSON(
+                      e.toString(),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Text(context.l10n.common_save),
+          ),
+          TextButton(
+            onPressed: () {
+              final newSettings = settingsService.settings.copyWith(
+                cyr2latCharMap: defaultCyr2LatCharMap,
+              );
+              settingsService.updateSettings(newSettings);
+              Navigator.pop(context);
+              showDismissibleSnackBar(
+                context,
+                content: Text(
+                  context.l10n.channels_cyr2latSettingsDialogResetted,
+                ),
+              );
+            },
+            child: Text(context.l10n.channels_cyr2latSettingsDialogReset),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDebugCard(

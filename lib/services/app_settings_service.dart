@@ -4,6 +4,7 @@ import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/app_logger.dart';
+import '../helpers/cyr2lat.dart';
 
 class AppSettingsService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
@@ -32,16 +33,22 @@ class AppSettingsService extends ChangeNotifier {
       try {
         final json = jsonDecode(jsonStr) as Map<String, dynamic>;
         _settings = AppSettings.fromJson(json);
+        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
         notifyListeners();
       } catch (e) {
         // If parsing fails, use defaults
         _settings = AppSettings();
+        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
       }
+    } else {
+      _settings = AppSettings();
+      Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
     }
   }
 
   Future<void> updateSettings(AppSettings newSettings) async {
     _settings = newSettings;
+    Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
     notifyListeners();
 
     final prefs = PrefsManager.instance;

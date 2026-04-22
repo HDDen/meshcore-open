@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "Kompresija SMAZ",
+  "channels_cyr2latCompression": "Kompresija Cyr2Lat",
+  "channels_cyr2latCompressionDscr": "Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.",
+  "channels_cyr2latSettingsHeading": "Nastavitve Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Seznam zamenjav",
+  "channels_cyr2latSettingsDscr": "Uredi JSON-konfiguracijo zamenjav znakov",
+  "channels_cyr2latSettingsDialogHint": "JSON-tabela zamenjav",
+  "channels_cyr2latSettingsDialogSuccess": "Seznam zamenjav je posodobljen",
+  "channels_cyr2latSettingsDialogWrongJSON": "Nepravilen JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Ponastavi na privzete",
+  "channels_cyr2latSettingsDialogResetted": "Nastavitve zamenjav Cyr2Lat so ponastavljene na privzete",
   "channels_channelUpdated": "Kanal {name} je bil posodobljen",
   "@channels_channelUpdated": {
     "placeholders": {

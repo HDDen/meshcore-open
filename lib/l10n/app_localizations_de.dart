@@ -1171,6 +1171,42 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ-Komprimierung';
 
   @override
+  String get channels_cyr2latCompression => 'Cyr2Lat-Komprimierung';
+
+  @override
+  String get channels_cyr2latCompressionDscr =>
+      'Ersetzt einige kyrillische Zeichen durch lateinische Zeichen, wenn sie gesendet werden.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat-Einstellungen';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => 'Ersetzungsliste';
+
+  @override
+  String get channels_cyr2latSettingsDscr =>
+      'JSON-Konfiguration für die Zeichenersetzung bearbeiten';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON-Ersetzungstabelle';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess =>
+      'Ersetzungsliste aktualisiert';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return 'Ungültiges JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset => 'Auf Standard zurücksetzen';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'Die Cyr2Lat-Ersetzungseinstellungen wurden auf die Standardeinstellungen zurückgesetzt';
+
+  @override
   String channels_channelUpdated(String name) {
     return 'Kanal \"$name\" aktualisiert';
   }

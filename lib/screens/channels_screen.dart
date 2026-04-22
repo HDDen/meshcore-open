@@ -1404,6 +1404,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final nameController = TextEditingController(text: channel.name);
     final pskController = TextEditingController(text: channel.pskHex);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
+    bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
 
     showDialog(
       context: context,
@@ -1449,7 +1450,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   contentPadding: EdgeInsets.zero,
                   title: Text(dialogContext.l10n.channels_smazCompression),
                   value: smazEnabled,
-                  onChanged: (value) => setState(() => smazEnabled = value),
+                  onChanged: (value) => setState(() {
+                    smazEnabled = value;
+                    if (smazEnabled) {
+                      cyr2latEnabled = false;
+                    }
+                  }),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(dialogContext.l10n.channels_cyr2latCompression),
+                  subtitle: Text(
+                    dialogContext.l10n.channels_cyr2latCompressionDscr,
+                  ),
+                  value: cyr2latEnabled,
+                  onChanged: (value) => setState(() {
+                    cyr2latEnabled = value;
+                    if (cyr2latEnabled) {
+                      smazEnabled = false;
+                    }
+                  }),
                 ),
               ],
             ),
@@ -1481,6 +1501,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelSmazEnabled(
                     channel.index,
                     smazEnabled,
+                  );
+                  await connector.setChannelCyr2LatEnabled(
+                    channel.index,
+                    cyr2latEnabled,
                   );
                   if (!context.mounted) return;
                   showDismissibleSnackBar(

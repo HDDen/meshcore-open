@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "Odstránenie kompresie SMAZ",
+  "channels_cyr2latCompression": "Odstránenie kompresie Cyr2Lat",
+  "channels_cyr2latCompressionDscr": "Pri odosielaní nahradí niektoré znaky cyriliky latinskými znakmi.",
+  "channels_cyr2latSettingsHeading": "Nastavenia Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Zoznam nahradení",
+  "channels_cyr2latSettingsDscr": "Upravte konfiguráciu JSON pre nahradenie znakov",
+  "channels_cyr2latSettingsDialogHint": "JSON mapa nahradení",
+  "channels_cyr2latSettingsDialogSuccess": "Zoznam nahradení bol aktualizovaný",
+  "channels_cyr2latSettingsDialogWrongJSON": "Nesprávny JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Obnoviť predvolené nastavenia",
+  "channels_cyr2latSettingsDialogResetted": "Nastavenia nahradzovania Cyr2Lat boli obnovené na predvolené",
   "channels_channelUpdated": "Kanál \"{name}\" bol aktualizovaný",
   "@channels_channelUpdated": {
     "placeholders": {

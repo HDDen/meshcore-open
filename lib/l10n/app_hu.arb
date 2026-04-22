@@ -548,6 +548,16 @@
     }
   },
   "channels_smazCompression": "SMAZ kompresszió",
+  "channels_cyr2latCompression": "Cyr2Lat kompresszió",
+  "channels_cyr2latCompressionDscr": "Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.",
+  "channels_cyr2latSettingsHeading": "Cyr2Lat beállítások",
+  "channels_cyr2latSettingsSubheading": "Helyettesítési lista",
+  "channels_cyr2latSettingsDscr": "A karakterhelyettesítési JSON-konfiguráció szerkesztése",
+  "channels_cyr2latSettingsDialogHint": "JSON-csere táblázat",
+  "channels_cyr2latSettingsDialogSuccess": "A csere lista frissítve",
+  "channels_cyr2latSettingsDialogWrongJSON": "Hibás JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Alapértelmezett értékekre állítás",
+  "channels_cyr2latSettingsDialogResetted": "A Cyr2Lat helyettesítési beállítások alapértelmezett értékekre lettek állítva",
   "channels_channelUpdated": "A {name} csatorna frissítve",
   "@channels_channelUpdated": {
     "placeholders": {

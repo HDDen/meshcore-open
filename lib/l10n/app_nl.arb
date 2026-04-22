@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "SMAZ compressie",
+  "channels_cyr2latCompression": "Cyr2Lat compressie",
+  "channels_cyr2latCompressionDscr": "Vervangt sommige Cyrillische tekens door Latijnse tekens bij het verzenden.",
+  "channels_cyr2latSettingsHeading": "Instellingen Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Lijst met vervangingen",
+  "channels_cyr2latSettingsDscr": "Bewerk de JSON-configuratie voor tekenvervanging",
+  "channels_cyr2latSettingsDialogHint": "JSON-vervangingskaart",
+  "channels_cyr2latSettingsDialogSuccess": "Lijst met vervangingen bijgewerkt",
+  "channels_cyr2latSettingsDialogWrongJSON": "Onjuiste JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Terugzetten naar standaard",
+  "channels_cyr2latSettingsDialogResetted": "De instellingen voor Cyr2Lat-vervangingen zijn teruggezet naar de standaardinstellingen",
   "channels_channelUpdated": "Kanaal \"{name}\" is bijgewerkt",
   "@channels_channelUpdated": {
     "placeholders": {

@@ -1162,6 +1162,43 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_smazCompression => 'Odstránenie kompresie SMAZ';
 
   @override
+  String get channels_cyr2latCompression => 'Odstránenie kompresie Cyr2Lat';
+
+  @override
+  String get channels_cyr2latCompressionDscr =>
+      'Pri odosielaní nahradí niektoré znaky cyriliky latinskými znakmi.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Nastavenia Cyr2Lat';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => 'Zoznam nahradení';
+
+  @override
+  String get channels_cyr2latSettingsDscr =>
+      'Upravte konfiguráciu JSON pre nahradenie znakov';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON mapa nahradení';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess =>
+      'Zoznam nahradení bol aktualizovaný';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return 'Nesprávny JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset =>
+      'Obnoviť predvolené nastavenia';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'Nastavenia nahradzovania Cyr2Lat boli obnovené na predvolené';
+
+  @override
   String channels_channelUpdated(String name) {
     return 'Kanál \"$name\" bol aktualizovaný';
   }

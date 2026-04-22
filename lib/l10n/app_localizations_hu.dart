@@ -1178,6 +1178,42 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ kompresszió';
 
   @override
+  String get channels_cyr2latCompression => 'Cyr2Lat kompresszió';
+
+  @override
+  String get channels_cyr2latCompressionDscr =>
+      'Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.';
+
+  @override
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat beállítások';
+
+  @override
+  String get channels_cyr2latSettingsSubheading => 'Helyettesítési lista';
+
+  @override
+  String get channels_cyr2latSettingsDscr =>
+      'A karakterhelyettesítési JSON-konfiguráció szerkesztése';
+
+  @override
+  String get channels_cyr2latSettingsDialogHint => 'JSON-csere táblázat';
+
+  @override
+  String get channels_cyr2latSettingsDialogSuccess => 'A csere lista frissítve';
+
+  @override
+  String channels_cyr2latSettingsDialogWrongJSON(Object error) {
+    return 'Hibás JSON: $error';
+  }
+
+  @override
+  String get channels_cyr2latSettingsDialogReset =>
+      'Alapértelmezett értékekre állítás';
+
+  @override
+  String get channels_cyr2latSettingsDialogResetted =>
+      'A Cyr2Lat helyettesítési beállítások alapértelmezett értékekre lettek állítva';
+
+  @override
   String channels_channelUpdated(String name) {
     return 'A $name csatorna frissítve';
   }

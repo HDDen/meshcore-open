@@ -389,6 +389,16 @@
     }
   },
   "channels_smazCompression": "Стиснення SMAZ",
+  "channels_cyr2latCompression": "Стиснення Cyr2Lat",
+  "channels_cyr2latCompressionDscr": "Замінює деякі кириличні символи на латиницю при відправці.",
+  "channels_cyr2latSettingsHeading": "Налаштування Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Список замін",
+  "channels_cyr2latSettingsDscr": "Редагувати JSON-конфігурацію заміни символів",
+  "channels_cyr2latSettingsDialogHint": "JSON-карта замін",
+  "channels_cyr2latSettingsDialogSuccess": "Список замін оновлено",
+  "channels_cyr2latSettingsDialogWrongJSON": "Некоректний JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Скинути до початкових",
+  "channels_cyr2latSettingsDialogResetted": "Налаштування замін Cyr2Lat скинуто до початкових",
   "channels_channelUpdated": "Канал «{name}» оновлено",
   "@channels_channelUpdated": {
     "placeholders": {

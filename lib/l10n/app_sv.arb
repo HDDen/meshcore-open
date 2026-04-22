@@ -388,6 +388,16 @@
     }
   },
   "channels_smazCompression": "SMAZ-komprimering",
+  "channels_cyr2latCompression": "Cyr2Lat-komprimering",
+  "channels_cyr2latCompressionDscr": "Ersätter vissa kyrilliska tecken med latinska tecken när du skickar.",
+  "channels_cyr2latSettingsHeading": "Inställningar för Cyr2Lat",
+  "channels_cyr2latSettingsSubheading": "Ersättningslista",
+  "channels_cyr2latSettingsDscr": "Redigera JSON-konfigurationen för teckenersättning",
+  "channels_cyr2latSettingsDialogHint": "JSON-ersättningskarta",
+  "channels_cyr2latSettingsDialogSuccess": "Ersättningslistan har uppdaterats",
+  "channels_cyr2latSettingsDialogWrongJSON": "Felaktig JSON: {error}",
+  "channels_cyr2latSettingsDialogReset": "Återställ till standard",
+  "channels_cyr2latSettingsDialogResetted": "Inställningarna för Cyr2Lat-ersättningar har återställts till standard",
   "channels_channelUpdated": "Kanalen \"{name}\" har uppdaterats",
   "@channels_channelUpdated": {
     "placeholders": {

@@ -403,6 +403,16 @@
     }
   },
   "channels_smazCompression": "SMAZ 压缩",
+  "channels_cyr2latCompression": "Cyr2Lat 压缩",
+  "channels_cyr2latCompressionDscr": "发送时将一些西里尔字符替换为拉丁字符。",
+  "channels_cyr2latSettingsHeading": "Cyr2Lat 設定",
+  "channels_cyr2latSettingsSubheading": "替換清單",
+  "channels_cyr2latSettingsDscr": "編輯 JSON 字元替換設定檔",
+  "channels_cyr2latSettingsDialogHint": "JSON 替換映射表",
+  "channels_cyr2latSettingsDialogSuccess": "替換清單已更新",
+  "channels_cyr2latSettingsDialogWrongJSON": "JSON 格式錯誤：{error}",
+  "channels_cyr2latSettingsDialogReset": "還原為預設值",
+  "channels_cyr2latSettingsDialogResetted": "Cyr2Lat 替換設定已還原為預設值",
   "channels_channelUpdated": "频道 \"{name}\" 已更新",
   "@channels_channelUpdated": {
     "placeholders": {

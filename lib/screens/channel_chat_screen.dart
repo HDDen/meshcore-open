@@ -11,6 +11,7 @@ import '../connector/meshcore_connector.dart';
 import '../utils/platform_info.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -1100,7 +1101,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
                       encoder:
-                          connector.isChannelSmazEnabled(widget.channel.index)
+                          (connector.isChannelSmazEnabled(
+                                widget.channel.index,
+                              ) ||
+                              connector.isChannelCyr2LatEnabled(
+                                widget.channel.index,
+                              ))
                           ? (text) => connector.prepareChannelOutboundText(
                               widget.channel.index,
                               text,
@@ -1212,6 +1218,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
       return;
     }
+
+    // When messageText is transformed with cyr2lat, it (generally) hasn't visual differences,
+    // but we getting messages doubles in chat screen (source text and transformed).
+    // To prevent, we'll perform transform of source before pass to main sender logic.
+    // We can pass whole text, senderName will be kept intact
+    if (connector.isChannelCyr2LatEnabled(widget.channel.index)) {
+      messageText = Cyr2Lat.encode(messageText);
+    }
+    // end transform
 
     _textController.clear();
     _cancelReply();
