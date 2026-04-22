@@ -1178,14 +1178,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channels_smazCompression => 'Compression SMAZ';
 
   @override
-  String get channels_cyr2latCompression => 'Compression cyr2lat';
+  String get channels_cyr2latCompression => 'Compression Cyr2Lat';
 
   @override
   String get channels_cyr2latCompressionDscr =>
       'Remplace certains caractères cyrilliques par des caractères latins lors de l\'envoi.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Paramètres cyr2lat';
+  String get channels_cyr2latSettingsHeading => 'Paramètres Cyr2Lat';
 
   @override
   String get channels_cyr2latSettingsSubheading => 'Liste des remplacements';
@@ -1213,7 +1213,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Les paramètres de remplacement cyr2lat ont été réinitialisés aux valeurs par défaut';
+      'Les paramètres de remplacement Cyr2Lat ont été réinitialisés aux valeurs par défaut';
 
   @override
   String channels_channelUpdated(String name) {

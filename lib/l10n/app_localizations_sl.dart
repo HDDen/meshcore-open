@@ -1160,14 +1160,14 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_smazCompression => 'Kompresija SMAZ';
 
   @override
-  String get channels_cyr2latCompression => 'Kompresija cyr2lat';
+  String get channels_cyr2latCompression => 'Kompresija Cyr2Lat';
 
   @override
   String get channels_cyr2latCompressionDscr =>
       'Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Nastavitve cyr2lat';
+  String get channels_cyr2latSettingsHeading => 'Nastavitve Cyr2Lat';
 
   @override
   String get channels_cyr2latSettingsSubheading => 'Seznam zamenjav';
@@ -1193,7 +1193,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Nastavitve zamenjav cyr2lat so ponastavljene na privzete';
+      'Nastavitve zamenjav Cyr2Lat so ponastavljene na privzete';
 
   @override
   String channels_channelUpdated(String name) {

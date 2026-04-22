@@ -288,6 +288,7 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactSmazEnabled = {};
+  final Map<String, bool> _contactCyr2LatEnabled = {};
   final Set<String> _knownContactKeys = {};
   final Map<String, int> _contactUnreadCount = {};
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
@@ -605,12 +606,20 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
 
+  void ensureContactSmazSettingLoaded(String contactKeyHex) {
+    _ensureContactSmazSettingLoaded(contactKeyHex);
+  }
+
   bool isChannelCyr2LatEnabled(int channelIndex) {
     return _channelCyr2LatEnabled[channelIndex] ?? false;
   }
 
-  void ensureContactSmazSettingLoaded(String contactKeyHex) {
-    _ensureContactSmazSettingLoaded(contactKeyHex);
+  bool isContactCyr2LatEnabled(String contactKeyHex) {
+    return _contactCyr2LatEnabled[contactKeyHex] ?? false;
+  }
+
+  void ensureContactCyr2LatSettingLoaded(String contactKeyHex) {
+    _ensureContactCyr2LatSettingLoaded(contactKeyHex);
   }
 
   Future<void> loadUnreadState() async {
@@ -696,6 +705,12 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setContactSmazEnabled(String contactKeyHex, bool enabled) async {
+    _contactSmazEnabled[contactKeyHex] = enabled;
+    await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
     _channelCyr2LatEnabled[channelIndex] = enabled;
     if (enabled) {
@@ -706,9 +721,12 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setContactSmazEnabled(String contactKeyHex, bool enabled) async {
-    _contactSmazEnabled[contactKeyHex] = enabled;
-    await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
+  Future<void> setContactCyr2LatEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    _contactCyr2LatEnabled[contactKeyHex] = enabled;
+    await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
@@ -848,6 +866,7 @@ class MeshCoreConnector extends ChangeNotifier {
       ..addAll(cached);
     for (final contact in cached) {
       _ensureContactSmazSettingLoaded(contact.publicKeyHex);
+      _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
     }
   }
 
@@ -3017,19 +3036,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
-    final trimmed = text.trim();
-    final isStructuredPayload =
-        trimmed.startsWith('g:') || trimmed.startsWith('m:');
-
-    String outboundText = text;
-    if (!isStructuredPayload) {
-      if (isChannelSmazEnabled(channel.index)) {
-        outboundText = Smaz.encodeIfSmaller(text);
-      } else if (isChannelCyr2LatEnabled(channel.index)) {
-        outboundText = Cyr2Lat.encode(text);
-      }
-    }
-
+    final outboundText = prepareChannelOutboundText(channel.index, text);
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     await sendFrame(
       buildSendChannelTextMsgFrame(channel.index, outboundText),
@@ -4467,6 +4474,15 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactCyr2LatSettingLoaded(String contactKeyHex) {
+    if (_contactCyr2LatEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadCyr2LatEnabled(contactKeyHex).then((enabled) {
+      if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
+      _contactCyr2LatEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
   /// Prepares contact outbound text by applying SMAZ encoding if enabled.
   /// This should be used to transform text before computing ACK hashes.
   String prepareContactOutboundText(Contact contact, String text) {
@@ -4475,8 +4491,26 @@ class MeshCoreConnector extends ChangeNotifier {
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|');
-    if (!isStructuredPayload && isContactSmazEnabled(contact.publicKeyHex)) {
-      return Smaz.encodeIfSmaller(text);
+    if (!isStructuredPayload) {
+      if (isContactSmazEnabled(contact.publicKeyHex)) {
+        return Smaz.encodeIfSmaller(text);
+      } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
+        return Cyr2Lat.encode(text);
+      }
+    }
+    return text;
+  }
+
+  String prepareChannelOutboundText(int channelIndex, String text) {
+    final trimmed = text.trim();
+    final isStructuredPayload =
+        trimmed.startsWith('g:') || trimmed.startsWith('m:');
+    if (!isStructuredPayload) {
+      if (isChannelSmazEnabled(channelIndex)) {
+        return Smaz.encodeIfSmaller(text);
+      } else if (isChannelCyr2LatEnabled(channelIndex)) {
+        return Cyr2Lat.encode(text);
+      }
     }
     return text;
   }

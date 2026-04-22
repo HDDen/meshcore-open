@@ -1113,13 +1113,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ 압축';
 
   @override
-  String get channels_cyr2latCompression => 'Cyr2lat 압축';
+  String get channels_cyr2latCompression => 'Cyr2Lat 압축';
 
   @override
   String get channels_cyr2latCompressionDscr => '보낼 때 일부 키릴 문자를 라틴 문자로 바꿉니다.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Cyr2lat 설정';
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 설정';
 
   @override
   String get channels_cyr2latSettingsSubheading => '변환 목록';
@@ -1143,7 +1143,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Cyr2lat 변환 설정이 초기값으로 초기화되었습니다';
+      'Cyr2Lat 변환 설정이 초기값으로 초기화되었습니다';
 
   @override
   String channels_channelUpdated(String name) {

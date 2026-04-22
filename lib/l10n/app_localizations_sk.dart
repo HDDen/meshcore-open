@@ -1162,14 +1162,14 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_smazCompression => 'Odstránenie kompresie SMAZ';
 
   @override
-  String get channels_cyr2latCompression => 'Odstránenie kompresie cyr2lat';
+  String get channels_cyr2latCompression => 'Odstránenie kompresie Cyr2Lat';
 
   @override
   String get channels_cyr2latCompressionDscr =>
       'Pri odosielaní nahradí niektoré znaky cyriliky latinskými znakmi.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Nastavenia cyr2lat';
+  String get channels_cyr2latSettingsHeading => 'Nastavenia Cyr2Lat';
 
   @override
   String get channels_cyr2latSettingsSubheading => 'Zoznam nahradení';
@@ -1196,7 +1196,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'Nastavenia nahradzovania cyr2lat boli obnovené na predvolené';
+      'Nastavenia nahradzovania Cyr2Lat boli obnovené na predvolené';
 
   @override
   String channels_channelUpdated(String name) {

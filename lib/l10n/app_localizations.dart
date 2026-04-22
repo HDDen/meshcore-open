@@ -2179,7 +2179,7 @@ abstract class AppLocalizations {
   /// No description provided for @channels_cyr2latCompression.
   ///
   /// In en, this message translates to:
-  /// **'Cyr2lat compression'**
+  /// **'Cyr2Lat compression'**
   String get channels_cyr2latCompression;
 
   /// No description provided for @channels_cyr2latCompressionDscr.
@@ -2191,7 +2191,7 @@ abstract class AppLocalizations {
   /// No description provided for @channels_cyr2latSettingsHeading.
   ///
   /// In en, this message translates to:
-  /// **'Сyr2lat Setup'**
+  /// **'Cyr2Lat Setup'**
   String get channels_cyr2latSettingsHeading;
 
   /// No description provided for @channels_cyr2latSettingsSubheading.
@@ -2233,7 +2233,7 @@ abstract class AppLocalizations {
   /// No description provided for @channels_cyr2latSettingsDialogResetted.
   ///
   /// In en, this message translates to:
-  /// **'Сyr2lat replacement settings reset to default'**
+  /// **'Cyr2Lat replacement settings reset to default'**
   String get channels_cyr2latSettingsDialogResetted;
 
   /// No description provided for @channels_channelUpdated.

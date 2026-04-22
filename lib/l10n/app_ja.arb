@@ -548,7 +548,7 @@
     }
   },
   "channels_smazCompression": "SMAZ 圧縮",
-  "channels_cyr2latCompression": "Cyr2lat 圧縮",
+  "channels_cyr2latCompression": "Cyr2Lat 圧縮",
   "channels_cyr2latCompressionDscr": "送信時に一部のキリル文字をラテン文字に置き換えます。",
   "channels_cyr2latSettingsHeading": "cyr2latの設定",
   "channels_cyr2latSettingsSubheading": "置換リスト",

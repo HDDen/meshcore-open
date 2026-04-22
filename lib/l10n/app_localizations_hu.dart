@@ -1178,14 +1178,14 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ kompresszió';
 
   @override
-  String get channels_cyr2latCompression => 'Cyr2lat kompresszió';
+  String get channels_cyr2latCompression => 'Cyr2Lat kompresszió';
 
   @override
   String get channels_cyr2latCompressionDscr =>
       'Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Cyr2lat beállítások';
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat beállítások';
 
   @override
   String get channels_cyr2latSettingsSubheading => 'Helyettesítési lista';
@@ -1211,7 +1211,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'A cyr2lat helyettesítési beállítások alapértelmezett értékekre lettek állítva';
+      'A Cyr2Lat helyettesítési beállítások alapértelmezett értékekre lettek állítva';
 
   @override
   String channels_channelUpdated(String name) {

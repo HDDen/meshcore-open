@@ -1269,9 +1269,9 @@ class AppSettingsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              context.l10n.channels_cyr2latSettingsHeading, 
+              context.l10n.channels_cyr2latSettingsHeading,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            )
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.translate),
@@ -1291,7 +1291,9 @@ class AppSettingsScreen extends StatelessWidget {
     AppSettingsService settingsService,
   ) {
     final controller = TextEditingController(
-      text: const JsonEncoder.withIndent('  ').convert(settingsService.settings.cyr2latCharMap),
+      text: const JsonEncoder.withIndent(
+        '  ',
+      ).convert(settingsService.settings.cyr2latCharMap),
     );
 
     showDialog(
@@ -1316,19 +1318,30 @@ class AppSettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               try {
-                final json = jsonDecode(controller.text) as Map<String, dynamic>;
-                final map = json.map((key, value) => MapEntry(key, value.toString()));
-                final newSettings = settingsService.settings.copyWith(cyr2latCharMap: map);
+                final json =
+                    jsonDecode(controller.text) as Map<String, dynamic>;
+                final map = json.map(
+                  (key, value) => MapEntry(key, value.toString()),
+                );
+                final newSettings = settingsService.settings.copyWith(
+                  cyr2latCharMap: map,
+                );
                 settingsService.updateSettings(newSettings);
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
-                  content: Text(context.l10n.channels_cyr2latSettingsDialogSuccess), 
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogSuccess,
+                  ),
                 );
               } catch (e) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text(context.l10n.channels_cyr2latSettingsDialogWrongJSON(e.toString())),
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogWrongJSON(
+                      e.toString(),
+                    ),
+                  ),
                 );
               }
             },
@@ -1336,12 +1349,16 @@ class AppSettingsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final newSettings = settingsService.settings.copyWith(cyr2latCharMap: defaultCyr2latCharMap);
+              final newSettings = settingsService.settings.copyWith(
+                cyr2latCharMap: defaultCyr2LatCharMap,
+              );
               settingsService.updateSettings(newSettings);
               Navigator.pop(context);
               showDismissibleSnackBar(
                 context,
-                content: Text(context.l10n.channels_cyr2latSettingsDialogResetted),
+                content: Text(
+                  context.l10n.channels_cyr2latSettingsDialogResetted,
+                ),
               );
             },
             child: Text(context.l10n.channels_cyr2latSettingsDialogReset),

@@ -11,10 +11,9 @@ import '../connector/meshcore_connector.dart';
 import '../utils/platform_info.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/reaction_helper.dart';
-import '../helpers/utf8_length_limiter.dart';
-import '../helpers/cyr2lat.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/channel.dart';
@@ -24,6 +23,7 @@ import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/translation_service.dart';
 import '../utils/emoji_utils.dart';
+import '../widgets/byte_count_input.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
@@ -1008,7 +1008,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final maxBytes = maxChannelMessageBytes(connector.selfName);
     final settings = context.watch<AppSettingsService>().settings;
-    var remainingBytes = maxBytes;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1095,93 +1094,48 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       );
                     }
-
-                    final isCyr2LatEnabled = connector.isChannelCyr2LatEnabled(
-                      widget.channel.index,
-                    );
-                    final transformedText = isCyr2LatEnabled
-                        ? Cyr2Lat.encode(value.text)
-                        : value.text;
-
-                    var usedBytes = utf8.encode(transformedText).length;
-                    if (_replyingToMessage != null) {
-                      usedBytes = utf8.encode('@[${_replyingToMessage!.senderName}] $transformedText').length;
-                    }
-
-                    remainingBytes = maxBytes - usedBytes;
-
-                    return TextField(
+                    return ByteCountedTextField(
+                      maxBytes: maxBytes,
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
-                      inputFormatters: [
-                        Utf8LengthLimitingTextInputFormatter(
-                          maxBytes,
-                          transformText:
-                              isCyr2LatEnabled
-                              ? Cyr2Lat.encode
-                              : (text) => text,
-                        ),
-                      ],
-                      textCapitalization: TextCapitalization.sentences,
+                      hintText: context.l10n.chat_typeMessage,
+                      onSubmitted: (_) => _sendMessage(),
+                      encoder:
+                          (connector.isChannelSmazEnabled(
+                                widget.channel.index,
+                              ) ||
+                              connector.isChannelCyr2LatEnabled(
+                                widget.channel.index,
+                              ))
+                          ? (text) => connector.prepareChannelOutboundText(
+                              widget.channel.index,
+                              text,
+                            )
+                          : null,
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
+                        filled: true,
+                        fillColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: 20,
+                          vertical: 14,
                         ),
                       ),
-                      maxLines: null,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
                     );
                   },
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    tooltip: context.l10n.chat_sendMessage,
-                    onPressed: _sendMessage,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-
-                    ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, _) {
-                      final isCyr2LatEnabled =
-                        connector.isChannelCyr2LatEnabled(
-                      widget.channel.index,
-                      );
-                      final transformedText = isCyr2LatEnabled
-                        ? Cyr2Lat.encode(value.text)
-                        : value.text;
-
-                      remainingBytes =
-                        maxBytes - utf8.encode(transformedText).length;
-                      if (_replyingToMessage != null) {
-                        remainingBytes =
-                        maxBytes - utf8.encode('@[${_replyingToMessage!.senderName}] $transformedText').length;
-                      }
-
-                      return Text(
-                        '$remainingBytes',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: remainingBytes < 0
-                            ? Colors.red
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.send),
+                tooltip: context.l10n.chat_sendMessage,
+                onPressed: _sendMessage,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ],
           ),
@@ -1248,26 +1202,31 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-
-    final encodedText = connector.isChannelCyr2LatEnabled(widget.channel.index)
-        ? Cyr2Lat.encode(messageText)
-        : messageText;
-
-    // выполним перекодировку
     if (_replyingToMessage != null) {
-      messageText = '@[${_replyingToMessage!.senderName}] $encodedText';
-    } else {
-      messageText = encodedText;
+      messageText = '@[${_replyingToMessage!.senderName}] $messageText';
     }
 
     final maxBytes = maxChannelMessageBytes(connector.selfName);
-    if (utf8.encode(messageText).length > maxBytes) {
+    final outboundText = connector.prepareChannelOutboundText(
+      widget.channel.index,
+      messageText,
+    );
+    if (utf8.encode(outboundText).length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
       );
       return;
     }
+
+    // When messageText is transformed with cyr2lat, it (generally) hasn't visual differences,
+    // but we getting messages doubles in chat screen (source text and transformed).
+    // To prevent, we'll perform transform of source before pass to main sender logic.
+    // We can pass whole text, senderName will be kept intact
+    if (connector.isChannelCyr2LatEnabled(widget.channel.index)) {
+      messageText = Cyr2Lat.encode(messageText);
+    }
+    // end transform
 
     _textController.clear();
     _cancelReply();

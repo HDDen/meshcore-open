@@ -1118,7 +1118,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ 圧縮';
 
   @override
-  String get channels_cyr2latCompression => 'Cyr2lat 圧縮';
+  String get channels_cyr2latCompression => 'Cyr2Lat 圧縮';
 
   @override
   String get channels_cyr2latCompressionDscr => '送信時に一部のキリル文字をラテン文字に置き換えます。';

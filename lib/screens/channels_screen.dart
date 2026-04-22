@@ -1452,7 +1452,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   value: smazEnabled,
                   onChanged: (value) => setState(() {
                     smazEnabled = value;
-                    if (value) {
+                    if (smazEnabled) {
                       cyr2latEnabled = false;
                     }
                   }),
@@ -1460,11 +1460,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(dialogContext.l10n.channels_cyr2latCompression),
-                  subtitle: Text(dialogContext.l10n.channels_cyr2latCompressionDscr),
+                  subtitle: Text(
+                    dialogContext.l10n.channels_cyr2latCompressionDscr,
+                  ),
                   value: cyr2latEnabled,
                   onChanged: (value) => setState(() {
                     cyr2latEnabled = value;
-                    if (value) {
+                    if (cyr2latEnabled) {
                       smazEnabled = false;
                     }
                   }),

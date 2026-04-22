@@ -13,12 +13,12 @@ import 'package:latlong2/latlong.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/path_helper.dart';
-import '../helpers/utf8_length_limiter.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
@@ -30,6 +30,7 @@ import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/elements_ui.dart';
+import '../widgets/byte_count_input.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
 import '../utils/emoji_utils.dart';
@@ -567,24 +568,38 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     );
                   }
-
-                  return TextField(
+                  return ByteCountedTextField(
+                    maxBytes: maxBytes,
                     controller: _textController,
                     focusNode: _textFieldFocusNode,
-                    inputFormatters: [
-                      Utf8LengthLimitingTextInputFormatter(maxBytes),
-                    ],
-                    textCapitalization: TextCapitalization.sentences,
+                    hintText: context.l10n.chat_typeMessage,
+                    onSubmitted: (_) => _sendMessage(connector),
+                    encoder:
+                        (connector.isContactSmazEnabled(
+                              widget.contact.publicKeyHex,
+                            ) ||
+                            connector.isContactCyr2LatEnabled(
+                              widget.contact.publicKeyHex,
+                            ))
+                        ? (text) => connector.prepareContactOutboundText(
+                            widget.contact,
+                            text,
+                          )
+                        : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLow,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: 20,
+                        vertical: 14,
                       ),
                     ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(connector),
                   );
                 },
               ),
@@ -672,13 +687,29 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     final maxBytes = maxContactMessageBytes();
-    if (utf8.encode(outgoingText).length > maxBytes) {
+    final outboundText = connector.prepareContactOutboundText(
+      _resolveContact(connector),
+      outgoingText,
+    );
+    if (utf8.encode(outboundText).length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
       );
       return;
     }
+
+    // This is only for cyr2lat compression - to see the message being sent in the same format as the other person will receive
+    try {
+      if (connector.isContactCyr2LatEnabled(
+        _resolveContact(connector).publicKeyHex,
+      )) {
+        outgoingText = Cyr2Lat.encode(outgoingText);
+      }
+    } catch (_) {
+      // TODO maybe log
+    }
+    // end transform
 
     _textController.clear();
     _textFieldFocusNode.requestFocus();
@@ -1181,8 +1212,12 @@ class _ChatScreenState extends State<ChatScreen> {
   void _showContactSettings(BuildContext context) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
+    bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
+      contact.publicKeyHex,
+    );
     bool teleBaseEnabled = contact.teleBaseEnabled;
     bool teleLocEnabled = contact.teleLocEnabled;
     bool teleEnvEnabled = contact.teleEnvEnabled;
@@ -1213,7 +1248,39 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       value,
                     );
-                    setDialogState(() => smazEnabled = value);
+                    connector.setContactCyr2LatEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
+                    setDialogState(() {
+                      smazEnabled = value;
+                      if (smazEnabled) {
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.channels_cyr2latCompression),
+                  subtitle: Text(context.l10n.channels_cyr2latCompressionDscr),
+                  value: cyr2latEnabled,
+                  onChanged: (value) {
+                    connector.setContactCyr2LatEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    connector.setContactSmazEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
+                    setDialogState(() {
+                      cyr2latEnabled = value;
+                      if (cyr2latEnabled) {
+                        smazEnabled = false;
+                      }
+                    });
                   },
                 ),
                 const Divider(height: 8),

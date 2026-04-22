@@ -1100,13 +1100,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ 压缩';
 
   @override
-  String get channels_cyr2latCompression => 'Cyr2lat 压缩';
+  String get channels_cyr2latCompression => 'Cyr2Lat 压缩';
 
   @override
   String get channels_cyr2latCompressionDscr => '发送时将一些西里尔字符替换为拉丁字符。';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Cyr2lat 設定';
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 設定';
 
   @override
   String get channels_cyr2latSettingsSubheading => '替換清單';
@@ -1129,7 +1129,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_cyr2latSettingsDialogReset => '還原為預設值';
 
   @override
-  String get channels_cyr2latSettingsDialogResetted => 'Cyr2lat 替換設定已還原為預設值';
+  String get channels_cyr2latSettingsDialogResetted => 'Cyr2Lat 替換設定已還原為預設值';
 
   @override
   String channels_channelUpdated(String name) {

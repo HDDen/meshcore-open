@@ -1162,14 +1162,14 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_smazCompression => 'SMAZ compressie';
 
   @override
-  String get channels_cyr2latCompression => 'Cyr2lat compressie';
+  String get channels_cyr2latCompression => 'Cyr2Lat compressie';
 
   @override
   String get channels_cyr2latCompressionDscr =>
       'Vervangt sommige Cyrillische tekens door Latijnse tekens bij het verzenden.';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Instellingen cyr2lat';
+  String get channels_cyr2latSettingsHeading => 'Instellingen Cyr2Lat';
 
   @override
   String get channels_cyr2latSettingsSubheading => 'Lijst met vervangingen';
@@ -1196,7 +1196,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get channels_cyr2latSettingsDialogResetted =>
-      'De instellingen voor cyr2lat-vervangingen zijn teruggezet naar de standaardinstellingen';
+      'De instellingen voor Cyr2Lat-vervangingen zijn teruggezet naar de standaardinstellingen';
 
   @override
   String channels_channelUpdated(String name) {

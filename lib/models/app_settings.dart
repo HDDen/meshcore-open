@@ -13,7 +13,7 @@ extension UnitSystemValue on UnitSystem {
   }
 }
 
-const Map<String, String> defaultCyr2latCharMap = {
+const Map<String, String> defaultCyr2LatCharMap = {
   'А': 'A',
   'В': 'B',
   'Е': 'E',
@@ -29,10 +29,8 @@ const Map<String, String> defaultCyr2latCharMap = {
   'Х': 'X',
   'Ь': 'b',
   'а': 'a',
-  //'б': '6',
   'е': 'e',
   'ё': 'e',
-  //'к': 'k',
   'о': 'o',
   'р': 'p',
   'с': 'c',
@@ -133,7 +131,7 @@ class AppSettings {
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
        translationDownloadedModels = translationDownloadedModels ?? const [],
-       cyr2latCharMap = cyr2latCharMap ?? defaultCyr2latCharMap;
+       cyr2latCharMap = cyr2latCharMap ?? defaultCyr2LatCharMap;
 
   Map<String, dynamic> toJson() {
     return {
@@ -268,10 +266,11 @@ class AppSettings {
               )
               .toList() ??
           const [],
-      cyr2latCharMap: (json['cyr2lat_char_map'] as Map?)?.map(
+      cyr2latCharMap:
+          (json['cyr2lat_char_map'] as Map?)?.map(
             (key, value) => MapEntry(key.toString(), value.toString()),
           ) ??
-          defaultCyr2latCharMap,
+          defaultCyr2LatCharMap,
     );
   }
 
