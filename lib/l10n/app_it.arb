@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "it",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Contatti",
   "nav_channels": "Canali",
   "nav_map": "Mappa",
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open",
+  "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Scansione in corso per i dispositivi...",
   "scanner_connecting": "Connessione...",
   "scanner_disconnecting": "Disconnessione...",
@@ -121,7 +121,7 @@
   "settings_appDebugLog": "Log di Debug dell'App",
   "settings_appDebugLogSubtitle": "Messaggi di debug dell'applicazione",
   "settings_about": "Informazioni",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {

@@ -1,6 +1,6 @@
 {
   "@@locale": "hu",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Kapcsolatok",
   "nav_channels": "Csatornák",
   "nav_map": "Térkép",
@@ -184,7 +184,7 @@
   "settings_appDebugLog": "App-debug log",
   "settings_appDebugLogSubtitle": "Programozási hibajelzések",
   "settings_about": "Ról",
-  "settings_aboutVersion": "MeshCore Open {version} verzió",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) {version} verzió",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {

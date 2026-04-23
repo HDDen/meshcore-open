@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "sk",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Kontakty",
   "nav_channels": "Kanály",
   "nav_map": "Mapa",
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open",
+  "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Skrívania zariadení...",
   "scanner_connecting": "Pripojujem sa...",
   "scanner_disconnecting": "Odpojuje sa...",
@@ -121,7 +121,7 @@
   "settings_appDebugLog": "Záznam ladenia aplikácie",
   "settings_appDebugLogSubtitle": "Správy z ladenia aplikácie",
   "settings_about": "O nás",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -129,7 +129,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open Source Projekt 2024",
+  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Projekt 2024",
   "settings_aboutDescription": "Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.",
   "settings_infoName": "Meno",
   "settings_infoId": "ID",

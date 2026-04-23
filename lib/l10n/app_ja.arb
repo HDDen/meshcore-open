@@ -1,6 +1,6 @@
 {
   "@@locale": "ja",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "連絡先",
   "nav_channels": "チャンネル",
   "nav_map": "地図",
@@ -184,7 +184,7 @@
   "settings_appDebugLog": "アプリケーションのデバッグログ",
   "settings_appDebugLogSubtitle": "アプリケーションのデバッグメッセージ",
   "settings_about": "概要",
-  "settings_aboutVersion": "MeshCore Open {version}版",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) {version}版",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {

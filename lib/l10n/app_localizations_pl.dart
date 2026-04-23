@@ -9,7 +9,7 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
-  String get appTitle => 'MeshCore Open';
+  String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override
   String get nav_contacts => 'Kontakty';
@@ -109,7 +109,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get scanner_title => 'MeshCore Open';
+  String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
   String get connectionChoiceUsbLabel => 'USB';
@@ -507,11 +507,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String settings_aboutVersion(String version) {
-    return 'MeshCore Open v$version';
+    return 'MeshCore Open (Advanced mod) v$version';
   }
 
   @override
-  String get settings_aboutLegalese => 'Projekt MeshCore Open Source 2026';
+  String get settings_aboutLegalese =>
+      'Projekt MeshCore Open (Advanced mod) Source 2026';
 
   @override
   String get settings_aboutDescription =>

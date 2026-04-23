@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "sl",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Stiki",
   "nav_channels": "Kanali",
   "nav_map": "Karta",
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open",
+  "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Skeniram za naprave...",
   "scanner_connecting": "Povezujem se...",
   "scanner_disconnecting": "Odklapljam se...",
@@ -121,7 +121,7 @@
   "settings_appDebugLog": "Logi aplikacije",
   "settings_appDebugLogSubtitle": "Debug sporočila aplikacije",
   "settings_about": "Oglejte si",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {

@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "zh",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "联系人",
   "nav_channels": "频道",
   "nav_map": "地图",
@@ -126,7 +126,7 @@
   "settings_appDebugLog": "应用调试日志",
   "settings_appDebugLogSubtitle": "应用调试消息",
   "settings_about": "关于",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -1611,8 +1611,8 @@
   "settings_gpxExportAllSubtitle": "导出所有带位置的联系人到 GPX 文件",
   "settings_gpxExportAllContacts": "所有联系人位置",
   "settings_gpxExportNoContacts": "没有可导出的联系人",
-  "settings_gpxExportShareText": "来自 MeshCore Open 的地图数据导出",
-  "settings_gpxExportShareSubject": "MeshCore Open GPX 地图数据导出",
+  "settings_gpxExportShareText": "来自 MeshCore Open (Advanced mod) 的地图数据导出",
+  "settings_gpxExportShareSubject": "MeshCore Open (Advanced mod) GPX 地图数据导出",
   "pathTrace_someHopsNoLocation": "某些跳缺少位置信息！",
   "map_tapToAdd": "点击节点以添加到路径",
   "pathTrace_clearTooltip": "清除路径",

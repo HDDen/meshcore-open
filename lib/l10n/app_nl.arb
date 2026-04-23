@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "nl",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Contacten",
   "nav_channels": "Kanalen",
   "nav_map": "Kaart",
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open",
+  "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Scannen naar apparaten...",
   "scanner_connecting": "Verbinden...",
   "scanner_disconnecting": "Verbinding verbreken...",
@@ -121,7 +121,7 @@
   "settings_appDebugLog": "App Debug Log",
   "settings_appDebugLogSubtitle": "Toepassingsdebugberichten",
   "settings_about": "Over",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -129,7 +129,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open Source Project 2024",
+  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Project 2024",
   "settings_aboutDescription": "Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.",
   "settings_infoName": "Naam",
   "settings_infoId": "ID",

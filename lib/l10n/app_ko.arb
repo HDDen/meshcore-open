@@ -1,6 +1,6 @@
 {
   "@@locale": "ko",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "연락처",
   "nav_channels": "채널",
   "nav_map": "지도",
@@ -184,7 +184,7 @@
   "settings_appDebugLog": "앱 디버깅 로그",
   "settings_appDebugLogSubtitle": "애플리케이션 디버깅 메시지",
   "settings_about": "소개",
-  "settings_aboutVersion": "MeshCore Open {version} 버전",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) {version} 버전",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {

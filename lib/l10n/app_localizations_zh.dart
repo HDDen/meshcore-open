@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'MeshCore Open';
+  String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override
   String get nav_contacts => '联系人';
@@ -471,7 +471,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String settings_aboutVersion(String version) {
-    return 'MeshCore Open v$version';
+    return 'MeshCore Open (Advanced mod) v$version';
   }
 
   @override
@@ -3201,10 +3201,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_gpxExportAllContacts => '所有联系人位置';
 
   @override
-  String get settings_gpxExportShareText => '来自 MeshCore Open 的地图数据导出';
+  String get settings_gpxExportShareText =>
+      '来自 MeshCore Open (Advanced mod) 的地图数据导出';
 
   @override
-  String get settings_gpxExportShareSubject => 'MeshCore Open GPX 地图数据导出';
+  String get settings_gpxExportShareSubject =>
+      'MeshCore Open (Advanced mod) GPX 地图数据导出';
 
   @override
   String get snrIndicator_nearByRepeaters => '附近的重复器';

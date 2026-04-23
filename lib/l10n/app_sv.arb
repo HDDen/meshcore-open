@@ -8,7 +8,7 @@
     }
   },
   "@@locale": "sv",
-  "appTitle": "MeshCore Open",
+  "appTitle": "MeshCore Open (Advanced mod)",
   "nav_contacts": "Kontakter",
   "nav_channels": "Kanaler",
   "nav_map": "Karta",
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open",
+  "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Söker efter enheter...",
   "scanner_connecting": "Anslutning...",
   "scanner_disconnecting": "Anslutning bryts...",
@@ -121,7 +121,7 @@
   "settings_appDebugLog": "Appfelsökning",
   "settings_appDebugLogSubtitle": "Applikations felsökningsmeddelanden",
   "settings_about": "Om",
-  "settings_aboutVersion": "MeshCore Open v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
