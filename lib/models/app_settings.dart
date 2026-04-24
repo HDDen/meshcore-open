@@ -43,25 +43,18 @@ class Cyr2LatProfile {
   final String name;
   final Map<String, String> charMap;
 
-  Cyr2LatProfile({
-    required this.id,
-    required this.name,
-    required this.charMap,
-  });
+  Cyr2LatProfile({required this.id, required this.name, required this.charMap});
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'char_map': charMap,
-    };
+    return {'id': id, 'name': name, 'char_map': charMap};
   }
 
   factory Cyr2LatProfile.fromJson(Map<String, dynamic> json) {
     return Cyr2LatProfile(
       id: json['id'] as String,
       name: json['name'] as String,
-      charMap: (json['char_map'] as Map?)?.map(
+      charMap:
+          (json['char_map'] as Map?)?.map(
             (key, value) => MapEntry(key.toString(), value.toString()),
           ) ??
           {},
@@ -184,7 +177,15 @@ class AppSettings {
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
        translationDownloadedModels = translationDownloadedModels ?? const [],
-       cyr2latProfiles = cyr2latProfiles ?? [Cyr2LatProfile(id: 'default', name: 'Default', charMap: defaultCyr2LatCharMap)],
+       cyr2latProfiles =
+           cyr2latProfiles ??
+           [
+             Cyr2LatProfile(
+               id: 'default',
+               name: 'Default',
+               charMap: defaultCyr2LatCharMap,
+             ),
+           ],
        selectedCyr2latProfileId = selectedCyr2latProfileId ?? 'default';
 
   Map<String, dynamic> toJson() {
@@ -232,7 +233,9 @@ class AppSettings {
       'translation_downloaded_models': translationDownloadedModels
           .map((model) => model.toJson())
           .toList(),
-      'cyr2lat_profiles': cyr2latProfiles.map((profile) => profile.toJson()).toList(),
+      'cyr2lat_profiles': cyr2latProfiles
+          .map((profile) => profile.toJson())
+          .toList(),
       'selected_cyr2lat_profile_id': selectedCyr2latProfileId,
     };
   }
@@ -331,16 +334,27 @@ class AppSettings {
               .toList() ??
           // Backward compatibility: if old cyr2lat_char_map exists, create a profile from it
           (json['cyr2lat_char_map'] != null
-              ? [Cyr2LatProfile(
-                  id: 'migrated',
-                  name: 'Migrated Profile',
-                  charMap: (json['cyr2lat_char_map'] as Map?)?.map(
-                        (key, value) => MapEntry(key.toString(), value.toString()),
-                      ) ??
-                      defaultCyr2LatCharMap,
-                )]
-              : [Cyr2LatProfile(id: 'default', name: 'Default', charMap: defaultCyr2LatCharMap)]),
-      selectedCyr2latProfileId: json['selected_cyr2lat_profile_id'] as String? ??
+              ? [
+                  Cyr2LatProfile(
+                    id: 'migrated',
+                    name: 'Migrated Profile',
+                    charMap:
+                        (json['cyr2lat_char_map'] as Map?)?.map(
+                          (key, value) =>
+                              MapEntry(key.toString(), value.toString()),
+                        ) ??
+                        defaultCyr2LatCharMap,
+                  ),
+                ]
+              : [
+                  Cyr2LatProfile(
+                    id: 'default',
+                    name: 'Default',
+                    charMap: defaultCyr2LatCharMap,
+                  ),
+                ]),
+      selectedCyr2latProfileId:
+          json['selected_cyr2lat_profile_id'] as String? ??
           (json['cyr2lat_char_map'] != null ? 'migrated' : 'default'),
     );
   }
@@ -453,7 +467,8 @@ class AppSettings {
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
       cyr2latProfiles: cyr2latProfiles ?? this.cyr2latProfiles,
-      selectedCyr2latProfileId: selectedCyr2latProfileId ?? this.selectedCyr2latProfileId,
+      selectedCyr2latProfileId:
+          selectedCyr2latProfileId ?? this.selectedCyr2latProfileId,
     );
   }
 }

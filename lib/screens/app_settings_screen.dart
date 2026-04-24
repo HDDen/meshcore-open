@@ -1301,27 +1301,37 @@ class AppSettingsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _showAddCyr2LatProfileDialog(context, settingsService),
+                    onPressed: () =>
+                        _showAddCyr2LatProfileDialog(context, settingsService),
                     icon: const Icon(Icons.add),
-                    label: Text(context.l10n.common_add ?? 'Add'),
+                    label: Text(context.l10n.common_add),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _showEditCyr2LatProfileDialog(context, settingsService, selectedProfile),
+                    onPressed: () => _showEditCyr2LatProfileDialog(
+                      context,
+                      settingsService,
+                      selectedProfile,
+                    ),
                     icon: const Icon(Icons.edit),
-                    label: Text(context.l10n.common_edit ?? 'Edit'),
+                    label: Text(context.l10n.common_edit),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: settingsService.settings.cyr2latProfiles.length > 1
-                        ? () => _showDeleteCyr2LatProfileDialog(context, settingsService, selectedProfile)
+                    onPressed:
+                        settingsService.settings.cyr2latProfiles.length > 1
+                        ? () => _showDeleteCyr2LatProfileDialog(
+                            context,
+                            settingsService,
+                            selectedProfile,
+                          )
                         : null,
                     icon: const Icon(Icons.delete),
-                    label: Text(context.l10n.common_delete ?? 'Delete'),
+                    label: Text(context.l10n.common_delete),
                   ),
                 ),
               ],
@@ -1363,7 +1373,8 @@ class AppSettingsScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: 'Character Map (JSON)', // TODO: l10n
                   border: const OutlineInputBorder(),
-                  hintText: 'Enter JSON mapping from Cyrillic to Latin characters',
+                  hintText:
+                      'Enter JSON mapping from Cyrillic to Latin characters',
                 ),
               ),
             ],
@@ -1384,14 +1395,18 @@ class AppSettingsScreen extends StatelessWidget {
                 return;
               }
               try {
-                final json = jsonDecode(jsonController.text) as Map<String, dynamic>;
-                final map = json.map((key, value) => MapEntry(key, value.toString()));
+                final json =
+                    jsonDecode(jsonController.text) as Map<String, dynamic>;
+                final map = json.map(
+                  (key, value) => MapEntry(key, value.toString()),
+                );
                 final profile = Cyr2LatProfile(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   name: nameController.text,
                   charMap: map,
                 );
                 await settingsService.addCyr2LatProfile(profile);
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
@@ -1443,7 +1458,8 @@ class AppSettingsScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: 'Character Map (JSON)', // TODO: l10n
                   border: const OutlineInputBorder(),
-                  hintText: 'Enter JSON mapping from Cyrillic to Latin characters',
+                  hintText:
+                      'Enter JSON mapping from Cyrillic to Latin characters',
                 ),
               ),
             ],
@@ -1464,13 +1480,17 @@ class AppSettingsScreen extends StatelessWidget {
                 return;
               }
               try {
-                final json = jsonDecode(jsonController.text) as Map<String, dynamic>;
-                final map = json.map((key, value) => MapEntry(key, value.toString()));
+                final json =
+                    jsonDecode(jsonController.text) as Map<String, dynamic>;
+                final map = json.map(
+                  (key, value) => MapEntry(key, value.toString()),
+                );
                 final updatedProfile = profile.copyWith(
                   name: nameController.text,
                   charMap: map,
                 );
                 await settingsService.updateCyr2LatProfile(updatedProfile);
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
@@ -1499,7 +1519,9 @@ class AppSettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete Cyr2Lat Profile'), // TODO: l10n
-        content: Text('Are you sure you want to delete the profile "${profile.name}"?'), // TODO: l10n
+        content: Text(
+          'Are you sure you want to delete the profile "${profile.name}"?',
+        ), // TODO: l10n
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1508,6 +1530,7 @@ class AppSettingsScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               await settingsService.removeCyr2LatProfile(profile.id);
+              if (!context.mounted) return;
               Navigator.pop(context);
               showDismissibleSnackBar(
                 context,
