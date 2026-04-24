@@ -260,4 +260,38 @@ class AppSettingsService extends ChangeNotifier {
       _settings.copyWith(translationDownloadedModels: value),
     );
   }
+
+  Cyr2LatProfile getSelectedCyr2LatProfile() {
+    return _settings.cyr2latProfiles.firstWhere(
+      (p) => p.id == _settings.selectedCyr2latProfileId,
+      orElse: () => _settings.cyr2latProfiles.first,
+    );
+  }
+
+  Future<void> setSelectedCyr2LatProfile(String profileId) async {
+    await updateSettings(_settings.copyWith(selectedCyr2latProfileId: profileId));
+  }
+
+  Future<void> addCyr2LatProfile(Cyr2LatProfile profile) async {
+    final updated = List<Cyr2LatProfile>.from(_settings.cyr2latProfiles)..add(profile);
+    await updateSettings(_settings.copyWith(cyr2latProfiles: updated));
+  }
+
+  Future<void> updateCyr2LatProfile(Cyr2LatProfile updatedProfile) async {
+    final updated = _settings.cyr2latProfiles.map((p) => p.id == updatedProfile.id ? updatedProfile : p).toList();
+    await updateSettings(_settings.copyWith(cyr2latProfiles: updated));
+  }
+
+  Future<void> removeCyr2LatProfile(String profileId) async {
+    if (_settings.cyr2latProfiles.length <= 1) return; // Don't remove the last profile
+    final updated = _settings.cyr2latProfiles.where((p) => p.id != profileId).toList();
+    var newSelectedId = _settings.selectedCyr2latProfileId;
+    if (newSelectedId == profileId) {
+      newSelectedId = updated.first.id;
+    }
+    await updateSettings(_settings.copyWith(
+      cyr2latProfiles: updated,
+      selectedCyr2latProfileId: newSelectedId,
+    ));
+  }
 }

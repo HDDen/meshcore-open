@@ -1262,6 +1262,7 @@ class AppSettingsScreen extends StatelessWidget {
     BuildContext context,
     AppSettingsService settingsService,
   ) {
+    final selectedProfile = settingsService.getSelectedCyr2LatProfile();
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1273,41 +1274,99 @@ class AppSettingsScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.translate),
-
-            title: Text(context.l10n.channels_cyr2latSettingsSubheading),
-            subtitle: Text(context.l10n.channels_cyr2latSettingsDscr),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCyr2LatDialog(context, settingsService),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: DropdownButtonFormField<String>(
+              initialValue: settingsService.settings.selectedCyr2latProfileId,
+              decoration: InputDecoration(
+                labelText: context.l10n.channels_cyr2latSettingsSubheading,
+                border: const OutlineInputBorder(),
+              ),
+              items: settingsService.settings.cyr2latProfiles.map((profile) {
+                return DropdownMenuItem(
+                  value: profile.id,
+                  child: Text(profile.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  settingsService.setSelectedCyr2LatProfile(value);
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showAddCyr2LatProfileDialog(context, settingsService),
+                    icon: const Icon(Icons.add),
+                    label: Text(context.l10n.common_add ?? 'Add'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showEditCyr2LatProfileDialog(context, settingsService, selectedProfile),
+                    icon: const Icon(Icons.edit),
+                    label: Text(context.l10n.common_edit ?? 'Edit'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: settingsService.settings.cyr2latProfiles.length > 1
+                        ? () => _showDeleteCyr2LatProfileDialog(context, settingsService, selectedProfile)
+                        : null,
+                    icon: const Icon(Icons.delete),
+                    label: Text(context.l10n.common_delete ?? 'Delete'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showCyr2LatDialog(
+  void _showAddCyr2LatProfileDialog(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    final controller = TextEditingController(
-      text: const JsonEncoder.withIndent(
-        '  ',
-      ).convert(settingsService.settings.cyr2latCharMap),
+    final nameController = TextEditingController();
+    final jsonController = TextEditingController(
+      text: const JsonEncoder.withIndent('  ').convert(defaultCyr2LatCharMap),
     );
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.l10n.channels_cyr2latSettingsDscr),
+        title: Text('Add Cyr2Lat Profile'), // TODO: l10n
         content: SingleChildScrollView(
-          child: TextField(
-            controller: controller,
-            maxLines: 20,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              hintText: context.l10n.channels_cyr2latSettingsDialogHint,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Profile Name', // TODO: l10n
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: jsonController,
+                maxLines: 15,
+                decoration: InputDecoration(
+                  labelText: 'Character Map (JSON)', // TODO: l10n
+                  border: const OutlineInputBorder(),
+                  hintText: 'Enter JSON mapping from Cyrillic to Latin characters',
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -1316,52 +1375,146 @@ class AppSettingsScreen extends StatelessWidget {
             child: Text(context.l10n.common_cancel),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              if (nameController.text.isEmpty) {
+                showDismissibleSnackBar(
+                  context,
+                  content: Text('Profile name cannot be empty'), // TODO: l10n
+                );
+                return;
+              }
               try {
-                final json =
-                    jsonDecode(controller.text) as Map<String, dynamic>;
-                final map = json.map(
-                  (key, value) => MapEntry(key, value.toString()),
+                final json = jsonDecode(jsonController.text) as Map<String, dynamic>;
+                final map = json.map((key, value) => MapEntry(key, value.toString()));
+                final profile = Cyr2LatProfile(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  name: nameController.text,
+                  charMap: map,
                 );
-                final newSettings = settingsService.settings.copyWith(
-                  cyr2latCharMap: map,
-                );
-                settingsService.updateSettings(newSettings);
+                await settingsService.addCyr2LatProfile(profile);
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
-                  content: Text(
-                    context.l10n.channels_cyr2latSettingsDialogSuccess,
-                  ),
+                  content: Text('Profile added successfully'), // TODO: l10n
                 );
               } catch (e) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text(
-                    context.l10n.channels_cyr2latSettingsDialogWrongJSON(
-                      e.toString(),
-                    ),
-                  ),
+                  content: Text('Invalid JSON: ${e.toString()}'), // TODO: l10n
                 );
               }
             },
             child: Text(context.l10n.common_save),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCyr2LatProfileDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+    Cyr2LatProfile profile,
+  ) {
+    final nameController = TextEditingController(text: profile.name);
+    final jsonController = TextEditingController(
+      text: const JsonEncoder.withIndent('  ').convert(profile.charMap),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit Cyr2Lat Profile'), // TODO: l10n
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Profile Name', // TODO: l10n
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: jsonController,
+                maxLines: 15,
+                decoration: InputDecoration(
+                  labelText: 'Character Map (JSON)', // TODO: l10n
+                  border: const OutlineInputBorder(),
+                  hintText: 'Enter JSON mapping from Cyrillic to Latin characters',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
           TextButton(
-            onPressed: () {
-              final newSettings = settingsService.settings.copyWith(
-                cyr2latCharMap: defaultCyr2LatCharMap,
-              );
-              settingsService.updateSettings(newSettings);
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (nameController.text.isEmpty) {
+                showDismissibleSnackBar(
+                  context,
+                  content: Text('Profile name cannot be empty'), // TODO: l10n
+                );
+                return;
+              }
+              try {
+                final json = jsonDecode(jsonController.text) as Map<String, dynamic>;
+                final map = json.map((key, value) => MapEntry(key, value.toString()));
+                final updatedProfile = profile.copyWith(
+                  name: nameController.text,
+                  charMap: map,
+                );
+                await settingsService.updateCyr2LatProfile(updatedProfile);
+                Navigator.pop(context);
+                showDismissibleSnackBar(
+                  context,
+                  content: Text('Profile updated successfully'), // TODO: l10n
+                );
+              } catch (e) {
+                showDismissibleSnackBar(
+                  context,
+                  content: Text('Invalid JSON: ${e.toString()}'), // TODO: l10n
+                );
+              }
+            },
+            child: Text(context.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteCyr2LatProfileDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+    Cyr2LatProfile profile,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Cyr2Lat Profile'), // TODO: l10n
+        content: Text('Are you sure you want to delete the profile "${profile.name}"?'), // TODO: l10n
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              await settingsService.removeCyr2LatProfile(profile.id);
               Navigator.pop(context);
               showDismissibleSnackBar(
                 context,
-                content: Text(
-                  context.l10n.channels_cyr2latSettingsDialogResetted,
-                ),
+                content: Text('Profile deleted successfully'), // TODO: l10n
               );
             },
-            child: Text(context.l10n.channels_cyr2latSettingsDialogReset),
+            child: Text(context.l10n.common_delete),
           ),
         ],
       ),
