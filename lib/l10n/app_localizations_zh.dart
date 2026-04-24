@@ -1118,22 +1118,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_cyr2latSettingsDialogHint => 'JSON 替換映射表';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess => '替換清單已更新';
-
-  @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
     return 'JSON 格式錯誤：$error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => '還原為預設值';
-
-  @override
-  String get channels_cyr2latSettingsDialogResetted => 'Cyr2Lat 替換設定已還原為預設值';
-
-  @override
   String channels_channelUpdated(String name) {
     return '频道 \"$name\" 已更新';
+  }
+
+  @override
+  String get settings_cyr2latProfileAdd => '新增 Cyr2Lat 設定檔';
+
+  @override
+  String get settings_cyr2latProfileName => '設定檔名稱';
+
+  @override
+  String get settings_cyr2latProfileNameEmpty => '設定檔名稱不能為空';
+
+  @override
+  String get settings_cyr2latProfileAdded => '設定檔已成功新增';
+
+  @override
+  String get settings_cyr2latProfileUpdated => '設定檔已成功更新';
+
+  @override
+  String get settings_cyr2latProfileEdit => '編輯 Cyr2Lat 設定檔';
+
+  @override
+  String get settings_cyr2latProfileDelete => '刪除 Cyr2Lat 設定檔';
+
+  @override
+  String get settings_cyr2latProfileDeleted => '設定檔已成功刪除';
+
+  @override
+  String settings_cyr2latProfileDeleteDscr(String name) {
+    return '您確定要刪除設定檔 \"$name\" 嗎？';
   }
 
   @override

@@ -586,17 +586,30 @@
   "channels_cyr2latSettingsSubheading": "List of replacements",
   "channels_cyr2latSettingsDscr": "Edit the JSON configuration of character replacement",
   "channels_cyr2latSettingsDialogHint": "JSON replacement map",
-  "channels_cyr2latSettingsDialogSuccess": "The list of replacements has been updated",
   "channels_cyr2latSettingsDialogWrongJSON": "Invalid JSON: {error}",
   "@channels_cyr2latSettingsDialogWrongJSON": {
     "placeholders": {
       "error": {}
     }
   },
-  "channels_cyr2latSettingsDialogReset": "Reset to default",
-  "channels_cyr2latSettingsDialogResetted": "Cyr2Lat replacement settings reset to default",
   "channels_channelUpdated": "Channel \"{name}\" updated",
   "@channels_channelUpdated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_cyr2latProfileAdd": "Add Cyr2Lat Profile",
+  "settings_cyr2latProfileName": "Profile Name",
+  "settings_cyr2latProfileNameEmpty": "Profile name cannot be empty",
+  "settings_cyr2latProfileAdded": "Profile added successfully",
+  "settings_cyr2latProfileUpdated": "Profile updated successfully",
+  "settings_cyr2latProfileEdit": "Edit Cyr2Lat Profile",
+  "settings_cyr2latProfileDelete": "Delete Cyr2Lat Profile",
+  "settings_cyr2latProfileDeleted": "Profile deleted successfully",
+  "settings_cyr2latProfileDeleteDscr": "Are you sure you want to delete the profile \"{name}\"?",
+  "@settings_cyr2latProfileDeleteDscr": {
     "placeholders": {
       "name": {
         "type": "String"

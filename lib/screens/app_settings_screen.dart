@@ -1354,7 +1354,7 @@ class AppSettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add Cyr2Lat Profile'), // TODO: l10n
+        title: Text(context.l10n.settings_cyr2latProfileAdd),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1362,7 +1362,7 @@ class AppSettingsScreen extends StatelessWidget {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'Profile Name', // TODO: l10n
+                  labelText: context.l10n.settings_cyr2latProfileName,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -1371,10 +1371,9 @@ class AppSettingsScreen extends StatelessWidget {
                 controller: jsonController,
                 maxLines: 15,
                 decoration: InputDecoration(
-                  labelText: 'Character Map (JSON)', // TODO: l10n
+                  labelText: context.l10n.channels_cyr2latSettingsDialogHint,
                   border: const OutlineInputBorder(),
-                  hintText:
-                      'Enter JSON mapping from Cyrillic to Latin characters',
+                  hintText: context.l10n.channels_cyr2latSettingsDscr,
                 ),
               ),
             ],
@@ -1390,7 +1389,7 @@ class AppSettingsScreen extends StatelessWidget {
               if (nameController.text.isEmpty) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Profile name cannot be empty'), // TODO: l10n
+                  content: Text(context.l10n.settings_cyr2latProfileNameEmpty),
                 );
                 return;
               }
@@ -1410,12 +1409,16 @@ class AppSettingsScreen extends StatelessWidget {
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Profile added successfully'), // TODO: l10n
+                  content: Text(context.l10n.settings_cyr2latProfileAdded),
                 );
               } catch (e) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Invalid JSON: ${e.toString()}'), // TODO: l10n
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogWrongJSON(
+                      e.toString(),
+                    ),
+                  ),
                 );
               }
             },
@@ -1439,7 +1442,7 @@ class AppSettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Cyr2Lat Profile'), // TODO: l10n
+        title: Text(context.l10n.settings_cyr2latProfileEdit),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1447,7 +1450,7 @@ class AppSettingsScreen extends StatelessWidget {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'Profile Name', // TODO: l10n
+                  labelText: context.l10n.settings_cyr2latProfileName,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -1456,10 +1459,9 @@ class AppSettingsScreen extends StatelessWidget {
                 controller: jsonController,
                 maxLines: 15,
                 decoration: InputDecoration(
-                  labelText: 'Character Map (JSON)', // TODO: l10n
+                  labelText: context.l10n.channels_cyr2latSettingsDialogHint,
                   border: const OutlineInputBorder(),
-                  hintText:
-                      'Enter JSON mapping from Cyrillic to Latin characters',
+                  hintText: context.l10n.channels_cyr2latSettingsDscr,
                 ),
               ),
             ],
@@ -1475,7 +1477,7 @@ class AppSettingsScreen extends StatelessWidget {
               if (nameController.text.isEmpty) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Profile name cannot be empty'), // TODO: l10n
+                  content: Text(context.l10n.settings_cyr2latProfileNameEmpty),
                 );
                 return;
               }
@@ -1494,12 +1496,16 @@ class AppSettingsScreen extends StatelessWidget {
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Profile updated successfully'), // TODO: l10n
+                  content: Text(context.l10n.settings_cyr2latProfileUpdated),
                 );
               } catch (e) {
                 showDismissibleSnackBar(
                   context,
-                  content: Text('Invalid JSON: ${e.toString()}'), // TODO: l10n
+                  content: Text(
+                    context.l10n.channels_cyr2latSettingsDialogWrongJSON(
+                      e.toString(),
+                    ),
+                  ),
                 );
               }
             },
@@ -1518,10 +1524,10 @@ class AppSettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Cyr2Lat Profile'), // TODO: l10n
+        title: Text(context.l10n.settings_cyr2latProfileDelete),
         content: Text(
-          'Are you sure you want to delete the profile "${profile.name}"?',
-        ), // TODO: l10n
+          context.l10n.settings_cyr2latProfileDeleteDscr(profile.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1534,7 +1540,7 @@ class AppSettingsScreen extends StatelessWidget {
               Navigator.pop(context);
               showDismissibleSnackBar(
                 context,
-                content: Text('Profile deleted successfully'), // TODO: l10n
+                content: Text(context.l10n.settings_cyr2latProfileDeleted),
               );
             },
             child: Text(context.l10n.common_delete),

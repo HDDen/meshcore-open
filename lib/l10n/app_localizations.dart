@@ -2212,35 +2212,71 @@ abstract class AppLocalizations {
   /// **'JSON replacement map'**
   String get channels_cyr2latSettingsDialogHint;
 
-  /// No description provided for @channels_cyr2latSettingsDialogSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'The list of replacements has been updated'**
-  String get channels_cyr2latSettingsDialogSuccess;
-
   /// No description provided for @channels_cyr2latSettingsDialogWrongJSON.
   ///
   /// In en, this message translates to:
   /// **'Invalid JSON: {error}'**
   String channels_cyr2latSettingsDialogWrongJSON(Object error);
 
-  /// No description provided for @channels_cyr2latSettingsDialogReset.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset to default'**
-  String get channels_cyr2latSettingsDialogReset;
-
-  /// No description provided for @channels_cyr2latSettingsDialogResetted.
-  ///
-  /// In en, this message translates to:
-  /// **'Cyr2Lat replacement settings reset to default'**
-  String get channels_cyr2latSettingsDialogResetted;
-
   /// No description provided for @channels_channelUpdated.
   ///
   /// In en, this message translates to:
   /// **'Channel \"{name}\" updated'**
   String channels_channelUpdated(String name);
+
+  /// No description provided for @settings_cyr2latProfileAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Cyr2Lat Profile'**
+  String get settings_cyr2latProfileAdd;
+
+  /// No description provided for @settings_cyr2latProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Name'**
+  String get settings_cyr2latProfileName;
+
+  /// No description provided for @settings_cyr2latProfileNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile name cannot be empty'**
+  String get settings_cyr2latProfileNameEmpty;
+
+  /// No description provided for @settings_cyr2latProfileAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile added successfully'**
+  String get settings_cyr2latProfileAdded;
+
+  /// No description provided for @settings_cyr2latProfileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get settings_cyr2latProfileUpdated;
+
+  /// No description provided for @settings_cyr2latProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Cyr2Lat Profile'**
+  String get settings_cyr2latProfileEdit;
+
+  /// No description provided for @settings_cyr2latProfileDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Cyr2Lat Profile'**
+  String get settings_cyr2latProfileDelete;
+
+  /// No description provided for @settings_cyr2latProfileDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile deleted successfully'**
+  String get settings_cyr2latProfileDeleted;
+
+  /// No description provided for @settings_cyr2latProfileDeleteDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the profile \"{name}\"?'**
+  String settings_cyr2latProfileDeleteDscr(String name);
 
   /// No description provided for @channels_publicChannelAdded.
   ///

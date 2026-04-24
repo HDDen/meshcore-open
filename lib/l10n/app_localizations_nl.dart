@@ -1183,25 +1183,43 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_cyr2latSettingsDialogHint => 'JSON-vervangingskaart';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'Lijst met vervangingen bijgewerkt';
-
-  @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
     return 'Onjuiste JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset =>
-      'Terugzetten naar standaard';
-
-  @override
-  String get channels_cyr2latSettingsDialogResetted =>
-      'De instellingen voor Cyr2Lat-vervangingen zijn teruggezet naar de standaardinstellingen';
-
-  @override
   String channels_channelUpdated(String name) {
     return 'Kanaal \"$name\" is bijgewerkt';
+  }
+
+  @override
+  String get settings_cyr2latProfileAdd => 'Cyr2Lat-profiel toevoegen';
+
+  @override
+  String get settings_cyr2latProfileName => 'Profielnaam';
+
+  @override
+  String get settings_cyr2latProfileNameEmpty =>
+      'Profielnaam mag niet leeg zijn';
+
+  @override
+  String get settings_cyr2latProfileAdded => 'Profiel succesvol toegevoegd';
+
+  @override
+  String get settings_cyr2latProfileUpdated => 'Profiel succesvol bijgewerkt';
+
+  @override
+  String get settings_cyr2latProfileEdit => 'Cyr2Lat-profiel bewerken';
+
+  @override
+  String get settings_cyr2latProfileDelete => 'Cyr2Lat-profiel verwijderen';
+
+  @override
+  String get settings_cyr2latProfileDeleted => 'Profiel succesvol verwijderd';
+
+  @override
+  String settings_cyr2latProfileDeleteDscr(String name) {
+    return 'Weet u zeker dat u het profiel \"$name\" wilt verwijderen?';
   }
 
   @override
