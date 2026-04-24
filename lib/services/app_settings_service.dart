@@ -268,6 +268,13 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Cyr2LatProfile? getCyr2LatProfileById(String profileId) {
+    return _settings.cyr2latProfiles.cast<Cyr2LatProfile?>().firstWhere(
+      (p) => p?.id == profileId,
+      orElse: () => null,
+    );
+  }
+
   Future<void> setSelectedCyr2LatProfile(String profileId) async {
     await updateSettings(
       _settings.copyWith(selectedCyr2latProfileId: profileId),
