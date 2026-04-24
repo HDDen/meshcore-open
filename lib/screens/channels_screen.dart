@@ -1480,7 +1480,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ),
                 if (cyr2latEnabled) ...[
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
                     child: DropdownButtonFormField<String>(
                       initialValue: selectedCyr2LatProfileId,
                       decoration: InputDecoration(
