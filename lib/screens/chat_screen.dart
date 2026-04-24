@@ -1211,11 +1211,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _showContactSettings(BuildContext context) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    final appSettingsService = Provider.of<AppSettingsService>(context, listen: false);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
+      contact.publicKeyHex,
+    );
+    String? selectedCyr2LatProfileId = connector.getContactCyr2LatProfileId(
       contact.publicKeyHex,
     );
     bool teleBaseEnabled = contact.teleBaseEnabled;
@@ -1283,6 +1287,33 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
+                if (cyr2latEnabled) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: DropdownButtonFormField<String>(
+                      initialValue: selectedCyr2LatProfileId,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.channels_cyr2latSettingsSubheading,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: appSettingsService.settings.cyr2latProfiles.map((profile) {
+                        return DropdownMenuItem(
+                          value: profile.id,
+                          child: Text(profile.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        connector.setContactCyr2LatProfileId(
+                          contact.publicKeyHex,
+                          value,
+                        );
+                        setDialogState(() {
+                          selectedCyr2LatProfileId = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
