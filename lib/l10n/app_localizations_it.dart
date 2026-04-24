@@ -437,9 +437,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Includi la posizione nell\'annuncio';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Multi-ACKs: $value';
-  }
+  String get settings_multiAck => 'ACK multipli';
 
   @override
   String get settings_telemetryModeUpdated => 'Modalità telemetria aggiornata';

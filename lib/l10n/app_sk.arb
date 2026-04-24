@@ -1938,13 +1938,6 @@
   "contact_lastSeen": "Naposledy videný",
   "contact_teleBase": "Báza telemetrie",
   "contact_teleEnvSubtitle": "Povoliť zdieľanie údajov senzorov prostredia",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_maxRouteWeightSubtitle": "Maximálna hmotnosť, ktorú môže trás prenášať vďaka úspešným zásielkam.",
   "appSettings_initialRouteWeightSubtitle": "Počiatočná váha pre nové, objavené cesty",
   "appSettings_initialRouteWeight": "Počiatočná váha trasy",
@@ -1957,7 +1950,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Počet pokusov o odošleť pred označením správy ako neúspešnej",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Režim telemetrie bol aktualizovaný",
-  "settings_multiAck": "Viaceré ACK: {value}",
+  "settings_multiAck": "Viaceré ACK",
   "map_showOverlaps": "Prekrývanie opakovača kľúča",
   "map_runTraceWithReturnPath": "Vráťte sa späť po tej istej ceste.",
   "@radioStats_noiseFloor": {

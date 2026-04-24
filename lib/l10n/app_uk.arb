@@ -1938,13 +1938,6 @@
   "contact_lastSeen": "Останній раз бачили",
   "contact_teleEnv": "Середовище телеметрії",
   "contact_teleEnvSubtitle": "Дозволити спільний доступ до даних датчиків середовища",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeight": "Початкова вартість маршруту",
   "appSettings_initialRouteWeightSubtitle": "Початкова вага для нових відкритих шляхів",
   "appSettings_maxRouteWeight": "Максимальна вага маршруту",
@@ -1957,7 +1950,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Кількість спроб повторного відправлення повідомлення перед тим, як позначити його як невдале",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Режим телеметрії оновлено",
-  "settings_multiAck": "Багатократне підтвердження: {value}",
   "map_showOverlaps": "Перекриття ключа повторювача",
   "map_runTraceWithReturnPath": "Повернутися назад тим же шляхом",
   "@radioStats_noiseFloor": {
@@ -2089,5 +2081,6 @@
   "repeater_guestTools": "Інструменти для гостей",
   "repeater_guest": "Інформація про ретранслятор",
   "room_guest": "Інформація про сервер кімнати",
-  "chat_sendMessage": "Надіслати повідомлення"
+  "chat_sendMessage": "Надіслати повідомлення",
+  "settings_multiAck": "Багато підтверджень"
 }

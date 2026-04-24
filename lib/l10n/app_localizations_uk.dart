@@ -432,9 +432,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Включити місце розташування в оголошення';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Багатократне підтвердження: $value';
-  }
+  String get settings_multiAck => 'Багато підтверджень';
 
   @override
   String get settings_telemetryModeUpdated => 'Режим телеметрії оновлено';

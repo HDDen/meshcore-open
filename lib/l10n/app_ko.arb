@@ -2028,13 +2028,6 @@
   "radioStats_stripWaiting": "라디오 통계 가져오기…",
   "radioStats_settingsTile": "라디오 통계",
   "radioStats_settingsSubtitle": "잡음 수준, RSSI, 신호 대 잡음비, 통신 시간",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "settings_privacy": "개인 정보 설정",
   "settings_privacySubtitle": "어떤 정보를 공유할지 통제하세요.",
   "settings_privacySettingsDescription": "어떤 정보를 기기가 다른 사람들과 공유할지 선택하세요.",
@@ -2046,7 +2039,6 @@
   "settings_telemetryEnvironmentMode": "텔레메트리 환경 모드",
   "settings_advertLocation": "광고 위치",
   "settings_advertLocationSubtitle": "광고에 위치 정보를 포함하세요.",
-  "settings_multiAck": "다중 ACK: {value}",
   "settings_telemetryModeUpdated": "텔레메트리 모드 업데이트 완료",
   "contact_info": "연락처",
   "contact_settings": "연락처 설정",
@@ -2127,5 +2119,6 @@
   "repeater_guestTools": "손님용 도구",
   "chat_sendMessage": "메시지를 보내기",
   "repeater_guest": "반복 장비 정보",
-  "room_guest": "서버 정보"
+  "room_guest": "서버 정보",
+  "settings_multiAck": "다중 ACK"
 }

@@ -437,9 +437,7 @@ class AppLocalizationsBg extends AppLocalizations {
       'Включи местоположение в обявата';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Мулти-потвърди: $value';
-  }
+  String get settings_multiAck => 'Множество потвърждения';
 
   @override
   String get settings_telemetryModeUpdated => 'Режим на телеметрията е обновен';

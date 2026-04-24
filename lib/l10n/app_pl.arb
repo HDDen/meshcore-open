@@ -1976,13 +1976,6 @@
   "contact_settings": "Ustawienia kontaktowe",
   "contact_lastSeen": "Ostatnio widziany",
   "contact_teleBaseSubtitle": "Pozwól na udostępnianie poziomu naładowania baterii i podstawowych danych telemetrycznych",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeight": "Początkowa waga trasy",
   "appSettings_maxRouteWeight": "Maksymalny dopuszczalny ciężar pojazdu",
   "appSettings_initialRouteWeightSubtitle": "Początkowa waga dla nowych, odkrytych ścieżek",
@@ -1995,7 +1988,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Liczba prób ponownego wysłania wiadomości przed oznaczaniem jej jako nieudanej",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Tryb telemetryczny zaktualizowany",
-  "settings_multiAck": "Wielokrotne ACK: {value}",
   "map_showOverlaps": "Nakładające się klucze przekaźników",
   "map_runTraceWithReturnPath": "Wróć tą samą ścieżką",
   "@radioStats_noiseFloor": {
@@ -2127,5 +2119,6 @@
   "chat_sendMessage": "Wyślij wiadomość",
   "repeater_guestTools": "Narzędzia dla gości",
   "repeater_guest": "Informacje dotyczące urządzenia powtarzającego",
-  "room_guest": "Informacje o serwerze"
+  "room_guest": "Informacje o serwerze",
+  "settings_multiAck": "Wielokrotne potwierdzenia odbioru"
 }

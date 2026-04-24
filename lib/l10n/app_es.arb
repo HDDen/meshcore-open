@@ -1966,13 +1966,6 @@
   "contact_teleBaseSubtitle": "Permitir el intercambio de nivel de batería y telemetría básica",
   "contact_teleEnv": "Entorno de Telemetría",
   "contact_teleEnvSubtitle": "Permitir el intercambio de datos de sensores de entorno",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeight": "Peso inicial de la ruta",
   "appSettings_maxRouteWeight": "Peso máximo permitido para la ruta",
   "appSettings_initialRouteWeightSubtitle": "Peso inicial para rutas recién descubiertas",
@@ -1985,7 +1978,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Número de intentos de reintento antes de marcar un mensaje como fallido.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetría actualizado",
-  "settings_multiAck": "Multi-ACKs: {value}",
   "map_showOverlaps": "Superposiciones de tecla repetidora",
   "map_runTraceWithReturnPath": "Volver atrás por el mismo camino.",
   "@radioStats_noiseFloor": {
@@ -2117,5 +2109,6 @@
   "repeater_guest": "Información sobre repetidores",
   "chat_sendMessage": "Enviar mensaje",
   "repeater_guestTools": "Herramientas para invitados",
-  "room_guest": "Información del servidor"
+  "room_guest": "Información del servidor",
+  "settings_multiAck": "Múltiples respuestas de confirmación"
 }

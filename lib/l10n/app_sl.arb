@@ -1938,13 +1938,6 @@
   "contact_teleEnv": "Okolje telemetrije",
   "contact_teleEnvSubtitle": "Dovoli deljenje podatkov okoljskih senzorjev",
   "contact_teleLocSubtitle": "Dovoli deljenje podatkov o lokaciji",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_maxRouteWeightSubtitle": "Največja teža, ki jo lahko pot doseže s uspešnimi dostavnami.",
   "appSettings_initialRouteWeight": "Izvirna teža poti",
   "appSettings_initialRouteWeightSubtitle": "Izguba teže za nove, odkriti poti",
@@ -1956,7 +1949,6 @@
   "appSettings_maxMessageRetries": "Najve število poskusov pošiljanja sporočil",
   "appSettings_maxMessageRetriesSubtitle": "Število poskusov ponovnega poslanja, preden se sporočilo označuje kot neuspešno",
   "path_routeWeight": "{weight}/{max}",
-  "settings_multiAck": "Večkratni potrditvi: {value}",
   "settings_telemetryModeUpdated": "Način telemetrije posodobljen",
   "map_showOverlaps": "Prekrivanje ključa ponovnega predvajanja",
   "map_runTraceWithReturnPath": "Vrni se nazaj po isti poti.",
@@ -2089,5 +2081,6 @@
   "repeater_guest": "Informacije o ponovljalniku",
   "chat_sendMessage": "Pošlji sporočilo",
   "room_guest": "Informacije o strežniku",
-  "repeater_guestTools": "Naložila za goste"
+  "repeater_guestTools": "Naložila za goste",
+  "settings_multiAck": "Več potrdil"
 }
