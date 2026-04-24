@@ -1211,7 +1211,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _showContactSettings(BuildContext context) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    final appSettingsService = Provider.of<AppSettingsService>(context, listen: false);
+    final appSettingsService = Provider.of<AppSettingsService>(
+      context,
+      listen: false,
+    );
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
@@ -1293,10 +1296,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: DropdownButtonFormField<String>(
                       initialValue: selectedCyr2LatProfileId,
                       decoration: InputDecoration(
-                        labelText: context.l10n.channels_cyr2latSettingsSubheading,
+                        labelText:
+                            context.l10n.channels_cyr2latSettingsSubheading,
                         border: const OutlineInputBorder(),
                       ),
-                      items: appSettingsService.settings.cyr2latProfiles.map((profile) {
+                      items: appSettingsService.settings.cyr2latProfiles.map((
+                        profile,
+                      ) {
                         return DropdownMenuItem(
                           value: profile.id,
                           child: Text(profile.name),
