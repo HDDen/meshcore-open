@@ -1938,13 +1938,6 @@
   "contact_teleLocSubtitle": "Позволи споделяне на данни за местоположение",
   "contact_teleLoc": "Местоположение на телеметрията",
   "contact_teleEnvSubtitle": "Позволи споделяне на данни от средносферните датчици",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeight": "Първоначална тежест на маршрута",
   "appSettings_maxRouteWeight": "Максимално допустимо тегло на маршрута",
   "appSettings_initialRouteWeightSubtitle": "Начално тегло за новооткрити маршрути",
@@ -1956,7 +1949,6 @@
   "appSettings_maxMessageRetries": "Максимален брой опити за изпращане на съобщение",
   "appSettings_maxMessageRetriesSubtitle": "Брой опити за повторно изпращане, преди съобщението да бъде маркирано като неуспешно.",
   "path_routeWeight": "{weight}/{max}",
-  "settings_multiAck": "Мулти-потвърди: {value}",
   "settings_telemetryModeUpdated": "Режим на телеметрията е обновен",
   "map_showOverlaps": "Покриване на ключа на повтаряча",
   "map_runTraceWithReturnPath": "Върни се по същия път.",
@@ -2089,5 +2081,6 @@
   "chat_sendMessage": "Изпратете съобщение",
   "room_guest": "Информация за сървъра на стаята",
   "repeater_guest": "Информация за ретранслаторите",
-  "repeater_guestTools": "Инструменти за гости"
+  "repeater_guestTools": "Инструменти за гости",
+  "settings_multiAck": "Множество потвърждения"
 }

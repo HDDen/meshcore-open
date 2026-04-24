@@ -716,8 +716,11 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
-    if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
     _channelCyr2LatEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelSmazEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+    }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
   }
@@ -726,7 +729,6 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex,
     bool enabled,
   ) async {
-    if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
     notifyListeners();
