@@ -438,9 +438,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Inclure l\'emplacement dans l\'annonce';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Multi-ACKs : $value';
-  }
+  String get settings_multiAck => 'Plusieurs accusés de réception';
 
   @override
   String get settings_telemetryModeUpdated =>

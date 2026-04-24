@@ -1178,13 +1178,6 @@
   "contact_clearChat": "Очистить чат",
   "contact_lastSeen": "Последний раз видели",
   "contact_teleBaseSubtitle": "Разрешить обмен уровнем заряда батареи и базовой телеметрией",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_maxRouteWeight": "Максимальный допустимый вес маршрута",
   "appSettings_maxRouteWeightSubtitle": "Максимальный вес, который может быть перевезён по определённому маршруту при успешных доставках.",
   "appSettings_initialRouteWeightSubtitle": "Начальный вес для новых, только что открытых маршрутов",
@@ -1197,7 +1190,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Количество попыток повторной отправки сообщения перед тем, как пометить его как неудачное.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Режим телеметрии обновлен",
-  "settings_multiAck": "Мульти-ACK: {value}",
   "map_showOverlaps": "Перекрытия ключа повтора",
   "map_runTraceWithReturnPath": "Вернуться обратно по тому же пути",
   "@radioStats_noiseFloor": {
@@ -1329,5 +1321,6 @@
   "chat_sendMessage": "Отправить сообщение",
   "repeater_guest": "Информация о ретрансляторе",
   "room_guest": "Информация о сервере",
-  "repeater_guestTools": "Инструменты для гостей"
+  "repeater_guestTools": "Инструменты для гостей",
+  "settings_multiAck": "Несколько подтверждений"
 }

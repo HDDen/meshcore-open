@@ -437,9 +437,7 @@ class AppLocalizationsHu extends AppLocalizations {
       'A hirdetés tartalmazza a helyszínt.';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Többszöri visszaigazolások: $value';
-  }
+  String get settings_multiAck => 'Többszörös visszaigazolások';
 
   @override
   String get settings_telemetryModeUpdated => 'A telemetriamód frissítve';

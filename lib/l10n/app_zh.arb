@@ -1943,13 +1943,6 @@
   "contact_settings": "联系人设置",
   "contact_teleLocSubtitle": "允许共享位置数据",
   "contact_telemetry": "遥测数据",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_maxRouteWeight": "最大路径重量",
   "appSettings_initialRouteWeightSubtitle": "新发现路径的初始重量",
   "appSettings_initialRouteWeight": "初始路线权重",
@@ -1961,7 +1954,7 @@
   "appSettings_maxMessageRetries": "最大消息重试次数",
   "appSettings_maxMessageRetriesSubtitle": "在将消息标记为失败之前，允许尝试的次数",
   "path_routeWeight": "{weight}/{max}",
-  "settings_multiAck": "多重ACK：{value}",
+  "settings_multiAck": "多重ACK",
   "settings_telemetryModeUpdated": "遥测模式已更新",
   "map_showOverlaps": "重复键重叠",
   "map_runTraceWithReturnPath": "沿着相同的路径返回",

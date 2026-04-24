@@ -901,8 +901,8 @@ abstract class AppLocalizations {
   /// No description provided for @settings_multiAck.
   ///
   /// In en, this message translates to:
-  /// **'Multi-ACKs: {value}'**
-  String settings_multiAck(String value);
+  /// **'Multi-ACKs'**
+  String get settings_multiAck;
 
   /// No description provided for @settings_telemetryModeUpdated.
   ///

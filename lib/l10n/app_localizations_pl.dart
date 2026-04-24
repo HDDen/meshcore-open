@@ -439,9 +439,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Uwzględnij lokalizację w ogłoszeniu';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Wielokrotne ACK: $value';
-  }
+  String get settings_multiAck => 'Wielokrotne potwierdzenia odbioru';
 
   @override
   String get settings_telemetryModeUpdated =>

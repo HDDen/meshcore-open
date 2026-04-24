@@ -2028,13 +2028,6 @@
   "radioStats_stripWaiting": "ラジオの統計情報を取得中…",
   "radioStats_settingsTile": "ラジオの統計",
   "radioStats_settingsSubtitle": "ノイズレベル、RSSI、SNR、および通信時間",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "settings_privacy": "プライバシー設定",
   "settings_privacySubtitle": "共有する情報の内容を管理する。",
   "settings_denyAll": "すべてを否定",
@@ -2046,7 +2039,6 @@
   "settings_telemetryEnvironmentMode": "テレメトリ環境モード",
   "settings_advertLocation": "広告掲載場所",
   "settings_advertLocationSubtitle": "広告に場所を記載してください。",
-  "settings_multiAck": "複数のACK：{value}",
   "settings_telemetryModeUpdated": "テレメトリモードが更新されました",
   "contact_info": "連絡先",
   "contact_settings": "連絡設定",
@@ -2127,5 +2119,6 @@
   "room_guest": "ルームサーバーに関する情報",
   "chat_sendMessage": "メッセージを送信する",
   "repeater_guest": "繰り返し送信に関する情報",
-  "repeater_guestTools": "ゲスト向けツール"
+  "repeater_guestTools": "ゲスト向けツール",
+  "settings_multiAck": "複数のACK（応答）"
 }

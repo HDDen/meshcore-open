@@ -1938,13 +1938,6 @@
   "contact_telemetry": "Telemetria",
   "contact_settings": "Configurações de Contato",
   "contact_teleBaseSubtitle": "Permitir compartilhamento do nível da bateria e telemetria básica",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeight": "Peso Inicial da Rota",
   "appSettings_maxRouteWeight": "Peso Máximo da Rota",
   "appSettings_maxRouteWeightSubtitle": "Peso máximo que um determinado percurso pode acumular com entregas bem-sucedidas.",
@@ -1957,7 +1950,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Número de tentativas de reenvio antes de classificar uma mensagem como falha.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetria atualizado",
-  "settings_multiAck": "Multi-ACKs: {value}",
+  "settings_multiAck": "Multi-ACKs",
   "map_showOverlaps": "Sobreposições da Chave Repeater",
   "map_runTraceWithReturnPath": "Retornar ao mesmo caminho.",
   "@radioStats_noiseFloor": {

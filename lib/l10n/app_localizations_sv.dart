@@ -428,9 +428,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_advertLocationSubtitle => 'Inkludera plats i annonsen';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Multi-ACKs: $value';
-  }
+  String get settings_multiAck => 'Flera bekräftelser';
 
   @override
   String get settings_telemetryModeUpdated => 'Telemetri-läge uppdaterat';

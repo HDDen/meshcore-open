@@ -2028,13 +2028,6 @@
   "radioStats_stripWaiting": "Rádió adatok begyűjtése…",
   "radioStats_settingsTile": "Rádió statisztikák",
   "radioStats_settingsSubtitle": "Háttérzaj, RSSI, zaj-sűrűség, és a használat időtartama",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "settings_denyAll": "Elutasítom",
   "settings_privacySettingsDescription": "Válassza ki, hogy az eszközének melyik információkat oszt meg másokkal.",
   "settings_privacySubtitle": "Ellenőrizd, hogy milyen információkat osztanak meg.",
@@ -2046,7 +2039,6 @@
   "settings_telemetryEnvironmentMode": "Adatkapcsolati környezeti mód",
   "settings_advertLocation": "Reklám megjelenési hely",
   "settings_advertLocationSubtitle": "A hirdetés tartalmazza a helyszínt.",
-  "settings_multiAck": "Többszöri visszaigazolások: {value}",
   "settings_telemetryModeUpdated": "A telemetriamód frissítve",
   "contact_info": "Kapcsolattartási információk",
   "contact_settings": "Kapcsolat beállítások",
@@ -2127,5 +2119,6 @@
   "repeater_guestTools": "Vendégek számára elérhető eszközök",
   "room_guest": "Szoba szerver információk",
   "chat_sendMessage": "Üzenet küldése",
-  "repeater_guest": "Adatok a repeaterről"
+  "repeater_guest": "Adatok a repeaterről",
+  "settings_multiAck": "Többszörös visszaigazolások"
 }

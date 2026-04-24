@@ -1938,13 +1938,6 @@
   "contact_lastSeen": "Dernière fois vu",
   "contact_clearChat": "Effacer la conversation",
   "contact_teleBaseSubtitle": "Autoriser le partage du niveau de batterie et de la télémétrie de base",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_maxRouteWeightSubtitle": "Poids maximal qu'un itinéraire peut accumuler grâce à des livraisons réussies.",
   "appSettings_initialRouteWeight": "Poids initial de l'itinéraire",
   "appSettings_maxRouteWeight": "Poids maximal autorisé pour le trajet",
@@ -1956,7 +1949,6 @@
   "appSettings_maxMessageRetries": "Nombre maximal de tentatives de récupération de messages",
   "appSettings_maxMessageRetriesSubtitle": "Nombre de tentatives de relance avant de marquer un message comme ayant échoué.",
   "path_routeWeight": "{weight}/{max}",
-  "settings_multiAck": "Multi-ACKs : {value}",
   "settings_telemetryModeUpdated": "Le mode télémétrie a été mis à jour",
   "map_showOverlaps": "Chevauchement de la touche répétitive",
   "map_runTraceWithReturnPath": "Revenir sur le même chemin.",
@@ -2089,5 +2081,6 @@
   "repeater_guestTools": "Outils pour les invités",
   "chat_sendMessage": "Envoyer un message",
   "room_guest": "Informations sur le serveur",
-  "repeater_guest": "Informations sur les répéteurs"
+  "repeater_guest": "Informations sur les répéteurs",
+  "settings_multiAck": "Plusieurs accusés de réception"
 }

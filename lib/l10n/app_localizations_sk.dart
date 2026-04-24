@@ -430,9 +430,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_advertLocationSubtitle => 'Zahrnúť polohu do inzerátu';
 
   @override
-  String settings_multiAck(String value) {
-    return 'Viaceré ACK: $value';
-  }
+  String get settings_multiAck => 'Viaceré ACK';
 
   @override
   String get settings_telemetryModeUpdated =>
