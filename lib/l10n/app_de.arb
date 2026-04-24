@@ -1966,13 +1966,6 @@
   "contact_lastSeen": "Zuletzt gesehen",
   "contact_clearChat": "Chat löschen",
   "contact_teleEnvSubtitle": "Teilen von Umgebungsensordaten zulassen",
-  "@settings_multiAck": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_initialRouteWeightSubtitle": "Ausgangsgewicht für neu entdeckte Pfade",
   "appSettings_maxRouteWeightSubtitle": "Maximales Gewicht, das ein Weg durch erfolgreiche Lieferungen erreichen kann.",
   "appSettings_maxRouteWeight": "Maximale Gesamtstreckenlänge",
@@ -1985,7 +1978,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Anzahl der Versuche, eine Nachricht erneut zu senden, bevor sie als fehlgeschlagen markiert wird.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetriemodus aktualisiert",
-  "settings_multiAck": "Mehrfach-Bestätigungen: {value}",
   "map_showOverlaps": "Überlappungen der Repeater-Taste",
   "map_runTraceWithReturnPath": "Auf dem gleichen Pfad zurückkehren.",
   "@radioStats_noiseFloor": {
@@ -2117,5 +2109,6 @@
   "repeater_guest": "Informationen zu Repeatern",
   "repeater_guestTools": "Gastwerkzeuge",
   "chat_sendMessage": "Nachricht senden",
-  "room_guest": "Informationen zum Room Server"
+  "room_guest": "Informationen zum Room Server",
+  "settings_multiAck": "Mehrere Bestätigungen"
 }

@@ -1011,6 +1011,15 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                 },
               ),
               const SizedBox(height: 8),
+              SwitchListTile(
+                title: Text(l10n.settings_multiAck),
+                value: multiAcks == 1,
+                onChanged: (value) {
+                  setDialogState(() => multiAcks = value ? 1 : 0);
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 initialValue: telemetryMode,
                 decoration: InputDecoration(
@@ -1050,21 +1059,6 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                   if (value != null) {
                     setDialogState(() => telemetryEnvMode = value);
                   }
-                },
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.settings_multiAck(multiAcks.toString()),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              Slider(
-                value: multiAcks.toDouble(),
-                min: 0,
-                max: 2,
-                divisions: 2,
-                label: multiAcks.toString(),
-                onChanged: (value) {
-                  setDialogState(() => multiAcks = value.round());
                 },
               ),
             ],
