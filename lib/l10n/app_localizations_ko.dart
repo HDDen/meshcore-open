@@ -1131,23 +1131,42 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_cyr2latSettingsDialogHint => 'JSON 변환 맵';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess => '변환 목록이 업데이트되었습니다';
-
-  @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
     return '잘못된 JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => '초기값으로 초기화';
-
-  @override
-  String get channels_cyr2latSettingsDialogResetted =>
-      'Cyr2Lat 변환 설정이 초기값으로 초기화되었습니다';
-
-  @override
   String channels_channelUpdated(String name) {
     return '채널 \"$name\"이 업데이트되었습니다.';
+  }
+
+  @override
+  String get settings_cyr2latProfileAdd => 'Cyr2Lat 프로필 추가';
+
+  @override
+  String get settings_cyr2latProfileName => '프로필 이름';
+
+  @override
+  String get settings_cyr2latProfileNameEmpty => '프로필 이름은 비워둘 수 없습니다';
+
+  @override
+  String get settings_cyr2latProfileAdded => '프로필이 성공적으로 추가되었습니다';
+
+  @override
+  String get settings_cyr2latProfileUpdated => '프로필이 성공적으로 업데이트되었습니다';
+
+  @override
+  String get settings_cyr2latProfileEdit => 'Cyr2Lat 프로필 편집';
+
+  @override
+  String get settings_cyr2latProfileDelete => 'Cyr2Lat 프로필 삭제';
+
+  @override
+  String get settings_cyr2latProfileDeleted => '프로필이 성공적으로 삭제되었습니다';
+
+  @override
+  String settings_cyr2latProfileDeleteDscr(String name) {
+    return '\"$name\" 프로필을 삭제하시겠습니까?';
   }
 
   @override

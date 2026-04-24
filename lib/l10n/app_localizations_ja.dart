@@ -1136,23 +1136,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_cyr2latSettingsDialogHint => 'JSON置換マップ';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess => '置換リストが更新されました';
-
-  @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
     return '不正なJSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset => '初期設定に戻す';
-
-  @override
-  String get channels_cyr2latSettingsDialogResetted =>
-      'cyr2latの置換設定が初期設定に戻されました';
-
-  @override
   String channels_channelUpdated(String name) {
     return 'チャンネル「$name」が更新されました';
+  }
+
+  @override
+  String get settings_cyr2latProfileAdd => 'Cyr2Latプロファイルの追加';
+
+  @override
+  String get settings_cyr2latProfileName => 'プロファイル名';
+
+  @override
+  String get settings_cyr2latProfileNameEmpty => 'プロファイル名は空にできません';
+
+  @override
+  String get settings_cyr2latProfileAdded => 'プロファイルが正常に追加されました';
+
+  @override
+  String get settings_cyr2latProfileUpdated => 'プロファイルの更新に成功しました';
+
+  @override
+  String get settings_cyr2latProfileEdit => 'Cyr2Latプロファイルを編集';
+
+  @override
+  String get settings_cyr2latProfileDelete => 'Cyr2Latプロファイルを削除';
+
+  @override
+  String get settings_cyr2latProfileDeleted => 'プロファイルの削除に成功しました';
+
+  @override
+  String settings_cyr2latProfileDeleteDscr(String name) {
+    return 'プロファイル \"$name\" を削除してもよろしいですか？';
   }
 
   @override

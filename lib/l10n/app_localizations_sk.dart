@@ -1182,25 +1182,44 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_cyr2latSettingsDialogHint => 'JSON mapa nahradení';
 
   @override
-  String get channels_cyr2latSettingsDialogSuccess =>
-      'Zoznam nahradení bol aktualizovaný';
-
-  @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
     return 'Nesprávny JSON: $error';
   }
 
   @override
-  String get channels_cyr2latSettingsDialogReset =>
-      'Obnoviť predvolené nastavenia';
-
-  @override
-  String get channels_cyr2latSettingsDialogResetted =>
-      'Nastavenia nahradzovania Cyr2Lat boli obnovené na predvolené';
-
-  @override
   String channels_channelUpdated(String name) {
     return 'Kanál \"$name\" bol aktualizovaný';
+  }
+
+  @override
+  String get settings_cyr2latProfileAdd => 'Pridať profil Cyr2Lat';
+
+  @override
+  String get settings_cyr2latProfileName => 'Názov profilu';
+
+  @override
+  String get settings_cyr2latProfileNameEmpty =>
+      'Názov profilu nesmie byť prázdny';
+
+  @override
+  String get settings_cyr2latProfileAdded => 'Profil bol úspešne pridaný';
+
+  @override
+  String get settings_cyr2latProfileUpdated =>
+      'Profil bol úspešne aktualizovaný';
+
+  @override
+  String get settings_cyr2latProfileEdit => 'Upraviť profil Cyr2Lat';
+
+  @override
+  String get settings_cyr2latProfileDelete => 'Odstrániť profil Cyr2Lat';
+
+  @override
+  String get settings_cyr2latProfileDeleted => 'Profil bol úspešne odstránený';
+
+  @override
+  String settings_cyr2latProfileDeleteDscr(String name) {
+    return 'Naozaj chcete odstrániť profil \"$name\"?';
   }
 
   @override
