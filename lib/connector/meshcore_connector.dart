@@ -285,10 +285,12 @@ class MeshCoreConnector extends ChangeNotifier {
   List<Channel> _cachedChannels = [];
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
+  final Map<int, String?> _channelCyr2LatProfileId = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
+  final Map<String, String?> _contactCyr2LatProfileId = {};
   final Set<String> _knownContactKeys = {};
   final Map<String, int> _contactUnreadCount = {};
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
@@ -611,10 +613,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool isChannelCyr2LatEnabled(int channelIndex) {
+    _ensureChannelCyr2LatSettingLoaded(channelIndex);
     return _channelCyr2LatEnabled[channelIndex] ?? false;
   }
 
   bool isContactCyr2LatEnabled(String contactKeyHex) {
+    _ensureContactCyr2LatSettingLoaded(contactKeyHex);
     return _contactCyr2LatEnabled[contactKeyHex] ?? false;
   }
 
@@ -712,11 +716,8 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
+    if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
     _channelCyr2LatEnabled[channelIndex] = enabled;
-    if (enabled) {
-      _channelSmazEnabled[channelIndex] = false;
-      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
-    }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
   }
@@ -725,6 +726,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex,
     bool enabled,
   ) async {
+    if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
     notifyListeners();
@@ -4483,6 +4485,63 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactCyr2LatProfileLoaded(String contactKeyHex) {
+    if (_contactCyr2LatProfileId.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadCyr2LatProfileId(contactKeyHex).then((profileId) {
+      if (_contactCyr2LatProfileId[contactKeyHex] == profileId) return;
+      _contactCyr2LatProfileId[contactKeyHex] = profileId;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelCyr2LatSettingLoaded(int channelIndex) {
+    if (_channelCyr2LatEnabled.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadCyr2LatEnabled(channelIndex).then((enabled) {
+      if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
+      _channelCyr2LatEnabled[channelIndex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelCyr2LatProfileLoaded(int channelIndex) {
+    if (_channelCyr2LatProfileId.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadCyr2LatProfileId(channelIndex).then((profileId) {
+      if (_channelCyr2LatProfileId[channelIndex] == profileId) return;
+      _channelCyr2LatProfileId[channelIndex] = profileId;
+      notifyListeners();
+    });
+  }
+
+  String? getChannelCyr2LatProfileId(int channelIndex) {
+    _ensureChannelCyr2LatProfileLoaded(channelIndex);
+    return _channelCyr2LatProfileId[channelIndex];
+  }
+
+  Future<void> setChannelCyr2LatProfileId(
+    int channelIndex,
+    String? profileId,
+  ) async {
+    if (_channelCyr2LatProfileId[channelIndex] == profileId) return;
+    _channelCyr2LatProfileId[channelIndex] = profileId;
+    await _channelSettingsStore.saveCyr2LatProfileId(channelIndex, profileId);
+    notifyListeners();
+  }
+
+  String? getContactCyr2LatProfileId(String contactKeyHex) {
+    _ensureContactCyr2LatProfileLoaded(contactKeyHex);
+    return _contactCyr2LatProfileId[contactKeyHex];
+  }
+
+  Future<void> setContactCyr2LatProfileId(
+    String contactKeyHex,
+    String? profileId,
+  ) async {
+    if (_contactCyr2LatProfileId[contactKeyHex] == profileId) return;
+    _contactCyr2LatProfileId[contactKeyHex] = profileId;
+    await _contactSettingsStore.saveCyr2LatProfileId(contactKeyHex, profileId);
+    notifyListeners();
+  }
+
   /// Prepares contact outbound text by applying SMAZ encoding if enabled.
   /// This should be used to transform text before computing ACK hashes.
   String prepareContactOutboundText(Contact contact, String text) {
@@ -4495,6 +4554,20 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
+        final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
+        final profile = profileId != null && _appSettingsService != null
+            ? _appSettingsService!.getCyr2LatProfileById(profileId)
+            : null;
+        if (profile != null) {
+          Cyr2Lat.setCharMap(profile.charMap);
+        } else {
+          // Use global profile
+          final globalProfile = _appSettingsService
+              ?.getSelectedCyr2LatProfile();
+          if (globalProfile != null) {
+            Cyr2Lat.setCharMap(globalProfile.charMap);
+          }
+        }
         return Cyr2Lat.encode(text);
       }
     }
@@ -4509,6 +4582,20 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isChannelCyr2LatEnabled(channelIndex)) {
+        final profileId = getChannelCyr2LatProfileId(channelIndex);
+        final profile = profileId != null && _appSettingsService != null
+            ? _appSettingsService!.getCyr2LatProfileById(profileId)
+            : null;
+        if (profile != null) {
+          Cyr2Lat.setCharMap(profile.charMap);
+        } else {
+          // Use global profile
+          final globalProfile = _appSettingsService
+              ?.getSelectedCyr2LatProfile();
+          if (globalProfile != null) {
+            Cyr2Lat.setCharMap(globalProfile.charMap);
+          }
+        }
         return Cyr2Lat.encode(text);
       }
     }
