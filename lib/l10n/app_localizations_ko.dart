@@ -1536,6 +1536,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get chat_markAsUnread => 'Mark as Unread';
+
+  @override
+  String get chat_newMessages => 'New messages';
+
+  @override
   String get chat_openLink => '링크를 열기?';
 
   @override

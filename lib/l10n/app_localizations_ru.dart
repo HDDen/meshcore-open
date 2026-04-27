@@ -1615,6 +1615,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get chat_markAsUnread => 'Пометить как непрочитанные';
+
+  @override
+  String get chat_newMessages => 'Новые сообщения';
+
+  @override
   String get chat_openLink => 'Открыть ссылку?';
 
   @override
