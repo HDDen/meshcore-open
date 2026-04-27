@@ -492,13 +492,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ],
           ),
           onTap: () async {
+            final unread = connector.getUnreadCountForChannelIndex(
+              channel.index,
+            );
             connector.markChannelRead(channel.index);
             await Future.delayed(const Duration(milliseconds: 50));
             if (context.mounted) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ChannelChatScreen(channel: channel),
+                  builder: (context) => ChannelChatScreen(
+                    channel: channel,
+                    initialUnreadCount: unread,
+                  ),
                 ),
               );
             }

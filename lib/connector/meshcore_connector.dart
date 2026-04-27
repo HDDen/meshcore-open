@@ -677,6 +677,27 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  void setContactUnreadCount(String contactKeyHex, int count) {
+    _contactUnreadCount[contactKeyHex] = count;
+    _unreadStore.saveContactUnreadCount(
+      Map<String, int>.from(_contactUnreadCount),
+    );
+    notifyListeners();
+  }
+
+  void setChannelUnreadCount(int channelIndex, int count) {
+    final channel = _findChannelByIndex(channelIndex);
+    if (channel != null) {
+      channel.unreadCount = count;
+      unawaited(
+        _channelStore.saveChannels(
+          _channels.isNotEmpty ? _channels : _cachedChannels,
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   void markChannelRead(int channelIndex) {
     final channel = _findChannelByIndex(channelIndex);
     if (channel != null && channel.unreadCount > 0) {

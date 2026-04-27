@@ -2920,6 +2920,18 @@ abstract class AppLocalizations {
   /// **'Unread: {count}'**
   String chat_unread(int count);
 
+  /// No description provided for @chat_markAsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Unread'**
+  String get chat_markAsUnread;
+
+  /// No description provided for @chat_newMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get chat_newMessages;
+
   /// No description provided for @chat_openLink.
   ///
   /// In en, this message translates to:
