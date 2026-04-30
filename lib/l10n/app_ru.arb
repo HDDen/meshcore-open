@@ -81,6 +81,8 @@
   "settings_privacyModeEnabled": "Режим конфиденциальности включен",
   "settings_privacyModeDisabled": "Режим конфиденциальности выключен",
   "settings_actions": "Действия",
+  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Отправить анонсирование",
   "settings_sendAdvertisementSubtitle": "Отправить анонсирование о присутствии сейчас",
   "settings_advertisementSent": "Анонсирование отправлено",
@@ -374,6 +376,8 @@
   "chat_direct": "Прямой",
   "chat_poiShared": "Точка интереса отправлена",
   "chat_unread": "Непрочитанных: {count}",
+  "chat_markAsUnread": "Пометить как непрочитанные",
+  "chat_newMessages": "Новые сообщения",
   "map_title": "Карта нод",
   "map_noNodesWithLocation": "Нет нод с данными о местоположении",
   "map_nodesNeedGps": "Ноды должны передавать свои GPS-координаты, чтобы отображаться на карте",
@@ -1322,5 +1326,86 @@
   "repeater_guest": "Информация о ретрансляторе",
   "room_guest": "Информация о сервере",
   "repeater_guestTools": "Инструменты для гостей",
-  "settings_multiAck": "Несколько подтверждений"
+  "common_done": "Готово",
+  "background_serviceTitle": "MeshCore работает",
+  "background_serviceText": "Поддерживает BLE-соединение",
+  "appSettings_translationModelDeleted": "Удалено {name}",
+  "@appSettings_translationModelDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_translationModelDeleteFailed": "Не удалось удалить: {error}",
+  "@appSettings_translationModelDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_channelUpdateFailed": "Не удалось обновить канал: {error}",
+  "@channels_channelUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_type": "Тип",
+  "map_path": "Путь",
+  "map_location": "Местоположение",
+  "map_estLocation": "Прибл. местоположение",
+  "map_publicKey": "Публичный ключ",
+  "map_publicKeyPrefixHint": "напр. ab12",
+  "contact_typeChat": "Чат",
+  "contact_typeRepeater": "Ретранслятор",
+  "contact_typeRoom": "Комната",
+  "contact_typeSensor": "Датчик",
+  "contact_typeUnknown": "Неизвестно",
+  "channels_via": "через {path}",
+  "chat_score": "Оценка",
+  "settings_multiAck": "Несколько подтверждений",
+  "map_sharedAt": "Поделено",
+  "@losBlockedSpotChip": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      }
+    }
+  },
+  "@losSelectedObstructionDetails": {
+    "placeholders": {
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      },
+      "distanceFromA": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "distanceFromB": {
+        "type": "String"
+      }
+    }
+  },
+  "losBlockedSpotsHint": "Щелкните по заблокированной области, чтобы выделить ее на карте.",
+  "losBlockedSpotsTitle": "Зарезервированные места",
+  "losSelectedObstructionTitle": "Выбранный объект, препятствующий движению",
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
 }

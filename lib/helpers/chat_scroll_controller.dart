@@ -49,6 +49,25 @@ class ChatScrollController extends ScrollController {
     }
   }
 
+  /// Jumps toward an off-screen message so that lazy ListView.builder builds
+  /// items near it. Only visible + cacheExtent items have real heights, so we
+  /// use proportion of maxScrollExtent (itself an estimate from built items'
+  /// avg height). Call [onJumped] on the next frame to ensureVisible/scroll
+  /// to the exact target.
+  void jumpToEstimatedOffset({
+    required int unreadCount,
+    required int totalMessages,
+    required VoidCallback onJumped,
+  }) {
+    if (!hasClients || totalMessages == 0) return;
+    final maxExtent = position.maxScrollExtent;
+    final jumpOffset = maxExtent * (unreadCount / totalMessages);
+    if (jumpOffset > 100) {
+      jumpTo(jumpOffset);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => onJumped());
+  }
+
   void scrollToBottomIfAtBottom() {
     // Only scroll if jump button is NOT showing (i.e., already at bottom)
     if (!showJumpToBottom.value && hasClients && position.maxScrollExtent > 0) {

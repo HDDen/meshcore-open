@@ -1,1 +1,81 @@
-{}
+{
+  "bg": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "de": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "es": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "fr": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "hu": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "it": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "ja": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "ko": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "nl": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "pl": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "pt": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "sk": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "sl": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "sv": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "uk": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ],
+
+  "zh": [
+    "chat_markAsUnread",
+    "chat_newMessages"
+  ]
+}

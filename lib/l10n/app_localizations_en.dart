@@ -45,6 +45,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_close => 'Close';
 
   @override
+  String get common_done => 'Done';
+
+  @override
   String get common_edit => 'Edit';
 
   @override
@@ -434,6 +437,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_actions => 'Actions';
+
+  @override
+  String get settings_deleteAllPaths => 'Delete All Paths';
+
+  @override
+  String get settings_deleteAllPathsSubtitle =>
+      'Clear all path data from contacts.';
 
   @override
   String get settings_sendAdvertisement => 'Send Advertisement';
@@ -1073,6 +1083,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channels_public => 'Public';
 
   @override
+  String channels_via(String path) {
+    return 'via $path';
+  }
+
+  @override
   String get channels_private => 'Private';
 
   @override
@@ -1483,6 +1498,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_successes => 'successes';
 
   @override
+  String get chat_score => 'Score';
+
+  @override
   String get chat_removePath => 'Remove path';
 
   @override
@@ -1580,6 +1598,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chat_markAsUnread => 'Mark as Unread';
+
+  @override
+  String get chat_newMessages => 'New messages';
+
+  @override
   String get chat_openLink => 'Open Link?';
 
   @override
@@ -1659,6 +1683,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get map_flags => 'Flags';
+
+  @override
+  String get map_type => 'Type';
+
+  @override
+  String get map_path => 'Path';
+
+  @override
+  String get map_location => 'Location';
+
+  @override
+  String get map_estLocation => 'Est. Location';
+
+  @override
+  String get map_publicKey => 'Public Key';
+
+  @override
+  String get map_publicKeyPrefixHint => 'e.g. ab12';
 
   @override
   String get map_shareMarkerHere => 'Share marker here';
@@ -1743,6 +1785,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get map_sharedPin => 'Shared pin';
+
+  @override
+  String get map_sharedAt => 'Shared';
 
   @override
   String get map_joinRoom => 'Join Room';
@@ -3235,6 +3280,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get losLegendTerrain => 'Terrain';
 
   @override
+  String get losBlockedSpotsTitle => 'Blocked spots';
+
+  @override
+  String get losBlockedSpotsHint =>
+      'Tap a blocked spot to highlight it on the map.';
+
+  @override
+  String losBlockedSpotChip(
+    String distance,
+    String distanceUnit,
+    String obstruction,
+    String heightUnit,
+  ) {
+    return '$distance $distanceUnit • $obstruction $heightUnit';
+  }
+
+  @override
+  String get losSelectedObstructionTitle => 'Selected obstruction';
+
+  @override
+  String losSelectedObstructionDetails(
+    String obstruction,
+    String heightUnit,
+    String distanceFromA,
+    String distanceUnit,
+    String distanceFromB,
+  ) {
+    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+  }
+
+  @override
   String get losFrequencyLabel => 'Frequency';
 
   @override
@@ -3685,4 +3761,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translation_systemLanguage => 'System language';
+
+  @override
+  String get background_serviceTitle => 'MeshCore running';
+
+  @override
+  String get background_serviceText => 'Keeping BLE connected';
+
+  @override
+  String appSettings_translationModelDeleted(String name) {
+    return 'Deleted $name';
+  }
+
+  @override
+  String appSettings_translationModelDeleteFailed(String error) {
+    return 'Failed to delete: $error';
+  }
+
+  @override
+  String channels_channelUpdateFailed(String error) {
+    return 'Failed to update channel: $error';
+  }
+
+  @override
+  String get contact_typeChat => 'Chat';
+
+  @override
+  String get contact_typeRepeater => 'Repeater';
+
+  @override
+  String get contact_typeRoom => 'Room';
+
+  @override
+  String get contact_typeSensor => 'Sensor';
+
+  @override
+  String get contact_typeUnknown => 'Unknown';
 }

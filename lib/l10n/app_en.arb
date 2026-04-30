@@ -12,6 +12,7 @@
   "common_delete": "Delete",
   "common_deleteAll": "Delete All",
   "common_close": "Close",
+  "common_done": "Done",
   "common_edit": "Edit",
   "common_add": "Add",
   "common_settings": "Settings",
@@ -181,6 +182,8 @@
   "settings_multiAck": "Multi-ACKs",
   "settings_telemetryModeUpdated": "Telemetry mode updated",
   "settings_actions": "Actions",
+  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Send Advertisement",
   "settings_sendAdvertisementSubtitle": "Broadcast presence now",
   "settings_advertisementSent": "Advertisement sent",
@@ -516,6 +519,14 @@
   },
   "channels_hashtagChannel": "Hashtag channel",
   "channels_public": "Public",
+  "channels_via": "via {path}",
+  "@channels_via": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "channels_private": "Private",
   "channels_publicChannel": "Public channel",
   "channels_privateChannel": "Private channel",
@@ -794,6 +805,7 @@
     }
   },
   "chat_successes": "successes",
+  "chat_score": "Score",
   "chat_removePath": "Remove path",
   "chat_noPathHistoryYet": "No path history yet.\nSend a message to discover paths.",
   "chat_pathActions": "Path Actions:",
@@ -845,6 +857,8 @@
       }
     }
   },
+  "chat_markAsUnread": "Mark as Unread",
+  "chat_newMessages": "New messages",
   "chat_openLink": "Open Link?",
   "chat_openLinkConfirmation": "Do you want to open this link in your browser?",
   "chat_open": "Open",
@@ -890,6 +904,12 @@
   "map_from": "From",
   "map_source": "Source",
   "map_flags": "Flags",
+  "map_type": "Type",
+  "map_path": "Path",
+  "map_location": "Location",
+  "map_estLocation": "Est. Location",
+  "map_publicKey": "Public Key",
+  "map_publicKeyPrefixHint": "e.g. ab12",
   "map_shareMarkerHere": "Share marker here",
   "map_setAsMyLocation": "Set as my location",
   "map_pinLabel": "Pin label",
@@ -924,6 +944,7 @@
   "map_guessedLocation": "Guessed location",
   "map_lastSeenTime": "Last Seen Time",
   "map_sharedPin": "Shared pin",
+  "map_sharedAt": "Shared",
   "map_joinRoom": "Join Room",
   "map_manageRepeater": "Manage Repeater",
   "map_tapToAdd": "Tap on nodes to add them to the path.",
@@ -1903,6 +1924,46 @@
   "losLegendRadioHorizon": "Radio horizon",
   "losLegendLosBeam": "LOS beam",
   "losLegendTerrain": "Terrain",
+  "losBlockedSpotsTitle": "Blocked spots",
+  "losBlockedSpotsHint": "Tap a blocked spot to highlight it on the map.",
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "@losBlockedSpotChip": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      }
+    }
+  },
+  "losSelectedObstructionTitle": "Selected obstruction",
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "@losSelectedObstructionDetails": {
+    "placeholders": {
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      },
+      "distanceFromA": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "distanceFromB": {
+        "type": "String"
+      }
+    }
+  },
   "losFrequencyLabel": "Frequency",
   "losFrequencyInfoTooltip": "View calculation details",
   "losFrequencyDialogTitle": "Radio horizon calculation",
@@ -2142,5 +2203,36 @@
     }
   },
   "translation_translationOptions": "Translation options",
-  "translation_systemLanguage": "System language"
+  "translation_systemLanguage": "System language",
+  "background_serviceTitle": "MeshCore running",
+  "background_serviceText": "Keeping BLE connected",
+  "appSettings_translationModelDeleted": "Deleted {name}",
+  "@appSettings_translationModelDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "@appSettings_translationModelDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "@channels_channelUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "contact_typeChat": "Chat",
+  "contact_typeRepeater": "Repeater",
+  "contact_typeRoom": "Room",
+  "contact_typeSensor": "Sensor",
+  "contact_typeUnknown": "Unknown"
 }

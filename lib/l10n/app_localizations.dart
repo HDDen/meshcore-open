@@ -202,6 +202,12 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get common_close;
 
+  /// No description provided for @common_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get common_done;
+
   /// No description provided for @common_edit.
   ///
   /// In en, this message translates to:
@@ -915,6 +921,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Actions'**
   String get settings_actions;
+
+  /// No description provided for @settings_deleteAllPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Paths'**
+  String get settings_deleteAllPaths;
+
+  /// No description provided for @settings_deleteAllPathsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all path data from contacts.'**
+  String get settings_deleteAllPathsSubtitle;
 
   /// No description provided for @settings_sendAdvertisement.
   ///
@@ -2044,6 +2062,12 @@ abstract class AppLocalizations {
   /// **'Public'**
   String get channels_public;
 
+  /// No description provided for @channels_via.
+  ///
+  /// In en, this message translates to:
+  /// **'via {path}'**
+  String channels_via(String path);
+
   /// No description provided for @channels_private.
   ///
   /// In en, this message translates to:
@@ -2758,6 +2782,12 @@ abstract class AppLocalizations {
   /// **'successes'**
   String get chat_successes;
 
+  /// No description provided for @chat_score.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get chat_score;
+
   /// No description provided for @chat_removePath.
   ///
   /// In en, this message translates to:
@@ -2920,6 +2950,18 @@ abstract class AppLocalizations {
   /// **'Unread: {count}'**
   String chat_unread(int count);
 
+  /// No description provided for @chat_markAsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Unread'**
+  String get chat_markAsUnread;
+
+  /// No description provided for @chat_newMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get chat_newMessages;
+
   /// No description provided for @chat_openLink.
   ///
   /// In en, this message translates to:
@@ -3063,6 +3105,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flags'**
   String get map_flags;
+
+  /// No description provided for @map_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get map_type;
+
+  /// No description provided for @map_path.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get map_path;
+
+  /// No description provided for @map_location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get map_location;
+
+  /// No description provided for @map_estLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. Location'**
+  String get map_estLocation;
+
+  /// No description provided for @map_publicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Key'**
+  String get map_publicKey;
+
+  /// No description provided for @map_publicKeyPrefixHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ab12'**
+  String get map_publicKeyPrefixHint;
 
   /// No description provided for @map_shareMarkerHere.
   ///
@@ -3225,6 +3303,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared pin'**
   String get map_sharedPin;
+
+  /// No description provided for @map_sharedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get map_sharedAt;
 
   /// No description provided for @map_joinRoom.
   ///
@@ -5736,6 +5820,47 @@ abstract class AppLocalizations {
   /// **'Terrain'**
   String get losLegendTerrain;
 
+  /// No description provided for @losBlockedSpotsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked spots'**
+  String get losBlockedSpotsTitle;
+
+  /// No description provided for @losBlockedSpotsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a blocked spot to highlight it on the map.'**
+  String get losBlockedSpotsHint;
+
+  /// No description provided for @losBlockedSpotChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} {distanceUnit} • {obstruction} {heightUnit}'**
+  String losBlockedSpotChip(
+    String distance,
+    String distanceUnit,
+    String obstruction,
+    String heightUnit,
+  );
+
+  /// No description provided for @losSelectedObstructionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected obstruction'**
+  String get losSelectedObstructionTitle;
+
+  /// No description provided for @losSelectedObstructionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).'**
+  String losSelectedObstructionDetails(
+    String obstruction,
+    String heightUnit,
+    String distanceFromA,
+    String distanceUnit,
+    String distanceFromB,
+  );
+
   /// No description provided for @losFrequencyLabel.
   ///
   /// In en, this message translates to:
@@ -6484,6 +6609,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System language'**
   String get translation_systemLanguage;
+
+  /// No description provided for @background_serviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore running'**
+  String get background_serviceTitle;
+
+  /// No description provided for @background_serviceText.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping BLE connected'**
+  String get background_serviceText;
+
+  /// No description provided for @appSettings_translationModelDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {name}'**
+  String appSettings_translationModelDeleted(String name);
+
+  /// No description provided for @appSettings_translationModelDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete: {error}'**
+  String appSettings_translationModelDeleteFailed(String error);
+
+  /// No description provided for @channels_channelUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update channel: {error}'**
+  String channels_channelUpdateFailed(String error);
+
+  /// No description provided for @contact_typeChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get contact_typeChat;
+
+  /// No description provided for @contact_typeRepeater.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater'**
+  String get contact_typeRepeater;
+
+  /// No description provided for @contact_typeRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get contact_typeRoom;
+
+  /// No description provided for @contact_typeSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get contact_typeSensor;
+
+  /// No description provided for @contact_typeUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get contact_typeUnknown;
 }
 
 class _AppLocalizationsDelegate

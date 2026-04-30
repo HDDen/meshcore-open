@@ -59,6 +59,9 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
   await backgroundService.initialize();
+  backgroundService.setLanguageOverrideProvider(
+    () => appSettingsService.settings.languageOverride,
+  );
   _registerThirdPartyLicenses();
 
   await chatTextScaleService.initialize();

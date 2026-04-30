@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -304,6 +304,8 @@ class ChannelMessagePathMapScreen extends StatefulWidget {
 class _ChannelMessagePathMapScreenState
     extends State<ChannelMessagePathMapScreen> {
   static const double _labelZoomThreshold = 8.5;
+  static const double _mapMinZoom = 2.0;
+  static const double _mapMaxZoom = 18.0;
 
   final MapController _mapController = MapController();
   Uint8List? _selectedPath;
@@ -328,6 +330,18 @@ class _ChannelMessagePathMapScreenState
         )) {
       _selectedPath = widget.initialPath;
     }
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  bool _isDesktopPlatform(TargetPlatform platform) {
+    return platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS;
   }
 
   double _getPathDistance(List<LatLng> points) {
@@ -357,6 +371,70 @@ class _ChannelMessagePathMapScreenState
     });
   }
 
+  void _zoomMapBy(double delta) {
+    final camera = _mapController.camera;
+    final nextZoom = (camera.zoom + delta)
+        .clamp(_mapMinZoom, _mapMaxZoom)
+        .toDouble();
+    _mapController.move(camera.center, nextZoom);
+  }
+
+  void _resetMapView({
+    required LatLng initialCenter,
+    required double initialZoom,
+    required LatLngBounds? bounds,
+  }) {
+    if (bounds != null) {
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(64),
+          maxZoom: 16,
+        ),
+      );
+      return;
+    }
+    _mapController.move(initialCenter, initialZoom);
+  }
+
+  Widget _buildDesktopMapControls({
+    required LatLng initialCenter,
+    required double initialZoom,
+    required LatLngBounds? bounds,
+  }) {
+    return Positioned(
+      left: 16,
+      top: 16,
+      child: Card(
+        elevation: 4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Zoom in',
+              onPressed: () => _zoomMapBy(1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.remove),
+              tooltip: 'Zoom out',
+              onPressed: () => _zoomMapBy(-1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.my_location),
+              tooltip: 'Center map',
+              onPressed: () => _resetMapView(
+                initialCenter: initialCenter,
+                initialZoom: initialZoom,
+                bounds: bounds,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MeshCoreConnector>(
@@ -372,6 +450,7 @@ class _ChannelMessagePathMapScreenState
           primaryPath,
           widget.message.pathVariants,
         );
+        final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
         final selectedPathTmp = _resolveSelectedPath(
           _selectedPath,
           observedPaths,
@@ -451,10 +530,20 @@ class _ChannelMessagePathMapScreenState
                             padding: const EdgeInsets.all(64),
                             maxZoom: 16,
                           ),
-                    minZoom: 2.0,
-                    maxZoom: 18.0,
+                    minZoom: _mapMinZoom,
+                    maxZoom: _mapMaxZoom,
                     interactionOptions: InteractionOptions(
                       flags: ~InteractiveFlag.rotate,
+                      scrollWheelVelocity: isDesktop ? 0.012 : 0.005,
+                      cursorKeyboardRotationOptions:
+                          CursorKeyboardRotationOptions.disabled(),
+                      keyboardOptions: isDesktop
+                          ? const KeyboardOptions(
+                              enableArrowKeysPanning: true,
+                              enableWASDPanning: true,
+                              enableRFZooming: true,
+                            )
+                          : const KeyboardOptions.disabled(),
                     ),
                     onPositionChanged: (camera, hasGesture) {
                       final shouldShow = camera.zoom >= _labelZoomThreshold;
@@ -486,6 +575,12 @@ class _ChannelMessagePathMapScreenState
                     ),
                   ],
                 ),
+                if (isDesktop)
+                  _buildDesktopMapControls(
+                    initialCenter: initialCenter,
+                    initialZoom: initialZoom,
+                    bounds: bounds,
+                  ),
                 if (observedPaths.length > 1)
                   _buildPathSelector(context, observedPaths, selectedIndex, (
                     index,

@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../helpers/path_helper.dart';
 import '../services/path_history_service.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -147,7 +148,7 @@ class _PathManagementDialogState extends State<_PathManagementDialog> {
       context,
       availableContacts: availableContacts,
       initialPath: pathForInput.isEmpty ? null : pathForInput,
-      currentPathLabel: currentContact.pathLabel,
+      currentPathLabel: currentContact.pathLabel(l10n),
       onRefresh: connector.isConnected ? connector.getContacts : null,
     );
 
@@ -236,7 +237,7 @@ class _PathManagementDialogState extends State<_PathManagementDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.path_currentPath(currentContact.pathLabel),
+                  l10n.path_currentPath(currentContact.pathLabel(l10n)),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 12),
@@ -303,7 +304,7 @@ class _PathManagementDialogState extends State<_PathManagementDialog> {
                           ),
                           isThreeLine: true,
                           subtitle: Text(
-                            '${(path.tripTimeMs / 1000).toStringAsFixed(2)}s • ${_formatRelativeTime(context, path.timestamp)}\n${path.successCount} ${l10n.chat_successes} • Score: ${path.routeWeight.toStringAsFixed(1)}',
+                            '${(path.tripTimeMs / 1000).toStringAsFixed(2)}s • ${_formatRelativeTime(context, path.timestamp)}\n${path.successCount} ${l10n.chat_successes} • ${l10n.chat_score}: ${path.routeWeight.toStringAsFixed(1)}',
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: Row(

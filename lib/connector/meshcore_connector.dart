@@ -677,6 +677,27 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  void setContactUnreadCount(String contactKeyHex, int count) {
+    _contactUnreadCount[contactKeyHex] = count;
+    _unreadStore.saveContactUnreadCount(
+      Map<String, int>.from(_contactUnreadCount),
+    );
+    notifyListeners();
+  }
+
+  void setChannelUnreadCount(int channelIndex, int count) {
+    final channel = _findChannelByIndex(channelIndex);
+    if (channel != null) {
+      channel.unreadCount = count;
+      unawaited(
+        _channelStore.saveChannels(
+          _channels.isNotEmpty ? _channels : _cachedChannels,
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   void markChannelRead(int channelIndex) {
     final channel = _findChannelByIndex(channelIndex);
     if (channel != null && channel.unreadCount > 0) {
@@ -4043,7 +4064,7 @@ class MeshCoreConnector extends ChangeNotifier {
           );
         } else {
           appLogger.info(
-            "Discovered contact ${contact.name} (type ${contact.typeLabel}) not added due to auto-add settings",
+            "Discovered contact ${contact.name} (type ${contact.typeLabelRaw}) not added due to auto-add settings",
             tag: 'Connector',
           );
           return;
@@ -4065,7 +4086,7 @@ class MeshCoreConnector extends ChangeNotifier {
         if (settings.notificationsEnabled && settings.notifyOnNewAdvert) {
           _notificationService.showAdvertNotification(
             contactName: contact.name,
-            contactType: contact.typeLabel,
+            contactType: contact.typeLabelRaw,
             contactId: contact.publicKeyHex,
           );
         }
@@ -4140,7 +4161,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (settings.notificationsEnabled && settings.notifyOnNewAdvert) {
         _notificationService.showAdvertNotification(
           contactName: contact.name,
-          contactType: contact.typeLabel,
+          contactType: contact.typeLabelRaw,
           contactId: contact.publicKeyHex,
         );
       }
@@ -6173,7 +6194,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (settings.notificationsEnabled && settings.notifyOnNewAdvert) {
         _notificationService.showAdvertNotification(
           contactName: contact.name,
-          contactType: contact.typeLabel,
+          contactType: contact.typeLabelRaw,
           contactId: contact.publicKeyHex,
         );
       }

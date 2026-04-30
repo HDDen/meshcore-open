@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,6 +19,9 @@ class MapCacheScreen extends StatefulWidget {
 }
 
 class _MapCacheScreenState extends State<MapCacheScreen> {
+  static const double _mapMinZoom = 2.0;
+  static const double _mapMaxZoom = 18.0;
+
   final MapController _mapController = MapController();
 
   LatLngBounds? _selectedBounds;
@@ -41,6 +45,61 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
   void dispose() {
     _mapController.dispose();
     super.dispose();
+  }
+
+  bool _isDesktopPlatform(TargetPlatform platform) {
+    return platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS;
+  }
+
+  void _zoomMapBy(double delta) {
+    final camera = _mapController.camera;
+    final nextZoom = (camera.zoom + delta)
+        .clamp(_mapMinZoom, _mapMaxZoom)
+        .toDouble();
+    _mapController.move(camera.center, nextZoom);
+  }
+
+  void _resetMapView() {
+    final bounds = _selectedBounds;
+    if (bounds != null) {
+      _mapController.fitCamera(
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(48)),
+      );
+      return;
+    }
+    _mapController.move(const LatLng(0, 0), 2.0);
+  }
+
+  Widget _buildDesktopMapControls() {
+    return Positioned(
+      top: 12,
+      left: 12,
+      child: Card(
+        elevation: 4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Zoom in',
+              onPressed: () => _zoomMapBy(1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.remove),
+              tooltip: 'Zoom out',
+              onPressed: () => _zoomMapBy(-1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.my_location),
+              tooltip: 'Center map',
+              onPressed: _resetMapView,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _loadSettings() {
@@ -222,6 +281,7 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
     final tileCache = context.read<MapTileCacheService>();
     final selectedBounds = _selectedBounds;
     final l10n = context.l10n;
+    final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
     final progressValue = _estimatedTiles == 0
         ? 0.0
         : (_completedTiles / _estimatedTiles).clamp(0.0, 1.0).toDouble();
@@ -238,11 +298,24 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
               children: [
                 FlutterMap(
                   mapController: _mapController,
-                  options: const MapOptions(
-                    initialCenter: LatLng(0, 0),
+                  options: MapOptions(
+                    initialCenter: const LatLng(0, 0),
                     initialZoom: 2.0,
-                    minZoom: 2.0,
-                    maxZoom: 18.0,
+                    minZoom: _mapMinZoom,
+                    maxZoom: _mapMaxZoom,
+                    interactionOptions: InteractionOptions(
+                      flags: ~InteractiveFlag.rotate,
+                      scrollWheelVelocity: isDesktop ? 0.012 : 0.005,
+                      cursorKeyboardRotationOptions:
+                          CursorKeyboardRotationOptions.disabled(),
+                      keyboardOptions: isDesktop
+                          ? const KeyboardOptions(
+                              enableArrowKeysPanning: true,
+                              enableWASDPanning: true,
+                              enableRFZooming: true,
+                            )
+                          : const KeyboardOptions.disabled(),
+                    ),
                   ),
                   children: [
                     TileLayer(
@@ -265,6 +338,7 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                       ),
                   ],
                 ),
+                if (isDesktop) _buildDesktopMapControls(),
                 Positioned(
                   top: 12,
                   right: 12,

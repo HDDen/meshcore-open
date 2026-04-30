@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class PathSelectionDialog extends StatefulWidget {
@@ -311,7 +312,7 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
                           style: const TextStyle(fontSize: 14),
                         ),
                         subtitle: Text(
-                          '${contact.typeLabel} • ${contact.publicKeyHex.substring(0, 2)}',
+                          '${contact.typeLabel(l10n)} • ${contact.publicKeyHex.substring(0, 2)}',
                           style: const TextStyle(fontSize: 10),
                         ),
                         trailing: isSelected

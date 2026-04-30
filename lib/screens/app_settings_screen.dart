@@ -1240,15 +1240,20 @@ class AppSettingsScreen extends StatelessWidget {
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
-        // TODO: l10n
-        content: Text('Deleted ${translationModelFriendlyName(model)}.'),
+        content: Text(
+          context.l10n.appSettings_translationModelDeleted(
+            translationModelFriendlyName(model),
+          ),
+        ),
       );
     } catch (error) {
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
-        content: Text('Delete failed: $error'),
-      ); // TODO: l10n
+        content: Text(
+          context.l10n.appSettings_translationModelDeleteFailed('$error'),
+        ),
+      );
     }
   }
 

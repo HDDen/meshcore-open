@@ -13,6 +13,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../models/contact_group.dart';
 import '../services/ui_view_state_service.dart';
 import '../utils/contact_search.dart';
@@ -930,10 +931,17 @@ class _ContactsScreenState extends State<ContactsScreen>
     } else if (contact.type == advTypeRoom) {
       _showRoomLogin(context, contact, RoomLoginDestination.chat);
     } else {
-      context.read<MeshCoreConnector>().markContactRead(contact.publicKeyHex);
+      final connector = context.read<MeshCoreConnector>();
+      final unread = connector.getUnreadCountForContactKey(
+        contact.publicKeyHex,
+      );
+      connector.markContactRead(contact.publicKeyHex);
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ChatScreen(contact: contact)),
+        MaterialPageRoute(
+          builder: (context) =>
+              ChatScreen(contact: contact, initialUnreadCount: unread),
+        ),
       );
     }
   }
@@ -988,7 +996,11 @@ class _ContactsScreenState extends State<ContactsScreen>
       builder: (context) => RoomLoginDialog(
         room: room,
         onLogin: (password, isAdmin) {
-          context.read<MeshCoreConnector>().markContactRead(room.publicKeyHex);
+          final connector = context.read<MeshCoreConnector>();
+          final unread = connector.getUnreadCountForContactKey(
+            room.publicKeyHex,
+          );
+          connector.markContactRead(room.publicKeyHex);
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -999,7 +1011,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       password: password,
                       isAdmin: isAdmin,
                     )
-                  : ChatScreen(contact: room),
+                  : ChatScreen(contact: room, initialUnreadCount: unread),
             ),
           );
         },
@@ -1122,7 +1134,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                                 return CheckboxListTile(
                                   value: isSelected,
                                   title: Text(contact.name),
-                                  subtitle: Text(contact.typeLabel),
+                                  subtitle: Text(
+                                    contact.typeLabel(context.l10n),
+                                  ),
                                   onChanged: (value) {
                                     setDialogState(() {
                                       if (value == true) {
@@ -1464,7 +1478,7 @@ class _ContactTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              contact.pathLabel,
+              contact.pathLabel(context.l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

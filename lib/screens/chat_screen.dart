@@ -9,7 +9,6 @@ import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -21,6 +20,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/path_helper.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../models/message.dart';
 import '../models/path_history.dart';
 import '../models/translation_support.dart';
@@ -45,12 +45,18 @@ import '../widgets/translated_message_content.dart';
 import '../utils/app_logger.dart';
 import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../widgets/unread_divider.dart';
 import 'telemetry_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final Contact contact;
+  final int initialUnreadCount;
 
-  const ChatScreen({super.key, required this.contact});
+  const ChatScreen({
+    super.key,
+    required this.contact,
+    this.initialUnreadCount = 0,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -64,6 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
   Message? _pendingUnreadScrollTarget;
+  String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
 
   @override
@@ -71,34 +78,47 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
     _scrollController.onScrollNearTop = _loadOlderMessages;
+    _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final connector = context.read<MeshCoreConnector>();
       final settings = context.read<AppSettingsService>().settings;
       final keyHex = widget.contact.publicKeyHex;
-      final unread = connector.getUnreadCountForContactKey(keyHex);
+      final unread = widget.initialUnreadCount;
+      final messages = connector.getMessages(widget.contact);
       Message? anchor;
-      if (settings.jumpToOldestUnread && unread > 0) {
-        anchor = _findOldestUnreadAnchor(
-          connector.getMessages(widget.contact),
-          unread,
-        );
+      if (unread > 0) {
+        anchor = _findOldestUnreadAnchor(messages, unread);
       }
+      setState(() {
+        if (anchor != null) _unreadDividerMessageId = anchor.messageId;
+        if (anchor != null && settings.jumpToOldestUnread) {
+          _pendingUnreadScrollTarget = anchor;
+        }
+      });
       connector.setActiveContact(keyHex);
       _connector = connector;
-      if (anchor != null) {
-        setState(() => _pendingUnreadScrollTarget = anchor);
+      if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          final ctx = _unreadScrollKey.currentContext;
-          if (ctx != null) {
-            Scrollable.ensureVisible(
-              ctx,
-              duration: const Duration(milliseconds: 350),
-              alignment: 0.15,
-            );
-          }
-          setState(() => _pendingUnreadScrollTarget = null);
+          _scrollController.jumpToEstimatedOffset(
+            unreadCount: unread,
+            totalMessages: messages.length,
+            onJumped: () async {
+              if (!mounted) return;
+              final ctx = _unreadScrollKey.currentContext;
+              if (ctx != null) {
+                await Scrollable.ensureVisible(
+                  ctx,
+                  duration: const Duration(milliseconds: 350),
+                  alignment: 0.15,
+                );
+              }
+              if (mounted) {
+                setState(() => _pendingUnreadScrollTarget = null);
+              }
+            },
+          );
         });
       }
     });
@@ -115,6 +135,13 @@ class _ChatScreenState extends State<ChatScreen> {
       if (n >= unreadCount) break;
     }
     return oldest;
+  }
+
+  void _clearDividerAtBottom() {
+    if (!_scrollController.showJumpToBottom.value &&
+        _unreadDividerMessageId != null) {
+      setState(() => _unreadDividerMessageId = null);
+    }
   }
 
   void _onTextFieldFocusChange() {
@@ -138,6 +165,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _textFieldFocusNode.dispose();
     _textController.dispose();
@@ -480,6 +508,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 senderName: resolvedContact.type == advTypeRoom
                     ? "${contact.name} [$fourByteHex]"
                     : contact.name,
+                sourceId: widget.contact.publicKeyHex,
                 isRoomServer: resolvedContact.type == advTypeRoom,
                 textScale: textScale,
                 onTap: () => _openMessagePath(message, contact),
@@ -487,15 +516,36 @@ class _ChatScreenState extends State<ChatScreen> {
                 onRetryReaction: (msg, emoji) =>
                     _sendReaction(msg, contact, emoji),
               );
+              final isUnreadAnchor =
+                  _unreadDividerMessageId != null &&
+                  message.messageId == _unreadDividerMessageId;
+              final child = isUnreadAnchor
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [const UnreadDivider(), bubble],
+                    )
+                  : bubble;
               if (identical(message, _pendingUnreadScrollTarget)) {
-                return KeyedSubtree(key: _unreadScrollKey, child: bubble);
+                return KeyedSubtree(key: _unreadScrollKey, child: child);
               }
-              return bubble;
+              return child;
             },
           );
         },
       ),
     );
+  }
+
+  void _markAsUnread(Message message) {
+    final connector = context.read<MeshCoreConnector>();
+    final messages = connector.getMessages(widget.contact);
+    var count = 0;
+    var found = false;
+    for (final m in messages) {
+      if (m.messageId == message.messageId) found = true;
+      if (found && !m.isOutgoing && !m.isCli) count++;
+    }
+    connector.setContactUnreadCount(widget.contact.publicKeyHex, count);
   }
 
   Widget _buildInputBar(MeshCoreConnector connector) {
@@ -1184,8 +1234,14 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow(context.l10n.chat_type, contact.typeLabel),
-              _buildInfoRow(context.l10n.chat_path, contact.pathLabel),
+              _buildInfoRow(
+                context.l10n.chat_type,
+                contact.typeLabel(context.l10n),
+              ),
+              _buildInfoRow(
+                context.l10n.chat_path,
+                contact.pathLabel(context.l10n),
+              ),
               _buildInfoRow(
                 context.l10n.contact_lastSeen,
                 _formatContactLastMessage(contact.lastMessageAt),
@@ -1409,11 +1465,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _openChat(BuildContext context, Contact contact) {
-    // Check if this is a repeater
-    context.read<MeshCoreConnector>().markContactRead(contact.publicKeyHex);
+    final connector = context.read<MeshCoreConnector>();
+    final unread = connector.getUnreadCountForContactKey(contact.publicKeyHex);
+    connector.markContactRead(contact.publicKeyHex);
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ChatScreen(contact: contact)),
+      MaterialPageRoute(
+        builder: (context) =>
+            ChatScreen(contact: contact, initialUnreadCount: unread),
+      ),
     );
   }
 
@@ -1550,6 +1610,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 _copyMessageText(message.text);
               },
             ),
+            if (!message.isOutgoing)
+              ListTile(
+                leading: const Icon(Icons.mark_chat_unread_outlined),
+                title: Text(context.l10n.chat_markAsUnread),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _markAsUnread(message);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.delete_outline),
               title: Text(context.l10n.common_delete),
@@ -1657,10 +1726,12 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
   final double textScale;
+  final String sourceId;
 
   const _MessageBubble({
     required this.message,
     required this.senderName,
+    required this.sourceId,
     required this.isRoomServer,
     required this.textScale,
     this.onTap,
@@ -1675,7 +1746,7 @@ class _MessageBubble extends StatelessWidget {
     final isOutgoing = message.isOutgoing;
     final colorScheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
-    final poi = _parsePoiMessage(message.text);
+    final poi = parseMarkerText(message.text);
     final isFailed = message.status == MessageStatus.failed;
     final bubbleColor = isFailed
         ? colorScheme.errorContainer
@@ -1767,6 +1838,7 @@ class _MessageBubble extends StatelessWidget {
                             textColor,
                             metaColor,
                             textScale,
+                            senderName,
                             trailing: (!enableTracing && isOutgoing)
                                 ? Padding(
                                     padding: const EdgeInsets.only(bottom: 2),
@@ -1948,25 +2020,13 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  _PoiInfo? _parsePoiMessage(String text) {
-    final trimmed = text.trim();
-    final match = RegExp(
-      r'^m:([\-0-9.]+),([\-0-9.]+)\|([^|]*)\|.*$',
-    ).firstMatch(trimmed);
-    if (match == null) return null;
-    final lat = double.tryParse(match.group(1) ?? '');
-    final lon = double.tryParse(match.group(2) ?? '');
-    if (lat == null || lon == null) return null;
-    final label = match.group(3) ?? '';
-    return _PoiInfo(lat: lat, lon: lon, label: label);
-  }
-
   Widget _buildPoiMessage(
     BuildContext context,
-    _PoiInfo poi,
+    MarkerPayload poi,
     Color textColor,
     Color metaColor,
-    double textScale, {
+    double textScale,
+    String senderName, {
     Widget? trailing,
   }) {
     return Row(
@@ -1976,13 +2036,23 @@ class _MessageBubble extends StatelessWidget {
           icon: Icon(Icons.location_on_outlined, color: textColor),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          onPressed: () {
+          onPressed: () async {
+            final selfName = context.read<MeshCoreConnector>().selfName ?? 'Me';
+            final fromName = message.isOutgoing ? selfName : senderName;
+            final key = buildSharedMarkerKey(
+              sourceId: sourceId,
+              label: poi.label,
+              fromName: fromName,
+              flags: poi.flags,
+              isChannel: false,
+            );
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => MapScreen(
-                  highlightPosition: LatLng(poi.lat, poi.lon),
+                  highlightPosition: poi.position,
                   highlightLabel: poi.label,
+                  highlightMarkerKey: key,
                 ),
               ),
             );
@@ -2162,12 +2232,4 @@ class _MessageBubble extends StatelessWidget {
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
   }
-}
-
-class _PoiInfo {
-  final double lat;
-  final double lon;
-  final String label;
-
-  const _PoiInfo({required this.lat, required this.lon, required this.label});
 }
