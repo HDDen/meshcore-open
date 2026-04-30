@@ -537,27 +537,39 @@ class TranslationService extends ChangeNotifier {
     final lower = trimmed.toLowerCase();
     final patterns = <String, String>{
       'uk': r'\b(привіт|дякую|будь|ласка|як|де|не|так|це|є|най|ще|може|для)\b',
-      'ru': r'\b(что|это|как|не|да|нет|он|она|они|быть|есть|для|сегодня|если|уже|может)\b',
+      'ru':
+          r'\b(что|это|как|не|да|нет|он|она|они|быть|есть|для|сегодня|если|уже|может)\b',
       'bg': r'\b(ще|няма|благодаря|моля|това|какво|тук|ние|вие|не|със|за)\b',
-      'de': r'\b(der|die|das|und|ist|nicht|ein|eine|ich|für|mit|auf|zu|auch|als|an|im|am|es|dem|den|sich|von)\b',
-      'en': r'\b(the|and|is|you|for|with|from|not|that|this|have|be|are|was|were|but|can|will|your|what|when|how|they)\b',
-      'es': r'\b(el|la|los|las|es|que|de|en|con|por|para|no|un|una|se|como|su|al|del|está)\b',
-      'fr': r'\b(le|la|les|un|une|et|est|que|qui|pour|dans|pas|avec|sur|ne|vous|il|elle|des|ce|cette|je|tu|nous|vous)\b',
-      'it': r'\b(il|la|lo|un|una|che|di|da|in|per|con|non|si|mi|ti|noi|voi|lui|lei)\b',
-      'pt': r'\b(os|as|que|de|do|da|em|para|com|por|não|uma|um|se|você|também)\b',
-      'nl': r'\b(de|het|een|en|is|niet|dat|wat|je|ik|op|aan|voor|met|als|nog|zijn)\b',
-      'sv': r'\b(och|är|det|att|som|en|på|inte|har|var|men|du|jag|vi|ni|den|detta)\b',
-      'pl': r'\b(na|się|nie|jest|to|że|do|od|dla|czy|tak|ale|ma|jak|on|ona|my)\b',
+      'de':
+          r'\b(der|die|das|und|ist|nicht|ein|eine|ich|für|mit|auf|zu|auch|als|an|im|am|es|dem|den|sich|von)\b',
+      'en':
+          r'\b(the|and|is|you|for|with|from|not|that|this|have|be|are|was|were|but|can|will|your|what|when|how|they)\b',
+      'es':
+          r'\b(el|la|los|las|es|que|de|en|con|por|para|no|un|una|se|como|su|al|del|está)\b',
+      'fr':
+          r'\b(le|la|les|un|une|et|est|que|qui|pour|dans|pas|avec|sur|ne|vous|il|elle|des|ce|cette|je|tu|nous|vous)\b',
+      'it':
+          r'\b(il|la|lo|un|una|che|di|da|in|per|con|non|si|mi|ti|noi|voi|lui|lei)\b',
+      'pt':
+          r'\b(os|as|que|de|do|da|em|para|com|por|não|uma|um|se|você|também)\b',
+      'nl':
+          r'\b(de|het|een|en|is|niet|dat|wat|je|ik|op|aan|voor|met|als|nog|zijn)\b',
+      'sv':
+          r'\b(och|är|det|att|som|en|på|inte|har|var|men|du|jag|vi|ni|den|detta)\b',
+      'pl':
+          r'\b(na|się|nie|jest|to|że|do|od|dla|czy|tak|ale|ma|jak|on|ona|my)\b',
       'sk': r'\b(je|na|so|že|do|od|za|si|to|ten|tá|tí|ako|má|nie|som|sa)\b',
       'sl': r'\b(in|je|na|se|da|za|od|ne|to|ta|so|kako|bo|sem|si)\b',
-      'hu': r'\b(az|és|nem|van|volt|hogy|mit|mire|ki|mi|ez|azért|is|de|ha|te|ő|mi|itt)\b',
+      'hu':
+          r'\b(az|és|nem|van|volt|hogy|mit|mire|ki|mi|ez|azért|is|de|ha|te|ő|mi|itt)\b',
     };
 
     final scores = <String, int>{};
     for (final entry in patterns.entries) {
-      scores[entry.key] = RegExp(entry.value, caseSensitive: false)
-          .allMatches(lower)
-          .length;
+      scores[entry.key] = RegExp(
+        entry.value,
+        caseSensitive: false,
+      ).allMatches(lower).length;
     }
 
     final sorted = scores.entries.toList()
