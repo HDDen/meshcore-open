@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -56,12 +57,16 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   static const double _maxAntennaFeet = 400.0;
   static const double _maxAntennaMeters = _maxAntennaFeet / _metersToFeet;
   static const double _labelZoomThreshold = 8.5;
+  static const double _mapMinZoom = 2.0;
+  static const double _mapMaxZoom = 18.0;
 
   final LineOfSightService _lineOfSightService = LineOfSightService();
+  final MapController _mapController = MapController();
 
   bool _loading = false;
   String? _error;
   LineOfSightPathResult? _result;
+  LineOfSightObstruction? _selectedObstruction;
   LineOfSightEndpoint? _start;
   LineOfSightEndpoint? _end;
   final List<LineOfSightEndpoint> _customEndpoints = [];
@@ -98,8 +103,83 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
 
   @override
   void dispose() {
+    _mapController.dispose();
     _lineOfSightService.dispose();
     super.dispose();
+  }
+
+  bool _isDesktopPlatform(TargetPlatform platform) {
+    return platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS;
+  }
+
+  void _zoomMapBy(double delta) {
+    final camera = _mapController.camera;
+    final nextZoom = (camera.zoom + delta)
+        .clamp(_mapMinZoom, _mapMaxZoom)
+        .toDouble();
+    _mapController.move(camera.center, nextZoom);
+  }
+
+  void _resetMapView({
+    required LatLng initialCenter,
+    required double initialZoom,
+    required LatLngBounds? bounds,
+  }) {
+    if (bounds != null) {
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(64),
+          maxZoom: 16,
+        ),
+      );
+      return;
+    }
+    _mapController.move(initialCenter, initialZoom);
+  }
+
+  Widget _buildDesktopMapControls({
+    required LatLng initialCenter,
+    required double initialZoom,
+    required LatLngBounds? bounds,
+  }) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topOffset = _showHud
+        ? math.min(screenHeight * 0.52 + 24, screenHeight - 220)
+        : 12.0;
+    return Positioned(
+      top: topOffset,
+      left: 12,
+      child: Card(
+        elevation: 4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Zoom in',
+              onPressed: () => _zoomMapBy(1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.remove),
+              tooltip: 'Zoom out',
+              onPressed: () => _zoomMapBy(-1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.my_location),
+              tooltip: 'Center map',
+              onPressed: () => _resetMapView(
+                initialCenter: initialCenter,
+                initialZoom: initialZoom,
+                bounds: bounds,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _runLos() async {
@@ -111,6 +191,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
     if (start == null || end == null) {
       setState(() {
         _result = null;
+        _selectedObstruction = null;
         _error = _errorSelectStartEnd;
       });
       return;
@@ -142,6 +223,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       }
       setState(() {
         _result = result;
+        _selectedObstruction = _defaultObstructionFor(result);
       });
     } catch (e) {
       if (!mounted) return;
@@ -156,6 +238,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       }
       setState(() {
         _result = null;
+        _selectedObstruction = null;
         _error = context.l10n.losRunFailed(e.toString());
       });
     } finally {
@@ -184,6 +267,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   void _selectFromMap(LineOfSightEndpoint endpoint) {
     setState(() {
       _result = null;
+      _selectedObstruction = null;
       _error = null;
       if (_start == null || (_start != null && _end != null)) {
         _start = endpoint;
@@ -241,6 +325,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       _start = null;
       _end = null;
       _result = null;
+      _selectedObstruction = null;
       _error = _errorSelectStartEnd;
     });
   }
@@ -251,6 +336,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       if (identical(_start, endpoint)) _start = null;
       if (identical(_end, endpoint)) _end = null;
       _result = null;
+      _selectedObstruction = null;
     });
   }
 
@@ -318,6 +404,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
         ? LatLngBounds.fromPoints(mapPoints)
         : null;
     final initialZoom = mapPoints.length > 1 ? 13.0 : 2.0;
+    final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
     if (!_didReceivePositionUpdate) {
       _showMarkerLabels = initialZoom >= _labelZoomThreshold;
     }
@@ -343,6 +430,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       body: Stack(
         children: [
           FlutterMap(
+            mapController: _mapController,
             options: MapOptions(
               initialCenter: initialCenter,
               initialZoom: initialZoom,
@@ -355,7 +443,19 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                     ),
               interactionOptions: InteractionOptions(
                 flags: ~InteractiveFlag.rotate,
+                scrollWheelVelocity: isDesktop ? 0.012 : 0.005,
+                cursorKeyboardRotationOptions:
+                    CursorKeyboardRotationOptions.disabled(),
+                keyboardOptions: isDesktop
+                    ? const KeyboardOptions(
+                        enableArrowKeysPanning: true,
+                        enableWASDPanning: true,
+                        enableRFZooming: true,
+                      )
+                    : const KeyboardOptions.disabled(),
               ),
+              minZoom: _mapMinZoom,
+              maxZoom: _mapMaxZoom,
               onLongPress: (_, point) => _addCustomPoint(point),
               onPositionChanged: (camera, hasGesture) {
                 final shouldShow = camera.zoom >= _labelZoomThreshold;
@@ -377,9 +477,17 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
               ),
               if (_result != null && _result!.segments.isNotEmpty)
                 PolylineLayer(polylines: _buildSegmentPolylines(_result!)),
-              MarkerLayer(markers: _buildMarkers(endpoints)),
+              MarkerLayer(
+                markers: _buildMarkers(endpoints, _primaryObstructions()),
+              ),
             ],
           ),
+          if (isDesktop)
+            _buildDesktopMapControls(
+              initialCenter: initialCenter,
+              initialZoom: initialZoom,
+              bounds: bounds,
+            ),
           if (_showHud)
             Positioned(
               left: 12,
@@ -445,6 +553,8 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
     );
     final displayFrequencyMHz = segment?.frequencyMHz ?? reportedFrequencyMHz;
     final kFactorUsed = segment?.usedKFactor;
+    final obstructions =
+        segment?.obstructions ?? const <LineOfSightObstruction>[];
     final endpoints = _visibleEndpoints();
     final distanceUnit = isImperial ? 'mi' : 'km';
     final heightUnit = isImperial ? 'ft' : 'm';
@@ -463,31 +573,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (segment != null)
-                SizedBox(
-                  height: 160,
-                  width: double.infinity,
-                  child: CustomPaint(
-                    painter: _LosProfilePainter(
-                      samples: segment.samples,
-                      distanceUnit: distanceUnit,
-                      heightUnit: heightUnit,
-                      badgeTextStyle:
-                          Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Colors.white70,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ) ??
-                          const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                      terrainLabel: context.l10n.losLegendTerrain,
-                      losBeamLabel: context.l10n.losLegendLosBeam,
-                      radioHorizonLabel: context.l10n.losLegendRadioHorizon,
-                    ),
-                  ),
-                )
+                _buildProfileView(segment, distanceUnit, heightUnit, isImperial)
               else
                 SizedBox(
                   height: 44,
@@ -519,6 +605,96 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (obstructions.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.losBlockedSpotsTitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.losBlockedSpotsHint,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final obstruction in obstructions)
+                      ChoiceChip(
+                        label: Text(
+                          _obstructionChipLabel(obstruction, isImperial),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        selected:
+                            _selectedObstruction?.sampleIndex ==
+                            obstruction.sampleIndex,
+                        onSelected: (_) => _selectObstruction(obstruction),
+                      ),
+                  ],
+                ),
+                if (_selectedObstruction != null) ...[
+                  const SizedBox(height: 8),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.deepOrangeAccent.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.losSelectedObstructionTitle,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.l10n.losSelectedObstructionDetails(
+                              _formatHeightValue(
+                                _selectedObstruction!.obstructionMeters,
+                                isImperial,
+                              ),
+                              heightUnit,
+                              _formatDistanceValue(
+                                _selectedObstruction!.distanceMeters,
+                                isImperial,
+                              ),
+                              distanceUnit,
+                              _formatDistanceValue(
+                                segment!.totalDistanceMeters -
+                                    _selectedObstruction!.distanceMeters,
+                                isImperial,
+                              ),
+                            ),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_selectedObstruction!.point.latitude.toStringAsFixed(5)}, '
+                            '${_selectedObstruction!.point.longitude.toStringAsFixed(5)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
               const SizedBox(height: 4),
               if (displayFrequencyMHz != null)
                 Padding(
@@ -605,6 +781,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                         _showDisplayNodes = value;
                         _sanitizeSelection();
                         _result = null;
+                        _selectedObstruction = null;
                       });
                     },
                   ),
@@ -655,6 +832,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                       setState(() {
                         _start = value;
                         _result = null;
+                        _selectedObstruction = null;
                       });
                       if (_start != null && _end != null) {
                         _runLos();
@@ -670,6 +848,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                       setState(() {
                         _end = value;
                         _result = null;
+                        _selectedObstruction = null;
                       });
                       if (_start != null && _end != null) {
                         _runLos();
@@ -769,6 +948,179 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
     return _result!.segments.first.result;
   }
 
+  List<LineOfSightObstruction> _primaryObstructions() {
+    return _primarySegmentResult()?.obstructions ?? const [];
+  }
+
+  LineOfSightObstruction? _defaultObstructionFor(
+    LineOfSightPathResult? result,
+  ) {
+    if (result == null || result.segments.isEmpty) return null;
+    final obstructions = result.segments.first.result.obstructions;
+    if (obstructions.isEmpty) return null;
+    return obstructions.reduce(
+      (current, next) =>
+          next.obstructionMeters > current.obstructionMeters ? next : current,
+    );
+  }
+
+  void _selectObstruction(LineOfSightObstruction obstruction) {
+    setState(() {
+      _selectedObstruction = obstruction;
+    });
+  }
+
+  String _formatDistanceValue(double meters, bool isImperial) {
+    final value = isImperial ? (meters / 1000.0) * _kmToMiles : meters / 1000.0;
+    return value.toStringAsFixed(2);
+  }
+
+  String _formatHeightValue(double meters, bool isImperial) {
+    final value = isImperial ? meters * _metersToFeet : meters;
+    return value.toStringAsFixed(1);
+  }
+
+  String _obstructionChipLabel(
+    LineOfSightObstruction obstruction,
+    bool isImperial,
+  ) {
+    final distanceUnit = isImperial ? 'mi' : 'km';
+    final heightUnit = isImperial ? 'ft' : 'm';
+    return context.l10n.losBlockedSpotChip(
+      _formatDistanceValue(obstruction.distanceMeters, isImperial),
+      distanceUnit,
+      _formatHeightValue(obstruction.obstructionMeters, isImperial),
+      heightUnit,
+    );
+  }
+
+  Widget _buildProfileView(
+    LineOfSightResult segment,
+    String distanceUnit,
+    String heightUnit,
+    bool isImperial,
+  ) {
+    if (segment.samples.length < 2) {
+      return SizedBox(
+        height: 160,
+        width: double.infinity,
+        child: CustomPaint(
+          painter: _LosProfilePainter(
+            samples: segment.samples,
+            distanceUnit: distanceUnit,
+            heightUnit: heightUnit,
+            badgeTextStyle:
+                Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ) ??
+                const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+            terrainLabel: context.l10n.losLegendTerrain,
+            losBeamLabel: context.l10n.losLegendLosBeam,
+            radioHorizonLabel: context.l10n.losLegendRadioHorizon,
+            selectedSampleIndex: _selectedObstruction?.sampleIndex,
+          ),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 160,
+      width: double.infinity,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = Size(constraints.maxWidth, 160);
+          final geometry = _LosProfileGeometry(
+            samples: segment.samples,
+            size: size,
+          );
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _LosProfilePainter(
+                    samples: segment.samples,
+                    distanceUnit: distanceUnit,
+                    heightUnit: heightUnit,
+                    badgeTextStyle:
+                        Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ) ??
+                        const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                    terrainLabel: context.l10n.losLegendTerrain,
+                    losBeamLabel: context.l10n.losLegendLosBeam,
+                    radioHorizonLabel: context.l10n.losLegendRadioHorizon,
+                    selectedSampleIndex: _selectedObstruction?.sampleIndex,
+                  ),
+                ),
+              ),
+              for (final obstruction in segment.obstructions)
+                Builder(
+                  builder: (context) {
+                    final sample = segment.samples[obstruction.sampleIndex];
+                    final position = geometry.mapPoint(
+                      sample.distanceMeters,
+                      sample.terrainMeters,
+                    );
+                    final isSelected =
+                        _selectedObstruction?.sampleIndex ==
+                        obstruction.sampleIndex;
+                    final markerSize = isSelected ? 18.0 : 14.0;
+                    final left = (position.dx - markerSize / 2)
+                        .clamp(0.0, math.max(0.0, size.width - markerSize))
+                        .toDouble();
+                    final top = (position.dy - markerSize / 2)
+                        .clamp(0.0, math.max(0.0, size.height - markerSize))
+                        .toDouble();
+                    return Positioned(
+                      left: left,
+                      top: top,
+                      child: Tooltip(
+                        message: _obstructionChipLabel(obstruction, isImperial),
+                        child: GestureDetector(
+                          onTap: () => _selectObstruction(obstruction),
+                          child: Container(
+                            width: markerSize,
+                            height: markerSize,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.amberAccent
+                                  : Colors.deepOrangeAccent,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.black87,
+                                width: isSelected ? 2 : 1.5,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black45, blurRadius: 4),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   String _profileStats(LineOfSightResult result, bool isImperial) {
     final distance = isImperial
         ? (result.totalDistanceMeters / 1000.0) * _kmToMiles
@@ -820,8 +1172,51 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
     return polylines;
   }
 
-  List<Marker> _buildMarkers(List<LineOfSightEndpoint> endpoints) {
+  List<Marker> _buildMarkers(
+    List<LineOfSightEndpoint> endpoints,
+    List<LineOfSightObstruction> obstructions,
+  ) {
     return [
+      for (final obstruction in obstructions)
+        Marker(
+          point: obstruction.point,
+          width: 52,
+          height: 52,
+          child: GestureDetector(
+            onTap: () => _selectObstruction(obstruction),
+            child: Center(
+              child: Container(
+                width:
+                    _selectedObstruction?.sampleIndex == obstruction.sampleIndex
+                    ? 36
+                    : 24,
+                height:
+                    _selectedObstruction?.sampleIndex == obstruction.sampleIndex
+                    ? 36
+                    : 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.transparent,
+                  border: Border.all(
+                    color:
+                        _selectedObstruction?.sampleIndex ==
+                            obstruction.sampleIndex
+                        ? Colors.amberAccent
+                        : Colors.deepOrangeAccent,
+                    width:
+                        _selectedObstruction?.sampleIndex ==
+                            obstruction.sampleIndex
+                        ? 4
+                        : 3,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 6),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       for (final endpoint in endpoints)
         Marker(
           point: endpoint.point,
@@ -1010,6 +1405,51 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   }
 }
 
+class _LosProfileGeometry {
+  static const horizontalPadding = 12.0;
+  static const verticalPadding = 12.0;
+
+  final List<LineOfSightSample> samples;
+  final Size size;
+  late final double minY = samples
+      .map(
+        (s) => math.min(
+          math.min(s.terrainMeters, s.lineHeightMeters),
+          s.refractedHeightMeters,
+        ),
+      )
+      .reduce(math.min);
+  late final double maxY = samples
+      .map(
+        (s) => math.max(
+          math.max(s.terrainMeters, s.lineHeightMeters),
+          s.refractedHeightMeters,
+        ),
+      )
+      .reduce(math.max);
+  late final double ySpan = math.max(1.0, maxY - minY);
+  late final double maxDist = math.max(1.0, samples.last.distanceMeters);
+  late final double chartWidth = math.max(
+    1.0,
+    size.width - horizontalPadding * 2,
+  );
+  late final double chartHeight = math.max(
+    1.0,
+    size.height - verticalPadding * 2,
+  );
+
+  _LosProfileGeometry({required this.samples, required this.size});
+
+  Offset mapPoint(double distanceMeters, double elevationMeters) {
+    final px = horizontalPadding + (distanceMeters / maxDist) * chartWidth;
+    final py =
+        size.height -
+        verticalPadding -
+        ((elevationMeters - minY) / ySpan) * chartHeight;
+    return Offset(px, py);
+  }
+}
+
 class _LosProfilePainter extends CustomPainter {
   final List<LineOfSightSample> samples;
   final String distanceUnit;
@@ -1018,6 +1458,7 @@ class _LosProfilePainter extends CustomPainter {
   final String terrainLabel;
   final String losBeamLabel;
   final String radioHorizonLabel;
+  final int? selectedSampleIndex;
 
   const _LosProfilePainter({
     required this.samples,
@@ -1027,6 +1468,7 @@ class _LosProfilePainter extends CustomPainter {
     required this.terrainLabel,
     required this.losBeamLabel,
     required this.radioHorizonLabel,
+    this.selectedSampleIndex,
   });
 
   @override
@@ -1212,6 +1654,32 @@ class _LosProfilePainter extends CustomPainter {
         ..color = horizonFillColor
         ..style = PaintingStyle.fill,
     );
+
+    if (selectedSampleIndex != null &&
+        selectedSampleIndex! >= 0 &&
+        selectedSampleIndex! < samples.length) {
+      final selectedSample = samples[selectedSampleIndex!];
+      final selectedPoint = mapPoint(
+        selectedSample.distanceMeters,
+        selectedSample.terrainMeters,
+      );
+      canvas.drawLine(
+        Offset(selectedPoint.dx, verticalPadding),
+        Offset(selectedPoint.dx, size.height - verticalPadding),
+        Paint()
+          ..color = Colors.amberAccent.withValues(alpha: 0.7)
+          ..strokeWidth = 1.5,
+      );
+      canvas.drawCircle(selectedPoint, 7, Paint()..color = Colors.amberAccent);
+      canvas.drawCircle(
+        selectedPoint,
+        8.5,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
   }
 
   @override
@@ -1222,7 +1690,8 @@ class _LosProfilePainter extends CustomPainter {
         oldDelegate.badgeTextStyle != badgeTextStyle ||
         oldDelegate.terrainLabel != terrainLabel ||
         oldDelegate.losBeamLabel != losBeamLabel ||
-        oldDelegate.radioHorizonLabel != radioHorizonLabel;
+        oldDelegate.radioHorizonLabel != radioHorizonLabel ||
+        oldDelegate.selectedSampleIndex != selectedSampleIndex;
   }
 
   void _drawUnitBadge(Canvas canvas, Size size) {

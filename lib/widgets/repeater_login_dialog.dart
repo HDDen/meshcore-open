@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -467,7 +468,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    repeater.pathLabel,
+                    repeater.pathLabel(context.l10n),
                     style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   const SizedBox(height: 8),

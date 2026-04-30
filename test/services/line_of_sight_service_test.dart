@@ -23,6 +23,7 @@ void main() {
     expect(result.isClear, isTrue);
     expect(result.maxObstructionMeters, equals(0));
     expect(result.firstObstructionDistanceMeters, isNull);
+    expect(result.obstructions, isEmpty);
   });
 
   test(
@@ -44,8 +45,31 @@ void main() {
       expect(result.isClear, isFalse);
       expect(result.maxObstructionMeters, greaterThan(0));
       expect(result.firstObstructionDistanceMeters, isNotNull);
+      expect(result.obstructions, hasLength(1));
+      expect(result.obstructions.single.sampleIndex, equals(10));
+      expect(result.obstructions.single.point, equals(points[10]));
     },
   );
+
+  test('computeFromElevations groups contiguous blocked samples', () {
+    final points = makePoints(21);
+    final elevations = List<double>.filled(points.length, 100);
+    elevations[9] = 220;
+    elevations[10] = 320;
+    elevations[11] = 240;
+
+    final result = LineOfSightService.computeFromElevations(
+      points: points,
+      elevations: elevations,
+      startAntennaHeightMeters: 1.5,
+      endAntennaHeightMeters: 1.5,
+      kFactor: 4.0 / 3.0,
+    );
+
+    expect(result.obstructions, hasLength(1));
+    expect(result.obstructions.single.sampleIndex, equals(10));
+    expect(result.obstructions.single.obstructionMeters, greaterThan(0));
+  });
 
   test('analyzePath summarizes clear and blocked segments', () async {
     final service = LineOfSightService(

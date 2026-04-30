@@ -13,6 +13,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../models/contact_group.dart';
 import '../services/ui_view_state_service.dart';
 import '../utils/contact_search.dart';
@@ -1133,7 +1134,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                                 return CheckboxListTile(
                                   value: isSelected,
                                   title: Text(contact.name),
-                                  subtitle: Text(contact.typeLabel),
+                                  subtitle: Text(
+                                    contact.typeLabel(context.l10n),
+                                  ),
                                   onChanged: (value) {
                                     setDialogState(() {
                                       if (value == true) {
@@ -1475,7 +1478,7 @@ class _ContactTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              contact.pathLabel,
+              contact.pathLabel(context.l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

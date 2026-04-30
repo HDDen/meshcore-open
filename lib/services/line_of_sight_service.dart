@@ -24,6 +24,26 @@ class LineOfSightSample {
   });
 }
 
+class LineOfSightObstruction {
+  final int sampleIndex;
+  final LatLng point;
+  final double distanceMeters;
+  final double clearanceMeters;
+  final double obstructionMeters;
+  final double terrainMeters;
+  final double lineHeightMeters;
+
+  const LineOfSightObstruction({
+    required this.sampleIndex,
+    required this.point,
+    required this.distanceMeters,
+    required this.clearanceMeters,
+    required this.obstructionMeters,
+    required this.terrainMeters,
+    required this.lineHeightMeters,
+  });
+}
+
 class LineOfSightResult {
   final bool hasData;
   final bool isClear;
@@ -31,6 +51,7 @@ class LineOfSightResult {
   final double maxObstructionMeters;
   final double? firstObstructionDistanceMeters;
   final List<LineOfSightSample> samples;
+  final List<LineOfSightObstruction> obstructions;
   final String? errorMessage;
   final double usedKFactor;
   final double? frequencyMHz;
@@ -42,6 +63,7 @@ class LineOfSightResult {
     required this.maxObstructionMeters,
     required this.firstObstructionDistanceMeters,
     required this.samples,
+    required this.obstructions,
     required this.usedKFactor,
     this.frequencyMHz,
     this.errorMessage,
@@ -56,7 +78,8 @@ class LineOfSightResult {
        isClear = false,
        maxObstructionMeters = 0,
        firstObstructionDistanceMeters = null,
-       samples = const [];
+       samples = const [],
+       obstructions = const [];
 }
 
 class LineOfSightPathSegment {
@@ -191,6 +214,7 @@ class LineOfSightService {
         maxObstructionMeters: 0,
         firstObstructionDistanceMeters: null,
         samples: const [],
+        obstructions: const [],
         usedKFactor: kFactor,
         frequencyMHz: frequencyMHz,
       );
@@ -249,7 +273,9 @@ class LineOfSightService {
     var maxObstructionMeters = 0.0;
     double? firstObstructionDistanceMeters;
     final samples = <LineOfSightSample>[];
+    final obstructions = <LineOfSightObstruction>[];
     var isClear = true;
+    LineOfSightObstruction? clusterWorstObstruction;
 
     for (int i = 0; i < points.length; i++) {
       final fraction = points.length == 1 ? 0.0 : i / (points.length - 1);
@@ -274,6 +300,23 @@ class LineOfSightService {
           maxObstructionMeters = obstruction;
         }
         firstObstructionDistanceMeters ??= distanceFromStart;
+        final candidate = LineOfSightObstruction(
+          sampleIndex: i,
+          point: points[i],
+          distanceMeters: distanceFromStart,
+          clearanceMeters: clearance,
+          obstructionMeters: obstruction,
+          terrainMeters: terrainHeight,
+          lineHeightMeters: lineHeight,
+        );
+        if (clusterWorstObstruction == null ||
+            candidate.obstructionMeters >
+                clusterWorstObstruction.obstructionMeters) {
+          clusterWorstObstruction = candidate;
+        }
+      } else if (clusterWorstObstruction != null) {
+        obstructions.add(clusterWorstObstruction);
+        clusterWorstObstruction = null;
       }
 
       samples.add(
@@ -286,6 +329,9 @@ class LineOfSightService {
         ),
       );
     }
+    if (clusterWorstObstruction != null) {
+      obstructions.add(clusterWorstObstruction);
+    }
 
     return LineOfSightResult(
       hasData: true,
@@ -294,6 +340,7 @@ class LineOfSightService {
       maxObstructionMeters: maxObstructionMeters,
       firstObstructionDistanceMeters: firstObstructionDistanceMeters,
       samples: samples,
+      obstructions: obstructions,
       usedKFactor: kFactor,
       frequencyMHz: frequencyMHz,
     );

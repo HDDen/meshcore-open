@@ -341,9 +341,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: Text("Delete All Paths"),
+            title: Text(l10n.settings_deleteAllPaths),
             subtitle: Text(
-              "Clear all path data from contacts.",
+              l10n.settings_deleteAllPathsSubtitle,
               style: TextStyle(color: Colors.red[700]),
             ),
             onTap: () => connector.deleteAllPaths(),

@@ -1,8 +1,19 @@
-import '../utils/platform_info.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+
+import '../l10n/app_localizations.dart';
+import '../utils/platform_info.dart';
 
 class BackgroundService {
   bool _initialized = false;
+  String? Function()? _languageOverrideProvider;
+
+  /// Allows the app to expose its current language override (e.g. from
+  /// AppSettingsService) so the foreground notification matches the app UI
+  /// language instead of only the system locale.
+  void setLanguageOverrideProvider(String? Function()? provider) {
+    _languageOverrideProvider = provider;
+  }
 
   Future<void> initialize() async {
     if (!PlatformInfo.isAndroid || _initialized) return;
@@ -34,11 +45,29 @@ class BackgroundService {
     }
     final running = await FlutterForegroundTask.isRunningService;
     if (running) return;
+    final l10n = await _loadLocalizations();
     await FlutterForegroundTask.startService(
-      notificationTitle: 'MeshCore running',
-      notificationText: 'Keeping BLE connected',
+      notificationTitle: l10n.background_serviceTitle,
+      notificationText: l10n.background_serviceText,
       callback: startCallback,
     );
+  }
+
+  Future<AppLocalizations> _loadLocalizations() async {
+    final supported = AppLocalizations.supportedLocales;
+    final override = _languageOverrideProvider?.call();
+    if (override != null && override.isNotEmpty) {
+      final overrideLocale = Locale(override);
+      final isSupported = supported.any(
+        (l) => l.languageCode == overrideLocale.languageCode,
+      );
+      if (isSupported) {
+        return AppLocalizations.delegate.load(overrideLocale);
+      }
+    }
+    final preferred = WidgetsBinding.instance.platformDispatcher.locales;
+    final match = basicLocaleListResolution(preferred, supported);
+    return AppLocalizations.delegate.load(match);
   }
 
   Future<void> stop() async {

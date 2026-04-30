@@ -45,6 +45,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get common_close => 'Закрыть';
 
   @override
+  String get common_done => 'Готово';
+
+  @override
   String get common_edit => 'Изменить';
 
   @override
@@ -443,6 +446,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_actions => 'Действия';
+
+  @override
+  String get settings_deleteAllPaths => 'Delete All Paths';
+
+  @override
+  String get settings_deleteAllPathsSubtitle =>
+      'Clear all path data from contacts.';
 
   @override
   String get settings_sendAdvertisement => 'Отправить анонсирование';
@@ -1095,6 +1105,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_public => 'Публичный';
 
   @override
+  String channels_via(String path) {
+    return 'через $path';
+  }
+
+  @override
   String get channels_private => 'Приватный';
 
   @override
@@ -1513,6 +1528,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_successes => 'успешно';
 
   @override
+  String get chat_score => 'Оценка';
+
+  @override
   String get chat_removePath => 'Удалить маршрут';
 
   @override
@@ -1702,6 +1720,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_flags => 'Флаги';
 
   @override
+  String get map_type => 'Тип';
+
+  @override
+  String get map_path => 'Путь';
+
+  @override
+  String get map_location => 'Местоположение';
+
+  @override
+  String get map_estLocation => 'Прибл. местоположение';
+
+  @override
+  String get map_publicKey => 'Публичный ключ';
+
+  @override
+  String get map_publicKeyPrefixHint => 'напр. ab12';
+
+  @override
   String get map_shareMarkerHere => 'Поделиться меткой здесь';
 
   @override
@@ -1785,6 +1821,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_sharedPin => 'Общая метка';
+
+  @override
+  String get map_sharedAt => 'Поделено';
 
   @override
   String get map_joinRoom => 'Присоединиться к комнате';
@@ -3302,6 +3341,38 @@ class AppLocalizationsRu extends AppLocalizations {
   String get losLegendTerrain => 'Рельеф';
 
   @override
+  String get losBlockedSpotsTitle => 'Зарезервированные места';
+
+  @override
+  String get losBlockedSpotsHint =>
+      'Щелкните по заблокированной области, чтобы выделить ее на карте.';
+
+  @override
+  String losBlockedSpotChip(
+    String distance,
+    String distanceUnit,
+    String obstruction,
+    String heightUnit,
+  ) {
+    return '$distance $distanceUnit • $obstruction $heightUnit';
+  }
+
+  @override
+  String get losSelectedObstructionTitle =>
+      'Выбранный объект, препятствующий движению';
+
+  @override
+  String losSelectedObstructionDetails(
+    String obstruction,
+    String heightUnit,
+    String distanceFromA,
+    String distanceUnit,
+    String distanceFromB,
+  ) {
+    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+  }
+
+  @override
   String get losFrequencyLabel => 'Частота';
 
   @override
@@ -3774,4 +3845,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translation_systemLanguage => 'Язык системы';
+
+  @override
+  String get background_serviceTitle => 'MeshCore работает';
+
+  @override
+  String get background_serviceText => 'Поддерживает BLE-соединение';
+
+  @override
+  String appSettings_translationModelDeleted(String name) {
+    return 'Удалено $name';
+  }
+
+  @override
+  String appSettings_translationModelDeleteFailed(String error) {
+    return 'Не удалось удалить: $error';
+  }
+
+  @override
+  String channels_channelUpdateFailed(String error) {
+    return 'Не удалось обновить канал: $error';
+  }
+
+  @override
+  String get contact_typeChat => 'Чат';
+
+  @override
+  String get contact_typeRepeater => 'Ретранслятор';
+
+  @override
+  String get contact_typeRoom => 'Комната';
+
+  @override
+  String get contact_typeSensor => 'Датчик';
+
+  @override
+  String get contact_typeUnknown => 'Неизвестно';
 }
