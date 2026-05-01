@@ -17,6 +17,7 @@ class Contact {
   final double? longitude;
   final DateTime lastSeen;
   final DateTime lastMessageAt;
+  final DateTime? lastModified;
   final bool isActive;
   final bool wasPulled;
   final Uint8List? rawPacket;
@@ -33,6 +34,7 @@ class Contact {
     this.latitude,
     this.longitude,
     required this.lastSeen,
+    this.lastModified,
     DateTime? lastMessageAt,
     this.isActive = true,
     this.wasPulled = false,
@@ -86,6 +88,7 @@ class Contact {
     double? longitude,
     DateTime? lastSeen,
     DateTime? lastMessageAt,
+    DateTime? lastModified,
     bool? isActive,
     Uint8List? rawPacket,
   }) {
@@ -106,6 +109,7 @@ class Contact {
       longitude: longitude ?? this.longitude,
       lastSeen: lastSeen ?? this.lastSeen,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      lastModified: lastModified ?? this.lastModified,
       isActive: isActive ?? this.isActive,
       rawPacket: rawPacket ?? this.rawPacket,
     );
@@ -174,16 +178,34 @@ class Contact {
         return null;
       }
 
-      final lastMod = reader.readUInt32LE();
+      // mandatory last_advert_timestamp
+      final lastAdvertTimestamp = reader.readUInt32LE();
 
       double? lat, lon;
-      if (reader.remaining >= 8) {
+      DateTime? lastModified;
+      if (reader.remaining >= 12) {
+        final latRaw = reader.readInt32LE();
+        final lonRaw = reader.readInt32LE();
+        final lastModRaw = reader.readUInt32LE();
+        // TODO: should this be &&?
+        if (latRaw != 0 || lonRaw != 0) {
+          lat = latRaw / 1e6;
+          lon = lonRaw / 1e6;
+        }
+        if (lastModRaw != 0) {
+          lastModified = DateTime.fromMillisecondsSinceEpoch(lastModRaw * 1000);
+        }
+      } else if (reader.remaining >= 8) {
+        // Old layout: gps without lastmod
         final latRaw = reader.readInt32LE();
         final lonRaw = reader.readInt32LE();
         if (latRaw != 0 || lonRaw != 0) {
           lat = latRaw / 1e6;
           lon = lonRaw / 1e6;
         }
+        appLogger.info(
+          'Contact ${pubKeyToHex(pubKey).substring(0, 8)} has gps but no lastmod (legacy firmware layout)',
+        );
       }
 
       return Contact(
@@ -195,7 +217,10 @@ class Contact {
         path: pathBytes,
         latitude: lat,
         longitude: lon,
-        lastSeen: DateTime.fromMillisecondsSinceEpoch(lastMod * 1000),
+        lastSeen: DateTime.fromMillisecondsSinceEpoch(
+          lastAdvertTimestamp * 1000,
+        ),
+        lastModified: lastModified,
         isActive: true,
         rawPacket: null,
       );

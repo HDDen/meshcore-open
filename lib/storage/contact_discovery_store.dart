@@ -43,6 +43,7 @@ class ContactDiscoveryStore {
       'latitude': contact.latitude,
       'longitude': contact.longitude,
       'lastSeen': contact.lastSeen.millisecondsSinceEpoch,
+      'lastModified': contact.lastModified?.millisecondsSinceEpoch,
       'lastMessageAt': contact.lastMessageAt.millisecondsSinceEpoch,
       'rawPacket': contact.rawPacket != null
           ? base64Encode(contact.rawPacket!)
@@ -53,6 +54,7 @@ class ContactDiscoveryStore {
   Contact _fromJson(Map<String, dynamic> json) {
     final lastSeenMs = json['lastSeen'] as int? ?? 0;
     final lastMessageMs = json['lastMessageAt'] as int?;
+    final lastModifiedMs = json['lastModified'] as int?;
     return Contact(
       publicKey: Uint8List.fromList(base64Decode(json['publicKey'] as String)),
       name: json['name'] as String? ?? 'Unknown',
@@ -71,6 +73,9 @@ class ContactDiscoveryStore {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       lastSeen: DateTime.fromMillisecondsSinceEpoch(lastSeenMs),
+      lastModified: lastModifiedMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastModifiedMs),
       lastMessageAt: DateTime.fromMillisecondsSinceEpoch(
         lastMessageMs ?? lastSeenMs,
       ),
