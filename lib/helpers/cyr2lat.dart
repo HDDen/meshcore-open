@@ -1,5 +1,5 @@
 class Cyr2Lat {
-  static Map<String, String> _charMap = {
+  static const Map<String, String> defaultCharMap = {
     'А': 'A',
     'В': 'B',
     'Е': 'E',
@@ -25,6 +25,8 @@ class Cyr2Lat {
   };
 
   static final RegExp _prefixRegExp = RegExp(r'\@\[[\S\s]+\] ');
+
+  static Map<String, String> _charMap = Map.from(defaultCharMap);
 
   static void setCharMap(Map<String, String> charMap) {
     _charMap = Map.from(charMap);
