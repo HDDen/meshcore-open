@@ -41,7 +41,10 @@ class Contact {
 
   String get publicKeyHex => pubKeyToHex(publicKey);
 
-  String get typeLabel {
+  /// Non-localized type label, intended for logs and non-UI exports
+  /// (e.g. GPX). For UI use the `typeLabel(l10n)` extension in
+  /// `lib/l10n/contact_localization.dart`.
+  String get typeLabelRaw {
     switch (type) {
       case advTypeChat:
         return 'Chat';
@@ -54,17 +57,6 @@ class Contact {
       default:
         return 'Unknown';
     }
-  }
-
-  String get pathLabel {
-    if (pathOverride != null) {
-      if (pathOverride! < 0) return 'Flood (forced)';
-      if (pathOverride == 0) return 'Direct (forced)';
-      return '$pathOverride hops (forced)';
-    }
-    if (pathLength < 0) return 'Flood';
-    if (pathLength == 0) return 'Direct';
-    return '$pathLength hops';
   }
 
   bool get hasLocation {

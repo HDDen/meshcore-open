@@ -167,6 +167,8 @@
   "settings_privacyModeEnabled": "Adatvédelem mód beállítva",
   "settings_privacyModeDisabled": "Adatvédelem mód kikapcsolva",
   "settings_actions": "Tevékenységek",
+  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Hirdetés küldése",
   "settings_sendAdvertisementSubtitle": "A nyilvános megjelenés",
   "settings_advertisementSent": "Hirdetés elküldve",
@@ -2120,5 +2122,86 @@
   "room_guest": "Szoba szerver információk",
   "chat_sendMessage": "Üzenet küldése",
   "repeater_guest": "Adatok a repeaterről",
-  "settings_multiAck": "Többszörös visszaigazolások"
+  "common_done": "Done",
+  "background_serviceTitle": "MeshCore running",
+  "background_serviceText": "Keeping BLE connected",
+  "appSettings_translationModelDeleted": "Deleted {name}",
+  "@appSettings_translationModelDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "@appSettings_translationModelDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "@channels_channelUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_type": "Type",
+  "map_path": "Path",
+  "map_location": "Location",
+  "map_estLocation": "Est. Location",
+  "map_publicKey": "Public Key",
+  "map_publicKeyPrefixHint": "e.g. ab12",
+  "contact_typeChat": "Chat",
+  "contact_typeRepeater": "Repeater",
+  "contact_typeRoom": "Room",
+  "contact_typeSensor": "Sensor",
+  "contact_typeUnknown": "Unknown",
+  "channels_via": "via {path}",
+  "chat_score": "Score",
+  "settings_multiAck": "Többszörös visszaigazolások",
+  "map_sharedAt": "Megosztva",
+  "@losBlockedSpotChip": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      }
+    }
+  },
+  "@losSelectedObstructionDetails": {
+    "placeholders": {
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      },
+      "distanceFromA": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "distanceFromB": {
+        "type": "String"
+      }
+    }
+  },
+  "losSelectedObstructionTitle": "Kiválasztott akadály",
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "losBlockedSpotsHint": "A blokkolt területet megjelölve, hogy a térképen kiemeljük.",
+  "losBlockedSpotsTitle": "Foglalhatatlan területek",
+  "losSelectedObstructionDetails": "Elakadt a {obstruction} miatt, {heightUnit} magasságban, {distanceFromA} méterrel A-tól és {distanceFromB} méterrel B-től ({distanceUnit})."
 }

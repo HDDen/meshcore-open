@@ -76,9 +76,12 @@ class PathTraceMapScreen extends StatefulWidget {
 
 class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   static const double _labelZoomThreshold = 8.5;
+  static const double _mapMinZoom = 2.0;
+  static const double _mapMaxZoom = 18.0;
   //miles to meters conversion for filtering out repeaters that are too far from the last known GPS hop to be a likely match, to avoid false matches that throw off the inferred positions of other hops in the path
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
+  final MapController _mapController = MapController();
   StreamSubscription<Uint8List>? _frameSubscription;
   Timer? _timeoutTimer;
 
@@ -116,9 +119,72 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
 
   @override
   void dispose() {
+    _mapController.dispose();
     _frameSubscription?.cancel();
     _timeoutTimer?.cancel();
     super.dispose();
+  }
+
+  bool _isDesktopPlatform(TargetPlatform platform) {
+    return platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS;
+  }
+
+  void _zoomMapBy(double delta) {
+    final camera = _mapController.camera;
+    final nextZoom = (camera.zoom + delta)
+        .clamp(_mapMinZoom, _mapMaxZoom)
+        .toDouble();
+    _mapController.move(camera.center, nextZoom);
+  }
+
+  void _resetMapView() {
+    final bounds = _bounds;
+    if (bounds != null) {
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(64),
+          maxZoom: 16,
+        ),
+      );
+      return;
+    }
+    final center = _initialCenter;
+    if (center != null) {
+      _mapController.move(center, _initialZoom);
+    }
+  }
+
+  Widget _buildDesktopMapControls() {
+    return Positioned(
+      top: 16,
+      left: 16,
+      child: Card(
+        elevation: 4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Zoom in',
+              onPressed: () => _zoomMapBy(1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.remove),
+              tooltip: 'Zoom out',
+              onPressed: () => _zoomMapBy(-1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.my_location),
+              tooltip: 'Center map',
+              onPressed: _resetMapView,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Uint8List buildPath(Uint8List pathBytes) {
@@ -519,6 +585,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                   ),
                 if (_hasData)
                   _buildMapPathTrace(context, tileCache, _targetContact),
+                if (_hasData && _isDesktopPlatform(defaultTargetPlatform))
+                  _buildDesktopMapControls(),
                 if (_points.isEmpty &&
                     !_hasData &&
                     !_isLoading &&
@@ -801,10 +869,24 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     MapTileCacheService tileCache,
     Contact? target,
   ) {
+    final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
     return FlutterMap(
       key: _mapKey,
+      mapController: _mapController,
       options: MapOptions(
-        interactionOptions: InteractionOptions(flags: ~InteractiveFlag.rotate),
+        interactionOptions: InteractionOptions(
+          flags: ~InteractiveFlag.rotate,
+          scrollWheelVelocity: isDesktop ? 0.012 : 0.005,
+          cursorKeyboardRotationOptions:
+              CursorKeyboardRotationOptions.disabled(),
+          keyboardOptions: isDesktop
+              ? const KeyboardOptions(
+                  enableArrowKeysPanning: true,
+                  enableWASDPanning: true,
+                  enableRFZooming: true,
+                )
+              : const KeyboardOptions.disabled(),
+        ),
         initialCenter: _initialCenter!,
         initialZoom: _initialZoom,
         initialCameraFit: _bounds == null
@@ -814,8 +896,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                 padding: const EdgeInsets.all(64),
                 maxZoom: 16,
               ),
-        minZoom: 2.0,
-        maxZoom: 18.0,
+        minZoom: _mapMinZoom,
+        maxZoom: _mapMaxZoom,
         onPositionChanged: (camera, hasGesture) {
           final shouldShow = camera.zoom >= _labelZoomThreshold;
           if (shouldShow != _showNodeLabels && mounted) {

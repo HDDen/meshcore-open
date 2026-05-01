@@ -3,6 +3,7 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
+import '../l10n/contact_localization.dart';
 import '../services/app_settings_service.dart';
 import 'repeater_status_screen.dart';
 import 'repeater_cli_screen.dart';
@@ -93,7 +94,7 @@ class RepeaterHubScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      repeater.pathLabel,
+                      repeater.pathLabel(context.l10n),
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                     if (repeater.hasLocation) ...[

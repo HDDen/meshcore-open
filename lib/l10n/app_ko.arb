@@ -167,6 +167,8 @@
   "settings_privacyModeEnabled": "개인 정보 보호 모드 활성화",
   "settings_privacyModeDisabled": "개인 정보 보호 모드 비활성화",
   "settings_actions": "행동",
+  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "광고 전송",
   "settings_sendAdvertisementSubtitle": "방송 활동",
   "settings_advertisementSent": "광고 전송",
@@ -2120,5 +2122,86 @@
   "chat_sendMessage": "메시지를 보내기",
   "repeater_guest": "반복 장비 정보",
   "room_guest": "서버 정보",
-  "settings_multiAck": "다중 ACK"
+  "common_done": "Done",
+  "background_serviceTitle": "MeshCore running",
+  "background_serviceText": "Keeping BLE connected",
+  "appSettings_translationModelDeleted": "Deleted {name}",
+  "@appSettings_translationModelDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "@appSettings_translationModelDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "@channels_channelUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_type": "Type",
+  "map_path": "Path",
+  "map_location": "Location",
+  "map_estLocation": "Est. Location",
+  "map_publicKey": "Public Key",
+  "map_publicKeyPrefixHint": "e.g. ab12",
+  "contact_typeChat": "Chat",
+  "contact_typeRepeater": "Repeater",
+  "contact_typeRoom": "Room",
+  "contact_typeSensor": "Sensor",
+  "contact_typeUnknown": "Unknown",
+  "channels_via": "via {path}",
+  "chat_score": "Score",
+  "settings_multiAck": "다중 ACK",
+  "map_sharedAt": "공유됨",
+  "@losBlockedSpotChip": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      }
+    }
+  },
+  "@losSelectedObstructionDetails": {
+    "placeholders": {
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      },
+      "distanceFromA": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "distanceFromB": {
+        "type": "String"
+      }
+    }
+  },
+  "losBlockedSpotsHint": "지도에서 특정 위치를 강조하려면 해당 위치를 클릭하세요.",
+  "losBlockedSpotsTitle": "차단된 공간",
+  "losSelectedObstructionTitle": "선택된 장애물",
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
 }

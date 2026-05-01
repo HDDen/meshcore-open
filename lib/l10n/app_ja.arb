@@ -167,6 +167,8 @@
   "settings_privacyModeEnabled": "プライバシーモードが有効になっています",
   "settings_privacyModeDisabled": "プライバシーモードは無効化されています",
   "settings_actions": "行動",
+  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "広告を送信する",
   "settings_sendAdvertisementSubtitle": "現在、放送での活動",
   "settings_advertisementSent": "広告が送信されました",
@@ -2120,5 +2122,86 @@
   "chat_sendMessage": "メッセージを送信する",
   "repeater_guest": "繰り返し送信に関する情報",
   "repeater_guestTools": "ゲスト向けツール",
-  "settings_multiAck": "複数のACK（応答）"
+  "common_done": "Done",
+  "background_serviceTitle": "MeshCore running",
+  "background_serviceText": "Keeping BLE connected",
+  "appSettings_translationModelDeleted": "Deleted {name}",
+  "@appSettings_translationModelDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "@appSettings_translationModelDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "@channels_channelUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_type": "Type",
+  "map_path": "Path",
+  "map_location": "Location",
+  "map_estLocation": "Est. Location",
+  "map_publicKey": "Public Key",
+  "map_publicKeyPrefixHint": "e.g. ab12",
+  "contact_typeChat": "Chat",
+  "contact_typeRepeater": "Repeater",
+  "contact_typeRoom": "Room",
+  "contact_typeSensor": "Sensor",
+  "contact_typeUnknown": "Unknown",
+  "channels_via": "via {path}",
+  "chat_score": "Score",
+  "settings_multiAck": "複数のACK（応答）",
+  "map_sharedAt": "共有済み",
+  "@losBlockedSpotChip": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      }
+    }
+  },
+  "@losSelectedObstructionDetails": {
+    "placeholders": {
+      "obstruction": {
+        "type": "String"
+      },
+      "heightUnit": {
+        "type": "String"
+      },
+      "distanceFromA": {
+        "type": "String"
+      },
+      "distanceUnit": {
+        "type": "String"
+      },
+      "distanceFromB": {
+        "type": "String"
+      }
+    }
+  },
+  "losBlockedSpotsHint": "地図上で、特定された場所を強調するために、該当する場所をタップしてください。",
+  "losSelectedObstructionTitle": "選択された障害",
+  "losBlockedSpotsTitle": "利用できない場所",
+  "losSelectedObstructionDetails": "{obstruction} によって {heightUnit} の高さで、A地点から {distanceFromA}、B地点から {distanceFromB} ({distanceUnit}) の距離で塞がれています。",
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}"
 }

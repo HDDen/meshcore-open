@@ -72,8 +72,8 @@ class GpxExport {
         contact.name,
         contact.latitude!,
         contact.longitude!,
-        "Type: ${contact.typeLabel}\nPublic Key: ${contact.publicKeyHex}",
         url,
+        "Type: ${contact.typeLabelRaw}\nPublic Key: ${contact.publicKeyHex}",
       );
     }
   }
@@ -91,8 +91,8 @@ class GpxExport {
         contact.name,
         contact.latitude!,
         contact.longitude!,
-        "Type: ${contact.typeLabel}\nPublic Key: ${contact.publicKeyHex}",
         url,
+        "Type: ${contact.typeLabelRaw}\nPublic Key: ${contact.publicKeyHex}",
       );
     }
   }
@@ -110,8 +110,8 @@ class GpxExport {
         contact.name,
         contact.latitude ?? 0.0,
         contact.longitude ?? 0.0,
-        "Type: ${contact.typeLabel}\nPublic Key: ${contact.publicKeyHex}",
         url,
+        "Type: ${contact.typeLabelRaw}\nPublic Key: ${contact.publicKeyHex}",
       );
     }
   }
