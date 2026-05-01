@@ -735,10 +735,15 @@ Uint8List buildUpdateContactPathFrame(
     writer.writeInt32LE((longitude * 1e6).round());
   }
 
-  if (lastModified != null) {
-    // Last modified
-    final lastModifiedTimestamp = lastModified.millisecondsSinceEpoch ~/ 1000;
-    writer.writeUInt32LE(lastModifiedTimestamp);
+  final hasLocation = lat != null && lon != null;
+  if (hasLocation || lastModified != null) {
+    writer.writeInt32LE(hasLocation ? (lat * 1e6).round() : 0);
+    writer.writeInt32LE(hasLocation ? (lon * 1e6).round() : 0);
+    if (lastModified != null) {
+      // Last modified
+      final lastModifiedTimestamp = lastModified.millisecondsSinceEpoch ~/ 1000;
+      writer.writeUInt32LE(lastModifiedTimestamp);
+    }
   }
 
   return writer.toBytes();
