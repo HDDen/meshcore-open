@@ -12,6 +12,7 @@ import '../services/notification_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/cyr2lat.dart';
 import 'map_cache_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
@@ -1353,7 +1354,7 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     final nameController = TextEditingController();
     final jsonController = TextEditingController(
-      text: const JsonEncoder.withIndent('  ').convert(defaultCyr2LatCharMap),
+      text: const JsonEncoder.withIndent('  ').convert(Cyr2Lat.defaultCharMap),
     );
 
     showDialog(
