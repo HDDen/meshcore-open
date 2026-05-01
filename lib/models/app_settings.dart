@@ -1,4 +1,5 @@
 import 'translation_support.dart';
+import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
 
@@ -12,31 +13,6 @@ extension UnitSystemValue on UnitSystem {
     }
   }
 }
-
-const Map<String, String> defaultCyr2LatCharMap = {
-  'А': 'A',
-  'В': 'B',
-  'Е': 'E',
-  'Ё': 'E',
-  'З': '3',
-  'К': 'K',
-  'М': 'M',
-  'Н': 'H',
-  'О': 'O',
-  'Р': 'P',
-  'С': 'C',
-  'Т': 'T',
-  'Х': 'X',
-  'Ь': 'b',
-  'а': 'a',
-  'е': 'e',
-  'ё': 'e',
-  'о': 'o',
-  'р': 'p',
-  'с': 'c',
-  'у': 'y',
-  'х': 'x',
-};
 
 class Cyr2LatProfile {
   final String id;
@@ -183,7 +159,7 @@ class AppSettings {
              Cyr2LatProfile(
                id: 'default',
                name: 'Default',
-               charMap: defaultCyr2LatCharMap,
+               charMap: Cyr2Lat.defaultCharMap,
              ),
            ],
        selectedCyr2latProfileId = selectedCyr2latProfileId ?? 'default';
@@ -343,14 +319,14 @@ class AppSettings {
                           (key, value) =>
                               MapEntry(key.toString(), value.toString()),
                         ) ??
-                        defaultCyr2LatCharMap,
+                        Cyr2Lat.defaultCharMap,
                   ),
                 ]
               : [
                   Cyr2LatProfile(
                     id: 'default',
                     name: 'Default',
-                    charMap: defaultCyr2LatCharMap,
+                    charMap: Cyr2Lat.defaultCharMap,
                   ),
                 ]),
       selectedCyr2latProfileId:
