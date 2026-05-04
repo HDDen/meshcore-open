@@ -5633,7 +5633,7 @@ class MeshCoreConnector extends ChangeNotifier {
   ) {
     // Search backwards for most recent message from this sender
     for (int i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].senderName == mentionedNode && !messages[i].isOutgoing) {
+      if (messages[i].senderName == mentionedNode) {
         return messages[i];
       }
     }
