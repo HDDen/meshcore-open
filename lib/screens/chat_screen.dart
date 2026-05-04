@@ -14,6 +14,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/newline_to_space_formatter.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
@@ -624,6 +625,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     focusNode: _textFieldFocusNode,
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
+                    extraFormatters:
+                        connector.isContactMcmpEnabled(
+                          widget.contact.publicKeyHex,
+                        )
+                        ? const [NewlineToSpaceFormatter()]
+                        : const [],
                     encoder:
                         (connector.isContactMcmpEnabled(
                               widget.contact.publicKeyHex,
