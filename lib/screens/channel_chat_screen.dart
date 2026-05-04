@@ -172,20 +172,62 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _scrollToMessage(String messageId) async {
-    final key = _messageKeys[messageId];
+    final connector = context.read<MeshCoreConnector>();
+    final messenger = ScaffoldMessenger.of(context);
+    final originalMessageNotFoundText =
+        context.l10n.chat_originalMessageNotFound;
+    GlobalKey? key = _messageKeys[messageId];
     if (key == null) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_originalMessageNotFound),
-        duration: const Duration(seconds: 2),
+      while (mounted && key == null) {
+        final olderMessages = await connector.loadOlderChannelMessages(
+          widget.channel.index,
+        );
+        if (olderMessages.isEmpty) {
+          break;
+        }
+        await WidgetsBinding.instance.endOfFrame;
+        key = _messageKeys[messageId];
+      }
+    }
+
+    if (!mounted) return;
+
+    if (key == null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: GestureDetector(
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(originalMessageNotFoundText),
+          ),
+          duration: const Duration(seconds: 2),
+          dismissDirection: DismissDirection.down,
+          clipBehavior: Clip.hardEdge,
+        ),
       );
       return;
     }
 
     final targetContext = key.currentContext;
-    if (targetContext == null) return;
+    if (targetContext == null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: GestureDetector(
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(originalMessageNotFoundText),
+          ),
+          duration: const Duration(seconds: 2),
+          dismissDirection: DismissDirection.down,
+          clipBehavior: Clip.hardEdge,
+        ),
+      );
+      return;
+    }
 
-    await Scrollable.ensureVisible(
+    if (!targetContext.mounted) {
+      return;
+    }
+
+    Scrollable.ensureVisible(
       targetContext,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
