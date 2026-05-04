@@ -1057,7 +1057,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildMessageComposer() {
     final connector = context.watch<MeshCoreConnector>();
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
+    final maxBytes = _maxChannelInputBytes(connector);
     final settings = context.watch<AppSettingsService>().settings;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1260,7 +1260,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       messageText = '@[${_replyingToMessage!.senderName}] $messageText';
     }
 
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
+    final maxBytes = _maxChannelInputBytes(connector);
     final outboundText = connector.prepareChannelOutboundText(
       widget.channel.index,
       messageText,
@@ -1292,6 +1292,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
     );
+  }
+
+  int _maxChannelInputBytes(MeshCoreConnector connector) {
+    if (connector.isChannelMcmpEnabled(widget.channel.index)) {
+      return maxChannelMessageBytes(null);
+    }
+    return maxChannelMessageBytes(connector.selfName);
   }
 
   String _formatTime(BuildContext context, DateTime time) {
