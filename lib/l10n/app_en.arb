@@ -2230,6 +2230,8 @@
       }
     }
   },
+  "channels_mcmpCompression": "MCMP compression",
+  "channels_mcmpCompressionDescription": "Using mesh-compressor model",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",

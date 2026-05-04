@@ -6640,6 +6640,18 @@ abstract class AppLocalizations {
   /// **'Failed to update channel: {error}'**
   String channels_channelUpdateFailed(String error);
 
+  /// No description provided for @channels_mcmpCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP compression'**
+  String get channels_mcmpCompression;
+
+  /// No description provided for @channels_mcmpCompressionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Using mesh-compressor model'**
+  String get channels_mcmpCompressionDescription;
+
   /// No description provided for @contact_typeChat.
   ///
   /// In en, this message translates to:

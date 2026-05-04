@@ -1308,9 +1308,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('MCMP compression'),
-                  subtitle: const Text(
-                    'Model-based compression with Base91 transport prefix.',
+                  title: Text(context.l10n.channels_mcmpCompression),
+                  subtitle: Text(
+                    context.l10n.channels_mcmpCompressionDescription,
                   ),
                   value: mcmpEnabled,
                   onChanged: (value) {

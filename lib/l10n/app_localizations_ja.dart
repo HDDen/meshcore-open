@@ -3676,6 +3676,13 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get channels_mcmpCompression => 'MCMP compression';
+
+  @override
+  String get channels_mcmpCompressionDescription =>
+      'Using mesh-compressor model';
+
+  @override
   String get contact_typeChat => 'Chat';
 
   @override

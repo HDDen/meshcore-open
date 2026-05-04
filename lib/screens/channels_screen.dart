@@ -1462,7 +1462,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 const SizedBox(height: 16),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('MCMP compression'),
+                  title: Text(dialogContext.l10n.channels_mcmpCompression),
+                  subtitle: Text(
+                    dialogContext.l10n.channels_mcmpCompressionDescription,
+                  ),
                   value: mcmpEnabled,
                   onChanged: (value) => setState(() {
                     mcmpEnabled = value;
