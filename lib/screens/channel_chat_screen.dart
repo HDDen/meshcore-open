@@ -644,7 +644,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   decoration: BoxDecoration(
                     color: isHighlighted
                         ? Color.alphaBlend(
-                            Colors.green.withValues(alpha: 0.7),
+                            Colors.green.withValues(alpha: 0.5),
                             baseBubbleColor,
                           )
                         : baseBubbleColor,
