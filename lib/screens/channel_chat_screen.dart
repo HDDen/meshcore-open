@@ -304,7 +304,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return null;
   }
 
-  Future<void> _scrollToMessage(String messageId) async {
+  Future<void> _scrollToMessage(
+    String messageId, {
+    bool highlightOnSuccess = false,
+  }) async {
     final messenger = ScaffoldMessenger.of(context);
     final originalMessageNotFoundText =
         context.l10n.chat_originalMessageNotFound;
@@ -337,7 +340,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
-    _highlightMessage(messageId);
+    if (highlightOnSuccess) {
+      _highlightMessage(messageId);
+    }
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
@@ -363,7 +368,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return;
     }
 
-    await _scrollToMessage(resolvedMessageId);
+    await _scrollToMessage(resolvedMessageId, highlightOnSuccess: true);
   }
 
   @override
