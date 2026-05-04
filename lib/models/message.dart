@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
 import 'translation_support.dart';
 
@@ -139,7 +140,9 @@ class Message {
       if ((flags >> 2) != txtTypePlain) {
         return null;
       }
-      final text = reader.readCString();
+      final rawText = reader.readCString();
+      final text =
+          MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
 
       return Message(
         senderKey: senderKey,

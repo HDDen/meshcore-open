@@ -23,6 +23,7 @@ import 'services/translation_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'storage/prefs_manager.dart';
+import 'helpers/mesh_compressor.dart';
 import 'utils/app_logger.dart';
 
 void main() async {
@@ -30,6 +31,7 @@ void main() async {
 
   // Initialize SharedPreferences cache
   await PrefsManager.initialize();
+  await MeshCompressor.instance.initialize();
 
   // Initialize services
   final storage = StorageService();

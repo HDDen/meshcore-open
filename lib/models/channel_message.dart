@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/reaction_helper.dart';
-import '../helpers/smaz.dart';
+import '../helpers/message_text_codec.dart';
 import 'translation_support.dart';
 import '../utils/app_logger.dart';
 
@@ -199,7 +199,8 @@ class ChannelMessage {
         }
       }
 
-      final decodedText = Smaz.tryDecodePrefixed(actualText) ?? actualText;
+      final decodedText =
+          MessageTextCodec.tryDecodeKnownCompression(actualText) ?? actualText;
 
       return ChannelMessage(
         senderKey: null,
