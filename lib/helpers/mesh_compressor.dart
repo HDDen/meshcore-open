@@ -243,43 +243,118 @@ class MeshCompressor {
       return '';
     }
 
-    late final int textLength;
-    late final bool hasEscapes;
-    late final Uint8List acData;
+    final decoded = _tryDecodeCompressedCandidates(data, model);
+    if (decoded != null) {
+      return decoded;
+    }
+    throw const FormatException('Unable to decode compressed message');
+  }
 
+  String? _tryDecodeCompressedCandidates(
+    Uint8List data,
+    _MeshCompressionModel model,
+  ) {
     final byte1 = data[1];
+    final candidates = <_DecodeCandidate>[];
+
     if ((byte1 & 0x80) == 0) {
-      textLength = byte1 & 0x7F;
-      hasEscapes = false;
-      acData = Uint8List.sublistView(data, 2);
-    } else if (byte1 != 0xFF && byte1 >= 0x80) {
+      candidates.add(
+        _DecodeCandidate(
+          textLength: byte1 & 0x7F,
+          hasEscapes: false,
+          acOffset: 2,
+        ),
+      );
+    } else if (byte1 != 0xFF) {
       final compactTextLength = byte1 & 0x7F;
       if (compactTextLength > 0) {
-        textLength = compactTextLength;
-        hasEscapes = true;
-        acData = Uint8List.sublistView(data, 2);
-      } else {
-        if (data.length < 3) {
-          throw const FormatException('Data too short for standard header');
-        }
-        textLength = (data[0] << 8) | data[1];
-        final flags = data[2];
-        if (flags > 1) {
-          return _decompressLegacyHeader(data, model, textLength, flags);
-        }
-        hasEscapes = flags == 1;
-        acData = Uint8List.sublistView(data, 3);
+        candidates.add(
+          _DecodeCandidate(
+            textLength: compactTextLength,
+            hasEscapes: true,
+            acOffset: 2,
+          ),
+        );
       }
-    } else {
-      throw FormatException(
-        'Unexpected header byte: 0x${byte1.toRadixString(16)}',
-      );
+      if (data.length >= 3) {
+        final textLength = (data[0] << 8) | data[1];
+        final flags = data[2];
+        if (flags <= 1) {
+          candidates.add(
+            _DecodeCandidate(
+              textLength: textLength,
+              hasEscapes: flags == 1,
+              acOffset: 3,
+            ),
+          );
+        } else {
+          candidates.add(
+            _DecodeCandidate(
+              textLength: textLength,
+              hasEscapes: false,
+              acOffset: 3,
+              legacyExtraCount: flags,
+            ),
+          );
+        }
+      }
     }
 
-    if (acData.isEmpty) {
-      throw const FormatException('No AC data after header');
+    for (final candidate in candidates) {
+      final decoded = _tryDecodeCandidate(data, model, candidate);
+      if (decoded != null) {
+        return decoded;
+      }
     }
-    return _decodeArithmetic(acData, model, textLength, hasEscapes);
+    return null;
+  }
+
+  String? _tryDecodeCandidate(
+    Uint8List data,
+    _MeshCompressionModel model,
+    _DecodeCandidate candidate,
+  ) {
+    try {
+      final decoded = candidate.legacyExtraCount != null
+          ? _decompressLegacyHeader(
+              data,
+              model,
+              candidate.textLength,
+              candidate.legacyExtraCount!,
+            )
+          : _decodeArithmetic(
+              Uint8List.sublistView(data, candidate.acOffset),
+              model,
+              candidate.textLength,
+              candidate.hasEscapes,
+            );
+
+      if (_compressedEncodingMatches(data, decoded, model)) {
+        return decoded;
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
+  bool _compressedEncodingMatches(
+    Uint8List originalData,
+    String decoded,
+    _MeshCompressionModel model,
+  ) {
+    try {
+      final recompressed = _compressArithmetic(decoded, model);
+      if (recompressed.length != originalData.length) {
+        return false;
+      }
+      for (int i = 0; i < recompressed.length; i++) {
+        if (recompressed[i] != originalData[i]) return false;
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   String _decompressLegacyHeader(
@@ -862,6 +937,20 @@ class _CdfEntry {
   final String symbol;
   final int low;
   final int high;
+}
+
+class _DecodeCandidate {
+  const _DecodeCandidate({
+    required this.textLength,
+    required this.hasEscapes,
+    required this.acOffset,
+    this.legacyExtraCount,
+  });
+
+  final int textLength;
+  final bool hasEscapes;
+  final int acOffset;
+  final int? legacyExtraCount;
 }
 
 class _UnicodeBlock {
