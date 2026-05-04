@@ -625,7 +625,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
                     encoder:
-                        (connector.isContactSmazEnabled(
+                        (connector.isContactMcmpEnabled(
+                              widget.contact.publicKeyHex,
+                            ) ||
+                            connector.isContactSmazEnabled(
                               widget.contact.publicKeyHex,
                             ) ||
                             connector.isContactCyr2LatEnabled(
@@ -1271,9 +1274,11 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       listen: false,
     );
+    connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
+    bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
@@ -1303,6 +1308,38 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
+                  title: const Text('MCMP compression'),
+                  subtitle: const Text(
+                    'Model-based compression with Base91 transport prefix.',
+                  ),
+                  value: mcmpEnabled,
+                  onChanged: (value) {
+                    connector.setContactMcmpEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    if (value) {
+                      connector.setContactSmazEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                      connector.setContactCyr2LatEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                    }
+                    setDialogState(() {
+                      mcmpEnabled = value;
+                      if (mcmpEnabled) {
+                        smazEnabled = false;
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text(context.l10n.channels_smazCompression),
                   subtitle: Text(context.l10n.chat_compressOutgoingMessages),
                   value: smazEnabled,
@@ -1311,6 +1348,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       value,
                     );
+                    connector.setContactMcmpEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
                     connector.setContactCyr2LatEnabled(
                       contact.publicKeyHex,
                       false,
@@ -1318,6 +1359,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     setDialogState(() {
                       smazEnabled = value;
                       if (smazEnabled) {
+                        mcmpEnabled = false;
                         cyr2latEnabled = false;
                       }
                     });
@@ -1334,6 +1376,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       value,
                     );
+                    connector.setContactMcmpEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
                     connector.setContactSmazEnabled(
                       contact.publicKeyHex,
                       false,
@@ -1341,6 +1387,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     setDialogState(() {
                       cyr2latEnabled = value;
                       if (cyr2latEnabled) {
+                        mcmpEnabled = false;
                         smazEnabled = false;
                       }
                     });

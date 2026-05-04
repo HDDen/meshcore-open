@@ -1413,6 +1413,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
     final nameController = TextEditingController(text: channel.name);
     final pskController = TextEditingController(text: channel.pskHex);
+    bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
@@ -1461,11 +1462,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 const SizedBox(height: 16),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
+                  title: const Text('MCMP compression'),
+                  value: mcmpEnabled,
+                  onChanged: (value) => setState(() {
+                    mcmpEnabled = value;
+                    if (mcmpEnabled) {
+                      smazEnabled = false;
+                      cyr2latEnabled = false;
+                    }
+                  }),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text(dialogContext.l10n.channels_smazCompression),
                   value: smazEnabled,
                   onChanged: (value) => setState(() {
                     smazEnabled = value;
                     if (smazEnabled) {
+                      mcmpEnabled = false;
                       cyr2latEnabled = false;
                     }
                   }),
@@ -1480,6 +1494,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   onChanged: (value) => setState(() {
                     cyr2latEnabled = value;
                     if (cyr2latEnabled) {
+                      mcmpEnabled = false;
                       smazEnabled = false;
                     }
                   }),
@@ -1536,6 +1551,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 Navigator.pop(dialogContext);
                 try {
                   await connector.setChannel(channel.index, name, psk);
+                  await connector.setChannelMcmpEnabled(
+                    channel.index,
+                    mcmpEnabled,
+                  );
                   await connector.setChannelSmazEnabled(
                     channel.index,
                     smazEnabled,

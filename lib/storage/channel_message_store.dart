@@ -4,7 +4,7 @@ import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../models/channel_message.dart';
 import '../models/translation_support.dart';
-import '../helpers/smaz.dart';
+import '../helpers/message_text_codec.dart';
 import 'prefs_manager.dart';
 
 class ChannelMessageStore {
@@ -125,7 +125,8 @@ class ChannelMessageStore {
   /// Convert JSON map to ChannelMessage
   ChannelMessage _messageFromJson(Map<String, dynamic> json) {
     final rawText = json['text'] as String;
-    final decodedText = Smaz.tryDecodePrefixed(rawText) ?? rawText;
+    final decodedText =
+        MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
     return ChannelMessage(
       senderKey: json['senderKey'] != null
           ? Uint8List.fromList(base64Decode(json['senderKey']))
