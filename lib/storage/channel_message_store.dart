@@ -4,7 +4,8 @@ import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../models/channel_message.dart';
 import '../models/translation_support.dart';
-import '../helpers/smaz.dart';
+import '../helpers/message_text_codec.dart';
+import '../helpers/mesh_compressor.dart';
 import 'prefs_manager.dart';
 
 class ChannelMessageStore {
@@ -104,6 +105,7 @@ class ChannelMessageStore {
       'translatedLanguageCode': msg.translatedLanguageCode,
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
+      'wasMcmpCompressed': msg.wasMcmpCompressed,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'status': msg.status.index,
@@ -125,7 +127,11 @@ class ChannelMessageStore {
   /// Convert JSON map to ChannelMessage
   ChannelMessage _messageFromJson(Map<String, dynamic> json) {
     final rawText = json['text'] as String;
-    final decodedText = Smaz.tryDecodePrefixed(rawText) ?? rawText;
+    final wasMcmpCompressed =
+        json['wasMcmpCompressed'] as bool? ??
+        MeshCompressor.instance.hasPrefix(rawText);
+    final decodedText =
+        MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
     return ChannelMessage(
       senderKey: json['senderKey'] != null
           ? Uint8List.fromList(base64Decode(json['senderKey']))
@@ -139,6 +145,7 @@ class ChannelMessageStore {
         json['translationStatus'],
       ),
       translationModelId: json['translationModelId'] as String?,
+      wasMcmpCompressed: wasMcmpCompressed,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       isOutgoing: json['isOutgoing'] as bool,
       status: ChannelMessageStatus.values[json['status'] as int],

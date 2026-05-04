@@ -14,6 +14,7 @@ import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
+import '../helpers/newline_to_space_formatter.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
@@ -857,6 +858,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       : Colors.grey[600],
                                 ),
                               ],
+                              if (enableTracing &&
+                                  message.wasMcmpCompressed) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  'mcmp',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1250,7 +1262,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildMessageComposer() {
     final connector = context.watch<MeshCoreConnector>();
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
+    final maxBytes = _maxChannelInputBytes(connector);
     final settings = context.watch<AppSettingsService>().settings;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1344,8 +1356,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       focusNode: _textFieldFocusNode,
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
+                      extraFormatters:
+                          connector.isChannelMcmpEnabled(widget.channel.index)
+                          ? const [NewlineToSpaceFormatter()]
+                          : const [],
                       encoder:
-                          (connector.isChannelSmazEnabled(
+                          (connector.isChannelMcmpEnabled(
+                                widget.channel.index,
+                              ) ||
+                              connector.isChannelSmazEnabled(
                                 widget.channel.index,
                               ) ||
                               connector.isChannelCyr2LatEnabled(
@@ -1450,7 +1469,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       messageText = '@[${_replyingToMessage!.senderName}] $messageText';
     }
 
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
+    final maxBytes = _maxChannelInputBytes(connector);
     final outboundText = connector.prepareChannelOutboundText(
       widget.channel.index,
       messageText,
@@ -1486,6 +1505,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       replyToSenderName: replyTarget?.senderName,
       replyToText: replyTarget?.text,
     );
+  }
+
+  int _maxChannelInputBytes(MeshCoreConnector connector) {
+    if (connector.isChannelMcmpEnabled(widget.channel.index)) {
+      return maxChannelMessageBytes(null);
+    }
+    return maxChannelMessageBytes(connector.selfName);
   }
 
   String _formatTime(BuildContext context, DateTime time) {

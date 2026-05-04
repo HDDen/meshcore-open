@@ -17,6 +17,8 @@ import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/mesh_compressor.dart';
+import '../helpers/message_text_codec.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -283,11 +285,13 @@ class MeshCoreConnector extends ChangeNotifier {
   final ChannelStore _channelStore = ChannelStore();
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
+  final Map<int, bool> _channelMcmpEnabled = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
+  final Map<String, bool> _contactMcmpEnabled = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
@@ -600,12 +604,24 @@ class MeshCoreConnector extends ChangeNotifier {
     return total;
   }
 
+  bool isChannelMcmpEnabled(int channelIndex) {
+    return _channelMcmpEnabled[channelIndex] ?? false;
+  }
+
   bool isChannelSmazEnabled(int channelIndex) {
     return _channelSmazEnabled[channelIndex] ?? false;
   }
 
+  bool isContactMcmpEnabled(String contactKeyHex) {
+    return _contactMcmpEnabled[contactKeyHex] ?? false;
+  }
+
   bool isContactSmazEnabled(String contactKeyHex) {
     return _contactSmazEnabled[contactKeyHex] ?? false;
+  }
+
+  void ensureContactMcmpSettingLoaded(String contactKeyHex) {
+    _ensureContactMcmpSettingLoaded(contactKeyHex);
   }
 
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
@@ -720,18 +736,48 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  Future<void> setChannelMcmpEnabled(int channelIndex, bool enabled) async {
+    _channelMcmpEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelSmazEnabled[channelIndex] = false;
+      _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+      await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
+    }
+    await _channelSettingsStore.saveMcmpEnabled(channelIndex, enabled);
+    notifyListeners();
+  }
+
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
     _channelSmazEnabled[channelIndex] = enabled;
     if (enabled) {
+      _channelMcmpEnabled[channelIndex] = false;
       _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveMcmpEnabled(channelIndex, false);
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
     await _channelSettingsStore.saveSmazEnabled(channelIndex, enabled);
     notifyListeners();
   }
 
+  Future<void> setContactMcmpEnabled(String contactKeyHex, bool enabled) async {
+    _contactMcmpEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactSmazEnabled[contactKeyHex] = false;
+      _contactCyr2LatEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
+    }
+    await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
   Future<void> setContactSmazEnabled(String contactKeyHex, bool enabled) async {
     _contactSmazEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactMcmpEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
+    }
     await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
@@ -739,6 +785,12 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
     if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
     _channelCyr2LatEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelMcmpEnabled[channelIndex] = false;
+      _channelSmazEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveMcmpEnabled(channelIndex, false);
+      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+    }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
   }
@@ -749,6 +801,12 @@ class MeshCoreConnector extends ChangeNotifier {
   ) async {
     if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactMcmpEnabled[contactKeyHex] = false;
+      _contactSmazEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
+    }
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
@@ -888,6 +946,7 @@ class MeshCoreConnector extends ChangeNotifier {
       ..clear()
       ..addAll(cached);
     for (final contact in cached) {
+      _ensureContactMcmpSettingLoaded(contact.publicKeyHex);
       _ensureContactSmazSettingLoaded(contact.publicKeyHex);
       _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
     }
@@ -901,10 +960,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> loadChannelSettings({int? maxChannels}) async {
+    _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
+      _channelMcmpEnabled[i] = await _channelSettingsStore.loadMcmpEnabled(i);
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
       _channelCyr2LatEnabled[i] = await _channelSettingsStore
           .loadCyr2LatEnabled(i);
@@ -2689,6 +2750,9 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = Message.outgoing(
         contact.publicKey,
         text,
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+          prepareContactOutboundText(contact, text),
+        ),
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
         originalText: originalText,
@@ -3055,6 +3119,9 @@ class MeshCoreConnector extends ChangeNotifier {
       text,
       _selfName ?? 'Me',
       channel.index,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareChannelOutboundText(channel.index, text),
+      ),
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4442,7 +4509,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       final decodedText = isCli
           ? msgText
-          : (Smaz.tryDecodePrefixed(msgText) ?? msgText);
+          : (MessageTextCodec.tryDecodeKnownCompression(msgText) ?? msgText);
 
       final contact = _contacts.cast<Contact?>().firstWhere(
         (c) => c != null && _matchesPrefix(c.publicKey, senderPrefix),
@@ -4462,6 +4529,7 @@ class MeshCoreConnector extends ChangeNotifier {
         isOutgoing: false,
         isCli: isCli,
         status: MessageStatus.delivered,
+        wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
         pathLength: pathLength == 0xFF ? 0 : pathLength,
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: msgText.length >= 4
@@ -4495,6 +4563,15 @@ class MeshCoreConnector extends ChangeNotifier {
     if (frame.length < prefixOffset + prefixLen) return null;
 
     return frame.sublist(prefixOffset, prefixOffset + prefixLen);
+  }
+
+  void _ensureContactMcmpSettingLoaded(String contactKeyHex) {
+    if (_contactMcmpEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadMcmpEnabled(contactKeyHex).then((enabled) {
+      if (_contactMcmpEnabled[contactKeyHex] == enabled) return;
+      _contactMcmpEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
   }
 
   void _ensureContactSmazSettingLoaded(String contactKeyHex) {
@@ -4581,6 +4658,9 @@ class MeshCoreConnector extends ChangeNotifier {
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|');
     if (!isStructuredPayload) {
+      if (isContactMcmpEnabled(contact.publicKeyHex)) {
+        return MeshCompressor.instance.encodeIfSmaller(text);
+      }
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
@@ -4609,6 +4689,9 @@ class MeshCoreConnector extends ChangeNotifier {
     final isStructuredPayload =
         trimmed.startsWith('g:') || trimmed.startsWith('m:');
     if (!isStructuredPayload) {
+      if (isChannelMcmpEnabled(channelIndex)) {
+        return MeshCompressor.instance.encodeIfSmaller(text);
+      }
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isChannelCyr2LatEnabled(channelIndex)) {
@@ -4736,7 +4819,8 @@ class MeshCoreConnector extends ChangeNotifier {
           final text = decrypted.readCString();
           final parsed = _splitSenderText(text);
           final decodedText =
-              Smaz.tryDecodePrefixed(parsed.text) ?? parsed.text;
+              MessageTextCodec.tryDecodeKnownCompression(parsed.text) ??
+              parsed.text;
           if (_shouldDropSelfChannelMessage(
             parsed.senderName,
             packet.pathBytes,
@@ -4753,6 +4837,7 @@ class MeshCoreConnector extends ChangeNotifier {
             senderKey: null,
             senderName: parsed.senderName,
             text: decodedText,
+            wasMcmpCompressed: MeshCompressor.instance.hasPrefix(parsed.text),
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
             isOutgoing: false,
             status: ChannelMessageStatus.sent,
@@ -5470,6 +5555,7 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
 
+      // Create new message with reply metadata
       processedMessage = ChannelMessage(
         senderKey: message.senderKey,
         senderName: message.senderName,
@@ -5479,6 +5565,7 @@ class MeshCoreConnector extends ChangeNotifier {
         translatedLanguageCode: message.translatedLanguageCode,
         translationStatus: message.translationStatus,
         translationModelId: message.translationModelId,
+        wasMcmpCompressed: message.wasMcmpCompressed,
         timestamp: message.timestamp,
         isOutgoing: message.isOutgoing,
         status: message.status,
@@ -5548,7 +5635,7 @@ class MeshCoreConnector extends ChangeNotifier {
   ) {
     // Search backwards for most recent message from this sender
     for (int i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].senderName == mentionedNode && !messages[i].isOutgoing) {
+      if (messages[i].senderName == mentionedNode) {
         return messages[i];
       }
     }

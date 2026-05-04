@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/reaction_helper.dart';
-import '../helpers/smaz.dart';
+import '../helpers/message_text_codec.dart';
 import 'translation_support.dart';
 import '../utils/app_logger.dart';
 
@@ -35,6 +35,7 @@ class ChannelMessage {
   final String? translatedLanguageCode;
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
+  final bool wasMcmpCompressed;
   final DateTime timestamp;
   final bool isOutgoing;
   final ChannelMessageStatus status;
@@ -60,6 +61,7 @@ class ChannelMessage {
     this.translatedLanguageCode,
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
+    this.wasMcmpCompressed = false,
     required this.timestamp,
     required this.isOutgoing,
     this.status = ChannelMessageStatus.pending,
@@ -104,6 +106,7 @@ class ChannelMessage {
     Object? translatedLanguageCode = _unset,
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
+    bool? wasMcmpCompressed,
     Map<String, int>? reactions,
   }) {
     return ChannelMessage(
@@ -123,6 +126,7 @@ class ChannelMessage {
       translationModelId: translationModelId == _unset
           ? this.translationModelId
           : translationModelId as String?,
+      wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
       timestamp: timestamp,
       isOutgoing: isOutgoing,
       status: status ?? this.status,
@@ -199,12 +203,14 @@ class ChannelMessage {
         }
       }
 
-      final decodedText = Smaz.tryDecodePrefixed(actualText) ?? actualText;
+      final decodedText =
+          MessageTextCodec.tryDecodeKnownCompression(actualText) ?? actualText;
 
       return ChannelMessage(
         senderKey: null,
         senderName: senderName,
         text: decodedText,
+        wasMcmpCompressed: actualText.trimLeft().startsWith('mcmp:'),
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,
@@ -229,6 +235,7 @@ class ChannelMessage {
     String? replyToMessageId,
     String? replyToSenderName,
     String? replyToText,
+    bool wasMcmpCompressed = false,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -237,6 +244,7 @@ class ChannelMessage {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      wasMcmpCompressed: wasMcmpCompressed,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: ChannelMessageStatus.pending,
