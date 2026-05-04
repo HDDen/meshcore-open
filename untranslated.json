@@ -1,81 +1,113 @@
 {
   "bg": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "de": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "es": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "fr": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "hu": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "it": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "ja": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "ko": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "nl": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "pl": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "pt": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "sk": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "sl": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "sv": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "uk": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ],
 
   "zh": [
     "chat_markAsUnread",
-    "chat_newMessages"
+    "chat_newMessages",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
   ]
 }

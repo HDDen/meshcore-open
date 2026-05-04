@@ -1359,6 +1359,8 @@
   "map_estLocation": "Прибл. местоположение",
   "map_publicKey": "Публичный ключ",
   "map_publicKeyPrefixHint": "напр. ab12",
+  "channels_mcmpCompression": "Сжатие MCMP",
+  "channels_mcmpCompressionDescription": "Используется метод и модель mesh-compressor",
   "contact_typeChat": "Чат",
   "contact_typeRepeater": "Ретранслятор",
   "contact_typeRoom": "Комната",

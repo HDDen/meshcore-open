@@ -3868,6 +3868,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get channels_mcmpCompression => 'Сжатие MCMP';
+
+  @override
+  String get channels_mcmpCompressionDescription =>
+      'Используется метод и модель mesh-compressor';
+
+  @override
   String get contact_typeChat => 'Чат';
 
   @override
