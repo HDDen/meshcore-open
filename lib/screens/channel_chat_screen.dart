@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -58,6 +59,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ChannelMessage? _replyingToMessage;
   final Map<String, GlobalKey> _messageKeys = {};
   bool _isLoadingOlder = false;
+  String? _highlightedMessageId;
+  int _highlightSequence = 0;
 
   MeshCoreConnector? _connector;
   DateTime? _lastChannelSendAt;
@@ -169,6 +172,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       _replyingToMessage = null;
     });
+  }
+
+  void _highlightMessage(String messageId) {
+    final sequence = ++_highlightSequence;
+    if (mounted) {
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+    }
+
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 1000)).then((_) {
+        if (!mounted || _highlightSequence != sequence) return;
+        setState(() {
+          if (_highlightedMessageId == messageId) {
+            _highlightedMessageId = null;
+          }
+        });
+      }),
+    );
   }
 
   String _normalizeReplyLookupText(String text) {
@@ -314,6 +337,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
+    _highlightMessage(messageId);
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
@@ -575,6 +599,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
     const bodyFontSize = 14.0;
+    final isHighlighted = _highlightedMessageId == message.messageId;
+    final baseBubbleColor = isOutgoing
+        ? Theme.of(context).colorScheme.primaryContainer
+        : Theme.of(context).colorScheme.surfaceContainerHighest;
     final messageBody = Column(
       crossAxisAlignment: isOutgoing
           ? CrossAxisAlignment.end
@@ -599,7 +627,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 onSecondaryTapUp: PlatformInfo.isDesktop
                     ? (_) => _showMessageActions(message)
                     : null,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 1000),
+                  curve: Curves.easeInOut,
                   padding: gifId != null
                       ? const EdgeInsets.all(4)
                       : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -607,9 +637,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     maxWidth: MediaQuery.of(context).size.width * 0.65,
                   ),
                   decoration: BoxDecoration(
-                    color: isOutgoing
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: isHighlighted
+                        ? Color.alphaBlend(
+                            Colors.green.withValues(alpha: 0.7),
+                            baseBubbleColor,
+                          )
+                        : baseBubbleColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
