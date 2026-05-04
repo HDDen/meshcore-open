@@ -624,18 +624,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     focusNode: _textFieldFocusNode,
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
-                    encoder:
-                        (connector.isContactSmazEnabled(
-                              widget.contact.publicKeyHex,
-                            ) ||
-                            connector.isContactCyr2LatEnabled(
-                              widget.contact.publicKeyHex,
-                            ))
-                        ? (text) => connector.prepareContactOutboundText(
-                            widget.contact,
-                            text,
-                          )
-                        : null,
+                    encoder: (text) => connector.prepareContactOutboundText(
+                      widget.contact,
+                      text,
+                    ),
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
                       border: OutlineInputBorder(

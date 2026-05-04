@@ -1151,18 +1151,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       focusNode: _textFieldFocusNode,
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
-                      encoder:
-                          (connector.isChannelSmazEnabled(
-                                widget.channel.index,
-                              ) ||
-                              connector.isChannelCyr2LatEnabled(
-                                widget.channel.index,
-                              ))
-                          ? (text) => connector.prepareChannelOutboundText(
-                              widget.channel.index,
-                              text,
-                            )
-                          : null,
+                      encoder: (text) => connector.prepareChannelOutboundText(
+                        widget.channel.index,
+                        text,
+                      ),
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
                         border: OutlineInputBorder(
