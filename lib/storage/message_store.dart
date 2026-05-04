@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../models/message.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
+import '../helpers/mesh_compressor.dart';
 import '../utils/app_logger.dart';
 import 'prefs_manager.dart';
 
@@ -89,6 +90,7 @@ class MessageStore {
       'translatedLanguageCode': msg.translatedLanguageCode,
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
+      'wasMcmpCompressed': msg.wasMcmpCompressed,
       'retryCount': msg.retryCount,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
@@ -110,6 +112,9 @@ class MessageStore {
   Message _messageFromJson(Map<String, dynamic> json) {
     final rawText = json['text'] as String;
     final isCli = json['isCli'] as bool? ?? false;
+    final wasMcmpCompressed =
+        json['wasMcmpCompressed'] as bool? ??
+        MeshCompressor.instance.hasPrefix(rawText);
     final decodedText = isCli
         ? rawText
         : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
@@ -128,6 +133,7 @@ class MessageStore {
         json['translationStatus'],
       ),
       translationModelId: json['translationModelId'] as String?,
+      wasMcmpCompressed: wasMcmpCompressed,
       retryCount: json['retryCount'] as int? ?? 0,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,

@@ -14,6 +14,7 @@ import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
+import '../helpers/newline_to_space_formatter.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
@@ -857,6 +858,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       : Colors.grey[600],
                                 ),
                               ],
+                              if (enableTracing &&
+                                  message.wasMcmpCompressed) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  'mcmp',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1344,6 +1356,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       focusNode: _textFieldFocusNode,
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
+                      extraFormatters:
+                          connector.isChannelMcmpEnabled(widget.channel.index)
+                          ? const [NewlineToSpaceFormatter()]
+                          : const [],
                       encoder:
                           (connector.isChannelMcmpEnabled(
                                 widget.channel.index,
