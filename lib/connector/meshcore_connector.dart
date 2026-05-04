@@ -2205,6 +2205,7 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     _bleInitialSyncStarted = true;
+    _pendingInitialContactsSync = true;
 
     await _requestDeviceInfo();
     _startBatteryPolling();
@@ -3004,6 +3005,9 @@ class MeshCoreConnector extends ChangeNotifier {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
   }) async {
     if (!isConnected || text.isEmpty) return;
 
@@ -3054,6 +3058,9 @@ class MeshCoreConnector extends ChangeNotifier {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
     );
     _addChannelMessage(channel.index, message);
     _pendingChannelSentQueue.add(message.messageId);
@@ -4182,7 +4189,9 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_contacts.isEmpty) return 0;
     var latest = 0;
     for (final contact in _contacts) {
-      final seconds = contact.lastSeen.millisecondsSinceEpoch ~/ 1000;
+      // prefer lastmod per spec, fallback to lastseen
+      final source = contact.lastModified ?? contact.lastSeen;
+      final seconds = source.millisecondsSinceEpoch ~/ 1000;
       if (seconds > latest) {
         latest = seconds;
       }
@@ -5444,38 +5453,48 @@ class MeshCoreConnector extends ChangeNotifier {
     ChannelMessage processedMessage = message;
 
     if (replyInfo != null) {
-      // Find original message by sender name (most recent match)
-      final originalMessage = _findMessageBySender(
-        messages,
-        replyInfo.mentionedNode,
-      );
+      var replyToMessageId = message.replyToMessageId;
+      var replyToSenderName = message.replyToSenderName;
+      var replyToText = message.replyToText;
 
-      if (originalMessage != null) {
-        // Create new message with reply metadata
-        processedMessage = ChannelMessage(
-          senderKey: message.senderKey,
-          senderName: message.senderName,
-          text: replyInfo.actualMessage,
-          originalText: message.originalText,
-          translatedText: message.translatedText,
-          translatedLanguageCode: message.translatedLanguageCode,
-          translationStatus: message.translationStatus,
-          translationModelId: message.translationModelId,
-          timestamp: message.timestamp,
-          isOutgoing: message.isOutgoing,
-          status: message.status,
-          repeats: message.repeats,
-          repeatCount: message.repeatCount,
-          pathLength: message.pathLength,
-          pathBytes: message.pathBytes,
-          pathVariants: message.pathVariants,
-          channelIndex: message.channelIndex,
-          messageId: message.messageId,
-          replyToMessageId: originalMessage.messageId,
-          replyToSenderName: originalMessage.senderName,
-          replyToText: originalMessage.text,
+      if (replyToSenderName == null || replyToText == null) {
+        // Fallback for incoming/legacy messages where only the @mention exists.
+        final originalMessage = _findMessageBySender(
+          messages,
+          replyInfo.mentionedNode,
         );
+        if (originalMessage != null) {
+          replyToMessageId ??= originalMessage.messageId;
+          replyToSenderName ??= originalMessage.senderName;
+          replyToText ??= originalMessage.text;
+        }
       }
+
+      processedMessage = ChannelMessage(
+        senderKey: message.senderKey,
+        senderName: message.senderName,
+        text: replyInfo.actualMessage,
+        originalText: message.originalText,
+        translatedText: message.translatedText,
+        translatedLanguageCode: message.translatedLanguageCode,
+        translationStatus: message.translationStatus,
+        translationModelId: message.translationModelId,
+        timestamp: message.timestamp,
+        isOutgoing: message.isOutgoing,
+        status: message.status,
+        repeats: message.repeats,
+        repeatCount: message.repeatCount,
+        pathLength: message.pathLength,
+        pathBytes: message.pathBytes,
+        pathVariants: message.pathVariants,
+        channelIndex: message.channelIndex,
+        messageId: message.messageId,
+        packetHash: message.packetHash,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName ?? replyInfo.mentionedNode,
+        replyToText: replyToText,
+        reactions: message.reactions,
+      );
     }
 
     final existingIndex = _findChannelRepeatIndex(messages, processedMessage);
