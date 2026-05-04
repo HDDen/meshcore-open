@@ -8,7 +8,7 @@ void main() {
 
   setUpAll(() async {
     final json = await File(
-      'mesh-compressor/docs/model-universal-10lang.json',
+      'assets/models/model-universal-10lang.json',
     ).readAsString();
     await MeshCompressor.instance.initializeFromJsonString(json);
   });

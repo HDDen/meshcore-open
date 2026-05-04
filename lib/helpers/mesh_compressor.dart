@@ -11,7 +11,7 @@ class MeshCompressor {
 
   static const String prefix = 'mcmp:';
   static const String _modelAssetPath =
-      'mesh-compressor/docs/model-universal-10lang.json';
+      'assets/models/model-universal-10lang.json';
   static const String _bos = '\x02';
   static const String _eof = '\x03';
   static const String _esc = '\x04';
