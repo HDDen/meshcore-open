@@ -486,7 +486,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                         if (gifId == null) const SizedBox(height: 4),
                       ],
-                      if (message.replyToMessageId != null) ...[
+                      if (message.replyToSenderName != null ||
+                          message.replyToText != null) ...[
                         _buildReplyPreview(message, textScale),
                         const SizedBox(height: 8),
                       ],
@@ -793,7 +794,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _scrollToMessage(message.replyToMessageId!),
+      onTap: message.replyToMessageId == null
+          ? null
+          : () => _scrollToMessage(message.replyToMessageId!),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -1279,6 +1282,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     // end transform
 
+    final replyTarget = _replyingToMessage;
     _textController.clear();
     _cancelReply();
     _textFieldFocusNode.requestFocus();
@@ -1288,6 +1292,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      replyToMessageId: replyTarget?.messageId,
+      replyToSenderName: replyTarget?.senderName,
+      replyToText: replyTarget?.text,
     );
   }
 
