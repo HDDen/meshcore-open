@@ -171,26 +171,175 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     });
   }
 
-  Future<void> _scrollToMessage(String messageId) async {
+  String _normalizeReplyLookupText(String text) {
+    return text.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+  }
+
+  String? _findReplyFallbackMessageId(
+    List<ChannelMessage> messages,
+    ChannelMessage reply,
+  ) {
+    final senderName = reply.replyToSenderName?.trim();
+    final replyText = reply.replyToText;
+    if (senderName == null || senderName.isEmpty || replyText == null) {
+      return null;
+    }
+
+    final normalizedQuotedText = _normalizeReplyLookupText(replyText);
+    if (normalizedQuotedText.isEmpty) {
+      return null;
+    }
+
+    for (int i = messages.length - 1; i >= 0; i--) {
+      final candidate = messages[i];
+      if (candidate.senderName.trim() != senderName) continue;
+
+      final normalizedCandidateText = _normalizeReplyLookupText(candidate.text);
+      if (normalizedCandidateText.isEmpty) continue;
+
+      if (normalizedCandidateText.contains(normalizedQuotedText) ||
+          normalizedQuotedText.contains(normalizedCandidateText)) {
+        return candidate.messageId;
+      }
+    }
+
+    return null;
+  }
+
+  BuildContext? _tryGetMessageContext(String messageId) {
     final key = _messageKeys[messageId];
-    if (key == null) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_originalMessageNotFound),
-        duration: const Duration(seconds: 2),
+    return key?.currentContext;
+  }
+
+  Future<BuildContext?> _materializeMessageContext(String messageId) async {
+    final connector = context.read<MeshCoreConnector>();
+
+    while (mounted) {
+      final targetContext = _tryGetMessageContext(messageId);
+      if (targetContext != null && targetContext.mounted) {
+        return targetContext;
+      }
+
+      final messages = connector.getChannelMessages(widget.channel);
+      final targetIndex = messages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (targetIndex >= 0 &&
+          _scrollController.hasClients &&
+          messages.length > 1) {
+        final reversedIndex = messages.length - 1 - targetIndex;
+        final targetOffset =
+            _scrollController.position.maxScrollExtent *
+            (reversedIndex / (messages.length - 1));
+        _scrollController.jumpTo(
+          targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        );
+        await WidgetsBinding.instance.endOfFrame;
+        final materializedContext = _tryGetMessageContext(messageId);
+        if (materializedContext != null && materializedContext.mounted) {
+          return materializedContext;
+        }
+      }
+
+      final olderMessages = await connector.loadOlderChannelMessages(
+        widget.channel.index,
+      );
+      if (olderMessages.isEmpty) {
+        return null;
+      }
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    return null;
+  }
+
+  Future<String?> _resolveReplyTargetMessageId(ChannelMessage reply) async {
+    final connector = context.read<MeshCoreConnector>();
+
+    while (mounted) {
+      final messages = connector.getChannelMessages(widget.channel);
+      final directMessageId = reply.replyToMessageId;
+      if (directMessageId != null &&
+          messages.any((message) => message.messageId == directMessageId)) {
+        return directMessageId;
+      }
+
+      final fallbackMessageId = _findReplyFallbackMessageId(messages, reply);
+      if (fallbackMessageId != null) {
+        return fallbackMessageId;
+      }
+
+      final olderMessages = await connector.loadOlderChannelMessages(
+        widget.channel.index,
+      );
+      if (olderMessages.isEmpty) {
+        return null;
+      }
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    return null;
+  }
+
+  Future<void> _scrollToMessage(String messageId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final originalMessageNotFoundText =
+        context.l10n.chat_originalMessageNotFound;
+    final targetContext = await _materializeMessageContext(messageId);
+
+    if (!mounted) return;
+
+    if (targetContext == null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: GestureDetector(
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(originalMessageNotFoundText),
+          ),
+          duration: const Duration(seconds: 2),
+          dismissDirection: DismissDirection.down,
+          clipBehavior: Clip.hardEdge,
+        ),
       );
       return;
     }
 
-    final targetContext = key.currentContext;
-    if (targetContext == null) return;
+    if (!targetContext.mounted) {
+      return;
+    }
 
-    await Scrollable.ensureVisible(
+    Scrollable.ensureVisible(
       targetContext,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
+  }
+
+  Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final originalMessageNotFoundText =
+        context.l10n.chat_originalMessageNotFound;
+    final resolvedMessageId = await _resolveReplyTargetMessageId(reply);
+
+    if (!mounted) return;
+
+    if (resolvedMessageId == null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: GestureDetector(
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(originalMessageNotFoundText),
+          ),
+          duration: const Duration(seconds: 2),
+          dismissDirection: DismissDirection.down,
+          clipBehavior: Clip.hardEdge,
+        ),
+      );
+      return;
+    }
+
+    await _scrollToMessage(resolvedMessageId);
   }
 
   @override
@@ -486,7 +635,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                         if (gifId == null) const SizedBox(height: 4),
                       ],
-                      if (message.replyToMessageId != null) ...[
+                      if (message.replyToSenderName != null ||
+                          message.replyToText != null) ...[
                         _buildReplyPreview(message, textScale),
                         const SizedBox(height: 8),
                       ],
@@ -793,7 +943,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _scrollToMessage(message.replyToMessageId!),
+      onTap:
+          (message.replyToMessageId == null &&
+              message.replyToSenderName == null &&
+              message.replyToText == null)
+          ? null
+          : () => _scrollToReplyTarget(message),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -1279,6 +1434,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     // end transform
 
+    final replyTarget = _replyingToMessage;
     _textController.clear();
     _cancelReply();
     _textFieldFocusNode.requestFocus();
@@ -1288,6 +1444,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      replyToMessageId: replyTarget?.messageId,
+      replyToSenderName: replyTarget?.senderName,
+      replyToText: replyTarget?.text,
     );
   }
 
