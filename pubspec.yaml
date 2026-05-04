@@ -110,6 +110,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/models/model-universal-10lang.json
 
 flutter_launcher_icons:
   android: true

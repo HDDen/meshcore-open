@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import '../models/message.dart';
 import '../models/translation_support.dart';
-import '../helpers/smaz.dart';
+import '../helpers/message_text_codec.dart';
 import '../utils/app_logger.dart';
 import 'prefs_manager.dart';
 
@@ -110,9 +110,7 @@ class MessageStore {
   Message _messageFromJson(Map<String, dynamic> json) {
     final rawText = json['text'] as String;
     final isCli = json['isCli'] as bool? ?? false;
-    final decodedText = isCli
-        ? rawText
-        : (Smaz.tryDecodePrefixed(rawText) ?? rawText);
+    final decodedText = isCli ? rawText : MessageTextCodec.decode(rawText);
     return Message(
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,

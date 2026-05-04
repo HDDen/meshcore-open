@@ -22,6 +22,7 @@ import 'services/chat_text_scale_service.dart';
 import 'services/translation_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
+import 'helpers/model_text_compression.dart';
 import 'storage/prefs_manager.dart';
 import 'utils/app_logger.dart';
 
@@ -68,6 +69,7 @@ void main() async {
   await translationService.refreshDownloadedModels();
   await uiViewStateService.initialize();
   await timeoutPredictionService.initialize();
+  await ModelTextCompression.ensureInitialized();
 
   // Wire up connector with services
   connector.initialize(

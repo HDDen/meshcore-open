@@ -1414,6 +1414,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final nameController = TextEditingController(text: channel.name);
     final pskController = TextEditingController(text: channel.pskHex);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
+    bool modelCompressionEnabled = connector.isChannelModelCompressionEnabled(
+      channel.index,
+    );
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
@@ -1466,6 +1469,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   onChanged: (value) => setState(() {
                     smazEnabled = value;
                     if (smazEnabled) {
+                      modelCompressionEnabled = false;
+                      cyr2latEnabled = false;
+                    }
+                  }),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Model compression'),
+                  subtitle: const Text(
+                    'Use the trained dictionary-based compressor for outgoing messages.',
+                  ),
+                  value: modelCompressionEnabled,
+                  onChanged: (value) => setState(() {
+                    modelCompressionEnabled = value;
+                    if (modelCompressionEnabled) {
+                      smazEnabled = false;
                       cyr2latEnabled = false;
                     }
                   }),
@@ -1481,6 +1500,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     cyr2latEnabled = value;
                     if (cyr2latEnabled) {
                       smazEnabled = false;
+                      modelCompressionEnabled = false;
                     }
                   }),
                 ),
@@ -1539,6 +1559,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelSmazEnabled(
                     channel.index,
                     smazEnabled,
+                  );
+                  await connector.setChannelModelCompressionEnabled(
+                    channel.index,
+                    modelCompressionEnabled,
                   );
                   await connector.setChannelCyr2LatEnabled(
                     channel.index,

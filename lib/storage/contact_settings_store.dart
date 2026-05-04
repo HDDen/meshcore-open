@@ -3,6 +3,7 @@ import 'prefs_manager.dart';
 
 class ContactSettingsStore {
   static const String _keyPrefix = 'contact_smaz_';
+  static const String _modelKeyPrefix = 'contact_model_compression_';
   static const String _cyr2latKeyPrefix = 'contact_cyr2lat_';
 
   String publicKeyHex = '';
@@ -10,6 +11,7 @@ class ContactSettingsStore {
       publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
+  String get keyForModel => '$_modelKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(String contactKeyHex) async {
@@ -46,6 +48,33 @@ class ContactSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyFor$contactKeyHex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadModelCompressionEnabled(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load contact model compression settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForModel$contactKeyHex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveModelCompressionEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save contact model compression settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForModel$contactKeyHex';
     await prefs.setBool(key, enabled);
   }
 

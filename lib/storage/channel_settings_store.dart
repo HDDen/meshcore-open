@@ -3,6 +3,7 @@ import 'prefs_manager.dart';
 
 class ChannelSettingsStore {
   static const String _keyPrefix = 'channel_smaz_';
+  static const String _modelKeyPrefix = 'channel_model_compression_';
   static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
 
   String publicKeyHex = '';
@@ -10,6 +11,7 @@ class ChannelSettingsStore {
       publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
+  String get keyForModel => '$_modelKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(int channelIndex) async {
@@ -46,6 +48,33 @@ class ChannelSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyFor$channelIndex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadModelCompressionEnabled(int channelIndex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel model compression settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForModel$channelIndex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveModelCompressionEnabled(
+    int channelIndex,
+    bool enabled,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel model compression settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForModel$channelIndex';
     await prefs.setBool(key, enabled);
   }
 

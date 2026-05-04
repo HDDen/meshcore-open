@@ -17,6 +17,8 @@ import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/message_text_codec.dart';
+import '../helpers/model_text_compression.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -284,11 +286,13 @@ class MeshCoreConnector extends ChangeNotifier {
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
   final Map<int, bool> _channelSmazEnabled = {};
+  final Map<int, bool> _channelModelCompressionEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactSmazEnabled = {};
+  final Map<String, bool> _contactModelCompressionEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
   final Set<String> _knownContactKeys = {};
@@ -604,12 +608,24 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelSmazEnabled[channelIndex] ?? false;
   }
 
+  bool isChannelModelCompressionEnabled(int channelIndex) {
+    return _channelModelCompressionEnabled[channelIndex] ?? false;
+  }
+
   bool isContactSmazEnabled(String contactKeyHex) {
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
 
+  bool isContactModelCompressionEnabled(String contactKeyHex) {
+    return _contactModelCompressionEnabled[contactKeyHex] ?? false;
+  }
+
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
     _ensureContactSmazSettingLoaded(contactKeyHex);
+  }
+
+  void ensureContactModelCompressionSettingLoaded(String contactKeyHex) {
+    _ensureContactModelCompressionSettingLoaded(contactKeyHex);
   }
 
   bool isChannelCyr2LatEnabled(int channelIndex) {
@@ -723,7 +739,12 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
     _channelSmazEnabled[channelIndex] = enabled;
     if (enabled) {
+      _channelModelCompressionEnabled[channelIndex] = false;
       _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveModelCompressionEnabled(
+        channelIndex,
+        false,
+      );
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
     await _channelSettingsStore.saveSmazEnabled(channelIndex, enabled);
@@ -732,7 +753,52 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> setContactSmazEnabled(String contactKeyHex, bool enabled) async {
     _contactSmazEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactModelCompressionEnabled[contactKeyHex] = false;
+      _contactCyr2LatEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveModelCompressionEnabled(
+        contactKeyHex,
+        false,
+      );
+      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
+    }
     await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setChannelModelCompressionEnabled(
+    int channelIndex,
+    bool enabled,
+  ) async {
+    _channelModelCompressionEnabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelSmazEnabled[channelIndex] = false;
+      _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+      await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
+    }
+    await _channelSettingsStore.saveModelCompressionEnabled(
+      channelIndex,
+      enabled,
+    );
+    notifyListeners();
+  }
+
+  Future<void> setContactModelCompressionEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    _contactModelCompressionEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactSmazEnabled[contactKeyHex] = false;
+      _contactCyr2LatEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
+    }
+    await _contactSettingsStore.saveModelCompressionEnabled(
+      contactKeyHex,
+      enabled,
+    );
     notifyListeners();
   }
 
@@ -740,7 +806,12 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelCyr2LatEnabled[channelIndex] = enabled;
     if (enabled) {
       _channelSmazEnabled[channelIndex] = false;
+      _channelModelCompressionEnabled[channelIndex] = false;
       await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+      await _channelSettingsStore.saveModelCompressionEnabled(
+        channelIndex,
+        false,
+      );
     }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
@@ -751,6 +822,15 @@ class MeshCoreConnector extends ChangeNotifier {
     bool enabled,
   ) async {
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactSmazEnabled[contactKeyHex] = false;
+      _contactModelCompressionEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveModelCompressionEnabled(
+        contactKeyHex,
+        false,
+      );
+    }
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
@@ -891,6 +971,7 @@ class MeshCoreConnector extends ChangeNotifier {
       ..addAll(cached);
     for (final contact in cached) {
       _ensureContactSmazSettingLoaded(contact.publicKeyHex);
+      _ensureContactModelCompressionSettingLoaded(contact.publicKeyHex);
       _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
     }
   }
@@ -904,10 +985,13 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> loadChannelSettings({int? maxChannels}) async {
     _channelSmazEnabled.clear();
+    _channelModelCompressionEnabled.clear();
     _channelCyr2LatEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
+      _channelModelCompressionEnabled[i] = await _channelSettingsStore
+          .loadModelCompressionEnabled(i);
       _channelCyr2LatEnabled[i] = await _channelSettingsStore
           .loadCyr2LatEnabled(i);
     }
@@ -4436,9 +4520,7 @@ class MeshCoreConnector extends ChangeNotifier {
         appLogger.warn('Received message with empty text, ignoring');
         return null;
       }
-      final decodedText = isCli
-          ? msgText
-          : (Smaz.tryDecodePrefixed(msgText) ?? msgText);
+      final decodedText = isCli ? msgText : MessageTextCodec.decode(msgText);
 
       final contact = _contacts.cast<Contact?>().firstWhere(
         (c) => c != null && _matchesPrefix(c.publicKey, senderPrefix),
@@ -4498,6 +4580,17 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSettingsStore.loadSmazEnabled(contactKeyHex).then((enabled) {
       if (_contactSmazEnabled[contactKeyHex] == enabled) return;
       _contactSmazEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureContactModelCompressionSettingLoaded(String contactKeyHex) {
+    if (_contactModelCompressionEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadModelCompressionEnabled(contactKeyHex).then((
+      enabled,
+    ) {
+      if (_contactModelCompressionEnabled[contactKeyHex] == enabled) return;
+      _contactModelCompressionEnabled[contactKeyHex] = enabled;
       notifyListeners();
     });
   }
@@ -4579,6 +4672,8 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isStructuredPayload) {
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
+      } else if (isContactModelCompressionEnabled(contact.publicKeyHex)) {
+        return ModelTextCompression.encodeIfSmaller(text);
       } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
         final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
         final profile = profileId != null && _appSettingsService != null
@@ -4607,6 +4702,8 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isStructuredPayload) {
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
+      } else if (isChannelModelCompressionEnabled(channelIndex)) {
+        return ModelTextCompression.encodeIfSmaller(text);
       } else if (isChannelCyr2LatEnabled(channelIndex)) {
         final profileId = getChannelCyr2LatProfileId(channelIndex);
         final profile = profileId != null && _appSettingsService != null
@@ -4731,8 +4828,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
           final text = decrypted.readCString();
           final parsed = _splitSenderText(text);
-          final decodedText =
-              Smaz.tryDecodePrefixed(parsed.text) ?? parsed.text;
+          final decodedText = MessageTextCodec.decode(parsed.text);
           if (_shouldDropSelfChannelMessage(
             parsed.senderName,
             packet.pathBytes,

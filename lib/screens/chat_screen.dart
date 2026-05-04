@@ -1272,9 +1272,15 @@ class _ChatScreenState extends State<ChatScreen> {
       listen: false,
     );
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactModelCompressionSettingLoaded(
+      widget.contact.publicKeyHex,
+    );
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
+    bool modelCompressionEnabled = connector.isContactModelCompressionEnabled(
+      contact.publicKeyHex,
+    );
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
     );
@@ -1318,6 +1324,29 @@ class _ChatScreenState extends State<ChatScreen> {
                     setDialogState(() {
                       smazEnabled = value;
                       if (smazEnabled) {
+                        modelCompressionEnabled = false;
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Model compression'),
+                  subtitle: const Text(
+                    'Use the trained dictionary-based compressor for outgoing messages.',
+                  ),
+                  value: modelCompressionEnabled,
+                  onChanged: (value) {
+                    connector.setContactModelCompressionEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    setDialogState(() {
+                      modelCompressionEnabled = value;
+                      if (modelCompressionEnabled) {
+                        smazEnabled = false;
                         cyr2latEnabled = false;
                       }
                     });
@@ -1342,6 +1371,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       cyr2latEnabled = value;
                       if (cyr2latEnabled) {
                         smazEnabled = false;
+                        modelCompressionEnabled = false;
                       }
                     });
                   },
