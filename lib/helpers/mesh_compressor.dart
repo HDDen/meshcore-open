@@ -127,6 +127,11 @@ class MeshCompressor {
     return text;
   }
 
+  bool hasPrefix(String text) {
+    final trimmedLeft = text.trimLeft();
+    return trimmedLeft.startsWith(prefix) && trimmedLeft.length > prefix.length;
+  }
+
   Uint8List compressToBytes(String text) {
     final model = _requireModel();
     return _compress(text, model);

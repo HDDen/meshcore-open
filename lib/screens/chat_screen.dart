@@ -1615,6 +1615,7 @@ class _ChatScreenState extends State<ChatScreen> {
       senderKey: null,
       senderName: senderName,
       text: message.text,
+      wasMcmpCompressed: message.wasMcmpCompressed,
       timestamp: message.timestamp,
       isOutgoing: message.isOutgoing,
       status: ChannelMessageStatus.sent,
@@ -2048,6 +2049,17 @@ class _MessageBubble extends StatelessWidget {
                                       color: isOutgoing
                                           ? metaColor
                                           : Colors.green[700],
+                                    ),
+                                  ),
+                                ],
+                                if (enableTracing &&
+                                    message.wasMcmpCompressed) ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'mcmp',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: metaColor,
                                     ),
                                   ),
                                 ],

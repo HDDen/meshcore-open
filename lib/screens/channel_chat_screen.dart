@@ -670,6 +670,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       : Colors.grey[600],
                                 ),
                               ],
+                              if (enableTracing &&
+                                  message.wasMcmpCompressed) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  'mcmp',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

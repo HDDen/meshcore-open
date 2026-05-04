@@ -2748,6 +2748,9 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = Message.outgoing(
         contact.publicKey,
         text,
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+          prepareContactOutboundText(contact, text),
+        ),
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
         originalText: originalText,
@@ -3111,6 +3114,9 @@ class MeshCoreConnector extends ChangeNotifier {
       text,
       _selfName ?? 'Me',
       channel.index,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareChannelOutboundText(channel.index, text),
+      ),
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,

@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/path_selection.dart';
+import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
 
@@ -156,6 +157,9 @@ class MessageRetryService extends ChangeNotifier {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        _config?.prepareContactOutboundText?.call(contact, text) ?? text,
+      ),
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,

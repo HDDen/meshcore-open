@@ -20,6 +20,7 @@ class Message {
   final String? translatedLanguageCode;
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
+  final bool wasMcmpCompressed;
 
   // NEW: Retry logic fields
   final String messageId;
@@ -48,6 +49,7 @@ class Message {
     this.translatedLanguageCode,
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
+    this.wasMcmpCompressed = false,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
     this.expectedAckHash,
@@ -85,6 +87,7 @@ class Message {
     Object? translatedLanguageCode = _unset,
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
+    bool? wasMcmpCompressed,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
@@ -110,6 +113,7 @@ class Message {
       translationModelId: translationModelId == _unset
           ? this.translationModelId
           : translationModelId as String?,
+      wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
       retryCount: retryCount ?? this.retryCount,
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,
@@ -151,6 +155,7 @@ class Message {
         isOutgoing: false,
         isCli: false,
         status: MessageStatus.delivered,
+        wasMcmpCompressed: rawText.trimLeft().startsWith('mcmp:'),
         pathBytes: Uint8List(0),
       );
     } catch (e) {
@@ -164,6 +169,7 @@ class Message {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    bool wasMcmpCompressed = false,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -173,6 +179,7 @@ class Message {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      wasMcmpCompressed: wasMcmpCompressed,
       timestamp: DateTime.now(),
       isOutgoing: true,
       isCli: false,

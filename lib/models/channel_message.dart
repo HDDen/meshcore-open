@@ -35,6 +35,7 @@ class ChannelMessage {
   final String? translatedLanguageCode;
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
+  final bool wasMcmpCompressed;
   final DateTime timestamp;
   final bool isOutgoing;
   final ChannelMessageStatus status;
@@ -60,6 +61,7 @@ class ChannelMessage {
     this.translatedLanguageCode,
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
+    this.wasMcmpCompressed = false,
     required this.timestamp,
     required this.isOutgoing,
     this.status = ChannelMessageStatus.pending,
@@ -104,6 +106,7 @@ class ChannelMessage {
     Object? translatedLanguageCode = _unset,
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
+    bool? wasMcmpCompressed,
     Map<String, int>? reactions,
   }) {
     return ChannelMessage(
@@ -123,6 +126,7 @@ class ChannelMessage {
       translationModelId: translationModelId == _unset
           ? this.translationModelId
           : translationModelId as String?,
+      wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
       timestamp: timestamp,
       isOutgoing: isOutgoing,
       status: status ?? this.status,
@@ -206,6 +210,7 @@ class ChannelMessage {
         senderKey: null,
         senderName: senderName,
         text: decodedText,
+        wasMcmpCompressed: actualText.trimLeft().startsWith('mcmp:'),
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,
@@ -227,6 +232,7 @@ class ChannelMessage {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    bool wasMcmpCompressed = false,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -235,6 +241,7 @@ class ChannelMessage {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      wasMcmpCompressed: wasMcmpCompressed,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: ChannelMessageStatus.pending,
