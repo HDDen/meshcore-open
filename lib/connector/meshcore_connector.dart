@@ -4527,6 +4527,7 @@ class MeshCoreConnector extends ChangeNotifier {
         isOutgoing: false,
         isCli: isCli,
         status: MessageStatus.delivered,
+        wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
         pathLength: pathLength == 0xFF ? 0 : pathLength,
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: msgText.length >= 4
@@ -4834,6 +4835,7 @@ class MeshCoreConnector extends ChangeNotifier {
             senderKey: null,
             senderName: parsed.senderName,
             text: decodedText,
+            wasMcmpCompressed: MeshCompressor.instance.hasPrefix(parsed.text),
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
             isOutgoing: false,
             status: ChannelMessageStatus.sent,
@@ -5551,6 +5553,7 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
 
+      // Create new message with reply metadata
       processedMessage = ChannelMessage(
         senderKey: message.senderKey,
         senderName: message.senderName,
@@ -5560,6 +5563,7 @@ class MeshCoreConnector extends ChangeNotifier {
         translatedLanguageCode: message.translatedLanguageCode,
         translationStatus: message.translationStatus,
         translationModelId: message.translationModelId,
+        wasMcmpCompressed: message.wasMcmpCompressed,
         timestamp: message.timestamp,
         isOutgoing: message.isOutgoing,
         status: message.status,
