@@ -54,6 +54,12 @@ class ByteCountedTextField extends StatelessWidget {
   /// If provided, byte limits and counters will use the encoded text length.
   final String Function(String)? encoder;
 
+  /// Minimum number of visible lines before the field starts expanding.
+  final int minLines;
+
+  /// Optional maximum height for the input area before it becomes scrollable.
+  final double? maxHeight;
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -69,6 +75,8 @@ class ByteCountedTextField extends StatelessWidget {
     this.errorThreshold = 0.9,
     this.hideCounterWhenEmpty = true,
     this.encoder,
+    this.minLines = 1,
+    this.maxHeight,
   });
 
   @override
@@ -93,30 +101,39 @@ class ByteCountedTextField extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              maxLines: null,
-              controller: controller,
-              focusNode: focusNode,
-              inputFormatters: [
-                ...extraFormatters,
-                Utf8LengthLimitingTextInputFormatter(
-                  maxBytes,
-                  encoder: encoder,
-                ),
-              ],
-              textCapitalization: textCapitalization,
-              decoration:
-                  decoration ??
-                  InputDecoration(
-                    hintText: hintText,
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: maxHeight ?? double.infinity,
+              ),
+              child: TextField(
+                minLines: minLines,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                scrollPhysics: const BouncingScrollPhysics(),
+                textAlignVertical: TextAlignVertical.top,
+                controller: controller,
+                focusNode: focusNode,
+                inputFormatters: [
+                  ...extraFormatters,
+                  Utf8LengthLimitingTextInputFormatter(
+                    maxBytes,
+                    encoder: encoder,
                   ),
-              textInputAction: textInputAction,
-              onSubmitted: onSubmitted,
+                ],
+                textCapitalization: textCapitalization,
+                decoration:
+                    decoration ??
+                    InputDecoration(
+                      hintText: hintText,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                textInputAction: textInputAction,
+                onSubmitted: onSubmitted,
+              ),
             ),
             if (showCounter)
               Padding(

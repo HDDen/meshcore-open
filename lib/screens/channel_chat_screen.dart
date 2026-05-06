@@ -1059,6 +1059,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final maxBytes = maxChannelMessageBytes(connector.selfName);
     final settings = context.watch<AppSettingsService>().settings;
+    final mediaQuery = MediaQuery.of(context);
+    final replyBannerHeight = _replyingToMessage != null ? 64.0 : 0.0;
+    final maxInputHeight = (mediaQuery.size.height -
+            mediaQuery.padding.top -
+            kToolbarHeight -
+            mediaQuery.viewInsets.bottom -
+            replyBannerHeight -
+            48)
+        .clamp(56.0, 240.0)
+        .toDouble();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1149,6 +1159,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       maxBytes: maxBytes,
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
+                      maxHeight: maxInputHeight,
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
                       encoder:
