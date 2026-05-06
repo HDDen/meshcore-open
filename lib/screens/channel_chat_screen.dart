@@ -379,6 +379,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       ),
                       JumpToBottomButton(scrollController: _scrollController),
+                      _buildHideKeyboardButton(),
                     ],
                   );
                 },
@@ -1204,6 +1205,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHideKeyboardButton() {
+    if (MediaQuery.of(context).viewInsets.bottom <= 0) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      right: 16,
+      bottom: 72,
+      child: FloatingActionButton.small(
+        heroTag: 'hide_keyboard_button_channel_chat',
+        onPressed: () => FocusScope.of(context).unfocus(),
+        child: const Icon(Icons.keyboard_hide),
+      ),
     );
   }
 
