@@ -30,6 +30,14 @@ class MeshCompressor {
   static const int _escProb = 500;
   static const int _cdfCacheMax = 50000;
   static const int _decodeHardLimit = 4096;
+  static const String _textEmptyMarker = '!';
+  static const String _textCompressedNoEscMarker = '"';
+  static const String _textCompressedEscMarker = '#';
+  static const Set<String> _textMarkers = {
+    _textEmptyMarker,
+    _textCompressedNoEscMarker,
+    _textCompressedEscMarker,
+  };
 
   static const String _base91Alphabet =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -86,9 +94,8 @@ class MeshCompressor {
       return text;
     }
     try {
-      final compressed = compressToBytes(text);
-      final encoded = _base91Encode(compressed);
-      final candidate = '$prefix$encoded';
+      final encodedText = _compressTextTransport(text, model);
+      final candidate = '$prefix$encodedText';
       if (utf8.encode(candidate).length < utf8.encode(text).length) {
         return candidate;
       }
@@ -122,9 +129,10 @@ class MeshCompressor {
       final model = _model;
       if (model == null) return null;
       try {
-        final encoded = trimmedLeft.substring(prefix.length);
-        final compressed = _base91DecodeBytes(encoded);
-        return _decompress(compressed, model);
+        return _decompressTextTransport(
+          trimmedLeft.substring(prefix.length),
+          model,
+        );
       } catch (_) {
         return null;
       }
@@ -202,6 +210,47 @@ class MeshCompressor {
       return utf8Bytes;
     }
     return acResult;
+  }
+
+  String _compressTextTransport(String text, _MeshCompressionModel model) {
+    if (text.isEmpty) {
+      return _textEmptyMarker;
+    }
+
+    final (flags, bits) = _compressArithmeticBits(text, model);
+    final payload = _bitsToMinBytes(bits);
+    final marker = (flags & 0x01) == 1
+        ? _textCompressedEscMarker
+        : _textCompressedNoEscMarker;
+    final compressedText = '$marker${_base91Encode(payload)}';
+
+    if (compressedText.length >= text.length && !_textMarkers.contains(text[0])) {
+      return text;
+    }
+    return compressedText;
+  }
+
+  String _decompressTextTransport(String text, _MeshCompressionModel model) {
+    if (text.isEmpty) {
+      return '';
+    }
+
+    final head = text[0];
+    if (head == _textEmptyMarker) {
+      return '';
+    }
+
+    final int flags;
+    if (head == _textCompressedNoEscMarker) {
+      flags = 0;
+    } else if (head == _textCompressedEscMarker) {
+      flags = 1;
+    } else {
+      return text;
+    }
+
+    final payload = _base91DecodeBytes(text.substring(1));
+    return _decodeArithmetic(payload, model, (flags & 0x01) == 1);
   }
 
   Uint8List _compressArithmetic(String text, _MeshCompressionModel model) {
@@ -948,6 +997,15 @@ class MeshCompressor {
       out[i >> 3] |= 1 << (7 - (i & 7));
     }
     return out;
+  }
+
+  Uint8List _bitsToMinBytes(List<int> bits) {
+    final out = _bitsToBytes(bits);
+    int end = out.length;
+    while (end > 0 && out[end - 1] == 0) {
+      end--;
+    }
+    return end == out.length ? out : Uint8List.sublistView(out, 0, end);
   }
 
   String _appendContext(String context, String ch, int order) {
