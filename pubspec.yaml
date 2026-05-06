@@ -111,6 +111,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/models/model-universal-10lang.json
+    - assets/models/model-en-ru.json
 
 flutter_launcher_icons:
   android: true

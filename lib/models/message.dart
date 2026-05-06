@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
 import 'translation_support.dart';
@@ -155,7 +156,7 @@ class Message {
         isOutgoing: false,
         isCli: false,
         status: MessageStatus.delivered,
-        wasMcmpCompressed: rawText.trimLeft().startsWith('mcmp:'),
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(rawText),
         pathBytes: Uint8List(0),
       );
     } catch (e) {
