@@ -776,7 +776,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSmazEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
+      _contactCyr2LatEnabled[contactKeyHex] = false;
       await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
     notifyListeners();

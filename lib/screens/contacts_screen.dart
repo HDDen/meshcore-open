@@ -15,6 +15,7 @@ import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/contact_group.dart';
+import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
 import '../utils/contact_search.dart';
 import '../storage/contact_group_store.dart';
@@ -1246,171 +1247,292 @@ class _ContactsScreenState extends State<ContactsScreen>
     final isRepeater = contact.type == advTypeRepeater;
     final isRoom = contact.type == advTypeRoom;
     final isFavorite = contact.isFavorite;
+    final appSettingsService = isRoom
+        ? Provider.of<AppSettingsService>(context, listen: false)
+        : null;
+    if (isRoom) {
+      connector.ensureContactMcmpSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
+    }
+    bool mcmpEnabled =
+        isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
+    bool smazEnabled =
+        isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
+    bool cyr2latEnabled =
+        isRoom && connector.isContactCyr2LatEnabled(contact.publicKeyHex);
+    String? selectedCyr2LatProfileId = isRoom
+        ? connector.getContactCyr2LatProfileId(contact.publicKeyHex)
+        : null;
 
     showModalBottomSheet(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isRepeater) ...[
-              ListTile(
-                leading: const Icon(Icons.radar, color: Colors.green),
-                title: Text(context.l10n.contacts_ping),
-                onTap: () {
-                  final hw = context
-                      .read<MeshCoreConnector>()
-                      .pathHashByteWidth;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PathTraceMapScreen(
-                        title: context.l10n.contacts_repeaterPing,
-                        path: Uint8List.fromList([contact.publicKey.first]),
-                        targetContact: contact,
-                        pathHashByteWidth: hw,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.cell_tower, color: Colors.orange),
-                title: Text(context.l10n.contacts_manageRepeater),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showRepeaterLogin(context, contact);
-                },
-              ),
-            ] else if (isRoom) ...[
-              ListTile(
-                leading: const Icon(Icons.radar, color: Colors.green),
-                title: Text(context.l10n.contacts_pathTrace),
-                onTap: () {
-                  final hw = context
-                      .read<MeshCoreConnector>()
-                      .pathHashByteWidth;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PathTraceMapScreen(
-                        title: contact.pathBytesForDisplay.isNotEmpty
-                            ? context.l10n.contacts_roomPathTrace
-                            : context.l10n.contacts_roomPing,
-                        path: contact.pathBytesForDisplay.isNotEmpty
-                            ? contact.pathBytesForDisplay
-                            : Uint8List.fromList([contact.publicKey.first]),
-                        flipPathAround: contact.pathBytesForDisplay.isNotEmpty,
-                        targetContact: contact,
-                        pathHashByteWidth: hw,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.room, color: Colors.blue),
-                title: Text(context.l10n.contacts_roomLogin),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showRoomLogin(context, contact, RoomLoginDestination.chat);
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.room_preferences,
-                  color: Colors.orange,
-                ),
-                title: Text(context.l10n.room_management),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showRoomLogin(
-                    context,
-                    contact,
-                    RoomLoginDestination.management,
-                  );
-                },
-              ),
-            ] else ...[
-              if (contact.pathLength > 0)
-                ListTile(
-                  leading: const Icon(Icons.radar, color: Colors.green),
-                  title: Text(context.l10n.contacts_chatTraceRoute),
-                  onTap: () {
-                    final hw = context
-                        .read<MeshCoreConnector>()
-                        .pathHashByteWidth;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PathTraceMapScreen(
-                          title: context.l10n.contacts_pathTraceTo(
-                            contact.name,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isRepeater) ...[
+                  ListTile(
+                    leading: const Icon(Icons.radar, color: Colors.green),
+                    title: Text(context.l10n.contacts_ping),
+                    onTap: () {
+                      final hw = context
+                          .read<MeshCoreConnector>()
+                          .pathHashByteWidth;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PathTraceMapScreen(
+                            title: context.l10n.contacts_repeaterPing,
+                            path: Uint8List.fromList([contact.publicKey.first]),
+                            targetContact: contact,
+                            pathHashByteWidth: hw,
                           ),
-                          path: contact.pathBytesForDisplay,
-                          flipPathAround: true,
-                          targetContact: contact,
-                          pathHashByteWidth: hw,
                         ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.cell_tower, color: Colors.orange),
+                    title: Text(context.l10n.contacts_manageRepeater),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showRepeaterLogin(context, contact);
+                    },
+                  ),
+                ] else if (isRoom) ...[
+                  ListTile(
+                    leading: const Icon(Icons.radar, color: Colors.green),
+                    title: Text(context.l10n.contacts_pathTrace),
+                    onTap: () {
+                      final hw = context
+                          .read<MeshCoreConnector>()
+                          .pathHashByteWidth;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PathTraceMapScreen(
+                            title: contact.pathBytesForDisplay.isNotEmpty
+                                ? context.l10n.contacts_roomPathTrace
+                                : context.l10n.contacts_roomPing,
+                            path: contact.pathBytesForDisplay.isNotEmpty
+                                ? contact.pathBytesForDisplay
+                                : Uint8List.fromList([contact.publicKey.first]),
+                            flipPathAround:
+                                contact.pathBytesForDisplay.isNotEmpty,
+                            targetContact: contact,
+                            pathHashByteWidth: hw,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.room, color: Colors.blue),
+                    title: Text(context.l10n.contacts_roomLogin),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showRoomLogin(
+                        context,
+                        contact,
+                        RoomLoginDestination.chat,
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.room_preferences,
+                      color: Colors.orange,
+                    ),
+                    title: Text(context.l10n.room_management),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showRoomLogin(
+                        context,
+                        contact,
+                        RoomLoginDestination.management,
+                      );
+                    },
+                  ),
+                  const Divider(height: 8),
+                  SwitchListTile(
+                    title: Text(context.l10n.channels_mcmpCompression),
+                    subtitle: Text(
+                      context.l10n.channels_mcmpCompressionDescription,
+                    ),
+                    value: mcmpEnabled,
+                    onChanged: (value) {
+                      connector.setContactMcmpEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      setSheetState(() {
+                        mcmpEnabled = value;
+                        if (mcmpEnabled) {
+                          smazEnabled = false;
+                          cyr2latEnabled = false;
+                        }
+                      });
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text(context.l10n.channels_smazCompression),
+                    subtitle: Text(context.l10n.chat_compressOutgoingMessages),
+                    value: smazEnabled,
+                    onChanged: (value) {
+                      connector.setContactSmazEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      if (value) {
+                        connector.setContactCyr2LatEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                      }
+                      setSheetState(() {
+                        smazEnabled = value;
+                        if (smazEnabled) {
+                          mcmpEnabled = false;
+                          cyr2latEnabled = false;
+                        }
+                      });
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text(context.l10n.channels_cyr2latCompression),
+                    subtitle: Text(
+                      context.l10n.channels_cyr2latCompressionDscr,
+                    ),
+                    value: cyr2latEnabled,
+                    onChanged: (value) {
+                      connector.setContactCyr2LatEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      setSheetState(() {
+                        cyr2latEnabled = value;
+                        if (cyr2latEnabled) {
+                          mcmpEnabled = false;
+                          smazEnabled = false;
+                        }
+                      });
+                    },
+                  ),
+                  if (cyr2latEnabled && appSettingsService != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: selectedCyr2LatProfileId,
+                        decoration: InputDecoration(
+                          labelText:
+                              context.l10n.channels_cyr2latSettingsSubheading,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: appSettingsService.settings.cyr2latProfiles.map((
+                          profile,
+                        ) {
+                          return DropdownMenuItem(
+                            value: profile.id,
+                            child: Text(profile.name),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          connector.setContactCyr2LatProfileId(
+                            contact.publicKeyHex,
+                            value,
+                          );
+                          setSheetState(() {
+                            selectedCyr2LatProfileId = value;
+                          });
+                        },
                       ),
+                    ),
+                  ],
+                ] else ...[
+                  if (contact.pathLength > 0)
+                    ListTile(
+                      leading: const Icon(Icons.radar, color: Colors.green),
+                      title: Text(context.l10n.contacts_chatTraceRoute),
+                      onTap: () {
+                        final hw = context
+                            .read<MeshCoreConnector>()
+                            .pathHashByteWidth;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PathTraceMapScreen(
+                              title: context.l10n.contacts_pathTraceTo(
+                                contact.name,
+                              ),
+                              path: contact.pathBytesForDisplay,
+                              flipPathAround: true,
+                              targetContact: contact,
+                              pathHashByteWidth: hw,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ListTile(
+                    leading: const Icon(Icons.chat),
+                    title: Text(context.l10n.contacts_openChat),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openChat(context, contact);
+                    },
+                  ),
+                ],
+                ListTile(
+                  leading: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    color: Colors.amber[700],
+                  ),
+                  title: Text(
+                    isFavorite
+                        ? context.l10n.listFilter_removeFromFavorites
+                        : context.l10n.listFilter_addToFavorites,
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await connector.setContactFlags(
+                      contact,
+                      isFavorite: !isFavorite,
                     );
                   },
                 ),
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: Text(context.l10n.contacts_openChat),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openChat(context, contact);
-                },
-              ),
-            ],
-            ListTile(
-              leading: Icon(
-                isFavorite ? Icons.star : Icons.star_border,
-                color: Colors.amber[700],
-              ),
-              title: Text(
-                isFavorite
-                    ? context.l10n.listFilter_removeFromFavorites
-                    : context.l10n.listFilter_addToFavorites,
-              ),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await connector.setContactFlags(
-                  contact,
-                  isFavorite: !isFavorite,
-                );
-              },
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: Text(context.l10n.contacts_ShareContact),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _contactExport(contact.publicKey);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.connect_without_contact),
+                  title: Text(context.l10n.contacts_ShareContactZeroHop),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _contactZeroHop(contact.publicKey);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: Text(
+                    context.l10n.contacts_deleteContact,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _confirmDelete(context, connector, contact);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.copy),
-              title: Text(context.l10n.contacts_ShareContact),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _contactExport(contact.publicKey);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.connect_without_contact),
-              title: Text(context.l10n.contacts_ShareContactZeroHop),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _contactZeroHop(contact.publicKey);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: Text(
-                context.l10n.contacts_deleteContact,
-                style: const TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _confirmDelete(context, connector, contact);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
