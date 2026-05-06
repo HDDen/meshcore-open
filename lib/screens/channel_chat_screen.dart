@@ -1508,9 +1508,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   int _maxChannelInputBytes(MeshCoreConnector connector) {
-    if (connector.isChannelMcmpEnabled(widget.channel.index)) {
-      return maxChannelMessageBytes(null);
-    }
+    // fixed bug on long messages
+    // if (connector.isChannelMcmpEnabled(widget.channel.index)) {
+    //   return maxChannelMessageBytes(null);
+    // }
     return maxChannelMessageBytes(connector.selfName);
   }
 
