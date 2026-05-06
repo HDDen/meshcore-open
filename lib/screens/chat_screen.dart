@@ -412,6 +412,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ? _buildEmptyState()
                         : _buildMessageList(messages, connector),
                     JumpToBottomButton(scrollController: _scrollController),
+                    _buildHideKeyboardButton(),
                   ],
                 ),
               ),
@@ -684,6 +685,21 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHideKeyboardButton() {
+    if (MediaQuery.of(context).viewInsets.bottom <= 0) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      right: 16,
+      bottom: 72,
+      child: FloatingActionButton.small(
+        heroTag: 'hide_keyboard_button_chat',
+        onPressed: () => FocusScope.of(context).unfocus(),
+        child: const Icon(Icons.keyboard_hide),
       ),
     );
   }
