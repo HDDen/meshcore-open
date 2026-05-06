@@ -7,9 +7,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    final json = await File(
-      'assets/models/model-universal-10lang.json',
-    ).readAsString();
+    final json = await File('assets/models/model-en-ru.json').readAsString();
     await MeshCompressor.instance.initializeFromJsonString(json);
   });
 
@@ -17,9 +15,8 @@ void main() {
     const samples = [
       'Battery at 40%, switching to power save',
       'Привет, как дела? Проверка связи.',
-      'مرحبا، كيف حالك اليوم؟',
-      '今日の天気は晴れ、気温22度',
-      'Emoji test: 👍📡🙂',
+      'Signal check -> north-east ↗ and weather ☀️🙂',
+      'Ёжик нашёл GPS: 57.153, 68.241',
     ];
 
     for (final sample in samples) {
