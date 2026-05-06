@@ -11,13 +11,27 @@ class JumpToBottomButton extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: scrollController.showJumpToBottom,
       builder: (context, show, _) {
-        if (!show) return const SizedBox.shrink();
+        final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+        if (!show && !keyboardVisible) return const SizedBox.shrink();
         return Positioned(
           right: 16,
           bottom: 16,
-          child: FloatingActionButton.small(
-            onPressed: scrollController.jumpToBottom,
-            child: const Icon(Icons.keyboard_arrow_down),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (show)
+                FloatingActionButton.small(
+                  onPressed: scrollController.jumpToBottom,
+                  child: const Icon(Icons.keyboard_arrow_down),
+                ),
+              if (show && keyboardVisible) const SizedBox(height: 8),
+              if (keyboardVisible)
+                FloatingActionButton.small(
+                  heroTag: 'hide_keyboard_button',
+                  onPressed: () => FocusScope.of(context).unfocus(),
+                  child: const Icon(Icons.keyboard_hide),
+                ),
+            ],
           ),
         );
       },
