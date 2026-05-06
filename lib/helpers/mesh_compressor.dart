@@ -839,7 +839,7 @@ class MeshCompressor {
       (i) => _CdfEntry('', i, i + 1),
       growable: false,
     );
-    final blockId = decoder.decodeSymbolIndex(blockCdf);
+    final blockId = decoder.decodeSymbolIndex(blockCdf, _totalBlockIds);
     if (blockId < _numBlocks) {
       final block = _unicodeBlocks[blockId];
       final offsetCdf = List<_CdfEntry>.generate(
@@ -847,7 +847,7 @@ class MeshCompressor {
         (i) => _CdfEntry('', i, i + 1),
         growable: false,
       );
-      final offset = decoder.decodeSymbolIndex(offsetCdf);
+      final offset = decoder.decodeSymbolIndex(offsetCdf, block.size);
       return block.start + offset;
     }
 
@@ -856,9 +856,9 @@ class MeshCompressor {
       (i) => _CdfEntry('', i, i + 1),
       growable: false,
     );
-    final b0 = decoder.decodeSymbolIndex(cpCdf);
-    final b1 = decoder.decodeSymbolIndex(cpCdf);
-    final b2 = decoder.decodeSymbolIndex(cpCdf);
+    final b0 = decoder.decodeSymbolIndex(cpCdf, 128);
+    final b1 = decoder.decodeSymbolIndex(cpCdf, 128);
+    final b2 = decoder.decodeSymbolIndex(cpCdf, 128);
     return b0 | (b1 << 7) | (b2 << 14);
   }
 
@@ -957,7 +957,7 @@ class MeshCompressor {
       (i) => _CdfEntry('', i, i + 1),
       growable: false,
     );
-    final blockId = decoder.decodeSymbolIndex(blockCdf);
+    final blockId = decoder.decodeSymbolIndex(blockCdf, _legacyTotalBlockIds);
 
     if (blockId == _legacyCjkCommonBlockId) {
       final idxCdf = List<_CdfEntry>.generate(
@@ -965,7 +965,7 @@ class MeshCompressor {
         (i) => _CdfEntry('', i, i + 1),
         growable: false,
       );
-      final idx = decoder.decodeSymbolIndex(idxCdf);
+      final idx = decoder.decodeSymbolIndex(idxCdf, _legacyCjkCommon.length);
       return _legacyCjkCommon.runes.elementAt(idx);
     }
 
@@ -976,7 +976,7 @@ class MeshCompressor {
         (i) => _CdfEntry('', i, i + 1),
         growable: false,
       );
-      final offset = decoder.decodeSymbolIndex(offsetCdf);
+      final offset = decoder.decodeSymbolIndex(offsetCdf, block.size);
       return block.start + offset;
     }
 
@@ -985,9 +985,9 @@ class MeshCompressor {
       (i) => _CdfEntry('', i, i + 1),
       growable: false,
     );
-    final b0 = decoder.decodeSymbolIndex(cpCdf);
-    final b1 = decoder.decodeSymbolIndex(cpCdf);
-    final b2 = decoder.decodeSymbolIndex(cpCdf);
+    final b0 = decoder.decodeSymbolIndex(cpCdf, 128);
+    final b1 = decoder.decodeSymbolIndex(cpCdf, 128);
+    final b2 = decoder.decodeSymbolIndex(cpCdf, 128);
     return b0 | (b1 << 7) | (b2 << 14);
   }
 
@@ -1608,11 +1608,13 @@ class _ArithmeticDecoder {
     return cdf[index].symbol;
   }
 
-  int decodeSymbolIndex(List<_CdfEntry> cdf) {
+  int decodeSymbolIndex(
+    List<_CdfEntry> cdf, [
+    int total = MeshCompressor._cdfScale,
+  ]) {
     final range = high - low + BigInt.one;
     final scaled =
-        (((value - low + BigInt.one) * BigInt.from(MeshCompressor._cdfScale)) -
-            BigInt.one) ~/
+        (((value - low + BigInt.one) * BigInt.from(total)) - BigInt.one) ~/
         range;
     final scaledInt = scaled.toInt();
 
@@ -1628,7 +1630,7 @@ class _ArithmeticDecoder {
     }
 
     final entry = cdf[left];
-    final totalBig = BigInt.from(MeshCompressor._cdfScale);
+    final totalBig = BigInt.from(total);
     high = low + (range * BigInt.from(entry.high)) ~/ totalBig - BigInt.one;
     low = low + (range * BigInt.from(entry.low)) ~/ totalBig;
 
