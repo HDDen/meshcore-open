@@ -553,13 +553,14 @@ class _ChatScreenState extends State<ChatScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
     final mediaQuery = MediaQuery.of(context);
-    final maxInputHeight = (mediaQuery.size.height -
-            mediaQuery.padding.top -
-            kToolbarHeight -
-            mediaQuery.viewInsets.bottom -
-            48)
-        .clamp(56.0, 240.0)
-        .toDouble();
+    final maxInputHeight =
+        (mediaQuery.size.height -
+                mediaQuery.padding.top -
+                kToolbarHeight -
+                mediaQuery.viewInsets.bottom -
+                48)
+            .clamp(56.0, 240.0)
+            .toDouble();
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
