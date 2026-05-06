@@ -378,7 +378,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           },
                         ),
                       ),
-                      JumpToBottomButton(scrollController: _scrollController),
+                      JumpToBottomButton(
+                        scrollController: _scrollController,
+                        bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? 72
+                            : 16,
+                      ),
                       _buildHideKeyboardButton(),
                     ],
                   );
@@ -1214,7 +1219,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     return Positioned(
       right: 16,
-      bottom: 72,
+      bottom: 16,
       child: FloatingActionButton.small(
         heroTag: 'hide_keyboard_button_channel_chat',
         onPressed: () => FocusScope.of(context).unfocus(),
