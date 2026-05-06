@@ -1275,6 +1275,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 48)
             .clamp(56.0, 240.0)
             .toDouble();
+    final usesChannelEncoding =
+        connector.isChannelMcmpEnabled(widget.channel.index) ||
+        connector.isChannelSmazEnabled(widget.channel.index) ||
+        connector.isChannelCyr2LatEnabled(widget.channel.index);
+
+    String encodeComposerText(String text) {
+      final sendText = _applyReplyMention(text);
+      return usesChannelEncoding
+          ? connector.prepareChannelOutboundText(widget.channel.index, sendText)
+          : sendText;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1372,20 +1384,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           connector.isChannelMcmpEnabled(widget.channel.index)
                           ? const [NewlineToSpaceFormatter()]
                           : const [],
-                      encoder:
-                          (connector.isChannelMcmpEnabled(
-                                widget.channel.index,
-                              ) ||
-                              connector.isChannelSmazEnabled(
-                                widget.channel.index,
-                              ) ||
-                              connector.isChannelCyr2LatEnabled(
-                                widget.channel.index,
-                              ))
-                          ? (text) => connector.prepareChannelOutboundText(
-                              widget.channel.index,
-                              text,
-                            )
+                      encoder: _replyingToMessage != null || usesChannelEncoding
+                          ? encodeComposerText
                           : null,
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
@@ -1417,6 +1417,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ),
       ],
     );
+  }
+
+  String _applyReplyMention(String text) {
+    final replyingTo = _replyingToMessage;
+    if (replyingTo == null) return text;
+    return '@[${replyingTo.senderName}] $text';
   }
 
   Future<void> _showTranslationOptions() async {
@@ -1477,9 +1483,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-    if (_replyingToMessage != null) {
-      messageText = '@[${_replyingToMessage!.senderName}] $messageText';
-    }
+    messageText = _applyReplyMention(messageText);
 
     final maxBytes = _maxChannelInputBytes(connector);
     final outboundText = connector.prepareChannelOutboundText(
@@ -1520,11 +1524,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   int _maxChannelInputBytes(MeshCoreConnector connector) {
-    // fixed bug on long messages
-    // if (connector.isChannelMcmpEnabled(widget.channel.index)) {
-    //   return maxChannelMessageBytes(null);
-    // }
-    return maxChannelMessageBytes(connector.selfName);
+    final limit = maxChannelMessageBytes(connector.selfName);
+    if (connector.isChannelMcmpEnabled(widget.channel.index)) {
+      return math.max(0, limit - 2);
+    }
+    return limit;
   }
 
   String _formatTime(BuildContext context, DateTime time) {

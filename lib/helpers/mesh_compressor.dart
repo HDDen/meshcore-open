@@ -224,7 +224,8 @@ class MeshCompressor {
         : _textCompressedNoEscMarker;
     final compressedText = '$marker${_base91Encode(payload)}';
 
-    if (compressedText.length >= text.length && !_textMarkers.contains(text[0])) {
+    if (compressedText.length >= text.length &&
+        !_textMarkers.contains(text[0])) {
       return text;
     }
     return compressedText;
@@ -903,8 +904,9 @@ class MeshCompressor {
       '速若影断食即算业联调队古切病静份木服球基脸热'
       '止福欢兴终师际备般斯际欢负观题武角坚费另丝黄'
       '类造待千严干考整杂买试护穿复底致微席黑官龙';
-  static final Set<String> _legacyCjkCommonSet =
-      _legacyCjkCommon.split('').toSet();
+  static final Set<String> _legacyCjkCommonSet = _legacyCjkCommon
+      .split('')
+      .toSet();
   static final Map<String, int> _legacyCjkCommonMap = {
     for (int i = 0; i < _legacyCjkCommon.length; i++) _legacyCjkCommon[i]: i,
   };
@@ -1410,7 +1412,8 @@ class _LegacyMeshCompressionModel {
     }
 
     Set<String>? compatScripts;
-    if (contextScript != null && _legacyScriptCompat.containsKey(contextScript)) {
+    if (contextScript != null &&
+        _legacyScriptCompat.containsKey(contextScript)) {
       compatScripts = _legacyScriptCompat[contextScript];
     } else if (contextScript != null && contextScript != 'Common') {
       compatScripts = {contextScript, 'Common'};

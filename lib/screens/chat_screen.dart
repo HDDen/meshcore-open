@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -550,7 +551,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(MeshCoreConnector connector) {
-    final maxBytes = maxContactMessageBytes();
+    final maxBytes = _maxContactInputBytes(connector);
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
     final mediaQuery = MediaQuery.of(context);
@@ -756,7 +757,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
-    final maxBytes = maxContactMessageBytes();
+    final maxBytes = _maxContactInputBytes(connector);
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
       outgoingText,
@@ -790,6 +791,14 @@ class _ChatScreenState extends State<ChatScreen> {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
     );
+  }
+
+  int _maxContactInputBytes(MeshCoreConnector connector) {
+    final limit = maxContactMessageBytes();
+    if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex)) {
+      return math.max(0, limit - 2);
+    }
+    return limit;
   }
 
   void _showPathHistory(BuildContext context) {
