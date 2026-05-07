@@ -620,7 +620,7 @@
       }
     }
   },
-  "settings_mcmpTextLimit": "MCMP text processing limit",
+  "settings_mcmpTextLimit": "MCMP text paste limit",
   "channels_publicChannelAdded": "Public channel added",
   "channels_sortBy": "Sort by",
   "channels_sortManual": "Manual",
