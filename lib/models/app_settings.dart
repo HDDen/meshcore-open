@@ -94,8 +94,24 @@ class AppSettings {
   final String? translationModelSourceUrl;
   final String? translationSelectedModelId;
   final List<TranslationModelRecord> translationDownloadedModels;
+  final int mcmpTextLimit;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
+
+  static const int defaultMcmpTextLimit = 600;
+  static const int maxMcmpTextLimit = 10000;
+
+  static int normalizeMcmpTextLimit(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    return (parsed ?? defaultMcmpTextLimit).clamp(1, maxMcmpTextLimit).toInt();
+  }
 
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
@@ -147,12 +163,14 @@ class AppSettings {
     this.translationModelSourceUrl,
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
+    int? mcmpTextLimit,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
        translationDownloadedModels = translationDownloadedModels ?? const [],
+       mcmpTextLimit = normalizeMcmpTextLimit(mcmpTextLimit),
        cyr2latProfiles =
            cyr2latProfiles ??
            [
@@ -209,6 +227,7 @@ class AppSettings {
       'translation_downloaded_models': translationDownloadedModels
           .map((model) => model.toJson())
           .toList(),
+      'mcmp_text_limit': mcmpTextLimit,
       'cyr2lat_profiles': cyr2latProfiles
           .map((profile) => profile.toJson())
           .toList(),
@@ -300,6 +319,7 @@ class AppSettings {
               )
               .toList() ??
           const [],
+      mcmpTextLimit: json['mcmp_text_limit'],
       cyr2latProfiles:
           (json['cyr2lat_profiles'] as List<dynamic>?)
               ?.map(
@@ -377,6 +397,7 @@ class AppSettings {
     Object? translationModelSourceUrl = _unset,
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
+    int? mcmpTextLimit,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
   }) {
@@ -442,6 +463,7 @@ class AppSettings {
           : translationSelectedModelId as String?,
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
+      mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
       cyr2latProfiles: cyr2latProfiles ?? this.cyr2latProfiles,
       selectedCyr2latProfileId:
           selectedCyr2latProfileId ?? this.selectedCyr2latProfileId,

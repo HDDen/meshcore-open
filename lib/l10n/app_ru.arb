@@ -270,6 +270,7 @@
   "settings_cyr2latProfileDelete": "Удалить профиль Cyr2Lat",
   "settings_cyr2latProfileDeleted": "Профиль успешно удален",
   "settings_cyr2latProfileDeleteDscr": "Вы действительно хотите удалить профиль \"{name}\"?",
+  "settings_mcmpTextLimit": "MCMP: лимит символов для обработки",
   "channels_channelUpdated": "Канал \"{name}\" обновлён",
   "channels_publicChannelAdded": "Публичный канал добавлен",
   "channels_sortBy": "Сортировка",

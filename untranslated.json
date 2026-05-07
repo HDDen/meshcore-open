@@ -1,5 +1,6 @@
 {
   "bg": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -7,6 +8,7 @@
   ],
 
   "de": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -14,6 +16,7 @@
   ],
 
   "es": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -21,6 +24,7 @@
   ],
 
   "fr": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -28,6 +32,7 @@
   ],
 
   "hu": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -35,6 +40,7 @@
   ],
 
   "it": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -42,6 +48,7 @@
   ],
 
   "ja": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -49,6 +56,7 @@
   ],
 
   "ko": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -56,6 +64,7 @@
   ],
 
   "nl": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -63,6 +72,7 @@
   ],
 
   "pl": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -70,6 +80,7 @@
   ],
 
   "pt": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -77,6 +88,7 @@
   ],
 
   "sk": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -84,6 +96,7 @@
   ],
 
   "sl": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -91,6 +104,7 @@
   ],
 
   "sv": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -98,6 +112,7 @@
   ],
 
   "uk": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",
@@ -105,6 +120,7 @@
   ],
 
   "zh": [
+    "settings_mcmpTextLimit",
     "chat_markAsUnread",
     "chat_newMessages",
     "channels_mcmpCompression",

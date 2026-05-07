@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 
 class NewlineToSpaceFormatter extends TextInputFormatter {
-  const NewlineToSpaceFormatter();
+  const NewlineToSpaceFormatter({this.maxInsertedChars = 600});
 
-  static const int _maxInsertedChars = 400;
+  final int maxInsertedChars;
   static final RegExp _newlinePattern = RegExp(r'[\r\n]+');
 
   @override
@@ -51,12 +51,13 @@ class NewlineToSpaceFormatter extends TextInputFormatter {
 
     final insertedEnd = newText.length - suffixLength;
     final inserted = newText.substring(prefixLength, insertedEnd);
-    if (inserted.length <= _maxInsertedChars) return newText;
+    final limit = maxInsertedChars < 0 ? 0 : maxInsertedChars;
+    if (inserted.length <= limit) return newText;
 
     return newText.replaceRange(
       prefixLength,
       insertedEnd,
-      inserted.substring(0, _maxInsertedChars),
+      inserted.substring(0, limit),
     );
   }
 }

@@ -1253,6 +1253,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get settings_mcmpTextLimit => 'MCMP text processing limit';
+
+  @override
   String get channels_publicChannelAdded => 'Le canal public a été ajouté';
 
   @override
