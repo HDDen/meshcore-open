@@ -1836,7 +1836,10 @@ class _MessageBubble extends StatelessWidget {
         : (isOutgoing ? colorScheme.onPrimary : colorScheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.7);
     const bodyFontSize = 14.0;
-    final messageText = message.text;
+    String messageText = message.text;
+    if (isRoomServer && !isOutgoing) {
+      messageText = message.text.substring(4.clamp(0, message.text.length));
+    }
     final translatedDisplayText =
         message.translatedText != null &&
             message.translatedText!.trim().isNotEmpty

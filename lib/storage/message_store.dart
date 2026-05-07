@@ -112,21 +112,12 @@ class MessageStore {
   Message _messageFromJson(Map<String, dynamic> json) {
     final rawText = json['text'] as String;
     final isCli = json['isCli'] as bool? ?? false;
-    final fourByteRoomContactKey = json['fourByteRoomContactKey'] != null
-        ? Uint8List.fromList(
-            base64Decode(json['fourByteRoomContactKey'] as String),
-          )
-        : null;
-    final messageText = isCli
-        ? rawText
-        : _stripStoredRoomPrefix(rawText, fourByteRoomContactKey);
     final wasMcmpCompressed =
-        (json['wasMcmpCompressed'] as bool? ?? false) ||
-        MeshCompressor.instance.hasPrefix(messageText);
+        json['wasMcmpCompressed'] as bool? ??
+        MeshCompressor.instance.hasPrefix(rawText);
     final decodedText = isCli
-        ? messageText
-        : (MessageTextCodec.tryDecodeKnownCompression(messageText) ??
-              messageText);
+        ? rawText
+        : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
     return Message(
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
@@ -167,13 +158,11 @@ class MessageStore {
             (key, value) => MapEntry(key, MessageStatus.values[value as int]),
           ) ??
           {},
-      fourByteRoomContactKey: fourByteRoomContactKey,
+      fourByteRoomContactKey: json['fourByteRoomContactKey'] != null
+          ? Uint8List.fromList(
+              base64Decode(json['fourByteRoomContactKey'] as String),
+            )
+          : null,
     );
-  }
-
-  String _stripStoredRoomPrefix(String text, Uint8List? roomContactKey) {
-    if (roomContactKey == null || roomContactKey.isEmpty) return text;
-    final prefix = String.fromCharCodes(roomContactKey);
-    return text.startsWith(prefix) ? text.substring(prefix.length) : text;
   }
 }

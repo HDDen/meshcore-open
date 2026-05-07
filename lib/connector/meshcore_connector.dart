@@ -4436,7 +4436,9 @@ class MeshCoreConnector extends ChangeNotifier {
           } else if (contact?.type == advTypeRoom) {
             _notificationService.showMessageNotification(
               contactName: contact?.name ?? 'Unknown Room',
-              message: message.text,
+              message: message.text.length > 4
+                  ? message.text.substring(4)
+                  : message.text,
               contactId: message.senderKeyHex,
               badgeCount: getTotalUnreadCount(),
             );
@@ -4505,6 +4507,10 @@ class MeshCoreConnector extends ChangeNotifier {
         appLogger.warn('Received message with empty text, ignoring');
         return null;
       }
+      final decodedText = isCli
+          ? msgText
+          : (MessageTextCodec.tryDecodeKnownCompression(msgText) ?? msgText);
+
       final contact = _contacts.cast<Contact?>().firstWhere(
         (c) => c != null && _matchesPrefix(c.publicKey, senderPrefix),
         orElse: () => null,
@@ -4516,18 +4522,6 @@ class MeshCoreConnector extends ChangeNotifier {
         return null;
       }
 
-      final isRoomMessage = contact.type == advTypeRoom;
-      final roomContactKey = isRoomMessage && !isCli && msgText.length >= 4
-          ? Uint8List.fromList(msgText.substring(0, 4).codeUnits)
-          : null;
-      final messageBody = roomContactKey != null
-          ? msgText.substring(4)
-          : msgText;
-      final decodedText = isCli
-          ? messageBody
-          : (MessageTextCodec.tryDecodeKnownCompression(messageBody) ??
-                messageBody);
-
       return Message(
         senderKey: contact.publicKey,
         text: decodedText,
@@ -4535,11 +4529,12 @@ class MeshCoreConnector extends ChangeNotifier {
         isOutgoing: false,
         isCli: isCli,
         status: MessageStatus.delivered,
-        wasMcmpCompressed:
-            !isCli && MeshCompressor.instance.hasPrefix(messageBody),
+        wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
         pathLength: pathLength == 0xFF ? 0 : pathLength,
         pathBytes: Uint8List(0),
-        fourByteRoomContactKey: roomContactKey,
+        fourByteRoomContactKey: msgText.length >= 4
+            ? Uint8List.fromList(msgText.substring(0, 4).codeUnits)
+            : null,
       );
     } catch (e) {
       appLogger.warn('Error parsing contact direct message: $e');
