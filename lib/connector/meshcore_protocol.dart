@@ -720,27 +720,16 @@ Uint8List buildUpdateContactPathFrame(
   final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   writer.writeUInt32LE(timestamp);
 
-  if ((lat == null || lon == null) && lastModified != null) {
-    // If lat/lon not provided, write zeros
-    writer.writeInt32LE(0);
-    writer.writeInt32LE(0);
-  } else {
-    // Latitude and Longitude are expected in degrees, convert to int by multiplying by 1e6
-    // Latitude
-    final latitude = lat ?? 0.0;
-    writer.writeInt32LE((latitude * 1e6).round());
-
-    // Longitude
-    final longitude = lon ?? 0.0;
-    writer.writeInt32LE((longitude * 1e6).round());
-  }
-
+  // Optional [Lat x4, Lon x4][timestamp x4] tail per the doc comment above.
+  // Emit 8 bytes of position (zero-filled when only lastModified is provided)
+  // followed by an optional 4-byte timestamp. Earlier code emitted the
+  // position block twice, which corrupted the tail and caused the firmware
+  // to parse the second lat as the timestamp. See #427.
   final hasLocation = lat != null && lon != null;
   if (hasLocation || lastModified != null) {
     writer.writeInt32LE(hasLocation ? (lat * 1e6).round() : 0);
     writer.writeInt32LE(hasLocation ? (lon * 1e6).round() : 0);
     if (lastModified != null) {
-      // Last modified
       final lastModifiedTimestamp = lastModified.millisecondsSinceEpoch ~/ 1000;
       writer.writeUInt32LE(lastModifiedTimestamp);
     }
