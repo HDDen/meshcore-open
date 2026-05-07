@@ -2305,7 +2305,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_mcmpTextLimit.
   ///
   /// In en, this message translates to:
-  /// **'MCMP text processing limit'**
+  /// **'MCMP text paste limit'**
   String get settings_mcmpTextLimit;
 
   /// No description provided for @channels_publicChannelAdded.

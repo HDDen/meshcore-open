@@ -64,6 +64,8 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildCyr2LatCard(context, settingsService),
                         const SizedBox(height: 16),
+                        _buildMcmpTextLimitCard(context, settingsService),
+                        const SizedBox(height: 16),
                         _buildDebugCard(context, settingsService),
                       ],
                     );
@@ -1343,15 +1345,22 @@ class AppSettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.compress),
-            title: Text(context.l10n.settings_mcmpTextLimit),
-            subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showMcmpTextLimitDialog(context, settingsService),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMcmpTextLimitCard(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.compress),
+        title: Text(context.l10n.settings_mcmpTextLimit),
+        subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _showMcmpTextLimitDialog(context, settingsService),
       ),
     );
   }
@@ -1373,10 +1382,7 @@ class AppSettingsScreen extends StatelessWidget {
           autofocus: true,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            labelText: dialogContext.l10n.settings_mcmpTextLimit,
-            border: const OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
         actions: [
           TextButton(
