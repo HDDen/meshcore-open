@@ -1236,6 +1236,9 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get settings_mcmpTextLimit => 'MCMP text processing limit';
+
+  @override
   String get channels_publicChannelAdded => 'Veľký kanál pridaný';
 
   @override

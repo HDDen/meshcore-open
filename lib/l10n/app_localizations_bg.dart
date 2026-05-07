@@ -1249,6 +1249,9 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get settings_mcmpTextLimit => 'MCMP text processing limit';
+
+  @override
   String get channels_publicChannelAdded => 'Публичен канал добавен';
 
   @override

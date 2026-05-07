@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
@@ -1341,6 +1342,56 @@ class AppSettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.compress),
+            title: Text(context.l10n.settings_mcmpTextLimit),
+            subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showMcmpTextLimitDialog(context, settingsService),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMcmpTextLimitDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.mcmpTextLimit.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_mcmpTextLimit),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            labelText: dialogContext.l10n.settings_mcmpTextLimit,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final value = int.tryParse(controller.text.trim());
+              if (value == null) return;
+              await settingsService.setMcmpTextLimit(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
           ),
         ],
       ),

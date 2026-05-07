@@ -1177,7 +1177,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       onSubmitted: (_) => _sendMessage(),
                       extraFormatters:
                           connector.isChannelMcmpEnabled(widget.channel.index)
-                          ? const [NewlineToSpaceFormatter()]
+                          ? [
+                              NewlineToSpaceFormatter(
+                                maxInsertedChars: settings.mcmpTextLimit,
+                              ),
+                            ]
                           : const [],
                       encoder: _replyingToMessage != null || usesChannelEncoding
                           ? encodeComposerText

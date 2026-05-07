@@ -1246,6 +1246,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get settings_mcmpTextLimit => 'MCMP: лимит символов для обработки';
+
+  @override
   String get channels_publicChannelAdded => 'Публичный канал добавлен';
 
   @override

@@ -261,6 +261,14 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMcmpTextLimit(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        mcmpTextLimit: AppSettings.normalizeMcmpTextLimit(value),
+      ),
+    );
+  }
+
   Cyr2LatProfile getSelectedCyr2LatProfile() {
     return _settings.cyr2latProfiles.firstWhere(
       (p) => p.id == _settings.selectedCyr2latProfileId,

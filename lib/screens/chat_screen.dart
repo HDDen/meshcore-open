@@ -630,7 +630,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         connector.isContactMcmpEnabled(
                           widget.contact.publicKeyHex,
                         )
-                        ? const [NewlineToSpaceFormatter()]
+                        ? [
+                            NewlineToSpaceFormatter(
+                              maxInsertedChars: settings.mcmpTextLimit,
+                            ),
+                          ]
                         : const [],
                     encoder:
                         (connector.isContactMcmpEnabled(

@@ -2302,6 +2302,12 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete the profile \"{name}\"?'**
   String settings_cyr2latProfileDeleteDscr(String name);
 
+  /// No description provided for @settings_mcmpTextLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP text processing limit'**
+  String get settings_mcmpTextLimit;
+
   /// No description provided for @channels_publicChannelAdded.
   ///
   /// In en, this message translates to:
