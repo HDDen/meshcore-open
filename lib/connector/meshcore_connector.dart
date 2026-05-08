@@ -5718,7 +5718,10 @@ class MeshCoreConnector extends ChangeNotifier {
     // Name matches - this is from self
     // Drop only if pathBytes is empty (direct broadcast)
     // Keep if pathBytes has data (repeated through another node)
-    return pathBytes.isEmpty;
+    // Issue with self-terminal-cli - messages will be filtered
+    // So, return false
+    return false;
+    // return pathBytes.isEmpty;
   }
 
   Uint8List _selectPreferredPathBytes(Uint8List existing, Uint8List incoming) {
