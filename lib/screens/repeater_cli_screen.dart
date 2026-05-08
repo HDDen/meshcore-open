@@ -585,6 +585,62 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         command: 'clear stats',
         description: l10n.repeater_cliHelpClearStats,
       ),
+      _CommandHelpEntry(
+        command: 'poweroff',
+        description: l10n.repeater_cliHelpPowerOff,
+      ),
+      _CommandHelpEntry(
+        command: 'shutdown',
+        description: l10n.repeater_cliHelpPowerOff,
+      ),
+      _CommandHelpEntry(
+        command: 'clkreboot',
+        description: l10n.repeater_cliHelpClkReboot,
+      ),
+      _CommandHelpEntry(
+        command: 'advert.zerohop',
+        description: l10n.repeater_cliHelpAdvertZeroHop,
+      ),
+      _CommandHelpEntry(
+        command: 'start ota',
+        description: l10n.repeater_cliHelpStartOta,
+      ),
+      _CommandHelpEntry(
+        command: 'time {epoch-seconds}',
+        description: l10n.repeater_cliHelpTime,
+      ),
+      _CommandHelpEntry(
+        command: 'board',
+        description: l10n.repeater_cliHelpBoard,
+      ),
+      _CommandHelpEntry(
+        command: 'discover.neighbors',
+        description: l10n.repeater_cliHelpDiscoverNeighbors,
+      ),
+      _CommandHelpEntry(
+        command: 'powersaving',
+        description: l10n.repeater_cliHelpPowersaving,
+      ),
+      _CommandHelpEntry(
+        command: 'powersaving {on|off}',
+        description: l10n.repeater_cliHelpPowersavingOnOff,
+      ),
+      _CommandHelpEntry(
+        command: 'erase',
+        description: l10n.repeater_cliHelpErase,
+      ),
+      _CommandHelpEntry(
+        command: 'stats-packets',
+        description: l10n.repeater_cliHelpStatsPackets,
+      ),
+      _CommandHelpEntry(
+        command: 'stats-radio',
+        description: l10n.repeater_cliHelpStatsRadio,
+      ),
+      _CommandHelpEntry(
+        command: 'stats-core',
+        description: l10n.repeater_cliHelpStatsCore,
+      ),
     ];
 
     final settingsCommands = [
@@ -692,6 +748,38 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         command: 'setperm {pubkey-hex} {permissions}',
         description: l10n.repeater_cliHelpSetPerm,
       ),
+      _CommandHelpEntry(
+        command: 'set dutycycle {1-100}',
+        description: l10n.repeater_cliHelpSetDutyCycle,
+      ),
+      _CommandHelpEntry(
+        command: 'set prv.key {hex}',
+        description: l10n.repeater_cliHelpSetPrvKey,
+      ),
+      _CommandHelpEntry(
+        command: 'set radio.rxgain {on|off}',
+        description: l10n.repeater_cliHelpSetRadioRxGain,
+      ),
+      _CommandHelpEntry(
+        command: 'set owner.info {text}',
+        description: l10n.repeater_cliHelpSetOwnerInfo,
+      ),
+      _CommandHelpEntry(
+        command: 'set path.hash.mode {0|1|2}',
+        description: l10n.repeater_cliHelpSetPathHashMode,
+      ),
+      _CommandHelpEntry(
+        command: 'set loop.detect {off|minimal|moderate|strict}',
+        description: l10n.repeater_cliHelpSetLoopDetect,
+      ),
+      _CommandHelpEntry(
+        command: 'set freq {mhz}',
+        description: l10n.repeater_cliHelpSetFreq,
+      ),
+      _CommandHelpEntry(
+        command: 'set bridge.channel {1-14}',
+        description: l10n.repeater_cliHelpSetBridgeChannel,
+      ),
     ];
 
     final bridgeCommands = [
@@ -768,6 +856,203 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         command: 'region save',
         description: l10n.repeater_cliHelpRegionSave,
       ),
+      _CommandHelpEntry(
+        command: 'region default',
+        description: l10n.repeater_cliHelpRegionDefault,
+      ),
+      _CommandHelpEntry(
+        command: 'region default {* | name-prefix | <null>}',
+        description: l10n.repeater_cliHelpRegionDefaultSet,
+      ),
+      _CommandHelpEntry(
+        command: 'region list allowed',
+        description: l10n.repeater_cliHelpRegionListAllowed,
+      ),
+      _CommandHelpEntry(
+        command: 'region list denied',
+        description: l10n.repeater_cliHelpRegionListDenied,
+      ),
+    ];
+
+    final getCommands = [
+      _CommandHelpEntry(
+        command: 'get name',
+        description: l10n.repeater_cliHelpGetName,
+      ),
+      _CommandHelpEntry(
+        command: 'get role',
+        description: l10n.repeater_cliHelpGetRole,
+      ),
+      _CommandHelpEntry(
+        command: 'get public.key',
+        description: l10n.repeater_cliHelpGetPublicKey,
+      ),
+      _CommandHelpEntry(
+        command: 'get prv.key',
+        description: l10n.repeater_cliHelpGetPrvKey,
+      ),
+      _CommandHelpEntry(
+        command: 'get repeat',
+        description: l10n.repeater_cliHelpGetRepeat,
+      ),
+      _CommandHelpEntry(
+        command: 'get tx',
+        description: l10n.repeater_cliHelpGetTx,
+      ),
+      _CommandHelpEntry(
+        command: 'get freq',
+        description: l10n.repeater_cliHelpGetFreq,
+      ),
+      _CommandHelpEntry(
+        command: 'get radio',
+        description: l10n.repeater_cliHelpGetRadio,
+      ),
+      _CommandHelpEntry(
+        command: 'get radio.rxgain',
+        description: l10n.repeater_cliHelpGetRadioRxGain,
+      ),
+      _CommandHelpEntry(
+        command: 'get af',
+        description: l10n.repeater_cliHelpGetAf,
+      ),
+      _CommandHelpEntry(
+        command: 'get dutycycle',
+        description: l10n.repeater_cliHelpGetDutyCycle,
+      ),
+      _CommandHelpEntry(
+        command: 'get int.thresh',
+        description: l10n.repeater_cliHelpGetIntThresh,
+      ),
+      _CommandHelpEntry(
+        command: 'get agc.reset.interval',
+        description: l10n.repeater_cliHelpGetAgcResetInterval,
+      ),
+      _CommandHelpEntry(
+        command: 'get multi.acks',
+        description: l10n.repeater_cliHelpGetMultiAcks,
+      ),
+      _CommandHelpEntry(
+        command: 'get allow.read.only',
+        description: l10n.repeater_cliHelpGetAllowReadOnly,
+      ),
+      _CommandHelpEntry(
+        command: 'get advert.interval',
+        description: l10n.repeater_cliHelpGetAdvertInterval,
+      ),
+      _CommandHelpEntry(
+        command: 'get flood.advert.interval',
+        description: l10n.repeater_cliHelpGetFloodAdvertInterval,
+      ),
+      _CommandHelpEntry(
+        command: 'get guest.password',
+        description: l10n.repeater_cliHelpGetGuestPassword,
+      ),
+      _CommandHelpEntry(
+        command: 'get lat',
+        description: l10n.repeater_cliHelpGetLat,
+      ),
+      _CommandHelpEntry(
+        command: 'get lon',
+        description: l10n.repeater_cliHelpGetLon,
+      ),
+      _CommandHelpEntry(
+        command: 'get rxdelay',
+        description: l10n.repeater_cliHelpGetRxDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'get txdelay',
+        description: l10n.repeater_cliHelpGetTxDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'get direct.txdelay',
+        description: l10n.repeater_cliHelpGetDirectTxDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'get flood.max',
+        description: l10n.repeater_cliHelpGetFloodMax,
+      ),
+      _CommandHelpEntry(
+        command: 'get owner.info',
+        description: l10n.repeater_cliHelpGetOwnerInfo,
+      ),
+      _CommandHelpEntry(
+        command: 'get path.hash.mode',
+        description: l10n.repeater_cliHelpGetPathHashMode,
+      ),
+      _CommandHelpEntry(
+        command: 'get loop.detect',
+        description: l10n.repeater_cliHelpGetLoopDetect,
+      ),
+      _CommandHelpEntry(
+        command: 'get acl',
+        description: l10n.repeater_cliHelpGetAcl,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.enabled',
+        description: l10n.repeater_cliHelpGetBridgeEnabled,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.delay',
+        description: l10n.repeater_cliHelpGetBridgeDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.source',
+        description: l10n.repeater_cliHelpGetBridgeSource,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.baud',
+        description: l10n.repeater_cliHelpGetBridgeBaud,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.channel',
+        description: l10n.repeater_cliHelpGetBridgeChannel,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.secret',
+        description: l10n.repeater_cliHelpGetBridgeSecret,
+      ),
+      _CommandHelpEntry(
+        command: 'get bootloader.ver',
+        description: l10n.repeater_cliHelpGetBootloaderVer,
+      ),
+      _CommandHelpEntry(
+        command: 'get adc.multiplier',
+        description: l10n.repeater_cliHelpGetAdcMultiplier,
+      ),
+    ];
+
+    final powerMgmtCommands = [
+      _CommandHelpEntry(
+        command: 'get pwrmgt.support',
+        description: l10n.repeater_cliHelpGetPwrMgtSupport,
+      ),
+      _CommandHelpEntry(
+        command: 'get pwrmgt.source',
+        description: l10n.repeater_cliHelpGetPwrMgtSource,
+      ),
+      _CommandHelpEntry(
+        command: 'get pwrmgt.bootreason',
+        description: l10n.repeater_cliHelpGetPwrMgtBootReason,
+      ),
+      _CommandHelpEntry(
+        command: 'get pwrmgt.bootmv',
+        description: l10n.repeater_cliHelpGetPwrMgtBootMv,
+      ),
+    ];
+
+    final sensorCommands = [
+      _CommandHelpEntry(
+        command: 'sensor get {key}',
+        description: l10n.repeater_cliHelpSensorGet,
+      ),
+      _CommandHelpEntry(
+        command: 'sensor set {key} {value}',
+        description: l10n.repeater_cliHelpSensorSet,
+      ),
+      _CommandHelpEntry(
+        command: 'sensor list [start]',
+        description: l10n.repeater_cliHelpSensorList,
+      ),
     ];
 
     final gpsCommands = [
@@ -816,9 +1101,23 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
               const SizedBox(height: 16),
               _buildHelpSection(
                 context,
+                l10n.repeater_getCategory,
+                getCommands,
+              ),
+              const SizedBox(height: 16),
+              _buildHelpSection(
+                context,
                 l10n.repeater_settingsCategory,
                 settingsCommands,
               ),
+              const SizedBox(height: 16),
+              _buildHelpSection(
+                context,
+                l10n.repeater_powerMgmt,
+                powerMgmtCommands,
+              ),
+              const SizedBox(height: 16),
+              _buildHelpSection(context, l10n.repeater_sensors, sensorCommands),
               const SizedBox(height: 16),
               _buildHelpSection(context, l10n.repeater_bridge, bridgeCommands),
               const SizedBox(height: 16),

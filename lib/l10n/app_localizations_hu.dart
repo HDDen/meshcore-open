@@ -496,11 +496,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_debug => 'Hibakeresés';
 
   @override
-  String get settings_bleDebugLog => 'BLE hibaelhárítási napló';
+  String get settings_companionDebugLog => 'Companion Debug Log';
 
   @override
-  String get settings_bleDebugLogSubtitle =>
-      'BLE parancsok, válaszok és alapvető adatok';
+  String get settings_companionDebugLogSubtitle =>
+      'BLE/TCP/USB commands, responses, and raw data';
 
   @override
   String get settings_appDebugLog => 'App-debug log';
@@ -1102,9 +1102,6 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get channels_hashtagChannel => 'Hashtag-ok közössége';
-
-  @override
   String get channels_public => 'A nyilvánosság számára';
 
   @override
@@ -1114,12 +1111,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channels_private => 'Személyes';
-
-  @override
-  String get channels_publicChannel => 'Össztávos csatorna';
-
-  @override
-  String get channels_privateChannel => 'Személyes csatorna';
 
   @override
   String get channels_editChannel => 'Csatorna szerkesztése';
@@ -2256,6 +2247,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
+  String get repeater_chanUtil => 'Channel Utilization';
+
+  @override
   String get repeater_packetStatistics => 'Csomagok statisztikája';
 
   @override
@@ -2464,6 +2458,163 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_settingsSaved => 'Beállítások sikeresen mentve';
 
   @override
+  String get repeater_rxGain => 'Nagyobb RX-jel erősítés';
+
+  @override
+  String get repeater_rxGainHelper =>
+      'Magasabb érzékenység, nagyobb áramfelvétel (csak SX1262/SX1268 esetén)';
+
+  @override
+  String get repeater_refreshRxGain => 'Újraindított, fokozott RX hatás';
+
+  @override
+  String get repeater_multiAcks => 'Többszörös visszaigazolások';
+
+  @override
+  String get repeater_multiAcksSubtitle =>
+      'Ismerje el üzeneteket több úton is, hogy biztosítsa a jobb átadást.';
+
+  @override
+  String get repeater_refreshMultiAcks =>
+      'Frissítse a többször is kapott visszaigazolásokat.';
+
+  @override
+  String get repeater_networkHealth => 'Hálózati állapot';
+
+  @override
+  String get repeater_loopDetect => 'Ciklusok azonosítása';
+
+  @override
+  String get repeater_loopDetectHelper =>
+      'Készíts olyan \"vízfolyást\" megjelenítő csomagokat, amelyek úgy néznek ki, mint egy hibaút.';
+
+  @override
+  String get repeater_loopDetectOff => 'Le, kikap';
+
+  @override
+  String get repeater_loopDetectMinimal => 'Minimális';
+
+  @override
+  String get repeater_loopDetectModerate => 'Közepes';
+
+  @override
+  String get repeater_loopDetectStrict => 'Szigorú';
+
+  @override
+  String get repeater_dutyCycle => 'Munka- és pihenőidő aránya';
+
+  @override
+  String get repeater_dutyCycleHelper =>
+      'A maximális időszámítás százalékos aránya';
+
+  @override
+  String repeater_dutyCyclePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get repeater_ownerInfo => 'Üzemeltető információ';
+
+  @override
+  String get repeater_ownerInfoHelper =>
+      'A nyilvánosan elérhető metadatak a repeaterhez';
+
+  @override
+  String get repeater_refreshOwnerInfo => 'Frissítse az üzemeltető adatokat';
+
+  @override
+  String get repeater_floodMax => 'A vízmaximumos ugrások';
+
+  @override
+  String get repeater_floodMaxHelper =>
+      'A legmagasabb szám, amely egy vízszint-csomagban szerepelhet (0-64)';
+
+  @override
+  String get repeater_advancedSettings => 'Haladó';
+
+  @override
+  String get repeater_advancedSettingsSubtitle =>
+      'Erkélő kapcsolók tapasztalt kezelők számára';
+
+  @override
+  String get repeater_pathHashMode => 'Út-hash mód';
+
+  @override
+  String get repeater_pathHashModeHelper =>
+      'A byte-ok, amelyek az alábbi repeater-ek azonosítójának kódolására szolgálnak a flood-útvonal/ciklus-észlelő címkékben. 0=1 byte (256 azonosító, akár 64 útvonal), 1=2 byte (65 000 azonosító, akár 32 útvonal), 2=3 byte (16 millió azonosító, akár 21 útvonal). A v1.13-as verziótól kezdődően és az azt követő verziókban a több byte-os útvonalak megszűntek – csak egyetlen útvonal létesül, miután a hálózat a v1.14-es verzióra vagy az azt követő verzióra frissült.';
+
+  @override
+  String get repeater_txDelay => 'Flood TX késés';
+
+  @override
+  String get repeater_txDelayHelper =>
+      'Újraküldési intervallum árvíz esetén, amely a csomag átviteli idejének (0-2, alapérték 0,5) szorzata. Minél nagyobb az érték, annál kevesebb ütközés, de lassabb a továbbítás.';
+
+  @override
+  String get repeater_directTxDelay => 'Közvetlen TX késés';
+
+  @override
+  String get repeater_directTxDelayHelper =>
+      'A közvetlen (nem tömeges) forgalomhoz tartozó adatcsomagok újrádiózására szolgáló intervallum, amely a csomag átviteli idejének (0-2, alapértelmezett érték 0,3) szorzata.';
+
+  @override
+  String get repeater_intThresh => 'Interferencia határ';
+
+  @override
+  String get repeater_intThreshHelper =>
+      'A határt a rádió zajszintjének kalibrálására állították, így elutasítja a fenti szint feletti interferenciákat. 0 kikapcsol – csak akkor állítsa be, ha zajos frekvencián RX hibákat észlel.';
+
+  @override
+  String get repeater_agcResetInterval => 'AGC visszazárási intervallum';
+
+  @override
+  String get repeater_agcResetIntervalHelper =>
+      'Mennyi időnként kell a rádió automatikus hangerőszabályozását visszaállítani, hogy kijavítsa a problémát? A visszaállítás időtartama: másoderek, amely 4-szeresével osztható. A 0 érték a periodikus visszaállítás kikapcsolását jelzi.';
+
+  @override
+  String get repeater_actionsTitle => 'Tevékenységek';
+
+  @override
+  String get repeater_sendAdvert => 'Eljuttass flood hirdetést';
+
+  @override
+  String get repeater_sendAdvertSubtitle =>
+      'Terjesztse egy árvíz elleni reklámot a hálózaton keresztül.';
+
+  @override
+  String get repeater_sendAdvertZeroHop => 'Küldj egy közvetlen hirdetést';
+
+  @override
+  String get repeater_sendAdvertZeroHopSubtitle =>
+      'Adja közzé egyetlen átjáró hirdetést (nincs átjátszás).';
+
+  @override
+  String get repeater_clockSync => 'Synchronizálja az órát';
+
+  @override
+  String get repeater_clockSyncSubtitle =>
+      'Állítsa be a telefon időzítését a repeaterhez.';
+
+  @override
+  String repeater_actionSucceeded(String action) {
+    return '$action sikert aratott';
+  }
+
+  @override
+  String repeater_actionFailed(String action, String error) {
+    return '$action sikertelen: $error';
+  }
+
+  @override
+  String get repeater_settingsSavedRebootNeeded =>
+      'Beállítások mentve – újraindítsa a repeatert, hogy alkalmazza';
+
+  @override
+  String repeater_settingsPartialFailure(String failures) {
+    return 'Bizonyos beállítások nem sikerültek: $failures';
+  }
+
+  @override
   String repeater_errorSavingSettings(String error) {
     return 'Hibás beállítások mentése: $error';
   }
@@ -2478,10 +2629,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_refreshTxPower => 'Újraindítás TX-támogatással';
 
   @override
-  String get repeater_refreshLocationSettings =>
-      'Újraindítás helyszín beállításokkal';
-
-  @override
   String get repeater_refreshPacketForwarding =>
       'Csomagok továbbításának frissítése';
 
@@ -2491,10 +2638,6 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get repeater_refreshPrivacyMode =>
       'Visszaállítás a magánéletvédő módra';
-
-  @override
-  String get repeater_refreshAdvertisementSettings =>
-      'Újraindítás hirdetés beállítások';
 
   @override
   String repeater_refreshed(String label) {
@@ -2820,6 +2963,285 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get repeater_gpsNote =>
       'Az GPS-al kapcsolatos funkciók lehetővé teszik a helyszín-személyesítéssel kapcsolatos feladatok kezelését.';
+
+  @override
+  String get repeater_getCategory => 'Szereplő értékek';
+
+  @override
+  String get repeater_powerMgmt =>
+      'Energiahatékonyság, energiafelhasználás optimalizálása';
+
+  @override
+  String get repeater_sensors => 'Érzékelők';
+
+  @override
+  String get repeater_cliHelpPowerOff =>
+      'Át kapcsolja a készüléket. (nincs válasz elvárás)';
+
+  @override
+  String get repeater_cliHelpClkReboot =>
+      'Visszaállítja az órát egy ismert időpontra, majd újraindítja a készüléket.';
+
+  @override
+  String get repeater_cliHelpAdvertZeroHop =>
+      'Küld egy közvetlen szomszédoknak szóló hirdetést, amely közvetlen kapcsolatot igényel.';
+
+  @override
+  String get repeater_cliHelpStartOta =>
+      'Elindítja a vezeték nélküli útvonalon történő firmware frissítést a támogatott kártyákon.';
+
+  @override
+  String get repeater_cliHelpTime =>
+      'Beállítja a eszköz óráját a megadott Unix-időpont (Unix epoch) időpontra. Az óra nem tud visszanyúlni.';
+
+  @override
+  String get repeater_cliHelpBoard =>
+      'Megjeleníti a gyártó nevét/a hardver azonosítóját.';
+
+  @override
+  String get repeater_cliHelpDiscoverNeighbors =>
+      'Kérést küld a közeli eszközöknek, hogy azok is megtalálják egymást. (Csak egy repeater eszköz számára)';
+
+  @override
+  String get repeater_cliHelpPowersaving =>
+      'Megmutatja, hogy a takarékos üzemmód engedélyezve van-e vagy nem.';
+
+  @override
+  String get repeater_cliHelpPowersavingOnOff =>
+      'Engedélyezi vagy kikapcsolja a takarékos üzemmódot (ha támogatott).';
+
+  @override
+  String get repeater_cliHelpErase =>
+      '(Csak sorozatban) Formázza a eszköz fájlrendszerét. Eltávolítja az összes beállítást és a kapcsolatokat.';
+
+  @override
+  String get repeater_cliHelpSetDutyCycle =>
+      'Beállítja a maximális engedélyezett átviteli időtartamot százalékban (1-100). Belsőleg módosítja az időtartam-szabályozást.';
+
+  @override
+  String get repeater_cliHelpSetPrvKey =>
+      '(Csak sorozatban) Cseréli a eszköz egyedi kulcsát. Az alkalmazáshoz újraindítás szükséges. Új nyilvános kulcsot generál.';
+
+  @override
+  String get repeater_cliHelpSetRadioRxGain =>
+      '(Csak SX126x család) A növelt RX erősítést be- és kikapcsolható, így a nagyobb áramfelvétel esetén is javítható a érzékenység.';
+
+  @override
+  String get repeater_cliHelpSetOwnerInfo =>
+      'Megadja az üvegezésben megjelenő tulajdonos elérhetőségeinek szövegét. Használja a \'|\' karaktert új sorok elválasztására.';
+
+  @override
+  String get repeater_cliHelpSetPathHashMode =>
+      'Beállítja a hálózati útvonal-hash módot. 0 = régebbi, 1 = szabványos, 2 = szigorú. Hatással van a hálózati útvonalak megadatalására.';
+
+  @override
+  String get repeater_cliHelpSetLoopDetect =>
+      'Beállítja a hibaforrás-keresés érzékenységét: kikapcsolva, minimális, közepes vagy szigorú.';
+
+  @override
+  String get repeater_cliHelpSetFreq =>
+      '(Csak soros mód) Gyorsan beállítja a frekvenciát. A rendszer újraindítás szükséges. A teljes rádióparaméterek beállításához a \"rádió beállítás\" funkciót javaslom.';
+
+  @override
+  String get repeater_cliHelpSetBridgeChannel =>
+      '(Csak ESPNow híd esetén) Beállítja a híd által használt WiFi-csatornát (1-14).';
+
+  @override
+  String get repeater_cliHelpGetName =>
+      'Megjeleníti a konfigurált csomópont nevét.';
+
+  @override
+  String get repeater_cliHelpGetRole =>
+      'Megmutatja a firmware funkcióját (repeater, szobai szerver stb.).';
+
+  @override
+  String get repeater_cliHelpGetPublicKey =>
+      'Megjeleníti a eszköz nyilvános kulcsát.';
+
+  @override
+  String get repeater_cliHelpGetPrvKey =>
+      '(Csak soros mód) Megjeleníti a eszköz privát kulcsát. Kezelje titkos információként.';
+
+  @override
+  String get repeater_cliHelpGetRepeat =>
+      'Megmutatja, hogy a csomagok továbbításának (repeater funkció) engedélyezve van-e vagy nem.';
+
+  @override
+  String get repeater_cliHelpGetTx =>
+      'Megmutatja a jelenlegi TX (átvitel) teljesítményt dBm-ben.';
+
+  @override
+  String get repeater_cliHelpGetFreq =>
+      'Megjeleníti a konfigurált rádiófrekvenciát MHz-ben.';
+
+  @override
+  String get repeater_cliHelpGetRadio =>
+      'Megjeleníti az összes rádióparamétert: frekvencia, sávszélesség, széttétező tényező, kódolási ráta.';
+
+  @override
+  String get repeater_cliHelpGetRadioRxGain =>
+      '(Csak SX126x családra) Megjeleníti az RX erősítés állapotát.';
+
+  @override
+  String get repeater_cliHelpGetAf => 'Megmutatja az aktuális időadó tényezőt.';
+
+  @override
+  String get repeater_cliHelpGetDutyCycle =>
+      'Megmutatja az aktuális engedélyezett működési ciklust százalékban.';
+
+  @override
+  String get repeater_cliHelpGetIntThresh =>
+      'Megmutatja a csatornák közötti interferencia szintjét dB-ben.';
+
+  @override
+  String get repeater_cliHelpGetAgcResetInterval =>
+      'Megmutatja az AGC (automatikus gain-kontroll) visszaállítási időt másodpercekben.';
+
+  @override
+  String get repeater_cliHelpGetMultiAcks =>
+      'Megmutatja, hogy a kettős visszaigazolás (double-ACK) mód engedélyezve van-e (1), vagy kikapcsolva (0).';
+
+  @override
+  String get repeater_cliHelpGetAllowReadOnly =>
+      'Megmutatja, hogy a vendég csak olvasási jogosítást engedélyez-e.';
+
+  @override
+  String get repeater_cliHelpGetAdvertInterval =>
+      'Megmutatja a helyi hirdetés időtartamát percenként.';
+
+  @override
+  String get repeater_cliHelpGetFloodAdvertInterval =>
+      'Megmutatja az aktuális időzítést, amikor megjelenik a vízparti reklám, órákonként.';
+
+  @override
+  String get repeater_cliHelpGetGuestPassword =>
+      'Megjeleníti a konfigurált vendégjelszót.';
+
+  @override
+  String get repeater_cliHelpGetLat => 'Megjeleníti a beállított szélességet.';
+
+  @override
+  String get repeater_cliHelpGetLon => 'Megjeleníti a beállított hosszúságot.';
+
+  @override
+  String get repeater_cliHelpGetRxDelay =>
+      'Megmutatja az alapértéket a késéshez.';
+
+  @override
+  String get repeater_cliHelpGetTxDelay =>
+      'Megmutatja a vízszint-érzékelő jelátviteli késésének tényezőjét.';
+
+  @override
+  String get repeater_cliHelpGetDirectTxDelay =>
+      'Megmutatja a közvetlen módban használt késés tényezőt.';
+
+  @override
+  String get repeater_cliHelpGetFloodMax =>
+      'Megmutatja a maximális vízszint-emelkedés mértékét.';
+
+  @override
+  String get repeater_cliHelpGetOwnerInfo =>
+      'Megjeleníti az tulajdonos elérhetőségének szövegét.';
+
+  @override
+  String get repeater_cliHelpGetPathHashMode =>
+      'Megjeleníti a hash-alapú mód (0/1/2) beállításokat.';
+
+  @override
+  String get repeater_cliHelpGetLoopDetect =>
+      'Mutatja a cikkszám-azonosító érzékenységet.';
+
+  @override
+  String get repeater_cliHelpGetAcl =>
+      '(Csak sorozat) A repeateren található hozzáférési szabályok listája.';
+
+  @override
+  String get repeater_cliHelpGetBridgeEnabled =>
+      'Megmutatja, hogy a híd engedélyezve van-e.';
+
+  @override
+  String get repeater_cliHelpGetBridgeDelay =>
+      'Megmutatja a hídon bekövetkező késést másodpercben.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSource =>
+      'Megmutatja, hogy a híd RX vagy TX csomagokat fogad-e.';
+
+  @override
+  String get repeater_cliHelpGetBridgeBaud =>
+      '(Csak RS232 híd) Megjeleníti a híd sebességét.';
+
+  @override
+  String get repeater_cliHelpGetBridgeChannel =>
+      '(Csak ESPNow híd) Megjeleníti a híd által használt WiFi csatornát.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSecret =>
+      '(Csak ESPNow híd esetén) Megjeleníti a híd által megosztott titkos kulcsot.';
+
+  @override
+  String get repeater_cliHelpGetBootloaderVer =>
+      '(Csak NRF52 esetén) Megjeleníti a bootloader verzióját.';
+
+  @override
+  String get repeater_cliHelpGetAdcMultiplier =>
+      'A bemeneti feszültség-átalakító (akkumulátor-feszültség-szabályozó) működését mutatja.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSupport =>
+      'Megállapítja, hogy a felügyelet rendelkezik-e energiahatékonysági támogatással.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSource =>
+      'Megmutatja az aktuális energiaforrást: külső vagy akkumulátor.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootReason =>
+      'Megjeleníti az utolsó újraindítás és leállítás okait.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootMv =>
+      'Megjeleníti a rendszerindításkor mért akkumulátor feszültséget millivoltban (mV).';
+
+  @override
+  String get repeater_cliHelpSensorGet =>
+      'Beolvas egy felhasználó által definiált szenzor beállítást kulcs segítségével.';
+
+  @override
+  String get repeater_cliHelpSensorSet =>
+      'Egyedi szenzorbeállítások létrehozása.';
+
+  @override
+  String get repeater_cliHelpSensorList =>
+      'Összesíti az összes egyedi szenzor beállításot, oldalanként, opcionális kezdő index alapján.';
+
+  @override
+  String get repeater_cliHelpRegionDefault =>
+      'Megmutatja a jelenlegi alapértelmezett régió határait.';
+
+  @override
+  String get repeater_cliHelpRegionDefaultSet =>
+      'Beállítja az alapértelmezett régió hatókörét. Használja a \"<null>\" értéket a törléshez.';
+
+  @override
+  String get repeater_cliHelpRegionListAllowed =>
+      'Felhasználható területek, ahol árvíz esetén forgalmat engedélyeznek.';
+
+  @override
+  String get repeater_cliHelpRegionListDenied =>
+      'Felhasznál, amelyek elutasítják a árvíz okozta forgalmat.';
+
+  @override
+  String get repeater_cliHelpStatsPackets =>
+      '(Csak sorozat) A csomagok szintjén történő statisztikát mutat.';
+
+  @override
+  String get repeater_cliHelpStatsRadio =>
+      '(Csak sorozat) Mutat rádióstatisztikákat.';
+
+  @override
+  String get repeater_cliHelpStatsCore =>
+      '(Csak soros mód) A főfirmware-adatokat mutatja.';
 
   @override
   String get telemetry_receivedData => 'Kapott adatokat a szenzorokról';

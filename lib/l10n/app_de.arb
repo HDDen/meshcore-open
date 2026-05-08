@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open (Advanced mod)",
+  "scanner_title": "MeshCore – Open-Version (Advanced mod)",
   "scanner_scanning": "Scannen nach Geräten...",
   "scanner_connecting": "Verbunden...",
   "scanner_disconnecting": "Trenne...",
@@ -123,7 +123,7 @@
   "settings_appDebugLog": "App-Debug-Protokoll",
   "settings_appDebugLogSubtitle": "Anwendung Debug-Nachrichten",
   "settings_about": "Über",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod), Version {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -148,7 +148,7 @@
   "settings_spreadingFactor": "Verteilungsfaktor",
   "settings_codingRate": "Kodierungsrate",
   "settings_txPower": "TX-Leistung (dBm)",
-  "settings_txPowerHelper": "0 - 22",
+  "settings_txPowerHelper": "0 – 22",
   "settings_txPowerInvalid": "Ungültige TX-Leistung (0-22 dBm)",
   "settings_error": "Fehler: {message}",
   "@settings_error": {
@@ -160,25 +160,25 @@
   },
   "appSettings_title": "App-Einstellungen",
   "appSettings_appearance": "Aussehen",
-  "appSettings_theme": "Theme",
+  "appSettings_theme": "Thema",
   "appSettings_themeSystem": "Systemstandard",
   "appSettings_themeLight": "Hell",
   "appSettings_themeDark": "Dunkel",
   "appSettings_language": "Sprache",
   "appSettings_languageSystem": "Systemstandard",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
-  "appSettings_languageEs": "Español",
+  "appSettings_languageEn": "Englisch",
+  "appSettings_languageFr": "Französisch",
+  "appSettings_languageEs": "Spanisch",
   "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
-  "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
-  "appSettings_languageIt": "Italiano",
-  "appSettings_languageZh": "中文",
-  "appSettings_languageSv": "Svenska",
-  "appSettings_languageNl": "Nederlands",
-  "appSettings_languageSk": "Slovenčina",
-  "appSettings_languageBg": "Български",
+  "appSettings_languagePl": "Polnisch",
+  "appSettings_languageSl": "Slowenisch",
+  "appSettings_languagePt": "Portugiesisch",
+  "appSettings_languageIt": "Italienisch",
+  "appSettings_languageZh": "Chinesisch",
+  "appSettings_languageSv": "Schwedisch",
+  "appSettings_languageNl": "Niederländisch",
+  "appSettings_languageSk": "Slowenisch",
+  "appSettings_languageBg": "Bulgarisch",
   "appSettings_notifications": "Benachrichtigungen",
   "appSettings_enableNotifications": "Benachrichtigungen aktivieren",
   "appSettings_enableNotificationsSubtitle": "Erhalte Benachrichtigungen für Nachrichten und Ankündigungen",
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtag-Kanal",
   "channels_public": "Öffentlich",
   "channels_private": "Privat",
-  "channels_publicChannel": "Öffentlicher Kanal",
-  "channels_privateChannel": "Privater Kanal",
   "channels_editChannel": "Kanal bearbeiten",
   "channels_muteChannel": "Kanal stummschalten",
   "channels_unmuteChannel": "Kanal Stummschaltung aufheben",
@@ -369,7 +366,7 @@
   "channels_channelName": "Kanalname",
   "channels_usePublicChannel": "Verwende öffentlichen Kanal",
   "channels_standardPublicPsk": "Öffentliche Standard PSK",
-  "channels_pskHex": "PSK (Hex)",
+  "channels_pskHex": "PSK (Hexadezimal)",
   "channels_generateRandomPsk": "Zufällige PSK generieren",
   "channels_enterChannelName": "Bitte geben Sie einen Kanalnamen ein.",
   "channels_pskMustBe32Hex": "Die PSK muss 32 hexadezimale Zeichen haben.",
@@ -530,7 +527,7 @@
       }
     }
   },
-  "debugFrame_flags": "- Flags: 0x{value}",
+  "debugFrame_flags": "- Flaggen: 0x{value}",
   "@debugFrame_flags": {
     "placeholders": {
       "value": {
@@ -549,7 +546,7 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypeCli": "Befehlszeilen-Schnittstelle",
   "debugFrame_textTypePlain": "Einfach",
   "debugFrame_text": "- Text: \"{text}\"",
   "@debugFrame_text": {
@@ -651,7 +648,7 @@
       }
     }
   },
-  "map_pinsCount": "Pins: {count}",
+  "map_pinsCount": "Nadeln: {count}",
   "@map_pinsCount": {
     "placeholders": {
       "count": {
@@ -660,20 +657,20 @@
     }
   },
   "map_chat": "Benutzer",
-  "map_repeater": "Repeater",
+  "map_repeater": "Wiederholungseinheit",
   "map_room": "Raum",
   "map_sensor": "Sensor",
   "map_pinDm": "Pin (Kontakt)",
   "map_pinPrivate": "Pin (Channel)",
-  "map_pinPublic": "Pin (Public)",
+  "map_pinPublic": "Kennzeichnung (Öffentlich)",
   "map_lastSeen": "Letzte Sichtung",
   "map_disconnectConfirm": "Sind Sie sicher, dass Sie sich von diesem Gerät trennen möchten?",
   "map_from": "Von",
   "map_source": "Quelle",
-  "map_flags": "Flags",
+  "map_flags": "Flaggen",
   "map_shareMarkerHere": "Teilen Sie den Marker hier.",
   "map_pinLabel": "Pin Name",
-  "map_label": "Label",
+  "map_label": "Etikett",
   "map_pointOfInterest": "Punkt von Interesse",
   "map_sendToContact": "Senden an Kontakt",
   "map_sendToChannel": "Senden an Kanal",
@@ -901,7 +898,7 @@
   "repeater_statusSubtitle": "Status, Statistiken und Nachbarn anzeigen",
   "repeater_telemetry": "Telemetrie",
   "repeater_telemetrySubtitle": "Sensordaten und Systemwerte anzeigen",
-  "repeater_cli": "CLI",
+  "repeater_cli": "Befehlszeilen-Schnittstelle",
   "repeater_cliSubtitle": "Sende Befehle an den Repeater",
   "repeater_settings": "Einstellungen",
   "repeater_settingsSubtitle": "Repeater-parameter konfigurieren",
@@ -1002,7 +999,7 @@
   },
   "repeater_settingsTitle": "Repeater Einstellungen",
   "repeater_basicSettings": "Grundlegende Einstellungen",
-  "repeater_repeaterName": "Repeater Name",
+  "repeater_repeaterName": "Name des Repeater",
   "repeater_repeaterNameHelper": "Anzeigename für diesen Repeater",
   "repeater_adminPassword": "Admin-Passwort",
   "repeater_adminPasswordHelper": "Vollzugriffspasswort",
@@ -1010,7 +1007,7 @@
   "repeater_guestPasswordHelper": "Schreibgeschütztes Zugriffspasswort",
   "repeater_radioSettings": "Funk Einstellungen",
   "repeater_frequencyMhz": "Frequenz (MHz)",
-  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_frequencyHelper": "300–2500 MHz",
   "repeater_txPower": "TX Power",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Bandbreite",
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Bestätigen",
   "repeater_settingsSaved": "Einstellungen erfolgreich gespeichert",
+  "repeater_rxGain": "Erhöhter RX-Gewinn",
+  "repeater_rxGainHelper": "Höhere Empfindlichkeit, höherer Stromverbrauch (nur für SX1262/SX1268)",
+  "repeater_refreshRxGain": "Erneuerung des verstärkten RX-Effekts",
+  "repeater_multiAcks": "Mehrere Bestätigungen",
+  "repeater_multiAcksSubtitle": "Nachrichten über verschiedene Pfade senden, um die Zustellbarkeit zu verbessern.",
+  "repeater_refreshMultiAcks": "Mehrere Bestätigungen neu senden/aktualisieren",
+  "repeater_networkHealth": "Netzwerkgesundheit",
+  "repeater_loopDetect": "Erkennung von Schleifen",
+  "repeater_loopDetectHelper": "Erstellen Sie \"Flood\"-Pakete, die so aussehen, als ob sie Schleifen erzeugen.",
+  "repeater_loopDetectOff": "Aus",
+  "repeater_loopDetectMinimal": "Minimal",
+  "repeater_loopDetectModerate": "mäßig",
+  "repeater_loopDetectStrict": "streng",
+  "repeater_dutyCycle": "Betriebsdauer",
+  "repeater_dutyCycleHelper": "Höchster zulässiger Prozentsatz der Sendefläche",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Information zum Betreiber",
+  "repeater_ownerInfoHelper": "Öffentliche Metadaten für dieses Gerät",
+  "repeater_refreshOwnerInfo": "Aktualisieren Sie die Informationen zum Betreiber",
+  "repeater_floodMax": "Max-Hops-Flut",
+  "repeater_floodMaxHelper": "Maximale Anzahl an Hop-Paketen, die ein einzelnes Paket durchlaufen kann (0-64)",
+  "repeater_advancedSettings": "Fortgeschritten",
+  "repeater_advancedSettingsSubtitle": "Regler für erfahrene Bediener",
+  "repeater_pathHashMode": "Hash-Modus für Pfade",
+  "repeater_pathHashModeHelper": "Bytes, die zur Kodierung der ID dieses Repeaters in Flood-Pfad-/Schleifen-Erkennung-Tags verwendet werden. 0 = 1 Byte (256 IDs, bis zu 64 Hops), 1 = 2 Bytes (65.000 IDs, bis zu 32 Hops), 2 = 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Firmware-Versionen 1.13 und älter verwenden mehrstellige Pfade – ab Version 1.14+ wird nur ein Pfad erstellt, sobald das Netzwerk aktiv ist.",
+  "repeater_txDelay": "Verzögerung bei Flood TX",
+  "repeater_txDelayHelper": "Wiederholung des Abstands für Hochwasser-Verkehr, als Multiplikator der Übertragungszeit des Pakets (0-2, Standardwert 0,5). Höherer Wert = weniger Kollisionen, aber langsamere Übertragung.",
+  "repeater_directTxDelay": "Direkter TX-Verzögerung",
+  "repeater_directTxDelayHelper": "Die Übertragungsrate für direkten (nicht-fluten) Datenverkehr wird als Vielfaches der Übertragungszeit des Pakets festgelegt (0-2, Standardwert 0,3).",
+  "repeater_intThresh": "Grenzwert für Störungen",
+  "repeater_intThreshHelper": "Der Schwellenwert wird an die Rauschpegel-Kalibrierung des Radios angepasst, sodass Störungen über diesem Wert abgefangen werden. 0 deaktiviert – erhöhen Sie diesen Wert nur, wenn Sie in einem verrauschten Frequenzbereich RX-Fehler feststellen.",
+  "repeater_agcResetInterval": "Intervall für die Rücksetzung von AGC",
+  "repeater_agcResetIntervalHelper": "Wie oft sollte die automatische Verstärkungskontrolle des Radios zurückgesetzt werden, um von einem Zustand mit zu hoher Verstärkung wieder in einen normalen Zustand zu gelangen? Die Einstellung „Sekunden“ ermöglicht eine Rücksetzung alle 4 Sekunden. Die Einstellung „0“ deaktiviert die periodische Rücksetzung.",
+  "repeater_actionsTitle": "Aktionen",
+  "repeater_sendAdvert": "Flood-Werbung versenden",
+  "repeater_sendAdvertSubtitle": "Eine Werbekampagne für Überschwemmungen über das Netzwerk verbreiten.",
+  "repeater_sendAdvertZeroHop": "Versenden Sie eine Anzeige ohne Zwischenvermittler.",
+  "repeater_sendAdvertZeroHopSubtitle": "Eine Werbekampagne mit einem einzigen Sender (ohne Weiterleitung) senden.",
+  "repeater_clockSync": "Uhr jetzt synchronisieren",
+  "repeater_clockSyncSubtitle": "Übertragen Sie die Uhrzeit Ihres Telefons an den Repeater.",
+  "repeater_actionSucceeded": "{action} war erfolgreich",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} fehlgeschlagen: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Einstellungen gespeichert – Repeater neu starten, um die Änderungen anzuwenden.",
+  "repeater_settingsPartialFailure": "Einige Einstellungen sind fehlgeschlagen: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Fehler beim Speichern der Einstellungen: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Grundlegende Einstellungen aktualisieren",
   "repeater_refreshRadioSettings": "Radio-Einstellungen aktualisieren",
   "repeater_refreshTxPower": "Sendeleistung aktualisieren",
-  "repeater_refreshLocationSettings": "Aktualisieren Sie die Standort Einstellungen",
   "repeater_refreshPacketForwarding": "Aktualisieren Paketweiterleitung",
   "repeater_refreshGuestAccess": "Aktualisieren Sie den Gastzugriff",
   "repeater_refreshPrivacyMode": "Wiederherstellen des Datenschutzzustands",
-  "repeater_refreshAdvertisementSettings": "Aktualisieren Sie die Ankündigungseinstellungen",
   "repeater_refreshed": "{label} wurde aktualisiert",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1109,7 +1179,7 @@
       }
     }
   },
-  "repeater_cliTitle": "Repeater CLI",
+  "repeater_cliTitle": "Befehlszeilen-Schnittstelle (CLI) für Repeater",
   "repeater_debugNextCommand": "Fehlersuche des nächsten Befehls",
   "repeater_commandHelp": "Hilfe",
   "repeater_clearHistory": "Löschen der Historie",
@@ -1365,7 +1435,7 @@
   "listFilter_sortBy": "Sortiere nach",
   "listFilter_latestMessages": "Letzte Nachrichten",
   "listFilter_heardRecently": "Kürzlich gehört",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "Von A bis Z",
   "listFilter_filters": "Filtere",
   "listFilter_all": "Alle",
   "listFilter_favorites": "Favoriten",
@@ -1480,7 +1550,7 @@
       }
     }
   },
-  "common_ok": "OK",
+  "common_ok": "Alles klar",
   "community_create": "Erstelle Community",
   "community_createDesc": "Erstelle eine neue Community und teile sie über den QR-Code.",
   "community_join": "Beitreten",
@@ -1491,14 +1561,14 @@
   "community_showQr": "Zeige QR-Code",
   "community_publicChannel": "Community Öffentlich",
   "community_enterName": "Bitte Community-Name eingeben",
-  "community_title": "Community",
+  "community_title": "Gemeinschaft",
   "community_created": "Community \"{name}\" wurde erstellt",
   "community_joined": "Community \"{name}\" beigetreten",
   "community_qrTitle": "Teile Community",
   "community_qrInstructions": "Scannen Sie diesen QR-Code, um sich \"{name}\" anzuschließen.",
   "community_hashtagPrivacyHint": "Community-Hashtag-Kanäle können nur von Mitgliedern der Community betreten werden",
-  "community_hashtagChannel": "Community Hashtag",
-  "community_name": "Community Name",
+  "community_hashtagChannel": "Gemeinschaftlicher Hashtag",
+  "community_name": "Name der Gemeinde",
   "community_invalidQrCode": "Ungültiger Community-QR-Code",
   "community_alreadyMember": "Bereits registriert",
   "community_alreadyMemberMessage": "Sie sind bereits Mitglied von \"{name}\".",
@@ -1525,7 +1595,7 @@
   "community_regularHashtagDesc": "Öffentlicher Hashtag (jeder kann teilnehmen)",
   "community_communityHashtagDesc": "Nur für Mitglieder der Community",
   "community_forCommunity": "Für {name}",
-  "community_communityHashtag": "Community Hashtag",
+  "community_communityHashtag": "Gemeinschaftlicher Hashtag",
   "@community_regenerateSecretConfirm": {
     "placeholders": {
       "name": {
@@ -1925,7 +1995,7 @@
   "connectionChoiceTcpLabel": "TCP",
   "tcpHostHint": "192.168.40.10",
   "tcpScreenTitle": "Verbinden über TCP",
-  "tcpPortLabel": "Port",
+  "tcpPortLabel": "Hafen",
   "tcpPortHint": "5000",
   "tcpStatus_notConnected": "Geben Sie den Endpunkt ein und verbinden Sie sich.",
   "tcpStatus_connectingTo": "Verbindung zu {endpoint}...",
@@ -2112,6 +2182,77 @@
   "repeater_guestTools": "Gastwerkzeuge",
   "chat_sendMessage": "Nachricht senden",
   "room_guest": "Informationen zum Room Server",
+  "repeater_getCategory": "Werte erhalten",
+  "repeater_powerMgmt": "Energieverwaltung",
+  "repeater_sensors": "Sensoren",
+  "repeater_cliHelpPowerOff": "Schaltet das Gerät aus. (keine Antwort erwartet)",
+  "repeater_cliHelpClkReboot": "Setzt die Uhr auf einen bekannten Zeitpunkt zurück und startet das Gerät neu.",
+  "repeater_cliHelpAdvertZeroHop": "Sendet eine Werbeanzeige, die nur an unmittelbare Nachbarn gesendet wird (ohne Zwischenstation).",
+  "repeater_cliHelpStartOta": "Startet ein Firmware-Update über Funk, das auf unterstützten Boards durchgeführt wird.",
+  "repeater_cliHelpTime": "Stellt die Gerätuhr auf die angegebene Unix-Epoche in Sekunden ein. Die Uhr kann nicht rückwärts laufen.",
+  "repeater_cliHelpBoard": "Zeigt den Hersteller/die Hardware-Kennung an.",
+  "repeater_cliHelpDiscoverNeighbors": "Sendet eine Anfrage zur Entdeckung von Nachbarn in der Nähe. (Nur bei Repeatern)",
+  "repeater_cliHelpPowersaving": "Zeigt an, ob der Energiesparmodus aktiviert oder deaktiviert ist.",
+  "repeater_cliHelpPowersavingOnOff": "Aktiviert oder deaktiviert den Energiesparmodus (falls unterstützt).",
+  "repeater_cliHelpErase": "(Nur für serielle Schnittstellen) Formatiert das Dateisystem des Geräts. Löscht alle Einstellungen und Kontakte.",
+  "repeater_cliHelpSetDutyCycle": "Legt den maximal zulässigen Übertragungszyklus als Prozentsatz fest (1-100). Passt den Zeitfaktor intern an.",
+  "repeater_cliHelpSetPrvKey": "(Nur für serielle Anwendungen) Ersetzt den privaten Schlüssel zur Geräteidentifizierung. Nach der Anwendung ist ein Neustart erforderlich. Generiert einen neuen öffentlichen Schlüssel.",
+  "repeater_cliHelpSetRadioRxGain": "(Nur für SX126x) Schaltet die verstärkte RX-Verstärkung ein, um die Empfindlichkeit bei höherem Stromverbrauch zu verbessern.",
+  "repeater_cliHelpSetOwnerInfo": "Definiert den String mit den Kontaktinformationen des Eigentümers, der in den Anzeigen enthalten ist. Verwenden Sie '|' für Zeilenumbrüche.",
+  "repeater_cliHelpSetPathHashMode": "Legt den Modus für die Pfad-Hashes fest. 0 = ältere Version, 1 = Standard, 2 = streng. Beeinflusst, wie Routing-Pfade abgeglichen werden.",
+  "repeater_cliHelpSetLoopDetect": "Legt die Empfindlichkeit der Schleifenerkennung fest: aus, minimal, moderat oder streng.",
+  "repeater_cliHelpSetFreq": "(Nur für die serielle Schnittstelle) Ermöglicht die schnelle Einstellung der Frequenz. Nach der Einstellung ist ein Neustart erforderlich. Für die vollständige Einstellung aller Radio-Parameter wird die Option \"Radio einstellen\" empfohlen.",
+  "repeater_cliHelpSetBridgeChannel": "(Nur für ESPNow-Brücke) Legt den verwendeten WLAN-Kanal (1-14) für die Brücke fest.",
+  "repeater_cliHelpGetName": "Zeigt den konfigurierten Knotenamen an.",
+  "repeater_cliHelpGetRole": "Zeigt die Funktion der Firmware an (Repeater, Raumserver usw.).",
+  "repeater_cliHelpGetPublicKey": "Zeigt den öffentlichen Schlüssel des Geräts an.",
+  "repeater_cliHelpGetPrvKey": "(Nur für serielle Kommunikation) Zeigt den privaten Schlüssel des Geräts an. Behandeln Sie diesen als ein Geheimnis.",
+  "repeater_cliHelpGetRepeat": "Zeigt an, ob die Weiterleitung von Paketen (als Repeater) aktiviert oder deaktiviert ist.",
+  "repeater_cliHelpGetTx": "Zeigt die aktuelle Sendeleistung in dBm an.",
+  "repeater_cliHelpGetFreq": "Zeigt die konfigurierte Funkfrequenz in MHz an.",
+  "repeater_cliHelpGetRadio": "Zeigt alle Funkparameter an: Frequenz, Bandbreite, Spreading-Faktor, Codierungsrate.",
+  "repeater_cliHelpGetRadioRxGain": "(Nur für SX126x) Zeigt den Zustand des verstärkten Empfangs (RX).",
+  "repeater_cliHelpGetAf": "Zeigt den aktuellen Zeitfaktor an.",
+  "repeater_cliHelpGetDutyCycle": "Zeigt den aktuellen zulässigen Schaltzyklus als Prozentsatz an.",
+  "repeater_cliHelpGetIntThresh": "Zeigt den Grenzwert für Kanalüberlagerung in dB an.",
+  "repeater_cliHelpGetAgcResetInterval": "Zeigt das Intervall für die Rücksetzung des AGC in Sekunden an.",
+  "repeater_cliHelpGetMultiAcks": "Zeigt an, ob der Modus \"doppelte ACK\"-Funktion aktiviert (1) oder deaktiviert (0) ist.",
+  "repeater_cliHelpGetAllowReadOnly": "Zeigt an, ob der Zugriff für Gäste nur in Lesemodus erlaubt ist.",
+  "repeater_cliHelpGetAdvertInterval": "Zeigt die Dauer des lokalen Werbeintervalls in Minuten an.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Zeigt die Dauer der Werbeunterbrechung in Stunden an.",
+  "repeater_cliHelpGetGuestPassword": "Zeigt das konfigurierte Gast-Passwort an.",
+  "repeater_cliHelpGetLat": "Zeigt die konfigurierte Breitengrade.",
+  "repeater_cliHelpGetLon": "Zeigt die konfigurierte Länge an.",
+  "repeater_cliHelpGetRxDelay": "Zeigt den Basiswert für die Verzögerungszeit an.",
+  "repeater_cliHelpGetTxDelay": "Zeigt den Faktor für die Übertragungsverzögerung im Notfallmodus an.",
+  "repeater_cliHelpGetDirectTxDelay": "Zeigt den Faktor für die Verzögerung im Direktmodus an.",
+  "repeater_cliHelpGetFloodMax": "Zeigt die maximale Anzahl von Überschwemmungsphasen an.",
+  "repeater_cliHelpGetOwnerInfo": "Zeigt die Zeichenkette mit den Kontaktinformationen des Eigentümers an.",
+  "repeater_cliHelpGetPathHashMode": "Zeigt den Pfad-Hash-Modus (0/1/2) an.",
+  "repeater_cliHelpGetLoopDetect": "Zeigt die Empfindlichkeit der Schleifenerkennung an.",
+  "repeater_cliHelpGetAcl": "(Nur für serielle Kommunikation) Zeigt die Zugriffskontrolleinträge auf einem Repeater an.",
+  "repeater_cliHelpGetBridgeEnabled": "Zeigt an, ob die Brücke aktiviert ist.",
+  "repeater_cliHelpGetBridgeDelay": "Zeigt die Verzögerung der Brücke in Millisekunden an.",
+  "repeater_cliHelpGetBridgeSource": "Zeigt, ob die Brücke RX- oder TX-Pakete empfängt oder sendet.",
+  "repeater_cliHelpGetBridgeBaud": "(Nur für RS232-Verbindungen) Zeigt die Baudrate der Verbindung an.",
+  "repeater_cliHelpGetBridgeChannel": "(Nur für ESPNow-Brücke) Zeigt den WLAN-Kanal der Brücke an.",
+  "repeater_cliHelpGetBridgeSecret": "(Nur für ESPNow-Brücke) Zeigt das gemeinsam genutzte Geheimnis der Brücke.",
+  "repeater_cliHelpGetBootloaderVer": "(Nur für NRF52) Zeigt die Version des Bootloaders an.",
+  "repeater_cliHelpGetAdcMultiplier": "Zeigt den ADC-Verstärker (Spannungs-Skalierung) an.",
+  "repeater_cliHelpGetPwrMgtSupport": "Gibt an, ob der Verwaltungsrat die Funktion zur Energieverwaltung unterstützt.",
+  "repeater_cliHelpGetPwrMgtSource": "Zeigt die aktuelle Stromquelle an: extern oder Batterie.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Zeigt die aktuellsten Gründe für einen Neustart und Herunterfahren an.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Zeigt die Batteriespannung beim Start in Millivolt (mV) an.",
+  "repeater_cliHelpSensorGet": "Liest eine benutzerdefinierte Sensoreinstellung über eine Taste.",
+  "repeater_cliHelpSensorSet": "Erstellt eine benutzerdefinierte Sensoreinstellung.",
+  "repeater_cliHelpSensorList": "Zeigt alle benutzerdefinierten Sensoreinstellungen an, wobei die Seitennummerierung optional von einem Startindex abhängt.",
+  "repeater_cliHelpRegionDefault": "Zeigt den aktuellen Standard-Region-Bereich an.",
+  "repeater_cliHelpRegionDefaultSet": "Definiert den Standard-Regionenbereich. Verwenden Sie \"<null>\", um diesen zu löschen.",
+  "repeater_cliHelpRegionListAllowed": "Nennt die Regionen, die Überschwemmungsverkehr zulassen.",
+  "repeater_cliHelpRegionListDenied": "Auflistung von Regionen, die den Verkehr aufgrund von Überschwemmungen verbieten.",
+  "repeater_cliHelpStatsPackets": "(Nur für serielle Verbindungen) Zeigt Statistiken auf Paketebene.",
+  "repeater_cliHelpStatsRadio": "(Nur für Serien) Zeigt Radiostatistiken an.",
+  "repeater_cliHelpStatsCore": "(Nur für serielle Schnittstellen) Zeigt grundlegende Firmware-Statistiken.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",

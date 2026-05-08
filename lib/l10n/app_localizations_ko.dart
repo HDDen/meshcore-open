@@ -470,10 +470,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_debug => '디버깅';
 
   @override
-  String get settings_bleDebugLog => 'BLE 디버그 로그';
+  String get settings_companionDebugLog => 'Companion Debug Log';
 
   @override
-  String get settings_bleDebugLogSubtitle => 'BLE 명령어, 응답 및 원시 데이터';
+  String get settings_companionDebugLogSubtitle =>
+      'BLE/TCP/USB commands, responses, and raw data';
 
   @override
   String get settings_appDebugLog => '앱 디버깅 로그';
@@ -1039,9 +1040,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get channels_hashtagChannel => '해시태그 채널';
-
-  @override
   String get channels_public => '대중의';
 
   @override
@@ -1051,12 +1049,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channels_private => '사립';
-
-  @override
-  String get channels_publicChannel => '공개 채널';
-
-  @override
-  String get channels_privateChannel => '개인 채널';
 
   @override
   String get channels_editChannel => '채널 편집';
@@ -2147,6 +2139,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_rxAirtime => 'RX 에어타임';
 
   @override
+  String get repeater_chanUtil => 'Channel Utilization';
+
+  @override
   String get repeater_packetStatistics => '패킷 통계';
 
   @override
@@ -2347,6 +2342,153 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_settingsSaved => '설정이 성공적으로 저장되었습니다.';
 
   @override
+  String get repeater_rxGain => '향상된 RX 성능';
+
+  @override
+  String get repeater_rxGainHelper =>
+      '더 높은 감도, 더 많은 전류 소모 (SX1262/SX1268에만 해당)';
+
+  @override
+  String get repeater_refreshRxGain => 'RX 성능 향상 효과 재확인';
+
+  @override
+  String get repeater_multiAcks => '다중 ACK';
+
+  @override
+  String get repeater_multiAcksSubtitle => '다양한 경로를 통해 메시지를 확인하여 전달 효율성을 높입니다.';
+
+  @override
+  String get repeater_refreshMultiAcks => '다중 ACK 재확인';
+
+  @override
+  String get repeater_networkHealth => '네트워크 상태';
+
+  @override
+  String get repeater_loopDetect => '루프 감지';
+
+  @override
+  String get repeater_loopDetectHelper => '라우팅 루프처럼 보이는 과도한 데이터 패킷을 전송';
+
+  @override
+  String get repeater_loopDetectOff => '거기';
+
+  @override
+  String get repeater_loopDetectMinimal => '최소';
+
+  @override
+  String get repeater_loopDetectModerate => '적당한';
+
+  @override
+  String get repeater_loopDetectStrict => '엄격한';
+
+  @override
+  String get repeater_dutyCycle => '작동 주기';
+
+  @override
+  String get repeater_dutyCycleHelper => '허용되는 최대 방송 시간 비율';
+
+  @override
+  String repeater_dutyCyclePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get repeater_ownerInfo => '운영자 정보';
+
+  @override
+  String get repeater_ownerInfoHelper => '이 리피터에 대한 공개 메타데이터';
+
+  @override
+  String get repeater_refreshOwnerInfo => '운영자 정보 업데이트';
+
+  @override
+  String get repeater_floodMax => '최대 홉 수';
+
+  @override
+  String get repeater_floodMaxHelper => '최대 패킷이 이동할 수 있는 홉 수 (0-64)';
+
+  @override
+  String get repeater_advancedSettings => '고급';
+
+  @override
+  String get repeater_advancedSettingsSubtitle => '숙련된 운영자를 위한 조절 노브';
+
+  @override
+  String get repeater_pathHashMode => '패스 해시 모드';
+
+  @override
+  String get repeater_pathHashModeHelper =>
+      '이 리피터의 ID를 플러드 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수: 0=1 바이트 (256개의 ID, 최대 64개의 홉), 1=2 바이트 (65,000개의 ID, 최대 32개의 홉), 2=3 바이트 (16백만 개의 ID, 최대 21개의 홉). v1.13 및 이전 버전의 펌웨어는 다중 바이트 경로를 지원하지 않으며, 네트워크가 v1.14 이상으로 업그레이드되면 한 번만 감지합니다.';
+
+  @override
+  String get repeater_txDelay => '플러드 TX 지연';
+
+  @override
+  String get repeater_txDelayHelper =>
+      '홍수 시 교통량에 맞춰 재전송 간격을 설정합니다. 이는 패킷의 전송 시간을 곱한 값 (0-2, 기본값 0.5)으로 설정합니다. 값이 클수록 충돌이 줄어들지만 전송 속도가 느려집니다.';
+
+  @override
+  String get repeater_directTxDelay => '직접적인 TX 지연';
+
+  @override
+  String get repeater_directTxDelayHelper =>
+      '직접 (대량 전송이 아닌) 트래픽에 대한 재전송 간격을, 패킷의 전송 시간을 곱하여 설정 (0-2, 기본값 0.3).';
+
+  @override
+  String get repeater_intThresh => '간섭 허용치';
+
+  @override
+  String get repeater_intThreshHelper =>
+      '신호의 잡음 수준을 기준으로 작동하며, 이 수준 이상의 간섭은 차단합니다. 0은 비활성화 상태를 의미하며, 잡음이 심한 대역에서 RX 오류가 발생할 경우에만 활성화해야 합니다.';
+
+  @override
+  String get repeater_agcResetInterval => 'AGC 재설정 간격';
+
+  @override
+  String get repeater_agcResetIntervalHelper =>
+      '자동 게인 제어를 재설정하여 신호가 불안정해졌을 때 원래 상태로 복구하는 빈도를 설정하는 방법은 다음과 같습니다. 4의 배수 단위로 설정하면 주기적인 재설정이 수행됩니다. 0을 설정하면 주기적인 재설정이 수행되지 않습니다.';
+
+  @override
+  String get repeater_actionsTitle => '행동';
+
+  @override
+  String get repeater_sendAdvert => '홍수 관련 광고 전송';
+
+  @override
+  String get repeater_sendAdvertSubtitle => '네트워크를 통해 홍수 광고를 방송';
+
+  @override
+  String get repeater_sendAdvertZeroHop => '제로 홉 광고 전송';
+
+  @override
+  String get repeater_sendAdvertZeroHopSubtitle => '단일 중계 (중계 없이) 광고를 송출';
+
+  @override
+  String get repeater_clockSync => '현재 시계 동기화';
+
+  @override
+  String get repeater_clockSyncSubtitle => '스마트폰의 시간을 리피터로 설정';
+
+  @override
+  String repeater_actionSucceeded(String action) {
+    return '$action이 성공적으로 완료되었습니다.';
+  }
+
+  @override
+  String repeater_actionFailed(String action, String error) {
+    return '$action 실패: $error';
+  }
+
+  @override
+  String get repeater_settingsSavedRebootNeeded =>
+      '설정이 저장되었습니다. 다시 시작하여 설정을 적용하세요.';
+
+  @override
+  String repeater_settingsPartialFailure(String failures) {
+    return '다음 설정에 실패했습니다: $failures';
+  }
+
+  @override
   String repeater_errorSavingSettings(String error) {
     return '설정 저장 오류: $error';
   }
@@ -2361,9 +2503,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_refreshTxPower => 'TX 전원 재설정';
 
   @override
-  String get repeater_refreshLocationSettings => '위치 설정 초기화';
-
-  @override
   String get repeater_refreshPacketForwarding => '패킷 전송 재시작';
 
   @override
@@ -2371,9 +2510,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_refreshPrivacyMode => '개인 정보 보호 모드 재설정';
-
-  @override
-  String get repeater_refreshAdvertisementSettings => '광고 설정 재설정';
 
   @override
   String repeater_refreshed(String label) {
@@ -2676,6 +2812,246 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_gpsNote => 'GPS 명령이 위치 관련 주제를 관리하기 위해 도입되었습니다.';
+
+  @override
+  String get repeater_getCategory => '가치 얻기';
+
+  @override
+  String get repeater_powerMgmt => '전력 관리';
+
+  @override
+  String get repeater_sensors => '센서';
+
+  @override
+  String get repeater_cliHelpPowerOff => '장치를 끄는 기능 (응답이 없을 것으로 예상)';
+
+  @override
+  String get repeater_cliHelpClkReboot => '시계를 알려진 시점으로 재설정하고 장치를 재부팅합니다.';
+
+  @override
+  String get repeater_cliHelpAdvertZeroHop => '직접적인 연결 없이 이웃에게만 광고를 전송합니다.';
+
+  @override
+  String get repeater_cliHelpStartOta => '지원되는 보드에서 무선으로 펌웨어 업데이트를 시작합니다.';
+
+  @override
+  String get repeater_cliHelpTime =>
+      '장치를 주어진 유닉스 에포크 초부터 시간으로 설정합니다. 시간은 이전으로 이동할 수 없습니다.';
+
+  @override
+  String get repeater_cliHelpBoard => '제조사/하드웨어 식별 정보를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpDiscoverNeighbors =>
+      '인접한 노드에 대한 탐색 요청을 보냅니다. (리피터만 해당)';
+
+  @override
+  String get repeater_cliHelpPowersaving => '절전 모드가 켜져 있는지 확인하는 표시';
+
+  @override
+  String get repeater_cliHelpPowersavingOnOff =>
+      '절전 모드를 활성화하거나 비활성화할 수 있습니다 (지원되는 경우).';
+
+  @override
+  String get repeater_cliHelpErase =>
+      '(단일 사용) 장치 파일 시스템을 포맷합니다. 모든 설정 및 연락처를 삭제합니다.';
+
+  @override
+  String get repeater_cliHelpSetDutyCycle =>
+      '최대 허용 전송 주기(백분율)를 설정합니다(1~100%). 내부적으로 통신 시간을 조정합니다.';
+
+  @override
+  String get repeater_cliHelpSetPrvKey =>
+      '(시리얼 키만 해당) 장치 식별용 개인 키를 대체합니다. 적용하려면 재부팅이 필요합니다. 새로운 공개 키를 생성합니다.';
+
+  @override
+  String get repeater_cliHelpSetRadioRxGain =>
+      '(SX126x 전용) 더 높은 전류를 사용할 때 더 나은 감도를 위해 증폭된 RX 감쇠 기능을 전환합니다.';
+
+  @override
+  String get repeater_cliHelpSetOwnerInfo =>
+      '광고에 포함된 소유자 연락처 정보를 지정합니다. 줄 바꿈을 위해 \'|\' 문자를 사용합니다.';
+
+  @override
+  String get repeater_cliHelpSetPathHashMode =>
+      '경로 해시 모드를 설정합니다. 0 = 고전 방식, 1 = 표준 방식, 2 = 엄격한 방식. 경로 매칭 방식에 영향을 미칩니다.';
+
+  @override
+  String get repeater_cliHelpSetLoopDetect =>
+      '라우팅 루프 감지 감도 설정: 끄기, 최소, 중간, 또는 엄격';
+
+  @override
+  String get repeater_cliHelpSetFreq =>
+      '(단일 기능) 특정 주파수만 빠르게 설정합니다. 재부팅이 필요합니다. 전체 라디오 파라미터 설정에는 \"라디오 설정\" 기능을 사용하는 것이 좋습니다.';
+
+  @override
+  String get repeater_cliHelpSetBridgeChannel =>
+      '(ESPNow 브리지만 해당) 브리지에서 사용되는 WiFi 채널(1~14)을 설정합니다.';
+
+  @override
+  String get repeater_cliHelpGetName => '구성된 노드의 이름을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetRole => '펌웨어 역할(리피터, 룸 서버 등)을 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetPublicKey => '장치의 공개 키를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetPrvKey => '(전용) 장치의 개인 키를 표시합니다. 비밀 정보로 취급합니다.';
+
+  @override
+  String get repeater_cliHelpGetRepeat => '패킷 전달(리피터 기능)이 활성화되어 있는지 여부를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetTx => '현재 TX 전력(dBm)을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetFreq => '구성된 무선 주파수를 MHz 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetRadio =>
+      '전체 무선 파라미터 표시: 주파수, 대역폭, 스프레딩 계수, 인코딩 속도';
+
+  @override
+  String get repeater_cliHelpGetRadioRxGain =>
+      '(SX126x 전용) RX의 증폭 이득 상태를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetAf => '현재 공기 시간 요소를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetDutyCycle => '현재 허용되는 작업 주기를 백분율로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetIntThresh => '채널 간섭 임계값을 dB 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetAgcResetInterval => 'AGC 재설정 간격을 초 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetMultiAcks =>
+      '더블 ACK 모드가 활성화되어 있는지 (1) 또는 비활성화되어 있는지 (0)를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetAllowReadOnly =>
+      '게스트의 읽기 전용 액세스가 허용되는지 여부를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetAdvertInterval => '지역 광고 시간 간격을 분 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetFloodAdvertInterval =>
+      '홍수 광고 시간 간격을 시간 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetGuestPassword => '구성된 게스트 비밀번호를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetLat => '설정된 위도를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetLon => '설정된 경도를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetRxDelay => 'Rxdelay 기본 값을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetTxDelay => '홍수 모드에서의 전송 지연 계수를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetDirectTxDelay => '직렬 모드에서의 딜레이 계수를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetFloodMax => '최대 홍수 발생 횟수를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetOwnerInfo => '소유주 연락처 정보를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetPathHashMode => '경로 해시 모드 (0/1/2)를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetLoopDetect => '루프 탐지 감도를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetAcl =>
+      '(단순히 목록만 표시) 리피터에 설정된 접근 제어 항목 목록을 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeEnabled => '다리 기능이 활성화되어 있는지 여부를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeDelay => '다리 통과 시간(밀리초)을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSource =>
+      '브리지 로그가 RX 또는 TX 패킷을 기록하는지 여부를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeBaud =>
+      '(RS232 브리지 기능만) 브리지의 보드 속도를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeChannel =>
+      '(ESPNow 브리지만 해당) 브리지의 Wi-Fi 채널을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSecret =>
+      '(ESPNow 브리지만 해당) 브리지에서 공유된 비밀을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetBootloaderVer => '(NRF52만 해당) 부팅 로더 버전을 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetAdcMultiplier =>
+      '배터리 전압을 스케일링하는 ADC 멀티플라이어를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSupport =>
+      '이 보드가 전력 관리 기능을 지원하는지 여부를 나타냅니다.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSource =>
+      '현재 전원 공급 장치 (외부 전원 또는 배터리)를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootReason => '가장 최근 재설정 및 종료 이유를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootMv => '부팅 시 배터리 전압을 mV 단위로 표시합니다.';
+
+  @override
+  String get repeater_cliHelpSensorGet => '키를 사용하여 사용자 정의 센서 설정을 읽습니다.';
+
+  @override
+  String get repeater_cliHelpSensorSet => '사용자 정의 센서 설정을 작성합니다.';
+
+  @override
+  String get repeater_cliHelpSensorList =>
+      '사용자 정의 센서 설정 목록을, 선택적으로 지정된 시작 인덱스부터 페이지 나누어 표시합니다.';
+
+  @override
+  String get repeater_cliHelpRegionDefault => '현재 기본 지역 범위를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpRegionDefaultSet =>
+      '기본 지역 범위를 설정합니다. \"<null>\"을 사용하여 초기화합니다.';
+
+  @override
+  String get repeater_cliHelpRegionListAllowed => '홍수 피해 차량 통행이 가능한 지역 목록';
+
+  @override
+  String get repeater_cliHelpRegionListDenied => '홍수 발생 시 통행 금지 지역 목록';
+
+  @override
+  String get repeater_cliHelpStatsPackets => '(전송 속도만 표시) 패킷 수준의 통계 정보를 보여줍니다.';
+
+  @override
+  String get repeater_cliHelpStatsRadio => '(특정 시리즈만 해당) 라디오 통계 정보를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpStatsCore => '(시리얼 번호만 표시) 핵심 펌웨어 통계 정보를 보여줍니다.';
 
   @override
   String get telemetry_receivedData => '수신된 통신 데이터';

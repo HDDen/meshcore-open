@@ -305,6 +305,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _editLocation(context, connector),
           ),
+          if (connector.currentCustomVars?.containsKey('gps') ?? false) ...[
+            const Divider(height: 1),
+            SwitchListTile(
+              secondary: const Icon(Icons.gps_fixed),
+              title: Text(l10n.settings_locationGPSEnable),
+              subtitle: Text(l10n.settings_locationGPSEnableSubtitle),
+              value: connector.currentCustomVars?['gps'] == '1',
+              onChanged: (value) async {
+                await connector.setCustomVar(value ? 'gps:1' : 'gps:0');
+              },
+            ),
+          ],
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.group_add_outlined),
@@ -405,8 +417,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.bluetooth_outlined),
-            title: Text(l10n.settings_bleDebugLog),
-            subtitle: Text(l10n.settings_bleDebugLogSubtitle),
+            title: Text(l10n.settings_companionDebugLog),
+            subtitle: Text(l10n.settings_companionDebugLogSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(

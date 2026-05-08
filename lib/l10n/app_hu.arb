@@ -491,11 +491,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtag-ok közössége",
   "channels_public": "A nyilvánosság számára",
   "channels_private": "Személyes",
-  "channels_publicChannel": "Össztávos csatorna",
-  "channels_privateChannel": "Személyes csatorna",
   "channels_editChannel": "Csatorna szerkesztése",
   "channels_muteChannel": "Csendes csatorna",
   "channels_unmuteChannel": "Engedje be a hangot",
@@ -1263,6 +1260,81 @@
   },
   "repeater_confirm": "Beküldve",
   "repeater_settingsSaved": "Beállítások sikeresen mentve",
+  "repeater_rxGain": "Nagyobb RX-jel erősítés",
+  "repeater_rxGainHelper": "Magasabb érzékenység, nagyobb áramfelvétel (csak SX1262/SX1268 esetén)",
+  "repeater_refreshRxGain": "Újraindított, fokozott RX hatás",
+  "repeater_multiAcks": "Többszörös visszaigazolások",
+  "repeater_multiAcksSubtitle": "Ismerje el üzeneteket több úton is, hogy biztosítsa a jobb átadást.",
+  "repeater_refreshMultiAcks": "Frissítse a többször is kapott visszaigazolásokat.",
+  "repeater_networkHealth": "Hálózati állapot",
+  "repeater_loopDetect": "Ciklusok azonosítása",
+  "repeater_loopDetectHelper": "Készíts olyan \"vízfolyást\" megjelenítő csomagokat, amelyek úgy néznek ki, mint egy hibaút.",
+  "repeater_loopDetectOff": "Le, kikap",
+  "repeater_loopDetectMinimal": "Minimális",
+  "repeater_loopDetectModerate": "Közepes",
+  "repeater_loopDetectStrict": "Szigorú",
+  "repeater_dutyCycle": "Munka- és pihenőidő aránya",
+  "repeater_dutyCycleHelper": "A maximális időszámítás százalékos aránya",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Üzemeltető információ",
+  "repeater_ownerInfoHelper": "A nyilvánosan elérhető metadatak a repeaterhez",
+  "repeater_refreshOwnerInfo": "Frissítse az üzemeltető adatokat",
+  "repeater_floodMax": "A vízmaximumos ugrások",
+  "repeater_floodMaxHelper": "A legmagasabb szám, amely egy vízszint-csomagban szerepelhet (0-64)",
+  "repeater_advancedSettings": "Haladó",
+  "repeater_advancedSettingsSubtitle": "Erkélő kapcsolók tapasztalt kezelők számára",
+  "repeater_pathHashMode": "Út-hash mód",
+  "repeater_pathHashModeHelper": "A byte-ok, amelyek az alábbi repeater-ek azonosítójának kódolására szolgálnak a flood-útvonal/ciklus-észlelő címkékben. 0=1 byte (256 azonosító, akár 64 útvonal), 1=2 byte (65 000 azonosító, akár 32 útvonal), 2=3 byte (16 millió azonosító, akár 21 útvonal). A v1.13-as verziótól kezdődően és az azt követő verziókban a több byte-os útvonalak megszűntek – csak egyetlen útvonal létesül, miután a hálózat a v1.14-es verzióra vagy az azt követő verzióra frissült.",
+  "repeater_txDelay": "Flood TX késés",
+  "repeater_txDelayHelper": "Újraküldési intervallum árvíz esetén, amely a csomag átviteli idejének (0-2, alapérték 0,5) szorzata. Minél nagyobb az érték, annál kevesebb ütközés, de lassabb a továbbítás.",
+  "repeater_directTxDelay": "Közvetlen TX késés",
+  "repeater_directTxDelayHelper": "A közvetlen (nem tömeges) forgalomhoz tartozó adatcsomagok újrádiózására szolgáló intervallum, amely a csomag átviteli idejének (0-2, alapértelmezett érték 0,3) szorzata.",
+  "repeater_intThresh": "Interferencia határ",
+  "repeater_intThreshHelper": "A határt a rádió zajszintjének kalibrálására állították, így elutasítja a fenti szint feletti interferenciákat. 0 kikapcsol – csak akkor állítsa be, ha zajos frekvencián RX hibákat észlel.",
+  "repeater_agcResetInterval": "AGC visszazárási intervallum",
+  "repeater_agcResetIntervalHelper": "Mennyi időnként kell a rádió automatikus hangerőszabályozását visszaállítani, hogy kijavítsa a problémát? A visszaállítás időtartama: másoderek, amely 4-szeresével osztható. A 0 érték a periodikus visszaállítás kikapcsolását jelzi.",
+  "repeater_actionsTitle": "Tevékenységek",
+  "repeater_sendAdvert": "Eljuttass flood hirdetést",
+  "repeater_sendAdvertSubtitle": "Terjesztse egy árvíz elleni reklámot a hálózaton keresztül.",
+  "repeater_sendAdvertZeroHop": "Küldj egy közvetlen hirdetést",
+  "repeater_sendAdvertZeroHopSubtitle": "Adja közzé egyetlen átjáró hirdetést (nincs átjátszás).",
+  "repeater_clockSync": "Synchronizálja az órát",
+  "repeater_clockSyncSubtitle": "Állítsa be a telefon időzítését a repeaterhez.",
+  "repeater_actionSucceeded": "{action} sikert aratott",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} sikertelen: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Beállítások mentve – újraindítsa a repeatert, hogy alkalmazza",
+  "repeater_settingsPartialFailure": "Bizonyos beállítások nem sikerültek: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Hibás beállítások mentése: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1274,11 +1346,9 @@
   "repeater_refreshBasicSettings": "Visszaállítás az alapértékekre",
   "repeater_refreshRadioSettings": "Frissítse a rádió beállításait",
   "repeater_refreshTxPower": "Újraindítás TX-támogatással",
-  "repeater_refreshLocationSettings": "Újraindítás helyszín beállításokkal",
   "repeater_refreshPacketForwarding": "Csomagok továbbításának frissítése",
   "repeater_refreshGuestAccess": "Újraindítás vendégHozzáférés",
   "repeater_refreshPrivacyMode": "Visszaállítás a magánéletvédő módra",
-  "repeater_refreshAdvertisementSettings": "Újraindítás hirdetés beállítások",
   "repeater_refreshed": "{label} frissítve",
   "@repeater_refreshed": {
     "placeholders": {
@@ -2122,6 +2192,77 @@
   "room_guest": "Szoba szerver információk",
   "chat_sendMessage": "Üzenet küldése",
   "repeater_guest": "Adatok a repeaterről",
+  "repeater_getCategory": "Szereplő értékek",
+  "repeater_powerMgmt": "Energiahatékonyság, energiafelhasználás optimalizálása",
+  "repeater_sensors": "Érzékelők",
+  "repeater_cliHelpPowerOff": "Át kapcsolja a készüléket. (nincs válasz elvárás)",
+  "repeater_cliHelpClkReboot": "Visszaállítja az órát egy ismert időpontra, majd újraindítja a készüléket.",
+  "repeater_cliHelpAdvertZeroHop": "Küld egy közvetlen szomszédoknak szóló hirdetést, amely közvetlen kapcsolatot igényel.",
+  "repeater_cliHelpStartOta": "Elindítja a vezeték nélküli útvonalon történő firmware frissítést a támogatott kártyákon.",
+  "repeater_cliHelpTime": "Beállítja a eszköz óráját a megadott Unix-időpont (Unix epoch) időpontra. Az óra nem tud visszanyúlni.",
+  "repeater_cliHelpBoard": "Megjeleníti a gyártó nevét/a hardver azonosítóját.",
+  "repeater_cliHelpDiscoverNeighbors": "Kérést küld a közeli eszközöknek, hogy azok is megtalálják egymást. (Csak egy repeater eszköz számára)",
+  "repeater_cliHelpPowersaving": "Megmutatja, hogy a takarékos üzemmód engedélyezve van-e vagy nem.",
+  "repeater_cliHelpPowersavingOnOff": "Engedélyezi vagy kikapcsolja a takarékos üzemmódot (ha támogatott).",
+  "repeater_cliHelpErase": "(Csak sorozatban) Formázza a eszköz fájlrendszerét. Eltávolítja az összes beállítást és a kapcsolatokat.",
+  "repeater_cliHelpSetDutyCycle": "Beállítja a maximális engedélyezett átviteli időtartamot százalékban (1-100). Belsőleg módosítja az időtartam-szabályozást.",
+  "repeater_cliHelpSetPrvKey": "(Csak sorozatban) Cseréli a eszköz egyedi kulcsát. Az alkalmazáshoz újraindítás szükséges. Új nyilvános kulcsot generál.",
+  "repeater_cliHelpSetRadioRxGain": "(Csak SX126x család) A növelt RX erősítést be- és kikapcsolható, így a nagyobb áramfelvétel esetén is javítható a érzékenység.",
+  "repeater_cliHelpSetOwnerInfo": "Megadja az üvegezésben megjelenő tulajdonos elérhetőségeinek szövegét. Használja a '|' karaktert új sorok elválasztására.",
+  "repeater_cliHelpSetPathHashMode": "Beállítja a hálózati útvonal-hash módot. 0 = régebbi, 1 = szabványos, 2 = szigorú. Hatással van a hálózati útvonalak megadatalására.",
+  "repeater_cliHelpSetLoopDetect": "Beállítja a hibaforrás-keresés érzékenységét: kikapcsolva, minimális, közepes vagy szigorú.",
+  "repeater_cliHelpSetFreq": "(Csak soros mód) Gyorsan beállítja a frekvenciát. A rendszer újraindítás szükséges. A teljes rádióparaméterek beállításához a \"rádió beállítás\" funkciót javaslom.",
+  "repeater_cliHelpSetBridgeChannel": "(Csak ESPNow híd esetén) Beállítja a híd által használt WiFi-csatornát (1-14).",
+  "repeater_cliHelpGetName": "Megjeleníti a konfigurált csomópont nevét.",
+  "repeater_cliHelpGetRole": "Megmutatja a firmware funkcióját (repeater, szobai szerver stb.).",
+  "repeater_cliHelpGetPublicKey": "Megjeleníti a eszköz nyilvános kulcsát.",
+  "repeater_cliHelpGetPrvKey": "(Csak soros mód) Megjeleníti a eszköz privát kulcsát. Kezelje titkos információként.",
+  "repeater_cliHelpGetRepeat": "Megmutatja, hogy a csomagok továbbításának (repeater funkció) engedélyezve van-e vagy nem.",
+  "repeater_cliHelpGetTx": "Megmutatja a jelenlegi TX (átvitel) teljesítményt dBm-ben.",
+  "repeater_cliHelpGetFreq": "Megjeleníti a konfigurált rádiófrekvenciát MHz-ben.",
+  "repeater_cliHelpGetRadio": "Megjeleníti az összes rádióparamétert: frekvencia, sávszélesség, széttétező tényező, kódolási ráta.",
+  "repeater_cliHelpGetRadioRxGain": "(Csak SX126x családra) Megjeleníti az RX erősítés állapotát.",
+  "repeater_cliHelpGetAf": "Megmutatja az aktuális időadó tényezőt.",
+  "repeater_cliHelpGetDutyCycle": "Megmutatja az aktuális engedélyezett működési ciklust százalékban.",
+  "repeater_cliHelpGetIntThresh": "Megmutatja a csatornák közötti interferencia szintjét dB-ben.",
+  "repeater_cliHelpGetAgcResetInterval": "Megmutatja az AGC (automatikus gain-kontroll) visszaállítási időt másodpercekben.",
+  "repeater_cliHelpGetMultiAcks": "Megmutatja, hogy a kettős visszaigazolás (double-ACK) mód engedélyezve van-e (1), vagy kikapcsolva (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Megmutatja, hogy a vendég csak olvasási jogosítást engedélyez-e.",
+  "repeater_cliHelpGetAdvertInterval": "Megmutatja a helyi hirdetés időtartamát percenként.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Megmutatja az aktuális időzítést, amikor megjelenik a vízparti reklám, órákonként.",
+  "repeater_cliHelpGetGuestPassword": "Megjeleníti a konfigurált vendégjelszót.",
+  "repeater_cliHelpGetLat": "Megjeleníti a beállított szélességet.",
+  "repeater_cliHelpGetLon": "Megjeleníti a beállított hosszúságot.",
+  "repeater_cliHelpGetRxDelay": "Megmutatja az alapértéket a késéshez.",
+  "repeater_cliHelpGetTxDelay": "Megmutatja a vízszint-érzékelő jelátviteli késésének tényezőjét.",
+  "repeater_cliHelpGetDirectTxDelay": "Megmutatja a közvetlen módban használt késés tényezőt.",
+  "repeater_cliHelpGetFloodMax": "Megmutatja a maximális vízszint-emelkedés mértékét.",
+  "repeater_cliHelpGetOwnerInfo": "Megjeleníti az tulajdonos elérhetőségének szövegét.",
+  "repeater_cliHelpGetPathHashMode": "Megjeleníti a hash-alapú mód (0/1/2) beállításokat.",
+  "repeater_cliHelpGetLoopDetect": "Mutatja a cikkszám-azonosító érzékenységet.",
+  "repeater_cliHelpGetAcl": "(Csak sorozat) A repeateren található hozzáférési szabályok listája.",
+  "repeater_cliHelpGetBridgeEnabled": "Megmutatja, hogy a híd engedélyezve van-e.",
+  "repeater_cliHelpGetBridgeDelay": "Megmutatja a hídon bekövetkező késést másodpercben.",
+  "repeater_cliHelpGetBridgeSource": "Megmutatja, hogy a híd RX vagy TX csomagokat fogad-e.",
+  "repeater_cliHelpGetBridgeBaud": "(Csak RS232 híd) Megjeleníti a híd sebességét.",
+  "repeater_cliHelpGetBridgeChannel": "(Csak ESPNow híd) Megjeleníti a híd által használt WiFi csatornát.",
+  "repeater_cliHelpGetBridgeSecret": "(Csak ESPNow híd esetén) Megjeleníti a híd által megosztott titkos kulcsot.",
+  "repeater_cliHelpGetBootloaderVer": "(Csak NRF52 esetén) Megjeleníti a bootloader verzióját.",
+  "repeater_cliHelpGetAdcMultiplier": "A bemeneti feszültség-átalakító (akkumulátor-feszültség-szabályozó) működését mutatja.",
+  "repeater_cliHelpGetPwrMgtSupport": "Megállapítja, hogy a felügyelet rendelkezik-e energiahatékonysági támogatással.",
+  "repeater_cliHelpGetPwrMgtSource": "Megmutatja az aktuális energiaforrást: külső vagy akkumulátor.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Megjeleníti az utolsó újraindítás és leállítás okait.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Megjeleníti a rendszerindításkor mért akkumulátor feszültséget millivoltban (mV).",
+  "repeater_cliHelpSensorGet": "Beolvas egy felhasználó által definiált szenzor beállítást kulcs segítségével.",
+  "repeater_cliHelpSensorSet": "Egyedi szenzorbeállítások létrehozása.",
+  "repeater_cliHelpSensorList": "Összesíti az összes egyedi szenzor beállításot, oldalanként, opcionális kezdő index alapján.",
+  "repeater_cliHelpRegionDefault": "Megmutatja a jelenlegi alapértelmezett régió határait.",
+  "repeater_cliHelpRegionDefaultSet": "Beállítja az alapértelmezett régió hatókörét. Használja a \"<null>\" értéket a törléshez.",
+  "repeater_cliHelpRegionListAllowed": "Felhasználható területek, ahol árvíz esetén forgalmat engedélyeznek.",
+  "repeater_cliHelpRegionListDenied": "Felhasznál, amelyek elutasítják a árvíz okozta forgalmat.",
+  "repeater_cliHelpStatsPackets": "(Csak sorozat) A csomagok szintjén történő statisztikát mutat.",
+  "repeater_cliHelpStatsRadio": "(Csak sorozat) Mutat rádióstatisztikákat.",
+  "repeater_cliHelpStatsCore": "(Csak soros mód) A főfirmware-adatokat mutatja.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",

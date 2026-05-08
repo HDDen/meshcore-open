@@ -496,11 +496,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_debug => 'Отстрани';
 
   @override
-  String get settings_bleDebugLog => 'Лог за отстраняване на грешки на BLE';
+  String get settings_companionDebugLog => 'Companion Debug Log';
 
   @override
-  String get settings_bleDebugLogSubtitle =>
-      'Команди, отговори и сурови данни BLE';
+  String get settings_companionDebugLogSubtitle =>
+      'BLE/TCP/USB commands, responses, and raw data';
 
   @override
   String get settings_appDebugLog =>
@@ -515,7 +515,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String settings_aboutVersion(String version) {
-    return 'MeshCore Open (Advanced mod) v$version';
+    return 'MeshCore Open (Advanced mod), версия $version';
   }
 
   @override
@@ -557,7 +557,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_frequency => 'Честота (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '300,0 – 2500,0';
 
   @override
   String get settings_frequencyInvalid => 'Невалидна честота (300-2500 MHz)';
@@ -621,40 +621,40 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageSystem => 'Система по подразбиране';
 
   @override
-  String get appSettings_languageEn => 'English';
+  String get appSettings_languageEn => 'Английски';
 
   @override
-  String get appSettings_languageFr => 'Français';
+  String get appSettings_languageFr => 'Френски';
 
   @override
-  String get appSettings_languageEs => 'Español';
+  String get appSettings_languageEs => 'Испански';
 
   @override
-  String get appSettings_languageDe => 'Deutsch';
+  String get appSettings_languageDe => 'Немски';
 
   @override
-  String get appSettings_languagePl => 'Polski';
+  String get appSettings_languagePl => 'Полски';
 
   @override
-  String get appSettings_languageSl => 'Slovenščina';
+  String get appSettings_languageSl => 'Словенски език';
 
   @override
-  String get appSettings_languagePt => 'Português';
+  String get appSettings_languagePt => 'Португалски';
 
   @override
-  String get appSettings_languageIt => 'Italiano';
+  String get appSettings_languageIt => 'Италиански';
 
   @override
-  String get appSettings_languageZh => '中文';
+  String get appSettings_languageZh => 'Китайски';
 
   @override
-  String get appSettings_languageSv => 'Svenska';
+  String get appSettings_languageSv => 'Шведски';
 
   @override
-  String get appSettings_languageNl => 'Nederlands';
+  String get appSettings_languageNl => 'Хололандски';
 
   @override
-  String get appSettings_languageSk => 'Slovenčina';
+  String get appSettings_languageSk => 'Словенски';
 
   @override
   String get appSettings_languageBg => 'Български';
@@ -1100,9 +1100,6 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get channels_hashtagChannel => 'Канал с хаштаг';
-
-  @override
   String get channels_public => 'Публично';
 
   @override
@@ -1112,12 +1109,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get channels_private => 'Личен';
-
-  @override
-  String get channels_publicChannel => 'Публичен канал';
-
-  @override
-  String get channels_privateChannel => 'Частен канал';
 
   @override
   String get channels_editChannel => 'Редактирай канал';
@@ -1162,7 +1153,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_standardPublicPsk => 'Стандартен публичен PSK';
 
   @override
-  String get channels_pskHex => 'PSK (Hex)';
+  String get channels_pskHex => 'PSK (шестнадесетичен код)';
 
   @override
   String get channels_generateRandomPsk => 'Генерирай случайна PSK';
@@ -1269,7 +1260,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_sortManual => 'Ръчно';
 
   @override
-  String get channels_sortAZ => 'A-Z';
+  String get channels_sortAZ => 'От A до Я';
 
   @override
   String get channels_sortLatestMessages => 'Последни съобщения';
@@ -1443,7 +1434,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get debugLog_frames => 'Рамки';
 
   @override
-  String get debugLog_rawLogRx => 'Raw Log-RX';
+  String get debugLog_rawLogRx => 'Необработен лог-RX';
 
   @override
   String get debugLog_noBleActivity => 'Няма BLE активност към момента.';
@@ -1482,7 +1473,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get debugFrame_textTypeCli => 'CLI';
+  String get debugFrame_textTypeCli => 'Команден ред (CLI)';
 
   @override
   String get debugFrame_textTypePlain => 'Просто';
@@ -1529,8 +1520,8 @@ class AppLocalizationsBg extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'hops',
-      one: 'hop',
+      other: 'скача',
+      one: 'скача',
     );
     return '$count $_temp0';
   }
@@ -2156,7 +2147,7 @@ class AppLocalizationsBg extends AppLocalizations {
       'Прегледайте телеметрията на сензорите и системните статистики';
 
   @override
-  String get repeater_cli => 'CLI';
+  String get repeater_cli => 'Команден ред (CLI)';
 
   @override
   String get repeater_cliSubtitle => 'Изпрати команди към ретранслатора';
@@ -2246,6 +2237,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_rxAirtime => 'RX Airtime';
+
+  @override
+  String get repeater_chanUtil => 'Channel Utilization';
 
   @override
   String get repeater_packetStatistics => 'Статистика на пакетите';
@@ -2458,6 +2452,163 @@ class AppLocalizationsBg extends AppLocalizations {
   String get repeater_settingsSaved => 'Настройките са запазени успешно.';
 
   @override
+  String get repeater_rxGain => 'Увеличен коефициент на възвръщаемост (RX)';
+
+  @override
+  String get repeater_rxGainHelper =>
+      'По-висока чувствителност, по-голям ток (само за SX1262/SX1268)';
+
+  @override
+  String get repeater_refreshRxGain =>
+      'Възстановете повишената ефективност на RX';
+
+  @override
+  String get repeater_multiAcks => 'Множество потвърждения';
+
+  @override
+  String get repeater_multiAcksSubtitle =>
+      'Признавайте съобщения по множество канали за по-добро доставяне.';
+
+  @override
+  String get repeater_refreshMultiAcks => 'Обновете множество потвърждения';
+
+  @override
+  String get repeater_networkHealth => 'Състояние на мрежата';
+
+  @override
+  String get repeater_loopDetect => 'Откриване на цикли';
+
+  @override
+  String get repeater_loopDetectHelper =>
+      'Изпратете пакети, които изглеждат като цикли в маршрутизацията.';
+
+  @override
+  String get repeater_loopDetectOff => 'Изключено';
+
+  @override
+  String get repeater_loopDetectMinimal => 'Минимален';
+
+  @override
+  String get repeater_loopDetectModerate => 'Умерен';
+
+  @override
+  String get repeater_loopDetectStrict => 'Строг';
+
+  @override
+  String get repeater_dutyCycle => 'Цикъл на работа/почивка';
+
+  @override
+  String get repeater_dutyCycleHelper =>
+      'Максимален процент на използване на времето на въздуха';
+
+  @override
+  String repeater_dutyCyclePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get repeater_ownerInfo => 'Информация за оператора';
+
+  @override
+  String get repeater_ownerInfoHelper => 'Публични метаданни за този репитер';
+
+  @override
+  String get repeater_refreshOwnerInfo => 'Обновете информацията за оператора';
+
+  @override
+  String get repeater_floodMax => 'Максимален брой скачания при наводнение';
+
+  @override
+  String get repeater_floodMaxHelper =>
+      'Максималният брой пакети, които един поток може да пренесе (0-64)';
+
+  @override
+  String get repeater_advancedSettings => 'Напреднал';
+
+  @override
+  String get repeater_advancedSettingsSubtitle =>
+      'Регулаторни копчета за опитни оператори';
+
+  @override
+  String get repeater_pathHashMode => 'Режим за хеширане на пътища';
+
+  @override
+  String get repeater_pathHashModeHelper =>
+      'Байтовете, използвани за кодиране на идентификатора на този репитер в таговете за откриване на потоци/цикли, са: 0=1 байт (256 идентификатора, до 64 скача), 1=2 байта (65 000 идентификатора, до 32 скача), 2=3 байта (16 милиона идентификатора, до 21 скача). Версии 1.13 и по-стари версии на фърмуера използват многобайтови пътища – само след като мрежата е актуализирана до версия 1.14 или по-нова.';
+
+  @override
+  String get repeater_txDelay => 'Забавяне на проекта \"Flood TX\"';
+
+  @override
+  String get repeater_txDelayHelper =>
+      'Предавайте разстоянието между пакетите за трафик при наводнения, като множител на времето за пренос на пакета (0-2, по подразбиране 0.5). По-висока стойност означава по-малко сблъсъци, но по-бавно предаване.';
+
+  @override
+  String get repeater_directTxDelay => 'Директно забавяне на сигнала';
+
+  @override
+  String get repeater_directTxDelayHelper =>
+      'Предаване на интервали за директен (не-масивен) трафик, като множител на времето за пренос на пакета (0-2, по подразбиране 0.3).';
+
+  @override
+  String get repeater_intThresh => 'Праг на интерференция';
+
+  @override
+  String get repeater_intThreshHelper =>
+      'Прагът е зададен на нивото на шума на радиото, така че да отхвърля смущения, които са над този праг. 0 – изключва; активирайте само, ако забележите грешки в шумна честотна лента.';
+
+  @override
+  String get repeater_agcResetInterval => 'Интервал за рестартиране на AGC';
+
+  @override
+  String get repeater_agcResetIntervalHelper =>
+      'Колко често да се рестартира автоматичната настройка на усилването, за да се възстанови от състояние, в което усилването е блокирано. Времето за рестартиране е няколко секунди, като се определя като кратна на 4. 0 деактивира периодичното рестартиране.';
+
+  @override
+  String get repeater_actionsTitle => 'Действия';
+
+  @override
+  String get repeater_sendAdvert => 'Изпратете реклама за навод';
+
+  @override
+  String get repeater_sendAdvertSubtitle =>
+      'Публикувайте реклама за навод в мрежата.';
+
+  @override
+  String get repeater_sendAdvertZeroHop =>
+      'Изпратете реклама без преминаване през други системи';
+
+  @override
+  String get repeater_sendAdvertZeroHopSubtitle =>
+      'Публикувайте реклама, която достига до целевата аудитория само чрез директно разпространение (без използване на посредници).';
+
+  @override
+  String get repeater_clockSync => 'Синхронизиране на часовника сега';
+
+  @override
+  String get repeater_clockSyncSubtitle =>
+      'Настройте времето на телефона си да съвпада с времето на репитера.';
+
+  @override
+  String repeater_actionSucceeded(String action) {
+    return '$action succeeded';
+  }
+
+  @override
+  String repeater_actionFailed(String action, String error) {
+    return '$action failed: $error';
+  }
+
+  @override
+  String get repeater_settingsSavedRebootNeeded =>
+      'Настройки запаметени – рестартирайте ретранслатора, за да ги приложите.';
+
+  @override
+  String repeater_settingsPartialFailure(String failures) {
+    return 'Някои настройки не успяха: $failures';
+  }
+
+  @override
   String repeater_errorSavingSettings(String error) {
     return 'Грешка при запазване на настройките: $error';
   }
@@ -2473,10 +2624,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get repeater_refreshTxPower => 'Обнови TX захранване';
 
   @override
-  String get repeater_refreshLocationSettings =>
-      'Обнови настройките на местоположението';
-
-  @override
   String get repeater_refreshPacketForwarding => 'Обнови пакетно пренасочване';
 
   @override
@@ -2484,10 +2631,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_refreshPrivacyMode => 'Обнови Режим на поверителност';
-
-  @override
-  String get repeater_refreshAdvertisementSettings =>
-      'Обнови Настройки на Рекламата';
 
   @override
   String repeater_refreshed(String label) {
@@ -2812,6 +2955,282 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get repeater_gpsNote =>
       'GPS командата е въведена, за да управлява теми, свързани с местоположението.';
+
+  @override
+  String get repeater_getCategory => 'Получете стойности';
+
+  @override
+  String get repeater_powerMgmt => 'Управление на енергията';
+
+  @override
+  String get repeater_sensors => 'Датчици';
+
+  @override
+  String get repeater_cliHelpPowerOff =>
+      'Изключва устройството. (не се очаква отговор)';
+
+  @override
+  String get repeater_cliHelpClkReboot =>
+      'Възстановява часовника до известна историческа дата и рестартира устройството.';
+
+  @override
+  String get repeater_cliHelpAdvertZeroHop =>
+      'Изпраща реклама, която достига само до съседни устройства (само до съседни мрежи).';
+
+  @override
+  String get repeater_cliHelpStartOta =>
+      'Стартира актуализация на фърмуера чрез въздушното, на всички поддържани платки.';
+
+  @override
+  String get repeater_cliHelpTime =>
+      'Задава времето на устройството към зададените секунди от началото на Unix ерата. Времето не може да се върне назад.';
+
+  @override
+  String get repeater_cliHelpBoard =>
+      'Показва производителя на платката / идентификатора на хардуера.';
+
+  @override
+  String get repeater_cliHelpDiscoverNeighbors =>
+      'Изпраща заявка за откриване на съседни възли. (Само за устройства тип репитер)';
+
+  @override
+  String get repeater_cliHelpPowersaving =>
+      'Показва дали режимът за пестене на енергия е активиран или деактивиран.';
+
+  @override
+  String get repeater_cliHelpPowersavingOnOff =>
+      'Активира или деактивира режима за пестене на енергия (ако е поддържан).';
+
+  @override
+  String get repeater_cliHelpErase =>
+      '(Само за серийни устройства) Форматира файловата система на устройството. Изтрива всички настройки и контакти.';
+
+  @override
+  String get repeater_cliHelpSetDutyCycle =>
+      'Задава максимално допустимия процент на използване на времето за предаване (от 1 до 100 процента). Вътрешно коригира фактора за времето на предаване.';
+
+  @override
+  String get repeater_cliHelpSetPrvKey =>
+      '(Само за серийни номера) Заменя личната част от ключа за идентификация на устройството. Необходимо е да се рестартира устройството, за да се приложи. Генерира нов публичен ключ.';
+
+  @override
+  String get repeater_cliHelpSetRadioRxGain =>
+      '(Само за SX126x) Превключва усиления на приемния сигнал (RX gain) за подобрена чувствителност при по-високо потребление на ток.';
+
+  @override
+  String get repeater_cliHelpSetOwnerInfo =>
+      'Задава низовете с информация за контакт на собственика, които са включени в рекламите. Използвайте \'|\' за нови редове.';
+
+  @override
+  String get repeater_cliHelpSetPathHashMode =>
+      'Задава режима за хеширане на пътищата. 0 = за стари системи, 1 = за стандартни системи, 2 = за строги системи. Влияе върху начина, по който се съпоставят маршрутите.';
+
+  @override
+  String get repeater_cliHelpSetLoopDetect =>
+      'Задава чувствителността за откриване на цикли в маршрутизацията: изключена, минимална, умерена или строга.';
+
+  @override
+  String get repeater_cliHelpSetFreq =>
+      '(Само за серийно управление) Бързо задава само честотата. Необходимо е рестартиране. Препоръчително е да се използват настройките за \"радио\", за да се зададат всички параметри.';
+
+  @override
+  String get repeater_cliHelpSetBridgeChannel =>
+      '(Само за моста ESPNow) Определя WiFi канала (от 1 до 14), използван от моста.';
+
+  @override
+  String get repeater_cliHelpGetName => 'Показва зададеното име на възела.';
+
+  @override
+  String get repeater_cliHelpGetRole =>
+      'Показва ролята на фърмуера (например, репитер, сървър за стая и т.н.).';
+
+  @override
+  String get repeater_cliHelpGetPublicKey =>
+      'Показва публичния ключ на устройството.';
+
+  @override
+  String get repeater_cliHelpGetPrvKey =>
+      '(Само за серийния номер) Показва личната ключа на устройството. Трябва да се третира като тайна.';
+
+  @override
+  String get repeater_cliHelpGetRepeat =>
+      'Показва дали функцията за пренасочване на пакети (ролята на репитер) е активирана или деактивирана.';
+
+  @override
+  String get repeater_cliHelpGetTx => 'Показва текущата мощност на TX в dBm.';
+
+  @override
+  String get repeater_cliHelpGetFreq => 'Показва зададената честота в MHz.';
+
+  @override
+  String get repeater_cliHelpGetRadio =>
+      'Показва пълните радио параметри: честота, ширина на честотния обхват, фактор на разпространение, скорост на кодиране.';
+
+  @override
+  String get repeater_cliHelpGetRadioRxGain =>
+      '(Само за SX126x) Показва състоянието на усиления сигнал на RX.';
+
+  @override
+  String get repeater_cliHelpGetAf =>
+      'Показва текущия коефициент на въздействие върху въздуха.';
+
+  @override
+  String get repeater_cliHelpGetDutyCycle =>
+      'Показва текущия допустим цикъл на работа като процент.';
+
+  @override
+  String get repeater_cliHelpGetIntThresh =>
+      'Показва прага на интерференцията на канала в децибели (dB).';
+
+  @override
+  String get repeater_cliHelpGetAgcResetInterval =>
+      'Показва интервала за рестартиране на AGC в секунди.';
+
+  @override
+  String get repeater_cliHelpGetMultiAcks =>
+      'Показва дали режимът \"двоен ACK\" е активиран (1) или деактивиран (0).';
+
+  @override
+  String get repeater_cliHelpGetAllowReadOnly =>
+      'Показва дали е разрешено само четене за гостите.';
+
+  @override
+  String get repeater_cliHelpGetAdvertInterval =>
+      'Показва времето на рекламата в минути.';
+
+  @override
+  String get repeater_cliHelpGetFloodAdvertInterval =>
+      'Показва интервала на рекламата за навод в часове.';
+
+  @override
+  String get repeater_cliHelpGetGuestPassword =>
+      'Показва зададения парол за гост.';
+
+  @override
+  String get repeater_cliHelpGetLat => 'Показва зададената географска ширина.';
+
+  @override
+  String get repeater_cliHelpGetLon => 'Показва зададената дължина.';
+
+  @override
+  String get repeater_cliHelpGetRxDelay =>
+      'Показва основната стойност на забавянето на сигнала.';
+
+  @override
+  String get repeater_cliHelpGetTxDelay =>
+      'Показва коефициента за забавяне при режим на наводняване.';
+
+  @override
+  String get repeater_cliHelpGetDirectTxDelay =>
+      'Показва коефициента за забавяне при директен режим.';
+
+  @override
+  String get repeater_cliHelpGetFloodMax =>
+      'Показва максималния брой на повторни наводнения.';
+
+  @override
+  String get repeater_cliHelpGetOwnerInfo =>
+      'Показва информацията за контакт на собственика.';
+
+  @override
+  String get repeater_cliHelpGetPathHashMode =>
+      'Показва режима на хеширане на пътя (0/1/2).';
+
+  @override
+  String get repeater_cliHelpGetLoopDetect =>
+      'Показва чувствителността към откриване на цикли.';
+
+  @override
+  String get repeater_cliHelpGetAcl =>
+      '(Само за серийни номера) Изброява настройките за контрол на достъпа в репитера.';
+
+  @override
+  String get repeater_cliHelpGetBridgeEnabled =>
+      'Показва дали мостът е активиран.';
+
+  @override
+  String get repeater_cliHelpGetBridgeDelay =>
+      'Показва забавянето на моста в милисекунди.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSource =>
+      'Показва дали мостът изпраща или получава пакети RX или TX.';
+
+  @override
+  String get repeater_cliHelpGetBridgeBaud =>
+      '(Само за мост RS232) Показва скоростта на предаване на данните на моста.';
+
+  @override
+  String get repeater_cliHelpGetBridgeChannel =>
+      '(Само за моста ESPNow) Показва канала на WiFi на моста.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSecret =>
+      '(Само за моста ESPNow) Показва споделения секрет на моста.';
+
+  @override
+  String get repeater_cliHelpGetBootloaderVer =>
+      '(Само за NRF52) Показва версията на зареждащия софтуер.';
+
+  @override
+  String get repeater_cliHelpGetAdcMultiplier =>
+      'Показва множителя на аналоговия-цифров преобразувател (мащабиране на напрежението от батерията).';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSupport =>
+      'Описва дали борда на директорите има поддръжка за управление на захранването.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSource =>
+      'Показва текущия източник на захранване: външен или батерия.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootReason =>
+      'Показва най-скорошните причини за рестартиране и изключване.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootMv =>
+      'Показва напрежението на батерията при стартиране, измерено в миливолта (mV).';
+
+  @override
+  String get repeater_cliHelpSensorGet =>
+      'Чете персонализирана настройка на сензор чрез клавиш.';
+
+  @override
+  String get repeater_cliHelpSensorSet =>
+      'Създава персонализирана настройка за сензор.';
+
+  @override
+  String get repeater_cliHelpSensorList =>
+      'Показва всички настройки на потребителските сензори, разделени на страници, започвайки от опционален индекс.';
+
+  @override
+  String get repeater_cliHelpRegionDefault =>
+      'Показва текущия обхват на региона по подразбиране.';
+
+  @override
+  String get repeater_cliHelpRegionDefaultSet =>
+      'Задава обхвата на региона по подразбиране. Използвайте \"<null>\", за да го изчистите.';
+
+  @override
+  String get repeater_cliHelpRegionListAllowed =>
+      'Списва регионите, които позволяват преминаване на превозни средства при наводнение.';
+
+  @override
+  String get repeater_cliHelpRegionListDenied =>
+      'Списва региони, които забраняват движението по пътищата при наводнения.';
+
+  @override
+  String get repeater_cliHelpStatsPackets =>
+      '(Само за серия) Показва статистически данни на ниво пакет.';
+
+  @override
+  String get repeater_cliHelpStatsRadio =>
+      '(Само за конкретен сериал) Показва радиостатистика.';
+
+  @override
+  String get repeater_cliHelpStatsCore =>
+      '(Само за серийния номер) Показва основните статистически данни за фърмуера.';
 
   @override
   String get telemetry_receivedData => 'Получени телеметрични данни';
@@ -3178,7 +3597,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get listFilter_heardRecently => 'Слушано е наскоро';
 
   @override
-  String get listFilter_az => 'A-Z';
+  String get listFilter_az => 'А-Я';
 
   @override
   String get listFilter_filters => 'Филтри';

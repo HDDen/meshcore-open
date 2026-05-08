@@ -79,7 +79,7 @@
   "scanner_stop": "停止",
   "scanner_scan": "扫描",
   "device_quickSwitch": "快速切换",
-  "device_meshcore": "MeshCore",
+  "device_meshcore": "网格核心",
   "settings_title": "设置",
   "settings_deviceInfo": "设备信息",
   "settings_appSettings": "应用设置",
@@ -354,11 +354,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "标签频道",
   "channels_public": "公共",
   "channels_private": "私有",
-  "channels_publicChannel": "公共频道",
-  "channels_privateChannel": "私有频道",
   "channels_editChannel": "编辑频道",
   "channels_muteChannel": "静音频道",
   "channels_unmuteChannel": "取消静音频道",
@@ -432,7 +429,7 @@
   "channels_publicChannelAdded": "已添加公共频道",
   "channels_sortBy": "排序方式",
   "channels_sortManual": "手动",
-  "channels_sortAZ": "A-Z",
+  "channels_sortAZ": "A到Z",
   "channels_sortLatestMessages": "最新消息",
   "channels_sortUnread": "未读",
   "channels_createPrivateChannel": "创建私有频道",
@@ -1040,7 +1037,7 @@
   "repeater_guestPasswordHelper": "只读访问密码",
   "repeater_radioSettings": "无线电设置",
   "repeater_frequencyMhz": "频率 (MHz)",
-  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_frequencyHelper": "300-2500 兆赫",
   "repeater_txPower": "TX 功率",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "带宽",
@@ -1107,6 +1104,81 @@
   },
   "repeater_confirm": "确认",
   "repeater_settingsSaved": "设置保存成功",
+  "repeater_rxGain": "增强的 RX 增益",
+  "repeater_rxGainHelper": "更高的灵敏度，更大的电流消耗（仅适用于 SX1262/SX1268）",
+  "repeater_refreshRxGain": "重新启动增强型 RX 功能",
+  "repeater_multiAcks": "多重确认",
+  "repeater_multiAcksSubtitle": "通过多个路径确认消息，以提高传递效率。",
+  "repeater_refreshMultiAcks": "刷新多个确认",
+  "repeater_networkHealth": "网络健康",
+  "repeater_loopDetect": "循环检测",
+  "repeater_loopDetectHelper": "创建看起来像路由环的“洪水包”",
+  "repeater_loopDetectOff": "离开",
+  "repeater_loopDetectMinimal": "最少",
+  "repeater_loopDetectModerate": "适度的",
+  "repeater_loopDetectStrict": "严格",
+  "repeater_dutyCycle": "工作周期",
+  "repeater_dutyCycleHelper": "最大可使用的空闲时间百分比",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "运营商信息",
+  "repeater_ownerInfoHelper": "此复播器的公共元数据",
+  "repeater_refreshOwnerInfo": "刷新操作员信息",
+  "repeater_floodMax": "最大跳跃次数",
+  "repeater_floodMaxHelper": "一个洪水包中，最大可以传输的跳数 (0-64)",
+  "repeater_advancedSettings": "高级",
+  "repeater_advancedSettingsSubtitle": "高级操作员使用的调节旋钮",
+  "repeater_pathHashMode": "路径哈希模式",
+  "repeater_pathHashModeHelper": "用于编码此复用器的 ID 的字节数，在“洪流路径/环检测”标签中使用。 0=1 字节（256 个 ID，最多 64 个跳跃），1=2 字节（65K 个 ID，最多 32 个跳跃），2=3 字节（16M 个 ID，最多 21 个跳跃）。 v1.13 及更早版本的固件会使用多字节路径——只有在您的网络升级到 v1.14 或更高版本后才会生效。",
+  "repeater_txDelay": "洪水（德克萨斯州）延误",
+  "repeater_txDelayHelper": "对于洪水流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.5）的倍数。 较高的值意味着更少的冲突，但传输速度会变慢。",
+  "repeater_directTxDelay": "直接的 TX 延迟",
+  "repeater_directTxDelayHelper": "对于直接（非广播）流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.3）的倍数。",
+  "repeater_intThresh": "干扰阈值",
+  "repeater_intThreshHelper": "将阈值传递给射频信号的噪声水平校准，使其能够拒绝高于该水平的干扰。 0 表示禁用——只有在您在嘈杂频段中看到 RX 错误时才启用。",
+  "repeater_agcResetInterval": "AGC 恢复间隔",
+  "repeater_agcResetIntervalHelper": "为了从失控的增益状态中恢复，应该多久重置收音机的自动增益控制？设置为“秒”，每次重置间隔为4秒。将此选项设置为“0”将禁用周期性重置。",
+  "repeater_actionsTitle": "行动",
+  "repeater_sendAdvert": "发布防洪广告",
+  "repeater_sendAdvertSubtitle": "通过网络播放防洪广告",
+  "repeater_sendAdvertZeroHop": "发送零跳广告",
+  "repeater_sendAdvertZeroHopSubtitle": "进行单跳广告广播（不使用中继）",
+  "repeater_clockSync": "现在同步时钟",
+  "repeater_clockSyncSubtitle": "将手机的时间设置为与中继器同步",
+  "repeater_actionSucceeded": "{action} 成功",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} 失败：{error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "设置已保存 — 重启发射器以应用",
+  "repeater_settingsPartialFailure": "部分设置失败：{failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "保存设置时出错：{error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1118,11 +1190,9 @@
   "repeater_refreshBasicSettings": "刷新基本设置",
   "repeater_refreshRadioSettings": "刷新无线电设置",
   "repeater_refreshTxPower": "刷新 TX 功率",
-  "repeater_refreshLocationSettings": "刷新位置设置",
   "repeater_refreshPacketForwarding": "刷新包转发",
   "repeater_refreshGuestAccess": "刷新访客权限",
   "repeater_refreshPrivacyMode": "刷新隐私模式",
-  "repeater_refreshAdvertisementSettings": "刷新广播设置",
   "repeater_refreshed": "{label} 已刷新",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1265,7 +1335,7 @@
       }
     }
   },
-  "telemetry_voltageValue": "{volts}V",
+  "telemetry_voltageValue": "{volts}伏",
   "@telemetry_voltageValue": {
     "placeholders": {
       "volts": {
@@ -1559,7 +1629,7 @@
   "listFilter_sortBy": "排序方式",
   "listFilter_latestMessages": "最新消息",
   "listFilter_heardRecently": "最近听到",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "A到Z",
   "listFilter_filters": "筛选",
   "listFilter_all": "全部",
   "listFilter_users": "用户",
@@ -1572,7 +1642,7 @@
   "pathTrace_notAvailable": "无法获取路径信息。",
   "pathTrace_refreshTooltip": "刷新路径追踪",
   "contacts_pathTrace": "路径追踪",
-  "contacts_ping": "Ping",
+  "contacts_ping": "乒",
   "contacts_repeaterPathTrace": "Trace 转发节点",
   "contacts_repeaterPing": "Ping 转发节点",
   "contacts_roomPathTrace": "Trace 房间服务器",
@@ -2090,6 +2160,77 @@
   "repeater_guest": "重复器信息",
   "chat_sendMessage": "发送消息",
   "room_guest": "服务器信息",
+  "repeater_getCategory": "获取值",
+  "repeater_powerMgmt": "电源管理",
+  "repeater_sensors": "传感器",
+  "repeater_cliHelpPowerOff": "关闭设备。（不应有任何响应）",
+  "repeater_cliHelpClkReboot": "将时钟重置为已知的时间点，并重启设备。",
+  "repeater_cliHelpAdvertZeroHop": "发送无中继广告（仅限于邻居）。",
+  "repeater_cliHelpStartOta": "在支持的板上启动通过空中进行固件更新。",
+  "repeater_cliHelpTime": "将设备时钟设置为给定的 Unix 纪元秒。时钟不能倒退。",
+  "repeater_cliHelpBoard": "显示制造商/硬件标识。",
+  "repeater_cliHelpDiscoverNeighbors": "向附近的邻居发送节点发现请求。（仅限中继器）",
+  "repeater_cliHelpPowersaving": "显示节能模式是否已开启或已关闭。",
+  "repeater_cliHelpPowersavingOnOff": "启用或禁用节能模式（如果支持）。",
+  "repeater_cliHelpErase": "（仅适用于序列模式）格式化设备的文件系统。清除所有设置和联系人。",
+  "repeater_cliHelpSetDutyCycle": "设定允许的最大传输时段百分比（1-100）。内部调整空闲时间因子。",
+  "repeater_cliHelpSetPrvKey": "（仅适用于序列号）替换设备身份私钥。需要重启才能应用。生成一个新的公钥。",
+  "repeater_cliHelpSetRadioRxGain": "（仅适用于 SX126x 芯片） 启用增强型 RX 增益，以在较高电流下提高灵敏度。",
+  "repeater_cliHelpSetOwnerInfo": "设置广告中包含的联系人信息字符串。使用 '|' 作为换行符。",
+  "repeater_cliHelpSetPathHashMode": "设置路径哈希模式。 0 = 传统模式，1 = 标准模式，2 = 严格模式。 影响路由路径的匹配方式。",
+  "repeater_cliHelpSetLoopDetect": "设置路由环检测的灵敏度：关闭、低、中、或高。",
+  "repeater_cliHelpSetFreq": "（仅限串行模式）快速设置频率。需要重启。 建议使用“设置收音机参数”功能，以便设置完整的收音机参数。",
+  "repeater_cliHelpSetBridgeChannel": "（仅适用于 ESPNow 桥）设置桥使用的 WiFi 频道（1-14）。",
+  "repeater_cliHelpGetName": "显示配置的节点名称。",
+  "repeater_cliHelpGetRole": "显示固件的功能（如：中继器、房间服务器等）。",
+  "repeater_cliHelpGetPublicKey": "显示设备的公钥。",
+  "repeater_cliHelpGetPrvKey": "（仅适用于序列号）显示设备的私钥。请将其视为机密信息。",
+  "repeater_cliHelpGetRepeat": "显示数据包转发（作为中继器）是否已启用或已禁用。",
+  "repeater_cliHelpGetTx": "显示当前的发射功率（以dBm为单位）。",
+  "repeater_cliHelpGetFreq": "显示配置的射频频率（以兆赫兹为单位）。",
+  "repeater_cliHelpGetRadio": "显示完整的无线电参数：频率、带宽、扩频因子、编码速率。",
+  "repeater_cliHelpGetRadioRxGain": "（仅适用于 SX126x 模块）显示 RX 放大器的状态。",
+  "repeater_cliHelpGetAf": "显示当前的空闲时间系数。",
+  "repeater_cliHelpGetDutyCycle": "显示当前允许的占空比（以百分比表示）。",
+  "repeater_cliHelpGetIntThresh": "显示信道干扰阈值（以dB为单位）。",
+  "repeater_cliHelpGetAgcResetInterval": "显示 AGC 重置的间隔时间（以秒为单位）。",
+  "repeater_cliHelpGetMultiAcks": "显示双重确认模式是否已启用（1）或已禁用（0）。",
+  "repeater_cliHelpGetAllowReadOnly": "显示是否允许访客仅限查看权限。",
+  "repeater_cliHelpGetAdvertInterval": "显示本地广告的时间间隔，单位为分钟。",
+  "repeater_cliHelpGetFloodAdvertInterval": "显示洪水广告的播放时间间隔，以小时为单位。",
+  "repeater_cliHelpGetGuestPassword": "显示已配置的访客密码。",
+  "repeater_cliHelpGetLat": "显示已配置的纬度。",
+  "repeater_cliHelpGetLon": "显示已配置的经度。",
+  "repeater_cliHelpGetRxDelay": "显示 rxdelay 的基本值。",
+  "repeater_cliHelpGetTxDelay": "显示洪水模式下的传输延迟系数。",
+  "repeater_cliHelpGetDirectTxDelay": "显示直接模式下的时延系数。",
+  "repeater_cliHelpGetFloodMax": "显示最大洪水传播次数。",
+  "repeater_cliHelpGetOwnerInfo": "显示所有者的联系信息。",
+  "repeater_cliHelpGetPathHashMode": "显示哈希模式（0/1/2）。",
+  "repeater_cliHelpGetLoopDetect": "显示循环检测的灵敏度。",
+  "repeater_cliHelpGetAcl": "（仅适用于序列号）列出复用器上的访问控制条目。",
+  "repeater_cliHelpGetBridgeEnabled": "显示桥是否已启用。",
+  "repeater_cliHelpGetBridgeDelay": "显示桥梁延迟的时间，单位为毫秒。",
+  "repeater_cliHelpGetBridgeSource": "显示桥接设备是否接收或发送 RX 或 TX 类型的数据包。",
+  "repeater_cliHelpGetBridgeBaud": "（仅限 RS232 桥）显示桥的波特率。",
+  "repeater_cliHelpGetBridgeChannel": "（仅适用于 ESPNow 桥）显示桥的 WiFi 通道。",
+  "repeater_cliHelpGetBridgeSecret": "（仅适用于 ESPNow 桥）显示桥的共享密钥。",
+  "repeater_cliHelpGetBootloaderVer": "（仅适用于NRF52）显示引导程序版本。",
+  "repeater_cliHelpGetAdcMultiplier": "显示 ADC 乘数（电池电压缩放）。",
+  "repeater_cliHelpGetPwrMgtSupport": "报告董事会是否支持电源管理功能。",
+  "repeater_cliHelpGetPwrMgtSource": "显示当前的电源：外部电源或电池。",
+  "repeater_cliHelpGetPwrMgtBootReason": "显示最近的重置和关闭原因。",
+  "repeater_cliHelpGetPwrMgtBootMv": "显示启动时的电池电压，单位为毫伏 (mV)。",
+  "repeater_cliHelpSensorGet": "通过按键读取自定义传感器设置。",
+  "repeater_cliHelpSensorSet": "编写自定义传感器设置。",
+  "repeater_cliHelpSensorList": "列出所有自定义传感器设置，并按可选的起始索引进行分页显示。",
+  "repeater_cliHelpRegionDefault": "显示当前默认的区域范围。",
+  "repeater_cliHelpRegionDefaultSet": "设置默认的区域范围。使用 \"<null>\" 可以清除。",
+  "repeater_cliHelpRegionListAllowed": "列出允许洪水交通的区域。",
+  "repeater_cliHelpRegionListDenied": "列出禁止洪水交通的区域。",
+  "repeater_cliHelpStatsPackets": "（仅显示序列信息）显示数据包级别的统计信息。",
+  "repeater_cliHelpStatsRadio": "（仅显示序列信息）显示收音机相关统计数据。",
+  "repeater_cliHelpStatsCore": "（仅显示序列号）显示核心固件统计信息。",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",

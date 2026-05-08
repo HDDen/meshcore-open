@@ -44,7 +44,7 @@
       }
     }
   },
-  "common_percentValue": "{percent}%",
+  "common_percentValue": "{percent} %",
   "@common_percentValue": {
     "placeholders": {
       "percent": {
@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open (Advanced mod)",
+  "scanner_title": "MeshCore – Odprto (Advanced mod)",
   "scanner_scanning": "Skeniram za naprave...",
   "scanner_connecting": "Povezujem se...",
   "scanner_disconnecting": "Odklapljam se...",
@@ -117,13 +117,13 @@
   "settings_rebootDevice": "Ponovni zagon naprave",
   "settings_rebootDeviceSubtitle": "Ponovno zaženi MeshCore napravo",
   "settings_rebootDeviceConfirm": "Ste prepričani, da želite ponovno zagnati napravo? Povezava bo prekinjena.",
-  "settings_debug": "Debug",
+  "settings_debug": "Odpravljanje napak",
   "settings_bleDebugLog": "BLE debug log (razhroščevanje)",
   "settings_bleDebugLogSubtitle": "BLE ukazi, odgovori in surovi podatki",
   "settings_appDebugLog": "Logi aplikacije",
   "settings_appDebugLogSubtitle": "Debug sporočila aplikacije",
   "settings_about": "Oglejte si",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod), različ {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -135,7 +135,7 @@
   "settings_aboutDescription": "Odprtokodni Flutter klient za naprave za LoRa omrežje MeshCore.",
   "settings_infoName": "Ime",
   "settings_infoId": "ID",
-  "settings_infoStatus": "Status",
+  "settings_infoStatus": "Stanje",
   "settings_infoBattery": "Baterija",
   "settings_infoPublicKey": "Javni ključ",
   "settings_infoContactsCount": "Število stikov",
@@ -148,7 +148,7 @@
   "settings_spreadingFactor": "Razširitveni faktor",
   "settings_codingRate": "Programska hitrost",
   "settings_txPower": "TX Moč (dBm)",
-  "settings_txPowerHelper": "0 - 22",
+  "settings_txPowerHelper": "0 – 22",
   "settings_txPowerInvalid": "Neveljavna TX moč (0-22 dBm)",
   "settings_error": "Napaka: {message}",
   "@settings_error": {
@@ -166,18 +166,18 @@
   "appSettings_themeDark": "Temno",
   "appSettings_language": "Jezik",
   "appSettings_languageSystem": "Sistemska privzeta vrednost",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
-  "appSettings_languageEs": "Español",
-  "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
+  "appSettings_languageEn": "Angleščina",
+  "appSettings_languageFr": "Francija",
+  "appSettings_languageEs": "Španščina",
+  "appSettings_languageDe": "Nemščina",
+  "appSettings_languagePl": "Poljski",
   "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
-  "appSettings_languageIt": "Italiano",
+  "appSettings_languagePt": "Portugalski",
+  "appSettings_languageIt": "Italijanščina",
   "appSettings_languageZh": "中文",
-  "appSettings_languageSv": "Svenska",
-  "appSettings_languageNl": "Nederlands",
-  "appSettings_languageSk": "Slovenčina",
+  "appSettings_languageSv": "Švedska",
+  "appSettings_languageNl": "Nizozemsko",
+  "appSettings_languageSk": "Slovenščina",
   "appSettings_languageBg": "Български",
   "appSettings_notifications": "Obvestila",
   "appSettings_enableNotifications": "Omogoči obvestila",
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtag kanal",
   "channels_public": "Javni",
   "channels_private": "Zasebni",
-  "channels_publicChannel": "Javni kanal",
-  "channels_privateChannel": "Zasebni kanal",
   "channels_editChannel": "Uredi kanal",
   "channels_muteChannel": "Utišaj kanal",
   "channels_unmuteChannel": "Vklopi obvestila kanala",
@@ -417,7 +414,7 @@
   "channels_publicChannelAdded": "javna skupnost dodana",
   "channels_sortBy": "Sortiraj po",
   "channels_sortManual": "Ročno",
-  "channels_sortAZ": "A-Z",
+  "channels_sortAZ": "A do Z",
   "channels_sortLatestMessages": "Najnovejše sporočilo",
   "channels_sortUnread": "Nerešeno",
   "chat_noMessages": "Še ni sporočil.",
@@ -549,7 +546,7 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypeCli": "CLI (Command Line Interface)",
   "debugFrame_textTypePlain": "Preprosto",
   "debugFrame_text": "- Tekst: \"{text}\"",
   "@debugFrame_text": {
@@ -559,7 +556,7 @@
       }
     }
   },
-  "debugFrame_hexDump": "Hex Dump:",
+  "debugFrame_hexDump": "Izpis heksadecimalnih vrednosti:",
   "chat_pathManagement": "Upravljanje poti",
   "chat_routingMode": "Navodilo za usmerjevalni način",
   "chat_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
@@ -568,7 +565,7 @@
   "chat_pathHistoryFull": "Zapiske o poti so popolni. Izbriši vnose, da dodaš nove.",
   "chat_hopSingular": "skok",
   "chat_hopPlural": "skokov",
-  "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
+  "chat_hopsCount": "{count} {count, plural, =1{skok} other{skoki}}",
   "@chat_hopsCount": {
     "placeholders": {
       "count": {
@@ -897,11 +894,11 @@
   "path_setPath": "Nastavi Pot",
   "repeater_management": "Upravljanje ponovitve",
   "repeater_managementTools": "Upravne orodje",
-  "repeater_status": "Status",
+  "repeater_status": "Stanje",
   "repeater_statusSubtitle": "Pogledati stanje, statistike in sosede repeatera",
   "repeater_telemetry": "Telemetrija",
   "repeater_telemetrySubtitle": "Pogledate telemetrijo senzorjev in sistemske statistike",
-  "repeater_cli": "CLI",
+  "repeater_cli": "CLI (Command Line Interface)",
   "repeater_cliSubtitle": "Pošlji ukazne povelje na ponovitveno enoto.",
   "repeater_settings": "Nastavitve",
   "repeater_settingsSubtitle": "Konfigurirajte parametre ponovitelja",
@@ -1010,7 +1007,7 @@
   "repeater_guestPasswordHelper": "Odpovedni dostopni geslo",
   "repeater_radioSettings": "Nastavitve Radija",
   "repeater_frequencyMhz": "Frekvenca (MHz)",
-  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_frequencyHelper": "300–2500 MHz",
   "repeater_txPower": "TX Moč",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Pasovna širina",
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Potrdit",
   "repeater_settingsSaved": "Nastavitve so shranjene uspešno.",
+  "repeater_rxGain": "Povečana dobitka RX",
+  "repeater_rxGainHelper": "Veća občutljivost, večji porabljeni tok (velja samo za SX1262/SX1268)",
+  "repeater_refreshRxGain": "Povečana dobitka RX, posodobit",
+  "repeater_multiAcks": "Več potrdil",
+  "repeater_multiAcksSubtitle": "Potrdite sporočila po več poti za boljši dostop",
+  "repeater_refreshMultiAcks": "Ponovite več potrdil",
+  "repeater_networkHealth": "Zdravilo omrežja",
+  "repeater_loopDetect": "Detekcija ciklov",
+  "repeater_loopDetectHelper": "Izpišite pakete, ki izgledajo kot pete v omrežju.",
+  "repeater_loopDetectOff": "Izklopljeno",
+  "repeater_loopDetectMinimal": "Minimalen",
+  "repeater_loopDetectModerate": "Umiren",
+  "repeater_loopDetectStrict": "Strogi",
+  "repeater_dutyCycle": "Ciklus delovanja",
+  "repeater_dutyCycleHelper": "Najvišji odstotek časa, ki ga lahko posreduje.",
+  "repeater_dutyCyclePercent": "{percent} %",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Informacije o operaterju",
+  "repeater_ownerInfoHelper": "javni podatki o tej napravi",
+  "repeater_refreshOwnerInfo": "Prejmi informacije o operaterju",
+  "repeater_floodMax": "Največji možni odmerek",
+  "repeater_floodMaxHelper": "Največje število paketov, ki lahko potujejo v enem plovilnem paketu (0-64)",
+  "repeater_advancedSettings": "Napredno",
+  "repeater_advancedSettingsSubtitle": "Gumbi za nastavljanje za izkušene uporabnike",
+  "repeater_pathHashMode": "Način ustvarjanja hash-a poti",
+  "repeater_pathHashModeHelper": "Biti, ki so bila uporabljena za kodiranje ID-ja tega releja v oznakah za zaznavanje pot/kroga, imajo naslednje velikosti: 0=1 bit (256 ID-jev, do 64 skokov), 1=2 biti (65.000 ID-jev, do 32 skokov), 2=3 biti (16 milijonov ID-jev, do 21 skokov). V različicah 1.13 in starejših se ustvarjajo večbitne poti – vendar se to zgodi šele, ko je omrežje vklopljeno v različicah 1.14 in kasnejših.",
+  "repeater_txDelay": "Zatemnitevanje zaradi poplav v Texasu",
+  "repeater_txDelayHelper": "Uporaba intervalov za ponovno pošiljanje v primeru prometa zaradi poplav, kot pomnožnik časovne trajanje paketa (0-2, privzeto 0,5). Veje vrednost = manjše kolizije, vendar počasnejše dostavo.",
+  "repeater_directTxDelay": "Neposredni časovno odlašanje",
+  "repeater_directTxDelayHelper": "Razdalja za ponovno pošiljanje za neposredno (neobvezen) promet, kot pomnožnik časovne trajanja paketa (0-2, privzeto 0,3).",
+  "repeater_intThresh": "Meja, pri kateri nastane motnja",
+  "repeater_intThreshHelper": "Tretja stopnja se uporablja za kalibracijo šumnega nivoja radija, kar omogoča, da se izklaplja pri šumu, ki presega to raven. 0 izklopi – uporabite le, če zaznate napake v šumnem pasu.",
+  "repeater_agcResetInterval": "Interval ponovne kalibracije AGC",
+  "repeater_agcResetIntervalHelper": "Kako pogosto je treba ponovno nastaviti samodejno regulacijo občutljivosti, da se vrnete v normalno stanje? Interval je nastavljen na nekaj sekund, natančno na 4. 0 izklopi periodično ponovno nastavljanje.",
+  "repeater_actionsTitle": "Dejanja",
+  "repeater_sendAdvert": "Pošlji oglas o poplavah",
+  "repeater_sendAdvertSubtitle": "Razpustite oglas o poplavah preko omrežja.",
+  "repeater_sendAdvertZeroHop": "Pošlji oglas, ki ne potrebuje posrednika.",
+  "repeater_sendAdvertZeroHopSubtitle": "Premejte oglas, ki uporablja eno povezavo (brez posrednikov).",
+  "repeater_clockSync": "Sinerizirajte uro zdaj",
+  "repeater_clockSyncSubtitle": "Nastavite čas na telefonu, da se sinhronizira s repeatrom.",
+  "repeater_actionSucceeded": "{action} je uspel",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} ni bilo uspešno: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Nastavitve shranjene – ponovni zagon repetitorja za uporabo",
+  "repeater_settingsPartialFailure": "Nekatna nastavitva niso uspešna: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Napaka pri shranjevanju nastavitev: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Ponovno nastavi osnovne nastavitve",
   "repeater_refreshRadioSettings": "Ponovno Nastavitve Radija",
   "repeater_refreshTxPower": "Ponovno nastavi TX moč",
-  "repeater_refreshLocationSettings": "Ponovno Nastavi Nastavitve Lokacije",
   "repeater_refreshPacketForwarding": "Ponovno nastavitve usmerjevanja paketa",
   "repeater_refreshGuestAccess": "Ponovno nastavitve dostopa gostov",
   "repeater_refreshPrivacyMode": "Ponovno aktiviraj način zasebnosti",
-  "repeater_refreshAdvertisementSettings": "Ponovno nastavi Oglede Oglasi",
   "repeater_refreshed": "{label} je bil/a posodobljen/a",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1365,7 +1435,7 @@
   "listFilter_sortBy": "Sortiraj po",
   "listFilter_latestMessages": "Najnovejše sporočilo",
   "listFilter_heardRecently": "Nedavno slišan",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "A do Z",
   "listFilter_filters": "Filtri",
   "listFilter_all": "Vse",
   "listFilter_users": "Uporabniki",
@@ -2084,6 +2154,77 @@
   "chat_sendMessage": "Pošlji sporočilo",
   "room_guest": "Informacije o strežniku",
   "repeater_guestTools": "Naložila za goste",
+  "repeater_getCategory": "Dobite vrednosti",
+  "repeater_powerMgmt": "Upravljanje z energijo",
+  "repeater_sensors": "Senzori",
+  "repeater_cliHelpPowerOff": "Izklopi naprave. (ne pričakujemo odziva)",
+  "repeater_cliHelpClkReboot": "Ponovno nastavi uro na znano točko in ponovno vklopi naprave.",
+  "repeater_cliHelpAdvertZeroHop": "Pošlje oglas, ki doseže samo neposredne sosede (brez posredovanja).",
+  "repeater_cliHelpStartOta": "Začne nadstrekovno ažuriranje programne opreme na podprtih ploščah.",
+  "repeater_cliHelpTime": "Nastavi časovni ukaz naprave na podano število sekund od Unixovega začetka. Časovni ukaz ne more iti nazaj.",
+  "repeater_cliHelpBoard": "Prikaže proizvajalca plošče / identifikator strojne opreme.",
+  "repeater_cliHelpDiscoverNeighbors": "Pošlje zahtevo za odkrivanje sosednjih naprav. (Samo za repeatere)",
+  "repeater_cliHelpPowersaving": "Prikaže, ali je vklopljen način varčevanja z energijo.",
+  "repeater_cliHelpPowersavingOnOff": "Omogoča ali onemogoča način varčevanja z energijo (če je podprt).",
+  "repeater_cliHelpErase": "(Samo za serijske naprave) Formira datotapno sistemsko okolje. Izbriše vse nastavitve in kontakte.",
+  "repeater_cliHelpSetDutyCycle": "Določi maksimalni dovoljeni čas, ki ga naprave lahko posredujejo, v odstotkih (1-100). Samodejno prilagodi faktor, ki odvisen je od časa, ki ga naprave lahko posredujejo.",
+  "repeater_cliHelpSetPrvKey": "(Samo za serijske naprave) Nadomesti zasebni ključ za identifikacijo naprave. Za uporabo je potrebna ponovna aktivacija. Ustvari nov javni ključ.",
+  "repeater_cliHelpSetRadioRxGain": "(Samo za SX126x) Vklopi povečano občutljivost RX za izboljšano delovanje pri večjih navorih.",
+  "repeater_cliHelpSetOwnerInfo": "Določi niz z informacijami o kontaktni osebi, ki je v oglasih. Za uporabo novih vrstic uporabite '|'.",
+  "repeater_cliHelpSetPathHashMode": "Nastavlja način \"hash poti\". 0 = za stare sisteme, 1 = za standard, 2 = za stroge. Vpliva na to, kako so poti uskladene.",
+  "repeater_cliHelpSetLoopDetect": "Nastavlja občutljivost detekcije ponavljajočih se povezav: izklopljeno, minimalno, umeren, ali strogo.",
+  "repeater_cliHelpSetFreq": "(Samo za serijske naprave) Hitro nastavi samo frekvenco. Potrebna je ponovna aktivacija. Za popolno nastavitev radio parametrov je priporočljivo uporabiti možnost \"nastavitev radia\".",
+  "repeater_cliHelpSetBridgeChannel": "(Samo za most ESPNow) Nastavlja kanal WiFi-ja (1-14), ki ga uporablja most.",
+  "repeater_cliHelpGetName": "Prikaže ime konfigurirane notranje.",
+  "repeater_cliHelpGetRole": "Prikaže vlogo programskega oprema (repeater, strežnik za sobo itd.).",
+  "repeater_cliHelpGetPublicKey": "Prikazuje javni ključ naprave.",
+  "repeater_cliHelpGetPrvKey": "(Samo za serijske naprave) Prikazuje zasebni ključ naprave. Sprejemajte ga kot skrivno informacijo.",
+  "repeater_cliHelpGetRepeat": "Pokaže, ali je omogočeno posredovanje paketov (delovanje kot repetitor).",
+  "repeater_cliHelpGetTx": "Prikazuje trenutno moč TX v dBm.",
+  "repeater_cliHelpGetFreq": "Prikaže nastavljeno frekvenco v MHz.",
+  "repeater_cliHelpGetRadio": "Prikaže vse parametre radija: frekvenco, širino pasu, faktor razširjanja, raven kodiranja.",
+  "repeater_cliHelpGetRadioRxGain": "(Samo za SX126x) Prikazuje stanje povečanega dobiča na RX.",
+  "repeater_cliHelpGetAf": "Prikazuje trenutni faktor, ki določa časovno obdobje.",
+  "repeater_cliHelpGetDutyCycle": "Prikazuje trenutno dovoljeno stopnjo delovanja kot odstotek.",
+  "repeater_cliHelpGetIntThresh": "Prikazuje prag medsebojnega vpliva kanala v dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Prikazuje interval ponovne kalibracije AGC v sekundah.",
+  "repeater_cliHelpGetMultiAcks": "Pokaže, ali je vklopljen način dvojnega potrdila (1) ali je izklopljen (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Pokaže, ali je omogočen le brani dostop za goste.",
+  "repeater_cliHelpGetAdvertInterval": "Prikazuje časovno obdobje lokalne reklame v minutah.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Prikaže časovno obdobje, ko se prikazuje oglas o poplavah, v urah.",
+  "repeater_cliHelpGetGuestPassword": "Prikaže nastavljeno geslo za gostitelja.",
+  "repeater_cliHelpGetLat": "Prikaže določeno zemljepisno širino.",
+  "repeater_cliHelpGetLon": "Prikaže določeno merilo dolžine.",
+  "repeater_cliHelpGetRxDelay": "Prikazuje osnovno vrednost RX odlašanja.",
+  "repeater_cliHelpGetTxDelay": "Prikazuje faktor zamude v načinu delovanja pri plavlju.",
+  "repeater_cliHelpGetDirectTxDelay": "Prikazuje faktor odlašanja signala v režimu neposredne komunikacije.",
+  "repeater_cliHelpGetFloodMax": "Prikazuje največjo število, kolikokrat lahko voda doseže najvišjo višino.",
+  "repeater_cliHelpGetOwnerInfo": "Prikazuje niz z informacijami o lastniku.",
+  "repeater_cliHelpGetPathHashMode": "Prikaže način delovanja z hashjem poti (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Prikazuje občutljivost na zaznavanje ciklov.",
+  "repeater_cliHelpGetAcl": "(Samo za serije) Navaja vnos za nadzor dostopa na ponovljalniku.",
+  "repeater_cliHelpGetBridgeEnabled": "Pokaže, ali je most omogočen.",
+  "repeater_cliHelpGetBridgeDelay": "Prikazuje zamik mosta v milisekundah.",
+  "repeater_cliHelpGetBridgeSource": "Pokaže, ali most prenaša pakete RX ali TX.",
+  "repeater_cliHelpGetBridgeBaud": "(Samo za most RS232) Prikazuje hitrost prenosa podatkov na mostu.",
+  "repeater_cliHelpGetBridgeChannel": "(Samo za most ESPNow) Prikazuje kanal WiFi mosta.",
+  "repeater_cliHelpGetBridgeSecret": "(Samo za most ESPNow) Prikazuje tajno, ki jo deli most.",
+  "repeater_cliHelpGetBootloaderVer": "(Samo za NRF52) Prikazuje različico programskega orodja.",
+  "repeater_cliHelpGetAdcMultiplier": "Prikazuje pomnoževalnik ADC (skaliranje napetosti baterije).",
+  "repeater_cliHelpGetPwrMgtSupport": "Navaja, ali ima uprava področje za upravljanje z energijo.",
+  "repeater_cliHelpGetPwrMgtSource": "Prikaže trenutni vir napajanja: zunanji ali baterija.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Prikazuje najnovejšo razlog za ponovno nastavitve in izklop.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Prikazuje napetost baterije v mV ob zagonu.",
+  "repeater_cliHelpSensorGet": "Prebere določeno vrednost senzorja preko tipke.",
+  "repeater_cliHelpSensorSet": "Ustvari prilagojeno nastavitev za senzor.",
+  "repeater_cliHelpSensorList": "Navaja vse nastavitve za uporabniške senzorje, razvrščene po želeni začetni indeksu.",
+  "repeater_cliHelpRegionDefault": "Prikaže trenutno privzeto območje.",
+  "repeater_cliHelpRegionDefaultSet": "Določi privzeto območje. Za izbris uporabite \"<null>\".",
+  "repeater_cliHelpRegionListAllowed": "Navaja regije, ki dovoljujejo promet v času poplav.",
+  "repeater_cliHelpRegionListDenied": "Navaja regije, ki preprečujejo promet zaradi poplav.",
+  "repeater_cliHelpStatsPackets": "(Samo za serijske povezave) Prikazuje statistiko na nivoju paketov.",
+  "repeater_cliHelpStatsRadio": "(Samo za serije) Prikazuje statistične podatke o radiju.",
+  "repeater_cliHelpStatsCore": "(Samo za serijske naprave) Prikazuje osnovne statistične podatke.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",
