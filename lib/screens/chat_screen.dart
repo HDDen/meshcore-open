@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -550,9 +551,18 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(MeshCoreConnector connector) {
-    final maxBytes = maxContactMessageBytes();
+    final maxBytes = _maxContactInputBytes(connector);
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
+    final mediaQuery = MediaQuery.of(context);
+    final maxInputHeight =
+        (mediaQuery.size.height -
+                mediaQuery.padding.top -
+                kToolbarHeight -
+                mediaQuery.viewInsets.bottom -
+                48)
+            .clamp(56.0, 240.0)
+            .toDouble();
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -623,13 +633,18 @@ class _ChatScreenState extends State<ChatScreen> {
                     maxBytes: maxBytes,
                     controller: _textController,
                     focusNode: _textFieldFocusNode,
+                    maxHeight: maxInputHeight,
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
                     extraFormatters:
                         connector.isContactMcmpEnabled(
                           widget.contact.publicKeyHex,
                         )
-                        ? const [NewlineToSpaceFormatter()]
+                        ? [
+                            NewlineToSpaceFormatter(
+                              maxInsertedChars: settings.mcmpTextLimit,
+                            ),
+                          ]
                         : const [],
                     encoder:
                         (connector.isContactMcmpEnabled(
@@ -746,7 +761,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
-    final maxBytes = maxContactMessageBytes();
+    final maxBytes = _maxContactInputBytes(connector);
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
       outgoingText,
@@ -780,6 +795,14 @@ class _ChatScreenState extends State<ChatScreen> {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
     );
+  }
+
+  int _maxContactInputBytes(MeshCoreConnector connector) {
+    final limit = maxContactMessageBytes();
+    if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex)) {
+      return math.max(0, limit - 2);
+    }
+    return limit;
   }
 
   void _showPathHistory(BuildContext context) {

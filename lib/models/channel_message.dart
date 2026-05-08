@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
 import 'translation_support.dart';
@@ -210,7 +211,7 @@ class ChannelMessage {
         senderKey: null,
         senderName: senderName,
         text: decodedText,
-        wasMcmpCompressed: actualText.trimLeft().startsWith('mcmp:'),
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(actualText),
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,

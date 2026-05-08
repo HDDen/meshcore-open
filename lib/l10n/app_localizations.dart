@@ -2302,6 +2302,24 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete the profile \"{name}\"?'**
   String settings_cyr2latProfileDeleteDscr(String name);
 
+  /// No description provided for @settings_mcmpTextLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP text paste limit'**
+  String get settings_mcmpTextLimit;
+
+  /// No description provided for @settings_doNotFilterMessagesOnChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not filter selfmessages on channels'**
+  String get settings_doNotFilterMessagesOnChannels;
+
+  /// No description provided for @settings_doNotFilterMessagesOnChannelsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI'**
+  String get settings_doNotFilterMessagesOnChannelsSubtitle;
+
   /// No description provided for @channels_publicChannelAdded.
   ///
   /// In en, this message translates to:

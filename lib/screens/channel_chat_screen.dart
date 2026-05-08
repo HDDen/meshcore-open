@@ -1264,6 +1264,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final maxBytes = _maxChannelInputBytes(connector);
     final settings = context.watch<AppSettingsService>().settings;
+    final mediaQuery = MediaQuery.of(context);
+    final replyBannerHeight = _replyingToMessage != null ? 64.0 : 0.0;
+    final maxInputHeight =
+        (mediaQuery.size.height -
+                mediaQuery.padding.top -
+                kToolbarHeight -
+                mediaQuery.viewInsets.bottom -
+                replyBannerHeight -
+                48)
+            .clamp(56.0, 240.0)
+            .toDouble();
+    final usesChannelEncoding =
+        connector.isChannelMcmpEnabled(widget.channel.index) ||
+        connector.isChannelSmazEnabled(widget.channel.index) ||
+        connector.isChannelCyr2LatEnabled(widget.channel.index);
+
+    String encodeComposerText(String text) {
+      final sendText = _applyReplyMention(text);
+      return usesChannelEncoding
+          ? connector.prepareChannelOutboundText(widget.channel.index, sendText)
+          : sendText;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1354,26 +1377,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       maxBytes: maxBytes,
                       controller: _textController,
                       focusNode: _textFieldFocusNode,
+                      maxHeight: maxInputHeight,
                       hintText: context.l10n.chat_typeMessage,
                       onSubmitted: (_) => _sendMessage(),
                       extraFormatters:
                           connector.isChannelMcmpEnabled(widget.channel.index)
-                          ? const [NewlineToSpaceFormatter()]
+                          ? [
+                              NewlineToSpaceFormatter(
+                                maxInsertedChars: settings.mcmpTextLimit,
+                              ),
+                            ]
                           : const [],
-                      encoder:
-                          (connector.isChannelMcmpEnabled(
-                                widget.channel.index,
-                              ) ||
-                              connector.isChannelSmazEnabled(
-                                widget.channel.index,
-                              ) ||
-                              connector.isChannelCyr2LatEnabled(
-                                widget.channel.index,
-                              ))
-                          ? (text) => connector.prepareChannelOutboundText(
-                              widget.channel.index,
-                              text,
-                            )
+                      encoder: _replyingToMessage != null || usesChannelEncoding
+                          ? encodeComposerText
                           : null,
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
@@ -1405,6 +1421,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ),
       ],
     );
+  }
+
+  String _applyReplyMention(String text) {
+    final replyingTo = _replyingToMessage;
+    if (replyingTo == null) return text;
+    return '@[${replyingTo.senderName}] $text';
   }
 
   Future<void> _showTranslationOptions() async {
@@ -1465,9 +1487,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-    if (_replyingToMessage != null) {
-      messageText = '@[${_replyingToMessage!.senderName}] $messageText';
-    }
+    messageText = _applyReplyMention(messageText);
 
     final maxBytes = _maxChannelInputBytes(connector);
     final outboundText = connector.prepareChannelOutboundText(
@@ -1508,10 +1528,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   int _maxChannelInputBytes(MeshCoreConnector connector) {
+    final limit = maxChannelMessageBytes(connector.selfName);
     if (connector.isChannelMcmpEnabled(widget.channel.index)) {
-      return maxChannelMessageBytes(null);
+      return math.max(0, limit - 2);
     }
-    return maxChannelMessageBytes(connector.selfName);
+    return limit;
   }
 
   String _formatTime(BuildContext context, DateTime time) {

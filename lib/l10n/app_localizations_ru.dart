@@ -1247,6 +1247,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get settings_mcmpTextLimit => 'MCMP: лимит символов для вставки';
+
+  @override
+  String get settings_doNotFilterMessagesOnChannels =>
+      'Не фильтровать собственные пакеты сообщений на этих каналах';
+
+  @override
+  String get settings_doNotFilterMessagesOnChannelsSubtitle =>
+      'По умолчанию, сообщения от своей же ноды игнорируются. Это делает невозможным работу встроенного терминала (TerminalCLI) на некоторых прошивках';
+
+  @override
   String get channels_publicChannelAdded => 'Публичный канал добавлен';
 
   @override
