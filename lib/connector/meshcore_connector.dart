@@ -785,6 +785,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
+    if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
     _channelCyr2LatEnabled[channelIndex] = enabled;
     if (enabled) {
       _channelMcmpEnabled[channelIndex] = false;
@@ -800,6 +801,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex,
     bool enabled,
   ) async {
+    if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
