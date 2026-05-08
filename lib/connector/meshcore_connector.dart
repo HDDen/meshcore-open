@@ -4751,7 +4751,12 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleIncomingChannelMessage(Uint8List frame) {
     final parsed = ChannelMessage.fromFrame(frame);
     if (parsed != null && parsed.channelIndex != null) {
-      if (_shouldDropSelfChannelMessage(parsed.senderName, parsed.pathBytes)) {
+      final channelName = _channelDisplayName(parsed.channelIndex!);
+      if (_shouldDropSelfChannelMessage(
+        parsed.senderName,
+        parsed.pathBytes,
+        channelName: channelName,
+      )) {
         return;
       }
       _lastChannelMsgRxTime = DateTime.now();
@@ -4821,9 +4826,13 @@ class MeshCoreConnector extends ChangeNotifier {
           final decodedText =
               MessageTextCodec.tryDecodeKnownCompression(parsed.text) ??
               parsed.text;
+          final label = channel.name.isEmpty
+              ? 'Channel ${channel.index}'
+              : channel.name;
           if (_shouldDropSelfChannelMessage(
             parsed.senderName,
             packet.pathBytes,
+            channelName: label,
           )) {
             return;
           }
@@ -4859,9 +4868,6 @@ class MeshCoreConnector extends ChangeNotifier {
           _maybeIncrementChannelUnread(message, isNew: isNew);
           notifyListeners();
           if (isNew) {
-            final label = channel.name.isEmpty
-                ? 'Channel ${channel.index}'
-                : channel.name;
             _maybeNotifyChannelMessage(message, channelName: label);
           }
           return;
@@ -5705,7 +5711,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return false;
   }
 
-  bool _shouldDropSelfChannelMessage(String senderName, Uint8List pathBytes) {
+  bool _shouldDropSelfChannelMessage(
+    String senderName,
+    Uint8List pathBytes, {
+    String? channelName,
+  }) {
     final trimmed = senderName.trim();
     if (trimmed.isEmpty) return false;
 
@@ -5716,12 +5726,27 @@ class MeshCoreConnector extends ChangeNotifier {
     if (trimmed != selfName) return false;
 
     // Name matches - this is from self
+    if (_isSelfChannelFilterBypassed(channelName)) return false;
+
     // Drop only if pathBytes is empty (direct broadcast)
     // Keep if pathBytes has data (repeated through another node)
-    // Issue with self-terminal-cli - messages will be filtered
-    // So, return false
-    return false;
-    // return pathBytes.isEmpty;
+    return pathBytes.isEmpty;
+  }
+
+  bool _isSelfChannelFilterBypassed(String? channelName) {
+    final normalizedChannelName = channelName?.trim();
+    if (normalizedChannelName == null || normalizedChannelName.isEmpty) {
+      return false;
+    }
+
+    final settings = _appSettingsService?.settings;
+    if (settings == null) return false;
+
+    return settings.doNotFilterMessagesOnChannels
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .contains(normalizedChannelName);
   }
 
   Uint8List _selectPreferredPathBytes(Uint8List existing, Uint8List incoming) {

@@ -67,6 +67,8 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildMcmpTextLimitCard(context, settingsService),
                         const SizedBox(height: 16),
+                        _buildDoNotFilterChannelsCard(context, settingsService),
+                        const SizedBox(height: 16),
                         _buildDebugCard(context, settingsService),
                       ],
                     );
@@ -1362,6 +1364,45 @@ class AppSettingsScreen extends StatelessWidget {
         subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => _showMcmpTextLimitDialog(context, settingsService),
+      ),
+    );
+  }
+
+  Widget _buildDoNotFilterChannelsCard(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.settings_doNotFilterMessagesOnChannels,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.settings_doNotFilterMessagesOnChannelsSubtitle,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue:
+                  settingsService.settings.doNotFilterMessagesOnChannels,
+              minLines: 3,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'One channel name per line',
+              ),
+              onChanged: (value) {
+                settingsService.setDoNotFilterMessagesOnChannels(value);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

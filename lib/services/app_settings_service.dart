@@ -320,4 +320,10 @@ class AppSettingsService extends ChangeNotifier {
       ),
     );
   }
+
+  Future<void> setDoNotFilterMessagesOnChannels(String value) async {
+    await updateSettings(
+      _settings.copyWith(doNotFilterMessagesOnChannels: value),
+    );
+  }
 }

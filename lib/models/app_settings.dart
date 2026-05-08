@@ -95,11 +95,13 @@ class AppSettings {
   final String? translationSelectedModelId;
   final List<TranslationModelRecord> translationDownloadedModels;
   final int mcmpTextLimit;
+  final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
-
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
+  static const String defaultDoNotFilterMessagesOnChannels =
+      'TerminalCLI\nSomethingElse';
 
   static int normalizeMcmpTextLimit(dynamic value) {
     int? parsed;
@@ -164,6 +166,7 @@ class AppSettings {
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
@@ -228,6 +231,7 @@ class AppSettings {
           .map((model) => model.toJson())
           .toList(),
       'mcmp_text_limit': mcmpTextLimit,
+      'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
       'cyr2lat_profiles': cyr2latProfiles
           .map((profile) => profile.toJson())
           .toList(),
@@ -320,6 +324,9 @@ class AppSettings {
               .toList() ??
           const [],
       mcmpTextLimit: json['mcmp_text_limit'],
+      doNotFilterMessagesOnChannels:
+          json['do_not_filter_messages_on_channels'] as String? ??
+          defaultDoNotFilterMessagesOnChannels,
       cyr2latProfiles:
           (json['cyr2lat_profiles'] as List<dynamic>?)
               ?.map(
@@ -398,6 +405,7 @@ class AppSettings {
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
   }) {
@@ -464,6 +472,8 @@ class AppSettings {
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
       mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
+      doNotFilterMessagesOnChannels:
+          doNotFilterMessagesOnChannels ?? this.doNotFilterMessagesOnChannels,
       cyr2latProfiles: cyr2latProfiles ?? this.cyr2latProfiles,
       selectedCyr2latProfileId:
           selectedCyr2latProfileId ?? this.selectedCyr2latProfileId,

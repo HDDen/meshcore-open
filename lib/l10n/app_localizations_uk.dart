@@ -1245,6 +1245,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_mcmpTextLimit => 'MCMP text paste limit';
 
   @override
+  String get settings_doNotFilterMessagesOnChannels =>
+      'Do not filter selfmessages on channels';
+
+  @override
+  String get settings_doNotFilterMessagesOnChannelsSubtitle =>
+      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+
+  @override
   String get channels_publicChannelAdded => 'Публічний канал додано';
 
   @override
