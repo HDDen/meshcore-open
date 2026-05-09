@@ -1424,19 +1424,6 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
-                  SwitchListTile(
-                    title: Text(context.l10n.settings_useSendingDelay),
-                    value: sendingDelayEnabled,
-                    onChanged: (value) {
-                      connector.setContactSendingDelayEnabled(
-                        contact.publicKeyHex,
-                        value,
-                      );
-                      setSheetState(() {
-                        sendingDelayEnabled = value;
-                      });
-                    },
-                  ),
                   if (cyr2latEnabled && appSettingsService != null) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -1467,6 +1454,19 @@ class _ContactsScreenState extends State<ContactsScreen>
                       ),
                     ),
                   ],
+                  SwitchListTile(
+                    title: Text(context.l10n.settings_useSendingDelay),
+                    value: sendingDelayEnabled,
+                    onChanged: (value) {
+                      connector.setContactSendingDelayEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      setSheetState(() {
+                        sendingDelayEnabled = value;
+                      });
+                    },
+                  ),
                 ] else ...[
                   if (contact.pathLength > 0)
                     ListTile(

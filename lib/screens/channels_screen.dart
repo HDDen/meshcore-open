@@ -1495,14 +1495,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     }
                   }),
                 ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dialogContext.l10n.settings_useSendingDelay),
-                  value: sendingDelayEnabled,
-                  onChanged: (value) => setState(() {
-                    sendingDelayEnabled = value;
-                  }),
-                ),
                 if (cyr2latEnabled) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
@@ -1528,6 +1520,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                   ),
                 ],
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(dialogContext.l10n.settings_useSendingDelay),
+                  value: sendingDelayEnabled,
+                  onChanged: (value) => setState(() {
+                    sendingDelayEnabled = value;
+                  }),
+                ),
               ],
             ),
           ),

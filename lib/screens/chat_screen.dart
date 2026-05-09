@@ -1468,21 +1468,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.settings_useSendingDelay),
-                  value: sendingDelayEnabled,
-                  onChanged: (value) {
-                    connector.setContactSendingDelayEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    setDialogState(() {
-                      sendingDelayEnabled = value;
-                    });
-                  },
-                ),
                 if (cyr2latEnabled) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
@@ -1513,6 +1498,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ],
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.settings_useSendingDelay),
+                  value: sendingDelayEnabled,
+                  onChanged: (value) {
+                    connector.setContactSendingDelayEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    setDialogState(() {
+                      sendingDelayEnabled = value;
+                    });
+                  },
+                ),
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
