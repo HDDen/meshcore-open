@@ -800,8 +800,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.clear();
     _textFieldFocusNode.requestFocus();
     final contact = _resolveContact(connector);
-    if (settings.sendingDelayForCancellationSeconds > 0 &&
-        connector.isContactSendingDelayEnabled(contact.publicKeyHex)) {
+    final useSendingDelay =
+        settings.sendingDelayForCancellationSeconds > 0 &&
+        await connector.loadContactSendingDelayEnabled(contact.publicKeyHex);
+    if (!mounted) return;
+    if (useSendingDelay) {
       connector.scheduleContactMessage(
         contact,
         outgoingText,

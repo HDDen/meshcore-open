@@ -678,6 +678,17 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactSendingDelayEnabled[contactKeyHex] ?? false;
   }
 
+  Future<bool> loadContactSendingDelayEnabled(String contactKeyHex) async {
+    final cached = _contactSendingDelayEnabled[contactKeyHex];
+    if (cached != null) return cached;
+    final enabled = await _contactSettingsStore.loadSendingDelayEnabled(
+      contactKeyHex,
+    );
+    _contactSendingDelayEnabled[contactKeyHex] = enabled;
+    notifyListeners();
+    return enabled;
+  }
+
   Future<void> loadUnreadState() async {
     _contactUnreadCount
       ..clear()
