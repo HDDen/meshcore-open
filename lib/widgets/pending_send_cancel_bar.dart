@@ -75,12 +75,15 @@ class _PendingSendCancelBarState extends State<PendingSendCancelBar> {
                   SizedBox(
                     width: 11,
                     height: 11,
-                    child: CircularProgressIndicator(
-                      value: math.max(0, math.min(1, progress)).toDouble(),
-                      strokeWidth: 2,
-                      color: widget.foregroundColor,
-                      backgroundColor: widget.foregroundColor.withValues(
-                        alpha: 0.22,
+                    child: Transform.scale(
+                      scaleX: -1,
+                      child: CircularProgressIndicator(
+                        value: math.max(0, math.min(1, progress)).toDouble(),
+                        strokeWidth: 2,
+                        color: widget.foregroundColor,
+                        backgroundColor: widget.foregroundColor.withValues(
+                          alpha: 0.22,
+                        ),
                       ),
                     ),
                   ),
