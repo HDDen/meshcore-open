@@ -675,6 +675,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pokaż szczegółowe metadane trasowania i czasu dla wiadomości';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Powiadomienia';
 
   @override

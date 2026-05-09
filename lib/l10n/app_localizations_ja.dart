@@ -645,6 +645,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'メッセージに関する詳細な経路およびタイミングに関するメタデータを表示する';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => '通知';
 
   @override

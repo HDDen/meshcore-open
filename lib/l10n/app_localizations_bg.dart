@@ -674,6 +674,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Показване на подробни метаданни за маршрутизация и синхронизация за съобщения';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Уведомления';
 
   @override

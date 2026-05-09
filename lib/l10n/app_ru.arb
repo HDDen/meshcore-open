@@ -830,6 +830,7 @@
   "appSettings_languageUk": "Українська",
   "appSettings_enableMessageTracing": "Включить трассировку сообщений",
   "appSettings_enableMessageTracingSubtitle": "Показывать подробные метаданные о маршрутизации и времени для сообщений",
+  "appSettings_showKeyboardHidingButton": "Показывать кнопку скрытия клавиатуры",
   "contacts_floodAdvert": "Рекламный поток",
   "contacts_clipboardEmpty": "Буфер обмена пуст.",
   "contacts_copyAdvertToClipboard": "Копировать рекламу в буфер обмена",

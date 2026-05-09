@@ -671,6 +671,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mostrar metadatos detallados de enrutamiento y tiempo para los mensajes';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Notificaciones';
 
   @override

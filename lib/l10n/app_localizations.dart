@@ -1336,6 +1336,12 @@ abstract class AppLocalizations {
   /// **'Show detailed routing and timing metadata for messages'**
   String get appSettings_enableMessageTracingSubtitle;
 
+  /// No description provided for @appSettings_showKeyboardHidingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Show keyboard hiding button'**
+  String get appSettings_showKeyboardHidingButton;
+
   /// No description provided for @appSettings_notifications.
   ///
   /// In en, this message translates to:

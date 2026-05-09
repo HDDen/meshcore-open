@@ -670,6 +670,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Detaillierte Routing- und Timing-Metadaten für Nachrichten anzeigen';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Benachrichtigungen';
 
   @override

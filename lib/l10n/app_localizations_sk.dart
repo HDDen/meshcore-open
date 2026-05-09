@@ -666,6 +666,10 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zobraziť podrobné metadáta o smerovaní a časovaní správ';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Upozornenia';
 
   @override

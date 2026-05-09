@@ -673,6 +673,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывать подробные метаданные о маршрутизации и времени для сообщений';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Показывать кнопку скрытия клавиатуры';
+
+  @override
   String get appSettings_notifications => 'Уведомления';
 
   @override

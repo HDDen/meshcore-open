@@ -670,6 +670,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Показувати детальні метадані про маршрутизацію та час для повідомлень';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Сповіщення';
 
   @override

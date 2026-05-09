@@ -129,6 +129,15 @@ class AppSettingsScreen extends StatelessWidget {
               settingsService.setEnableMessageTracing(value);
             },
           ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.keyboard_hide_outlined),
+            title: Text(context.l10n.appSettings_showKeyboardHidingButton),
+            value: settingsService.settings.showKeyboardHidingButton,
+            onChanged: (value) {
+              settingsService.setShowKeyboardHidingButton(value);
+            },
+          ),
         ],
       ),
     );

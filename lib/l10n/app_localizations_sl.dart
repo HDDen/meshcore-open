@@ -663,6 +663,10 @@ class AppLocalizationsSl extends AppLocalizations {
       'Prikaži podrobne metapodatke o usmerjanju in časovnem usklajevanju sporočil';
 
   @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
+
+  @override
   String get appSettings_notifications => 'Obvestila';
 
   @override
