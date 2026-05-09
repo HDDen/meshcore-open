@@ -5,6 +5,7 @@ class ChannelSettingsStore {
   static const String _keyPrefix = 'channel_smaz_';
   static const String _mcmpKeyPrefix = 'channel_mcmp_';
   static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
+  static const String _sendingDelayKeyPrefix = 'channel_sending_delay_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -13,6 +14,7 @@ class ChannelSettingsStore {
   String get keyFor => '$_keyPrefix$publicKeyHex';
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
+  String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(int channelIndex) async {
     if (publicKeyHex.isEmpty) {
@@ -96,6 +98,30 @@ class ChannelSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForCyr2Lat$channelIndex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadSendingDelayEnabled(int channelIndex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel sending delay settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForSendingDelay$channelIndex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveSendingDelayEnabled(int channelIndex, bool enabled) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel sending delay settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForSendingDelay$channelIndex';
     await prefs.setBool(key, enabled);
   }
 

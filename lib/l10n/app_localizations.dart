@@ -2290,6 +2290,24 @@ abstract class AppLocalizations {
   /// **'MCMP text paste limit'**
   String get settings_mcmpTextLimit;
 
+  /// No description provided for @settings_sendingDelayForCancellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending delay for cancellation'**
+  String get settings_sendingDelayForCancellation;
+
+  /// No description provided for @settings_useSendingDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Use sending delay'**
+  String get settings_useSendingDelay;
+
+  /// No description provided for @chat_cancelSend.
+  ///
+  /// In en, this message translates to:
+  /// **'cancel sending'**
+  String get chat_cancelSend;
+
   /// No description provided for @settings_doNotFilterMessagesOnChannels.
   ///
   /// In en, this message translates to:

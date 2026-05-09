@@ -1406,6 +1406,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
+    bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
+      channel.index,
+    );
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
@@ -1492,6 +1495,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     }
                   }),
                 ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(dialogContext.l10n.settings_useSendingDelay),
+                  value: sendingDelayEnabled,
+                  onChanged: (value) => setState(() {
+                    sendingDelayEnabled = value;
+                  }),
+                ),
                 if (cyr2latEnabled) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
@@ -1559,6 +1570,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelCyr2LatProfileId(
                     channel.index,
                     selectedCyr2LatProfileId,
+                  );
+                  await connector.setChannelSendingDelayEnabled(
+                    channel.index,
+                    sendingDelayEnabled,
                   );
                   if (!context.mounted) return;
                   showDismissibleSnackBar(

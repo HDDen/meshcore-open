@@ -49,6 +49,7 @@ import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
 import 'telemetry_screen.dart';
+import '../widgets/pending_send_cancel_bar.dart';
 
 class ChatScreen extends StatefulWidget {
   final Contact contact;
@@ -403,7 +404,10 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Consumer<MeshCoreConnector>(
         builder: (context, connector, child) {
-          final messages = connector.getMessages(widget.contact);
+          final messages = [
+            ...connector.getMessages(widget.contact),
+            ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
+          ];
           return Column(
             children: [
               Expanded(
@@ -517,6 +521,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 onLongPress: () => _showMessageActions(message, contact),
                 onRetryReaction: (msg, emoji) =>
                     _sendReaction(msg, contact, emoji),
+                pendingSendAt: connector.pendingContactSendAt(
+                  message.messageId,
+                ),
+                pendingSendDelaySeconds: connector
+                    .pendingContactSendDelaySeconds(message.messageId),
+                onCancelPendingSend: () =>
+                    _cancelPendingContactSend(connector, message.messageId),
               );
               final isUnreadAnchor =
                   _unreadDividerMessageId != null &&
@@ -788,13 +799,38 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _textController.clear();
     _textFieldFocusNode.requestFocus();
-    connector.sendMessage(
-      _resolveContact(connector),
-      outgoingText,
-      originalText: originalText,
-      translatedLanguageCode: translatedLanguageCode,
-      translationModelId: translationModelId,
-    );
+    final contact = _resolveContact(connector);
+    if (settings.sendingDelayForCancellationSeconds > 0 &&
+        connector.isContactSendingDelayEnabled(contact.publicKeyHex)) {
+      connector.scheduleContactMessage(
+        contact,
+        outgoingText,
+        inputText: text,
+        delaySeconds: settings.sendingDelayForCancellationSeconds,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+      );
+    } else {
+      connector.sendMessage(
+        contact,
+        outgoingText,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+      );
+    }
+  }
+
+  void _cancelPendingContactSend(
+    MeshCoreConnector connector,
+    String messageId,
+  ) {
+    final text = connector.cancelPendingContactSend(messageId);
+    if (text == null) return;
+    _textController.text = text;
+    _textController.selection = TextSelection.collapsed(offset: text.length);
+    _textFieldFocusNode.requestFocus();
   }
 
   int _maxContactInputBytes(MeshCoreConnector connector) {
@@ -1307,10 +1343,16 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactSendingDelaySettingLoaded(
+      widget.contact.publicKeyHex,
+    );
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
+      contact.publicKeyHex,
+    );
+    bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
       contact.publicKeyHex,
     );
     String? selectedCyr2LatProfileId = connector.getContactCyr2LatProfileId(
@@ -1420,6 +1462,21 @@ class _ChatScreenState extends State<ChatScreen> {
                         mcmpEnabled = false;
                         smazEnabled = false;
                       }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.settings_useSendingDelay),
+                  value: sendingDelayEnabled,
+                  onChanged: (value) {
+                    connector.setContactSendingDelayEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    setDialogState(() {
+                      sendingDelayEnabled = value;
                     });
                   },
                 ),
@@ -1803,6 +1860,9 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
+  final DateTime? pendingSendAt;
+  final int? pendingSendDelaySeconds;
+  final VoidCallback? onCancelPendingSend;
   final double textScale;
   final String sourceId;
 
@@ -1815,6 +1875,9 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
+    this.pendingSendAt,
+    this.pendingSendDelaySeconds,
+    this.onCancelPendingSend,
   });
 
   @override
@@ -2090,6 +2153,15 @@ class _MessageBubble extends StatelessWidget {
                             ),
                           ),
                         ],
+                        if (pendingSendAt != null &&
+                            pendingSendDelaySeconds != null &&
+                            onCancelPendingSend != null)
+                          PendingSendCancelBar(
+                            sendAt: pendingSendAt!,
+                            delaySeconds: pendingSendDelaySeconds!,
+                            onCancel: onCancelPendingSend!,
+                            foregroundColor: textColor,
+                          ),
                       ],
                     ),
                   ),

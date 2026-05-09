@@ -38,6 +38,7 @@ import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
+import '../widgets/pending_send_cancel_bar.dart';
 
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
@@ -451,7 +452,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             Expanded(
               child: Consumer<MeshCoreConnector>(
                 builder: (context, connector, child) {
-                  final messages = connector.getChannelMessages(widget.channel);
+                  final messages = [
+                    ...connector.getChannelMessages(widget.channel),
+                    ...connector.getPendingChannelMessages(
+                      widget.channel.index,
+                    ),
+                  ];
 
                   if (messages.isEmpty) {
                     return Center(
@@ -583,6 +589,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Widget _buildMessageBubble(ChannelMessage message, double textScale) {
+    final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
     final isOutgoing = message.isOutgoing;
@@ -601,6 +608,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : (message.pathVariants.isNotEmpty
               ? message.pathVariants.first
               : Uint8List(0));
+    final pendingSendAt = connector.pendingChannelSendAt(message.messageId);
+    final pendingSendDelaySeconds = connector.pendingChannelSendDelaySeconds(
+      message.messageId,
+    );
 
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
@@ -873,6 +884,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           ),
                         ),
                       ],
+                      if (pendingSendAt != null &&
+                          pendingSendDelaySeconds != null)
+                        PendingSendCancelBar(
+                          sendAt: pendingSendAt,
+                          delaySeconds: pendingSendDelaySeconds,
+                          onCancel: () => _cancelPendingChannelSend(
+                            connector,
+                            message.messageId,
+                          ),
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                        ),
                     ],
                   ),
                 ),
@@ -1515,16 +1539,43 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textController.clear();
     _cancelReply();
     _textFieldFocusNode.requestFocus();
-    connector.sendChannelMessage(
-      widget.channel,
-      messageText,
-      originalText: originalText,
-      translatedLanguageCode: translatedLanguageCode,
-      translationModelId: translationModelId,
-      replyToMessageId: replyTarget?.messageId,
-      replyToSenderName: replyTarget?.senderName,
-      replyToText: replyTarget?.text,
-    );
+    if (settings.sendingDelayForCancellationSeconds > 0 &&
+        connector.isChannelSendingDelayEnabled(widget.channel.index)) {
+      connector.scheduleChannelMessage(
+        widget.channel,
+        messageText,
+        inputText: text,
+        delaySeconds: settings.sendingDelayForCancellationSeconds,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+        replyToMessageId: replyTarget?.messageId,
+        replyToSenderName: replyTarget?.senderName,
+        replyToText: replyTarget?.text,
+      );
+    } else {
+      connector.sendChannelMessage(
+        widget.channel,
+        messageText,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+        replyToMessageId: replyTarget?.messageId,
+        replyToSenderName: replyTarget?.senderName,
+        replyToText: replyTarget?.text,
+      );
+    }
+  }
+
+  void _cancelPendingChannelSend(
+    MeshCoreConnector connector,
+    String messageId,
+  ) {
+    final text = connector.cancelPendingChannelSend(messageId);
+    if (text == null) return;
+    _textController.text = text;
+    _textController.selection = TextSelection.collapsed(offset: text.length);
+    _textFieldFocusNode.requestFocus();
   }
 
   int _maxChannelInputBytes(MeshCoreConnector connector) {

@@ -67,6 +67,8 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildMcmpTextLimitCard(context, settingsService),
                         const SizedBox(height: 16),
+                        _buildSendingDelayCard(context, settingsService),
+                        const SizedBox(height: 16),
                         _buildDoNotFilterChannelsCard(context, settingsService),
                         const SizedBox(height: 16),
                         _buildDebugCard(context, settingsService),
@@ -1407,6 +1409,23 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSendingDelayCard(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.schedule),
+        title: Text(context.l10n.settings_sendingDelayForCancellation),
+        subtitle: Text(
+          '${settingsService.settings.sendingDelayForCancellationSeconds}',
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _showSendingDelayDialog(context, settingsService),
+      ),
+    );
+  }
+
   void _showMcmpTextLimitDialog(
     BuildContext context,
     AppSettingsService settingsService,
@@ -1436,6 +1455,48 @@ class AppSettingsScreen extends StatelessWidget {
               final value = int.tryParse(controller.text.trim());
               if (value == null) return;
               await settingsService.setMcmpTextLimit(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSendingDelayDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.sendingDelayForCancellationSeconds
+          .toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_sendingDelayForCancellation),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final value = int.tryParse(controller.text.trim());
+              if (value == null) return;
+              await settingsService.setSendingDelayForCancellationSeconds(
+                value,
+              );
               if (!dialogContext.mounted) return;
               Navigator.pop(dialogContext);
             },

@@ -617,6 +617,9 @@
     }
   },
   "settings_mcmpTextLimit": "MCMP text paste limit",
+  "settings_sendingDelayForCancellation": "Sending delay for cancellation",
+  "settings_useSendingDelay": "Use sending delay",
+  "chat_cancelSend": "cancel sending",
   "settings_doNotFilterMessagesOnChannels": "Do not filter selfmessages on channels",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI",
   "channels_publicChannelAdded": "Public channel added",

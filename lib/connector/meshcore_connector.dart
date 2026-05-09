@@ -302,6 +302,10 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
+  final Map<String, bool> _contactSendingDelayEnabled = {};
+  final Map<String, _PendingContactSend> _pendingContactSends = {};
+  final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  final Map<int, bool> _channelSendingDelayEnabled = {};
   final Set<String> _knownContactKeys = {};
   final Map<String, int> _contactUnreadCount = {};
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
@@ -660,6 +664,20 @@ class MeshCoreConnector extends ChangeNotifier {
     _ensureContactCyr2LatSettingLoaded(contactKeyHex);
   }
 
+  void ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
+    _ensureContactSendingDelaySettingLoaded(contactKeyHex);
+  }
+
+  bool isChannelSendingDelayEnabled(int channelIndex) {
+    _ensureChannelSendingDelaySettingLoaded(channelIndex);
+    return _channelSendingDelayEnabled[channelIndex] ?? false;
+  }
+
+  bool isContactSendingDelayEnabled(String contactKeyHex) {
+    _ensureContactSendingDelaySettingLoaded(contactKeyHex);
+    return _contactSendingDelayEnabled[contactKeyHex] ?? false;
+  }
+
   Future<void> loadUnreadState() async {
     _contactUnreadCount
       ..clear()
@@ -831,6 +849,26 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelSendingDelayEnabled(
+    int channelIndex,
+    bool enabled,
+  ) async {
+    if (_channelSendingDelayEnabled[channelIndex] == enabled) return;
+    _channelSendingDelayEnabled[channelIndex] = enabled;
+    await _channelSettingsStore.saveSendingDelayEnabled(channelIndex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setContactSendingDelayEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
+    _contactSendingDelayEnabled[contactKeyHex] = enabled;
+    await _contactSettingsStore.saveSendingDelayEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
   Future<void> _loadChannelOrder() async {
     _channelOrder = await _channelOrderStore.loadChannelOrder();
     _applyChannelOrder();
@@ -983,12 +1021,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
+    _channelSendingDelayEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       _channelMcmpEnabled[i] = await _channelSettingsStore.loadMcmpEnabled(i);
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
       _channelCyr2LatEnabled[i] = await _channelSettingsStore
           .loadCyr2LatEnabled(i);
+      _channelSendingDelayEnabled[i] = await _channelSettingsStore
+          .loadSendingDelayEnabled(i);
     }
   }
 
@@ -3181,6 +3222,172 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  List<Message> getPendingContactMessages(String contactKeyHex) {
+    return _pendingContactSends.values
+        .where((pending) => pending.contact.publicKeyHex == contactKeyHex)
+        .map((pending) => pending.message)
+        .toList();
+  }
+
+  List<ChannelMessage> getPendingChannelMessages(int channelIndex) {
+    return _pendingChannelSends.values
+        .where((pending) => pending.channel.index == channelIndex)
+        .map((pending) => pending.message)
+        .toList();
+  }
+
+  DateTime? pendingContactSendAt(String messageId) {
+    return _pendingContactSends[messageId]?.sendAt;
+  }
+
+  int? pendingContactSendDelaySeconds(String messageId) {
+    return _pendingContactSends[messageId]?.delaySeconds;
+  }
+
+  DateTime? pendingChannelSendAt(String messageId) {
+    return _pendingChannelSends[messageId]?.sendAt;
+  }
+
+  int? pendingChannelSendDelaySeconds(String messageId) {
+    return _pendingChannelSends[messageId]?.delaySeconds;
+  }
+
+  void scheduleContactMessage(
+    Contact contact,
+    String text, {
+    required String inputText,
+    required int delaySeconds,
+    String? originalText,
+    String? translatedLanguageCode,
+    String? translationModelId,
+  }) {
+    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    final resolved = resolvePathSelection(contact);
+    final message = Message.outgoing(
+      contact.publicKey,
+      text,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareContactOutboundText(contact, text),
+      ),
+      pathLength: resolved.useFlood ? -1 : resolved.hopCount,
+      pathBytes: Uint8List.fromList(resolved.pathBytes),
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+    );
+    final pending = _PendingContactSend(
+      contact: contact,
+      message: message,
+      text: text,
+      inputText: inputText,
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      delaySeconds: delaySeconds,
+      sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
+    );
+    pending.timer = Timer(
+      Duration(seconds: delaySeconds),
+      () => _commitPendingContactSend(message.messageId),
+    );
+    _pendingContactSends[message.messageId] = pending;
+    notifyListeners();
+  }
+
+  void scheduleChannelMessage(
+    Channel channel,
+    String text, {
+    required String inputText,
+    required int delaySeconds,
+    String? originalText,
+    String? translatedLanguageCode,
+    String? translationModelId,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
+  }) {
+    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    final message = ChannelMessage.outgoing(
+      text,
+      _selfName ?? 'Me',
+      channel.index,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareChannelOutboundText(channel.index, text),
+      ),
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+    );
+    final pending = _PendingChannelSend(
+      channel: channel,
+      message: message,
+      text: text,
+      inputText: inputText,
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+      delaySeconds: delaySeconds,
+      sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
+    );
+    pending.timer = Timer(
+      Duration(seconds: delaySeconds),
+      () => _commitPendingChannelSend(message.messageId),
+    );
+    _pendingChannelSends[message.messageId] = pending;
+    notifyListeners();
+  }
+
+  String? cancelPendingContactSend(String messageId) {
+    final pending = _pendingContactSends.remove(messageId);
+    if (pending == null) return null;
+    pending.timer?.cancel();
+    notifyListeners();
+    return pending.inputText;
+  }
+
+  String? cancelPendingChannelSend(String messageId) {
+    final pending = _pendingChannelSends.remove(messageId);
+    if (pending == null) return null;
+    pending.timer?.cancel();
+    notifyListeners();
+    return pending.inputText;
+  }
+
+  Future<void> _commitPendingContactSend(String messageId) async {
+    final pending = _pendingContactSends.remove(messageId);
+    if (pending == null) return;
+    notifyListeners();
+    await sendMessage(
+      pending.contact,
+      pending.text,
+      originalText: pending.originalText,
+      translatedLanguageCode: pending.translatedLanguageCode,
+      translationModelId: pending.translationModelId,
+    );
+  }
+
+  Future<void> _commitPendingChannelSend(String messageId) async {
+    final pending = _pendingChannelSends.remove(messageId);
+    if (pending == null) return;
+    notifyListeners();
+    await sendChannelMessage(
+      pending.channel,
+      pending.text,
+      originalText: pending.originalText,
+      translatedLanguageCode: pending.translatedLanguageCode,
+      translationModelId: pending.translationModelId,
+      replyToMessageId: pending.replyToMessageId,
+      replyToSenderName: pending.replyToSenderName,
+      replyToText: pending.replyToText,
+    );
+  }
+
   Future<void> removeContact(Contact contact) async {
     if (!isConnected) return;
 
@@ -4645,6 +4852,17 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
+    if (_contactSendingDelayEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadSendingDelayEnabled(contactKeyHex).then((
+      enabled,
+    ) {
+      if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
+      _contactSendingDelayEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
   void _ensureContactCyr2LatProfileLoaded(String contactKeyHex) {
     if (_contactCyr2LatProfileId.containsKey(contactKeyHex)) return;
     _contactSettingsStore.loadCyr2LatProfileId(contactKeyHex).then((profileId) {
@@ -4659,6 +4877,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSettingsStore.loadCyr2LatEnabled(channelIndex).then((enabled) {
       if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
       _channelCyr2LatEnabled[channelIndex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelSendingDelaySettingLoaded(int channelIndex) {
+    if (_channelSendingDelayEnabled.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadSendingDelayEnabled(channelIndex).then((enabled) {
+      if (_channelSendingDelayEnabled[channelIndex] == enabled) return;
+      _channelSendingDelayEnabled[channelIndex] = enabled;
       notifyListeners();
     });
   }
@@ -6026,6 +6253,12 @@ class MeshCoreConnector extends ChangeNotifier {
     _batteryPollTimer?.cancel();
     _gpsLocationPollTimer?.cancel();
     _radioStatsPollTimer?.cancel();
+    for (final pending in _pendingContactSends.values) {
+      pending.timer?.cancel();
+    }
+    for (final pending in _pendingChannelSends.values) {
+      pending.timer?.cancel();
+    }
     radioStatsNotifier.dispose();
     _receivedFramesController.close();
     _usbManager.dispose();
@@ -6508,6 +6741,62 @@ class _RepeaterAckContext {
     required this.selection,
     required this.pathLength,
     required this.messageBytes,
+  });
+}
+
+class _PendingContactSend {
+  final Contact contact;
+  final Message message;
+  final String text;
+  final String inputText;
+  final String? originalText;
+  final String? translatedLanguageCode;
+  final String? translationModelId;
+  final int delaySeconds;
+  final DateTime sendAt;
+  Timer? timer;
+
+  _PendingContactSend({
+    required this.contact,
+    required this.message,
+    required this.text,
+    required this.inputText,
+    required this.originalText,
+    required this.translatedLanguageCode,
+    required this.translationModelId,
+    required this.delaySeconds,
+    required this.sendAt,
+  });
+}
+
+class _PendingChannelSend {
+  final Channel channel;
+  final ChannelMessage message;
+  final String text;
+  final String inputText;
+  final String? originalText;
+  final String? translatedLanguageCode;
+  final String? translationModelId;
+  final String? replyToMessageId;
+  final String? replyToSenderName;
+  final String? replyToText;
+  final int delaySeconds;
+  final DateTime sendAt;
+  Timer? timer;
+
+  _PendingChannelSend({
+    required this.channel,
+    required this.message,
+    required this.text,
+    required this.inputText,
+    required this.originalText,
+    required this.translatedLanguageCode,
+    required this.translationModelId,
+    required this.replyToMessageId,
+    required this.replyToSenderName,
+    required this.replyToText,
+    required this.delaySeconds,
+    required this.sendAt,
   });
 }
 

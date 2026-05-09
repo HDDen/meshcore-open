@@ -1241,6 +1241,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_mcmpTextLimit => 'MCMP: лимит символов для вставки';
 
   @override
+  String get settings_sendingDelayForCancellation =>
+      'Задержка отправки для её отмены';
+
+  @override
+  String get settings_useSendingDelay => 'Отправлять с задержкой';
+
+  @override
+  String get chat_cancelSend => 'отменить отправку';
+
+  @override
   String get settings_doNotFilterMessagesOnChannels =>
       'Не фильтровать собственные пакеты сообщений на этих каналах';
 

@@ -269,6 +269,15 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setSendingDelayForCancellationSeconds(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        sendingDelayForCancellationSeconds:
+            AppSettings.normalizeSendingDelayForCancellation(value),
+      ),
+    );
+  }
+
   Cyr2LatProfile getSelectedCyr2LatProfile() {
     return _settings.cyr2latProfiles.firstWhere(
       (p) => p.id == _settings.selectedCyr2latProfileId,

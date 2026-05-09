@@ -1220,6 +1220,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_mcmpTextLimit => 'MCMP text paste limit';
 
   @override
+  String get settings_sendingDelayForCancellation =>
+      'Sending delay for cancellation';
+
+  @override
+  String get settings_useSendingDelay => 'Use sending delay';
+
+  @override
+  String get chat_cancelSend => 'cancel sending';
+
+  @override
   String get settings_doNotFilterMessagesOnChannels =>
       'Do not filter selfmessages on channels';
 

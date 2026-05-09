@@ -1254,6 +1254,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector.ensureContactMcmpSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
       connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactSendingDelaySettingLoaded(contact.publicKeyHex);
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
@@ -1261,6 +1262,8 @@ class _ContactsScreenState extends State<ContactsScreen>
         isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled =
         isRoom && connector.isContactCyr2LatEnabled(contact.publicKeyHex);
+    bool sendingDelayEnabled =
+        isRoom && connector.isContactSendingDelayEnabled(contact.publicKeyHex);
     String? selectedCyr2LatProfileId = isRoom
         ? connector.getContactCyr2LatProfileId(contact.publicKeyHex)
         : null;
@@ -1418,6 +1421,19 @@ class _ContactsScreenState extends State<ContactsScreen>
                           mcmpEnabled = false;
                           smazEnabled = false;
                         }
+                      });
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text(context.l10n.settings_useSendingDelay),
+                    value: sendingDelayEnabled,
+                    onChanged: (value) {
+                      connector.setContactSendingDelayEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      setSheetState(() {
+                        sendingDelayEnabled = value;
                       });
                     },
                   ),
