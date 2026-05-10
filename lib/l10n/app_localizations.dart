@@ -2512,6 +2512,12 @@ abstract class AppLocalizations {
   /// **'Retrying message'**
   String get chat_retryingMessage;
 
+  /// No description provided for @chat_retryingMessageWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait 30 seconds before resend'**
+  String get chat_retryingMessageWait;
+
   /// No description provided for @chat_retryCount.
   ///
   /// In en, this message translates to:

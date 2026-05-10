@@ -1375,6 +1375,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_retryingMessage => 'Újrapróbálási üzenet';
 
   @override
+  String get chat_retryingMessageWait => 'Please wait 30 seconds before resend';
+
+  @override
   String chat_retryCount(int current, int max) {
     return 'Újrapróbál $current/$max';
   }

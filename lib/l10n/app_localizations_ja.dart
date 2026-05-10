@@ -1306,6 +1306,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_retryingMessage => '再試行メッセージ';
 
   @override
+  String get chat_retryingMessageWait => 'Please wait 30 seconds before resend';
+
+  @override
   String chat_retryCount(int current, int max) {
     return '$current / $max 回目';
   }

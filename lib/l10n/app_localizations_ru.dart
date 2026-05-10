@@ -1368,6 +1368,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_retryingMessage => 'Повтор отправки сообщения';
 
   @override
+  String get chat_retryingMessageWait =>
+      'Пожалуйста, подождите 30 секунд перед переотправкой';
+
+  @override
   String chat_retryCount(int current, int max) {
     return 'Попытка $current/$max';
   }

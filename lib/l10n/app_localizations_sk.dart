@@ -1357,6 +1357,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_retryingMessage => 'Pokus o obnovenie';
 
   @override
+  String get chat_retryingMessageWait => 'Please wait 30 seconds before resend';
+
+  @override
   String chat_retryCount(int current, int max) {
     return 'Skúsiť $current/$max';
   }

@@ -66,6 +66,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   MeshCoreConnector? _connector;
   DateTime? _lastChannelSendAt;
+  String? _lastChannelSentText;
   bool _channelSkipNextBottomSnap = false;
   String? _unreadDividerMessageId;
 
@@ -1535,6 +1536,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     // end transform
 
+    // store last sended msg to resend mechanism
+    _lastChannelSentText = messageText;
+
     final replyTarget = _replyingToMessage;
     _textController.clear();
     _cancelReply();
@@ -1736,8 +1740,36 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  bool _shouldWaitBeforeResend(ChannelMessage message) {
+    final now = DateTime.now();
+    final messageElapsed = now.difference(message.timestamp);
+    if (!messageElapsed.isNegative &&
+        messageElapsed < const Duration(seconds: 30)) {
+      return true;
+    }
+
+    final lastSentAt = _lastChannelSendAt;
+    if (lastSentAt == null || _lastChannelSentText != message.text) {
+      return false;
+    }
+
+    final lastSendElapsed = now.difference(lastSentAt);
+    return !lastSendElapsed.isNegative &&
+        lastSendElapsed < const Duration(seconds: 30);
+  }
+
   void _resendMessage(ChannelMessage message) {
+    if (_shouldWaitBeforeResend(message)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_retryingMessageWait),
+      );
+      return;
+    }
+
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    _lastChannelSendAt = DateTime.now();
+    _lastChannelSentText = message.text;
     connector.sendChannelMessage(
       widget.channel,
       message.text,

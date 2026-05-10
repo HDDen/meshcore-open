@@ -682,6 +682,7 @@
   "chat_messageCopied": "Message copied",
   "chat_messageDeleted": "Message deleted",
   "chat_retryingMessage": "Retrying message",
+  "chat_retryingMessageWait": "Please wait 30 seconds before resend",
   "chat_retryCount": "Retry {current}/{max}",
   "@chat_retryCount": {
     "placeholders": {

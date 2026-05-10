@@ -1367,6 +1367,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_retryingMessage => 'Tentando novamente';
 
   @override
+  String get chat_retryingMessageWait => 'Please wait 30 seconds before resend';
+
+  @override
   String chat_retryCount(int current, int max) {
     return 'Tentar $current/$max';
   }

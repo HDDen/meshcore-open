@@ -304,6 +304,7 @@
   "chat_messageCopied": "Сообщение скопировано",
   "chat_messageDeleted": "Сообщение удалено",
   "chat_retryingMessage": "Повтор отправки сообщения",
+  "chat_retryingMessageWait": "Пожалуйста, подождите 30 секунд перед переотправкой",
   "chat_retryCount": "Попытка {current}/{max}",
   "chat_sendGif": "Отправить GIF",
   "chat_reply": "Ответить",
