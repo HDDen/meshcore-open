@@ -208,7 +208,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "2026 MeshCore Open (Advanced mod) Source Project",
+  "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "An open-source Flutter client for MeshCore LoRa mesh networking devices.",
   "settings_aboutOpenMeteoAttribution": "LOS elevation data: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Name",

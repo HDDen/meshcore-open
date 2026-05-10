@@ -131,7 +131,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Projekt 2026",
+  "settings_aboutLegalese": "MeshCore Open Source Projekt 2026",
   "settings_aboutDescription": "Ein Open-Source-Flutter-Client für MeshCore LoRa-Meshnetzwerkgeräte.",
   "settings_infoName": "Name",
   "settings_infoId": "ID",

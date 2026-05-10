@@ -131,7 +131,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Projekt 2024",
+  "settings_aboutLegalese": "MeshCore Open Source Projekt 2024",
   "settings_aboutDescription": "Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.",
   "settings_infoName": "Meno",
   "settings_infoId": "Identifikátor",

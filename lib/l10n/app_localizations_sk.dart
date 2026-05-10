@@ -512,8 +512,7 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese =>
-      'MeshCore Open (Advanced mod) Source Projekt 2024';
+  String get settings_aboutLegalese => 'MeshCore Open Source Projekt 2024';
 
   @override
   String get settings_aboutDescription =>

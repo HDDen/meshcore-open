@@ -517,8 +517,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese =>
-      '2026 MeshCore Open (Advanced mod) Source Project';
+  String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
 
   @override
   String get settings_aboutDescription =>

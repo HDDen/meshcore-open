@@ -1045,7 +1045,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_aboutLegalese.
   ///
   /// In en, this message translates to:
-  /// **'2026 MeshCore Open (Advanced mod) Source Project'**
+  /// **'2026 MeshCore Open Source Project'**
   String get settings_aboutLegalese;
 
   /// No description provided for @settings_aboutDescription.

@@ -131,7 +131,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Project 2024",
+  "settings_aboutLegalese": "MeshCore Open Source Project 2024",
   "settings_aboutDescription": "Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.",
   "settings_infoName": "Naam",
   "settings_infoId": "ID",

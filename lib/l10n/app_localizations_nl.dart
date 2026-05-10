@@ -512,8 +512,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese =>
-      'MeshCore Open (Advanced mod) Source Project 2024';
+  String get settings_aboutLegalese => 'MeshCore Open Source Project 2024';
 
   @override
   String get settings_aboutDescription =>

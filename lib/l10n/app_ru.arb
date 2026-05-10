@@ -101,7 +101,7 @@
   "settings_appDebugLogSubtitle": "Сообщения отладки приложения",
   "settings_about": "О программе",
   "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
-  "settings_aboutLegalese": "2026 MeshCore Open (Advanced mod) Source Project",
+  "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "Открытое клиентское приложение на Flutter для устройств MeshCore с LoRa-сетями.",
   "settings_infoName": "Имя",
   "settings_infoId": "ID",
