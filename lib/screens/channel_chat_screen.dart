@@ -1656,6 +1656,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 _copyMessageText(message.text);
               },
             ),
+            if (message.isOutgoing)
+              ListTile(
+                leading: const Icon(Icons.send_outlined),
+                title: Text(context.l10n.common_retry),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _resendMessage(message);
+                },
+              ),
             if (!message.isOutgoing)
               ListTile(
                 leading: const Icon(Icons.mark_chat_unread_outlined),
@@ -1724,6 +1733,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.chat_messageDeleted),
+    );
+  }
+
+  void _resendMessage(ChannelMessage message) {
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    connector.sendChannelMessage(
+      widget.channel,
+      message.text,
+      originalText: message.originalText,
+      translatedLanguageCode: message.translatedLanguageCode,
+      translationModelId: message.translationModelId,
+      replyToMessageId: message.replyToMessageId,
+      replyToSenderName: message.replyToSenderName,
+      replyToText: message.replyToText,
+    );
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_retryingMessage),
     );
   }
 

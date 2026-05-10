@@ -1765,7 +1765,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 await _deleteMessage(message);
               },
             ),
-            if (message.isOutgoing && message.status == MessageStatus.failed)
+            if (message.isOutgoing)
               ListTile(
                 leading: const Icon(Icons.refresh),
                 title: Text(context.l10n.common_retry),
