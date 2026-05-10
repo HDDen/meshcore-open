@@ -496,11 +496,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_debug => 'Hibakeresés';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => 'Párhuzamos hibakeresési napló';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'BLE/TCP/USB parancsok, válaszok és alapvető adatok';
 
   @override
   String get settings_appDebugLog => 'App-debug log';
@@ -1658,10 +1658,10 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Merekje olvashatóként';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Új üzenetek';
 
   @override
   String get chat_openLink => 'Nyisd meg a linket?';
@@ -2264,7 +2264,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Csatorna-használat';
 
   @override
   String get repeater_packetStatistics => 'Csomagok statisztikája';

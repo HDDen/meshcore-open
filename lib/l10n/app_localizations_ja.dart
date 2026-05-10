@@ -470,11 +470,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_debug => 'デバッグ';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => '同伴デバッグログ';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'BLE/TCP/USB 関連のコマンド、応答、および生のデータ';
 
   @override
   String get settings_appDebugLog => 'アプリケーションのデバッグログ';
@@ -1578,10 +1578,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => '未読としてマークする';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => '新しいメッセージ';
 
   @override
   String get chat_openLink => 'リンクを開く？';
@@ -2159,7 +2159,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_rxAirtime => 'RX 空き時間';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'チャンネルの利用状況';
 
   @override
   String get repeater_packetStatistics => 'パケット統計';

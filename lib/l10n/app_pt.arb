@@ -2022,7 +2022,6 @@
   "appSettings_maxMessageRetriesSubtitle": "Número de tentativas de reenvio antes de classificar uma mensagem como falha.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetria atualizado",
-  "settings_multiAck": "Múltiplas respostas de confirmação: {value}",
   "settings_multiAck": "Multi-ACKs",
   "map_showOverlaps": "Sobreposições da Chave Repeater",
   "map_runTraceWithReturnPath": "Retornar ao mesmo caminho.",
@@ -2307,5 +2306,10 @@
   "losBlockedSpotsHint": "Toque em um ponto bloqueado para destacá-lo no mapa.",
   "losSelectedObstructionTitle": "Obstrução selecionada",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "Registro de depuração auxiliar",
+  "settings_companionDebugLogSubtitle": "Comandos, respostas e dados brutos para protocolos BLE/TCP/USB",
+  "chat_markAsUnread": "Marcar como não lido",
+  "chat_newMessages": "Novas mensagens",
+  "repeater_chanUtil": "Utilização do canal"
 }

@@ -2344,5 +2344,10 @@
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
   "losBlockedSpotsHint": "A blokkolt területet megjelölve, hogy a térképen kiemeljük.",
   "losBlockedSpotsTitle": "Foglalhatatlan területek",
-  "losSelectedObstructionDetails": "Elakadt a {obstruction} miatt, {heightUnit} magasságban, {distanceFromA} méterrel A-tól és {distanceFromB} méterrel B-től ({distanceUnit})."
+  "losSelectedObstructionDetails": "Elakadt a {obstruction} miatt, {heightUnit} magasságban, {distanceFromA} méterrel A-tól és {distanceFromB} méterrel B-től ({distanceUnit}).",
+  "chat_markAsUnread": "Merekje olvashatóként",
+  "chat_newMessages": "Új üzenetek",
+  "settings_companionDebugLog": "Párhuzamos hibakeresési napló",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB parancsok, válaszok és alapvető adatok",
+  "repeater_chanUtil": "Csatorna-használat"
 }

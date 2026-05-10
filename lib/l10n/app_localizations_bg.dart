@@ -496,11 +496,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_debug => 'Отстрани';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog =>
+      'Лог за отстраняване на грешки (за съпътстваща програма)';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Команди, отговори и сурови данни за протоколите BLE/TCP/USB';
 
   @override
   String get settings_appDebugLog =>
@@ -1652,10 +1653,10 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Отбелязване като непрочетено';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Нови съобщения';
 
   @override
   String get chat_openLink => 'Отваряне на връзката?';
@@ -2256,7 +2257,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Използване на канала';
 
   @override
   String get repeater_packetStatistics => 'Статистика на пакетите';

@@ -25,7 +25,7 @@ All contacts with known GPS coordinates are plotted:
 | Room | Purple | Meeting room |
 | Sensor | Orange | Sensors |
 
-Node name labels appear automatically at zoom level 12 and above.
+Node name labels appear automatically at zoom level 14 and above.
 
 ### Shared Map Pins (Flag Icons)
 Location pins shared in chat messages are displayed as flags:
@@ -88,10 +88,10 @@ Shows a bottom sheet with:
 - **Set as my location**: Updates your device's advertised location
 
 ### Filter Dialog (FAB)
-Toggle visibility of: chat nodes, repeaters, other nodes, guessed locations, discovery contacts.
+Toggle visibility of: chat nodes, repeaters, other nodes, guessed locations, discovery contacts, overlapping markers (stacked markers at similar coordinates), and shared map pins (flag markers).
 Additional filters:
 - **Key prefix filter**: Show only contacts whose public key starts with a given prefix
-- **Last-seen time slider**: From 1 hour to "all time"
+- **Last-seen time slider**: Exponential scale from near-zero to 6 months, with "all time" at the top end
 
 ### Legend Card (Top-Right)
 Shows node count and pin count. Tappable to expand a legend of all marker types.

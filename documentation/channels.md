@@ -28,7 +28,6 @@ QuickSwitchBar tab 1 (middle) from any main screen.
 - **Scrollable list of channel cards**, each showing:
   - Type icon with color coding (purple badge overlay for community channels)
   - Channel name (or "Channel N" if unnamed)
-  - Subtitle: "Public channel", "Hashtag channel", "Private channel", or "Community channel - {name}"
   - Unread badge (if messages are unread)
   - Drag handle (when manual sort is active)
 - **"+" FAB** to add a new channel
@@ -70,9 +69,9 @@ Tap a channel card to open the channel chat screen.
 
 ### App Bar
 
-- Type icon (public/private/hashtag)
+- Type icon: globe for public channels, tag (#) for all other channel types
 - Channel name
-- Subtitle: "{type} - {N} unread"
+- Subtitle: "{Public|Private} • {N} unread" (e.g., "Public • 3 unread")
 
 ### Message Display
 
@@ -113,16 +112,8 @@ Tap a channel card to open the channel chat screen.
 | Path | Desktop only | Opens message path view |
 | Add Reaction | Incoming messages only | Opens emoji picker (cannot react to your own messages) |
 | Copy | All messages | Copies text to clipboard |
+| Mark as Unread | Incoming messages only | Marks this message and all subsequent incoming messages as unread |
 | Delete | All messages | Removes locally (not from mesh) |
-
-### Message Path Viewing
-
-Tap a message bubble to open the Channel Message Path Screen, which shows:
-- Each hop in the path as a visual chain
-- Known contacts identified by name at each hop
-- Observed vs. declared hop counts
-- Alternative path variants (if received via multiple paths)
-- Map view buttons for geographic path visualization
 
 ## Communities
 

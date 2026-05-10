@@ -495,11 +495,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_debug => 'Отладка';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog =>
+      'Журнал отладки (для сопутствующего приложения)';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Команды, ответы и необработанные данные, используемые для протоколов BLE, TCP и USB.';
 
   @override
   String get settings_appDebugLog => 'Журнал отладки приложения';
@@ -2254,7 +2255,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get repeater_rxAirtime => 'Время эфира (приём)';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Использование канала';
 
   @override
   String get repeater_packetStatistics => 'Статистика пакетов';

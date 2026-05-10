@@ -37,6 +37,7 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 ### Input Bar
 
 - **GIF button** (left): Opens GIF picker bottom sheet
+- **Translation button** (optional, between GIF and text field): Shown only when translation is enabled in App Settings. Tap to configure outgoing-message translation language and on/off toggle.
 - **Text field** (center): Auto-capitalization, enforces UTF-8 byte limit in real-time
 - **Send button** (right): Submits the message
 - On desktop: Enter/Numpad Enter also submits
@@ -66,8 +67,8 @@ Outgoing messages display a status indicator:
 
 When enabled in App Settings, additional metadata appears inside each bubble:
 - Timestamp (HH:MM)
-- Retry count (e.g., "Retry 2 of 4")
-- Status icon
+- Retry count (e.g., "Retry 2 of 4") — only shown for outgoing messages where at least one retry has occurred
+- Status icon (outgoing only)
 - Round-trip time in seconds (if delivered)
 
 ## Message Length Limits
@@ -86,7 +87,7 @@ When a direct message is sent:
 
 1. The app computes an expected ACK hash: `SHA256([timestamp][attempt][text][selfPubKey])[0:4]` — matching the firmware's hash calculation. If SMAZ compression is enabled, the compressed text (not the original) is hashed
 2. On device acknowledgment (`RESP_CODE_SENT`), the message transitions to "sent" and a timeout timer starts
-3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise `3000 + 3000 × path_length` milliseconds (15000ms for flood)
+3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate)
 4. On timeout, the message is retried with **exponential backoff**: `1000 × 2^retryCount` ms (1s, 2s, 4s, 8s, 16s...)
 5. **Max retries**: Configurable (default 5, range 2–10)
 6. After max retries, the message is marked "failed" — but a **30-second grace window** remains during which a late ACK can still resolve the message to "delivered"
@@ -115,6 +116,7 @@ Add emoji reactions to incoming messages (not your own):
 | Add reaction | Incoming messages only | Opens emoji picker |
 | View path | Mobile: tap bubble directly; Desktop: long-press/right-click menu | Shows message routing path |
 | Copy | All messages | Copies text to clipboard |
+| Mark as Unread | Incoming messages only | Marks this message and all subsequent incoming messages as unread |
 | Delete | All messages | Removes locally (not from mesh) |
 | Retry | Failed outgoing messages | Re-sends the message |
 | Open chat with sender | Room server chats | Opens 1:1 chat with the message sender |

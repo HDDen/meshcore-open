@@ -2334,5 +2334,10 @@
   "losSelectedObstructionTitle": "Ausgewählte Behinderung",
   "losBlockedSpotChip": "{distance} • {distanceUnit} • {obstruction} {heightUnit}",
   "losBlockedSpotsHint": "Klicken Sie auf einen blockierten Bereich, um ihn auf der Karte hervorzuheben.",
-  "losSelectedObstructionDetails": "Blockiert durch {obstruction} in einer Höhe von {heightUnit}, {distanceFromA} von A und {distanceFromB} von B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blockiert durch {obstruction} in einer Höhe von {heightUnit}, {distanceFromA} von A und {distanceFromB} von B ({distanceUnit}).",
+  "chat_markAsUnread": "Als nicht gelesen markieren",
+  "chat_newMessages": "Neue Nachrichten",
+  "settings_companionDebugLog": "Debug-Protokoll für die Begleitsoftware",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB-Befehle, Antworten und Rohdaten",
+  "repeater_chanUtil": "Nutzung des Kanals"
 }

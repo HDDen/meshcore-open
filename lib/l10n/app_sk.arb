@@ -2306,5 +2306,10 @@
   "losBlockedSpotsHint": "Kliknite na zablokované miesto, aby ste ho zvýraznili na mape.",
   "losSelectedObstructionTitle": "Vybraná prekážka",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "Označenie ako neprečítané",
+  "settings_companionDebugLogSubtitle": "Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB",
+  "settings_companionDebugLog": "Logovanie pre ladenie (sprievodný log)",
+  "chat_newMessages": "Nové správy",
+  "repeater_chanUtil": "Využitie kanálu"
 }

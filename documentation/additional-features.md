@@ -25,8 +25,8 @@ A bottom sheet with a search field and a grid of GIF thumbnails.
 ### How to Access
 App Settings → Appearance → Language
 
-### Supported Languages (15)
-English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian
+### Supported Languages (18)
+English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian, Hungarian, Japanese, Korean
 
 ### How It Works
 - All UI strings go through Flutter's ARB localization system
@@ -185,3 +185,77 @@ An ML-based service that predicts expected delivery timeouts:
 - Blends per-contact statistics with ML predictions
 - Falls back to `3000 + 3000 × pathLength` ms when insufficient data
 - Observations are persisted to storage via a 2-second debounced timer (observations within 2s of app termination may be lost)
+
+---
+
+## On-Device Message Translation
+
+### What It Is
+An optional on-device translation service powered by an embedded LLM (llamadart, running GGUF models). Translation runs entirely on-device — no data leaves the app.
+
+### How to Access
+Tap the translate button on any received message. On first use, the GGUF model file is downloaded and cached locally.
+
+### How It Works
+- Model files are managed by `TranslationFileStore`; download progress is shown in-place
+- Translation runs via `TranslationService` using the llamadart CPU backend (arm64 and x64 on Android)
+- Translated text is shown in `TranslatedMessageContent` as an inline overlay on the original message bubble
+- Each translation is cached; re-tapping shows the cached result without re-running inference
+
+---
+
+## Emoji Reactions
+
+### How to Access
+Long-press a message bubble in any direct or channel chat, then select a reaction emoji.
+
+### What the User Sees
+An emoji picker inline with common reactions. Selected reactions appear below the message bubble with a count.
+
+### How It Works
+- Implemented via `emoji_picker.dart` and `reaction_helper.dart`
+- Reactions are transmitted as a special message type visible to all participants with MeshCore Open
+
+---
+
+## Linkification
+
+### What It Does
+URLs and `meshcore://` URIs in received messages are automatically detected and rendered as tappable links.
+
+### How It Works
+- Powered by the `flutter_linkify` package via `link_handler.dart`
+- Tapping a URL opens the system browser; tapping a `meshcore://` URI imports the contact
+
+---
+
+## GPX Export
+
+### How to Access
+Settings → Export section (three options: Export Repeaters, Export Contacts, Export All).
+
+### What It Does
+Exports contacts with GPS coordinates to a `.gpx` file via the OS share sheet. Not available on web.
+
+---
+
+## Pinch-to-Zoom Chat Text
+
+### What It Does
+Users can pinch to scale all chat text up or down within a session.
+
+### How It Works
+- Implemented via `ChatTextScaleService` and `ChatZoomWrapper`
+- Scale range: 0.8× to 1.8×
+- The chosen scale persists across the session via the service
+
+---
+
+## Background Service (Android)
+
+### What It Does
+On Android, a foreground service (`background_service.dart`) keeps the BLE connection and message handling alive when the app is in the background. On other platforms this is a no-op.
+
+### User Impact
+- A persistent notification appears while the service is running
+- Messages are received and retry logic continues even when the app is not in the foreground

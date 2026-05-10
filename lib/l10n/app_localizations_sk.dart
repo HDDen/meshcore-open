@@ -490,11 +490,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_debug => 'Ladenie';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog =>
+      'Logovanie pre ladenie (sprievodný log)';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB';
 
   @override
   String get settings_appDebugLog => 'Záznam ladenia aplikácie';
@@ -1639,10 +1640,10 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Označenie ako neprečítané';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Nové správy';
 
   @override
   String get chat_openLink => 'Otvoriť odkaz?';
@@ -2239,7 +2240,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Využitie kanálu';
 
   @override
   String get repeater_packetStatistics => 'Statistiky balíka';

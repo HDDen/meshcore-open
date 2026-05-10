@@ -2022,7 +2022,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Numero di tentativi di riprova prima di considerare un messaggio come fallito.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modalità telemetria aggiornata",
-  "settings_multiAck": "ACK multipli: {value}",
+  "settings_multiAck": "ACK multipli",
   "map_showOverlaps": "Sovrapposizioni della chiave ripetitore",
   "map_runTraceWithReturnPath": "Tornare indietro sullo stesso percorso",
   "@radioStats_noiseFloor": {
@@ -2266,7 +2266,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "ACK multipli",
   "map_sharedAt": "Condiviso",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2307,5 +2306,10 @@
   "losBlockedSpotsHint": "Tocca un punto bloccato sulla mappa per evidenziarlo.",
   "losBlockedSpotsTitle": "Posti occupati",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLogSubtitle": "Comandi, risposte e dati grezzi per protocolli BLE/TCP/USB",
+  "settings_companionDebugLog": "Registro di debug per il supporto",
+  "chat_newMessages": "Nuovi messaggi",
+  "chat_markAsUnread": "Segna come non letto",
+  "repeater_chanUtil": "Utilizzo del canale"
 }

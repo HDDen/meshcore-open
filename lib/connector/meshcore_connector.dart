@@ -4079,6 +4079,14 @@ class MeshCoreConnector extends ChangeNotifier {
       _usbManager.updateConnectedLabel(selfName);
     }
 
+    // GPS poll responses arrive as RESP_CODE_SELF_INFO but are not the real
+    // handshake — only update location and notify, skip store reloads and
+    // contact sync which would clear and re-fetch contacts every minute.
+    if (!wasAwaitingSelfInfo) {
+      notifyListeners();
+      return;
+    }
+
     //set all the stores' public key so they can load the correct data
     _channelMessageStore.setPublicKeyHex = selfPublicKeyHex;
     _messageStore.setPublicKeyHex = selfPublicKeyHex;
@@ -4104,12 +4112,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     notifyListeners();
-
-    if (PlatformInfo.isWeb &&
-        _activeTransport == MeshCoreTransportType.bluetooth &&
-        !wasAwaitingSelfInfo) {
-      return;
-    }
 
     // Auto-fetch contacts after getting self info. On web BLE, defer this
     // until after channel 0 so startup writes stay serialized.

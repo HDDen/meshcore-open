@@ -2344,5 +2344,10 @@
   "losBlockedSpotsTitle": "Zablokowane miejsca",
   "losBlockedSpotsHint": "Kliknij zablokowane miejsce, aby je zaznaczyć na mapie.",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_newMessages": "Nowe wiadomości",
+  "settings_companionDebugLogSubtitle": "Polecenia, odpowiedzi i surowe dane związane z protokołami BLE/TCP/USB",
+  "chat_markAsUnread": "Oznacz jako nieprzeczytane",
+  "settings_companionDebugLog": "Log debugowania (dla pomocy w rozwiązywaniu problemów)",
+  "repeater_chanUtil": "Wykorzystanie kanału"
 }

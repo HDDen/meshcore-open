@@ -2344,5 +2344,10 @@
   "losSelectedObstructionTitle": "選択された障害",
   "losBlockedSpotsTitle": "利用できない場所",
   "losSelectedObstructionDetails": "{obstruction} によって {heightUnit} の高さで、A地点から {distanceFromA}、B地点から {distanceFromB} ({distanceUnit}) の距離で塞がれています。",
-  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}"
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB 関連のコマンド、応答、および生のデータ",
+  "settings_companionDebugLog": "同伴デバッグログ",
+  "chat_newMessages": "新しいメッセージ",
+  "chat_markAsUnread": "未読としてマークする",
+  "repeater_chanUtil": "チャンネルの利用状況"
 }

@@ -2022,7 +2022,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Aantal pogingen om een bericht opnieuw te versturen voordat het als mislukt wordt gemarkeerd",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetrie-modus bijgewerkt",
-  "settings_multiAck": "Meerdere bevestigingen: {value}",
+  "settings_multiAck": "Meerdere bevestigingen",
   "map_showOverlaps": "Herhalingssleutel overlapt",
   "map_runTraceWithReturnPath": "Terugkeren op hetzelfde pad.",
   "@radioStats_noiseFloor": {
@@ -2266,7 +2266,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Meerdere bevestigingen",
   "map_sharedAt": "Gedeeld",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2307,5 +2306,10 @@
   "losBlockedSpotsHint": "Tik op een geblokkeerd gebied om het op de kaart te markeren.",
   "losBlockedSpotsTitle": "Geplande plaatsen",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "Debuglog voor aanvullende informatie",
+  "chat_newMessages": "Nieuwe berichten",
+  "chat_markAsUnread": "Markeer als ongelezen",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB commando's, antwoorden en ruwe data",
+  "repeater_chanUtil": "Gebruik van het kanaal"
 }

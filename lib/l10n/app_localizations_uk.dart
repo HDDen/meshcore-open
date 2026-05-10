@@ -492,11 +492,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_debug => 'Налагодження';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog =>
+      'Журнал відлачування (для супутника)';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Команди, відповіді та необроблена інформація для протоколів BLE/TCP/USB';
 
   @override
   String get settings_appDebugLog => 'Журнал налагодження застосунку';
@@ -1647,10 +1648,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Позначити як непрочитане';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Нові повідомлення';
 
   @override
   String get chat_openLink => 'Відкрити посилання?';
@@ -2249,7 +2250,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get repeater_rxAirtime => 'Ефірний час RX';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Використання каналу';
 
   @override
   String get repeater_packetStatistics => 'Статистика пакетів';

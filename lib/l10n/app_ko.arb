@@ -2344,5 +2344,10 @@
   "losBlockedSpotsTitle": "차단된 공간",
   "losSelectedObstructionTitle": "선택된 장애물",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "동반 디버깅 로그",
+  "chat_newMessages": "새로운 메시지",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB 명령어, 응답 및 원시 데이터",
+  "chat_markAsUnread": "미리 읽지 않음으로 표시",
+  "repeater_chanUtil": "채널 활용도"
 }

@@ -51,7 +51,7 @@ Note: The weak (-80 to -90 dBm) and poor (< -90 dBm) tiers share the same icon s
 
 ### How Scanning Works
 
-- Filters for devices with names starting with `MeshCore-` or `Whisper-`
+- Filters for devices with names starting with one of the known prefixes: `MeshCore-`, `Whisper-`, `WisCore-`, `Seeed`, `Lilygo`, `HT-`, `LowMesh_MC_`
 - Uses low-latency scan mode on Android
 - Scans for 10 seconds then auto-stops
 - On iOS/macOS, waits for BLE adapter initialization before starting
@@ -61,7 +61,7 @@ Note: The weak (-80 to -90 dBm) and poor (< -90 dBm) tiers share the same icon s
 
 Tap a device tile or its Connect button:
 1. The connector stops scanning and transitions to "connecting"
-2. Connects to the device with a 15-second timeout
+2. Connects to the device with a 15-second timeout (6 seconds on Linux)
 3. Requests MTU 185 bytes for optimal throughput
 4. Discovers BLE services and locates the Nordic UART Service
 5. Subscribes to TX notifications for receiving data

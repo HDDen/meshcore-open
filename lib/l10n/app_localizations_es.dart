@@ -494,11 +494,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_debug => 'Depurar';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => 'Registro de depuración asociado';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Comandos, respuestas y datos brutos para protocolos BLE/TCP/USB';
 
   @override
   String get settings_appDebugLog => 'Registro de Depuración de la App';
@@ -1648,10 +1648,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Marcar como no leído';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Nuevos mensajes';
 
   @override
   String get chat_openLink => '¿Abrir enlace?';
@@ -2248,7 +2248,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Utilización del canal';
 
   @override
   String get repeater_packetStatistics => 'Estadísticas del Paquete';

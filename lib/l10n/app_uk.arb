@@ -2286,5 +2286,10 @@
   "losBlockedSpotsTitle": "Заблоковані місця",
   "losSelectedObstructionTitle": "Вибраний об'єкт перешкоди",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "Журнал відлачування (для супутника)",
+  "settings_companionDebugLogSubtitle": "Команди, відповіді та необроблена інформація для протоколів BLE/TCP/USB",
+  "chat_newMessages": "Нові повідомлення",
+  "chat_markAsUnread": "Позначити як непрочитане",
+  "repeater_chanUtil": "Використання каналу"
 }

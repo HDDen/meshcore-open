@@ -463,11 +463,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_debug => '调试';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => '调试日志';
 
   @override
-  String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+  String get settings_companionDebugLogSubtitle => 'BLE/TCP/USB 协议、响应和原始数据';
 
   @override
   String get settings_appDebugLog => '应用调试日志';
@@ -1546,10 +1545,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => '标记为未读';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => '新的消息';
 
   @override
   String get chat_openLink => '打开链接？';
@@ -2116,7 +2115,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_rxAirtime => '接收空中时间';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => '频道利用率';
 
   @override
   String get repeater_packetStatistics => '数据包统计';

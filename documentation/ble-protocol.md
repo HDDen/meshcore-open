@@ -33,7 +33,6 @@ RX (device → host):  [0x3E][len_lo][len_hi][payload...]
 - Length: 2-byte little-endian, payload only
 - Max payload: 172 bytes
 - TCP: `tcpNoDelay: true` (Nagle disabled), writes serialized to prevent interleaving
-- USB: 10ms post-write delay between frames
 
 ## Connection State Machine
 
@@ -53,9 +52,11 @@ enum MeshCoreConnectionState {
     - `MeshCore-`
     - `Whisper-`
     - `WisCore-`
+    - `Seeed`
+    - `Lilygo`
     - `HT-`
     - `LowMesh_MC_`
-2. **Connect** with 15-second timeout
+2. **Connect** with 15-second timeout (6 seconds on Linux)
 3. **Request MTU** 185 bytes (non-web only)
 4. **Discover services** and locate NUS
 5. **Enable TX notifications** (up to 3 attempts on native)
@@ -79,7 +80,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | Max path size | 64 bytes | Maximum path data |
 | Max name size | 32 bytes | Maximum node name |
 | Max text payload | 160 bytes | Firmware `MAX_TEXT_LEN` |
-| App protocol version | 3 | Sent in device query |
+| App protocol version | 4 | Sent in device query |
 | Contact frame size | 148 bytes | Fixed-size contact record |
 
 ## Command Codes (App → Device)

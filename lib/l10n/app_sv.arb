@@ -2022,7 +2022,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Antal försök att skicka om ett meddelande innan det markeras som misslyckat.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetri-läge uppdaterat",
-  "settings_multiAck": "Flera ACK-meddelanden: {value}",
+  "settings_multiAck": "Flera bekräftelser",
   "map_showOverlaps": "Repeater-nyckelöverlappningar",
   "map_runTraceWithReturnPath": "Gå tillbaka på samma väg",
   "@radioStats_noiseFloor": {
@@ -2266,7 +2266,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Flera bekräftelser",
   "map_sharedAt": "Delad",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2307,5 +2306,10 @@
   "losBlockedSpotsTitle": "Reserverade platser",
   "losSelectedObstructionTitle": "Vald hinder",
   "losBlockedSpotsHint": "Klicka på en markerad plats för att framhäva den på kartan.",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "Markera som oläst",
+  "settings_companionDebugLog": "Följande felsökningslogg",
+  "chat_newMessages": "Nya meddelanden",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB-kommandon, svar och rådata",
+  "repeater_chanUtil": "Användning av kanal"
 }

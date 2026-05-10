@@ -74,6 +74,14 @@ set_target_properties(${BINARY_NAME}
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# Work around tinycthread/glibc 2.43+ conflict: glibc 2.43 (with Clang 21's
+# C23 default) exports once_flag from stdlib.h bt tinycthread in flserial
+# defines once_flag as a preprocessor macro, causing a typedef clash.
+# __STDC_NO_THREADS__ suppresses the C23 once_flag declaration in glibc stdlib.h.
+if(TARGET flserial)
+  target_compile_definitions(flserial PRIVATE __STDC_NO_THREADS__)
+endif()
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build

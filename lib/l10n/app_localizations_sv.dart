@@ -485,11 +485,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_debug => 'Felsök';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => 'Följande felsökningslogg';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'BLE/TCP/USB-kommandon, svar och rådata';
 
   @override
   String get settings_appDebugLog => 'Appfelsökning';
@@ -1627,10 +1627,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Markera som oläst';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Nya meddelanden';
 
   @override
   String get chat_openLink => 'Öppna länk?';
@@ -2224,7 +2224,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Användning av kanal';
 
   @override
   String get repeater_packetStatistics => 'Paketstatistik';

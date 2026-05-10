@@ -470,11 +470,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_debug => '디버깅';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => '동반 디버깅 로그';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'BLE/TCP/USB 명령어, 응답 및 원시 데이터';
 
   @override
   String get settings_appDebugLog => '앱 디버깅 로그';
@@ -1574,10 +1574,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => '미리 읽지 않음으로 표시';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => '새로운 메시지';
 
   @override
   String get chat_openLink => '링크를 열기?';
@@ -2156,7 +2156,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_rxAirtime => 'RX 에어타임';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => '채널 활용도';
 
   @override
   String get repeater_packetStatistics => '패킷 통계';

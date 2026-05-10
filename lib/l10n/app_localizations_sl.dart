@@ -488,11 +488,11 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_debug => 'Odpravljanje napak';
 
   @override
-  String get settings_companionDebugLog => 'Companion Debug Log';
+  String get settings_companionDebugLog => 'Log zapis za odpravljanje napak';
 
   @override
   String get settings_companionDebugLogSubtitle =>
-      'BLE/TCP/USB commands, responses, and raw data';
+      'Navodila, odgovori in surova podatka za BLE/TCP/USB.';
 
   @override
   String get settings_appDebugLog => 'Logi aplikacije';
@@ -1633,10 +1633,10 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Označiti kot neneobdelano';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Nove novice';
 
   @override
   String get chat_openLink => 'Odpreti povezavo?';
@@ -2235,7 +2235,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
-  String get repeater_chanUtil => 'Channel Utilization';
+  String get repeater_chanUtil => 'Uporaba kanala';
 
   @override
   String get repeater_packetStatistics => 'Statistika paketa';

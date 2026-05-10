@@ -2311,5 +2311,10 @@
   "losBlockedSpotsHint": "点击地图上的某个被遮盖的区域，以突出显示该区域。",
   "losSelectedObstructionTitle": "选择性阻碍",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "标记为未读",
+  "settings_companionDebugLog": "调试日志",
+  "chat_newMessages": "新的消息",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB 协议、响应和原始数据",
+  "repeater_chanUtil": "频道利用率"
 }

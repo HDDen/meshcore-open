@@ -2050,7 +2050,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Número de intentos de reintento antes de marcar un mensaje como fallido.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetría actualizado",
-  "settings_multiAck": "Múltiples respuestas de confirmación: {value}",
+  "settings_multiAck": "Múltiples respuestas de confirmación",
   "map_showOverlaps": "Superposiciones de tecla repetidora",
   "map_runTraceWithReturnPath": "Volver atrás por el mismo camino.",
   "@radioStats_noiseFloor": {
@@ -2294,7 +2294,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Múltiples respuestas de confirmación",
   "map_sharedAt": "Compartido",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2335,5 +2334,10 @@
   "losBlockedSpotsHint": "Seleccione un punto bloqueado para resaltarlo en el mapa.",
   "losSelectedObstructionTitle": "Obstrucción seleccionada",
   "losSelectedObstructionDetails": "Bloqueado por {obstruction} a una altura de {heightUnit}, a {distanceFromA} metros de A y a {distanceFromB} metros de B ({distanceUnit}).",
-  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}"
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "settings_companionDebugLog": "Registro de depuración asociado",
+  "chat_newMessages": "Nuevos mensajes",
+  "settings_companionDebugLogSubtitle": "Comandos, respuestas y datos brutos para protocolos BLE/TCP/USB",
+  "chat_markAsUnread": "Marcar como no leído",
+  "repeater_chanUtil": "Utilización del canal"
 }

@@ -2306,5 +2306,10 @@
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
   "losBlockedSpotsHint": "Кликнете върху блокираната точка, за да я отбележите на картата.",
   "losBlockedSpotsTitle": "Ограничени места",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "Отбелязване като непрочетено",
+  "settings_companionDebugLogSubtitle": "Команди, отговори и сурови данни за протоколите BLE/TCP/USB",
+  "chat_newMessages": "Нови съобщения",
+  "settings_companionDebugLog": "Лог за отстраняване на грешки (за съпътстваща програма)",
+  "repeater_chanUtil": "Използване на канала"
 }

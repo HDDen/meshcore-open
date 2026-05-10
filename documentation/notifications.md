@@ -73,7 +73,7 @@ There is no per-contact muting.
 
 The notification system prevents notification storms:
 - **Minimum interval**: 3 seconds between individual notifications
-- **Batch window**: If multiple notifications arrive within 5 seconds, they are combined into a single summary notification on a fourth Android channel (`batch_summary`): "MeshCore Activity — 2 messages, 1 channel message, 3 new nodes". Note: batch summaries are Android-only; on Apple platforms individual notifications are shown
+- **Batch window**: If multiple notifications arrive within 5 seconds, they are combined into a single summary notification on a fourth Android channel (`batch_summary`). The title is "MeshCore Activity" and the body lists the grouped counts (e.g., "2 messages, 1 channel message, 3 new nodes"). Batch summaries are Android-only; queued notifications that overflow the batch window are silently dropped on other platforms
 
 ## Notification Clearing
 

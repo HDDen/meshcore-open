@@ -2306,5 +2306,10 @@
   "losSelectedObstructionTitle": "Izbrano ovire",
   "losBlockedSpotsTitle": "Zasedena parkirišča",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "Log zapis za odpravljanje napak",
+  "chat_markAsUnread": "Označiti kot neneobdelano",
+  "chat_newMessages": "Nove novice",
+  "settings_companionDebugLogSubtitle": "Navodila, odgovori in surova podatka za BLE/TCP/USB.",
+  "repeater_chanUtil": "Uporaba kanala"
 }
