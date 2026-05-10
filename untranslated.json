@@ -1,1 +1,209 @@
-{}
+{
+  "bg": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "de": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "es": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "fr": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "hu": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "it": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "ja": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "ko": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "nl": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "pl": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "pt": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "sk": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "sl": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "sv": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "uk": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ],
+
+  "zh": [
+    "appSettings_showKeyboardHidingButton",
+    "settings_mcmpTextLimit",
+    "settings_sendingDelayForCancellation",
+    "settings_useSendingDelay",
+    "chat_cancelSend",
+    "settings_doNotFilterMessagesOnChannels",
+    "settings_doNotFilterMessagesOnChannelsSubtitle",
+    "chat_retryingMessageWait",
+    "channels_mcmpCompression",
+    "channels_mcmpCompressionDescription"
+  ]
+}
