@@ -193,6 +193,7 @@ Devices are discovered by scanning for BLE advertisements with known MeshCore de
     - `WisCore-`
     - `HT-`
     - `LowMesh_MC_`
+    - `NRF52`
 
 New device prefixes can be added in `lib/connector/meshcore_uuids.dart`.
 
