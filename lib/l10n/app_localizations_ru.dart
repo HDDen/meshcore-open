@@ -596,6 +596,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get settings_channelResendTimeoutTitle =>
+      'Задержка для ручной переотправки';
+
+  @override
+  String get settings_channelResendTimeoutSubtitle =>
+      'Также влияет на внутренний механизм устранения отрисовки дублей исходящих сообщений';
+
+  @override
   String get appSettings_title => 'Настройки приложения';
 
   @override
@@ -1368,8 +1376,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_retryingMessage => 'Повтор отправки сообщения';
 
   @override
-  String get chat_retryingMessageWait =>
-      'Пожалуйста, подождите 30 секунд перед переотправкой';
+  String chat_retryingMessageWait(Object seconds) {
+    return 'Пожалуйста, подождите ещё $seconds сек. перед переотправкой';
+  }
 
   @override
   String chat_retryCount(int current, int max) {

@@ -1740,29 +1740,44 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  bool _shouldWaitBeforeResend(ChannelMessage message) {
+  int? _remainingResendWaitSeconds(ChannelMessage message) {
+    final resendTimeoutSeconds = context
+        .read<AppSettingsService>()
+        .settings
+        .channelResendTimeoutSeconds;
+    final resendTimeout = Duration(seconds: resendTimeoutSeconds);
     final now = DateTime.now();
+    var maxRemainingMs = 0;
+
     final messageElapsed = now.difference(message.timestamp);
-    if (!messageElapsed.isNegative &&
-        messageElapsed < const Duration(seconds: 30)) {
-      return true;
+    if (!messageElapsed.isNegative && messageElapsed < resendTimeout) {
+      maxRemainingMs = math.max(
+        maxRemainingMs,
+        resendTimeout.inMilliseconds - messageElapsed.inMilliseconds,
+      );
     }
 
     final lastSentAt = _lastChannelSendAt;
-    if (lastSentAt == null || _lastChannelSentText != message.text) {
-      return false;
+    if (lastSentAt != null && _lastChannelSentText == message.text) {
+      final lastSendElapsed = now.difference(lastSentAt);
+      if (!lastSendElapsed.isNegative && lastSendElapsed < resendTimeout) {
+        maxRemainingMs = math.max(
+          maxRemainingMs,
+          resendTimeout.inMilliseconds - lastSendElapsed.inMilliseconds,
+        );
+      }
     }
 
-    final lastSendElapsed = now.difference(lastSentAt);
-    return !lastSendElapsed.isNegative &&
-        lastSendElapsed < const Duration(seconds: 30);
+    if (maxRemainingMs <= 0) return null;
+    return ((maxRemainingMs + 999) ~/ 1000).clamp(1, resendTimeoutSeconds);
   }
 
   void _resendMessage(ChannelMessage message) {
-    if (_shouldWaitBeforeResend(message)) {
+    final remainingSeconds = _remainingResendWaitSeconds(message);
+    if (remainingSeconds != null) {
       showDismissibleSnackBar(
         context,
-        content: Text(context.l10n.chat_retryingMessageWait),
+        content: Text(context.l10n.chat_retryingMessageWait(remainingSeconds)),
       );
       return;
     }

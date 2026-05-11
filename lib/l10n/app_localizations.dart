@@ -1186,6 +1186,18 @@ abstract class AppLocalizations {
   /// **'Error: {message}'**
   String settings_error(String message);
 
+  /// No description provided for @settings_channelResendTimeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual resending delay'**
+  String get settings_channelResendTimeoutTitle;
+
+  /// No description provided for @settings_channelResendTimeoutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages'**
+  String get settings_channelResendTimeoutSubtitle;
+
   /// No description provided for @appSettings_title.
   ///
   /// In en, this message translates to:
@@ -2515,8 +2527,8 @@ abstract class AppLocalizations {
   /// No description provided for @chat_retryingMessageWait.
   ///
   /// In en, this message translates to:
-  /// **'Please wait 30 seconds before resend'**
-  String get chat_retryingMessageWait;
+  /// **'Please wait {seconds} seconds before resend'**
+  String chat_retryingMessageWait(Object seconds);
 
   /// No description provided for @chat_retryCount.
   ///

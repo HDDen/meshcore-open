@@ -596,6 +596,13 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+
+  @override
+  String get settings_channelResendTimeoutSubtitle =>
+      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+
+  @override
   String get appSettings_title => 'Configurações do App';
 
   @override
@@ -1367,7 +1374,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_retryingMessage => 'Tentando novamente';
 
   @override
-  String get chat_retryingMessageWait => 'Please wait 30 seconds before resend';
+  String chat_retryingMessageWait(Object seconds) {
+    return 'Please wait $seconds seconds before resend';
+  }
 
   @override
   String chat_retryCount(int current, int max) {

@@ -160,6 +160,15 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(maxMessageRetries: value));
   }
 
+  Future<void> setChannelResendTimeoutSeconds(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        channelResendTimeoutSeconds:
+            AppSettings.normalizeChannelResendTimeoutSeconds(value),
+      ),
+    );
+  }
+
   Future<void> setThemeMode(String value) async {
     await updateSettings(_settings.copyWith(themeMode: value));
   }

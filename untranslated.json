@@ -1,5 +1,7 @@
 {
   "bg": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -13,6 +15,8 @@
   ],
 
   "de": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -26,6 +30,8 @@
   ],
 
   "es": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -39,6 +45,8 @@
   ],
 
   "fr": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -52,6 +60,8 @@
   ],
 
   "hu": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -65,6 +75,8 @@
   ],
 
   "it": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -78,6 +90,8 @@
   ],
 
   "ja": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -91,6 +105,8 @@
   ],
 
   "ko": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -104,6 +120,8 @@
   ],
 
   "nl": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -117,6 +135,8 @@
   ],
 
   "pl": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -130,6 +150,8 @@
   ],
 
   "pt": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -143,6 +165,8 @@
   ],
 
   "sk": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -156,6 +180,8 @@
   ],
 
   "sl": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -169,6 +195,8 @@
   ],
 
   "sv": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -182,6 +210,8 @@
   ],
 
   "uk": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",
@@ -195,6 +225,8 @@
   ],
 
   "zh": [
+    "settings_channelResendTimeoutTitle",
+    "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
     "settings_mcmpTextLimit",
     "settings_sendingDelayForCancellation",

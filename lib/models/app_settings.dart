@@ -78,6 +78,7 @@ class AppSettings {
   final double routeWeightSuccessIncrement;
   final double routeWeightFailureDecrement;
   final int maxMessageRetries;
+  final int channelResendTimeoutSeconds;
   final String themeMode;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
@@ -101,6 +102,9 @@ class AppSettings {
   final String selectedCyr2latProfileId;
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
+  static const int minChannelResendTimeoutSeconds = 10;
+  static const int defaultChannelResendTimeoutSeconds = 30;
+  static const int maxChannelResendTimeoutSeconds = 30;
   final int sendingDelayForCancellationSeconds;
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
@@ -129,6 +133,20 @@ class AppSettings {
     }
     return (parsed ?? 0)
         .clamp(0, maxSendingDelayForCancellationSeconds)
+        .toInt();
+  }
+
+  static int normalizeChannelResendTimeoutSeconds(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    return (parsed ?? defaultChannelResendTimeoutSeconds)
+        .clamp(minChannelResendTimeoutSeconds, maxChannelResendTimeoutSeconds)
         .toInt();
   }
 
@@ -166,6 +184,7 @@ class AppSettings {
     this.routeWeightSuccessIncrement = 0.5,
     this.routeWeightFailureDecrement = 0.2,
     this.maxMessageRetries = 5,
+    int? channelResendTimeoutSeconds,
     this.themeMode = 'system',
     this.languageOverride,
     this.appDebugLogEnabled = false,
@@ -192,6 +211,9 @@ class AppSettings {
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
        translationDownloadedModels = translationDownloadedModels ?? const [],
+       channelResendTimeoutSeconds = normalizeChannelResendTimeoutSeconds(
+         channelResendTimeoutSeconds,
+       ),
        mcmpTextLimit = normalizeMcmpTextLimit(mcmpTextLimit),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
@@ -235,6 +257,7 @@ class AppSettings {
       'route_weight_success_increment': routeWeightSuccessIncrement,
       'route_weight_failure_decrement': routeWeightFailureDecrement,
       'max_message_retries': maxMessageRetries,
+      'channel_resend_timeout_seconds': channelResendTimeoutSeconds,
       'theme_mode': themeMode,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
@@ -309,6 +332,7 @@ class AppSettings {
       routeWeightFailureDecrement:
           (json['route_weight_failure_decrement'] as num?)?.toDouble() ?? 0.2,
       maxMessageRetries: json['max_message_retries'] as int? ?? 5,
+      channelResendTimeoutSeconds: json['channel_resend_timeout_seconds'],
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
@@ -418,6 +442,7 @@ class AppSettings {
     double? routeWeightSuccessIncrement,
     double? routeWeightFailureDecrement,
     int? maxMessageRetries,
+    int? channelResendTimeoutSeconds,
     String? themeMode,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
@@ -475,6 +500,8 @@ class AppSettings {
       routeWeightFailureDecrement:
           routeWeightFailureDecrement ?? this.routeWeightFailureDecrement,
       maxMessageRetries: maxMessageRetries ?? this.maxMessageRetries,
+      channelResendTimeoutSeconds:
+          channelResendTimeoutSeconds ?? this.channelResendTimeoutSeconds,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
           ? this.languageOverride

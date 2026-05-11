@@ -51,6 +51,11 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildMessagingCard(context, settingsService),
                         const SizedBox(height: 16),
+                        _buildChannelResendTimeoutCard(
+                          context,
+                          settingsService,
+                        ),
+                        const SizedBox(height: 16),
                         if (!kIsWeb) ...[
                           _buildTranslationCard(
                             context,
@@ -1435,6 +1440,23 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildChannelResendTimeoutCard(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.send_time_extension_outlined),
+        title: Text(context.l10n.settings_channelResendTimeoutTitle),
+        subtitle: Text(
+          '${settingsService.settings.channelResendTimeoutSeconds}',
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _showChannelResendTimeoutDialog(context, settingsService),
+      ),
+    );
+  }
+
   void _showMcmpTextLimitDialog(
     BuildContext context,
     AppSettingsService settingsService,
@@ -1506,6 +1528,57 @@ class AppSettingsScreen extends StatelessWidget {
               await settingsService.setSendingDelayForCancellationSeconds(
                 value,
               );
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChannelResendTimeoutDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.channelResendTimeoutSeconds.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_channelResendTimeoutTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(dialogContext.l10n.settings_channelResendTimeoutSubtitle),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+              ],
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final value = AppSettings.normalizeChannelResendTimeoutSeconds(
+                controller.text.trim(),
+              );
+              await settingsService.setChannelResendTimeoutSeconds(value);
               if (!dialogContext.mounted) return;
               Navigator.pop(dialogContext);
             },

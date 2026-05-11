@@ -13,6 +13,7 @@ import '../models/channel_message.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
+import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
@@ -5986,11 +5987,15 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isChannelRepeat(ChannelMessage existing, ChannelMessage incoming) {
     if (existing.text != incoming.text) return false;
 
+    final repeatWindowMs =
+        (_appSettingsService?.settings.channelResendTimeoutSeconds ??
+            AppSettings.defaultChannelResendTimeoutSeconds) *
+        1000;
     final diffMs =
         (existing.timestamp.millisecondsSinceEpoch -
                 incoming.timestamp.millisecondsSinceEpoch)
             .abs();
-    if (diffMs > 30000) return false;
+    if (diffMs > repeatWindowMs) return false;
 
     if (existing.senderName == incoming.senderName) return true;
 

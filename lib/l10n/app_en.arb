@@ -239,6 +239,8 @@
       }
     }
   },
+  "settings_channelResendTimeoutTitle": "Manual resending delay",
+  "settings_channelResendTimeoutSubtitle": "It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages",
   "appSettings_title": "App Settings",
   "appSettings_appearance": "Appearance",
   "appSettings_theme": "Theme",
@@ -682,7 +684,7 @@
   "chat_messageCopied": "Message copied",
   "chat_messageDeleted": "Message deleted",
   "chat_retryingMessage": "Retrying message",
-  "chat_retryingMessageWait": "Please wait 30 seconds before resend",
+  "chat_retryingMessageWait": "Please wait {seconds} seconds before resend",
   "chat_retryCount": "Retry {current}/{max}",
   "@chat_retryCount": {
     "placeholders": {
