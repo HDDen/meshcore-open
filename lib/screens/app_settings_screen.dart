@@ -56,6 +56,8 @@ class AppSettingsScreen extends StatelessWidget {
                           settingsService,
                         ),
                         const SizedBox(height: 16),
+                        _buildSendingDelayCard(context, settingsService),
+                        const SizedBox(height: 16),
                         if (!kIsWeb) ...[
                           _buildTranslationCard(
                             context,
@@ -71,8 +73,6 @@ class AppSettingsScreen extends StatelessWidget {
                         _buildCyr2LatCard(context, settingsService),
                         const SizedBox(height: 16),
                         _buildMcmpTextLimitCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildSendingDelayCard(context, settingsService),
                         const SizedBox(height: 16),
                         _buildDoNotFilterChannelsCard(context, settingsService),
                         const SizedBox(height: 16),
