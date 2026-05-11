@@ -46,7 +46,7 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 
 ### Appearance
 - **Theme**: System / Light / Dark
-- **Language**: System default or one of 15 languages (English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian)
+- **Language**: System default or one of 18 languages (English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian, Hungarian, Japanese, Korean)
 - **Enable Message Tracing**: Shows path trace overlays and extra metadata on messages
 
 ### Notifications
@@ -57,6 +57,7 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 
 ### Messaging
 - **Clear Path on Max Retry**: Erases the stored routing path after all retries fail
+- **Jump to Oldest Unread**: When opening a chat, scrolls to the oldest unread message instead of the newest
 - **Auto Route Rotation**: Enables weighted routing algorithm. When enabled, expands to show five slider sub-settings (hidden when off):
   - Max Route Weight (1–10, default 5, integer steps)
   - Initial Route Weight (0.5–5.0, default 3.0)
@@ -66,6 +67,15 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 
 ### Battery
 - **Battery Chemistry**: NMC / LiFePO4 / LiPo (per device, used to calibrate percentage from voltage)
+
+### Translation
+Not shown on web. Controls on-device message translation powered by a locally-downloaded ML model:
+- **Enable Translation**: Translates incoming messages into the selected target language
+- **Translate Composer**: Translates outgoing messages from the target language back before sending
+- **Target Language**: Language to translate into (searchable list; defaults to the app language)
+- **Downloaded Model**: Dropdown to select among already-downloaded translation models
+- **Preset Model**: Download a curated preset model with one tap
+- **Custom Model URL**: Enter a URL to download a custom GGUF-format model; shows download progress and a cancel button
 
 ### Map Display
 - **Show Repeaters**: Toggle repeater markers on map
@@ -91,7 +101,7 @@ These settings are sent directly to the connected device firmware.
 
 ### Radio Settings
 Opens a dialog pre-populated with the device's current radio settings. Contains:
-- **Preset dropdown**: 19 regional presets — selecting a preset immediately fills all fields below. Full list: Australia, Australia (Narrow), Australia SA/WA/QLD, Czech Republic, EU 433MHz, EU/UK (Long Range), EU/UK (Medium Range), EU/UK (Narrow), New Zealand, New Zealand (Narrow), Portugal 433, Portugal 869, Switzerland, USA Arizona, USA/Canada, Vietnam, Off-Grid 433, Off-Grid 869, Off-Grid 918
+- **Preset dropdown**: 19 regional presets — selecting a preset immediately fills all fields below. Full list: Australia, Australia (Narrow), Australia SA, WA, QLD, Czech Republic, EU 433MHz, EU/UK (Long Range), EU/UK (Medium Range), EU/UK (Narrow), New Zealand, New Zealand (Narrow), Portugal 433, Portugal 869, Switzerland, USA Arizona, USA/Canada, Vietnam, Off-Grid 433, Off-Grid 869, Off-Grid 918
 - **Frequency** (MHz): Free text, validated 300–2500 MHz
 - **Bandwidth**: Dropdown (7.8 / 10.4 / 15.6 / 20.8 / 31.25 / 41.7 / 62.5 / 125 / 250 / 500 kHz)
 - **Spreading Factor**: SF5–SF12

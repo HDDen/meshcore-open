@@ -64,6 +64,7 @@ class AppSettings {
   final bool mapShowMarkers;
   final bool mapShowGuessedLocations;
   final bool enableMessageTracing;
+  final bool showKeyboardHidingButton;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -77,6 +78,7 @@ class AppSettings {
   final double routeWeightSuccessIncrement;
   final double routeWeightFailureDecrement;
   final int maxMessageRetries;
+  final int channelResendTimeoutSeconds;
   final String themeMode;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
@@ -100,6 +102,11 @@ class AppSettings {
   final String selectedCyr2latProfileId;
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
+  static const int minChannelResendTimeoutSeconds = 10;
+  static const int defaultChannelResendTimeoutSeconds = 30;
+  static const int maxChannelResendTimeoutSeconds = 30;
+  final int sendingDelayForCancellationSeconds;
+  static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
       'TerminalCLI\nSomethingElse';
 
@@ -113,6 +120,34 @@ class AppSettings {
       parsed = int.tryParse(value);
     }
     return (parsed ?? defaultMcmpTextLimit).clamp(1, maxMcmpTextLimit).toInt();
+  }
+
+  static int normalizeSendingDelayForCancellation(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    return (parsed ?? 0)
+        .clamp(0, maxSendingDelayForCancellationSeconds)
+        .toInt();
+  }
+
+  static int normalizeChannelResendTimeoutSeconds(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    return (parsed ?? defaultChannelResendTimeoutSeconds)
+        .clamp(minChannelResendTimeoutSeconds, maxChannelResendTimeoutSeconds)
+        .toInt();
   }
 
   Map<String, String> get cyr2latCharMap {
@@ -135,6 +170,7 @@ class AppSettings {
     this.mapShowMarkers = true,
     this.mapShowGuessedLocations = true,
     this.enableMessageTracing = false,
+    this.showKeyboardHidingButton = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -148,6 +184,7 @@ class AppSettings {
     this.routeWeightSuccessIncrement = 0.5,
     this.routeWeightFailureDecrement = 0.2,
     this.maxMessageRetries = 5,
+    int? channelResendTimeoutSeconds,
     this.themeMode = 'system',
     this.languageOverride,
     this.appDebugLogEnabled = false,
@@ -166,6 +203,7 @@ class AppSettings {
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
@@ -173,7 +211,14 @@ class AppSettings {
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
        translationDownloadedModels = translationDownloadedModels ?? const [],
+       channelResendTimeoutSeconds = normalizeChannelResendTimeoutSeconds(
+         channelResendTimeoutSeconds,
+       ),
        mcmpTextLimit = normalizeMcmpTextLimit(mcmpTextLimit),
+       sendingDelayForCancellationSeconds =
+           normalizeSendingDelayForCancellation(
+             sendingDelayForCancellationSeconds,
+           ),
        cyr2latProfiles =
            cyr2latProfiles ??
            [
@@ -198,6 +243,7 @@ class AppSettings {
       'map_show_markers': mapShowMarkers,
       'map_show_guessed_locations': mapShowGuessedLocations,
       'enable_message_tracing': enableMessageTracing,
+      'show_keyboard_hiding_button': showKeyboardHidingButton,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -211,6 +257,7 @@ class AppSettings {
       'route_weight_success_increment': routeWeightSuccessIncrement,
       'route_weight_failure_decrement': routeWeightFailureDecrement,
       'max_message_retries': maxMessageRetries,
+      'channel_resend_timeout_seconds': channelResendTimeoutSeconds,
       'theme_mode': themeMode,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
@@ -231,6 +278,8 @@ class AppSettings {
           .map((model) => model.toJson())
           .toList(),
       'mcmp_text_limit': mcmpTextLimit,
+      'sending_delay_for_cancellation_seconds':
+          sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
       'cyr2lat_profiles': cyr2latProfiles
           .map((profile) => profile.toJson())
@@ -261,6 +310,8 @@ class AppSettings {
       mapShowGuessedLocations:
           json['map_show_guessed_locations'] as bool? ?? true,
       enableMessageTracing: json['enable_message_tracing'] as bool? ?? false,
+      showKeyboardHidingButton:
+          json['show_keyboard_hiding_button'] as bool? ?? true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -281,6 +332,7 @@ class AppSettings {
       routeWeightFailureDecrement:
           (json['route_weight_failure_decrement'] as num?)?.toDouble() ?? 0.2,
       maxMessageRetries: json['max_message_retries'] as int? ?? 5,
+      channelResendTimeoutSeconds: json['channel_resend_timeout_seconds'],
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
@@ -324,6 +376,8 @@ class AppSettings {
               .toList() ??
           const [],
       mcmpTextLimit: json['mcmp_text_limit'],
+      sendingDelayForCancellationSeconds:
+          json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
           json['do_not_filter_messages_on_channels'] as String? ??
           defaultDoNotFilterMessagesOnChannels,
@@ -374,6 +428,7 @@ class AppSettings {
     bool? mapShowMarkers,
     bool? mapShowGuessedLocations,
     bool? enableMessageTracing,
+    bool? showKeyboardHidingButton,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -387,6 +442,7 @@ class AppSettings {
     double? routeWeightSuccessIncrement,
     double? routeWeightFailureDecrement,
     int? maxMessageRetries,
+    int? channelResendTimeoutSeconds,
     String? themeMode,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
@@ -405,6 +461,7 @@ class AppSettings {
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
     String? selectedCyr2latProfileId,
@@ -422,6 +479,8 @@ class AppSettings {
       mapShowGuessedLocations:
           mapShowGuessedLocations ?? this.mapShowGuessedLocations,
       enableMessageTracing: enableMessageTracing ?? this.enableMessageTracing,
+      showKeyboardHidingButton:
+          showKeyboardHidingButton ?? this.showKeyboardHidingButton,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
@@ -441,6 +500,8 @@ class AppSettings {
       routeWeightFailureDecrement:
           routeWeightFailureDecrement ?? this.routeWeightFailureDecrement,
       maxMessageRetries: maxMessageRetries ?? this.maxMessageRetries,
+      channelResendTimeoutSeconds:
+          channelResendTimeoutSeconds ?? this.channelResendTimeoutSeconds,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
           ? this.languageOverride
@@ -472,6 +533,9 @@ class AppSettings {
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
       mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
+      sendingDelayForCancellationSeconds:
+          sendingDelayForCancellationSeconds ??
+          this.sendingDelayForCancellationSeconds,
       doNotFilterMessagesOnChannels:
           doNotFilterMessagesOnChannels ?? this.doNotFilterMessagesOnChannels,
       cyr2latProfiles: cyr2latProfiles ?? this.cyr2latProfiles,

@@ -13,6 +13,7 @@ import '../models/channel_message.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
+import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
@@ -168,6 +169,8 @@ class MeshCoreConnector extends ChangeNotifier {
   Timer? _selfInfoRetryTimer;
   Timer? _reconnectTimer;
   Timer? _batteryPollTimer;
+  Timer? _gpsLocationPollTimer;
+  static const _gpsLocationPollInterval = Duration(minutes: 1);
   Timer? _radioStatsPollTimer;
   int _radioStatsPollRefCount = 0;
   final ValueNotifier<CompanionRadioStats?> radioStatsNotifier =
@@ -255,6 +258,11 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _pathOpLock = Future.value();
   Map<String, String>? _currentCustomVars;
 
+  /// Maps repeater pubkey-prefix hex (12 hex chars = first 6 bytes) → the
+  /// repeater's RTC clock at the moment of the most recent successful login.
+  /// Reported by firmware in the login-success push frame at byte offset 8.
+  final Map<String, DateTime> _repeaterLoginClocks = {};
+
   // Channel syncing state (sequential pattern)
   bool _isSyncingChannels = false;
   bool _channelSyncInFlight = false;
@@ -295,6 +303,10 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
+  final Map<String, bool> _contactSendingDelayEnabled = {};
+  final Map<String, _PendingContactSend> _pendingContactSends = {};
+  final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  final Map<int, bool> _channelSendingDelayEnabled = {};
   final Set<String> _knownContactKeys = {};
   final Map<String, int> _contactUnreadCount = {};
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
@@ -408,6 +420,17 @@ class MeshCoreConnector extends ChangeNotifier {
   int get advertLocationPolicy => _advertLocPolicy;
   int get multiAcks => _multiAcks;
   bool? get clientRepeat => _clientRepeat;
+
+  /// Returns the repeater's RTC clock at the time of the most recent
+  /// successful login, looked up by the contact's full public key.
+  /// Returns null if no login response has been observed for this repeater
+  /// since connection.
+  DateTime? repeaterClockAtLogin(Uint8List publicKey) {
+    if (publicKey.length < 6) return null;
+    final prefix = pubKeyToHex(publicKey.sublist(0, 6));
+    return _repeaterLoginClocks[prefix];
+  }
+
   void rememberNonRepeatRadioState(MeshCoreRadioStateSnapshot snapshot) {
     _rememberedNonRepeatRadioState = snapshot;
   }
@@ -642,6 +665,31 @@ class MeshCoreConnector extends ChangeNotifier {
     _ensureContactCyr2LatSettingLoaded(contactKeyHex);
   }
 
+  void ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
+    _ensureContactSendingDelaySettingLoaded(contactKeyHex);
+  }
+
+  bool isChannelSendingDelayEnabled(int channelIndex) {
+    _ensureChannelSendingDelaySettingLoaded(channelIndex);
+    return _channelSendingDelayEnabled[channelIndex] ?? false;
+  }
+
+  bool isContactSendingDelayEnabled(String contactKeyHex) {
+    _ensureContactSendingDelaySettingLoaded(contactKeyHex);
+    return _contactSendingDelayEnabled[contactKeyHex] ?? false;
+  }
+
+  Future<bool> loadContactSendingDelayEnabled(String contactKeyHex) async {
+    final cached = _contactSendingDelayEnabled[contactKeyHex];
+    if (cached != null) return cached;
+    final enabled = await _contactSettingsStore.loadSendingDelayEnabled(
+      contactKeyHex,
+    );
+    _contactSendingDelayEnabled[contactKeyHex] = enabled;
+    notifyListeners();
+    return enabled;
+  }
+
   Future<void> loadUnreadState() async {
     _contactUnreadCount
       ..clear()
@@ -813,6 +861,26 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelSendingDelayEnabled(
+    int channelIndex,
+    bool enabled,
+  ) async {
+    if (_channelSendingDelayEnabled[channelIndex] == enabled) return;
+    _channelSendingDelayEnabled[channelIndex] = enabled;
+    await _channelSettingsStore.saveSendingDelayEnabled(channelIndex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setContactSendingDelayEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
+    _contactSendingDelayEnabled[contactKeyHex] = enabled;
+    await _contactSettingsStore.saveSendingDelayEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
   Future<void> _loadChannelOrder() async {
     _channelOrder = await _channelOrderStore.loadChannelOrder();
     _applyChannelOrder();
@@ -965,12 +1033,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
+    _channelSendingDelayEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       _channelMcmpEnabled[i] = await _channelSettingsStore.loadMcmpEnabled(i);
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
       _channelCyr2LatEnabled[i] = await _channelSettingsStore
           .loadCyr2LatEnabled(i);
+      _channelSendingDelayEnabled[i] = await _channelSettingsStore
+          .loadSendingDelayEnabled(i);
     }
   }
 
@@ -2528,6 +2599,25 @@ class MeshCoreConnector extends ChangeNotifier {
     _batteryPollTimer = null;
   }
 
+  /// Start polling the radio's GPS-backed self-info every minute.
+  /// No-op if already running. Triggered when the radio reports `gps=1`.
+  void _startGpsLocationPolling() {
+    if (_gpsLocationPollTimer != null) return;
+    _gpsLocationPollTimer = Timer.periodic(_gpsLocationPollInterval, (timer) {
+      if (!isConnected) {
+        timer.cancel();
+        _gpsLocationPollTimer = null;
+        return;
+      }
+      unawaited(sendFrame(buildAppStartFrame()));
+    });
+  }
+
+  void _stopGpsLocationPolling() {
+    _gpsLocationPollTimer?.cancel();
+    _gpsLocationPollTimer = null;
+  }
+
   void setPollingInterval(int i) {
     _pollingInterval = i.clamp(1, 60);
     if (isConnected) {
@@ -3144,6 +3234,172 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  List<Message> getPendingContactMessages(String contactKeyHex) {
+    return _pendingContactSends.values
+        .where((pending) => pending.contact.publicKeyHex == contactKeyHex)
+        .map((pending) => pending.message)
+        .toList();
+  }
+
+  List<ChannelMessage> getPendingChannelMessages(int channelIndex) {
+    return _pendingChannelSends.values
+        .where((pending) => pending.channel.index == channelIndex)
+        .map((pending) => pending.message)
+        .toList();
+  }
+
+  DateTime? pendingContactSendAt(String messageId) {
+    return _pendingContactSends[messageId]?.sendAt;
+  }
+
+  int? pendingContactSendDelaySeconds(String messageId) {
+    return _pendingContactSends[messageId]?.delaySeconds;
+  }
+
+  DateTime? pendingChannelSendAt(String messageId) {
+    return _pendingChannelSends[messageId]?.sendAt;
+  }
+
+  int? pendingChannelSendDelaySeconds(String messageId) {
+    return _pendingChannelSends[messageId]?.delaySeconds;
+  }
+
+  void scheduleContactMessage(
+    Contact contact,
+    String text, {
+    required String inputText,
+    required int delaySeconds,
+    String? originalText,
+    String? translatedLanguageCode,
+    String? translationModelId,
+  }) {
+    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    final resolved = resolvePathSelection(contact);
+    final message = Message.outgoing(
+      contact.publicKey,
+      text,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareContactOutboundText(contact, text),
+      ),
+      pathLength: resolved.useFlood ? -1 : resolved.hopCount,
+      pathBytes: Uint8List.fromList(resolved.pathBytes),
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+    );
+    final pending = _PendingContactSend(
+      contact: contact,
+      message: message,
+      text: text,
+      inputText: inputText,
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      delaySeconds: delaySeconds,
+      sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
+    );
+    pending.timer = Timer(
+      Duration(seconds: delaySeconds),
+      () => _commitPendingContactSend(message.messageId),
+    );
+    _pendingContactSends[message.messageId] = pending;
+    notifyListeners();
+  }
+
+  void scheduleChannelMessage(
+    Channel channel,
+    String text, {
+    required String inputText,
+    required int delaySeconds,
+    String? originalText,
+    String? translatedLanguageCode,
+    String? translationModelId,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
+  }) {
+    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    final message = ChannelMessage.outgoing(
+      text,
+      _selfName ?? 'Me',
+      channel.index,
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
+        prepareChannelOutboundText(channel.index, text),
+      ),
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+    );
+    final pending = _PendingChannelSend(
+      channel: channel,
+      message: message,
+      text: text,
+      inputText: inputText,
+      originalText: originalText,
+      translatedLanguageCode: translatedLanguageCode,
+      translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+      delaySeconds: delaySeconds,
+      sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
+    );
+    pending.timer = Timer(
+      Duration(seconds: delaySeconds),
+      () => _commitPendingChannelSend(message.messageId),
+    );
+    _pendingChannelSends[message.messageId] = pending;
+    notifyListeners();
+  }
+
+  String? cancelPendingContactSend(String messageId) {
+    final pending = _pendingContactSends.remove(messageId);
+    if (pending == null) return null;
+    pending.timer?.cancel();
+    notifyListeners();
+    return pending.inputText;
+  }
+
+  String? cancelPendingChannelSend(String messageId) {
+    final pending = _pendingChannelSends.remove(messageId);
+    if (pending == null) return null;
+    pending.timer?.cancel();
+    notifyListeners();
+    return pending.inputText;
+  }
+
+  Future<void> _commitPendingContactSend(String messageId) async {
+    final pending = _pendingContactSends.remove(messageId);
+    if (pending == null) return;
+    notifyListeners();
+    await sendMessage(
+      pending.contact,
+      pending.text,
+      originalText: pending.originalText,
+      translatedLanguageCode: pending.translatedLanguageCode,
+      translationModelId: pending.translationModelId,
+    );
+  }
+
+  Future<void> _commitPendingChannelSend(String messageId) async {
+    final pending = _pendingChannelSends.remove(messageId);
+    if (pending == null) return;
+    notifyListeners();
+    await sendChannelMessage(
+      pending.channel,
+      pending.text,
+      originalText: pending.originalText,
+      translatedLanguageCode: pending.translatedLanguageCode,
+      translationModelId: pending.translationModelId,
+      replyToMessageId: pending.replyToMessageId,
+      replyToSenderName: pending.replyToSenderName,
+      replyToText: pending.replyToText,
+    );
+  }
+
   Future<void> removeContact(Contact contact) async {
     if (!isConnected) return;
 
@@ -3377,6 +3633,18 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setCustomVar(String value) async {
     if (!isConnected) return;
     await sendFrame(buildSetCustomVarFrame(value));
+    final sep = value.indexOf(':');
+    if (sep > 0) {
+      final key = value.substring(0, sep);
+      final val = value.substring(sep + 1);
+      (_currentCustomVars ??= <String, String>{})[key] = val;
+      notifyListeners();
+    }
+    if (value == 'gps:1') {
+      _startGpsLocationPolling();
+    } else if (value == 'gps:0') {
+      _stopGpsLocationPolling();
+    }
   }
 
   Future<void> sendSelfAdvert({bool flood = true}) async {
@@ -3684,6 +3952,8 @@ class MeshCoreConnector extends ChangeNotifier {
         _handlePathUpdated(frame);
         break;
       case pushCodeLoginSuccess:
+        _handleLoginSuccess(frame);
+        break;
       case pushCodeLoginFail:
       case pushCodeStatusResponse:
         break;
@@ -3810,6 +4080,14 @@ class MeshCoreConnector extends ChangeNotifier {
       _usbManager.updateConnectedLabel(selfName);
     }
 
+    // GPS poll responses arrive as RESP_CODE_SELF_INFO but are not the real
+    // handshake — only update location and notify, skip store reloads and
+    // contact sync which would clear and re-fetch contacts every minute.
+    if (!wasAwaitingSelfInfo) {
+      notifyListeners();
+      return;
+    }
+
     //set all the stores' public key so they can load the correct data
     _channelMessageStore.setPublicKeyHex = selfPublicKeyHex;
     _messageStore.setPublicKeyHex = selfPublicKeyHex;
@@ -3835,12 +4113,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     notifyListeners();
-
-    if (PlatformInfo.isWeb &&
-        _activeTransport == MeshCoreTransportType.bluetooth &&
-        !wasAwaitingSelfInfo) {
-      return;
-    }
 
     // Auto-fetch contacts after getting self info. On web BLE, defer this
     // until after channel 0 so startup writes stay serialized.
@@ -4594,6 +4866,17 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
+    if (_contactSendingDelayEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadSendingDelayEnabled(contactKeyHex).then((
+      enabled,
+    ) {
+      if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
+      _contactSendingDelayEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
   void _ensureContactCyr2LatProfileLoaded(String contactKeyHex) {
     if (_contactCyr2LatProfileId.containsKey(contactKeyHex)) return;
     _contactSettingsStore.loadCyr2LatProfileId(contactKeyHex).then((profileId) {
@@ -4608,6 +4891,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSettingsStore.loadCyr2LatEnabled(channelIndex).then((enabled) {
       if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
       _channelCyr2LatEnabled[channelIndex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelSendingDelaySettingLoaded(int channelIndex) {
+    if (_channelSendingDelayEnabled.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadSendingDelayEnabled(channelIndex).then((enabled) {
+      if (_channelSendingDelayEnabled[channelIndex] == enabled) return;
+      _channelSendingDelayEnabled[channelIndex] = enabled;
       notifyListeners();
     });
   }
@@ -5695,11 +5987,15 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isChannelRepeat(ChannelMessage existing, ChannelMessage incoming) {
     if (existing.text != incoming.text) return false;
 
+    final repeatWindowMs =
+        (_appSettingsService?.settings.channelResendTimeoutSeconds ??
+            AppSettings.defaultChannelResendTimeoutSeconds) *
+        1000;
     final diffMs =
         (existing.timestamp.millisecondsSinceEpoch -
                 incoming.timestamp.millisecondsSinceEpoch)
             .abs();
-    if (diffMs > 30000) return false;
+    if (diffMs > repeatWindowMs) return false;
 
     if (existing.senderName == incoming.senderName) return true;
 
@@ -5803,6 +6099,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _handleDisconnection() {
     _stopBatteryPolling();
+    _stopGpsLocationPolling();
     _stopRadioStatsPolling();
     _latestRadioStats = null;
     radioStatsNotifier.value = null;
@@ -5888,10 +6185,35 @@ class MeshCoreConnector extends ChangeNotifier {
     return result;
   }
 
+  /// Parse PUSH_CODE_LOGIN_SUCCESS (0x85) frame and stash the repeater's
+  /// reported clock. Frame layout (firmware companion_radio/MyMesh.cpp:678+):
+  ///   [0]=0x85, [1]=permissions, [2..7]=pubkey prefix (6 bytes),
+  ///   [8..11]=repeater RTC unix seconds (LE), [12]=ACL perms, [13]=fw level
+  /// The timestamp is only present in the v7+ "new login response" — older
+  /// firmware emits a shorter frame that we silently skip.
+  void _handleLoginSuccess(Uint8List frame) {
+    if (frame.length < 12) return;
+    final prefix = pubKeyToHex(frame.sublist(2, 8));
+    final ts = ByteData.sublistView(frame, 8, 12).getUint32(0, Endian.little);
+    if (ts == 0) return;
+    _repeaterLoginClocks[prefix] = DateTime.fromMillisecondsSinceEpoch(
+      ts * 1000,
+      isUtc: true,
+    );
+    notifyListeners();
+  }
+
   void _handleCustomVars(Uint8List frame) {
     final buf = BufferReader(frame.sublist(1));
     try {
       _currentCustomVars = _parseKeyValueString(buf.readCString());
+      // Reflect current GPS state in the polling timer (handles initial
+      // device state on connect as well as external CLI/USB toggles).
+      if (_currentCustomVars?['gps'] == '1') {
+        _startGpsLocationPolling();
+      } else {
+        _stopGpsLocationPolling();
+      }
     } catch (e) {
       appLogger.warn('Malformed custom vars frame: $e', tag: 'Connector');
     }
@@ -5947,7 +6269,14 @@ class MeshCoreConnector extends ChangeNotifier {
     _notifyListenersTimer?.cancel();
     _reconnectTimer?.cancel();
     _batteryPollTimer?.cancel();
+    _gpsLocationPollTimer?.cancel();
     _radioStatsPollTimer?.cancel();
+    for (final pending in _pendingContactSends.values) {
+      pending.timer?.cancel();
+    }
+    for (final pending in _pendingChannelSends.values) {
+      pending.timer?.cancel();
+    }
     radioStatsNotifier.dispose();
     _receivedFramesController.close();
     _usbManager.dispose();
@@ -6430,6 +6759,62 @@ class _RepeaterAckContext {
     required this.selection,
     required this.pathLength,
     required this.messageBytes,
+  });
+}
+
+class _PendingContactSend {
+  final Contact contact;
+  final Message message;
+  final String text;
+  final String inputText;
+  final String? originalText;
+  final String? translatedLanguageCode;
+  final String? translationModelId;
+  final int delaySeconds;
+  final DateTime sendAt;
+  Timer? timer;
+
+  _PendingContactSend({
+    required this.contact,
+    required this.message,
+    required this.text,
+    required this.inputText,
+    required this.originalText,
+    required this.translatedLanguageCode,
+    required this.translationModelId,
+    required this.delaySeconds,
+    required this.sendAt,
+  });
+}
+
+class _PendingChannelSend {
+  final Channel channel;
+  final ChannelMessage message;
+  final String text;
+  final String inputText;
+  final String? originalText;
+  final String? translatedLanguageCode;
+  final String? translationModelId;
+  final String? replyToMessageId;
+  final String? replyToSenderName;
+  final String? replyToText;
+  final int delaySeconds;
+  final DateTime sendAt;
+  Timer? timer;
+
+  _PendingChannelSend({
+    required this.channel,
+    required this.message,
+    required this.text,
+    required this.inputText,
+    required this.originalText,
+    required this.translatedLanguageCode,
+    required this.translationModelId,
+    required this.replyToMessageId,
+    required this.replyToSenderName,
+    required this.replyToText,
+    required this.delaySeconds,
+    required this.sendAt,
   });
 }
 

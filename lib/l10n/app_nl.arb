@@ -76,7 +76,7 @@
     }
   },
   "scanner_stop": "Stoppen",
-  "scanner_scan": "Scan",
+  "scanner_scan": "Scannen",
   "device_quickSwitch": "Snelle overschakeling",
   "device_meshcore": "MeshCore",
   "settings_title": "Instellingen",
@@ -98,7 +98,7 @@
   "settings_locationInvalid": "Ongeldige breedtegraad of lengtegraad.",
   "settings_latitude": "Breedtegraad",
   "settings_longitude": "Lengtegraad",
-  "settings_privacyMode": "Privacy Mode",
+  "settings_privacyMode": "Privacy-modus",
   "settings_privacyModeSubtitle": "Naam/locatie verbergen in advertenties",
   "settings_privacyModeToggle": "Schakel privacy modus in om je naam en locatie in advertenties te verbergen.",
   "settings_privacyModeEnabled": "Privacy modus is ingeschakeld",
@@ -117,13 +117,13 @@
   "settings_rebootDevice": "Apparaat opnieuw opstarten",
   "settings_rebootDeviceSubtitle": "Herstart het MeshCore-apparaat",
   "settings_rebootDeviceConfirm": "Ben je er zeker van dat je het apparaat opnieuw wilt opstarten? Je wordt losgekoppeld.",
-  "settings_debug": "Debug",
+  "settings_debug": "Foutopsporing",
   "settings_bleDebugLog": "BLE Debug Log",
   "settings_bleDebugLogSubtitle": "BLE commando's, antwoorden en ruwe data",
-  "settings_appDebugLog": "App Debug Log",
+  "settings_appDebugLog": "Debuglog van de app",
   "settings_appDebugLogSubtitle": "Toepassingsdebugberichten",
   "settings_about": "Over",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) versie {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -131,7 +131,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Project 2024",
+  "settings_aboutLegalese": "MeshCore Open Source Project 2024",
   "settings_aboutDescription": "Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.",
   "settings_infoName": "Naam",
   "settings_infoId": "ID",
@@ -140,7 +140,7 @@
   "settings_infoPublicKey": "Openbare Sleutel",
   "settings_infoContactsCount": "Aantal Contacten",
   "settings_infoChannelCount": "Aantal Kanalen",
-  "settings_presets": "Presets",
+  "settings_presets": "Voorgeprogrammeerde instellingen",
   "settings_frequency": "Frequentie (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
   "settings_frequencyInvalid": "Ongeldige frequentie (300-2500 MHz)",
@@ -166,19 +166,19 @@
   "appSettings_themeDark": "Donker",
   "appSettings_language": "Taal",
   "appSettings_languageSystem": "Standaardinstelling",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
-  "appSettings_languageEs": "Español",
-  "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
-  "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
-  "appSettings_languageIt": "Italiano",
-  "appSettings_languageZh": "中文",
-  "appSettings_languageSv": "Svenska",
+  "appSettings_languageEn": "Engels",
+  "appSettings_languageFr": "Frans",
+  "appSettings_languageEs": "Spaans",
+  "appSettings_languageDe": "Duits",
+  "appSettings_languagePl": "Pools",
+  "appSettings_languageSl": "Sloveens",
+  "appSettings_languagePt": "Portugees",
+  "appSettings_languageIt": "Italiaans",
+  "appSettings_languageZh": "Chinees",
+  "appSettings_languageSv": "Zweeds",
   "appSettings_languageNl": "Nederlands",
-  "appSettings_languageSk": "Slovenčina",
-  "appSettings_languageBg": "Български",
+  "appSettings_languageSk": "Sloveens",
+  "appSettings_languageBg": "Bulgaars",
   "appSettings_notifications": "Notificaties",
   "appSettings_enableNotifications": "Notificaties inschakelen",
   "appSettings_enableNotificationsSubtitle": "Ontvang meldingen voor berichten en advertenties",
@@ -251,7 +251,7 @@
       }
     }
   },
-  "appSettings_debugCard": "Debug",
+  "appSettings_debugCard": "Foutopsporing",
   "appSettings_appDebugLogging": "App Debuggen Loggen",
   "appSettings_appDebugLoggingSubtitle": "Log app debugberichten voor probleemoplossing",
   "appSettings_appDebugLoggingEnabled": "App debug logging is ingeschakeld",
@@ -273,7 +273,7 @@
   },
   "contacts_manageRepeater": "Beheer Repeater",
   "contacts_roomLogin": "Ruimte Inloggen",
-  "contacts_openChat": "Open Chat",
+  "contacts_openChat": "Open gesprek",
   "contacts_editGroup": "Groep bewerken",
   "contacts_deleteGroup": "Groep verwijderen",
   "contacts_deleteGroupConfirm": "Verwijder {groupName}?",
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtag kanaal",
   "channels_public": "Openbaar",
   "channels_private": "Privé",
-  "channels_publicChannel": "Open kanaal",
-  "channels_privateChannel": "Private kanaal",
   "channels_editChannel": "Kanaal bewerken",
   "channels_muteChannel": "Kanaal dempen",
   "channels_unmuteChannel": "Kanaal dempen opheffen",
@@ -417,7 +414,7 @@
   "channels_publicChannelAdded": "Open kanaal toegevoegd",
   "channels_sortBy": "Sorteren door",
   "channels_sortManual": "Handmatig",
-  "channels_sortAZ": "A-Z",
+  "channels_sortAZ": "Alfabetisch",
   "channels_sortLatestMessages": "Recent berichten",
   "channels_sortUnread": "Ongelezen",
   "chat_noMessages": "Nog geen berichten.",
@@ -486,7 +483,7 @@
   "gifPicker_failedLoad": "GIF's konden niet worden geladen",
   "gifPicker_failedSearch": "Zoeken mislukt",
   "gifPicker_noInternet": "Geen internetverbinding",
-  "debugLog_appTitle": "App Debug Log",
+  "debugLog_appTitle": "Debuglog van de app",
   "debugLog_bleTitle": "BLE Debug Log",
   "debugLog_copyLog": "Kopieer log",
   "debugLog_clearLog": "Log wissen",
@@ -495,7 +492,7 @@
   "debugLog_noEntries": "Nog geen debug logs beschikbaar.",
   "debugLog_enableInSettings": "Schakel app debug logging in de instellingen",
   "debugLog_frames": "Ramen",
-  "debugLog_rawLogRx": "Raw Log-RX",
+  "debugLog_rawLogRx": "Niet-verwerkt Log-RX",
   "debugLog_noBleActivity": "Geen BLE-activiteit nog.",
   "debugFrame_length": "Frame Lengte: {count} bytes",
   "@debugFrame_length": {
@@ -559,7 +556,7 @@
       }
     }
   },
-  "debugFrame_hexDump": "Hex Dump:",
+  "debugFrame_hexDump": "Hex-dump:",
   "chat_pathManagement": "Beheer van Paden",
   "chat_routingMode": "Routeerwijze",
   "chat_autoUseSavedPath": "Automatisch (gebruik opgeslagen pad)",
@@ -617,7 +614,7 @@
       }
     }
   },
-  "chat_floodAuto": "Flood (auto)",
+  "chat_floodAuto": "Overstroming (van een auto)",
   "chat_direct": "Direct",
   "chat_poiShared": "Gedeelde POI",
   "chat_unread": "Nieuw: {count}",
@@ -640,10 +637,10 @@
     }
   },
   "chat_invalidLink": "Ongeldig linkformaat",
-  "map_title": "Node Map",
+  "map_title": "Kaart van de knopen",
   "map_noNodesWithLocation": "Geen nodes met locatiegegevens",
   "map_nodesNeedGps": "Nodes moeten hun GPS-coördinaten delen\nom op de kaart te verschijnen",
-  "map_nodesCount": "Nodes: {count}",
+  "map_nodesCount": "Knooppunten: {count}",
   "@map_nodesCount": {
     "placeholders": {
       "count": {
@@ -660,7 +657,7 @@
     }
   },
   "map_chat": "Chat",
-  "map_repeater": "Repeater",
+  "map_repeater": "Herhaald",
   "map_room": "Ruimte",
   "map_sensor": "Sensor",
   "map_pinDm": "Verzenden als bericht (DM)",
@@ -673,7 +670,7 @@
   "map_flags": "Vlaggen",
   "map_shareMarkerHere": "Deel marker hier",
   "map_pinLabel": "Label vastzetten",
-  "map_label": "Label",
+  "map_label": "Etiket",
   "map_pointOfInterest": "Interessepunt",
   "map_sendToContact": "Verzenden naar contact",
   "map_sendToChannel": "Verzenden naar kanaal",
@@ -688,10 +685,10 @@
     }
   },
   "map_connectToShareMarkers": "Verbind met een apparaat om markers te delen",
-  "map_filterNodes": "Filter Nodes",
+  "map_filterNodes": "Filternodes",
   "map_nodeTypes": "Nodetypes",
   "map_chatNodes": "Chatnodes",
-  "map_repeaters": "Repeaters",
+  "map_repeaters": "Herhaalders",
   "map_otherNodes": "Andere Nodes",
   "map_keyPrefix": "Prefix sleutel",
   "map_filterByKeyPrefix": "Filteren op sleutelvoorgemeld",
@@ -714,7 +711,7 @@
       }
     }
   },
-  "mapCache_downloadAction": "Download",
+  "mapCache_downloadAction": "Downloaden",
   "mapCache_cachedTiles": "Opgeslagen {count} tegels",
   "@mapCache_cachedTiles": {
     "placeholders": {
@@ -832,7 +829,7 @@
   "login_savePasswordSubtitle": "Het wachtwoord wordt veilig op dit apparaat opgeslagen.",
   "login_repeaterDescription": "Voer het wachtwoord van de repeater in om instellingen en status te openen.",
   "login_roomDescription": "Voer het wachtwoord van de kamer in om toegang te krijgen tot instellingen en status.",
-  "login_routing": "Routing",
+  "login_routing": "Routeplanning",
   "login_routingMode": "Routeerwijze",
   "login_autoUseSavedPath": "Automatisch (gebruik opgeslagen pad)",
   "login_forceFloodMode": "Dwing Floodmodus Af",
@@ -899,7 +896,7 @@
   "repeater_managementTools": "Beheerfuncties",
   "repeater_status": "Status",
   "repeater_statusSubtitle": "Status, statistieken en buren bekijken",
-  "repeater_telemetry": "Telemetry",
+  "repeater_telemetry": "Telemetrie",
   "repeater_telemetrySubtitle": "Bekijk telemetrie van sensoren en systeemgegevens",
   "repeater_cli": "CLI",
   "repeater_cliSubtitle": "Verzend commando's naar de repeater",
@@ -981,7 +978,7 @@
       }
     }
   },
-  "repeater_duplicatesFloodDirect": "Flood: {flood}, Direct: {direct}",
+  "repeater_duplicatesFloodDirect": "Overstroming: {flood}, Direct: {direct}",
   "@repeater_duplicatesFloodDirect": {
     "placeholders": {
       "flood": {
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Bevestigen",
   "repeater_settingsSaved": "Instellingen succesvol opgeslagen",
+  "repeater_rxGain": "Verhoogde RX-uitgang",
+  "repeater_rxGainHelper": "Hogere gevoeligheid, grotere stroomverbruik (alleen voor SX1262/SX1268)",
+  "repeater_refreshRxGain": "Versterk de reeds bestaande RX-verbetering.",
+  "repeater_multiAcks": "Meerdere bevestigingen",
+  "repeater_multiAcksSubtitle": "Bevestig berichten via verschillende routes voor een betere levering.",
+  "repeater_refreshMultiAcks": "Herhaal meerdere bevestigingen",
+  "repeater_networkHealth": "Netwerkgezondheid",
+  "repeater_loopDetect": "Detectie van beweging",
+  "repeater_loopDetectHelper": "Verzend pakketten die eruitzien als routing-lusjes",
+  "repeater_loopDetectOff": "Af",
+  "repeater_loopDetectMinimal": "Minimaal",
+  "repeater_loopDetectModerate": "Matig",
+  "repeater_loopDetectStrict": "Strikte",
+  "repeater_dutyCycle": "Werkcyclus",
+  "repeater_dutyCycleHelper": "Maximale percentage van de beschikbare uitzendtijd",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Informatie over de operator",
+  "repeater_ownerInfoHelper": "Openbare metadata voor deze repeater",
+  "repeater_refreshOwnerInfo": "Herstel informatie over de operator",
+  "repeater_floodMax": "Maximale hoeveelheid hop",
+  "repeater_floodMaxHelper": "Maximale hoeveelheid hop die een pakket kan bevatten (0-64)",
+  "repeater_advancedSettings": "Geavanceerd",
+  "repeater_advancedSettingsSubtitle": "Regelhendels voor ervaren gebruikers",
+  "repeater_pathHashMode": "Hash-modus voor paden",
+  "repeater_pathHashModeHelper": "Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID's, tot 64 hops), 1=2 bytes (65.000 ID's, tot 32 hops), 2=3 bytes (16 miljoen ID's, tot 21 hops). Versies 1.13 en ouder gebruiken multi-byte paden – alleen na het activeren van het netwerk.",
+  "repeater_txDelay": "Vertraging bij Flood TX",
+  "repeater_txDelayHelper": "Herzendinterval voor verkeer tijdens overstromingen, als een veelvoud van de tijd die het pakket nodig heeft (0-2, standaard 0.5). Een hoger getal betekent minder botsingen, maar ook een langere leveringstijd.",
+  "repeater_directTxDelay": "Directe vertraging",
+  "repeater_directTxDelayHelper": "De overzending van tijdslots voor directe (niet-massaal) verkeer, als een vermenigvuldigingsfactor van de tijd die een pakket nodig heeft (0-2, standaard 0,3).",
+  "repeater_intThresh": "Grenswaarde voor interferentie",
+  "repeater_intThreshHelper": "De drempelwaarde is ingesteld zodat de radio storingen boven deze waarde kan detecteren en blokkeren. 0 staat voor \"uitgezet\" – alleen verhoog deze waarde als u fouten in een storingrijke band ziet.",
+  "repeater_agcResetInterval": "Interval voor het opnieuw instellen van AGC",
+  "repeater_agcResetIntervalHelper": "Hoe vaak moet u de automatische gainregeling van de radio opnieuw instellen om terug te keren van een situatie waarin de gain vastzit? Elke seconde, of elke 4e seconde. Het uitschakelen van de periodieke reset (0) zorgt ervoor dat de gain niet automatisch wordt aangepast.",
+  "repeater_actionsTitle": "Acties",
+  "repeater_sendAdvert": "Verzend advertentie over overstromingen",
+  "repeater_sendAdvertSubtitle": "Zend een advertentie over overstromingen uit via het netwerk.",
+  "repeater_sendAdvertZeroHop": "Verzend een advertentie zonder tussenliggende stap",
+  "repeater_sendAdvertZeroHopSubtitle": "Zend een advertentie met één enkele verbinding (zonder tussenliggende zenders).",
+  "repeater_clockSync": "Synchroniseer klok nu",
+  "repeater_clockSyncSubtitle": "Stel de tijd van je telefoon in op de repeater.",
+  "repeater_actionSucceeded": "{action} is gelukt",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} failed: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Instellingen opgeslagen – start de zender opnieuw om de wijzigingen toe te passen.",
+  "repeater_settingsPartialFailure": "Sommige instellingen zijn niet correct uitgevoerd: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Fout bij het opslaan van de instellingen: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Basisinstellingen vernieuwen",
   "repeater_refreshRadioSettings": "Radiozender Instellingen Verversen",
   "repeater_refreshTxPower": "Nieuw laden TX-vermogen",
-  "repeater_refreshLocationSettings": "Instellingen Locatie Vernieuwen",
   "repeater_refreshPacketForwarding": "Vernieuwen Pakket Doorversturing",
   "repeater_refreshGuestAccess": "Toegang Gast Vernieuwen",
   "repeater_refreshPrivacyMode": "Privacymode vernieuwen",
-  "repeater_refreshAdvertisementSettings": "Instellingen Advertentie Bijwerken",
   "repeater_refreshed": "{label} is vernieuwd",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1109,7 +1179,7 @@
       }
     }
   },
-  "repeater_cliTitle": "Repeater CLI",
+  "repeater_cliTitle": "CLI-interface voor de repeater",
   "repeater_debugNextCommand": "Debug Volgende Commando",
   "repeater_commandHelp": "Help",
   "repeater_clearHistory": "Geschiedenis Verwijderen",
@@ -1194,7 +1264,7 @@
   "repeater_general": "Algemeen",
   "repeater_settingsCategory": "Instellingen",
   "repeater_bridge": "Bruggen",
-  "repeater_logging": "Logging",
+  "repeater_logging": "Loggen",
   "repeater_neighborsRepeaterOnly": "Buren (Alleen repeaters)",
   "repeater_regionManagementRepeaterOnly": "Regiobeheer (Alleen Repeater)",
   "repeater_regionNote": "Regio-commando's zijn geïntroduceerd om regio-definities en permissies te beheren.",
@@ -1265,12 +1335,12 @@
   "channelPath_title": "Pakketpad",
   "channelPath_viewMap": "Kaart bekijken",
   "channelPath_otherObservedPaths": "Overige Waargenomen Paden",
-  "channelPath_repeaterHops": "Repeater Hops",
+  "channelPath_repeaterHops": "Herhaalde sprongen",
   "channelPath_noHopDetails": "De details van de pakket zijn niet verstrekt.",
   "channelPath_messageDetails": "Details Bericht",
   "channelPath_senderLabel": "Afzender",
   "channelPath_timeLabel": "Tijd",
-  "channelPath_repeatsLabel": "Repeats",
+  "channelPath_repeatsLabel": "Herhaalt",
   "channelPath_pathLabel": "Pad {index}",
   "channelPath_observedLabel": "Waargenomen",
   "channelPath_observedPathTitle": "Waargenomen pad {index} • {hops}",
@@ -1308,7 +1378,7 @@
     }
   },
   "channelPath_unknownPath": "Onbekend",
-  "channelPath_floodPath": "Flood",
+  "channelPath_floodPath": "Overstroming",
   "channelPath_directPath": "Direct",
   "channelPath_observedZeroOf": "0 van {total} sprongen",
   "@channelPath_observedZeroOf": {
@@ -1365,11 +1435,11 @@
   "listFilter_sortBy": "Sorteren door",
   "listFilter_latestMessages": "Recente berichten",
   "listFilter_heardRecently": "Recent gezien",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "Alfabetisch",
   "listFilter_filters": "Filters",
   "listFilter_all": "Alles",
   "listFilter_users": "Gebruikers",
-  "listFilter_repeaters": "Repeaters",
+  "listFilter_repeaters": "Herhalers",
   "listFilter_roomServers": "Roomservers",
   "listFilter_unreadOnly": "Alleen ongelezen",
   "listFilter_newGroup": "Nieuwe groep",
@@ -1478,7 +1548,7 @@
     }
   },
   "community_title": "Gemeenschap",
-  "common_ok": "OK",
+  "common_ok": "Prima",
   "community_createDesc": "Maak een nieuwe community en deel deze via QR-code.",
   "community_create": "Maak Gemeenschap",
   "community_join": "Sluit aan",
@@ -1572,11 +1642,11 @@
   "contacts_pathTrace": "Pad Traceren",
   "contacts_ping": "Pingen",
   "contacts_repeaterPathTrace": "Pad traceren naar repeater",
-  "contacts_repeaterPing": "Ping repeater",
+  "contacts_repeaterPing": "Ping-repeater",
   "contacts_roomPathTrace": "Padtrace naar room server",
   "contacts_roomPing": "Ping kamer server",
   "contacts_chatTraceRoute": "Route traceren",
-  "contacts_pathTraceTo": "Trace route to {name}",
+  "contacts_pathTraceTo": "Volg de route naar {name}",
   "appSettings_languageUk": "Oekraïens",
   "contacts_invalidAdvertFormat": "Ongeldige contactgegevens",
   "contacts_contactImportFailed": "Contact kon niet geïmporteerd worden.",
@@ -1952,6 +2022,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Aantal pogingen om een bericht opnieuw te versturen voordat het als mislukt wordt gemarkeerd",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetrie-modus bijgewerkt",
+  "settings_multiAck": "Meerdere bevestigingen",
   "map_showOverlaps": "Herhalingssleutel overlapt",
   "map_runTraceWithReturnPath": "Terugkeren op hetzelfde pad.",
   "@radioStats_noiseFloor": {
@@ -2084,6 +2155,77 @@
   "room_guest": "Informatie over de server",
   "chat_sendMessage": "Verzend bericht",
   "repeater_guest": "Informatie over herhalingsapparatuur",
+  "repeater_getCategory": "Waarden verkrijgen",
+  "repeater_powerMgmt": "Energiebeheer",
+  "repeater_sensors": "Sensoren",
+  "repeater_cliHelpPowerOff": "Zorgt ervoor dat het apparaat wordt uitgeschakeld. (geen reactie verwacht)",
+  "repeater_cliHelpClkReboot": "Stelt de klok terug naar een bekende tijd en start het apparaat opnieuw op.",
+  "repeater_cliHelpAdvertZeroHop": "Verstuurt een advertentie die alleen naar directe buren wordt gericht (geen tussenliggende stops).",
+  "repeater_cliHelpStartOta": "Start een firmware-update via de lucht op ondersteunde boards.",
+  "repeater_cliHelpTime": "Stelt de klok van het apparaat in op de gegeven Unix-tijd (aantal seconden vanaf de Unix-epoch). De klok kan niet teruggedraaid worden.",
+  "repeater_cliHelpBoard": "Geeft de fabrikant van het bord en/of de hardware-identificatie weer.",
+  "repeater_cliHelpDiscoverNeighbors": "Stuurt een verzoek om buren in de buurt te ontdekken. (Alleen van toepassing op een repeater)",
+  "repeater_cliHelpPowersaving": "Geeft aan of de energiebesparingsmodus is ingeschakeld of uitgeschakeld.",
+  "repeater_cliHelpPowersavingOnOff": "Activeert of deactiveert de energiebesparingsmodus (indien ondersteund).",
+  "repeater_cliHelpErase": "(Alleen voor seriële verbindingen) Formateert het bestandssysteem van het apparaat. Verwijdert alle instellingen en contacten.",
+  "repeater_cliHelpSetDutyCycle": "Stelt het maximale toegestane transmissiepercentage in (in procenten, 1-100). Past intern de tijdsschaal aan.",
+  "repeater_cliHelpSetPrvKey": "(Alleen voor seriële toepassingen) Vervangt de private sleutel van het apparaat. Een herstart is vereist om deze wijziging toe te passen. Genereert een nieuwe publieke sleutel.",
+  "repeater_cliHelpSetRadioRxGain": "(Alleen voor SX126x-chips) Schakelt de versterkte RX-gain in om de gevoeligheid te verbeteren bij een hoger stroomverbruik.",
+  "repeater_cliHelpSetOwnerInfo": "Definieert de string met contactgegevens van de eigenaar, die in de advertenties wordt opgenomen. Gebruik '|' voor nieuwe regels.",
+  "repeater_cliHelpSetPathHashMode": "Stelt de modus voor het berekenen van de hash van de route in. 0 = voorheen, 1 = standaard, 2 = strikt. Beïnvloedt hoe de routes worden gematched.",
+  "repeater_cliHelpSetLoopDetect": "Stelt de gevoeligheid voor het detecteren van een lus in de routing in: uit, minimaal, matig of strikt.",
+  "repeater_cliHelpSetFreq": "(Alleen voor seriële communicatie) Stelt snel alleen de frequentie in. Herstart is vereist. Het is aan te raden om \"radio instellingen\" te gebruiken voor alle radioparameters.",
+  "repeater_cliHelpSetBridgeChannel": "(Alleen voor ESPNow-brug) Stelt het WiFi-kanaal (1-14) in dat door de brug wordt gebruikt.",
+  "repeater_cliHelpGetName": "Toont de naam van de geconfigureerde knoop.",
+  "repeater_cliHelpGetRole": "Geeft de rol van de firmware aan (herhaald, server voor een kamer, enz.).",
+  "repeater_cliHelpGetPublicKey": "Toont het openbare sleutel van het apparaat.",
+  "repeater_cliHelpGetPrvKey": "(Alleen voor seriële communicatie) Toont de private sleutel van het apparaat. Behandel dit als een geheim.",
+  "repeater_cliHelpGetRepeat": "Geeft aan of het doorsturen van pakketten (als repeater) is ingeschakeld of uitgeschakeld.",
+  "repeater_cliHelpGetTx": "Toont de huidige zendvermogen in dBm.",
+  "repeater_cliHelpGetFreq": "Toont de geconfigureerde frequentie in MHz.",
+  "repeater_cliHelpGetRadio": "Geeft alle radioparameters weer: frequentie, bandbreedte, spreidfactor, codegraad.",
+  "repeater_cliHelpGetRadioRxGain": "(Alleen voor SX126x-chips) Toont de status van de versterking van de RX-ontvangst.",
+  "repeater_cliHelpGetAf": "Geeft de huidige tijdsfactor weer.",
+  "repeater_cliHelpGetDutyCycle": "Toont de huidige toegestane duty cycle als een percentage.",
+  "repeater_cliHelpGetIntThresh": "Toont het drempelwaarde voor signaalinterferentie in dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Geeft het interval in seconden aan voor het resetten van de AGC (Automatic Gain Control).",
+  "repeater_cliHelpGetMultiAcks": "Geeft aan of de modus \"dubbele bevestiging\" is ingeschakeld (1) of uitgeschakeld (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Geeft aan of er toegang is voor gastgebruikers zonder rechten.",
+  "repeater_cliHelpGetAdvertInterval": "Geeft de duur van de lokale reclame in minuten aan.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Geeft de duur van de reclame-interval in uren aan.",
+  "repeater_cliHelpGetGuestPassword": "Toont het ingestelde gastwachtwoord.",
+  "repeater_cliHelpGetLat": "Toont de ingestelde breedtegraad.",
+  "repeater_cliHelpGetLon": "Toont de ingestelde lengtegraad.",
+  "repeater_cliHelpGetRxDelay": "Toont de basiswaarde van de rx-vertraging.",
+  "repeater_cliHelpGetTxDelay": "Geeft de factor weer die de vertraging in de flood-modus bepaalt.",
+  "repeater_cliHelpGetDirectTxDelay": "Geeft de factor voor de vertraging in de directe modus weer.",
+  "repeater_cliHelpGetFloodMax": "Toont het maximale aantal keer dat een overstroming heeft plaatsgevonden.",
+  "repeater_cliHelpGetOwnerInfo": "Toont de string met contactgegevens van de eigenaar.",
+  "repeater_cliHelpGetPathHashMode": "Toont de modus voor het berekenen van de hash (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Geeft de gevoeligheid voor het detecteren van lusvorming weer.",
+  "repeater_cliHelpGetAcl": "(Alleen voor seriële communicatie) Geeft de toegangscontroles weer op een repeater.",
+  "repeater_cliHelpGetBridgeEnabled": "Geeft aan of de brug is ingeschakeld.",
+  "repeater_cliHelpGetBridgeDelay": "Geeft de vertraging van de brug in milliseconden weer.",
+  "repeater_cliHelpGetBridgeSource": "Geeft aan of de brug RX- of TX-pakketten verwerkt.",
+  "repeater_cliHelpGetBridgeBaud": "(Alleen RS232-brug) Toont de baud-snelheid van de brug.",
+  "repeater_cliHelpGetBridgeChannel": "(Alleen voor ESPNow-brug) Toont het WiFi-kanaal van de brug.",
+  "repeater_cliHelpGetBridgeSecret": "(Alleen voor ESPNow-brug) Toont het gedeelde geheime sleutel.",
+  "repeater_cliHelpGetBootloaderVer": "(Alleen voor NRF52) Toont de versie van de bootloader.",
+  "repeater_cliHelpGetAdcMultiplier": "Toont de ADC-vermenigvuldiging (schalen van de batterijspanning).",
+  "repeater_cliHelpGetPwrMgtSupport": "Geeft aan of het bestuur ondersteuning heeft voor het beheer van energieverbruik.",
+  "repeater_cliHelpGetPwrMgtSource": "Geeft de huidige stroombron aan: extern of batterij.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Geeft de meest recente redenen voor het opnieuw opstarten en afsluiten weer.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Geeft de batterijspanning in mV weer, direct na het opstarten.",
+  "repeater_cliHelpSensorGet": "Leest een aangepaste sensorgegevens op basis van een sleutel.",
+  "repeater_cliHelpSensorSet": "Maakt een aangepaste instelling voor een sensor.",
+  "repeater_cliHelpSensorList": "Toont alle aangepaste instellingen voor sensoren, gegroepeerd op basis van een optionele startindex.",
+  "repeater_cliHelpRegionDefault": "Toont het huidige standaard regio-bereik.",
+  "repeater_cliHelpRegionDefaultSet": "Stelt de standaard regio-omvang in. Gebruik \"<null>\" om deze te resetten.",
+  "repeater_cliHelpRegionListAllowed": "Lijst van gebieden waar doorstromen tijdens overstromingen is toegestaan.",
+  "repeater_cliHelpRegionListDenied": "Geeft een lijst van regio's die het verkeer tijdens overstromingen verbieden.",
+  "repeater_cliHelpStatsPackets": "(Alleen voor seriële verbindingen) Toont statistieken op pakketniveau.",
+  "repeater_cliHelpStatsRadio": "(Alleen voor serienummers) Toont radio-statistieken.",
+  "repeater_cliHelpStatsCore": "(Alleen voor seriële communicatie) Toont de belangrijkste firmware-statistieken.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",
@@ -2124,7 +2266,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Meerdere bevestigingen",
   "map_sharedAt": "Gedeeld",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2165,5 +2306,10 @@
   "losBlockedSpotsHint": "Tik op een geblokkeerd gebied om het op de kaart te markeren.",
   "losBlockedSpotsTitle": "Geplande plaatsen",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "settings_companionDebugLog": "Debuglog voor aanvullende informatie",
+  "chat_newMessages": "Nieuwe berichten",
+  "chat_markAsUnread": "Markeer als ongelezen",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB commando's, antwoorden en ruwe data",
+  "repeater_chanUtil": "Gebruik van het kanaal"
 }

@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open (Advanced mod)",
+  "scanner_title": "MeshCore: Versión abierta (Advanced mod)",
   "scanner_scanning": "Escaneando dispositivos...",
   "scanner_connecting": "Conectando...",
   "scanner_disconnecting": "Desconectando...",
@@ -123,7 +123,7 @@
   "settings_appDebugLog": "Registro de Depuración de la App",
   "settings_appDebugLogSubtitle": "Mensajes de depuración de la aplicación",
   "settings_about": "Acerca de",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open versión (Advanced mod) {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -166,19 +166,19 @@
   "appSettings_themeDark": "Oscuro",
   "appSettings_language": "Idioma",
   "appSettings_languageSystem": "Predeterminado del sistema",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
+  "appSettings_languageEn": "Inglés",
+  "appSettings_languageFr": "Francés",
   "appSettings_languageEs": "Español",
-  "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
-  "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
+  "appSettings_languageDe": "Alemán",
+  "appSettings_languagePl": "Polaco",
+  "appSettings_languageSl": "Esloveno",
+  "appSettings_languagePt": "Portugués",
   "appSettings_languageIt": "Italiano",
-  "appSettings_languageZh": "中文",
-  "appSettings_languageSv": "Svenska",
-  "appSettings_languageNl": "Nederlands",
-  "appSettings_languageSk": "Slovenčina",
-  "appSettings_languageBg": "Български",
+  "appSettings_languageZh": "Chino",
+  "appSettings_languageSv": "Sueco",
+  "appSettings_languageNl": "Neerlandés",
+  "appSettings_languageSk": "Esloveno",
+  "appSettings_languageBg": "Bulgaro",
   "appSettings_notifications": "Notificaciones",
   "appSettings_enableNotifications": "Habilitar Notificaciones",
   "appSettings_enableNotificationsSubtitle": "Recibir notificaciones para mensajes y anuncios",
@@ -211,8 +211,8 @@
     }
   },
   "appSettings_batteryChemistryConnectFirst": "Conéctate a un dispositivo para elegir",
-  "appSettings_batteryNmc": "18650 NMC (3.0-4.2V)",
-  "appSettings_batteryLifepo4": "LiFePO4 (2.6-3.65V)",
+  "appSettings_batteryNmc": "18650 NMC (3,0-4,2 V)",
+  "appSettings_batteryLifepo4": "LiFePO4 (2.6-3.65 V)",
   "appSettings_batteryLipo": "LiPo (3.0-4.2V)",
   "appSettings_mapDisplay": "Visualización del Mapa",
   "appSettings_showRepeaters": "Mostrar Repetidores",
@@ -300,7 +300,7 @@
   "contacts_noContactsMatchFilter": "No hay contactos que coincidan con tu filtro",
   "contacts_noMembers": "No miembros",
   "contacts_lastSeenNow": "Última vez que se vio ahora",
-  "contacts_lastSeenMinsAgo": "~ {minutes} min.",
+  "contacts_lastSeenMinsAgo": "~ {minutes} minutos",
   "@contacts_lastSeenMinsAgo": {
     "placeholders": {
       "minutes": {
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Canal con hashtag",
   "channels_public": "Público",
   "channels_private": "Privado",
-  "channels_publicChannel": "Canal público",
-  "channels_privateChannel": "Canal privado",
   "channels_editChannel": "Editar canal",
   "channels_muteChannel": "Silenciar canal",
   "channels_unmuteChannel": "Activar canal",
@@ -417,7 +414,7 @@
   "channels_publicChannelAdded": "Canal público añadido",
   "channels_sortBy": "Ordenar por",
   "channels_sortManual": "Manual",
-  "channels_sortAZ": "A-Z",
+  "channels_sortAZ": "De la A a la Z",
   "channels_sortLatestMessages": "Últimos mensajes",
   "channels_sortUnread": "Sin leer",
   "chat_noMessages": "Aún no hay mensajes",
@@ -481,7 +478,7 @@
   "emojiCategoryObjects": "Objetos",
   "gifPicker_title": "Elegir un GIF",
   "gifPicker_searchHint": "Buscar GIFs...",
-  "gifPicker_poweredBy": "Powered by GIPHY",
+  "gifPicker_poweredBy": "Con tecnología de GIPHY",
   "gifPicker_noGifsFound": "No se encontraron GIFs",
   "gifPicker_failedLoad": "No se pudo cargar los GIFs",
   "gifPicker_failedSearch": "No se encontraron GIFs",
@@ -549,7 +546,7 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypeCli": "Interfaz de línea de comandos",
   "debugFrame_textTypePlain": "Sencillo",
   "debugFrame_text": "- Texto: \"{text}\"",
   "@debugFrame_text": {
@@ -568,7 +565,7 @@
   "chat_pathHistoryFull": "El historial de rutas está completo. Eliminar entradas para añadir nuevas.",
   "chat_hopSingular": "salta",
   "chat_hopPlural": "salta",
-  "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
+  "chat_hopsCount": "{count} {count, plural, =1{salto} other{saltos}}",
   "@chat_hopsCount": {
     "placeholders": {
       "count": {
@@ -663,7 +660,7 @@
   "map_repeater": "Repetidor",
   "map_room": "Habitación",
   "map_sensor": "Sensor",
-  "map_pinDm": "Pin (DM)",
+  "map_pinDm": "Etiqueta (DM)",
   "map_pinPrivate": "Bloqueo (Privado)",
   "map_pinPublic": "Clave (Pública)",
   "map_lastSeen": "Última vez que se vio",
@@ -899,9 +896,9 @@
   "repeater_managementTools": "Herramientas de Gestión",
   "repeater_status": "Estado",
   "repeater_statusSubtitle": "Ver el estado, las estadísticas y los vecinos del repetidor",
-  "repeater_telemetry": "Telemetry",
+  "repeater_telemetry": "Telemetría",
   "repeater_telemetrySubtitle": "Ver la telemetría de los sensores y las estadísticas del sistema",
-  "repeater_cli": "CLI",
+  "repeater_cli": "Interfaz de línea de comandos",
   "repeater_cliSubtitle": "Enviar comandos al repetidor",
   "repeater_settings": "Configuración",
   "repeater_settingsSubtitle": "Configurar parámetros del repetidor",
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Confirmar",
   "repeater_settingsSaved": "Guardado de ajustes exitoso",
+  "repeater_rxGain": "Aumento en la ganancia de RX",
+  "repeater_rxGainHelper": "Mayor sensibilidad, mayor consumo de corriente (solo para SX1262/SX1268)",
+  "repeater_refreshRxGain": "Aumenta el rendimiento de RX con la nueva versión.",
+  "repeater_multiAcks": "Múltiples respuestas de confirmación",
+  "repeater_multiAcksSubtitle": "Reconocer mensajes a través de múltiples vías para una mejor entrega.",
+  "repeater_refreshMultiAcks": "Reenviar múltiples confirmaciones",
+  "repeater_networkHealth": "Salud de la red",
+  "repeater_loopDetect": "Detección de bucles",
+  "repeater_loopDetectHelper": "Crea paquetes de \"flujo\" que parezcan bucles de enrutamiento.",
+  "repeater_loopDetectOff": "Fuera",
+  "repeater_loopDetectMinimal": "Mínimo",
+  "repeater_loopDetectModerate": "Moderado",
+  "repeater_loopDetectStrict": "Estrictos",
+  "repeater_dutyCycle": "Ciclo de trabajo",
+  "repeater_dutyCycleHelper": "Porcentaje máximo de tiempo de antena",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Información del operador",
+  "repeater_ownerInfoHelper": "Metadatos públicos para este repetidor",
+  "repeater_refreshOwnerInfo": "Actualizar información del operador",
+  "repeater_floodMax": "Máximo número de saltos en caso de inundación",
+  "repeater_floodMaxHelper": "Número máximo de paquetes de flujo que un nodo puede enviar (0-64)",
+  "repeater_advancedSettings": "Avanzado",
+  "repeater_advancedSettingsSubtitle": "Perillas de ajuste para operadores experimentados",
+  "repeater_pathHashMode": "Modo de hash de ruta",
+  "repeater_pathHashModeHelper": "Bytes utilizados para codificar el ID de este repetidor en las etiquetas de ruta/detección de bucles. 0=1 byte (256 IDs, hasta 64 saltos), 1=2 bytes (65.000 IDs, hasta 32 saltos), 2=3 bytes (16 millones de IDs, hasta 21 saltos). Las versiones 1.13 y anteriores de firmware eliminan rutas de múltiples bytes; solo se detectan una vez que la red está activa en la versión 1.14 o posterior.",
+  "repeater_txDelay": "Retraso en Flood, TX",
+  "repeater_txDelayHelper": "Ajuste de retransmisión para el tráfico de inundación, como un multiplicador del tiempo de transmisión del paquete (0-2, valor predeterminado 0.5). Un valor más alto significa menos colisiones, pero una entrega más lenta.",
+  "repeater_directTxDelay": "Retraso directo en TX",
+  "repeater_directTxDelayHelper": "Reenvío de espacios para el tráfico directo (no masivo), como un multiplicador del tiempo de transmisión del paquete (0-2, valor predeterminado 0.3).",
+  "repeater_intThresh": "Límite de interferencia",
+  "repeater_intThreshHelper": "Se establece un umbral para la calibración del nivel de ruido de la radio, de modo que rechaza las interferencias que superen este nivel. 0 deshabilita — solo aumente este valor si observa errores en una banda de frecuencia con mucho ruido.",
+  "repeater_agcResetInterval": "Intervalo de reinicio de AGC",
+  "repeater_agcResetIntervalHelper": "¿Con qué frecuencia se debe restablecer el control automático de ganancia del radio para recuperarse de un estado de ganancia bloqueada? Se puede restablecer cada pocos segundos, o cada 4 segundos. Desactivar la función de restablecimiento periódico.",
+  "repeater_actionsTitle": "Acciones",
+  "repeater_sendAdvert": "Enviar anuncio sobre inundaciones",
+  "repeater_sendAdvertSubtitle": "Transmite un anuncio sobre inundaciones a través de la red.",
+  "repeater_sendAdvertZeroHop": "Enviar anuncio sin intermediarios",
+  "repeater_sendAdvertZeroHopSubtitle": "Transmite un anuncio de un solo salto (sin retransmisiones).",
+  "repeater_clockSync": "Sincronizar reloj ahora",
+  "repeater_clockSyncSubtitle": "Envía la hora de tu teléfono al repetidor.",
+  "repeater_actionSucceeded": "{action} succeeded",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} failed: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Configuración guardada — reinicie el repetidor para aplicar los cambios.",
+  "repeater_settingsPartialFailure": "Algunas configuraciones no se pudieron aplicar: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Error al guardar la configuración: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Actualizar Configuración Básica",
   "repeater_refreshRadioSettings": "Actualizar Ajustes de Radio",
   "repeater_refreshTxPower": "Actualizar TX de energía",
-  "repeater_refreshLocationSettings": "Actualizar Configuración de Ubicación",
   "repeater_refreshPacketForwarding": "Actualizar Enrutamiento de Paquetes",
   "repeater_refreshGuestAccess": "Actualizar Acceso Invitados",
   "repeater_refreshPrivacyMode": "Actualizar Modo Privacidad",
-  "repeater_refreshAdvertisementSettings": "Actualizar Configuración de Anuncios",
   "repeater_refreshed": "{label} actualizado",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1365,7 +1435,7 @@
   "listFilter_sortBy": "Ordenar por",
   "listFilter_latestMessages": "Últimos mensajes",
   "listFilter_heardRecently": "Escuchado recientemente",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "De la A a la Z",
   "listFilter_filters": "Filtros",
   "listFilter_all": "Todas",
   "listFilter_users": "Usuarios",
@@ -1980,6 +2050,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Número de intentos de reintento antes de marcar un mensaje como fallido.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetría actualizado",
+  "settings_multiAck": "Múltiples respuestas de confirmación",
   "map_showOverlaps": "Superposiciones de tecla repetidora",
   "map_runTraceWithReturnPath": "Volver atrás por el mismo camino.",
   "@radioStats_noiseFloor": {
@@ -2112,6 +2183,77 @@
   "chat_sendMessage": "Enviar mensaje",
   "repeater_guestTools": "Herramientas para invitados",
   "room_guest": "Información del servidor",
+  "repeater_getCategory": "Obtener valores",
+  "repeater_powerMgmt": "Gestión de la energía",
+  "repeater_sensors": "Sensores",
+  "repeater_cliHelpPowerOff": "Apaga el dispositivo. (no se espera respuesta)",
+  "repeater_cliHelpClkReboot": "Restablece el reloj a una fecha conocida y reinicia el dispositivo.",
+  "repeater_cliHelpAdvertZeroHop": "Envía un anuncio que no requiere saltos (solo para los vecinos inmediatos).",
+  "repeater_cliHelpStartOta": "Inicia una actualización de firmware por aire en las placas compatibles.",
+  "repeater_cliHelpTime": "Establece la hora del dispositivo en los segundos correspondientes a la época Unix. La hora no puede retroceder.",
+  "repeater_cliHelpBoard": "Muestra el fabricante de la placa base / identificador de hardware.",
+  "repeater_cliHelpDiscoverNeighbors": "Envía una solicitud de descubrimiento de nodos a los vecinos cercanos. (Solo para repetidores)",
+  "repeater_cliHelpPowersaving": "Indica si el modo de ahorro de energía está activado o desactivado.",
+  "repeater_cliHelpPowersavingOnOff": "Activa o desactiva el modo de ahorro de energía (si está disponible).",
+  "repeater_cliHelpErase": "(Solo para dispositivos) Formatea el sistema de archivos del dispositivo. Elimina todas las configuraciones y contactos.",
+  "repeater_cliHelpSetDutyCycle": "Establece el ciclo de transmisión máximo permitido como un porcentaje (1-100). Ajusta internamente el factor de tiempo de aire.",
+  "repeater_cliHelpSetPrvKey": "(Solo para series) Reemplaza la clave privada de identificación del dispositivo. Se requiere reiniciar para aplicar. Genera una nueva clave pública.",
+  "repeater_cliHelpSetRadioRxGain": "(Solo para SX126x) Activa/desactiva el amplificador de la RX para mejorar la sensibilidad a corrientes más altas.",
+  "repeater_cliHelpSetOwnerInfo": "Define la cadena de información de contacto del propietario que se incluye en los anuncios. Utilice '|' para indicar nuevas líneas.",
+  "repeater_cliHelpSetPathHashMode": "Establece el modo de hash de la ruta. 0 = antiguo, 1 = estándar, 2 = estricto. Afecta la forma en que se comparan las rutas.",
+  "repeater_cliHelpSetLoopDetect": "Establece la sensibilidad para la detección de bucles de enrutamiento: apagado, mínimo, moderado o estricto.",
+  "repeater_cliHelpSetFreq": "(Solo para la configuración de frecuencia) Establece rápidamente la frecuencia deseada. Se requiere reiniciar. Se recomienda utilizar la opción \"configurar radio\" para obtener todos los parámetros de la radio.",
+  "repeater_cliHelpSetBridgeChannel": "(Solo para el puente ESPNow) Establece el canal de WiFi (1-14) que utiliza el puente.",
+  "repeater_cliHelpGetName": "Muestra el nombre del nodo configurado.",
+  "repeater_cliHelpGetRole": "Muestra el rol del firmware (Repetidor, Servidor de habitación, etc.).",
+  "repeater_cliHelpGetPublicKey": "Muestra la clave pública del dispositivo.",
+  "repeater_cliHelpGetPrvKey": "(Solo para uso en serie) Muestra la clave privada del dispositivo. Trátala como una información confidencial.",
+  "repeater_cliHelpGetRepeat": "Indica si el enrutamiento de paquetes (función de repetidor) está activado o desactivado.",
+  "repeater_cliHelpGetTx": "Muestra la potencia actual en dBm.",
+  "repeater_cliHelpGetFreq": "Muestra la frecuencia de radio configurada en MHz.",
+  "repeater_cliHelpGetRadio": "Muestra todos los parámetros de radio: frecuencia, ancho de banda, factor de dispersión, tasa de codificación.",
+  "repeater_cliHelpGetRadioRxGain": "(Solo para SX126x) Muestra el estado de ganancia amplificada del receptor.",
+  "repeater_cliHelpGetAf": "Muestra el factor de tiempo actual.",
+  "repeater_cliHelpGetDutyCycle": "Muestra el ciclo de trabajo actual permitido como un porcentaje.",
+  "repeater_cliHelpGetIntThresh": "Muestra el umbral de interferencia del canal en dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Muestra el intervalo de reinicio del AGC en segundos.",
+  "repeater_cliHelpGetMultiAcks": "Indica si el modo de confirmación doble está activado (1) o desactivado (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Indica si se permite el acceso de solo lectura para los usuarios invitados.",
+  "repeater_cliHelpGetAdvertInterval": "Muestra el intervalo de publicidad local en minutos.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Muestra el intervalo de publicidad para la emisión de la señal de inundación, expresado en horas.",
+  "repeater_cliHelpGetGuestPassword": "Muestra la contraseña de invitado configurada.",
+  "repeater_cliHelpGetLat": "Muestra la latitud configurada.",
+  "repeater_cliHelpGetLon": "Muestra la longitud configurada.",
+  "repeater_cliHelpGetRxDelay": "Muestra el valor base de rxdelay.",
+  "repeater_cliHelpGetTxDelay": "Muestra el factor de retardo en modo de inundación.",
+  "repeater_cliHelpGetDirectTxDelay": "Muestra el factor de retardo en modo directo.",
+  "repeater_cliHelpGetFloodMax": "Muestra el número máximo de saltos por inundación.",
+  "repeater_cliHelpGetOwnerInfo": "Muestra la cadena de información de contacto del propietario.",
+  "repeater_cliHelpGetPathHashMode": "Muestra el modo de hash de ruta (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Muestra la sensibilidad en la detección de bucles.",
+  "repeater_cliHelpGetAcl": "(Solo para series) Enumera las entradas de control de acceso en un repetidor.",
+  "repeater_cliHelpGetBridgeEnabled": "Indica si el puente está habilitado.",
+  "repeater_cliHelpGetBridgeDelay": "Muestra el retardo del puente en milisegundos.",
+  "repeater_cliHelpGetBridgeSource": "Indica si el puente está enviando o recibiendo paquetes RX o TX.",
+  "repeater_cliHelpGetBridgeBaud": "(Solo puente RS232) Muestra la velocidad de transmisión del puente.",
+  "repeater_cliHelpGetBridgeChannel": "(Solo para el puente ESPNow) Muestra el canal WiFi del puente.",
+  "repeater_cliHelpGetBridgeSecret": "(Solo para el puente ESPNow) Muestra el secreto compartido por el puente.",
+  "repeater_cliHelpGetBootloaderVer": "(Solo NRF52) Muestra la versión del cargador.",
+  "repeater_cliHelpGetAdcMultiplier": "Muestra el multiplicador del ADC (escalado de voltaje de la batería).",
+  "repeater_cliHelpGetPwrMgtSupport": "Indica si el sistema cuenta con funciones de gestión de energía.",
+  "repeater_cliHelpGetPwrMgtSource": "Indica la fuente de energía actual: externa o batería.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Muestra las razones más recientes de reinicio y apagado.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Muestra el voltaje de la batería al encender el sistema en milivoltios (mV).",
+  "repeater_cliHelpSensorGet": "Lee una configuración de sensor personalizada mediante una tecla.",
+  "repeater_cliHelpSensorSet": "Crea una configuración personalizada para un sensor.",
+  "repeater_cliHelpSensorList": "Muestra todas las configuraciones de sensores personalizadas, paginadas a partir de un índice de inicio opcional.",
+  "repeater_cliHelpRegionDefault": "Muestra el ámbito predeterminado actual.",
+  "repeater_cliHelpRegionDefaultSet": "Establece el ámbito regional predeterminado. Utilice \"<null>\" para restablecer a la configuración predeterminada.",
+  "repeater_cliHelpRegionListAllowed": "Enumera las regiones que permiten el paso de vehículos debido a inundaciones.",
+  "repeater_cliHelpRegionListDenied": "Enumera las regiones que prohíben el tráfico debido a las inundaciones.",
+  "repeater_cliHelpStatsPackets": "(Solo para series) Muestra estadísticas a nivel de paquetes.",
+  "repeater_cliHelpStatsRadio": "(Solo para transmisiones en serie) Muestra estadísticas de radio.",
+  "repeater_cliHelpStatsCore": "(Solo para series) Muestra estadísticas clave del firmware.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",
@@ -2152,7 +2294,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Múltiples respuestas de confirmación",
   "map_sharedAt": "Compartido",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2193,5 +2334,10 @@
   "losBlockedSpotsHint": "Seleccione un punto bloqueado para resaltarlo en el mapa.",
   "losSelectedObstructionTitle": "Obstrucción seleccionada",
   "losSelectedObstructionDetails": "Bloqueado por {obstruction} a una altura de {heightUnit}, a {distanceFromA} metros de A y a {distanceFromB} metros de B ({distanceUnit}).",
-  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}"
+  "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
+  "settings_companionDebugLog": "Registro de depuración asociado",
+  "chat_newMessages": "Nuevos mensajes",
+  "settings_companionDebugLogSubtitle": "Comandos, respuestas y datos brutos para protocolos BLE/TCP/USB",
+  "chat_markAsUnread": "Marcar como no leído",
+  "repeater_chanUtil": "Utilización del canal"
 }

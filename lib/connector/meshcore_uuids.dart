@@ -11,5 +11,6 @@ class MeshCoreUuids {
     "Lilygo",
     "HT-",
     "LowMesh_MC_",
+    "NRF52",
   ];
 }

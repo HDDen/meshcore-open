@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open (Advanced mod)",
+  "scanner_title": "MeshCore – Verzia pre verejnosť (Advanced mod)",
   "scanner_scanning": "Skrívania zariadení...",
   "scanner_connecting": "Pripojujem sa...",
   "scanner_disconnecting": "Odpojuje sa...",
@@ -123,7 +123,7 @@
   "settings_appDebugLog": "Záznam ladenia aplikácie",
   "settings_appDebugLogSubtitle": "Správy z ladenia aplikácie",
   "settings_about": "O nás",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod), verzia {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -131,11 +131,11 @@
       }
     }
   },
-  "settings_aboutLegalese": "MeshCore Open (Advanced mod) Source Projekt 2024",
+  "settings_aboutLegalese": "MeshCore Open Source Projekt 2024",
   "settings_aboutDescription": "Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.",
   "settings_infoName": "Meno",
-  "settings_infoId": "ID",
-  "settings_infoStatus": "Status",
+  "settings_infoId": "Identifikátor",
+  "settings_infoStatus": "Stav",
   "settings_infoBattery": "Batéria",
   "settings_infoPublicKey": "Verejný kľúč",
   "settings_infoContactsCount": "Počet kontaktov",
@@ -148,7 +148,7 @@
   "settings_spreadingFactor": "Rozptýľovací faktor",
   "settings_codingRate": "Cenový kurz pre programovanie",
   "settings_txPower": "TX Výkon (dBm)",
-  "settings_txPowerHelper": "0 - 22",
+  "settings_txPowerHelper": "0 – 22",
   "settings_txPowerInvalid": "Neplatná hodnota výkonu TX (0-22 dBm)",
   "settings_error": "Chyba: {message}",
   "@settings_error": {
@@ -166,19 +166,19 @@
   "appSettings_themeDark": "Tmavé",
   "appSettings_language": "Jazyk",
   "appSettings_languageSystem": "Predvolený systém",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
-  "appSettings_languageEs": "Español",
-  "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
-  "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
-  "appSettings_languageIt": "Italiano",
-  "appSettings_languageZh": "中文",
-  "appSettings_languageSv": "Svenska",
-  "appSettings_languageNl": "Nederlands",
+  "appSettings_languageEn": "Anglicky",
+  "appSettings_languageFr": "Francúzština",
+  "appSettings_languageEs": "Španielsky",
+  "appSettings_languageDe": "Nemecky",
+  "appSettings_languagePl": "Poľský",
+  "appSettings_languageSl": "Slovenčina",
+  "appSettings_languagePt": "Portugalčina",
+  "appSettings_languageIt": "Taliančina",
+  "appSettings_languageZh": "Čínština",
+  "appSettings_languageSv": "Švédska",
+  "appSettings_languageNl": "Niderlandsky",
   "appSettings_languageSk": "Slovenčina",
-  "appSettings_languageBg": "Български",
+  "appSettings_languageBg": "Българština",
   "appSettings_notifications": "Upozornenia",
   "appSettings_enableNotifications": "Povolte Notifikácie",
   "appSettings_enableNotificationsSubtitle": "Zísť o upozornenia na správy a inzeráty",
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Kanál s hashtagom",
   "channels_public": "Veľké verejné",
   "channels_private": "Osobné",
-  "channels_publicChannel": "Veľké verejne kanály",
-  "channels_privateChannel": "Osobné kanál",
   "channels_editChannel": "Upraviť kanál",
   "channels_muteChannel": "Stlmiť kanál",
   "channels_unmuteChannel": "Zrušiť stlmenie kanála",
@@ -417,7 +414,7 @@
   "channels_publicChannelAdded": "Veľký kanál pridaný",
   "channels_sortBy": "Triediť podľa",
   "channels_sortManual": "Ručne",
-  "channels_sortAZ": "A-Z",
+  "channels_sortAZ": "Od A po Z",
   "channels_sortLatestMessages": "Posledné správy",
   "channels_sortUnread": "Nezriadené",
   "chat_noMessages": "Zatiaľ žiadne správy.",
@@ -495,7 +492,7 @@
   "debugLog_noEntries": "Zatiaľ neboli zaznamenané žiadne debug logy.",
   "debugLog_enableInSettings": "Povolte ladicové logy v nastaveniach",
   "debugLog_frames": "Rámce",
-  "debugLog_rawLogRx": "Raw Log-RX",
+  "debugLog_rawLogRx": "Čistý log – RX",
   "debugLog_noBleActivity": "Zatiaľ žiadna aktivita BLE.",
   "debugFrame_length": "Dĺžka rámca: {count} bajtov",
   "@debugFrame_length": {
@@ -549,7 +546,7 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypeCli": "CLI (Command Line Interface)",
   "debugFrame_textTypePlain": "Jednoduché",
   "debugFrame_text": "- Text: \"{text}\"",
   "@debugFrame_text": {
@@ -559,7 +556,7 @@
       }
     }
   },
-  "debugFrame_hexDump": "Hex Dump:",
+  "debugFrame_hexDump": "Hexová analýza:",
   "chat_pathManagement": "Správa ciest",
   "chat_routingMode": "Režim trasy",
   "chat_autoUseSavedPath": "Použiť uloženú cestu",
@@ -568,7 +565,7 @@
   "chat_pathHistoryFull": "História ciest je plná. Odstráňte záznamy, aby ste mohli pridať nové.",
   "chat_hopSingular": "Skok",
   "chat_hopPlural": "Skákať",
-  "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
+  "chat_hopsCount": "{count} {count, plural, =1{skok} other{skoky}}",
   "@chat_hopsCount": {
     "placeholders": {
       "count": {
@@ -897,11 +894,11 @@
   "path_setPath": "Nastaviť cestu",
   "repeater_management": "Správa opakérov",
   "repeater_managementTools": "Nástroje na správu",
-  "repeater_status": "Status",
+  "repeater_status": "Stav",
   "repeater_statusSubtitle": "Zobraziť stav, štatistiky a susedov repeatera",
   "repeater_telemetry": "Telemetria",
   "repeater_telemetrySubtitle": "Zobraziť telemetriu senzorov a systémových štatistík",
-  "repeater_cli": "CLI",
+  "repeater_cli": "CLI (Command Line Interface)",
   "repeater_cliSubtitle": "Pošlite príkazy opakovaču",
   "repeater_settings": "Nastavenia",
   "repeater_settingsSubtitle": "Konfigurujte parametre opakovača",
@@ -1010,7 +1007,7 @@
   "repeater_guestPasswordHelper": "Prístupový heslo iba na čítanie",
   "repeater_radioSettings": "Nastavenia rádia",
   "repeater_frequencyMhz": "Frekvencia (MHz)",
-  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_frequencyHelper": "300–2500 MHz",
   "repeater_txPower": "TX Power",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Šírka pásma",
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Potvrdiť",
   "repeater_settingsSaved": "Nastavenia boli uložené úspešne.",
+  "repeater_rxGain": "Zvýšený zisk RX",
+  "repeater_rxGainHelper": "Vyššia citlivosť, vyšší príkon (platí len pre modely SX1262/SX1268)",
+  "repeater_refreshRxGain": "Obnovte zvýšený zisk z RX",
+  "repeater_multiAcks": "Víťazné potvrdenia (víťazné ACK)",
+  "repeater_multiAcksSubtitle": "Potvrďte správy prostredníctvom viacerých trás pre lepšiu doručenie.",
+  "repeater_refreshMultiAcks": "Opätovne potvrďte viacero ACK signálov",
+  "repeater_networkHealth": "Zdravie siete",
+  "repeater_loopDetect": "Detekcia slučiek",
+  "repeater_loopDetectHelper": "Vytvorte balíčky, ktoré vizuálne pripomínajú slučky v síti.",
+  "repeater_loopDetectOff": "Vypnuté",
+  "repeater_loopDetectMinimal": "Minimálny",
+  "repeater_loopDetectModerate": "Stredný, mierny",
+  "repeater_loopDetectStrict": "Prísne",
+  "repeater_dutyCycle": "Cyklus činnosti",
+  "repeater_dutyCycleHelper": "Maximálna percentáľ dostupného času vysielania",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Informácie o poskytovateľovi",
+  "repeater_ownerInfoHelper": "Veľké dátové informácie pre tento vysielací zdroj",
+  "repeater_refreshOwnerInfo": "Zísť informácie o operátore",
+  "repeater_floodMax": "Maximálny počet skokov pri povodni",
+  "repeater_floodMaxHelper": "Maximálny počet paketov, ktoré môžu preletieť cez jeden hop (0-64)",
+  "repeater_advancedSettings": "Pokročilé",
+  "repeater_advancedSettingsSubtitle": "Ovládacie knopy pre skúsených operátorov",
+  "repeater_pathHashMode": "Režim hashovania cesty",
+  "repeater_pathHashModeHelper": "Byty použité na zakódovanie ID tohto opakovača v tagoch pre trasu/detekciu slučky. 0 = 1 bytu (256 ID, až 64 skokov), 1 = 2 byty (65 000 ID, až 32 skokov), 2 = 3 byty (16 miliónov ID, až 21 skokov). Verzie 1.13 a staršie nepodporujú viacbytové trasy – fungujú len, keď je sieť aktivovaná.",
+  "repeater_txDelay": "Zpoždanie v Flood, TX",
+  "repeater_txDelayHelper": "Nastavenie pre opakované vysielanie pre dopravu počas povodní, ako násobok času, ktorý paket využije (0-2, výchoce hodnota 0,5). Vyššia hodnota znamená menej kolízii, ale pomalšie doručovanie.",
+  "repeater_directTxDelay": "Priame oneskorenie TX",
+  "repeater_directTxDelayHelper": "Nastavenie pre retransmisiu pre priame (nie pre plnú sieť), ako násobok času prenosu paketov (0-2, výchoce 0,3).",
+  "repeater_intThresh": "Hranica, pri ktorej dochádza k rušeniu",
+  "repeater_intThreshHelper": "Hranica je nastavená tak, aby odfiltrovala šum nad touto úrovňou. Hodnota 0 znamená, že sa nebude nič odfiltrovať – nastavte ju len v prípade, že zaznamenáte chyby pri prijímaní signálu v šumnej frekvencii.",
+  "repeater_agcResetInterval": "Interval reštartu AGC",
+  "repeater_agcResetIntervalHelper": "Ako často by ste mali reštartovať automatické ovládanie zosilnenia, aby ste sa vrátili do normálneho stavu, ak je zosilnenie zablokované? Nastavenie „4.0“ vypne pravidelné reštarty.",
+  "repeater_actionsTitle": "Opatrenia",
+  "repeater_sendAdvert": "Odoslať inzerát o povodňovej situácii",
+  "repeater_sendAdvertSubtitle": "Zverejnite reklamu na povodňu prostredníctvom siete.",
+  "repeater_sendAdvertZeroHop": "Odoslať reklamu bez prenosu",
+  "repeater_sendAdvertZeroHopSubtitle": "Zverejnite reklamnú správu, ktorá sa prenáša len raz (bez prenosov).",
+  "repeater_clockSync": "Synchronizujte hodiny teraz",
+  "repeater_clockSyncSubtitle": "Nastavte čas na vašom telefóne, aby odpovedal na volania z vysielacieho zariadenia.",
+  "repeater_actionSucceeded": "{action} succeeded",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} failed: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Nastavenia uložené – reštartujte vysielací prístroj, aby sa nastavenia aplikovali.",
+  "repeater_settingsPartialFailure": "Niektoré nastavenia neúspešné: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Chyba pri ukladaní nastavení: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Obnoviť základné nastavenia",
   "repeater_refreshRadioSettings": "Obnoviť Nastavenia Rádií",
   "repeater_refreshTxPower": "Obnoviť TX napájanie",
-  "repeater_refreshLocationSettings": "Obnoviť Nastavenia Miesta",
   "repeater_refreshPacketForwarding": "Obnoviť smerovanie paketov",
   "repeater_refreshGuestAccess": "Obnoviť prístup hosťa",
   "repeater_refreshPrivacyMode": "Obnoviť Ochranný režim",
-  "repeater_refreshAdvertisementSettings": "Obnoviť nastavenia reklamy",
   "repeater_refreshed": "{label} sa znova načítalo",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1365,7 +1435,7 @@
   "listFilter_sortBy": "Triediť podľa",
   "listFilter_latestMessages": "Posledné správy",
   "listFilter_heardRecently": "Nedávno počuli.",
-  "listFilter_az": "A-Z",
+  "listFilter_az": "Od A po Z",
   "listFilter_filters": "Filtre",
   "listFilter_all": "Všetko",
   "listFilter_users": "Používatelia",
@@ -1637,8 +1707,8 @@
   "appSettings_unitsTitle": "Jednotky",
   "appSettings_unitsMetric": "Metrické (m / km)",
   "appSettings_unitsImperial": "Imperiálne (ft / mi)",
-  "map_lineOfSight": "Line of Sight",
-  "map_losScreenTitle": "Line of Sight",
+  "map_lineOfSight": "Úroveň výhľadu",
+  "map_losScreenTitle": "Úroveň výhľadu",
   "losSelectStartEnd": "Vyberte počiatočný a koncový uzol pre LOS.",
   "losRunFailed": "Kontrola priamej viditeľnosti zlyhala: {error}",
   "@losRunFailed": {
@@ -1897,8 +1967,8 @@
   "tcpHostLabel": "IP adresa",
   "tcpScreenTitle": "Spojte sa pomocou protokolu TCP",
   "connectionChoiceTcpLabel": "TCP",
-  "tcpPortLabel": "Port",
-  "tcpPortHint": "5000",
+  "tcpPortLabel": "Prístav",
+  "tcpPortHint": "5 000",
   "tcpStatus_notConnected": "Zadajte cieľovú adresu a pripojte sa.",
   "tcpStatus_connectingTo": "Pripojenie k {endpoint}...",
   "tcpErrorHostRequired": "Je potrebné zadať IP adresu.",
@@ -2085,6 +2155,77 @@
   "repeater_guest": "Informácie o opakovači",
   "room_guest": "Informácie o serveri",
   "repeater_guestTools": "Nástroje pre hostí",
+  "repeater_getCategory": "Zísť hodnoty",
+  "repeater_powerMgmt": "Správa energie",
+  "repeater_sensors": "Senzory",
+  "repeater_cliHelpPowerOff": "Vypína zariadenie. (neočakáva sa žiadna odpoveď)",
+  "repeater_cliHelpClkReboot": "Resetuje hodiny na známu epochu a reštartuje zariadenie.",
+  "repeater_cliHelpAdvertZeroHop": "Rozosiela reklamu, ktorá sa prenáša len medzi susednými zariadeniami (bez prenosu cez iné siete).",
+  "repeater_cliHelpStartOta": "Spustí aktualizáciu firmvéru prostredníctvom diaľkového prenosu na podporovaných doskách.",
+  "repeater_cliHelpTime": "Nastavuje časovník zariadenia na zadané sekundy od Unix epochy. Časovník sa nedá otáčať dozadu.",
+  "repeater_cliHelpBoard": "Zobrazuje informácie o výrobcom dosky / identifikátor hardvéru.",
+  "repeater_cliHelpDiscoverNeighbors": "Odosiela požiadavku na nájdenie susedných uzlov. (Len pre opakovače)",
+  "repeater_cliHelpPowersaving": "Ukazuje, či je režim úspory energie zapnutý alebo vypnutý.",
+  "repeater_cliHelpPowersavingOnOff": "Umožňuje alebo vypína režim úspory energie (ak je podporovaný).",
+  "repeater_cliHelpErase": "(Používa sa len pre sériové zariadenia) Formátuje systém súborov zariadenia. Vymaže všetky nastavenia a kontakty.",
+  "repeater_cliHelpSetDutyCycle": "Nastavuje maximálnu povolenú frekvenciu prenosu ako percento (1-100). Internálne upravuje faktor času prenosu.",
+  "repeater_cliHelpSetPrvKey": "(Používa sa len v sériovej verzii) Nahradí privátny kľúč, ktorý identifikuje zariadenie. Po aplikácii je potrebné zariadenie reštartovať. Generuje nový verejný kľúč.",
+  "repeater_cliHelpSetRadioRxGain": "(iba pre SX126x) Zapína zvýšený zisk prijímania pre zlepšenie citlivosti pri vyššom príkonu.",
+  "repeater_cliHelpSetOwnerInfo": "Definuje reťazec s informáciami o kontaktnom osobě, ktorý je zahrnutý v reklamách. Používajte '|' pre nové riadky.",
+  "repeater_cliHelpSetPathHashMode": "Nastavuje režim hashovania cesty. 0 = starý režim, 1 = štandardný režim, 2 = striktný režim. Ovplyvňuje, ako sa prekladajú trasy.",
+  "repeater_cliHelpSetLoopDetect": "Nastavuje citlivosť detekcie slučky routovania: vypnutá, minimálna, stredná alebo prísna.",
+  "repeater_cliHelpSetFreq": "(Používa sa len v sériovej verzii) Rýchlo nastavuje len frekvenciu. Je potrebné reštartovať. Pre úplné nastavenie rádia preferujte funkciu \"nastavenie rádia\".",
+  "repeater_cliHelpSetBridgeChannel": "(Používa sa len pre ESPNow most) Nastavuje WiFi kanál (1-14), ktorý používa most.",
+  "repeater_cliHelpGetName": "Zobrazuje zadané meno uzla.",
+  "repeater_cliHelpGetRole": "Ukazuje funkciu firmvéru (opakovač, server pre miestnosť atď.).",
+  "repeater_cliHelpGetPublicKey": "Zobrazuje verejný kľúč zariadenia.",
+  "repeater_cliHelpGetPrvKey": "(Používa sa len v sériových aplikáciách) Zobrazuje súkromný kľúč zariadenia. Zotriďte ho ako tajný údaj.",
+  "repeater_cliHelpGetRepeat": "Ukazuje, či je funkcia preposielania paketov (funkcia opakéra) zapnutá alebo vypnutá.",
+  "repeater_cliHelpGetTx": "Zobrazuje aktuálnu výkonovú hodnotu TX v dBm.",
+  "repeater_cliHelpGetFreq": "Zobrazuje nakonfigurovanú frekvenciu v MHz.",
+  "repeater_cliHelpGetRadio": "Zobrazuje všetky parametre rádiového signálu: frekvencia, šírka pásma, faktor rozširovania, rýchlosť kódovania.",
+  "repeater_cliHelpGetRadioRxGain": "(iba pre SX126x) Zobrazuje stav zosilnenia prijímača RX.",
+  "repeater_cliHelpGetAf": "Zobrazuje aktuálny koeficient času vysielania.",
+  "repeater_cliHelpGetDutyCycle": "Zobrazuje aktuálnu povolenú frekvenciu ako percentáž.",
+  "repeater_cliHelpGetIntThresh": "Zobrazuje hranicu pre prechodové signály v dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Zobrazuje interval reštartovania AGC v sekundách.",
+  "repeater_cliHelpGetMultiAcks": "Ukazuje, či je režim dvojité potvrdenie zapnutý (1) alebo vypnutý (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Ukazuje, či je povolená len čítacia funkcia pre hostí.",
+  "repeater_cliHelpGetAdvertInterval": "Zobrazuje čas trvania miestnej reklamnej pauzy v minútach.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Zobrazuje časový interval reklamy počas záplavy v hodinách.",
+  "repeater_cliHelpGetGuestPassword": "Zobrazuje nastavené heslo pre hosta.",
+  "repeater_cliHelpGetLat": "Zobrazuje nastavenú šírku.",
+  "repeater_cliHelpGetLon": "Zobrazuje nastavenú dĺžku.",
+  "repeater_cliHelpGetRxDelay": "Zobrazuje základnú hodnotu rxdelay.",
+  "repeater_cliHelpGetTxDelay": "Ukazuje faktor zpoždenia pre režim povodňovej komunikácie.",
+  "repeater_cliHelpGetDirectTxDelay": "Zobrazuje faktor zloženia pri priamej modulácii.",
+  "repeater_cliHelpGetFloodMax": "Zobrazuje maximálny počet opakovaní povodňového stavu.",
+  "repeater_cliHelpGetOwnerInfo": "Zobrazuje reťazec s kontaktnými údajmi vlastníka.",
+  "repeater_cliHelpGetPathHashMode": "Zobrazuje režim hashovania cesty (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Ukazuje citlivosť na detekciu slučiek.",
+  "repeater_cliHelpGetAcl": "(Používa sa len v sériovej konfigurácii) Zobrazuje prístupové pravidlá na opakovači.",
+  "repeater_cliHelpGetBridgeEnabled": "Ukazuje, či je most povolený.",
+  "repeater_cliHelpGetBridgeDelay": "Zobrazuje čas strávený prechodom mosta v milisekundách.",
+  "repeater_cliHelpGetBridgeSource": "Ukazuje, či most prijíma alebo vysiela RX alebo TX balíky.",
+  "repeater_cliHelpGetBridgeBaud": "(iba pre rozhranie RS232) Zobrazuje rýchlosť prenosu dát na rozhraní RS232.",
+  "repeater_cliHelpGetBridgeChannel": "(Používa sa len pre ESPNow) Zobrazuje WiFi kanál mosta.",
+  "repeater_cliHelpGetBridgeSecret": "(Používa sa len pre ESPNow most) Zobrazuje spoločný tajný kľúč mosta.",
+  "repeater_cliHelpGetBootloaderVer": "(iba pre NRF52) Zobrazuje verziu bootloaderu.",
+  "repeater_cliHelpGetAdcMultiplier": "Zobrazuje násobič ADC (škálovanie napätia batérie).",
+  "repeater_cliHelpGetPwrMgtSupport": "Označuje, či riadiace orgány majú podporu pre správu energie.",
+  "repeater_cliHelpGetPwrMgtSource": "Ukazuje aktuálny zdroj napájania: externý alebo batéria.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Zobrazuje najaktuálnejšie dôvody pre reštart a vypnutie.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Zobrazuje napätie batérie pri spustení systému v milivoltov (mV).",
+  "repeater_cliHelpSensorGet": "Číta hodnotu nastavenia pre špecifický senzor pomocou klávesového vstupu.",
+  "repeater_cliHelpSensorSet": "Vytvára vlastné nastavenie pre senzor.",
+  "repeater_cliHelpSensorList": "Zobrazuje všetky nastavenia pre špecifické senzory, zoradené podľa voliteľného indexu začiatku.",
+  "repeater_cliHelpRegionDefault": "Zobrazuje aktuálnu rozsiahku, ktorá je nastavená ako výchozí.",
+  "repeater_cliHelpRegionDefaultSet": "Nastavuje výchoce rozsiahku regiónu. Použite \"<null>\", aby ju vymazal.",
+  "repeater_cliHelpRegionListAllowed": "Zoznam oblastí, ktoré umožňujú premávku počas povodní.",
+  "repeater_cliHelpRegionListDenied": "Zoznam oblastí, ktoré zakazujú premávku v dôsledku povodní.",
+  "repeater_cliHelpStatsPackets": "(Len pre sériové záznamy) Zobrazuje štatistiky na úrovni paketov.",
+  "repeater_cliHelpStatsRadio": "(Len pre sériu) Zobrazuje údaje o rádiových staniciach.",
+  "repeater_cliHelpStatsCore": "(Len pre sériové modely) Zobrazuje základné štatistiky firmvéru.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",
@@ -2165,5 +2306,10 @@
   "losBlockedSpotsHint": "Kliknite na zablokované miesto, aby ste ho zvýraznili na mape.",
   "losSelectedObstructionTitle": "Vybraná prekážka",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "Označenie ako neprečítané",
+  "settings_companionDebugLogSubtitle": "Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB",
+  "settings_companionDebugLog": "Logovanie pre ladenie (sprievodný log)",
+  "chat_newMessages": "Nové správy",
+  "repeater_chanUtil": "Využitie kanálu"
 }

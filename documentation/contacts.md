@@ -73,7 +73,8 @@ Groups are stored per radio identity (scoped by public key).
 
 | Action | Availability | Description |
 |---|---|---|
-| Path Trace / Ping | Repeaters, Rooms (always); Chat if `pathLength > 0` | Opens PathTraceMapScreen. Label shows "Ping" when no path bytes are known, "Path Trace" otherwise |
+| Ping | Repeaters (always) | Opens PathTraceMapScreen targeting the repeater |
+| Path Trace | Rooms (always); Chat/Sensor if `pathLength > 0` | Opens PathTraceMapScreen. For rooms, label shows "Ping" when no path bytes are known, "Path Trace" when path bytes are available |
 | Manage Repeater | Repeaters only | Login dialog → RepeaterHubScreen |
 | Room Login | Rooms only | Login dialog → ChatScreen |
 | Room Management | Rooms only | Login dialog → RepeaterHubScreen (management mode) |

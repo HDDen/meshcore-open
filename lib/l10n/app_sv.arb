@@ -52,7 +52,7 @@
       }
     }
   },
-  "scanner_title": "MeshCore Open (Advanced mod)",
+  "scanner_title": "MeshCore – Öppen version (Advanced mod)",
   "scanner_scanning": "Söker efter enheter...",
   "scanner_connecting": "Anslutning...",
   "scanner_disconnecting": "Anslutning bryts...",
@@ -123,7 +123,7 @@
   "settings_appDebugLog": "Appfelsökning",
   "settings_appDebugLogSubtitle": "Applikations felsökningsmeddelanden",
   "settings_about": "Om",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) version {version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -148,7 +148,7 @@
   "settings_spreadingFactor": "Spreadingfaktor",
   "settings_codingRate": "Kodningsgrad",
   "settings_txPower": "TX-effekt (dBm)",
-  "settings_txPowerHelper": "0 - 22",
+  "settings_txPowerHelper": "0 – 22",
   "settings_txPowerInvalid": "Ogiltig TX-effekt (0-22 dBm)",
   "settings_error": "Fel: {message}",
   "@settings_error": {
@@ -166,19 +166,19 @@
   "appSettings_themeDark": "Mörk",
   "appSettings_language": "Språk",
   "appSettings_languageSystem": "Systemstandard",
-  "appSettings_languageEn": "English",
-  "appSettings_languageFr": "Français",
-  "appSettings_languageEs": "Español",
-  "appSettings_languageDe": "Deutsch",
-  "appSettings_languagePl": "Polski",
-  "appSettings_languageSl": "Slovenščina",
-  "appSettings_languagePt": "Português",
-  "appSettings_languageIt": "Italiano",
-  "appSettings_languageZh": "中文",
+  "appSettings_languageEn": "Engelska",
+  "appSettings_languageFr": "Franska",
+  "appSettings_languageEs": "Spanska",
+  "appSettings_languageDe": "Tyskt",
+  "appSettings_languagePl": "Polsk",
+  "appSettings_languageSl": "Sloveniska",
+  "appSettings_languagePt": "Portugisiska",
+  "appSettings_languageIt": "Italienska",
+  "appSettings_languageZh": "Kinesiska",
   "appSettings_languageSv": "Svenska",
-  "appSettings_languageNl": "Nederlands",
-  "appSettings_languageSk": "Slovenčina",
-  "appSettings_languageBg": "Български",
+  "appSettings_languageNl": "Nederländska",
+  "appSettings_languageSk": "Sloveniska",
+  "appSettings_languageBg": "Bulgariska",
   "appSettings_notifications": "Meddelanden",
   "appSettings_enableNotifications": "Aktivera Notifikationer",
   "appSettings_enableNotificationsSubtitle": "Ta emot notiser för meddelanden och reklam",
@@ -211,9 +211,9 @@
     }
   },
   "appSettings_batteryChemistryConnectFirst": "Anslut till en enhet för att välja",
-  "appSettings_batteryNmc": "18650 NMC (3.0-4.2V)",
+  "appSettings_batteryNmc": "18650 NMC (3,0-4,2V)",
   "appSettings_batteryLifepo4": "LiFePO4 (2,6–3,65V)",
-  "appSettings_batteryLipo": "LiPo (3.0-4.2V)",
+  "appSettings_batteryLipo": "LiPo (3,0-4,2V)",
   "appSettings_mapDisplay": "Kartvisning",
   "appSettings_showRepeaters": "Visa återuppslag",
   "appSettings_showRepeatersSubtitle": "Visa återspelsnoder på kartan",
@@ -339,11 +339,8 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtagkanal",
   "channels_public": "Offentligt",
   "channels_private": "Privat",
-  "channels_publicChannel": "Allmänt kanal",
-  "channels_privateChannel": "Privat kanal",
   "channels_editChannel": "Redigera kanal",
   "channels_muteChannel": "Tysta kanal",
   "channels_unmuteChannel": "Slå på ljud för kanal",
@@ -369,7 +366,7 @@
   "channels_channelName": "Kanalnamn",
   "channels_usePublicChannel": "Använd Publikkanal",
   "channels_standardPublicPsk": "Standard allmän PSK",
-  "channels_pskHex": "PSK (Hex)",
+  "channels_pskHex": "PSK (heks)",
   "channels_generateRandomPsk": "Generera slumpmässig PSK",
   "channels_enterChannelName": "Ange en kanalnamn",
   "channels_pskMustBe32Hex": "PSK måste vara 32 hexadecimala tecken",
@@ -549,7 +546,7 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypeCli": "Kommandorad",
   "debugFrame_textTypePlain": "Enkel",
   "debugFrame_text": "- Text: \"{text}\"",
   "@debugFrame_text": {
@@ -568,7 +565,7 @@
   "chat_pathHistoryFull": "Historisk sökväg är full. Ta bort poster för att lägga till nya.",
   "chat_hopSingular": "hoppa",
   "chat_hopPlural": "hoppar",
-  "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
+  "chat_hopsCount": "{count} {count, plural, =1{hopp} other{hopp} }",
   "@chat_hopsCount": {
     "placeholders": {
       "count": {
@@ -899,9 +896,9 @@
   "repeater_managementTools": "Administrationsverktyg",
   "repeater_status": "Status",
   "repeater_statusSubtitle": "Visa återspolningsstatus, statistik och grannar",
-  "repeater_telemetry": "Telemetry",
+  "repeater_telemetry": "Telemetri",
   "repeater_telemetrySubtitle": "Visa telemetri för sensorer och systemstatistik",
-  "repeater_cli": "CLI",
+  "repeater_cli": "Kommandoradgränssnitt",
   "repeater_cliSubtitle": "Skicka kommandon till repetitorn",
   "repeater_settings": "Inställningar",
   "repeater_settingsSubtitle": "Konfigurera återspolarparametrar",
@@ -1010,7 +1007,7 @@
   "repeater_guestPasswordHelper": "Läs-skyddspassord",
   "repeater_radioSettings": "Radioinställningar",
   "repeater_frequencyMhz": "Frekvens (MHz)",
-  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_frequencyHelper": "300–2500 MHz",
   "repeater_txPower": "TX Effekt",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Bandbredd",
@@ -1077,6 +1074,81 @@
   },
   "repeater_confirm": "Bekräfta",
   "repeater_settingsSaved": "Inställningarna sparades framgångsrikt.",
+  "repeater_rxGain": "Ökad RX-vinst",
+  "repeater_rxGainHelper": "Ökad känslighet, högre strömförbrukning (endast för SX1262/SX1268)",
+  "repeater_refreshRxGain": "Återställ förbättrad RX-signalstyrka",
+  "repeater_multiAcks": "Flera bekräftelser",
+  "repeater_multiAcksSubtitle": "Bekräfta meddelanden via flera olika kanaler för bättre leverans.",
+  "repeater_refreshMultiAcks": "Återställ flera ACK-meddelanden",
+  "repeater_networkHealth": "Nätverkets hälsa",
+  "repeater_loopDetect": "Identifiering av loopar",
+  "repeater_loopDetectHelper": "Skapa \"flödespaket\" som ser ut som att de bildar en loop (en återkommande krets).",
+  "repeater_loopDetectOff": "Av",
+  "repeater_loopDetectMinimal": "Minimal",
+  "repeater_loopDetectModerate": "Måttlig",
+  "repeater_loopDetectStrict": "Strikt",
+  "repeater_dutyCycle": "Arbetscykel",
+  "repeater_dutyCycleHelper": "Maximal procentandel av sändningstid",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Information om operatören",
+  "repeater_ownerInfoHelper": "Offentliga metadata för denna sändare",
+  "repeater_refreshOwnerInfo": "Uppdatera information om personal",
+  "repeater_floodMax": "Maximala mängden humle",
+  "repeater_floodMaxHelper": "Maximalt antal hopp en paket kan färdas (0-64)",
+  "repeater_advancedSettings": "Avancerad",
+  "repeater_advancedSettingsSubtitle": "Ställjusteringsknappar för erfarna användare",
+  "repeater_pathHashMode": "Hash-läge för sökväg",
+  "repeater_pathHashModeHelper": "Byte används för att koda denna repeaters ID i taggar för att upptäcka loopar/flödesvägar. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Versioner 1.13 och äldre har stöd för multi-byte-vägar – endast en gång när nätverket är aktiverat (från och med version 1.14).",
+  "repeater_txDelay": "Försening i Flood TX",
+  "repeater_txDelayHelper": "Återöverföringsintervall för trafik under perioder med hög belastning, som en multiplikator av paketets överföringstid (0-2, standard 0,5). Högre värde = färre kollisioner, men långsammare leverans.",
+  "repeater_directTxDelay": "Direkt TX-fördröjning",
+  "repeater_directTxDelayHelper": "Återöverföringsintervall för direkt (icke-översvämmande) trafik, som en multiplikator av paketets överföringstid (0-2, standard 0,3).",
+  "repeater_intThresh": "Tröskelvärde för störning",
+  "repeater_intThreshHelper": "Tröskelvärdet har ställts in så att den filtrerar bort störningar som överstiger detta värde. 0 stänger av – aktivera endast om du ser RX-fel i ett störningsfyllt frekvensområde.",
+  "repeater_agcResetInterval": "Återställningsintervall för AGC",
+  "repeater_agcResetIntervalHelper": "Hur ofta ska man återställa radioens automatiska förstärkning för att återhämta sig från ett tillstånd där förstärkningen är fast? Sekunder, inställda till en multipel av 4. 0 stänger av periodiska återställningar.",
+  "repeater_actionsTitle": "Åtgärder",
+  "repeater_sendAdvert": "Skicka annons om översvämning",
+  "repeater_sendAdvertSubtitle": "Sänd en reklamfilm om översvämningar via nätverket.",
+  "repeater_sendAdvertZeroHop": "Skicka en annons som inte kräver någon mellanstopp",
+  "repeater_sendAdvertZeroHopSubtitle": "Sänd en reklamkampanj med en enda sändare (utan mellanliggande sändare).",
+  "repeater_clockSync": "Synkronisera klockan nu",
+  "repeater_clockSyncSubtitle": "Ställ din telefons tid till repeatern.",
+  "repeater_actionSucceeded": "{action} lyckades",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} misslyckades: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Inställningar sparade – starta om repetern för att tillämpa dem",
+  "repeater_settingsPartialFailure": "Vissa inställningar misslyckades: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Fel vid sparande av inställningar: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1088,11 +1160,9 @@
   "repeater_refreshBasicSettings": "Återställ Grundläggande Inställningar",
   "repeater_refreshRadioSettings": "Återställ Radiosinställningar",
   "repeater_refreshTxPower": "Återställ TX-effekt",
-  "repeater_refreshLocationSettings": "Uppdatera Lokationsinställningar",
   "repeater_refreshPacketForwarding": "Återställ Paketväxling",
   "repeater_refreshGuestAccess": "Återställ Gäståtkomst",
   "repeater_refreshPrivacyMode": "Återställ Sekretessläge",
-  "repeater_refreshAdvertisementSettings": "Återställ Annonsinställningar",
   "repeater_refreshed": "{label} har uppdaterats",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1495,7 +1565,7 @@
   "community_qrTitle": "Dela Gemenskap",
   "community_qrInstructions": "Skanna denna QR-kod för att gå med i \"{name}\"",
   "community_hashtagPrivacyHint": "Community-hashtagkanaler kan endast nås av medlemmar i communityn",
-  "community_hashtagChannel": "Community Hashtag",
+  "community_hashtagChannel": "Hashtag för gemenskapen",
   "community_invalidQrCode": "Ogiltig community QR-kod",
   "community_alreadyMember": "Är redan medlem",
   "community_alreadyMemberMessage": "Du är redan medlem av \"{name}\".",
@@ -1522,7 +1592,7 @@
   "community_regularHashtagDesc": "Offentlig hashtag (alla kan gå med)",
   "community_communityHashtagDesc": "Endast för medlemmar",
   "community_forCommunity": "För {name}",
-  "community_communityHashtag": "Community Hashtag",
+  "community_communityHashtag": "Gemenskaps-hashtag",
   "@community_regenerateSecretConfirm": {
     "placeholders": {
       "name": {
@@ -1569,7 +1639,7 @@
   "pathTrace_failed": "Sökvägsföljning misslyckades.",
   "pathTrace_notAvailable": "Path trace ej tillgänglig.",
   "pathTrace_refreshTooltip": "Uppdatera Path Trace",
-  "contacts_pathTrace": "Path Trace",
+  "contacts_pathTrace": "Spårning",
   "contacts_ping": "Ping",
   "contacts_repeaterPathTrace": "Vägspårning till repeater",
   "contacts_repeaterPing": "Ping-repeater",
@@ -1897,7 +1967,7 @@
   "tcpHostLabel": "IP-adress",
   "tcpScreenTitle": "Anslut via TCP",
   "connectionChoiceTcpLabel": "TCP",
-  "tcpPortLabel": "Port",
+  "tcpPortLabel": "Hamn",
   "tcpPortHint": "5000",
   "tcpStatus_notConnected": "Ange slutpunkt och anslut",
   "tcpStatus_connectingTo": "Anslutning till {endpoint}...",
@@ -1952,6 +2022,7 @@
   "appSettings_maxMessageRetriesSubtitle": "Antal försök att skicka om ett meddelande innan det markeras som misslyckat.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetri-läge uppdaterat",
+  "settings_multiAck": "Flera bekräftelser",
   "map_showOverlaps": "Repeater-nyckelöverlappningar",
   "map_runTraceWithReturnPath": "Gå tillbaka på samma väg",
   "@radioStats_noiseFloor": {
@@ -2084,6 +2155,77 @@
   "chat_sendMessage": "Skicka meddelande",
   "repeater_guestTools": "Gästverktyg",
   "room_guest": "Information om servern",
+  "repeater_getCategory": "Hämta värden",
+  "repeater_powerMgmt": "Effektstyrning",
+  "repeater_sensors": "Sensorer",
+  "repeater_cliHelpPowerOff": "Stänger av enheten. (ingen respons förväntas)",
+  "repeater_cliHelpClkReboot": "Återställer klockan till en känd tidpunkt och startar om enheten.",
+  "repeater_cliHelpAdvertZeroHop": "Skickar en annons som når endast direkt grannar (endast närmaste grannar).",
+  "repeater_cliHelpStartOta": "Startar en firmware-uppdatering via luft, på kompatibla enheter.",
+  "repeater_cliHelpTime": "Ställer enheten till den angivna Unix-epokens tid. Klockan kan inte gå bakåt.",
+  "repeater_cliHelpBoard": "Visar tillverkaren av moderkortet / hårdvaru-identifieraren.",
+  "repeater_cliHelpDiscoverNeighbors": "Skickar en förfrågan om att upptäcka närliggande noder. (Endast för repetrar)",
+  "repeater_cliHelpPowersaving": "Visar om energisparläget är aktiverat eller avstängt.",
+  "repeater_cliHelpPowersavingOnOff": "Aktiverar eller inaktiverar energisparläget (om det stöds).",
+  "repeater_cliHelpErase": "(Endast för seriell kommunikation) Formaterar enhetens filsystem. Raderar alla inställningar och kontakter.",
+  "repeater_cliHelpSetDutyCycle": "Anger den maximala tillåtna överföringsfrekvensen som en procent (1-100). Justerar automatiskt tidsfaktorn.",
+  "repeater_cliHelpSetPrvKey": "(Endast för seriell användning) Ersätter enhetsens privata nyckel. Återstart krävs för att tillämpa. Genererar en ny publik nyckel.",
+  "repeater_cliHelpSetRadioRxGain": "(Endast SX126x) Aktiverar förstärkt mottagargain för förbättrad känslighet vid högre strömförbrukning.",
+  "repeater_cliHelpSetOwnerInfo": "Anger kontaktinformationen som ska inkluderas i annonserna. Använd '|' för att separera olika fält.",
+  "repeater_cliHelpSetPathHashMode": "Definierar läget för hash-baserad ruttning. 0 = äldre läge, 1 = standard, 2 = strikt. Påverkar hur ruttvägar matchas.",
+  "repeater_cliHelpSetLoopDetect": "Ställer in känsligheten för att detektera loopar i routningen: av, minimal, måttlig eller strikt.",
+  "repeater_cliHelpSetFreq": "(Endast för seriell kommunikation) Ställer snabbt bara frekvensen. Kräver omstart. Föredrar \"ställ radio\" för att få full kontroll över radioinställningarna.",
+  "repeater_cliHelpSetBridgeChannel": "(Endast ESPNow-brygga) Anger WiFi-kanalen (1-14) som används av bryggan.",
+  "repeater_cliHelpGetName": "Visar det konfigurerade nodnamnet.",
+  "repeater_cliHelpGetRole": "Visar firmware-funktionen (Repeater, Room Server, etc.).",
+  "repeater_cliHelpGetPublicKey": "Visar enhetens publika nyckel.",
+  "repeater_cliHelpGetPrvKey": "(Endast för seriell användning) Visar enheters privata nyckel. Behandla detta som en hemlighet.",
+  "repeater_cliHelpGetRepeat": "Visar om funktionen för att vidarebefordra paket (som en repeater) är aktiverad eller inaktiverad.",
+  "repeater_cliHelpGetTx": "Visar aktuell TX-effekt i dBm.",
+  "repeater_cliHelpGetFreq": "Visar den konfigurerade radiovågen i MHz.",
+  "repeater_cliHelpGetRadio": "Visar alla radioparametrar: frekvens, bandbredd, spridningsfaktor, kodningshastighet.",
+  "repeater_cliHelpGetRadioRxGain": "(Endast för SX126x) Visar RX:s förstärkningstillstånd.",
+  "repeater_cliHelpGetAf": "Visar aktuell tidssats.",
+  "repeater_cliHelpGetDutyCycle": "Visar den aktuella tillåtna arbetscykeln i procent.",
+  "repeater_cliHelpGetIntThresh": "Visar gränsen för kanalinterferens i dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Visar återställningsintervallet för AGC i sekunder.",
+  "repeater_cliHelpGetMultiAcks": "Visar om dubbelbekräftelseläget är aktiverat (1) eller avstängt (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Visar om gäst har tillåtelse att endast läsa.",
+  "repeater_cliHelpGetAdvertInterval": "Visar den lokala reklampausens längd i minuter.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Visar tidsintervallet för reklamsegmentet under översvämningen, i timmar.",
+  "repeater_cliHelpGetGuestPassword": "Visar det angivna gästlösen.",
+  "repeater_cliHelpGetLat": "Visar den angivna latituden.",
+  "repeater_cliHelpGetLon": "Visar den angivna longituden.",
+  "repeater_cliHelpGetRxDelay": "Visar grundvärdet för rxdelay.",
+  "repeater_cliHelpGetTxDelay": "Visar faktor för fördröjning i flödesläge.",
+  "repeater_cliHelpGetDirectTxDelay": "Visar faktorn för fördröjning i direktläge.",
+  "repeater_cliHelpGetFloodMax": "Visar det maximala antalet gånger en översvämning har inträffat.",
+  "repeater_cliHelpGetOwnerInfo": "Visar strängen med kontaktinformation för ägaren.",
+  "repeater_cliHelpGetPathHashMode": "Visar hash-läge (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Visar känsligheten för att detektera loopar.",
+  "repeater_cliHelpGetAcl": "(Endast för serier) Visar åtkomstkontrollinställningarna för en repeater.",
+  "repeater_cliHelpGetBridgeEnabled": "Visar om bron är aktiverad.",
+  "repeater_cliHelpGetBridgeDelay": "Visar fördröjningen i bron i millisekunder.",
+  "repeater_cliHelpGetBridgeSource": "Visar om bron skickar RX- eller TX-paket.",
+  "repeater_cliHelpGetBridgeBaud": "(Enbart RS232-brygga) Visar bryggans baud-hastighet.",
+  "repeater_cliHelpGetBridgeChannel": "(Endast ESPNow-brygga) Visar WiFi-kanal för bryggan.",
+  "repeater_cliHelpGetBridgeSecret": "(Endast ESPNow-brygga) Visar bryggans delade hemlighet.",
+  "repeater_cliHelpGetBootloaderVer": "(Endast för NRF52) Visar versionen av bootloadern.",
+  "repeater_cliHelpGetAdcMultiplier": "Visar ADC-multiplikatorn (skalning av batterispänning).",
+  "repeater_cliHelpGetPwrMgtSupport": "Anger om styrelsen har stöd för energihantering.",
+  "repeater_cliHelpGetPwrMgtSource": "Visar aktuell strömkälla: extern eller batteri.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Visar de senaste orsakerna till återställning och avstängning.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Visar batterispänningen vid start i millivolt (mV).",
+  "repeater_cliHelpSensorGet": "Läser en anpassad sensorinställning via tangentbordet.",
+  "repeater_cliHelpSensorSet": "Skapar en anpassad inställning för en sensor.",
+  "repeater_cliHelpSensorList": "Visar alla anpassade sensorinställningar, sorterade från ett valfritt startindex.",
+  "repeater_cliHelpRegionDefault": "Visar det aktuella standardområde.",
+  "repeater_cliHelpRegionDefaultSet": "Definierar standardområde. Använd \"<null>\" för att återställa till standard.",
+  "repeater_cliHelpRegionListAllowed": "Lista områden där det är tillåtet med trafik under översvämningsförhållanden.",
+  "repeater_cliHelpRegionListDenied": "Listar områden där trafik på grund av översvämningar är förbjuden.",
+  "repeater_cliHelpStatsPackets": "(Endast för seriell kommunikation) Visar statistik på paketnivå.",
+  "repeater_cliHelpStatsRadio": "(Enbart för serier) Visar radiostatistik.",
+  "repeater_cliHelpStatsCore": "(Enbart för seriell kommunikation) Visar grundläggande firmware-statistik.",
   "common_done": "Done",
   "background_serviceTitle": "MeshCore running",
   "background_serviceText": "Keeping BLE connected",
@@ -2124,7 +2266,6 @@
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Flera bekräftelser",
   "map_sharedAt": "Delad",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2165,5 +2306,10 @@
   "losBlockedSpotsTitle": "Reserverade platser",
   "losSelectedObstructionTitle": "Vald hinder",
   "losBlockedSpotsHint": "Klicka på en markerad plats för att framhäva den på kartan.",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "chat_markAsUnread": "Markera som oläst",
+  "settings_companionDebugLog": "Följande felsökningslogg",
+  "chat_newMessages": "Nya meddelanden",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB-kommandon, svar och rådata",
+  "repeater_chanUtil": "Användning av kanal"
 }

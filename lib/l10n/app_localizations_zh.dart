@@ -285,7 +285,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get device_quickSwitch => '快速切换';
 
   @override
-  String get device_meshcore => 'MeshCore';
+  String get device_meshcore => '网格核心';
 
   @override
   String get settings_title => '设置';
@@ -463,10 +463,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_debug => '调试';
 
   @override
-  String get settings_bleDebugLog => 'BLE 调试日志';
+  String get settings_companionDebugLog => '调试日志';
 
   @override
-  String get settings_bleDebugLogSubtitle => 'BLE 命令、响应和原始数据';
+  String get settings_companionDebugLogSubtitle => 'BLE/TCP/USB 协议、响应和原始数据';
 
   @override
   String get settings_appDebugLog => '应用调试日志';
@@ -560,6 +560,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+
+  @override
+  String get settings_channelResendTimeoutSubtitle =>
+      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+
+  @override
   String get appSettings_title => '应用设置';
 
   @override
@@ -633,6 +640,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSettings_enableMessageTracingSubtitle => '显示消息的详细路由和时间元数据';
+
+  @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1026,9 +1037,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_hashtagChannel => '标签频道';
-
-  @override
   String get channels_public => '公共';
 
   @override
@@ -1038,12 +1046,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channels_private => '私有';
-
-  @override
-  String get channels_publicChannel => '公共频道';
-
-  @override
-  String get channels_privateChannel => '私有频道';
 
   @override
   String get channels_editChannel => '编辑频道';
@@ -1173,6 +1175,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_mcmpTextLimit => 'MCMP text paste limit';
 
   @override
+  String get settings_sendingDelayForCancellation =>
+      'Sending delay for cancellation';
+
+  @override
+  String get settings_useSendingDelay => 'Use sending delay';
+
+  @override
+  String get chat_cancelSend => 'cancel sending';
+
+  @override
   String get settings_doNotFilterMessagesOnChannels =>
       'Do not filter selfmessages on channels';
 
@@ -1190,7 +1202,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_sortManual => '手动';
 
   @override
-  String get channels_sortAZ => 'A-Z';
+  String get channels_sortAZ => 'A到Z';
 
   @override
   String get channels_sortLatestMessages => '最新消息';
@@ -1280,6 +1292,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_retryingMessage => '正在重试消息';
+
+  @override
+  String chat_retryingMessageWait(Object seconds) {
+    return 'Please wait $seconds seconds before resend';
+  }
 
   @override
   String chat_retryCount(int current, int max) {
@@ -1537,10 +1554,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => '标记为未读';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => '新的消息';
 
   @override
   String get chat_openLink => '打开链接？';
@@ -2107,6 +2124,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_rxAirtime => '接收空中时间';
 
   @override
+  String get repeater_chanUtil => '频道利用率';
+
+  @override
   String get repeater_packetStatistics => '数据包统计';
 
   @override
@@ -2179,7 +2199,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_frequencyMhz => '频率 (MHz)';
 
   @override
-  String get repeater_frequencyHelper => '300-2500 MHz';
+  String get repeater_frequencyHelper => '300-2500 兆赫';
 
   @override
   String get repeater_txPower => 'TX 功率';
@@ -2304,6 +2324,151 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_settingsSaved => '设置保存成功';
 
   @override
+  String get repeater_rxGain => '增强的 RX 增益';
+
+  @override
+  String get repeater_rxGainHelper => '更高的灵敏度，更大的电流消耗（仅适用于 SX1262/SX1268）';
+
+  @override
+  String get repeater_refreshRxGain => '重新启动增强型 RX 功能';
+
+  @override
+  String get repeater_multiAcks => '多重确认';
+
+  @override
+  String get repeater_multiAcksSubtitle => '通过多个路径确认消息，以提高传递效率。';
+
+  @override
+  String get repeater_refreshMultiAcks => '刷新多个确认';
+
+  @override
+  String get repeater_networkHealth => '网络健康';
+
+  @override
+  String get repeater_loopDetect => '循环检测';
+
+  @override
+  String get repeater_loopDetectHelper => '创建看起来像路由环的“洪水包”';
+
+  @override
+  String get repeater_loopDetectOff => '离开';
+
+  @override
+  String get repeater_loopDetectMinimal => '最少';
+
+  @override
+  String get repeater_loopDetectModerate => '适度的';
+
+  @override
+  String get repeater_loopDetectStrict => '严格';
+
+  @override
+  String get repeater_dutyCycle => '工作周期';
+
+  @override
+  String get repeater_dutyCycleHelper => '最大可使用的空闲时间百分比';
+
+  @override
+  String repeater_dutyCyclePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get repeater_ownerInfo => '运营商信息';
+
+  @override
+  String get repeater_ownerInfoHelper => '此复播器的公共元数据';
+
+  @override
+  String get repeater_refreshOwnerInfo => '刷新操作员信息';
+
+  @override
+  String get repeater_floodMax => '最大跳跃次数';
+
+  @override
+  String get repeater_floodMaxHelper => '一个洪水包中，最大可以传输的跳数 (0-64)';
+
+  @override
+  String get repeater_advancedSettings => '高级';
+
+  @override
+  String get repeater_advancedSettingsSubtitle => '高级操作员使用的调节旋钮';
+
+  @override
+  String get repeater_pathHashMode => '路径哈希模式';
+
+  @override
+  String get repeater_pathHashModeHelper =>
+      '用于编码此复用器的 ID 的字节数，在“洪流路径/环检测”标签中使用。 0=1 字节（256 个 ID，最多 64 个跳跃），1=2 字节（65K 个 ID，最多 32 个跳跃），2=3 字节（16M 个 ID，最多 21 个跳跃）。 v1.13 及更早版本的固件会使用多字节路径——只有在您的网络升级到 v1.14 或更高版本后才会生效。';
+
+  @override
+  String get repeater_txDelay => '洪水（德克萨斯州）延误';
+
+  @override
+  String get repeater_txDelayHelper =>
+      '对于洪水流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.5）的倍数。 较高的值意味着更少的冲突，但传输速度会变慢。';
+
+  @override
+  String get repeater_directTxDelay => '直接的 TX 延迟';
+
+  @override
+  String get repeater_directTxDelayHelper =>
+      '对于直接（非广播）流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.3）的倍数。';
+
+  @override
+  String get repeater_intThresh => '干扰阈值';
+
+  @override
+  String get repeater_intThreshHelper =>
+      '将阈值传递给射频信号的噪声水平校准，使其能够拒绝高于该水平的干扰。 0 表示禁用——只有在您在嘈杂频段中看到 RX 错误时才启用。';
+
+  @override
+  String get repeater_agcResetInterval => 'AGC 恢复间隔';
+
+  @override
+  String get repeater_agcResetIntervalHelper =>
+      '为了从失控的增益状态中恢复，应该多久重置收音机的自动增益控制？设置为“秒”，每次重置间隔为4秒。将此选项设置为“0”将禁用周期性重置。';
+
+  @override
+  String get repeater_actionsTitle => '行动';
+
+  @override
+  String get repeater_sendAdvert => '发布防洪广告';
+
+  @override
+  String get repeater_sendAdvertSubtitle => '通过网络播放防洪广告';
+
+  @override
+  String get repeater_sendAdvertZeroHop => '发送零跳广告';
+
+  @override
+  String get repeater_sendAdvertZeroHopSubtitle => '进行单跳广告广播（不使用中继）';
+
+  @override
+  String get repeater_clockSync => '现在同步时钟';
+
+  @override
+  String get repeater_clockSyncSubtitle => '将手机的时间设置为与中继器同步';
+
+  @override
+  String repeater_actionSucceeded(String action) {
+    return '$action 成功';
+  }
+
+  @override
+  String repeater_actionFailed(String action, String error) {
+    return '$action 失败：$error';
+  }
+
+  @override
+  String get repeater_settingsSavedRebootNeeded => '设置已保存 — 重启发射器以应用';
+
+  @override
+  String repeater_settingsPartialFailure(String failures) {
+    return '部分设置失败：$failures';
+  }
+
+  @override
   String repeater_errorSavingSettings(String error) {
     return '保存设置时出错：$error';
   }
@@ -2318,9 +2483,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_refreshTxPower => '刷新 TX 功率';
 
   @override
-  String get repeater_refreshLocationSettings => '刷新位置设置';
-
-  @override
   String get repeater_refreshPacketForwarding => '刷新包转发';
 
   @override
@@ -2328,9 +2490,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_refreshPrivacyMode => '刷新隐私模式';
-
-  @override
-  String get repeater_refreshAdvertisementSettings => '刷新广播设置';
 
   @override
   String repeater_refreshed(String label) {
@@ -2604,6 +2763,226 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_gpsNote => 'GPS 命令用于位置相关任务';
 
   @override
+  String get repeater_getCategory => '获取值';
+
+  @override
+  String get repeater_powerMgmt => '电源管理';
+
+  @override
+  String get repeater_sensors => '传感器';
+
+  @override
+  String get repeater_cliHelpPowerOff => '关闭设备。（不应有任何响应）';
+
+  @override
+  String get repeater_cliHelpClkReboot => '将时钟重置为已知的时间点，并重启设备。';
+
+  @override
+  String get repeater_cliHelpAdvertZeroHop => '发送无中继广告（仅限于邻居）。';
+
+  @override
+  String get repeater_cliHelpStartOta => '在支持的板上启动通过空中进行固件更新。';
+
+  @override
+  String get repeater_cliHelpTime => '将设备时钟设置为给定的 Unix 纪元秒。时钟不能倒退。';
+
+  @override
+  String get repeater_cliHelpBoard => '显示制造商/硬件标识。';
+
+  @override
+  String get repeater_cliHelpDiscoverNeighbors => '向附近的邻居发送节点发现请求。（仅限中继器）';
+
+  @override
+  String get repeater_cliHelpPowersaving => '显示节能模式是否已开启或已关闭。';
+
+  @override
+  String get repeater_cliHelpPowersavingOnOff => '启用或禁用节能模式（如果支持）。';
+
+  @override
+  String get repeater_cliHelpErase => '（仅适用于序列模式）格式化设备的文件系统。清除所有设置和联系人。';
+
+  @override
+  String get repeater_cliHelpSetDutyCycle =>
+      '设定允许的最大传输时段百分比（1-100）。内部调整空闲时间因子。';
+
+  @override
+  String get repeater_cliHelpSetPrvKey =>
+      '（仅适用于序列号）替换设备身份私钥。需要重启才能应用。生成一个新的公钥。';
+
+  @override
+  String get repeater_cliHelpSetRadioRxGain =>
+      '（仅适用于 SX126x 芯片） 启用增强型 RX 增益，以在较高电流下提高灵敏度。';
+
+  @override
+  String get repeater_cliHelpSetOwnerInfo => '设置广告中包含的联系人信息字符串。使用 \'|\' 作为换行符。';
+
+  @override
+  String get repeater_cliHelpSetPathHashMode =>
+      '设置路径哈希模式。 0 = 传统模式，1 = 标准模式，2 = 严格模式。 影响路由路径的匹配方式。';
+
+  @override
+  String get repeater_cliHelpSetLoopDetect => '设置路由环检测的灵敏度：关闭、低、中、或高。';
+
+  @override
+  String get repeater_cliHelpSetFreq =>
+      '（仅限串行模式）快速设置频率。需要重启。 建议使用“设置收音机参数”功能，以便设置完整的收音机参数。';
+
+  @override
+  String get repeater_cliHelpSetBridgeChannel =>
+      '（仅适用于 ESPNow 桥）设置桥使用的 WiFi 频道（1-14）。';
+
+  @override
+  String get repeater_cliHelpGetName => '显示配置的节点名称。';
+
+  @override
+  String get repeater_cliHelpGetRole => '显示固件的功能（如：中继器、房间服务器等）。';
+
+  @override
+  String get repeater_cliHelpGetPublicKey => '显示设备的公钥。';
+
+  @override
+  String get repeater_cliHelpGetPrvKey => '（仅适用于序列号）显示设备的私钥。请将其视为机密信息。';
+
+  @override
+  String get repeater_cliHelpGetRepeat => '显示数据包转发（作为中继器）是否已启用或已禁用。';
+
+  @override
+  String get repeater_cliHelpGetTx => '显示当前的发射功率（以dBm为单位）。';
+
+  @override
+  String get repeater_cliHelpGetFreq => '显示配置的射频频率（以兆赫兹为单位）。';
+
+  @override
+  String get repeater_cliHelpGetRadio => '显示完整的无线电参数：频率、带宽、扩频因子、编码速率。';
+
+  @override
+  String get repeater_cliHelpGetRadioRxGain => '（仅适用于 SX126x 模块）显示 RX 放大器的状态。';
+
+  @override
+  String get repeater_cliHelpGetAf => '显示当前的空闲时间系数。';
+
+  @override
+  String get repeater_cliHelpGetDutyCycle => '显示当前允许的占空比（以百分比表示）。';
+
+  @override
+  String get repeater_cliHelpGetIntThresh => '显示信道干扰阈值（以dB为单位）。';
+
+  @override
+  String get repeater_cliHelpGetAgcResetInterval => '显示 AGC 重置的间隔时间（以秒为单位）。';
+
+  @override
+  String get repeater_cliHelpGetMultiAcks => '显示双重确认模式是否已启用（1）或已禁用（0）。';
+
+  @override
+  String get repeater_cliHelpGetAllowReadOnly => '显示是否允许访客仅限查看权限。';
+
+  @override
+  String get repeater_cliHelpGetAdvertInterval => '显示本地广告的时间间隔，单位为分钟。';
+
+  @override
+  String get repeater_cliHelpGetFloodAdvertInterval => '显示洪水广告的播放时间间隔，以小时为单位。';
+
+  @override
+  String get repeater_cliHelpGetGuestPassword => '显示已配置的访客密码。';
+
+  @override
+  String get repeater_cliHelpGetLat => '显示已配置的纬度。';
+
+  @override
+  String get repeater_cliHelpGetLon => '显示已配置的经度。';
+
+  @override
+  String get repeater_cliHelpGetRxDelay => '显示 rxdelay 的基本值。';
+
+  @override
+  String get repeater_cliHelpGetTxDelay => '显示洪水模式下的传输延迟系数。';
+
+  @override
+  String get repeater_cliHelpGetDirectTxDelay => '显示直接模式下的时延系数。';
+
+  @override
+  String get repeater_cliHelpGetFloodMax => '显示最大洪水传播次数。';
+
+  @override
+  String get repeater_cliHelpGetOwnerInfo => '显示所有者的联系信息。';
+
+  @override
+  String get repeater_cliHelpGetPathHashMode => '显示哈希模式（0/1/2）。';
+
+  @override
+  String get repeater_cliHelpGetLoopDetect => '显示循环检测的灵敏度。';
+
+  @override
+  String get repeater_cliHelpGetAcl => '（仅适用于序列号）列出复用器上的访问控制条目。';
+
+  @override
+  String get repeater_cliHelpGetBridgeEnabled => '显示桥是否已启用。';
+
+  @override
+  String get repeater_cliHelpGetBridgeDelay => '显示桥梁延迟的时间，单位为毫秒。';
+
+  @override
+  String get repeater_cliHelpGetBridgeSource => '显示桥接设备是否接收或发送 RX 或 TX 类型的数据包。';
+
+  @override
+  String get repeater_cliHelpGetBridgeBaud => '（仅限 RS232 桥）显示桥的波特率。';
+
+  @override
+  String get repeater_cliHelpGetBridgeChannel => '（仅适用于 ESPNow 桥）显示桥的 WiFi 通道。';
+
+  @override
+  String get repeater_cliHelpGetBridgeSecret => '（仅适用于 ESPNow 桥）显示桥的共享密钥。';
+
+  @override
+  String get repeater_cliHelpGetBootloaderVer => '（仅适用于NRF52）显示引导程序版本。';
+
+  @override
+  String get repeater_cliHelpGetAdcMultiplier => '显示 ADC 乘数（电池电压缩放）。';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSupport => '报告董事会是否支持电源管理功能。';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSource => '显示当前的电源：外部电源或电池。';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootReason => '显示最近的重置和关闭原因。';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootMv => '显示启动时的电池电压，单位为毫伏 (mV)。';
+
+  @override
+  String get repeater_cliHelpSensorGet => '通过按键读取自定义传感器设置。';
+
+  @override
+  String get repeater_cliHelpSensorSet => '编写自定义传感器设置。';
+
+  @override
+  String get repeater_cliHelpSensorList => '列出所有自定义传感器设置，并按可选的起始索引进行分页显示。';
+
+  @override
+  String get repeater_cliHelpRegionDefault => '显示当前默认的区域范围。';
+
+  @override
+  String get repeater_cliHelpRegionDefaultSet =>
+      '设置默认的区域范围。使用 \"<null>\" 可以清除。';
+
+  @override
+  String get repeater_cliHelpRegionListAllowed => '列出允许洪水交通的区域。';
+
+  @override
+  String get repeater_cliHelpRegionListDenied => '列出禁止洪水交通的区域。';
+
+  @override
+  String get repeater_cliHelpStatsPackets => '（仅显示序列信息）显示数据包级别的统计信息。';
+
+  @override
+  String get repeater_cliHelpStatsRadio => '（仅显示序列信息）显示收音机相关统计数据。';
+
+  @override
+  String get repeater_cliHelpStatsCore => '（仅显示序列号）显示核心固件统计信息。';
+
+  @override
   String get telemetry_receivedData => '接收到的遥测数据';
 
   @override
@@ -2644,7 +3023,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String telemetry_voltageValue(String volts) {
-    return '${volts}V';
+    return '$volts伏';
   }
 
   @override
@@ -2958,7 +3337,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get listFilter_heardRecently => '最近听到';
 
   @override
-  String get listFilter_az => 'A-Z';
+  String get listFilter_az => 'A到Z';
 
   @override
   String get listFilter_filters => '筛选';
@@ -3175,7 +3554,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_pathTrace => '路径追踪';
 
   @override
-  String get contacts_ping => 'Ping';
+  String get contacts_ping => '乒';
 
   @override
   String get contacts_repeaterPathTrace => 'Trace 转发节点';

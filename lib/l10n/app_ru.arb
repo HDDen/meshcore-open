@@ -101,7 +101,7 @@
   "settings_appDebugLogSubtitle": "Сообщения отладки приложения",
   "settings_about": "О программе",
   "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
-  "settings_aboutLegalese": "2026 MeshCore Open (Advanced mod) Source Project",
+  "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "Открытое клиентское приложение на Flutter для устройств MeshCore с LoRa-сетями.",
   "settings_infoName": "Имя",
   "settings_infoId": "ID",
@@ -121,6 +121,8 @@
   "settings_txPowerHelper": "0 – 22",
   "settings_txPowerInvalid": "Недопустимая мощность передачи (0–22 дБм)",
   "settings_error": "Ошибка: {message}",
+  "settings_channelResendTimeoutTitle": "Задержка для ручной переотправки",
+  "settings_channelResendTimeoutSubtitle": "Также влияет на внутренний механизм устранения отрисовки дублей исходящих сообщений",
   "appSettings_title": "Настройки приложения",
   "appSettings_appearance": "Внешний вид",
   "appSettings_theme": "Тема",
@@ -231,11 +233,8 @@
   "channels_searchChannels": "Поиск каналов...",
   "channels_noChannelsFound": "Каналы не найдены",
   "channels_channelIndex": "Канал {index}",
-  "channels_hashtagChannel": "Хэштег-канал",
   "channels_public": "Публичный",
   "channels_private": "Приватный",
-  "channels_publicChannel": "Публичный канал",
-  "channels_privateChannel": "Приватный канал",
   "channels_editChannel": "Изменить канал",
   "channels_muteChannel": "Отключить уведомления канала",
   "channels_unmuteChannel": "Включить уведомления канала",
@@ -271,6 +270,9 @@
   "settings_cyr2latProfileDeleted": "Профиль успешно удален",
   "settings_cyr2latProfileDeleteDscr": "Вы действительно хотите удалить профиль \"{name}\"?",
   "settings_mcmpTextLimit": "MCMP: лимит символов для вставки",
+  "settings_sendingDelayForCancellation": "Задержка отправки для её отмены",
+  "settings_useSendingDelay": "Отправлять с задержкой",
+  "chat_cancelSend": "отменить отправку",
   "settings_doNotFilterMessagesOnChannels": "Не фильтровать собственные пакеты сообщений на этих каналах",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "По умолчанию, сообщения от своей же ноды игнорируются. Это делает невозможным работу встроенного терминала (TerminalCLI) на некоторых прошивках",
   "channels_channelUpdated": "Канал \"{name}\" обновлён",
@@ -304,6 +306,7 @@
   "chat_messageCopied": "Сообщение скопировано",
   "chat_messageDeleted": "Сообщение удалено",
   "chat_retryingMessage": "Повтор отправки сообщения",
+  "chat_retryingMessageWait": "Пожалуйста, подождите ещё {seconds} сек. перед переотправкой",
   "chat_retryCount": "Попытка {current}/{max}",
   "chat_sendGif": "Отправить GIF",
   "chat_reply": "Ответить",
@@ -830,6 +833,7 @@
   "appSettings_languageUk": "Українська",
   "appSettings_enableMessageTracing": "Включить трассировку сообщений",
   "appSettings_enableMessageTracingSubtitle": "Показывать подробные метаданные о маршрутизации и времени для сообщений",
+  "appSettings_showKeyboardHidingButton": "Показывать кнопку скрытия клавиатуры",
   "contacts_floodAdvert": "Рекламный поток",
   "contacts_clipboardEmpty": "Буфер обмена пуст.",
   "contacts_copyAdvertToClipboard": "Копировать рекламу в буфер обмена",
@@ -1412,5 +1416,215 @@
   "losBlockedSpotsTitle": "Зарезервированные места",
   "losSelectedObstructionTitle": "Выбранный объект, препятствующий движению",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit})."
+  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "repeater_rxGain": "Увеличенная эффективность RX",
+  "repeater_rxGainHelper": "Более высокая чувствительность, больший ток потребления (только для SX1262/SX1268)",
+  "repeater_refreshRxGain": "Обновите усиление RX",
+  "repeater_multiAcks": "Несколько подтверждений",
+  "repeater_multiAcksSubtitle": "Обеспечьте доставку сообщений по нескольким каналам для повышения эффективности.",
+  "repeater_refreshMultiAcks": "Обновление нескольких подтверждений",
+  "repeater_networkHealth": "Состояние сети",
+  "repeater_loopDetect": "Обнаружение циклов",
+  "repeater_loopDetectHelper": "Создайте пакеты данных, которые выглядят как циклы маршрутизации.",
+  "repeater_loopDetectOff": "Отключено",
+  "repeater_loopDetectMinimal": "Минимальный",
+  "repeater_loopDetectModerate": "Умеренный",
+  "repeater_loopDetectStrict": "Строгий",
+  "repeater_dutyCycle": "Цикл работы",
+  "repeater_dutyCycleHelper": "Максимальный процент времени, выделенного на трансляцию.",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Информация о операторе",
+  "repeater_ownerInfoHelper": "Общая метаинформация для этого ретранслятора",
+  "repeater_refreshOwnerInfo": "Обновить информацию о операторе",
+  "repeater_floodMax": "Максимальное количество прыжков при наводнении",
+  "repeater_floodMaxHelper": "Максимальное количество пакетов, которые могут быть отправлены в одном потоке (0-64)",
+  "repeater_advancedSettings": "Продвинутый",
+  "repeater_advancedSettingsSubtitle": "Регуляторы для опытных операторов",
+  "repeater_pathHashMode": "Режим хеширования пути",
+  "repeater_pathHashModeHelper": "Байты, используемые для кодирования идентификатора этого ретранслятора в тегах для обнаружения потоков/циклов. 0 = 1 байт (256 идентификаторов, до 64 переходов), 1 = 2 байта (65 000 идентификаторов, до 32 переходов), 2 = 3 байта (1 600 000 идентификаторов, до 21 перехода). Версии прошивки v1.13 и более ранние версии не поддерживают многобайтовые пути — они поднимаются только после того, как ваша сеть будет обновлена до версии v1.14 и выше.",
+  "repeater_txDelay": "Задержка в работе системы Flood TX",
+  "repeater_txDelayHelper": "Передача с увеличенным интервалом для трафика во время наводнения, в качестве коэффициента, умножающего время передачи пакета (от 0 до 2, по умолчанию 0,5). Более высокое значение означает меньшее количество столкновений, но более медленную передачу.",
+  "repeater_directTxDelay": "Прямая задержка сигнала TX",
+  "repeater_directTxDelayHelper": "Передача промежуточных данных для прямого (немассового) трафика, в качестве коэффициента, равного времени передачи пакета (от 0 до 2, по умолчанию 0,3).",
+  "repeater_intThresh": "Пороговое значение помех",
+  "repeater_intThreshHelper": "Порог устанавливается для калибровки уровня шума радио, чтобы оно отсеивало помехи, превышающие этот уровень. Значение \"0\" означает отключение – используйте только в случае, если вы наблюдаете ошибки при приеме сигнала в шумном диапазоне.",
+  "repeater_agcResetInterval": "Интервал сброса AGC",
+  "repeater_agcResetIntervalHelper": "Как часто следует сбрасывать автоматическую регулировку усиления радио, чтобы вернуться к нормальному состоянию после заклинивания? Интервал сброса составляет несколько секунд, кратный 4. Отключение периодического сброса осуществляется с помощью параметра 0.",
+  "repeater_actionsTitle": "Действия",
+  "repeater_sendAdvert": "Отправить объявление о наводнении",
+  "repeater_sendAdvertSubtitle": "Разместите рекламу о наводнении в эфире по всей сети.",
+  "repeater_sendAdvertZeroHop": "Опубликуйте рекламу, не требующую промежуточного распространения.",
+  "repeater_sendAdvertZeroHopSubtitle": "Разместите рекламу, распространяемую одним способом (без использования ретрансляторов).",
+  "repeater_clockSync": "Синхронизировать время сейчас",
+  "repeater_clockSyncSubtitle": "Установите время на вашем телефоне, чтобы оно совпадало со временем ретранслятора.",
+  "repeater_actionSucceeded": "{action} succeeded",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} failed: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Настройки сохранены — перезагрузите ретранслятор, чтобы применить их.",
+  "repeater_settingsPartialFailure": "Некоторые настройки не удалось применить: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
+  "@settings_multiAck": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@common_percentValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@settings_aboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_temperatureValue": {
+    "placeholders": {
+      "celsius": {
+        "type": "String"
+      },
+      "fahrenheit": {
+        "type": "String"
+      }
+    }
+  },
+  "@channelPath_timeWithDate": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@channelPath_timeOnly": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@channelPath_selectedPathLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_getCategory": "Получить значения",
+  "repeater_powerMgmt": "Управление энергопотреблением",
+  "repeater_sensors": "Датчики",
+  "repeater_cliHelpPowerOff": "Отключает устройство. (ожидается отсутствие ответа).",
+  "repeater_cliHelpClkReboot": "Сбрасывает часы до известной эпохи и перезапускает устройство.",
+  "repeater_cliHelpAdvertZeroHop": "Отправляет рекламу, распространяемую только среди ближайших соседей (без промежуточных узлов).",
+  "repeater_cliHelpStartOta": "Запускает обновление прошивки по воздуху на поддерживаемых устройствах.",
+  "repeater_cliHelpTime": "Устанавливает время устройства в соответствии с заданными секундами от начала эпохи Unix. Время не может сброситься назад.",
+  "repeater_cliHelpBoard": "Отображает информацию о производителе платы / идентификатор аппаратного обеспечения.",
+  "repeater_cliHelpDiscoverNeighbors": "Отправляет запрос на обнаружение соседних узлов. (Только для ретранслятора)",
+  "repeater_cliHelpPowersavingOnOff": "Включает или выключает режим экономии энергии (если он поддерживается).",
+  "repeater_cliHelpPowersaving": "Показывает, включен ли режим экономии энергии.",
+  "repeater_cliHelpErase": "(Только для серийного использования) Форматирует файловую систему устройства. Удаляет все настройки и контакты.",
+  "repeater_cliHelpSetDutyCycle": "Устанавливает максимальный допустимый цикл передачи данных в процентах (от 1 до 100). Внутренне корректирует коэффициент времени передачи.",
+  "repeater_cliHelpSetPrvKey": "(Только для серийного использования) Заменяет приватный ключ, идентифицирующий устройство. Требуется перезагрузка для применения. Генерирует новый публичный ключ.",
+  "repeater_cliHelpSetRadioRxGain": "(Только для SX126x) Переключает усиление RX для повышения чувствительности при больших токах потребления.",
+  "repeater_cliHelpSetOwnerInfo": "Указывает строку с контактной информацией владельца, которая должна быть включена в объявления. Используйте '|' для переносов строк.",
+  "repeater_cliHelpSetPathHashMode": "Устанавливает режим хеширования пути. 0 = устаревший, 1 = стандартный, 2 = строгий. Влияет на то, как определяются маршруты.",
+  "repeater_cliHelpSetLoopDetect": "Устанавливает чувствительность обнаружения циклов маршрутизации: \"выключено\", \"минимальная\", \"умеренная\" или \"строгая\".",
+  "repeater_cliHelpSetFreq": "(Только для настройки) Быстро устанавливает только частоту. Требуется перезагрузка. Рекомендуется использовать функцию \"настройка радио\" для полного набора параметров.",
+  "repeater_cliHelpSetBridgeChannel": "(Только для моста ESPNow) Устанавливает канал Wi-Fi (от 1 до 14), используемый мостом.",
+  "repeater_cliHelpGetName": "Отображает имя настроенного узла.",
+  "repeater_cliHelpGetRole": "Отображает роль прошивки (ретранслятор, сервер для комнаты и т.д.).",
+  "repeater_cliHelpGetPublicKey": "Отображает открытый ключ устройства.",
+  "repeater_cliHelpGetPrvKey": "(Только для серийного использования) Отображает приватный ключ устройства. Рассматривайте его как секретную информацию.",
+  "repeater_cliHelpGetRepeat": "Отображает, включена ли функция перенаправления пакетов (функция ретранслятора) или нет.",
+  "repeater_cliHelpGetTx": "Отображает текущую мощность передатчика в дБм.",
+  "repeater_cliHelpGetFreq": "Отображает настроенную частоту радиосигнала в мегагерцах.",
+  "repeater_cliHelpGetRadio": "Отображает все параметры радиосигнала: частоту, полосу пропускания, коэффициент модуляции, скорость кодирования.",
+  "repeater_cliHelpGetRadioRxGain": "(Только для SX126x) Отображает состояние усиления сигнала на входе RX.",
+  "repeater_cliHelpGetAf": "Отображает текущий коэффициент времени эфира.",
+  "repeater_cliHelpGetDutyCycle": "Отображает текущий допустимый цикл работы в процентах.",
+  "repeater_cliHelpGetIntThresh": "Отображает порог помех в децибелах.",
+  "repeater_cliHelpGetAgcResetInterval": "Отображает интервал сброса автоматической регулировки усиления в секундах.",
+  "repeater_cliHelpGetMultiAcks": "Показывает, включен ли режим двойной подтверждения (1) или выключен (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Отображает, разрешен ли доступ для чтения только для гостей.",
+  "repeater_cliHelpGetAdvertInterval": "Отображает продолжительность рекламного блока в минутах.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Отображает интервал времени показа рекламного ролика в часах.",
+  "repeater_cliHelpGetGuestPassword": "Отображает установленный пароль для гостя.",
+  "repeater_cliHelpGetLat": "Отображает заданную широту.",
+  "repeater_cliHelpGetLon": "Отображает заданную долготу.",
+  "repeater_cliHelpGetRxDelay": "Отображает базовое значение задержки.",
+  "repeater_cliHelpGetTxDelay": "Отображает коэффициент задержки при работе в режиме затопления.",
+  "repeater_cliHelpGetDirectTxDelay": "Отображает коэффициент задержки в режиме прямого подключения.",
+  "repeater_cliHelpGetFloodMax": "Отображает максимальное количество переходов при затоплении.",
+  "repeater_cliHelpGetOwnerInfo": "Отображает строку с контактной информацией владельца.",
+  "repeater_cliHelpGetPathHashMode": "Отображает режим работы с хэшем пути (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Отображает чувствительность к обнаружению циклов.",
+  "repeater_cliHelpGetAcl": "(Только для серий) Перечисляет записи управления доступом на ретрансляторе.",
+  "repeater_cliHelpGetBridgeEnabled": "Показывает, включена ли функция моста.",
+  "repeater_cliHelpGetBridgeDelay": "Отображает задержку в миллисекундах.",
+  "repeater_cliHelpGetBridgeSource": "Отображает, какие пакеты RX или TX передаются через мост.",
+  "repeater_cliHelpGetBridgeBaud": "(Только для интерфейса RS232) Отображает скорость передачи данных на интерфейсе RS232.",
+  "repeater_cliHelpGetBridgeChannel": "(Только для моста ESPNow) Отображает канал WiFi, используемый мостом.",
+  "repeater_cliHelpGetBridgeSecret": "(Только для моста ESPNow) Отображает общий секрет, используемый мостом.",
+  "repeater_cliHelpGetBootloaderVer": "(Только для NRF52) Отображает версию загрузчика.",
+  "repeater_cliHelpGetAdcMultiplier": "Отображает коэффициент умножения аналого-цифрового преобразователя (масштабирование напряжения от батареи).",
+  "repeater_cliHelpGetPwrMgtSupport": "Сообщает, есть ли у совета поддержки функций управления питанием.",
+  "repeater_cliHelpGetPwrMgtSource": "Отображает текущий источник питания: внешний или аккумулятор.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Отображает последние причины сброса и выключения.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Отображает напряжение батареи при запуске системы в милливольтах (мВ).",
+  "repeater_cliHelpSensorGet": "Считывает пользовательское значение для датчика по указанному ключу.",
+  "repeater_cliHelpSensorSet": "Создает пользовательские настройки для датчика.",
+  "repeater_cliHelpSensorList": "Перечисляет все пользовательские настройки датчиков, разбитые на страницы с возможностью указания начального индекса.",
+  "repeater_cliHelpRegionDefault": "Отображает текущий область действия по умолчанию.",
+  "repeater_cliHelpRegionDefaultSet": "Устанавливает значение региона по умолчанию. Используйте \"<null>\", чтобы сбросить значение.",
+  "repeater_cliHelpRegionListAllowed": "Перечисляет регионы, где разрешено движение транспорта во время наводнений.",
+  "repeater_cliHelpRegionListDenied": "Перечисляет регионы, где запрещено движение транспорта во время наводнений.",
+  "repeater_cliHelpStatsPackets": "(Только для серийной версии) Отображает статистику на уровне пакетов.",
+  "repeater_cliHelpStatsRadio": "(Только для серий) Отображает статистику радио.",
+  "repeater_cliHelpStatsCore": "(Только для серийного оборудования) Отображает основные статистические данные прошивки.",
+  "settings_companionDebugLogSubtitle": "Команды, ответы и необработанные данные, используемые для протоколов BLE, TCP и USB.",
+  "repeater_chanUtil": "Использование канала",
+  "settings_companionDebugLog": "Журнал отладки (для сопутствующего приложения)"
 }

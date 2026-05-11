@@ -5,6 +5,7 @@ class ContactSettingsStore {
   static const String _keyPrefix = 'contact_smaz_';
   static const String _mcmpKeyPrefix = 'contact_mcmp_';
   static const String _cyr2latKeyPrefix = 'contact_cyr2lat_';
+  static const String _sendingDelayKeyPrefix = 'contact_sending_delay_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -13,6 +14,7 @@ class ContactSettingsStore {
   String get keyFor => '$_keyPrefix$publicKeyHex';
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
+  String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
@@ -96,6 +98,33 @@ class ContactSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForCyr2Lat$contactKeyHex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadSendingDelayEnabled(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load contact sending delay settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForSendingDelay$contactKeyHex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveSendingDelayEnabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save contact sending delay settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForSendingDelay$contactKeyHex';
     await prefs.setBool(key, enabled);
   }
 

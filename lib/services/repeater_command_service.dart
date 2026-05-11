@@ -25,14 +25,6 @@ class RepeaterCommandService {
     Function(int)? onAttempt,
     int retries = maxRetries,
   }) async {
-    final repeaterKey = repeater.publicKeyHex;
-    final hasPending = _pendingCommands.keys.any(
-      (id) => id.startsWith(repeaterKey),
-    );
-    if (hasPending) {
-      throw Exception('Another command is still awaiting a response.');
-    }
-
     final attemptCount = retries < 1 ? 1 : retries;
     final selection = await _connector.preparePathForContactSend(repeater);
 
@@ -62,14 +54,14 @@ class RepeaterCommandService {
     int attempt,
   ) async {
     final repeaterKey = repeater.publicKeyHex;
-    final commandId = '${repeaterKey}_${DateTime.now().millisecondsSinceEpoch}';
+    final prefix = _nextPrefixToken();
+    final commandId = '${repeaterKey}_$prefix';
     final completer = Completer<String>();
     _pendingCommands[commandId] = completer;
+    _commandPrefixes[commandId] = prefix;
+    _pendingByPrefix[prefix] = commandId;
 
     try {
-      final prefix = _nextPrefixToken();
-      _commandPrefixes[commandId] = prefix;
-      _pendingByPrefix[prefix] = commandId;
       final framedCommand = '$prefix$command';
       final pathLengthValue = selection.useFlood ? -1 : selection.hopCount;
       final timestampSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;

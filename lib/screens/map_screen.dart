@@ -2011,9 +2011,6 @@ class _MapScreenState extends State<MapScreen> {
                               color: isPublic ? Colors.orange : Colors.blue,
                             ),
                             title: Text(label),
-                            subtitle: isPublic
-                                ? Text(context.l10n.channels_publicChannel)
-                                : null,
                             onTap: () async {
                               Navigator.pop(sheetContext);
                               final canSend = isPublic

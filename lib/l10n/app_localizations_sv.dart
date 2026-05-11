@@ -112,7 +112,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get scanner_title => 'MeshCore Open (Advanced mod)';
+  String get scanner_title => 'MeshCore – Öppen version (Advanced mod)';
 
   @override
   String get connectionChoiceUsbLabel => 'USB';
@@ -133,7 +133,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tcpHostHint => '192.168.40.10';
 
   @override
-  String get tcpPortLabel => 'Port';
+  String get tcpPortLabel => 'Hamn';
 
   @override
   String get tcpPortHint => '5000';
@@ -485,10 +485,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_debug => 'Felsök';
 
   @override
-  String get settings_bleDebugLog => 'BLE-felsökning';
+  String get settings_companionDebugLog => 'Följande felsökningslogg';
 
   @override
-  String get settings_bleDebugLogSubtitle => 'BLE-kommandon, svar och rådata';
+  String get settings_companionDebugLogSubtitle =>
+      'BLE/TCP/USB-kommandon, svar och rådata';
 
   @override
   String get settings_appDebugLog => 'Appfelsökning';
@@ -502,7 +503,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String settings_aboutVersion(String version) {
-    return 'MeshCore Open (Advanced mod) v$version';
+    return 'MeshCore Open (Advanced mod) version $version';
   }
 
   @override
@@ -562,7 +563,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_txPower => 'TX-effekt (dBm)';
 
   @override
-  String get settings_txPowerHelper => '0 - 22';
+  String get settings_txPowerHelper => '0 – 22';
 
   @override
   String get settings_txPowerInvalid => 'Ogiltig TX-effekt (0-22 dBm)';
@@ -582,6 +583,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String settings_error(String message) {
     return 'Fel: $message';
   }
+
+  @override
+  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+
+  @override
+  String get settings_channelResendTimeoutSubtitle =>
+      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
 
   @override
   String get appSettings_title => 'Appinställningar';
@@ -608,43 +616,43 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_languageSystem => 'Systemstandard';
 
   @override
-  String get appSettings_languageEn => 'English';
+  String get appSettings_languageEn => 'Engelska';
 
   @override
-  String get appSettings_languageFr => 'Français';
+  String get appSettings_languageFr => 'Franska';
 
   @override
-  String get appSettings_languageEs => 'Español';
+  String get appSettings_languageEs => 'Spanska';
 
   @override
-  String get appSettings_languageDe => 'Deutsch';
+  String get appSettings_languageDe => 'Tyskt';
 
   @override
-  String get appSettings_languagePl => 'Polski';
+  String get appSettings_languagePl => 'Polsk';
 
   @override
-  String get appSettings_languageSl => 'Slovenščina';
+  String get appSettings_languageSl => 'Sloveniska';
 
   @override
-  String get appSettings_languagePt => 'Português';
+  String get appSettings_languagePt => 'Portugisiska';
 
   @override
-  String get appSettings_languageIt => 'Italiano';
+  String get appSettings_languageIt => 'Italienska';
 
   @override
-  String get appSettings_languageZh => '中文';
+  String get appSettings_languageZh => 'Kinesiska';
 
   @override
   String get appSettings_languageSv => 'Svenska';
 
   @override
-  String get appSettings_languageNl => 'Nederlands';
+  String get appSettings_languageNl => 'Nederländska';
 
   @override
-  String get appSettings_languageSk => 'Slovenčina';
+  String get appSettings_languageSk => 'Sloveniska';
 
   @override
-  String get appSettings_languageBg => 'Български';
+  String get appSettings_languageBg => 'Bulgariska';
 
   @override
   String get appSettings_languageRu => 'Ryska';
@@ -658,6 +666,10 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Visa detaljerade metadata om dirigering och tidsinställningar för meddelanden';
+
+  @override
+  String get appSettings_showKeyboardHidingButton =>
+      'Show keyboard hiding button';
 
   @override
   String get appSettings_notifications => 'Meddelanden';
@@ -791,13 +803,13 @@ class AppLocalizationsSv extends AppLocalizations {
       'Anslut till en enhet för att välja';
 
   @override
-  String get appSettings_batteryNmc => '18650 NMC (3.0-4.2V)';
+  String get appSettings_batteryNmc => '18650 NMC (3,0-4,2V)';
 
   @override
   String get appSettings_batteryLifepo4 => 'LiFePO4 (2,6–3,65V)';
 
   @override
-  String get appSettings_batteryLipo => 'LiPo (3.0-4.2V)';
+  String get appSettings_batteryLipo => 'LiPo (3,0-4,2V)';
 
   @override
   String get appSettings_mapDisplay => 'Kartvisning';
@@ -1078,9 +1090,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get channels_hashtagChannel => 'Hashtagkanal';
-
-  @override
   String get channels_public => 'Offentligt';
 
   @override
@@ -1090,12 +1099,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get channels_private => 'Privat';
-
-  @override
-  String get channels_publicChannel => 'Allmänt kanal';
-
-  @override
-  String get channels_privateChannel => 'Privat kanal';
 
   @override
   String get channels_editChannel => 'Redigera kanal';
@@ -1140,7 +1143,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_standardPublicPsk => 'Standard allmän PSK';
 
   @override
-  String get channels_pskHex => 'PSK (Hex)';
+  String get channels_pskHex => 'PSK (heks)';
 
   @override
   String get channels_generateRandomPsk => 'Generera slumpmässig PSK';
@@ -1226,6 +1229,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_mcmpTextLimit => 'MCMP text paste limit';
+
+  @override
+  String get settings_sendingDelayForCancellation =>
+      'Sending delay for cancellation';
+
+  @override
+  String get settings_useSendingDelay => 'Use sending delay';
+
+  @override
+  String get chat_cancelSend => 'cancel sending';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
@@ -1341,6 +1354,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_retryingMessage => 'Försöker igen';
+
+  @override
+  String chat_retryingMessageWait(Object seconds) {
+    return 'Please wait $seconds seconds before resend';
+  }
 
   @override
   String chat_retryCount(int current, int max) {
@@ -1460,7 +1478,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get debugFrame_textTypeCli => 'CLI';
+  String get debugFrame_textTypeCli => 'Kommandorad';
 
   @override
   String get debugFrame_textTypePlain => 'Enkel';
@@ -1507,8 +1525,8 @@ class AppLocalizationsSv extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'hops',
-      one: 'hop',
+      other: 'hopp',
+      one: 'hopp',
     );
     return '$count $_temp0';
   }
@@ -1618,10 +1636,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get chat_markAsUnread => 'Mark as Unread';
+  String get chat_markAsUnread => 'Markera som oläst';
 
   @override
-  String get chat_newMessages => 'New messages';
+  String get chat_newMessages => 'Nya meddelanden';
 
   @override
   String get chat_openLink => 'Öppna länk?';
@@ -2119,14 +2137,14 @@ class AppLocalizationsSv extends AppLocalizations {
       'Visa återspolningsstatus, statistik och grannar';
 
   @override
-  String get repeater_telemetry => 'Telemetry';
+  String get repeater_telemetry => 'Telemetri';
 
   @override
   String get repeater_telemetrySubtitle =>
       'Visa telemetri för sensorer och systemstatistik';
 
   @override
-  String get repeater_cli => 'CLI';
+  String get repeater_cli => 'Kommandoradgränssnitt';
 
   @override
   String get repeater_cliSubtitle => 'Skicka kommandon till repetitorn';
@@ -2215,6 +2233,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_rxAirtime => 'RX Airtime';
 
   @override
+  String get repeater_chanUtil => 'Användning av kanal';
+
+  @override
   String get repeater_packetStatistics => 'Paketstatistik';
 
   @override
@@ -2287,7 +2308,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_frequencyMhz => 'Frekvens (MHz)';
 
   @override
-  String get repeater_frequencyHelper => '300-2500 MHz';
+  String get repeater_frequencyHelper => '300–2500 MHz';
 
   @override
   String get repeater_txPower => 'TX Effekt';
@@ -2422,6 +2443,162 @@ class AppLocalizationsSv extends AppLocalizations {
       'Inställningarna sparades framgångsrikt.';
 
   @override
+  String get repeater_rxGain => 'Ökad RX-vinst';
+
+  @override
+  String get repeater_rxGainHelper =>
+      'Ökad känslighet, högre strömförbrukning (endast för SX1262/SX1268)';
+
+  @override
+  String get repeater_refreshRxGain => 'Återställ förbättrad RX-signalstyrka';
+
+  @override
+  String get repeater_multiAcks => 'Flera bekräftelser';
+
+  @override
+  String get repeater_multiAcksSubtitle =>
+      'Bekräfta meddelanden via flera olika kanaler för bättre leverans.';
+
+  @override
+  String get repeater_refreshMultiAcks => 'Återställ flera ACK-meddelanden';
+
+  @override
+  String get repeater_networkHealth => 'Nätverkets hälsa';
+
+  @override
+  String get repeater_loopDetect => 'Identifiering av loopar';
+
+  @override
+  String get repeater_loopDetectHelper =>
+      'Skapa \"flödespaket\" som ser ut som att de bildar en loop (en återkommande krets).';
+
+  @override
+  String get repeater_loopDetectOff => 'Av';
+
+  @override
+  String get repeater_loopDetectMinimal => 'Minimal';
+
+  @override
+  String get repeater_loopDetectModerate => 'Måttlig';
+
+  @override
+  String get repeater_loopDetectStrict => 'Strikt';
+
+  @override
+  String get repeater_dutyCycle => 'Arbetscykel';
+
+  @override
+  String get repeater_dutyCycleHelper => 'Maximal procentandel av sändningstid';
+
+  @override
+  String repeater_dutyCyclePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get repeater_ownerInfo => 'Information om operatören';
+
+  @override
+  String get repeater_ownerInfoHelper =>
+      'Offentliga metadata för denna sändare';
+
+  @override
+  String get repeater_refreshOwnerInfo => 'Uppdatera information om personal';
+
+  @override
+  String get repeater_floodMax => 'Maximala mängden humle';
+
+  @override
+  String get repeater_floodMaxHelper =>
+      'Maximalt antal hopp en paket kan färdas (0-64)';
+
+  @override
+  String get repeater_advancedSettings => 'Avancerad';
+
+  @override
+  String get repeater_advancedSettingsSubtitle =>
+      'Ställjusteringsknappar för erfarna användare';
+
+  @override
+  String get repeater_pathHashMode => 'Hash-läge för sökväg';
+
+  @override
+  String get repeater_pathHashModeHelper =>
+      'Byte används för att koda denna repeaters ID i taggar för att upptäcka loopar/flödesvägar. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Versioner 1.13 och äldre har stöd för multi-byte-vägar – endast en gång när nätverket är aktiverat (från och med version 1.14).';
+
+  @override
+  String get repeater_txDelay => 'Försening i Flood TX';
+
+  @override
+  String get repeater_txDelayHelper =>
+      'Återöverföringsintervall för trafik under perioder med hög belastning, som en multiplikator av paketets överföringstid (0-2, standard 0,5). Högre värde = färre kollisioner, men långsammare leverans.';
+
+  @override
+  String get repeater_directTxDelay => 'Direkt TX-fördröjning';
+
+  @override
+  String get repeater_directTxDelayHelper =>
+      'Återöverföringsintervall för direkt (icke-översvämmande) trafik, som en multiplikator av paketets överföringstid (0-2, standard 0,3).';
+
+  @override
+  String get repeater_intThresh => 'Tröskelvärde för störning';
+
+  @override
+  String get repeater_intThreshHelper =>
+      'Tröskelvärdet har ställts in så att den filtrerar bort störningar som överstiger detta värde. 0 stänger av – aktivera endast om du ser RX-fel i ett störningsfyllt frekvensområde.';
+
+  @override
+  String get repeater_agcResetInterval => 'Återställningsintervall för AGC';
+
+  @override
+  String get repeater_agcResetIntervalHelper =>
+      'Hur ofta ska man återställa radioens automatiska förstärkning för att återhämta sig från ett tillstånd där förstärkningen är fast? Sekunder, inställda till en multipel av 4. 0 stänger av periodiska återställningar.';
+
+  @override
+  String get repeater_actionsTitle => 'Åtgärder';
+
+  @override
+  String get repeater_sendAdvert => 'Skicka annons om översvämning';
+
+  @override
+  String get repeater_sendAdvertSubtitle =>
+      'Sänd en reklamfilm om översvämningar via nätverket.';
+
+  @override
+  String get repeater_sendAdvertZeroHop =>
+      'Skicka en annons som inte kräver någon mellanstopp';
+
+  @override
+  String get repeater_sendAdvertZeroHopSubtitle =>
+      'Sänd en reklamkampanj med en enda sändare (utan mellanliggande sändare).';
+
+  @override
+  String get repeater_clockSync => 'Synkronisera klockan nu';
+
+  @override
+  String get repeater_clockSyncSubtitle =>
+      'Ställ din telefons tid till repeatern.';
+
+  @override
+  String repeater_actionSucceeded(String action) {
+    return '$action lyckades';
+  }
+
+  @override
+  String repeater_actionFailed(String action, String error) {
+    return '$action misslyckades: $error';
+  }
+
+  @override
+  String get repeater_settingsSavedRebootNeeded =>
+      'Inställningar sparade – starta om repetern för att tillämpa dem';
+
+  @override
+  String repeater_settingsPartialFailure(String failures) {
+    return 'Vissa inställningar misslyckades: $failures';
+  }
+
+  @override
   String repeater_errorSavingSettings(String error) {
     return 'Fel vid sparande av inställningar: $error';
   }
@@ -2437,10 +2614,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_refreshTxPower => 'Återställ TX-effekt';
 
   @override
-  String get repeater_refreshLocationSettings =>
-      'Uppdatera Lokationsinställningar';
-
-  @override
   String get repeater_refreshPacketForwarding => 'Återställ Paketväxling';
 
   @override
@@ -2448,10 +2621,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get repeater_refreshPrivacyMode => 'Återställ Sekretessläge';
-
-  @override
-  String get repeater_refreshAdvertisementSettings =>
-      'Återställ Annonsinställningar';
 
   @override
   String repeater_refreshed(String label) {
@@ -2775,6 +2944,277 @@ class AppLocalizationsSv extends AppLocalizations {
       'GPS-kommando har introducerats för att hantera platsrelaterade ämnen.';
 
   @override
+  String get repeater_getCategory => 'Hämta värden';
+
+  @override
+  String get repeater_powerMgmt => 'Effektstyrning';
+
+  @override
+  String get repeater_sensors => 'Sensorer';
+
+  @override
+  String get repeater_cliHelpPowerOff =>
+      'Stänger av enheten. (ingen respons förväntas)';
+
+  @override
+  String get repeater_cliHelpClkReboot =>
+      'Återställer klockan till en känd tidpunkt och startar om enheten.';
+
+  @override
+  String get repeater_cliHelpAdvertZeroHop =>
+      'Skickar en annons som når endast direkt grannar (endast närmaste grannar).';
+
+  @override
+  String get repeater_cliHelpStartOta =>
+      'Startar en firmware-uppdatering via luft, på kompatibla enheter.';
+
+  @override
+  String get repeater_cliHelpTime =>
+      'Ställer enheten till den angivna Unix-epokens tid. Klockan kan inte gå bakåt.';
+
+  @override
+  String get repeater_cliHelpBoard =>
+      'Visar tillverkaren av moderkortet / hårdvaru-identifieraren.';
+
+  @override
+  String get repeater_cliHelpDiscoverNeighbors =>
+      'Skickar en förfrågan om att upptäcka närliggande noder. (Endast för repetrar)';
+
+  @override
+  String get repeater_cliHelpPowersaving =>
+      'Visar om energisparläget är aktiverat eller avstängt.';
+
+  @override
+  String get repeater_cliHelpPowersavingOnOff =>
+      'Aktiverar eller inaktiverar energisparläget (om det stöds).';
+
+  @override
+  String get repeater_cliHelpErase =>
+      '(Endast för seriell kommunikation) Formaterar enhetens filsystem. Raderar alla inställningar och kontakter.';
+
+  @override
+  String get repeater_cliHelpSetDutyCycle =>
+      'Anger den maximala tillåtna överföringsfrekvensen som en procent (1-100). Justerar automatiskt tidsfaktorn.';
+
+  @override
+  String get repeater_cliHelpSetPrvKey =>
+      '(Endast för seriell användning) Ersätter enhetsens privata nyckel. Återstart krävs för att tillämpa. Genererar en ny publik nyckel.';
+
+  @override
+  String get repeater_cliHelpSetRadioRxGain =>
+      '(Endast SX126x) Aktiverar förstärkt mottagargain för förbättrad känslighet vid högre strömförbrukning.';
+
+  @override
+  String get repeater_cliHelpSetOwnerInfo =>
+      'Anger kontaktinformationen som ska inkluderas i annonserna. Använd \'|\' för att separera olika fält.';
+
+  @override
+  String get repeater_cliHelpSetPathHashMode =>
+      'Definierar läget för hash-baserad ruttning. 0 = äldre läge, 1 = standard, 2 = strikt. Påverkar hur ruttvägar matchas.';
+
+  @override
+  String get repeater_cliHelpSetLoopDetect =>
+      'Ställer in känsligheten för att detektera loopar i routningen: av, minimal, måttlig eller strikt.';
+
+  @override
+  String get repeater_cliHelpSetFreq =>
+      '(Endast för seriell kommunikation) Ställer snabbt bara frekvensen. Kräver omstart. Föredrar \"ställ radio\" för att få full kontroll över radioinställningarna.';
+
+  @override
+  String get repeater_cliHelpSetBridgeChannel =>
+      '(Endast ESPNow-brygga) Anger WiFi-kanalen (1-14) som används av bryggan.';
+
+  @override
+  String get repeater_cliHelpGetName => 'Visar det konfigurerade nodnamnet.';
+
+  @override
+  String get repeater_cliHelpGetRole =>
+      'Visar firmware-funktionen (Repeater, Room Server, etc.).';
+
+  @override
+  String get repeater_cliHelpGetPublicKey => 'Visar enhetens publika nyckel.';
+
+  @override
+  String get repeater_cliHelpGetPrvKey =>
+      '(Endast för seriell användning) Visar enheters privata nyckel. Behandla detta som en hemlighet.';
+
+  @override
+  String get repeater_cliHelpGetRepeat =>
+      'Visar om funktionen för att vidarebefordra paket (som en repeater) är aktiverad eller inaktiverad.';
+
+  @override
+  String get repeater_cliHelpGetTx => 'Visar aktuell TX-effekt i dBm.';
+
+  @override
+  String get repeater_cliHelpGetFreq =>
+      'Visar den konfigurerade radiovågen i MHz.';
+
+  @override
+  String get repeater_cliHelpGetRadio =>
+      'Visar alla radioparametrar: frekvens, bandbredd, spridningsfaktor, kodningshastighet.';
+
+  @override
+  String get repeater_cliHelpGetRadioRxGain =>
+      '(Endast för SX126x) Visar RX:s förstärkningstillstånd.';
+
+  @override
+  String get repeater_cliHelpGetAf => 'Visar aktuell tidssats.';
+
+  @override
+  String get repeater_cliHelpGetDutyCycle =>
+      'Visar den aktuella tillåtna arbetscykeln i procent.';
+
+  @override
+  String get repeater_cliHelpGetIntThresh =>
+      'Visar gränsen för kanalinterferens i dB.';
+
+  @override
+  String get repeater_cliHelpGetAgcResetInterval =>
+      'Visar återställningsintervallet för AGC i sekunder.';
+
+  @override
+  String get repeater_cliHelpGetMultiAcks =>
+      'Visar om dubbelbekräftelseläget är aktiverat (1) eller avstängt (0).';
+
+  @override
+  String get repeater_cliHelpGetAllowReadOnly =>
+      'Visar om gäst har tillåtelse att endast läsa.';
+
+  @override
+  String get repeater_cliHelpGetAdvertInterval =>
+      'Visar den lokala reklampausens längd i minuter.';
+
+  @override
+  String get repeater_cliHelpGetFloodAdvertInterval =>
+      'Visar tidsintervallet för reklamsegmentet under översvämningen, i timmar.';
+
+  @override
+  String get repeater_cliHelpGetGuestPassword => 'Visar det angivna gästlösen.';
+
+  @override
+  String get repeater_cliHelpGetLat => 'Visar den angivna latituden.';
+
+  @override
+  String get repeater_cliHelpGetLon => 'Visar den angivna longituden.';
+
+  @override
+  String get repeater_cliHelpGetRxDelay => 'Visar grundvärdet för rxdelay.';
+
+  @override
+  String get repeater_cliHelpGetTxDelay =>
+      'Visar faktor för fördröjning i flödesläge.';
+
+  @override
+  String get repeater_cliHelpGetDirectTxDelay =>
+      'Visar faktorn för fördröjning i direktläge.';
+
+  @override
+  String get repeater_cliHelpGetFloodMax =>
+      'Visar det maximala antalet gånger en översvämning har inträffat.';
+
+  @override
+  String get repeater_cliHelpGetOwnerInfo =>
+      'Visar strängen med kontaktinformation för ägaren.';
+
+  @override
+  String get repeater_cliHelpGetPathHashMode => 'Visar hash-läge (0/1/2).';
+
+  @override
+  String get repeater_cliHelpGetLoopDetect =>
+      'Visar känsligheten för att detektera loopar.';
+
+  @override
+  String get repeater_cliHelpGetAcl =>
+      '(Endast för serier) Visar åtkomstkontrollinställningarna för en repeater.';
+
+  @override
+  String get repeater_cliHelpGetBridgeEnabled => 'Visar om bron är aktiverad.';
+
+  @override
+  String get repeater_cliHelpGetBridgeDelay =>
+      'Visar fördröjningen i bron i millisekunder.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSource =>
+      'Visar om bron skickar RX- eller TX-paket.';
+
+  @override
+  String get repeater_cliHelpGetBridgeBaud =>
+      '(Enbart RS232-brygga) Visar bryggans baud-hastighet.';
+
+  @override
+  String get repeater_cliHelpGetBridgeChannel =>
+      '(Endast ESPNow-brygga) Visar WiFi-kanal för bryggan.';
+
+  @override
+  String get repeater_cliHelpGetBridgeSecret =>
+      '(Endast ESPNow-brygga) Visar bryggans delade hemlighet.';
+
+  @override
+  String get repeater_cliHelpGetBootloaderVer =>
+      '(Endast för NRF52) Visar versionen av bootloadern.';
+
+  @override
+  String get repeater_cliHelpGetAdcMultiplier =>
+      'Visar ADC-multiplikatorn (skalning av batterispänning).';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSupport =>
+      'Anger om styrelsen har stöd för energihantering.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtSource =>
+      'Visar aktuell strömkälla: extern eller batteri.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootReason =>
+      'Visar de senaste orsakerna till återställning och avstängning.';
+
+  @override
+  String get repeater_cliHelpGetPwrMgtBootMv =>
+      'Visar batterispänningen vid start i millivolt (mV).';
+
+  @override
+  String get repeater_cliHelpSensorGet =>
+      'Läser en anpassad sensorinställning via tangentbordet.';
+
+  @override
+  String get repeater_cliHelpSensorSet =>
+      'Skapar en anpassad inställning för en sensor.';
+
+  @override
+  String get repeater_cliHelpSensorList =>
+      'Visar alla anpassade sensorinställningar, sorterade från ett valfritt startindex.';
+
+  @override
+  String get repeater_cliHelpRegionDefault =>
+      'Visar det aktuella standardområde.';
+
+  @override
+  String get repeater_cliHelpRegionDefaultSet =>
+      'Definierar standardområde. Använd \"<null>\" för att återställa till standard.';
+
+  @override
+  String get repeater_cliHelpRegionListAllowed =>
+      'Lista områden där det är tillåtet med trafik under översvämningsförhållanden.';
+
+  @override
+  String get repeater_cliHelpRegionListDenied =>
+      'Listar områden där trafik på grund av översvämningar är förbjuden.';
+
+  @override
+  String get repeater_cliHelpStatsPackets =>
+      '(Endast för seriell kommunikation) Visar statistik på paketnivå.';
+
+  @override
+  String get repeater_cliHelpStatsRadio =>
+      '(Enbart för serier) Visar radiostatistik.';
+
+  @override
+  String get repeater_cliHelpStatsCore =>
+      '(Enbart för seriell kommunikation) Visar grundläggande firmware-statistik.';
+
+  @override
   String get telemetry_receivedData => 'Mottagen Telemetridata';
 
   @override
@@ -2993,7 +3433,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get community_publicChannel => 'Föreningens Offentliga';
 
   @override
-  String get community_hashtagChannel => 'Community Hashtag';
+  String get community_hashtagChannel => 'Hashtag för gemenskapen';
 
   @override
   String get community_name => 'Gemenskapens namn';
@@ -3117,7 +3557,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Offentlig hashtag (alla kan gå med)';
 
   @override
-  String get community_communityHashtag => 'Community Hashtag';
+  String get community_communityHashtag => 'Gemenskaps-hashtag';
 
   @override
   String get community_communityHashtagDesc => 'Endast för medlemmar';
@@ -3359,7 +3799,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get contacts_pathTrace => 'Path Trace';
+  String get contacts_pathTrace => 'Spårning';
 
   @override
   String get contacts_ping => 'Ping';

@@ -384,7 +384,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     IconData icon;
     Color iconColor;
     Color bgColor;
-    String subtitle;
 
     if (isCommunityChannel) {
       // Community channel styling
@@ -392,28 +391,21 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       bgColor = Colors.purple.withValues(alpha: 0.2);
       if (isCommunityPublic) {
         icon = Icons.groups;
-        subtitle =
-            '${context.l10n.community_publicChannel} • ${community.name}';
       } else {
         icon = Icons.tag;
-        subtitle =
-            '${context.l10n.community_hashtagChannel} • ${community.name}';
       }
     } else if (channel.isPublicChannel) {
       icon = Icons.public;
       iconColor = Colors.green;
       bgColor = Colors.green.withValues(alpha: 0.2);
-      subtitle = context.l10n.channels_publicChannel;
     } else if (channel.name.startsWith('#')) {
       icon = Icons.tag;
       iconColor = Colors.blue;
       bgColor = Colors.blue.withValues(alpha: 0.2);
-      subtitle = context.l10n.channels_hashtagChannel;
     } else {
       icon = Icons.lock;
       iconColor = Colors.blue;
       bgColor = Colors.blue.withValues(alpha: 0.2);
-      subtitle = context.l10n.channels_privateChannel;
     }
 
     return Card(
@@ -430,14 +422,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             : null,
         child: ListTile(
           dense: true,
-          minVerticalPadding: 0,
+          minVerticalPadding: 14,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           visualDensity: const VisualDensity(vertical: -2),
           leading: Stack(
             children: [
-              CircleAvatar(
-                backgroundColor: bgColor,
-                child: Icon(icon, color: iconColor),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: CircleAvatar(
+                  backgroundColor: bgColor,
+                  child: Icon(icon, color: iconColor),
+                ),
               ),
               if (isCommunityChannel)
                 Positioned(
@@ -468,11 +463,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ? context.l10n.channels_channelIndex(channel.index)
                 : channel.name,
             style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1416,6 +1406,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
+    bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
+      channel.index,
+    );
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
@@ -1527,6 +1520,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                   ),
                 ],
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(dialogContext.l10n.settings_useSendingDelay),
+                  value: sendingDelayEnabled,
+                  onChanged: (value) => setState(() {
+                    sendingDelayEnabled = value;
+                  }),
+                ),
               ],
             ),
           ),
@@ -1569,6 +1570,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelCyr2LatProfileId(
                     channel.index,
                     selectedCyr2LatProfileId,
+                  );
+                  await connector.setChannelSendingDelayEnabled(
+                    channel.index,
+                    sendingDelayEnabled,
                   );
                   if (!context.mounted) return;
                   showDismissibleSnackBar(

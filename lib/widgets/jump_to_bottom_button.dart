@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../helpers/chat_scroll_controller.dart';
+import '../services/app_settings_service.dart';
 
 class JumpToBottomButton extends StatefulWidget {
   final ChatScrollController scrollController;
@@ -43,10 +45,16 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
 
   @override
   Widget build(BuildContext context) {
+    final showKeyboardHidingButton = context.select<AppSettingsService, bool>(
+      (settingsService) => settingsService.settings.showKeyboardHidingButton,
+    );
+
     return ValueListenableBuilder<bool>(
       valueListenable: widget.scrollController.showJumpToBottom,
       builder: (context, show, _) {
-        if (!show && !_keyboardVisible) return const SizedBox.shrink();
+        final showHideKeyboardButton =
+            showKeyboardHidingButton && _keyboardVisible;
+        if (!show && !showHideKeyboardButton) return const SizedBox.shrink();
         return Positioned(
           right: 16,
           bottom: 16,
@@ -59,8 +67,8 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
                   onPressed: widget.scrollController.jumpToBottom,
                   child: const Icon(Icons.keyboard_arrow_down),
                 ),
-              if (show && _keyboardVisible) const SizedBox(height: 8),
-              if (_keyboardVisible)
+              if (show && showHideKeyboardButton) const SizedBox(height: 8),
+              if (showHideKeyboardButton)
                 FloatingActionButton.small(
                   heroTag: 'hide_keyboard_button',
                   onPressed: () => FocusScope.of(context).unfocus(),

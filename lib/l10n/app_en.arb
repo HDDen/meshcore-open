@@ -52,8 +52,8 @@
   "connectionChoiceBluetoothLabel": "Bluetooth",
   "connectionChoiceTcpLabel": "TCP",
   "tcpScreenTitle": "Connect over TCP",
-  "tcpHostLabel": "IP Address",
-  "tcpHostHint": "192.168.40.10",
+  "tcpHostLabel": "Endpoint",
+  "tcpHostHint": "192.168.40.10 / example.com",
   "tcpPortLabel": "Port",
   "tcpPortHint": "5000",
   "tcpStatus_notConnected": "Enter endpoint and connect",
@@ -65,7 +65,7 @@
       }
     }
   },
-  "tcpErrorHostRequired": "IP address is required.",
+  "tcpErrorHostRequired": "Host is required.",
   "tcpErrorPortInvalid": "Port must be between 1 and 65535.",
   "tcpErrorUnsupported": "TCP transport is not supported on this platform.",
   "tcpErrorTimedOut": "TCP connection timed out.",
@@ -128,7 +128,6 @@
       }
     }
   },
-  
   "scanner_stop": "Stop",
   "scanner_scan": "Scan",
   "scanner_bluetoothOff": "Bluetooth is off",
@@ -196,8 +195,8 @@
   "settings_rebootDeviceSubtitle": "Restart the MeshCore device",
   "settings_rebootDeviceConfirm": "Are you sure you want to reboot the device? You will be disconnected.",
   "settings_debug": "Debug",
-  "settings_bleDebugLog": "BLE Debug Log",
-  "settings_bleDebugLogSubtitle": "BLE commands, responses, and raw data",
+  "settings_companionDebugLog": "Companion Debug Log",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB commands, responses, and raw data",
   "settings_appDebugLog": "App Debug Log",
   "settings_appDebugLogSubtitle": "Application debug messages",
   "settings_about": "About",
@@ -209,7 +208,7 @@
       }
     }
   },
-  "settings_aboutLegalese": "2026 MeshCore Open (Advanced mod) Source Project",
+  "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "An open-source Flutter client for MeshCore LoRa mesh networking devices.",
   "settings_aboutOpenMeteoAttribution": "LOS elevation data: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Name",
@@ -240,6 +239,8 @@
       }
     }
   },
+  "settings_channelResendTimeoutTitle": "Manual resending delay",
+  "settings_channelResendTimeoutSubtitle": "It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages",
   "appSettings_title": "App Settings",
   "appSettings_appearance": "Appearance",
   "appSettings_theme": "Theme",
@@ -265,6 +266,7 @@
   "appSettings_languageUk": "Українська",
   "appSettings_enableMessageTracing": "Enable Message Tracing",
   "appSettings_enableMessageTracingSubtitle": "Show detailed routing and timing metadata for messages",
+  "appSettings_showKeyboardHidingButton": "Show keyboard hiding button",
   "appSettings_notifications": "Notifications",
   "appSettings_enableNotifications": "Enable Notifications",
   "appSettings_enableNotificationsSubtitle": "Receive notifications for messages and adverts",
@@ -517,7 +519,6 @@
       }
     }
   },
-  "channels_hashtagChannel": "Hashtag channel",
   "channels_public": "Public",
   "channels_via": "via {path}",
   "@channels_via": {
@@ -528,8 +529,6 @@
     }
   },
   "channels_private": "Private",
-  "channels_publicChannel": "Public channel",
-  "channels_privateChannel": "Private channel",
   "channels_editChannel": "Edit channel",
   "channels_muteChannel": "Mute channel",
   "channels_unmuteChannel": "Unmute channel",
@@ -621,6 +620,9 @@
     }
   },
   "settings_mcmpTextLimit": "MCMP text paste limit",
+  "settings_sendingDelayForCancellation": "Sending delay for cancellation",
+  "settings_useSendingDelay": "Use sending delay",
+  "chat_cancelSend": "cancel sending",
   "settings_doNotFilterMessagesOnChannels": "Do not filter selfmessages on channels",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI",
   "channels_publicChannelAdded": "Public channel added",
@@ -643,10 +645,10 @@
   "channels_hashtagHint": "e.g. #team",
   "chat_noMessages": "No messages yet",
   "chat_sendMessage": "Send message",
-  "chat_sendMessageTo": "Send message to {name}",
+  "chat_sendMessageTo": "Send a message to {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
-      "name": {
+      "contactName": {
         "type": "String"
       }
     }
@@ -670,14 +672,6 @@
     }
   },
   "chat_location": "Location",
-  "chat_sendMessageTo": "Send a message to {contactName}",
-  "@chat_sendMessageTo": {
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
   "chat_typeMessage": "Type a message...",
   "chat_messageTooLong": "Message too long (max {maxBytes} bytes).",
   "@chat_messageTooLong": {
@@ -690,6 +684,7 @@
   "chat_messageCopied": "Message copied",
   "chat_messageDeleted": "Message deleted",
   "chat_retryingMessage": "Retrying message",
+  "chat_retryingMessageWait": "Please wait {seconds} seconds before resend",
   "chat_retryCount": "Retry {current}/{max}",
   "@chat_retryCount": {
     "placeholders": {
@@ -1199,6 +1194,7 @@
   "repeater_noiseFloor": "Noise Floor",
   "repeater_txAirtime": "TX Airtime",
   "repeater_rxAirtime": "RX Airtime",
+  "repeater_chanUtil": "Channel Utilization",
   "repeater_packetStatistics": "Packet Statistics",
   "repeater_sent": "Sent",
   "repeater_received": "Received",
@@ -1344,6 +1340,81 @@
   },
   "repeater_confirm": "Confirm",
   "repeater_settingsSaved": "Settings saved successfully",
+  "repeater_rxGain": "Boosted RX gain",
+  "repeater_rxGainHelper": "Higher sensitivity, more current draw (SX1262/SX1268 only)",
+  "repeater_refreshRxGain": "Refresh boosted RX gain",
+  "repeater_multiAcks": "Multi-ACKs",
+  "repeater_multiAcksSubtitle": "Acknowledge messages over multiple paths for better delivery",
+  "repeater_refreshMultiAcks": "Refresh multi-ACKs",
+  "repeater_networkHealth": "Network health",
+  "repeater_loopDetect": "Loop detection",
+  "repeater_loopDetectHelper": "Drop flood packets that look like routing loops",
+  "repeater_loopDetectOff": "Off",
+  "repeater_loopDetectMinimal": "Minimal",
+  "repeater_loopDetectModerate": "Moderate",
+  "repeater_loopDetectStrict": "Strict",
+  "repeater_dutyCycle": "Duty cycle",
+  "repeater_dutyCycleHelper": "Maximum percentage of airtime",
+  "repeater_dutyCyclePercent": "{percent}%",
+  "@repeater_dutyCyclePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_ownerInfo": "Operator info",
+  "repeater_ownerInfoHelper": "Public metadata for this repeater",
+  "repeater_refreshOwnerInfo": "Refresh operator info",
+  "repeater_floodMax": "Flood max hops",
+  "repeater_floodMaxHelper": "Maximum hops a flood packet may travel (0-64)",
+  "repeater_advancedSettings": "Advanced",
+  "repeater_advancedSettingsSubtitle": "Tuning knobs for experienced operators",
+  "repeater_pathHashMode": "Path hash mode",
+  "repeater_pathHashModeHelper": "Bytes used to encode this repeater's ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). v1.13 and older firmware drops multi-byte paths — only raise once your network is on v1.14+.",
+  "repeater_txDelay": "Flood TX delay",
+  "repeater_txDelayHelper": "Retransmit spacing for flood traffic, as a multiplier of the packet's airtime (0-2, default 0.5). Higher = fewer collisions but slower delivery.",
+  "repeater_directTxDelay": "Direct TX delay",
+  "repeater_directTxDelayHelper": "Retransmit spacing for direct (non-flood) traffic, as a multiplier of the packet's airtime (0-2, default 0.3).",
+  "repeater_intThresh": "Interference threshold",
+  "repeater_intThreshHelper": "Threshold passed to the radio's noise-floor calibration so it rejects interference above this level. 0 disables — only raise if you see RX errors in a noisy band.",
+  "repeater_agcResetInterval": "AGC reset interval",
+  "repeater_agcResetIntervalHelper": "How often to reset the radio's automatic gain control to recover from a stuck gain state. Seconds, snapped down to a multiple of 4. 0 disables periodic resets.",
+  "repeater_actionsTitle": "Actions",
+  "repeater_sendAdvert": "Send flood advert",
+  "repeater_sendAdvertSubtitle": "Broadcast a flood advert through the network",
+  "repeater_sendAdvertZeroHop": "Send zero-hop advert",
+  "repeater_sendAdvertZeroHopSubtitle": "Broadcast a one-hop advert (no relays)",
+  "repeater_clockSync": "Sync clock now",
+  "repeater_clockSyncSubtitle": "Push your phone's time to the repeater",
+  "repeater_actionSucceeded": "{action} succeeded",
+  "@repeater_actionSucceeded": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_actionFailed": "{action} failed: {error}",
+  "@repeater_actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "repeater_settingsSavedRebootNeeded": "Settings saved — reboot the repeater to apply",
+  "repeater_settingsPartialFailure": "Some settings failed: {failures}",
+  "@repeater_settingsPartialFailure": {
+    "placeholders": {
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
   "repeater_errorSavingSettings": "Error saving settings: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
@@ -1355,11 +1426,9 @@
   "repeater_refreshBasicSettings": "Refresh Basic Settings",
   "repeater_refreshRadioSettings": "Refresh Radio Settings",
   "repeater_refreshTxPower": "Refresh TX power",
-  "repeater_refreshLocationSettings": "Refresh Location Settings",
   "repeater_refreshPacketForwarding": "Refresh Packet Forwarding",
   "repeater_refreshGuestAccess": "Refresh Guest Access",
   "repeater_refreshPrivacyMode": "Refresh Privacy Mode",
-  "repeater_refreshAdvertisementSettings": "Refresh Advertisement Settings",
   "repeater_refreshed": "{label} refreshed",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1469,6 +1538,77 @@
   "repeater_regionNote": "Region commands have been introduced to manage region definitions and permissions.",
   "repeater_gpsManagement": "GPS Management",
   "repeater_gpsNote": "gps command has been introduced to manage location related topics.",
+  "repeater_getCategory": "Get Values",
+  "repeater_powerMgmt": "Power Management",
+  "repeater_sensors": "Sensors",
+  "repeater_cliHelpPowerOff": "Powers the device off. (no response expected)",
+  "repeater_cliHelpClkReboot": "Resets the clock to a known epoch and reboots the device.",
+  "repeater_cliHelpAdvertZeroHop": "Sends a zero-hop advertisement (immediate neighbors only).",
+  "repeater_cliHelpStartOta": "Starts an over-the-air firmware update on supported boards.",
+  "repeater_cliHelpTime": "Sets the device clock to the given Unix epoch seconds. Clock cannot move backwards.",
+  "repeater_cliHelpBoard": "Shows the board manufacturer / hardware identifier.",
+  "repeater_cliHelpDiscoverNeighbors": "Sends a node-discovery request to nearby neighbors. (Repeater only)",
+  "repeater_cliHelpPowersaving": "Shows whether powersaving mode is on or off.",
+  "repeater_cliHelpPowersavingOnOff": "Enables or disables powersaving mode (where supported).",
+  "repeater_cliHelpErase": "(Serial only) Formats the device file system. Wipes all settings and contacts.",
+  "repeater_cliHelpSetDutyCycle": "Sets the maximum allowed transmit duty cycle as a percentage (1-100). Internally adjusts the airtime factor.",
+  "repeater_cliHelpSetPrvKey": "(Serial only) Replaces the device identity private key. Reboot required to apply. Generates a new public key.",
+  "repeater_cliHelpSetRadioRxGain": "(SX126x only) Toggles boosted RX gain for improved sensitivity at higher current draw.",
+  "repeater_cliHelpSetOwnerInfo": "Sets the owner contact info string included in adverts. Use '|' for newlines.",
+  "repeater_cliHelpSetPathHashMode": "Sets the path-hash mode. 0 = legacy, 1 = standard, 2 = strict. Affects how routing paths are matched.",
+  "repeater_cliHelpSetLoopDetect": "Sets the routing loop-detection sensitivity: off, minimal, moderate, or strict.",
+  "repeater_cliHelpSetFreq": "(Serial only) Quickly sets just the frequency. Reboot required. Prefer \"set radio\" for full radio params.",
+  "repeater_cliHelpSetBridgeChannel": "(ESPNow bridge only) Sets the WiFi channel (1-14) used by the bridge.",
+  "repeater_cliHelpGetName": "Shows the configured node name.",
+  "repeater_cliHelpGetRole": "Shows the firmware role (Repeater, Room Server, etc.).",
+  "repeater_cliHelpGetPublicKey": "Shows the device public key.",
+  "repeater_cliHelpGetPrvKey": "(Serial only) Shows the device private key. Treat as a secret.",
+  "repeater_cliHelpGetRepeat": "Shows whether packet forwarding (repeater role) is on or off.",
+  "repeater_cliHelpGetTx": "Shows the current TX power in dBm.",
+  "repeater_cliHelpGetFreq": "Shows the configured radio frequency in MHz.",
+  "repeater_cliHelpGetRadio": "Shows full radio params: freq, bandwidth, spreading factor, coding rate.",
+  "repeater_cliHelpGetRadioRxGain": "(SX126x only) Shows the RX boosted gain state.",
+  "repeater_cliHelpGetAf": "Shows the current airtime factor.",
+  "repeater_cliHelpGetDutyCycle": "Shows the current allowed duty cycle as a percentage.",
+  "repeater_cliHelpGetIntThresh": "Shows the channel interference threshold in dB.",
+  "repeater_cliHelpGetAgcResetInterval": "Shows the AGC reset interval in seconds.",
+  "repeater_cliHelpGetMultiAcks": "Shows whether double-ACK mode is on (1) or off (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Shows whether guest read-only access is allowed.",
+  "repeater_cliHelpGetAdvertInterval": "Shows the local advertisement interval in minutes.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Shows the flood advertisement interval in hours.",
+  "repeater_cliHelpGetGuestPassword": "Shows the configured guest password.",
+  "repeater_cliHelpGetLat": "Shows the configured latitude.",
+  "repeater_cliHelpGetLon": "Shows the configured longitude.",
+  "repeater_cliHelpGetRxDelay": "Shows the rxdelay base value.",
+  "repeater_cliHelpGetTxDelay": "Shows the flood-mode txdelay factor.",
+  "repeater_cliHelpGetDirectTxDelay": "Shows the direct-mode txdelay factor.",
+  "repeater_cliHelpGetFloodMax": "Shows the maximum flood hop count.",
+  "repeater_cliHelpGetOwnerInfo": "Shows the owner contact info string.",
+  "repeater_cliHelpGetPathHashMode": "Shows the path-hash mode (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "Shows the loop-detection sensitivity.",
+  "repeater_cliHelpGetAcl": "(Serial only) Lists the access-control entries on a repeater.",
+  "repeater_cliHelpGetBridgeEnabled": "Shows whether the bridge is enabled.",
+  "repeater_cliHelpGetBridgeDelay": "Shows the bridge delay in ms.",
+  "repeater_cliHelpGetBridgeSource": "Shows whether the bridge logs RX or TX packets.",
+  "repeater_cliHelpGetBridgeBaud": "(RS232 bridge only) Shows the bridge baud rate.",
+  "repeater_cliHelpGetBridgeChannel": "(ESPNow bridge only) Shows the bridge WiFi channel.",
+  "repeater_cliHelpGetBridgeSecret": "(ESPNow bridge only) Shows the bridge shared secret.",
+  "repeater_cliHelpGetBootloaderVer": "(NRF52 only) Shows the bootloader version.",
+  "repeater_cliHelpGetAdcMultiplier": "Shows the ADC multiplier (battery-voltage scaling).",
+  "repeater_cliHelpGetPwrMgtSupport": "Reports whether the board has power-management support.",
+  "repeater_cliHelpGetPwrMgtSource": "Shows the current power source: external or battery.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Shows the most recent reset and shutdown reasons.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Shows the boot-time battery voltage in mV.",
+  "repeater_cliHelpSensorGet": "Reads a custom sensor setting by key.",
+  "repeater_cliHelpSensorSet": "Writes a custom sensor setting.",
+  "repeater_cliHelpSensorList": "Lists all custom sensor settings, paginated from optional start index.",
+  "repeater_cliHelpRegionDefault": "Shows the current default region scope.",
+  "repeater_cliHelpRegionDefaultSet": "Sets the default region scope. Use \"<null>\" to clear.",
+  "repeater_cliHelpRegionListAllowed": "Lists regions that allow flood traffic.",
+  "repeater_cliHelpRegionListDenied": "Lists regions that deny flood traffic.",
+  "repeater_cliHelpStatsPackets": "(Serial only) Shows packet-level statistics.",
+  "repeater_cliHelpStatsRadio": "(Serial only) Shows radio statistics.",
+  "repeater_cliHelpStatsCore": "(Serial only) Shows core firmware statistics.",
   "telemetry_receivedData": "Received Telemetry Data",
   "telemetry_requestTimeout": "Telemetry request timed out.",
   "telemetry_errorLoading": "Error loading telemetry: {error}",
@@ -2153,7 +2293,6 @@
   "radioStats_stripWaiting": "Fetching radio stats…",
   "radioStats_settingsTile": "Radio stats",
   "radioStats_settingsSubtitle": "Noise floor, RSSI, SNR, and airtime",
-
   "translation_title": "Translation",
   "translation_enableTitle": "Enable translation",
   "translation_enableSubtitle": "Translate incoming messages and allow pre-send translation.",
