@@ -50,6 +50,54 @@ class Cyr2LatProfile {
   }
 }
 
+class TcpConnectionBookmark {
+  final String host;
+  final int port;
+  final DateTime lastConnectedAt;
+  final String name;
+
+  TcpConnectionBookmark({
+    required this.host,
+    required this.port,
+    required this.lastConnectedAt,
+    this.name = '',
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'host': host,
+      'port': port,
+      'last_connected_at': lastConnectedAt.toIso8601String(),
+      'name': name,
+    };
+  }
+
+  factory TcpConnectionBookmark.fromJson(Map<String, dynamic> json) {
+    return TcpConnectionBookmark(
+      host: json['host'] as String? ?? '',
+      port: json['port'] as int? ?? 0,
+      lastConnectedAt:
+          DateTime.tryParse(json['last_connected_at'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      name: json['name'] as String? ?? '',
+    );
+  }
+
+  TcpConnectionBookmark copyWith({
+    String? host,
+    int? port,
+    DateTime? lastConnectedAt,
+    String? name,
+  }) {
+    return TcpConnectionBookmark(
+      host: host ?? this.host,
+      port: port ?? this.port,
+      lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+      name: name ?? this.name,
+    );
+  }
+}
+
 class AppSettings {
   static const Object _unset = Object();
 
@@ -89,6 +137,7 @@ class AppSettings {
   final bool mapShowDiscoveryContacts;
   final String tcpServerAddress;
   final int tcpServerPort;
+  final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
   final bool translationEnabled;
   final String? translationTargetLanguageCode;
@@ -195,6 +244,7 @@ class AppSettings {
     this.mapShowDiscoveryContacts = true,
     this.tcpServerAddress = '',
     this.tcpServerPort = 0,
+    List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
     this.translationEnabled = false,
     this.translationTargetLanguageCode,
@@ -210,6 +260,7 @@ class AppSettings {
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
+       tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
        channelResendTimeoutSeconds = normalizeChannelResendTimeoutSeconds(
          channelResendTimeoutSeconds,
@@ -268,6 +319,9 @@ class AppSettings {
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
       'tcp_server_address': tcpServerAddress,
       'tcp_server_port': tcpServerPort,
+      'tcp_connection_bookmarks': tcpConnectionBookmarks
+          .map((bookmark) => bookmark.toJson())
+          .toList(),
       'jump_to_oldest_unread': jumpToOldestUnread,
       'translation_enabled': translationEnabled,
       'translation_target_language_code': translationTargetLanguageCode,
@@ -356,6 +410,18 @@ class AppSettings {
           json['map_show_discovery_contacts'] as bool? ?? true,
       tcpServerAddress: json['tcp_server_address'] as String? ?? '',
       tcpServerPort: json['tcp_server_port'] as int? ?? 0,
+      tcpConnectionBookmarks:
+          (json['tcp_connection_bookmarks'] as List<dynamic>?)
+              ?.map(
+                (entry) => TcpConnectionBookmark.fromJson(
+                  Map<String, dynamic>.from(entry as Map),
+                ),
+              )
+              .where(
+                (bookmark) => bookmark.host.isNotEmpty && bookmark.port > 0,
+              )
+              .toList() ??
+          const [],
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
       translationEnabled: json['translation_enabled'] as bool? ?? false,
       translationTargetLanguageCode:
@@ -453,6 +519,7 @@ class AppSettings {
     bool? mapShowDiscoveryContacts,
     String? tcpServerAddress,
     int? tcpServerPort,
+    List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
     bool? translationEnabled,
     Object? translationTargetLanguageCode = _unset,
@@ -517,6 +584,8 @@ class AppSettings {
           mapShowDiscoveryContacts ?? this.mapShowDiscoveryContacts,
       tcpServerAddress: tcpServerAddress ?? this.tcpServerAddress,
       tcpServerPort: tcpServerPort ?? this.tcpServerPort,
+      tcpConnectionBookmarks:
+          tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
       translationEnabled: translationEnabled ?? this.translationEnabled,
       translationTargetLanguageCode: translationTargetLanguageCode == _unset

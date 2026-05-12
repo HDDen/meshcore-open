@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
+import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
@@ -23,18 +24,20 @@ class _TcpScreenState extends State<TcpScreen> {
   late final TextEditingController _hostController;
   late final TextEditingController _portController;
   late final MeshCoreConnector _connector;
+  late final AppSettingsService _settingsService;
   late final VoidCallback _connectionListener;
   bool _navigatedToContacts = false;
 
   @override
   void initState() {
     super.initState();
+    _settingsService = context.read<AppSettingsService>();
     _hostController = TextEditingController(
-      text: context.read<AppSettingsService>().settings.tcpServerAddress,
+      text: _settingsService.settings.tcpServerAddress,
     );
     _portController = TextEditingController(
-      text: context.read<AppSettingsService>().settings.tcpServerPort > 0
-          ? context.read<AppSettingsService>().settings.tcpServerPort.toString()
+      text: _settingsService.settings.tcpServerPort > 0
+          ? _settingsService.settings.tcpServerPort.toString()
           : '',
     );
     _connector = context.read<MeshCoreConnector>();
@@ -47,15 +50,9 @@ class _TcpScreenState extends State<TcpScreen> {
       if (_connector.state == MeshCoreConnectionState.connected &&
           _connector.isTcpTransportConnected &&
           !_navigatedToContacts) {
-        context.read<AppSettingsService>().setTcpServerAddress(
-          _hostController.text,
-        );
-        context.read<AppSettingsService>().setTcpServerPort(
-          int.tryParse(_portController.text) ?? 0,
-        );
         _navigatedToContacts = true;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ContactsScreen()),
+        unawaited(
+          Future<void>.delayed(Duration.zero, _handleSuccessfulTcpConnection),
         );
       }
     };
@@ -64,9 +61,9 @@ class _TcpScreenState extends State<TcpScreen> {
 
   @override
   void dispose() {
+    _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
-    _connector.removeListener(_connectionListener);
     if (!_navigatedToContacts &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
@@ -75,6 +72,18 @@ class _TcpScreenState extends State<TcpScreen> {
       });
     }
     super.dispose();
+  }
+
+  Future<void> _handleSuccessfulTcpConnection() async {
+    if (!mounted) return;
+    final host = _hostController.text;
+    final port = int.tryParse(_portController.text) ?? 0;
+    await _settingsService.recordTcpConnection(host, port);
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ContactsScreen()),
+    );
   }
 
   @override
@@ -90,8 +99,8 @@ class _TcpScreenState extends State<TcpScreen> {
       ),
       body: SafeArea(
         top: false,
-        child: Consumer<MeshCoreConnector>(
-          builder: (context, connector, child) {
+        child: Consumer2<MeshCoreConnector, AppSettingsService>(
+          builder: (context, connector, settingsService, child) {
             final isConnecting =
                 connector.state == MeshCoreConnectionState.connecting &&
                 connector.activeTransport == MeshCoreTransportType.tcp;
@@ -101,10 +110,9 @@ class _TcpScreenState extends State<TcpScreen> {
             return Column(
               children: [
                 _buildStatusBar(context, connector),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
                       TextField(
                         controller: _hostController,
@@ -146,6 +154,18 @@ class _TcpScreenState extends State<TcpScreen> {
                               : context.l10n.common_connect,
                         ),
                       ),
+                      if (settingsService
+                          .settings
+                          .tcpConnectionBookmarks
+                          .isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        // Successful TCP endpoints are kept as quick-fill bookmarks.
+                        _buildBookmarksBlock(
+                          context,
+                          settingsService.settings.tcpConnectionBookmarks,
+                          enabled: !isConnecting,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -189,6 +209,63 @@ class _TcpScreenState extends State<TcpScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBookmarksBlock(
+    BuildContext context,
+    List<TcpConnectionBookmark> bookmarks, {
+    required bool enabled,
+  }) {
+    final sortedBookmarks = List<TcpConnectionBookmark>.from(bookmarks)
+      ..sort((a, b) => b.lastConnectedAt.compareTo(a.lastConnectedAt));
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.l10n.tcpBookmarksLabel,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        for (final bookmark in sortedBookmarks)
+          Card(
+            child: ListTile(
+              enabled: enabled,
+              leading: IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: enabled
+                    ? () => _showBookmarkNameDialog(context, bookmark)
+                    : null,
+              ),
+              title: _buildBookmarkTitle(context, bookmark),
+              subtitle: _buildBookmarkEndpoint(context, bookmark),
+              onTap: enabled ? () => _applyBookmark(bookmark) : null,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBookmarkTitle(
+    BuildContext context,
+    TcpConnectionBookmark bookmark,
+  ) {
+    final name = bookmark.name.trim();
+    final date = _formatBookmarkTimestamp(bookmark.lastConnectedAt);
+    if (name.isEmpty) return Text(date);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(name),
+        const SizedBox(height: 6),
+        _buildBookmarkDivider(context),
+        const SizedBox(height: 6),
+        Text(date),
+      ],
     );
   }
 
@@ -241,6 +318,95 @@ class _TcpScreenState extends State<TcpScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildBookmarkEndpoint(
+    BuildContext context,
+    TcpConnectionBookmark bookmark,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 6),
+        _buildBookmarkDivider(context),
+        const SizedBox(height: 6),
+        Text('${bookmark.host}:${bookmark.port}'),
+      ],
+    );
+  }
+
+  Widget _buildBookmarkDivider(BuildContext context) {
+    final color = Theme.of(context).dividerColor.withValues(alpha: 0.45);
+    return Divider(height: 1, color: color);
+  }
+
+  Future<void> _showBookmarkNameDialog(
+    BuildContext context,
+    TcpConnectionBookmark bookmark,
+  ) async {
+    final settingsService = context.read<AppSettingsService>();
+    final title = context.l10n.tcpBookmarksSetName;
+    final cancelLabel = context.l10n.common_cancel;
+    final saveLabel = context.l10n.common_save;
+    final titleStyle = Theme.of(context).textTheme.titleMedium;
+    final controller = TextEditingController(text: bookmark.name);
+    final updatedName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(title, style: titleStyle),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(cancelLabel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: Text(saveLabel),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (updatedName == null || !mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+    await settingsService.setTcpConnectionBookmarkName(bookmark, updatedName);
+  }
+
+  void _applyBookmark(TcpConnectionBookmark bookmark) {
+    _hostController.text = bookmark.host;
+    _portController.text = bookmark.port.toString();
+    _hostController.selection = TextSelection.collapsed(
+      offset: _hostController.text.length,
+    );
+    _portController.selection = TextSelection.collapsed(
+      offset: _portController.text.length,
+    );
+  }
+
+  String _formatBookmarkTimestamp(DateTime value) {
+    // The requested format is day-month-year hour:minute:second.
+    final day = value.day.toString().padLeft(2, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    final second = value.second.toString().padLeft(2, '0');
+    return '$day-$month-${value.year} $hour:$minute:$second';
   }
 
   Future<void> _connectTcp() async {

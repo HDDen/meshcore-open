@@ -164,6 +164,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get tcpBookmarksLabel => 'Last connections';
+
+  @override
+  String get tcpBookmarksSetName => 'Set name to bookmark';
+
+  @override
   String get usbScreenTitle => 'USB를 통해 연결';
 
   @override

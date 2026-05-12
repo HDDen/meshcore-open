@@ -77,6 +77,8 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Last connections",
+  "tcpBookmarksSetName": "Set name to bookmark",
   "usbScreenTitle": "Connect over USB",
   "usbScreenSubtitle": "Choose a detected serial device and connect directly to your MeshCore node.",
   "usbScreenStatus": "Select a USB device",

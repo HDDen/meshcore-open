@@ -166,6 +166,12 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get tcpBookmarksLabel => 'Last connections';
+
+  @override
+  String get tcpBookmarksSetName => 'Set name to bookmark';
+
+  @override
   String get usbScreenTitle => 'Підключити через USB';
 
   @override

@@ -240,6 +240,60 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(tcpServerPort: value));
   }
 
+  Future<void> recordTcpConnection(String host, int port) async {
+    final normalizedHost = host.trim();
+    if (normalizedHost.isEmpty || port <= 0) return;
+    final existing = _settings.tcpConnectionBookmarks
+        .cast<TcpConnectionBookmark?>()
+        .firstWhere(
+          (item) =>
+              item?.host.toLowerCase() == normalizedHost.toLowerCase() &&
+              item?.port == port,
+          orElse: () => null,
+        );
+
+    final bookmark = TcpConnectionBookmark(
+      host: normalizedHost,
+      port: port,
+      lastConnectedAt: DateTime.now(),
+      name: existing?.name ?? '',
+    );
+
+    // Move this endpoint to the top, drop duplicates, and keep only recent ones.
+    final bookmarks = [
+      bookmark,
+      ..._settings.tcpConnectionBookmarks.where(
+        (item) =>
+            item.host.toLowerCase() != normalizedHost.toLowerCase() ||
+            item.port != port,
+      ),
+    ]..sort((a, b) => b.lastConnectedAt.compareTo(a.lastConnectedAt));
+
+    await updateSettings(
+      _settings.copyWith(
+        tcpServerAddress: normalizedHost,
+        tcpServerPort: port,
+        tcpConnectionBookmarks: bookmarks.take(5).toList(),
+      ),
+    );
+  }
+
+  Future<void> setTcpConnectionBookmarkName(
+    TcpConnectionBookmark bookmark,
+    String name,
+  ) async {
+    final trimmedName = name.trim();
+    final bookmarks = _settings.tcpConnectionBookmarks.map((item) {
+      if (item.host.toLowerCase() == bookmark.host.toLowerCase() &&
+          item.port == bookmark.port) {
+        return item.copyWith(name: trimmedName);
+      }
+      return item;
+    }).toList();
+
+    await updateSettings(_settings.copyWith(tcpConnectionBookmarks: bookmarks));
+  }
+
   Future<void> setJumpToOldestUnread(bool value) async {
     await updateSettings(_settings.copyWith(jumpToOldestUnread: value));
   }

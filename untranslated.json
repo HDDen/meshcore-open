@@ -1,5 +1,7 @@
 {
   "bg": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -15,6 +17,8 @@
   ],
 
   "de": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -30,6 +34,8 @@
   ],
 
   "es": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -45,6 +51,8 @@
   ],
 
   "fr": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -60,6 +68,8 @@
   ],
 
   "hu": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -75,6 +85,8 @@
   ],
 
   "it": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -90,6 +102,8 @@
   ],
 
   "ja": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -105,6 +119,8 @@
   ],
 
   "ko": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -120,6 +136,8 @@
   ],
 
   "nl": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -135,6 +153,8 @@
   ],
 
   "pl": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -150,6 +170,8 @@
   ],
 
   "pt": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -165,6 +187,8 @@
   ],
 
   "sk": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -180,6 +204,8 @@
   ],
 
   "sl": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -195,6 +221,8 @@
   ],
 
   "sv": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -210,6 +238,8 @@
   ],
 
   "uk": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -225,6 +255,8 @@
   ],
 
   "zh": [
+    "tcpBookmarksLabel",
+    "tcpBookmarksSetName",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",

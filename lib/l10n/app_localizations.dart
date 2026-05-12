@@ -424,6 +424,18 @@ abstract class AppLocalizations {
   /// **'TCP connection failed: {error}'**
   String tcpConnectionFailed(String error);
 
+  /// No description provided for @tcpBookmarksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last connections'**
+  String get tcpBookmarksLabel;
+
+  /// No description provided for @tcpBookmarksSetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Set name to bookmark'**
+  String get tcpBookmarksSetName;
+
   /// No description provided for @usbScreenTitle.
   ///
   /// In en, this message translates to:

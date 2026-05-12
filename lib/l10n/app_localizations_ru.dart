@@ -166,6 +166,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get tcpBookmarksLabel => 'Последние подключения';
+
+  @override
+  String get tcpBookmarksSetName => 'Назначить имя закладке';
+
+  @override
   String get usbScreenTitle => 'Подключение через USB';
 
   @override
