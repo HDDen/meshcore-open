@@ -47,14 +47,6 @@ class _TcpScreenState extends State<TcpScreen> {
       if (_connector.state == MeshCoreConnectionState.disconnected) {
         _navigatedToContacts = false;
       }
-      if (_connector.state == MeshCoreConnectionState.connected &&
-          _connector.isTcpTransportConnected &&
-          !_navigatedToContacts) {
-        _navigatedToContacts = true;
-        unawaited(
-          Future<void>.delayed(Duration.zero, _handleSuccessfulTcpConnection),
-        );
-      }
     };
     _connector.addListener(_connectionListener);
   }
@@ -76,6 +68,7 @@ class _TcpScreenState extends State<TcpScreen> {
 
   Future<void> _handleSuccessfulTcpConnection() async {
     if (!mounted) return;
+    _navigatedToContacts = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
     await _settingsService.recordTcpConnection(host, port);
@@ -540,6 +533,12 @@ class _TcpScreenState extends State<TcpScreen> {
 
     try {
       await _connector.connectTcp(host: host, port: parsedPort);
+      if (!mounted ||
+          !_connector.isTcpTransportConnected ||
+          _connector.state != MeshCoreConnectionState.connected) {
+        return;
+      }
+      await _handleSuccessfulTcpConnection();
     } catch (error) {
       if (!mounted) return;
       _showError(_friendlyErrorMessage(error));
