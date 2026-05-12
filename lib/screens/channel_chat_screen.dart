@@ -188,6 +188,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       _replyingToMessage = message;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _textFieldFocusNode.requestFocus();
+      unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
+    });
   }
 
   void _cancelReply() {
