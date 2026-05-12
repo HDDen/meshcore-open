@@ -235,16 +235,39 @@ class _TcpScreenState extends State<TcpScreen> {
         ),
         const SizedBox(height: 8),
         for (final bookmark in sortedBookmarks)
-          Card(
-            child: ListTile(
-              enabled: enabled,
-              leading: _buildBookmarkLeading(context, bookmark, enabled),
-              title: _buildBookmarkTitle(context, bookmark),
-              subtitle: _buildBookmarkEndpoint(context, bookmark),
-              onTap: enabled ? () => _applyBookmark(bookmark) : null,
-            ),
-          ),
+          _buildBookmarkCard(context, bookmark, enabled),
       ],
+    );
+  }
+
+  Widget _buildBookmarkCard(
+    BuildContext context,
+    TcpConnectionBookmark bookmark,
+    bool enabled,
+  ) {
+    return Card(
+      child: InkWell(
+        onTap: enabled ? () => _applyBookmark(bookmark) : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              _buildBookmarkLeading(context, bookmark, enabled),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildBookmarkTitle(context, bookmark),
+                    _buildBookmarkEndpoint(context, bookmark),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -254,15 +277,12 @@ class _TcpScreenState extends State<TcpScreen> {
     bool enabled,
   ) {
     return SizedBox(
-      width: 40,
+      width: 48,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            padding: const EdgeInsets.all(4),
-            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-            visualDensity: VisualDensity.compact,
             onPressed: enabled
                 ? () => _showBookmarkNameDialog(context, bookmark)
                 : null,
