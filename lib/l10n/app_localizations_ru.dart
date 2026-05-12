@@ -172,6 +172,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tcpBookmarksSetName => 'Назначить имя закладке';
 
   @override
+  String get tcpBookmarksFavouritesSubtitle =>
+      'Когда отмечена, как избранное, не удаляется из истории подключений';
+
+  @override
   String get usbScreenTitle => 'Подключение через USB';
 
   @override

@@ -218,7 +218,12 @@ class _TcpScreenState extends State<TcpScreen> {
     required bool enabled,
   }) {
     final sortedBookmarks = List<TcpConnectionBookmark>.from(bookmarks)
-      ..sort((a, b) => b.lastConnectedAt.compareTo(a.lastConnectedAt));
+      ..sort((a, b) {
+        if (a.isFavorite != b.isFavorite) {
+          return a.isFavorite ? -1 : 1;
+        }
+        return b.lastConnectedAt.compareTo(a.lastConnectedAt);
+      });
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -233,18 +238,43 @@ class _TcpScreenState extends State<TcpScreen> {
           Card(
             child: ListTile(
               enabled: enabled,
-              leading: IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: enabled
-                    ? () => _showBookmarkNameDialog(context, bookmark)
-                    : null,
-              ),
+              leading: _buildBookmarkLeading(context, bookmark, enabled),
               title: _buildBookmarkTitle(context, bookmark),
               subtitle: _buildBookmarkEndpoint(context, bookmark),
               onTap: enabled ? () => _applyBookmark(bookmark) : null,
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildBookmarkLeading(
+    BuildContext context,
+    TcpConnectionBookmark bookmark,
+    bool enabled,
+  ) {
+    return SizedBox(
+      width: 40,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+            visualDensity: VisualDensity.compact,
+            onPressed: enabled
+                ? () => _showBookmarkNameDialog(context, bookmark)
+                : null,
+          ),
+          if (bookmark.isFavorite)
+            Icon(
+              Icons.star,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+        ],
+      ),
     );
   }
 
@@ -335,7 +365,7 @@ class _TcpScreenState extends State<TcpScreen> {
           _buildBookmarkDivider(context),
           const SizedBox(height: 6),
         ] else ...[
-          const SizedBox(height: 1),
+          const SizedBox(height: 4),
         ],
         Text('${bookmark.host}:${bookmark.port}'),
       ],
@@ -353,45 +383,100 @@ class _TcpScreenState extends State<TcpScreen> {
   ) async {
     final settingsService = context.read<AppSettingsService>();
     final title = context.l10n.tcpBookmarksSetName;
+    final favoritesLabel = context.l10n.listFilter_favorites;
+    final favoritesSubtitle = context.l10n.tcpBookmarksFavouritesSubtitle;
+    final deleteLabel = context.l10n.common_delete;
     final cancelLabel = context.l10n.common_cancel;
     final saveLabel = context.l10n.common_save;
     final titleStyle = Theme.of(context).textTheme.titleMedium;
+    final subtitleStyle = Theme.of(context).textTheme.bodySmall;
     final controller = TextEditingController(text: bookmark.name);
-    final updatedName = await showDialog<String>(
+    var isFavorite = bookmark.isFavorite;
+    final result = await showDialog<_TcpBookmarkEditResult>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(title, style: titleStyle),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(title, style: titleStyle),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: isFavorite,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          isFavorite = value ?? false;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(favoritesLabel),
+                          const SizedBox(height: 4),
+                          Text(favoritesSubtitle, style: subtitleStyle),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(
+                dialogContext,
+                const _TcpBookmarkEditResult(delete: true),
               ),
-            ],
-          ),
+              child: Text(deleteLabel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(cancelLabel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(
+                dialogContext,
+                _TcpBookmarkEditResult(
+                  name: controller.text,
+                  isFavorite: isFavorite,
+                ),
+              ),
+              child: Text(saveLabel),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(cancelLabel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: Text(saveLabel),
-          ),
-        ],
       ),
     );
     controller.dispose();
-    if (updatedName == null || !mounted) return;
+    if (result == null || !mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
-    await settingsService.setTcpConnectionBookmarkName(bookmark, updatedName);
+    if (result.delete) {
+      await settingsService.removeTcpConnectionBookmark(bookmark);
+      return;
+    }
+    await settingsService.setTcpConnectionBookmarkDetails(
+      bookmark,
+      name: result.name ?? '',
+      isFavorite: result.isFavorite ?? false,
+    );
   }
 
   void _applyBookmark(TcpConnectionBookmark bookmark) {
@@ -467,4 +552,16 @@ class _TcpScreenState extends State<TcpScreen> {
     }
     return context.l10n.tcpConnectionFailed(error.toString());
   }
+}
+
+class _TcpBookmarkEditResult {
+  final String? name;
+  final bool? isFavorite;
+  final bool delete;
+
+  const _TcpBookmarkEditResult({
+    this.name,
+    this.isFavorite,
+    this.delete = false,
+  });
 }

@@ -172,6 +172,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get tcpBookmarksSetName => 'Set name to bookmark';
 
   @override
+  String get tcpBookmarksFavouritesSubtitle =>
+      'When marked as a favourite, it is not removed from the connection history';
+
+  @override
   String get usbScreenTitle => 'USB-en keresztül csatlakoztassuk';
 
   @override

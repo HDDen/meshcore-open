@@ -170,6 +170,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tcpBookmarksSetName => 'Set name to bookmark';
 
   @override
+  String get tcpBookmarksFavouritesSubtitle =>
+      'When marked as a favourite, it is not removed from the connection history';
+
+  @override
   String get usbScreenTitle => 'USB를 통해 연결';
 
   @override

@@ -257,17 +257,18 @@ class AppSettingsService extends ChangeNotifier {
       port: port,
       lastConnectedAt: DateTime.now(),
       name: existing?.name ?? '',
+      isFavorite: existing?.isFavorite ?? false,
     );
 
     // Move this endpoint to the top, drop duplicates, and keep only recent ones.
-    final bookmarks = [
+    final bookmarks = _limitTcpBookmarks([
       bookmark,
       ..._settings.tcpConnectionBookmarks.where(
         (item) =>
             item.host.toLowerCase() != normalizedHost.toLowerCase() ||
             item.port != port,
       ),
-    ]..sort((a, b) => b.lastConnectedAt.compareTo(a.lastConnectedAt));
+    ]);
 
     await updateSettings(
       _settings.copyWith(
@@ -282,16 +283,68 @@ class AppSettingsService extends ChangeNotifier {
     TcpConnectionBookmark bookmark,
     String name,
   ) async {
-    final trimmedName = name.trim();
+    await setTcpConnectionBookmarkDetails(
+      bookmark,
+      name: name,
+      isFavorite: bookmark.isFavorite,
+    );
+  }
+
+  Future<void> setTcpConnectionBookmarkDetails(
+    TcpConnectionBookmark bookmark, {
+    required String name,
+    required bool isFavorite,
+  }) async {
     final bookmarks = _settings.tcpConnectionBookmarks.map((item) {
       if (item.host.toLowerCase() == bookmark.host.toLowerCase() &&
           item.port == bookmark.port) {
-        return item.copyWith(name: trimmedName);
+        return item.copyWith(name: name.trim(), isFavorite: isFavorite);
       }
       return item;
     }).toList();
 
+    await updateSettings(
+      _settings.copyWith(tcpConnectionBookmarks: _sortTcpBookmarks(bookmarks)),
+    );
+  }
+
+  Future<void> removeTcpConnectionBookmark(
+    TcpConnectionBookmark bookmark,
+  ) async {
+    final bookmarks = _settings.tcpConnectionBookmarks
+        .where(
+          (item) =>
+              item.host.toLowerCase() != bookmark.host.toLowerCase() ||
+              item.port != bookmark.port,
+        )
+        .toList();
+
     await updateSettings(_settings.copyWith(tcpConnectionBookmarks: bookmarks));
+  }
+
+  List<TcpConnectionBookmark> _limitTcpBookmarks(
+    List<TcpConnectionBookmark> bookmarks,
+  ) {
+    final limited = List<TcpConnectionBookmark>.from(bookmarks);
+    while (limited.length > 5) {
+      final removable =
+          limited.where((bookmark) => !bookmark.isFavorite).toList()
+            ..sort((a, b) => a.lastConnectedAt.compareTo(b.lastConnectedAt));
+      if (removable.isEmpty) break;
+      limited.remove(removable.first);
+    }
+    return _sortTcpBookmarks(limited.take(5).toList());
+  }
+
+  List<TcpConnectionBookmark> _sortTcpBookmarks(
+    List<TcpConnectionBookmark> bookmarks,
+  ) {
+    return List<TcpConnectionBookmark>.from(bookmarks)..sort((a, b) {
+      if (a.isFavorite != b.isFavorite) {
+        return a.isFavorite ? -1 : 1;
+      }
+      return b.lastConnectedAt.compareTo(a.lastConnectedAt);
+    });
   }
 
   Future<void> setJumpToOldestUnread(bool value) async {

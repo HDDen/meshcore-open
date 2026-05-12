@@ -2,6 +2,7 @@
   "bg": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -19,6 +20,7 @@
   "de": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -36,6 +38,7 @@
   "es": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -53,6 +56,7 @@
   "fr": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -70,6 +74,7 @@
   "hu": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -87,6 +92,7 @@
   "it": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -104,6 +110,7 @@
   "ja": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -121,6 +128,7 @@
   "ko": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -138,6 +146,7 @@
   "nl": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -155,6 +164,7 @@
   "pl": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -172,6 +182,7 @@
   "pt": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -189,6 +200,7 @@
   "sk": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -206,6 +218,7 @@
   "sl": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -223,6 +236,7 @@
   "sv": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -240,6 +254,7 @@
   "uk": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",
@@ -257,6 +272,7 @@
   "zh": [
     "tcpBookmarksLabel",
     "tcpBookmarksSetName",
+    "tcpBookmarksFavouritesSubtitle",
     "settings_channelResendTimeoutTitle",
     "settings_channelResendTimeoutSubtitle",
     "appSettings_showKeyboardHidingButton",

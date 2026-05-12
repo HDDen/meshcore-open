@@ -55,12 +55,14 @@ class TcpConnectionBookmark {
   final int port;
   final DateTime lastConnectedAt;
   final String name;
+  final bool isFavorite;
 
   TcpConnectionBookmark({
     required this.host,
     required this.port,
     required this.lastConnectedAt,
     this.name = '',
+    this.isFavorite = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -69,6 +71,7 @@ class TcpConnectionBookmark {
       'port': port,
       'last_connected_at': lastConnectedAt.toIso8601String(),
       'name': name,
+      'is_favorite': isFavorite,
     };
   }
 
@@ -80,6 +83,7 @@ class TcpConnectionBookmark {
           DateTime.tryParse(json['last_connected_at'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
       name: json['name'] as String? ?? '',
+      isFavorite: json['is_favorite'] as bool? ?? false,
     );
   }
 
@@ -88,12 +92,14 @@ class TcpConnectionBookmark {
     int? port,
     DateTime? lastConnectedAt,
     String? name,
+    bool? isFavorite,
   }) {
     return TcpConnectionBookmark(
       host: host ?? this.host,
       port: port ?? this.port,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       name: name ?? this.name,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 }

@@ -436,6 +436,12 @@ abstract class AppLocalizations {
   /// **'Set name to bookmark'**
   String get tcpBookmarksSetName;
 
+  /// No description provided for @tcpBookmarksFavouritesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When marked as a favourite, it is not removed from the connection history'**
+  String get tcpBookmarksFavouritesSubtitle;
+
   /// No description provided for @usbScreenTitle.
   ///
   /// In en, this message translates to:
