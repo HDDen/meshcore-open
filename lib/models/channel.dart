@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart' as crypto;
 
 import '../connector/meshcore_protocol.dart';
+import 'community.dart';
+
+enum ChannelType { public, private, hashtag, communityPublic, communityHashtag }
 
 class Channel {
   final int index;
@@ -109,6 +112,37 @@ class Channel {
 
   static String _bytesToHex(Uint8List bytes) {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  static bool isCommunityChannel(ChannelType channelType) {
+    switch (channelType) {
+      case ChannelType.communityPublic:
+      case ChannelType.communityHashtag:
+        return true;
+      case ChannelType.public:
+      case ChannelType.private:
+      case ChannelType.hashtag:
+        return false;
+    }
+  }
+
+  static ChannelType getChannelType(
+    Channel channel,
+    CommunityPskIndex communityIndex,
+  ) {
+    Community? community = communityIndex.getCommunityForChannel(channel);
+    if (community != null) {
+      if (Community.isCommunityPublicChannel(channel, community)) {
+        return ChannelType.communityPublic;
+      }
+      return ChannelType.communityHashtag;
+    }
+    if (channel.isPublicChannel) {
+      return ChannelType.public;
+    } else if (channel.name.startsWith('#')) {
+      return ChannelType.hashtag;
+    }
+    return ChannelType.private;
   }
 
   static const String publicChannelPsk = '8b3387e9c5cdea6ac9e5edbaa115cd72';

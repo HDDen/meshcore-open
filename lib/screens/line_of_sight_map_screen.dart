@@ -539,6 +539,12 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
         child: QuickSwitchBar(
           selectedIndex: 2,
           onDestinationSelected: (index) => _handleQuickSwitch(index, context),
+          contactsUnreadCount: context
+              .watch<MeshCoreConnector>()
+              .getTotalContactsUnreadCount(),
+          channelsUnreadCount: context
+              .watch<MeshCoreConnector>()
+              .getTotalChannelsUnreadCount(),
         ),
       ),
     );
