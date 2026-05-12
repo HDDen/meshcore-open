@@ -254,6 +254,7 @@ class _TcpScreenState extends State<TcpScreen> {
   ) {
     final name = bookmark.name.trim();
     final date = _formatBookmarkTimestamp(bookmark.lastConnectedAt);
+    final detailStyle = Theme.of(context).textTheme.bodyMedium;
     if (name.isEmpty) return Text(date);
 
     return Column(
@@ -264,7 +265,7 @@ class _TcpScreenState extends State<TcpScreen> {
         const SizedBox(height: 6),
         _buildBookmarkDivider(context),
         const SizedBox(height: 6),
-        Text(date),
+        Text(date, style: detailStyle),
       ],
     );
   }
@@ -324,13 +325,18 @@ class _TcpScreenState extends State<TcpScreen> {
     BuildContext context,
     TcpConnectionBookmark bookmark,
   ) {
+    final hasName = bookmark.name.trim().isNotEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 6),
-        _buildBookmarkDivider(context),
-        const SizedBox(height: 6),
+        if (!hasName) ...[
+          const SizedBox(height: 6),
+          _buildBookmarkDivider(context),
+          const SizedBox(height: 6),
+        ] else ...[
+          const SizedBox(height: 1),
+        ],
         Text('${bookmark.host}:${bookmark.port}'),
       ],
     );
