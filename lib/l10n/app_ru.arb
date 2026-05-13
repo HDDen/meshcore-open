@@ -1155,6 +1155,9 @@
   "tcpErrorUnsupported": "Протокол TCP не поддерживается на этой платформе.",
   "tcpErrorTimedOut": "Соединение TCP не удалось установить.",
   "tcpConnectionFailed": "Не удалось установить соединение TCP: {error}",
+  "tcpBookmarksLabel": "Последние подключения",
+  "tcpBookmarksSetName": "Назначить имя закладке",
+  "tcpBookmarksFavouritesSubtitle": "Когда отмечена, как избранное, не удаляется из истории подключений",
   "map_showDiscoveryContacts": "Показать контакты Discovery",
   "map_setAsMyLocation": "Установить мое местоположение",
   "@path_routeWeight": {

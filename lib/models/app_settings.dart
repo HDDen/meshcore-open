@@ -50,8 +50,67 @@ class Cyr2LatProfile {
   }
 }
 
+class TcpConnectionBookmark {
+  final String host;
+  final int port;
+  final DateTime lastConnectedAt;
+  final String name;
+  final bool isFavorite;
+
+  TcpConnectionBookmark({
+    required this.host,
+    required this.port,
+    required this.lastConnectedAt,
+    this.name = '',
+    this.isFavorite = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'host': host,
+      'port': port,
+      'last_connected_at': lastConnectedAt.toIso8601String(),
+      'name': name,
+      'is_favorite': isFavorite,
+    };
+  }
+
+  factory TcpConnectionBookmark.fromJson(Map<String, dynamic> json) {
+    return TcpConnectionBookmark(
+      host: json['host'] as String? ?? '',
+      port: json['port'] as int? ?? 0,
+      lastConnectedAt:
+          DateTime.tryParse(json['last_connected_at'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      name: json['name'] as String? ?? '',
+      isFavorite: json['is_favorite'] as bool? ?? false,
+    );
+  }
+
+  TcpConnectionBookmark copyWith({
+    String? host,
+    int? port,
+    DateTime? lastConnectedAt,
+    String? name,
+    bool? isFavorite,
+  }) {
+    return TcpConnectionBookmark(
+      host: host ?? this.host,
+      port: port ?? this.port,
+      lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+      name: name ?? this.name,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
+}
+
 class AppSettings {
   static const Object _unset = Object();
+  static const List<String> _standardCyr2LatProfileIds = [
+    'default',
+    'cyrillic_extended',
+    'cyrillic_transliteration',
+  ];
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -89,6 +148,7 @@ class AppSettings {
   final bool mapShowDiscoveryContacts;
   final String tcpServerAddress;
   final int tcpServerPort;
+  final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
   final bool translationEnabled;
   final String? translationTargetLanguageCode;
@@ -109,6 +169,49 @@ class AppSettings {
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
       'TerminalCLI\nSomethingElse';
+
+  static List<Cyr2LatProfile> get standardCyr2LatProfiles => [
+    Cyr2LatProfile(
+      id: 'default',
+      name: 'Cyrillic standard',
+      charMap: Cyr2Lat.defaultCharMap,
+    ),
+    Cyr2LatProfile(
+      id: 'cyrillic_extended',
+      name: 'Cyrillic extended',
+      charMap: Cyr2Lat.extendedCharMap,
+    ),
+    Cyr2LatProfile(
+      id: 'cyrillic_transliteration',
+      name: 'Cyrillic transliteration',
+      charMap: Cyr2Lat.transliterationCharMap,
+    ),
+  ];
+
+  static List<Cyr2LatProfile> _withStandardCyr2LatProfiles(
+    List<Cyr2LatProfile>? profiles,
+  ) {
+    final merged = <Cyr2LatProfile>[
+      for (final profile in profiles ?? const <Cyr2LatProfile>[]) profile,
+    ];
+    for (final standard in standardCyr2LatProfiles) {
+      final index = merged.indexWhere((profile) => profile.id == standard.id);
+      if (index >= 0) {
+        merged[index] = standard;
+      } else {
+        merged.add(standard);
+      }
+    }
+    merged.sort((a, b) {
+      final aIndex = _standardCyr2LatProfileIds.indexOf(a.id);
+      final bIndex = _standardCyr2LatProfileIds.indexOf(b.id);
+      if (aIndex >= 0 && bIndex >= 0) return aIndex.compareTo(bIndex);
+      if (aIndex >= 0) return -1;
+      if (bIndex >= 0) return 1;
+      return 0;
+    });
+    return merged;
+  }
 
   static int normalizeMcmpTextLimit(dynamic value) {
     int? parsed;
@@ -195,6 +298,7 @@ class AppSettings {
     this.mapShowDiscoveryContacts = true,
     this.tcpServerAddress = '',
     this.tcpServerPort = 0,
+    List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
     this.translationEnabled = false,
     this.translationTargetLanguageCode,
@@ -210,6 +314,7 @@ class AppSettings {
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
        mutedChannels = mutedChannels ?? {},
+       tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
        channelResendTimeoutSeconds = normalizeChannelResendTimeoutSeconds(
          channelResendTimeoutSeconds,
@@ -219,15 +324,7 @@ class AppSettings {
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
            ),
-       cyr2latProfiles =
-           cyr2latProfiles ??
-           [
-             Cyr2LatProfile(
-               id: 'default',
-               name: 'Default',
-               charMap: Cyr2Lat.defaultCharMap,
-             ),
-           ],
+       cyr2latProfiles = _withStandardCyr2LatProfiles(cyr2latProfiles),
        selectedCyr2latProfileId = selectedCyr2latProfileId ?? 'default';
 
   Map<String, dynamic> toJson() {
@@ -268,6 +365,9 @@ class AppSettings {
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
       'tcp_server_address': tcpServerAddress,
       'tcp_server_port': tcpServerPort,
+      'tcp_connection_bookmarks': tcpConnectionBookmarks
+          .map((bookmark) => bookmark.toJson())
+          .toList(),
       'jump_to_oldest_unread': jumpToOldestUnread,
       'translation_enabled': translationEnabled,
       'translation_target_language_code': translationTargetLanguageCode,
@@ -356,6 +456,18 @@ class AppSettings {
           json['map_show_discovery_contacts'] as bool? ?? true,
       tcpServerAddress: json['tcp_server_address'] as String? ?? '',
       tcpServerPort: json['tcp_server_port'] as int? ?? 0,
+      tcpConnectionBookmarks:
+          (json['tcp_connection_bookmarks'] as List<dynamic>?)
+              ?.map(
+                (entry) => TcpConnectionBookmark.fromJson(
+                  Map<String, dynamic>.from(entry as Map),
+                ),
+              )
+              .where(
+                (bookmark) => bookmark.host.isNotEmpty && bookmark.port > 0,
+              )
+              .toList() ??
+          const [],
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
       translationEnabled: json['translation_enabled'] as bool? ?? false,
       translationTargetLanguageCode:
@@ -403,13 +515,7 @@ class AppSettings {
                         Cyr2Lat.defaultCharMap,
                   ),
                 ]
-              : [
-                  Cyr2LatProfile(
-                    id: 'default',
-                    name: 'Default',
-                    charMap: Cyr2Lat.defaultCharMap,
-                  ),
-                ]),
+              : standardCyr2LatProfiles),
       selectedCyr2latProfileId:
           json['selected_cyr2lat_profile_id'] as String? ??
           (json['cyr2lat_char_map'] != null ? 'migrated' : 'default'),
@@ -453,6 +559,7 @@ class AppSettings {
     bool? mapShowDiscoveryContacts,
     String? tcpServerAddress,
     int? tcpServerPort,
+    List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
     bool? translationEnabled,
     Object? translationTargetLanguageCode = _unset,
@@ -517,6 +624,8 @@ class AppSettings {
           mapShowDiscoveryContacts ?? this.mapShowDiscoveryContacts,
       tcpServerAddress: tcpServerAddress ?? this.tcpServerAddress,
       tcpServerPort: tcpServerPort ?? this.tcpServerPort,
+      tcpConnectionBookmarks:
+          tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
       translationEnabled: translationEnabled ?? this.translationEnabled,
       translationTargetLanguageCode: translationTargetLanguageCode == _unset

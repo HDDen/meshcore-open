@@ -676,6 +676,8 @@ class _MapScreenState extends State<MapScreen> {
                 selectedIndex: 2,
                 onDestinationSelected: (index) =>
                     _handleQuickSwitch(index, context),
+                contactsUnreadCount: connector.getTotalContactsUnreadCount(),
+                channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
               ),
             ),
             floatingActionButton: FloatingActionButton(

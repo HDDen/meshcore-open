@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 
+import 'channel.dart';
+
 /// Represents a community with a shared secret for deriving channel PSKs.
 ///
 /// A Community is a namespace with a shared secret K (32 random bytes),
@@ -162,6 +164,12 @@ class Community {
     return hashtag.replaceFirst(RegExp(r'^#'), '').toLowerCase().trim();
   }
 
+  /// Returns true if this is the community's public channel
+  static bool isCommunityPublicChannel(Channel channel, Community community) {
+    final publicPsk = community.deriveCommunityPublicPsk();
+    return channel.pskHex == Channel.formatPskHex(publicPsk);
+  }
+
   /// Add a hashtag channel to this community's list
   Community addHashtagChannel(String hashtag) {
     final normalized = _normalizeCommunityHashtag(hashtag);
@@ -236,4 +244,29 @@ class Community {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+class CommunityPskIndex {
+  // Cache of PSK hex -> Community for quick lookup
+  final Map<String, Community> _pskToCommunity = {};
+
+  void initialize(List<Community> communities) {
+    _pskToCommunity.clear();
+    for (final community in communities) {
+      // Map the community public channel PSK
+      final publicPsk = community.deriveCommunityPublicPsk();
+      _pskToCommunity[Channel.formatPskHex(publicPsk)] = community;
+
+      // Map all known hashtag channel PSKs
+      for (final hashtag in community.hashtagChannels) {
+        final hashtagPsk = community.deriveCommunityHashtagPsk(hashtag);
+        _pskToCommunity[Channel.formatPskHex(hashtagPsk)] = community;
+      }
+    }
+  }
+
+  /// Returns the community this channel belongs to, or null if not a community channel
+  Community? getCommunityForChannel(Channel channel) {
+    return _pskToCommunity[channel.pskHex];
+  }
 }

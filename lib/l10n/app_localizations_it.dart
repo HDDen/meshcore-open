@@ -166,6 +166,16 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get tcpBookmarksLabel => 'Last connections';
+
+  @override
+  String get tcpBookmarksSetName => 'Set name to bookmark';
+
+  @override
+  String get tcpBookmarksFavouritesSubtitle =>
+      'When marked as a favourite, it is not removed from the connection history';
+
+  @override
   String get usbScreenTitle => 'Connessione tramite USB';
 
   @override
