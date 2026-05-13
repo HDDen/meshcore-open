@@ -54,6 +54,9 @@ class ByteCountedTextField extends StatelessWidget {
   /// If provided, byte limits and counters will use the encoded text length.
   final String Function(String)? encoder;
 
+  /// Optional byte counter for encodings that are not represented as UTF-8 text.
+  final int Function(String)? byteCounter;
+
   /// Minimum number of visible lines before the field starts expanding.
   final int minLines;
 
@@ -75,6 +78,7 @@ class ByteCountedTextField extends StatelessWidget {
     this.errorThreshold = 0.9,
     this.hideCounterWhenEmpty = true,
     this.encoder,
+    this.byteCounter,
     this.minLines = 1,
     this.maxHeight,
   });
@@ -87,7 +91,8 @@ class ByteCountedTextField extends StatelessWidget {
         final effectiveText = encoder != null
             ? encoder!(value.text)
             : value.text;
-        final usedBytes = utf8.encode(effectiveText).length;
+        final usedBytes =
+            byteCounter?.call(value.text) ?? utf8.encode(effectiveText).length;
         final ratio = maxBytes > 0 ? usedBytes / maxBytes : 0.0;
         final showCounter = !(hideCounterWhenEmpty && value.text.isEmpty);
 
@@ -118,6 +123,7 @@ class ByteCountedTextField extends StatelessWidget {
                   Utf8LengthLimitingTextInputFormatter(
                     maxBytes,
                     encoder: encoder,
+                    byteCounter: byteCounter,
                   ),
                 ],
                 textCapitalization: textCapitalization,

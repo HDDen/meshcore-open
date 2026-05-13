@@ -5,6 +5,7 @@ class ChannelSettingsStore {
   static const String _keyPrefix = 'channel_smaz_';
   static const String _mcmpKeyPrefix = 'channel_mcmp_';
   static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
+  static const String _cp866KeyPrefix = 'channel_cp866_';
   static const String _sendingDelayKeyPrefix = 'channel_sending_delay_';
 
   String publicKeyHex = '';
@@ -14,6 +15,7 @@ class ChannelSettingsStore {
   String get keyFor => '$_keyPrefix$publicKeyHex';
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
+  String get keyForCp866 => '$_cp866KeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(int channelIndex) async {
@@ -98,6 +100,30 @@ class ChannelSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForCyr2Lat$channelIndex';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<bool> loadCp866Enabled(int channelIndex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel CP866 settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForCp866$channelIndex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveCp866Enabled(int channelIndex, bool enabled) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel CP866 settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForCp866$channelIndex';
     await prefs.setBool(key, enabled);
   }
 

@@ -145,7 +145,8 @@ class Message {
       if ((flags >> 2) != txtTypePlain) {
         return null;
       }
-      final rawText = reader.readCString();
+      final rawTextBytes = reader.readCStringBytes();
+      final rawText = MessageTextCodec.decodeIncomingBytes(rawTextBytes);
       final text =
           MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
 

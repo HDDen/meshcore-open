@@ -1256,6 +1256,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector.ensureContactMcmpSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
       connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactCp866SettingLoaded(contact.publicKeyHex);
       connector.ensureContactSendingDelaySettingLoaded(contact.publicKeyHex);
     }
     bool mcmpEnabled =
@@ -1264,6 +1265,8 @@ class _ContactsScreenState extends State<ContactsScreen>
         isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled =
         isRoom && connector.isContactCyr2LatEnabled(contact.publicKeyHex);
+    bool cp866Enabled =
+        isRoom && connector.isContactCp866Enabled(contact.publicKeyHex);
     bool sendingDelayEnabled =
         isRoom && connector.isContactSendingDelayEnabled(contact.publicKeyHex);
     String? selectedCyr2LatProfileId = isRoom
@@ -1417,11 +1420,18 @@ class _ContactsScreenState extends State<ContactsScreen>
                         contact.publicKeyHex,
                         value,
                       );
+                      if (value) {
+                        connector.setContactCp866Enabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                      }
                       setSheetState(() {
                         cyr2latEnabled = value;
                         if (cyr2latEnabled) {
                           mcmpEnabled = false;
                           smazEnabled = false;
+                          cp866Enabled = false;
                         }
                       });
                     },
@@ -1456,6 +1466,31 @@ class _ContactsScreenState extends State<ContactsScreen>
                       ),
                     ),
                   ],
+                  SwitchListTile(
+                    title: const Text('CP866 encoding'),
+                    subtitle: const Text(
+                      'Sends Cyrillic text as CP866 bytes; incoming CP866 is decoded automatically.',
+                    ),
+                    value: cp866Enabled,
+                    onChanged: (value) {
+                      connector.setContactCp866Enabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      if (value) {
+                        connector.setContactCyr2LatEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                      }
+                      setSheetState(() {
+                        cp866Enabled = value;
+                        if (cp866Enabled) {
+                          cyr2latEnabled = false;
+                        }
+                      });
+                    },
+                  ),
                   SwitchListTile(
                     title: Text(context.l10n.settings_useSendingDelay),
                     value: sendingDelayEnabled,

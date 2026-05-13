@@ -1380,6 +1380,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
+    bool cp866Enabled = connector.isChannelCp866Enabled(channel.index);
     bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
       channel.index,
     );
@@ -1466,6 +1467,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     if (cyr2latEnabled) {
                       mcmpEnabled = false;
                       smazEnabled = false;
+                      cp866Enabled = false;
                     }
                   }),
                 ),
@@ -1494,6 +1496,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                   ),
                 ],
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('CP866 encoding'),
+                  subtitle: const Text(
+                    'Sends Cyrillic text as CP866 bytes; incoming CP866 is decoded automatically.',
+                  ),
+                  value: cp866Enabled,
+                  onChanged: (value) => setState(() {
+                    cp866Enabled = value;
+                    if (cp866Enabled) {
+                      cyr2latEnabled = false;
+                    }
+                  }),
+                ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(dialogContext.l10n.settings_useSendingDelay),
@@ -1540,6 +1556,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelCyr2LatEnabled(
                     channel.index,
                     cyr2latEnabled,
+                  );
+                  await connector.setChannelCp866Enabled(
+                    channel.index,
+                    cp866Enabled,
                   );
                   await connector.setChannelCyr2LatProfileId(
                     channel.index,

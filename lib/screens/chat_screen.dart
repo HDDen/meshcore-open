@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -666,11 +665,22 @@ class _ChatScreenState extends State<ChatScreen> {
                             ) ||
                             connector.isContactCyr2LatEnabled(
                               widget.contact.publicKeyHex,
+                            ) ||
+                            connector.isContactCp866Enabled(
+                              widget.contact.publicKeyHex,
                             ))
                         ? (text) => connector.prepareContactOutboundText(
                             widget.contact,
                             text,
                           )
+                        : null,
+                    byteCounter:
+                        connector.isContactCp866Enabled(
+                          widget.contact.publicKeyHex,
+                        )
+                        ? (text) => connector
+                              .prepareContactOutboundBytes(widget.contact, text)
+                              .length
                         : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
@@ -773,11 +783,11 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     final maxBytes = _maxContactInputBytes(connector);
-    final outboundText = connector.prepareContactOutboundText(
+    final outboundBytes = connector.prepareContactOutboundBytes(
       _resolveContact(connector),
       outgoingText,
     );
-    if (utf8.encode(outboundText).length > maxBytes) {
+    if (outboundBytes.length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
@@ -788,8 +798,11 @@ class _ChatScreenState extends State<ChatScreen> {
     // This is only for cyr2lat compression - to see the message being sent in the same format as the other person will receive
     try {
       if (connector.isContactCyr2LatEnabled(
-        _resolveContact(connector).publicKeyHex,
-      )) {
+            _resolveContact(connector).publicKeyHex,
+          ) &&
+          !connector.isContactCp866Enabled(
+            _resolveContact(connector).publicKeyHex,
+          )) {
         outgoingText = Cyr2Lat.encode(outgoingText);
       }
     } catch (_) {
@@ -1346,6 +1359,7 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactCp866SettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSendingDelaySettingLoaded(
       widget.contact.publicKeyHex,
     );
@@ -1355,6 +1369,7 @@ class _ChatScreenState extends State<ChatScreen> {
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
     );
+    bool cp866Enabled = connector.isContactCp866Enabled(contact.publicKeyHex);
     bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
       contact.publicKeyHex,
     );
@@ -1451,6 +1466,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       value,
                     );
+                    if (value) {
+                      connector.setContactCp866Enabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                    }
                     connector.setContactMcmpEnabled(
                       contact.publicKeyHex,
                       false,
@@ -1464,6 +1485,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       if (cyr2latEnabled) {
                         mcmpEnabled = false;
                         smazEnabled = false;
+                        cp866Enabled = false;
                       }
                     });
                   },
@@ -1498,6 +1520,33 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ],
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('CP866 encoding'),
+                  subtitle: const Text(
+                    'Sends Cyrillic text as CP866 bytes; incoming CP866 is decoded automatically.',
+                  ),
+                  value: cp866Enabled,
+                  onChanged: (value) {
+                    connector.setContactCp866Enabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    if (value) {
+                      connector.setContactCyr2LatEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                    }
+                    setDialogState(() {
+                      cp866Enabled = value;
+                      if (cp866Enabled) {
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,

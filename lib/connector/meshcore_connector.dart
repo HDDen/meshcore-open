@@ -17,6 +17,7 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/cp866_codec.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
@@ -296,12 +297,14 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, bool> _channelMcmpEnabled = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
+  final Map<int, bool> _channelCp866Enabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactMcmpEnabled = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
+  final Map<String, bool> _contactCp866Enabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
   final Map<String, bool> _contactSendingDelayEnabled = {};
   final Map<String, _PendingContactSend> _pendingContactSends = {};
@@ -689,8 +692,22 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactCyr2LatEnabled[contactKeyHex] ?? false;
   }
 
+  bool isChannelCp866Enabled(int channelIndex) {
+    _ensureChannelCp866SettingLoaded(channelIndex);
+    return _channelCp866Enabled[channelIndex] ?? false;
+  }
+
+  bool isContactCp866Enabled(String contactKeyHex) {
+    _ensureContactCp866SettingLoaded(contactKeyHex);
+    return _contactCp866Enabled[contactKeyHex] ?? false;
+  }
+
   void ensureContactCyr2LatSettingLoaded(String contactKeyHex) {
     _ensureContactCyr2LatSettingLoaded(contactKeyHex);
+  }
+
+  void ensureContactCp866SettingLoaded(String contactKeyHex) {
+    _ensureContactCp866SettingLoaded(contactKeyHex);
   }
 
   void ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
@@ -872,8 +889,10 @@ class MeshCoreConnector extends ChangeNotifier {
     if (enabled) {
       _channelMcmpEnabled[channelIndex] = false;
       _channelSmazEnabled[channelIndex] = false;
+      _channelCp866Enabled[channelIndex] = false;
       await _channelSettingsStore.saveMcmpEnabled(channelIndex, false);
       await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+      await _channelSettingsStore.saveCp866Enabled(channelIndex, false);
     }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
     notifyListeners();
@@ -888,10 +907,37 @@ class MeshCoreConnector extends ChangeNotifier {
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
+      _contactCp866Enabled[contactKeyHex] = false;
       await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveCp866Enabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setChannelCp866Enabled(int channelIndex, bool enabled) async {
+    if (_channelCp866Enabled[channelIndex] == enabled) return;
+    _channelCp866Enabled[channelIndex] = enabled;
+    if (enabled) {
+      _channelCyr2LatEnabled[channelIndex] = false;
+      await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
+    }
+    await _channelSettingsStore.saveCp866Enabled(channelIndex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setContactCp866Enabled(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (_contactCp866Enabled[contactKeyHex] == enabled) return;
+    _contactCp866Enabled[contactKeyHex] = enabled;
+    if (enabled) {
+      _contactCyr2LatEnabled[contactKeyHex] = false;
+      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
+    }
+    await _contactSettingsStore.saveCp866Enabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
@@ -1014,6 +1060,7 @@ class MeshCoreConnector extends ChangeNotifier {
             ),
         getSelfPublicKey: () => _selfPublicKey,
         prepareContactOutboundText: prepareContactOutboundText,
+        prepareContactOutboundBytes: prepareContactOutboundBytes,
         appSettingsService: appSettingsService,
         debugLogService: _appDebugLogService,
         recordPathResult: _recordPathResult,
@@ -1053,6 +1100,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _ensureContactMcmpSettingLoaded(contact.publicKeyHex);
       _ensureContactSmazSettingLoaded(contact.publicKeyHex);
       _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
+      _ensureContactCp866SettingLoaded(contact.publicKeyHex);
     }
   }
 
@@ -1067,6 +1115,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
+    _channelCp866Enabled.clear();
     _channelSendingDelayEnabled.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
@@ -1074,6 +1123,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
       _channelCyr2LatEnabled[i] = await _channelSettingsStore
           .loadCyr2LatEnabled(i);
+      _channelCp866Enabled[i] = await _channelSettingsStore.loadCp866Enabled(i);
       _channelSendingDelayEnabled[i] = await _channelSettingsStore
           .loadSendingDelayEnabled(i);
     }
@@ -1178,12 +1228,14 @@ class MeshCoreConnector extends ChangeNotifier {
     try {
       await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
       final outboundText = prepareContactOutboundText(contact, text);
+      final outboundBytes = prepareContactOutboundBytes(contact, text);
       await sendFrame(
         buildSendTextMsgFrame(
           contact.publicKey,
           outboundText,
           attempt: attempt,
           timestampSeconds: timestampSeconds,
+          textBytes: outboundBytes,
         ),
       );
     } catch (e) {
@@ -2857,7 +2909,13 @@ class MeshCoreConnector extends ChangeNotifier {
         _retryService!.sendMessageWithRetry(contact: contact, text: text);
       } else {
         final outboundText = prepareContactOutboundText(contact, text);
-        await sendFrame(buildSendTextMsgFrame(contact.publicKey, outboundText));
+        await sendFrame(
+          buildSendTextMsgFrame(
+            contact.publicKey,
+            outboundText,
+            textBytes: prepareContactOutboundBytes(contact, text),
+          ),
+        );
       }
       return;
     }
@@ -2888,7 +2946,13 @@ class MeshCoreConnector extends ChangeNotifier {
       _addMessage(contact.publicKeyHex, message);
       notifyListeners();
       final outboundText = prepareContactOutboundText(contact, text);
-      await sendFrame(buildSendTextMsgFrame(contact.publicKey, outboundText));
+      await sendFrame(
+        buildSendTextMsgFrame(
+          contact.publicKey,
+          outboundText,
+          textBytes: prepareContactOutboundBytes(contact, text),
+        ),
+      );
     }
   }
 
@@ -3234,7 +3298,11 @@ class MeshCoreConnector extends ChangeNotifier {
       _pendingChannelSentQueue.add(reactionQueueId);
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       await sendFrame(
-        buildSendChannelTextMsgFrame(channel.index, text),
+        buildSendChannelTextMsgFrame(
+          channel.index,
+          text,
+          textBytes: prepareChannelOutboundBytes(channel.index, text),
+        ),
         channelSendQueueId: reactionQueueId,
         expectsGenericAck: true,
       );
@@ -3262,7 +3330,11 @@ class MeshCoreConnector extends ChangeNotifier {
     final outboundText = prepareChannelOutboundText(channel.index, text);
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     await sendFrame(
-      buildSendChannelTextMsgFrame(channel.index, outboundText),
+      buildSendChannelTextMsgFrame(
+        channel.index,
+        outboundText,
+        textBytes: prepareChannelOutboundBytes(channel.index, text),
+      ),
       channelSendQueueId: message.messageId,
       expectsGenericAck: true,
     );
@@ -4807,7 +4879,9 @@ class MeshCoreConnector extends ChangeNotifier {
         reader.skipBytes(4); // Skip extra 4 bytes for signed/plain variants
       }
 
-      final msgText = reader.readCString();
+      final msgText = MessageTextCodec.decodeIncomingBytes(
+        reader.readCStringBytes(),
+      );
 
       final flags = txtType;
       final shiftedType = flags >> 2;
@@ -4910,6 +4984,15 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactCp866SettingLoaded(String contactKeyHex) {
+    if (_contactCp866Enabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadCp866Enabled(contactKeyHex).then((enabled) {
+      if (_contactCp866Enabled[contactKeyHex] == enabled) return;
+      _contactCp866Enabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
   void _ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
     if (_contactSendingDelayEnabled.containsKey(contactKeyHex)) return;
     _contactSettingsStore.loadSendingDelayEnabled(contactKeyHex).then((
@@ -4935,6 +5018,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSettingsStore.loadCyr2LatEnabled(channelIndex).then((enabled) {
       if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
       _channelCyr2LatEnabled[channelIndex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelCp866SettingLoaded(int channelIndex) {
+    if (_channelCp866Enabled.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadCp866Enabled(channelIndex).then((enabled) {
+      if (_channelCp866Enabled[channelIndex] == enabled) return;
+      _channelCp866Enabled[channelIndex] = enabled;
       notifyListeners();
     });
   }
@@ -4987,21 +5079,29 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Prepares contact outbound text by applying SMAZ encoding if enabled.
-  /// This should be used to transform text before computing ACK hashes.
-  String prepareContactOutboundText(Contact contact, String text) {
+  bool _isStructuredContactPayload(String text) {
     final trimmed = text.trim();
-    final isStructuredPayload =
-        trimmed.startsWith('g:') ||
+    return trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|');
+  }
+
+  bool _isStructuredChannelPayload(String text) {
+    final trimmed = text.trim();
+    return trimmed.startsWith('g:') || trimmed.startsWith('m:');
+  }
+
+  /// Applies text-level outbound transforms. CP866 is applied later as bytes.
+  String prepareContactOutboundText(Contact contact, String text) {
+    final isStructuredPayload = _isStructuredContactPayload(text);
     if (!isStructuredPayload) {
       if (isContactMcmpEnabled(contact.publicKeyHex)) {
         return MeshCompressor.instance.encodeIfSmaller(text);
       }
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
-      } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
+      } else if (!isContactCp866Enabled(contact.publicKeyHex) &&
+          isContactCyr2LatEnabled(contact.publicKeyHex)) {
         final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
         final profile = profileId != null && _appSettingsService != null
             ? _appSettingsService!.getCyr2LatProfileById(profileId)
@@ -5022,17 +5122,26 @@ class MeshCoreConnector extends ChangeNotifier {
     return text;
   }
 
+  Uint8List prepareContactOutboundBytes(Contact contact, String text) {
+    final outboundText = prepareContactOutboundText(contact, text);
+    if (!_isStructuredContactPayload(text) &&
+        isContactCp866Enabled(contact.publicKeyHex)) {
+      // CP866 changes transport bytes only; UI text stays readable.
+      return Cp866Codec.encode(outboundText);
+    }
+    return Uint8List.fromList(utf8.encode(outboundText));
+  }
+
   String prepareChannelOutboundText(int channelIndex, String text) {
-    final trimmed = text.trim();
-    final isStructuredPayload =
-        trimmed.startsWith('g:') || trimmed.startsWith('m:');
+    final isStructuredPayload = _isStructuredChannelPayload(text);
     if (!isStructuredPayload) {
       if (isChannelMcmpEnabled(channelIndex)) {
         return MeshCompressor.instance.encodeIfSmaller(text);
       }
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
-      } else if (isChannelCyr2LatEnabled(channelIndex)) {
+      } else if (!isChannelCp866Enabled(channelIndex) &&
+          isChannelCyr2LatEnabled(channelIndex)) {
         final profileId = getChannelCyr2LatProfileId(channelIndex);
         final profile = profileId != null && _appSettingsService != null
             ? _appSettingsService!.getCyr2LatProfileById(profileId)
@@ -5051,6 +5160,16 @@ class MeshCoreConnector extends ChangeNotifier {
       }
     }
     return text;
+  }
+
+  Uint8List prepareChannelOutboundBytes(int channelIndex, String text) {
+    final outboundText = prepareChannelOutboundText(channelIndex, text);
+    if (!_isStructuredChannelPayload(text) &&
+        isChannelCp866Enabled(channelIndex)) {
+      // CP866 is applied after optional SMAZ/MCMP text transforms.
+      return Cp866Codec.encode(outboundText);
+    }
+    return Uint8List.fromList(utf8.encode(outboundText));
   }
 
   String _channelDisplayName(int channelIndex) {
@@ -5159,8 +5278,9 @@ class MeshCoreConnector extends ChangeNotifier {
             return;
           }
 
-          final text = decrypted.readCString();
-          final parsed = _splitSenderText(text);
+          final parsed = MessageTextCodec.splitChannelTextBytes(
+            decrypted.readCStringBytes(),
+          );
           final decodedText =
               MessageTextCodec.tryDecodeKnownCompression(parsed.text) ??
               parsed.text;
@@ -5830,25 +5950,6 @@ class MeshCoreConnector extends ChangeNotifier {
       cipher.processBlock(cipherText, i, out, i);
     }
     return out;
-  }
-
-  _ParsedText _splitSenderText(String text) {
-    final colonIndex = text.indexOf(':');
-    if (colonIndex > 0 && colonIndex < text.length - 1 && colonIndex < 50) {
-      final potentialSender = text.substring(0, colonIndex);
-      if (RegExp(r'[:\[\]]').hasMatch(potentialSender)) {
-        return _ParsedText(senderName: 'Unknown', text: text);
-      }
-      final offset =
-          (colonIndex + 1 < text.length && text[colonIndex + 1] == ' ')
-          ? colonIndex + 2
-          : colonIndex + 1;
-      return _ParsedText(
-        senderName: potentialSender,
-        text: text.substring(offset),
-      );
-    }
-    return _ParsedText(senderName: 'Unknown', text: text);
   }
 
   bool _addChannelMessage(int channelIndex, ChannelMessage message) {
@@ -6784,13 +6885,6 @@ class _RawPacket {
       routeType == _routeFlood || routeType == _routeTransportFlood;
 
   int get hopCount => pathLenRaw & 63;
-}
-
-class _ParsedText {
-  final String senderName;
-  final String text;
-
-  _ParsedText({required this.senderName, required this.text});
 }
 
 class _RepeaterAckContext {

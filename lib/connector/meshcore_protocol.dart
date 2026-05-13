@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
+import '../helpers/message_text_codec.dart';
+
 // Buffer Reader - sequential binary data reader with pointer tracking
 class BufferReader {
   int _pointer = 0;
@@ -55,6 +57,10 @@ class BufferReader {
   }
 
   String readCString({int maxLength = -1}) {
+    return MessageTextCodec.decodeIncomingBytes(readCStringBytes(maxLength));
+  }
+
+  Uint8List readCStringBytes([int maxLength = -1]) {
     final backupPointer = _pointer;
     final value = <int>[];
     int counter = 0;
@@ -66,11 +72,7 @@ class BufferReader {
       counter++;
     }
     _lastPointer = backupPointer;
-    try {
-      return utf8.decode(Uint8List.fromList(value), allowMalformed: true);
-    } catch (e) {
-      return String.fromCharCodes(value); // Latin-1 fallback
-    }
+    return Uint8List.fromList(value);
   }
 
   int readUInt8() => readBytes(1).buffer.asByteData().getUint8(0);
@@ -495,6 +497,7 @@ Uint8List buildSendTextMsgFrame(
   String text, {
   int attempt = 0,
   int? timestampSeconds,
+  Uint8List? textBytes,
 }) {
   final timestamp =
       timestampSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
@@ -504,21 +507,25 @@ Uint8List buildSendTextMsgFrame(
   writer.writeByte(attempt.clamp(0, 255));
   writer.writeUInt32LE(timestamp);
   writer.writeBytes(recipientPubKey.sublist(0, 6));
-  writer.writeString(text);
+  writer.writeBytes(textBytes ?? Uint8List.fromList(utf8.encode(text)));
   writer.writeByte(0);
   return writer.toBytes();
 }
 
 // Build CMD_SEND_CHANNEL_TXT_MSG frame
 // Format: [cmd][txt_type][channel_idx][timestamp x4][text...]
-Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
+Uint8List buildSendChannelTextMsgFrame(
+  int channelIndex,
+  String text, {
+  Uint8List? textBytes,
+}) {
   final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   final writer = BufferWriter();
   writer.writeByte(cmdSendChannelTxtMsg);
   writer.writeByte(txtTypePlain);
   writer.writeByte(channelIndex);
   writer.writeUInt32LE(timestamp);
-  writer.writeString(text);
+  writer.writeBytes(textBytes ?? Uint8List.fromList(utf8.encode(text)));
   writer.writeByte(0);
   return writer.toBytes();
 }

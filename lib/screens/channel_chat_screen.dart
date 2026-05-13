@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -1374,7 +1373,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final usesChannelEncoding =
         connector.isChannelMcmpEnabled(widget.channel.index) ||
         connector.isChannelSmazEnabled(widget.channel.index) ||
-        connector.isChannelCyr2LatEnabled(widget.channel.index);
+        connector.isChannelCyr2LatEnabled(widget.channel.index) ||
+        connector.isChannelCp866Enabled(widget.channel.index);
 
     String encodeComposerText(String text) {
       final sendText = _applyReplyMention(text);
@@ -1487,6 +1487,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       encoder: _replyingToMessage != null || usesChannelEncoding
                           ? encodeComposerText
                           : null,
+                      byteCounter:
+                          connector.isChannelCp866Enabled(widget.channel.index)
+                          ? (text) => connector
+                                .prepareChannelOutboundBytes(
+                                  widget.channel.index,
+                                  _applyReplyMention(text),
+                                )
+                                .length
+                          : null,
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
                         border: OutlineInputBorder(
@@ -1586,11 +1595,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     messageText = _applyReplyMention(messageText);
 
     final maxBytes = _maxChannelInputBytes(connector);
-    final outboundText = connector.prepareChannelOutboundText(
+    final outboundBytes = connector.prepareChannelOutboundBytes(
       widget.channel.index,
       messageText,
     );
-    if (utf8.encode(outboundText).length > maxBytes) {
+    if (outboundBytes.length > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
@@ -1602,7 +1611,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // but we getting messages doubles in chat screen (source text and transformed).
     // To prevent, we'll perform transform of source before pass to main sender logic.
     // We can pass whole text, senderName will be kept intact
-    if (connector.isChannelCyr2LatEnabled(widget.channel.index)) {
+    if (connector.isChannelCyr2LatEnabled(widget.channel.index) &&
+        !connector.isChannelCp866Enabled(widget.channel.index)) {
       messageText = Cyr2Lat.encode(messageText);
     }
     // end transform

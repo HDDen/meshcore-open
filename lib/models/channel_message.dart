@@ -185,33 +185,19 @@ class ChannelMessage {
         return null;
       }
 
-      final text = reader.readCString();
-
-      // Extract sender name and actual message from "name: msg" format
-      String senderName = 'Unknown';
-      String actualText = text;
-
-      final colonIndex = text.indexOf(':');
-      if (colonIndex > 0 && colonIndex < text.length - 1 && colonIndex < 50) {
-        final potentialSender = text.substring(0, colonIndex);
-        if (!RegExp(r'[:\[\]]').hasMatch(potentialSender)) {
-          senderName = potentialSender;
-          final offset =
-              (colonIndex + 1 < text.length && text[colonIndex + 1] == ' ')
-              ? colonIndex + 2
-              : colonIndex + 1;
-          actualText = text.substring(offset);
-        }
-      }
+      final parsedText = MessageTextCodec.splitChannelTextBytes(
+        reader.readCStringBytes(),
+      );
 
       final decodedText =
-          MessageTextCodec.tryDecodeKnownCompression(actualText) ?? actualText;
+          MessageTextCodec.tryDecodeKnownCompression(parsedText.text) ??
+          parsedText.text;
 
       return ChannelMessage(
         senderKey: null,
-        senderName: senderName,
+        senderName: parsedText.senderName,
         text: decodedText,
-        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(actualText),
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(parsedText.text),
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,

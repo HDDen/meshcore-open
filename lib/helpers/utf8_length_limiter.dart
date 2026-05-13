@@ -5,10 +5,16 @@ import 'package:flutter/services.dart';
 class Utf8LengthLimitingTextInputFormatter extends TextInputFormatter {
   final int maxBytes;
   final String Function(String)? encoder;
+  final int Function(String)? byteCounter;
 
-  const Utf8LengthLimitingTextInputFormatter(this.maxBytes, {this.encoder});
+  const Utf8LengthLimitingTextInputFormatter(
+    this.maxBytes, {
+    this.encoder,
+    this.byteCounter,
+  });
 
   int _effectiveByteLength(String text) {
+    if (byteCounter != null) return byteCounter!(text);
     final effective = encoder != null ? encoder!(text) : text;
     return utf8.encode(effective).length;
   }
@@ -30,7 +36,7 @@ class Utf8LengthLimitingTextInputFormatter extends TextInputFormatter {
   }
 
   String _truncateToMaxBytes(String text, int limit) {
-    if (encoder != null) {
+    if (encoder != null || byteCounter != null) {
       final runes = text.runes.toList();
       while (runes.isNotEmpty &&
           _effectiveByteLength(String.fromCharCodes(runes)) > maxBytes) {

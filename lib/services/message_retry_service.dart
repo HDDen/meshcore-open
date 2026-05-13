@@ -44,6 +44,7 @@ class RetryServiceConfig {
   calculateTimeout;
   final Uint8List? Function()? getSelfPublicKey;
   final String Function(Contact, String)? prepareContactOutboundText;
+  final Uint8List Function(Contact, String)? prepareContactOutboundBytes;
   final AppSettingsService? appSettingsService;
   final AppDebugLogService? debugLogService;
   final void Function(String, PathSelection, bool, int?)? recordPathResult;
@@ -65,6 +66,7 @@ class RetryServiceConfig {
     this.calculateTimeout,
     this.getSelfPublicKey,
     this.prepareContactOutboundText,
+    this.prepareContactOutboundBytes,
     this.appSettingsService,
     this.debugLogService,
     this.recordPathResult,
@@ -131,6 +133,29 @@ class MessageRetryService extends ChangeNotifier {
     buffer.setRange(offset, offset + senderPubKey.length, senderPubKey);
 
     // Compute SHA256 and return first 4 bytes
+    final hash = sha256.convert(buffer);
+    final bytes = Uint8List.fromList(hash.bytes.sublist(0, 4));
+    return (bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
+  }
+
+  static int computeExpectedAckHashBytes(
+    int timestampSeconds,
+    int attempt,
+    Uint8List textBytes,
+    Uint8List senderPubKey,
+  ) {
+    final buffer = Uint8List(4 + 1 + textBytes.length + senderPubKey.length);
+    int offset = 0;
+
+    buffer[offset++] = timestampSeconds & 0xFF;
+    buffer[offset++] = (timestampSeconds >> 8) & 0xFF;
+    buffer[offset++] = (timestampSeconds >> 16) & 0xFF;
+    buffer[offset++] = (timestampSeconds >> 24) & 0xFF;
+    buffer[offset++] = attempt & 0x03;
+    buffer.setRange(offset, offset + textBytes.length, textBytes);
+    offset += textBytes.length;
+    buffer.setRange(offset, offset + senderPubKey.length, senderPubKey);
+
     final hash = sha256.convert(buffer);
     final bytes = Uint8List.fromList(hash.bytes.sublist(0, 4));
     return (bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
@@ -334,10 +359,13 @@ class MessageRetryService extends ChangeNotifier {
       final outboundText =
           config.prepareContactOutboundText?.call(contact, message.text) ??
           message.text;
-      final expectedHash = MessageRetryService.computeExpectedAckHash(
+      final outboundBytes =
+          config.prepareContactOutboundBytes?.call(contact, message.text) ??
+          Uint8List.fromList(utf8.encode(outboundText));
+      final expectedHash = MessageRetryService.computeExpectedAckHashBytes(
         timestampSeconds,
         attempt,
-        outboundText,
+        outboundBytes,
         selfPubKey,
       );
       final expectedHashHex = expectedHash.toRadixString(16).padLeft(8, '0');
