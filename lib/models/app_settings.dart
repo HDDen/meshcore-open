@@ -106,6 +106,11 @@ class TcpConnectionBookmark {
 
 class AppSettings {
   static const Object _unset = Object();
+  static const List<String> _standardCyr2LatProfileIds = [
+    'default',
+    'cyrillic_extended',
+    'cyrillic_transliteration',
+  ];
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -164,6 +169,49 @@ class AppSettings {
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
       'TerminalCLI\nSomethingElse';
+
+  static List<Cyr2LatProfile> get standardCyr2LatProfiles => [
+    Cyr2LatProfile(
+      id: 'default',
+      name: 'Cyrillic standard',
+      charMap: Cyr2Lat.defaultCharMap,
+    ),
+    Cyr2LatProfile(
+      id: 'cyrillic_extended',
+      name: 'Cyrillic extended',
+      charMap: Cyr2Lat.extendedCharMap,
+    ),
+    Cyr2LatProfile(
+      id: 'cyrillic_transliteration',
+      name: 'Cyrillic transliteration',
+      charMap: Cyr2Lat.transliterationCharMap,
+    ),
+  ];
+
+  static List<Cyr2LatProfile> _withStandardCyr2LatProfiles(
+    List<Cyr2LatProfile>? profiles,
+  ) {
+    final merged = <Cyr2LatProfile>[
+      for (final profile in profiles ?? const <Cyr2LatProfile>[]) profile,
+    ];
+    for (final standard in standardCyr2LatProfiles) {
+      final index = merged.indexWhere((profile) => profile.id == standard.id);
+      if (index >= 0) {
+        merged[index] = standard;
+      } else {
+        merged.add(standard);
+      }
+    }
+    merged.sort((a, b) {
+      final aIndex = _standardCyr2LatProfileIds.indexOf(a.id);
+      final bIndex = _standardCyr2LatProfileIds.indexOf(b.id);
+      if (aIndex >= 0 && bIndex >= 0) return aIndex.compareTo(bIndex);
+      if (aIndex >= 0) return -1;
+      if (bIndex >= 0) return 1;
+      return 0;
+    });
+    return merged;
+  }
 
   static int normalizeMcmpTextLimit(dynamic value) {
     int? parsed;
@@ -276,15 +324,7 @@ class AppSettings {
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
            ),
-       cyr2latProfiles =
-           cyr2latProfiles ??
-           [
-             Cyr2LatProfile(
-               id: 'default',
-               name: 'Default',
-               charMap: Cyr2Lat.defaultCharMap,
-             ),
-           ],
+       cyr2latProfiles = _withStandardCyr2LatProfiles(cyr2latProfiles),
        selectedCyr2latProfileId = selectedCyr2latProfileId ?? 'default';
 
   Map<String, dynamic> toJson() {
@@ -475,13 +515,7 @@ class AppSettings {
                         Cyr2Lat.defaultCharMap,
                   ),
                 ]
-              : [
-                  Cyr2LatProfile(
-                    id: 'default',
-                    name: 'Default',
-                    charMap: Cyr2Lat.defaultCharMap,
-                  ),
-                ]),
+              : standardCyr2LatProfiles),
       selectedCyr2latProfileId:
           json['selected_cyr2lat_profile_id'] as String? ??
           (json['cyr2lat_char_map'] != null ? 'migrated' : 'default'),
