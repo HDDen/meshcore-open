@@ -452,26 +452,51 @@ class _TcpScreenState extends State<TcpScreen> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                const _TcpBookmarkEditResult(delete: true),
+            SizedBox(
+              width: double.infinity,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(
+                        dialogContext,
+                        const _TcpBookmarkEditResult(delete: true),
+                      ),
+                      child: Text(
+                        deleteLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        cancelLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(
+                        dialogContext,
+                        _TcpBookmarkEditResult(
+                          name: controller.text,
+                          isFavorite: isFavorite,
+                        ),
+                      ),
+                      child: Text(
+                        saveLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: Text(deleteLabel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(cancelLabel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                _TcpBookmarkEditResult(
-                  name: controller.text,
-                  isFavorite: isFavorite,
-                ),
-              ),
-              child: Text(saveLabel),
             ),
           ],
         ),
