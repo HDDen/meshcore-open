@@ -511,6 +511,8 @@ Uint8List buildSendTextMsgFrame(
 
 // Build CMD_SEND_CHANNEL_TXT_MSG frame
 // Format: [cmd][txt_type][channel_idx][timestamp x4][text...]
+// Channel text is length-delimited by the frame; unlike direct messages it
+// must not append a trailing null byte.
 Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
   final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   final writer = BufferWriter();
@@ -519,7 +521,6 @@ Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
   writer.writeByte(channelIndex);
   writer.writeUInt32LE(timestamp);
   writer.writeString(text);
-  writer.writeByte(0);
   return writer.toBytes();
 }
 
