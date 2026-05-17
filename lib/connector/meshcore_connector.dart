@@ -2579,35 +2579,44 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _bleDebugLogService?.logFrame(data, outgoing: true);
 
-    if (_activeTransport == MeshCoreTransportType.usb) {
-      await _usbManager.write(data);
-      // Brief pause so the device firmware can process each frame before the
-      // next arrives. Without this, rapid-fire frames over USB can cause the
-      // device to miss responses (especially on reconnect).
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-    } else if (_activeTransport == MeshCoreTransportType.tcp) {
-      await _tcpConnector.write(data);
-    } else {
-      if (_rxCharacteristic == null) {
-        throw Exception("MeshCore RX characteristic not available");
-      }
-      // Prefer write without response when supported; fall back to write with response.
-      final properties = _rxCharacteristic!.properties;
-      final canWriteWithoutResponse = properties.writeWithoutResponse;
-      final canWriteWithResponse = properties.write;
-      if (!canWriteWithoutResponse && !canWriteWithResponse) {
-        throw Exception("MeshCore RX characteristic does not support write");
-      }
-      await _rxCharacteristic!.write(
-        data.toList(),
-        withoutResponse: canWriteWithoutResponse,
-      );
-    }
-    _trackPendingGenericAck(
+    // Register the expected OK before writing. Some transports can deliver the
+    // response quickly enough that waiting until after write races with _handleOk().
+    final pendingAck = _trackPendingGenericAck(
       data,
       channelSendQueueId: channelSendQueueId,
       expectsGenericAck: expectsGenericAck,
     );
+    try {
+      if (_activeTransport == MeshCoreTransportType.usb) {
+        await _usbManager.write(data);
+        // Brief pause so the device firmware can process each frame before the
+        // next arrives. Without this, rapid-fire frames over USB can cause the
+        // device to miss responses (especially on reconnect).
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      } else if (_activeTransport == MeshCoreTransportType.tcp) {
+        await _tcpConnector.write(data);
+      } else {
+        if (_rxCharacteristic == null) {
+          throw Exception("MeshCore RX characteristic not available");
+        }
+        // Prefer write without response when supported; fall back to write with response.
+        final properties = _rxCharacteristic!.properties;
+        final canWriteWithoutResponse = properties.writeWithoutResponse;
+        final canWriteWithResponse = properties.write;
+        if (!canWriteWithoutResponse && !canWriteWithResponse) {
+          throw Exception("MeshCore RX characteristic does not support write");
+        }
+        await _rxCharacteristic!.write(
+          data.toList(),
+          withoutResponse: canWriteWithoutResponse,
+        );
+      }
+    } catch (_) {
+      if (pendingAck != null) {
+        _pendingGenericAckQueue.remove(pendingAck);
+      }
+      rethrow;
+    }
   }
 
   Future<void> requestBatteryStatus({bool force = false}) async {
@@ -6185,18 +6194,18 @@ class MeshCoreConnector extends ChangeNotifier {
     _scheduleReconnect();
   }
 
-  void _trackPendingGenericAck(
+  _PendingCommandAck? _trackPendingGenericAck(
     Uint8List data, {
     String? channelSendQueueId,
     required bool expectsGenericAck,
   }) {
-    if (!expectsGenericAck || data.isEmpty) return;
-    _pendingGenericAckQueue.add(
-      _PendingCommandAck(
-        commandCode: data[0],
-        channelSendQueueId: channelSendQueueId,
-      ),
+    if (!expectsGenericAck || data.isEmpty) return null;
+    final pendingAck = _PendingCommandAck(
+      commandCode: data[0],
+      channelSendQueueId: channelSendQueueId,
     );
+    _pendingGenericAckQueue.add(pendingAck);
+    return pendingAck;
   }
 
   String _nextReactionSendQueueId() {
