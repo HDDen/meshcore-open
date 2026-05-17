@@ -472,6 +472,8 @@ class AppSettingsScreen extends StatelessWidget {
             _buildChannelResendTimeoutTile(context, settingsService),
             const Divider(height: 1),
             _buildSendingDelayTile(context, settingsService),
+            const Divider(height: 1),
+            _buildChannelMaxbytesOutgoingTile(context, settingsService),
           ],
         ],
       ),
@@ -1449,6 +1451,19 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildChannelMaxbytesOutgoingTile(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return ListTile(
+      leading: const Icon(Icons.data_usage),
+      title: Text(context.l10n.settings_channelMaxbytesOutgoingTitle),
+      subtitle: Text('${settingsService.settings.channelMaxbytesOutgoing}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showChannelMaxbytesOutgoingDialog(context, settingsService),
+    );
+  }
+
   void _showMcmpTextLimitDialog(
     BuildContext context,
     AppSettingsService settingsService,
@@ -1571,6 +1586,66 @@ class AppSettingsScreen extends StatelessWidget {
                 controller.text.trim(),
               );
               await settingsService.setChannelResendTimeoutSeconds(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChannelMaxbytesOutgoingDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.channelMaxbytesOutgoing.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_channelMaxbytesOutgoingTitle),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 320),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dialogContext.l10n.settings_channelMaxbytesOutgoingSubtitle,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                  ],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final value = AppSettings.normalizeChannelMaxbytesOutgoing(
+                controller.text.trim(),
+              );
+              await settingsService.setChannelMaxbytesOutgoing(value);
               if (!dialogContext.mounted) return;
               Navigator.pop(dialogContext);
             },
