@@ -4763,9 +4763,7 @@ class MeshCoreConnector extends ChangeNotifier {
           } else if (contact?.type == advTypeRoom) {
             _notificationService.showMessageNotification(
               contactName: contact?.name ?? 'Unknown Room',
-              message: message.text.length > 4
-                  ? message.text.substring(4)
-                  : message.text,
+              message: message.text,
               contactId: message.senderKeyHex,
               badgeCount: getTotalUnreadCount(),
             );
@@ -4812,16 +4810,24 @@ class MeshCoreConnector extends ChangeNotifier {
         timestampRaw * 1000,
       );
 
-      if (txtType == 2) {
-        reader.skipBytes(4); // Skip extra 4 bytes for signed/plain variants
+      final flags = txtType;
+      final shiftedType = flags >> 2;
+      final rawType = flags;
+      final isSigned = shiftedType == txtTypeSigned || rawType == txtTypeSigned;
+      final Uint8List? roomAuthorPrefix;
+      if (isSigned) {
+        // Room-server pushed posts use signed/plain contact messages where this
+        // 4-byte "signature" field is actually the original author's pubkey
+        // prefix. Keep it as metadata; the text starts after these bytes.
+        roomAuthorPrefix = reader.readBytes(4);
+      } else {
+        roomAuthorPrefix = null;
       }
 
       final msgText = reader.readCString();
 
-      final flags = txtType;
-      final shiftedType = flags >> 2;
-      final rawType = flags;
-      final isPlain = shiftedType == txtTypePlain || rawType == txtTypePlain;
+      final isPlain =
+          shiftedType == txtTypePlain || rawType == txtTypePlain || isSigned;
       final isCli = shiftedType == txtTypeCliData || rawType == txtTypeCliData;
       if (!isPlain && !isCli) {
         appLogger.warn(
@@ -4859,9 +4865,7 @@ class MeshCoreConnector extends ChangeNotifier {
         wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
         pathLength: pathLength == 0xFF ? 0 : pathLength,
         pathBytes: Uint8List(0),
-        fourByteRoomContactKey: msgText.length >= 4
-            ? Uint8List.fromList(msgText.substring(0, 4).codeUnits)
-            : null,
+        fourByteRoomContactKey: roomAuthorPrefix,
       );
     } catch (e) {
       appLogger.warn('Error parsing contact direct message: $e');
