@@ -51,13 +51,6 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildMessagingCard(context, settingsService),
                         const SizedBox(height: 16),
-                        _buildChannelResendTimeoutCard(
-                          context,
-                          settingsService,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSendingDelayCard(context, settingsService),
-                        const SizedBox(height: 16),
                         if (!kIsWeb) ...[
                           _buildTranslationCard(
                             context,
@@ -474,6 +467,11 @@ class AppSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Timing controls belong with message sending behavior.
+            const Divider(height: 1),
+            _buildChannelResendTimeoutTile(context, settingsService),
+            const Divider(height: 1),
+            _buildSendingDelayTile(context, settingsService),
           ],
         ],
       ),
@@ -1423,37 +1421,31 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSendingDelayCard(
+  Widget _buildSendingDelayTile(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.schedule),
-        title: Text(context.l10n.settings_sendingDelayForCancellation),
-        subtitle: Text(
-          '${settingsService.settings.sendingDelayForCancellationSeconds}',
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showSendingDelayDialog(context, settingsService),
+    return ListTile(
+      leading: const Icon(Icons.schedule),
+      title: Text(context.l10n.settings_sendingDelayForCancellation),
+      subtitle: Text(
+        '${settingsService.settings.sendingDelayForCancellationSeconds}',
       ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showSendingDelayDialog(context, settingsService),
     );
   }
 
-  Widget _buildChannelResendTimeoutCard(
+  Widget _buildChannelResendTimeoutTile(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.send_time_extension_outlined),
-        title: Text(context.l10n.settings_channelResendTimeoutTitle),
-        subtitle: Text(
-          '${settingsService.settings.channelResendTimeoutSeconds}',
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showChannelResendTimeoutDialog(context, settingsService),
-      ),
+    return ListTile(
+      leading: const Icon(Icons.send_time_extension_outlined),
+      title: Text(context.l10n.settings_channelResendTimeoutTitle),
+      subtitle: Text('${settingsService.settings.channelResendTimeoutSeconds}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showChannelResendTimeoutDialog(context, settingsService),
     );
   }
 
