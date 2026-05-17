@@ -6056,7 +6056,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (existing.isOutgoing && !incoming.isOutgoing) {
       final selfName = _selfName ?? 'Me';
-      if (incoming.senderName == selfName || existing.senderName == selfName) {
+      // Only our own radio echo should promote an outgoing message to a repeat.
+      // Bot replies may quote our text after @[...] is parsed away.
+      if (incoming.senderName == selfName) {
+      //if (incoming.senderName == selfName || existing.senderName == selfName) {
         return true;
       }
     }
