@@ -26,17 +26,29 @@ void showDismissibleSnackBar(
   Clip? clipBehavior,
 }) {
   final messenger = ScaffoldMessenger.of(context);
+  final contentPadding =
+      padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
   messenger.showSnackBar(
     SnackBar(
       key: key,
       content: GestureDetector(
-        onTap: () => messenger.hideCurrentSnackBar(),
-        child: content,
+        // Keep padding inside the tap target so the colored snackbar surface
+        // dismisses even when the click lands outside the text glyphs.
+        behavior: HitTestBehavior.opaque,
+        onTap: () =>
+            messenger.hideCurrentSnackBar(reason: SnackBarClosedReason.dismiss),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: AlignmentDirectional.centerStart,
+          padding: contentPadding,
+          child: content,
+        ),
       ),
       backgroundColor: backgroundColor,
       elevation: elevation,
       margin: margin,
-      padding: padding,
+      padding: EdgeInsets.zero,
       width: width,
       shape: shape,
       hitTestBehavior: hitTestBehavior,
