@@ -244,6 +244,8 @@
   },
   "settings_channelResendTimeoutTitle": "Manual resending delay",
   "settings_channelResendTimeoutSubtitle": "It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages",
+  "settings_channelMaxbytesOutgoingTitle": "Limit the outgoing payload for channels, bytes",
+  "settings_channelMaxbytesOutgoingSubtitle": "The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.",
   "appSettings_title": "App Settings",
   "appSettings_appearance": "Appearance",
   "appSettings_theme": "Theme",

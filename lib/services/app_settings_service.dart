@@ -389,6 +389,16 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setChannelMaxbytesOutgoing(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        channelMaxbytesOutgoing: AppSettings.normalizeChannelMaxbytesOutgoing(
+          value,
+        ),
+      ),
+    );
+  }
+
   Future<void> setSendingDelayForCancellationSeconds(int value) async {
     await updateSettings(
       _settings.copyWith(

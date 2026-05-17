@@ -20,6 +20,7 @@ import '../helpers/newline_to_space_formatter.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
+import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/translation_support.dart';
@@ -1358,8 +1359,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildMessageComposer() {
     final connector = context.watch<MeshCoreConnector>();
-    final maxBytes = _maxChannelInputBytes(connector);
     final settings = context.watch<AppSettingsService>().settings;
+    final maxBytes = _maxChannelInputBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
     final replyBannerHeight = _replyingToMessage != null ? 64.0 : 0.0;
     final maxInputHeight =
@@ -1585,7 +1586,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     messageText = _applyReplyMention(messageText);
 
-    final maxBytes = _maxChannelInputBytes(connector);
+    final maxBytes = _maxChannelInputBytes(connector, settings);
     final outboundText = connector.prepareChannelOutboundText(
       widget.channel.index,
       messageText,
@@ -1653,12 +1654,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textFieldFocusNode.requestFocus();
   }
 
-  int _maxChannelInputBytes(MeshCoreConnector connector) {
-    final limit = maxChannelMessageBytes(connector.selfName);
+  int _maxChannelInputBytes(MeshCoreConnector connector, AppSettings settings) {
+    var limit = maxChannelMessageBytes(connector.selfName);
+    final outgoingLimit = settings.channelMaxbytesOutgoing;
+    if (outgoingLimit > 0) {
+      // This user limit counts "<sender>: " plus the message bytes.
+      final textLimit = outgoingLimit - _channelSenderPrefixBytes(connector);
+      limit = math.min(limit, math.max(0, textLimit));
+    }
     if (connector.isChannelMcmpEnabled(widget.channel.index)) {
       return math.max(0, limit - 2);
     }
     return limit;
+  }
+
+  int _channelSenderPrefixBytes(MeshCoreConnector connector) {
+    final senderName = connector.selfName;
+    final nameBytes = senderName == null || senderName.isEmpty
+        ? maxNameSize - 1
+        : math.min(utf8.encode(senderName).length, maxNameSize - 1);
+    return nameBytes + 2; // "<name>: "
   }
 
   String _formatTime(BuildContext context, DateTime time) {

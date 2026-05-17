@@ -614,6 +614,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Также влияет на внутренний механизм устранения отрисовки дублей исходящих сообщений';
 
   @override
+  String get settings_channelMaxbytesOutgoingTitle =>
+      'Ограничить payload исходящих канальных сообщений, байт';
+
+  @override
+  String get settings_channelMaxbytesOutgoingSubtitle =>
+      'Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для usb этот лимит ~155 байт.';
+
+  @override
   String get appSettings_title => 'Настройки приложения';
 
   @override

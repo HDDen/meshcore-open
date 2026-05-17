@@ -157,11 +157,13 @@ class AppSettings {
   final String? translationSelectedModelId;
   final List<TranslationModelRecord> translationDownloadedModels;
   final int mcmpTextLimit;
+  final int channelMaxbytesOutgoing;
   final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
+  static const int maxChannelMaxbytesOutgoing = 1000;
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
@@ -223,6 +225,18 @@ class AppSettings {
       parsed = int.tryParse(value);
     }
     return (parsed ?? defaultMcmpTextLimit).clamp(1, maxMcmpTextLimit).toInt();
+  }
+
+  static int normalizeChannelMaxbytesOutgoing(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    return (parsed ?? 0).clamp(0, maxChannelMaxbytesOutgoing).toInt();
   }
 
   static int normalizeSendingDelayForCancellation(dynamic value) {
@@ -307,6 +321,7 @@ class AppSettings {
     this.translationSelectedModelId,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    int? channelMaxbytesOutgoing,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -320,6 +335,9 @@ class AppSettings {
          channelResendTimeoutSeconds,
        ),
        mcmpTextLimit = normalizeMcmpTextLimit(mcmpTextLimit),
+       channelMaxbytesOutgoing = normalizeChannelMaxbytesOutgoing(
+         channelMaxbytesOutgoing,
+       ),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -378,6 +396,7 @@ class AppSettings {
           .map((model) => model.toJson())
           .toList(),
       'mcmp_text_limit': mcmpTextLimit,
+      'channel_maxbytes_outgoing': channelMaxbytesOutgoing,
       'sending_delay_for_cancellation_seconds':
           sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
@@ -488,6 +507,7 @@ class AppSettings {
               .toList() ??
           const [],
       mcmpTextLimit: json['mcmp_text_limit'],
+      channelMaxbytesOutgoing: json['channel_maxbytes_outgoing'],
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
@@ -568,6 +588,7 @@ class AppSettings {
     Object? translationSelectedModelId = _unset,
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
+    int? channelMaxbytesOutgoing,
     int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -642,6 +663,8 @@ class AppSettings {
       translationDownloadedModels:
           translationDownloadedModels ?? this.translationDownloadedModels,
       mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
+      channelMaxbytesOutgoing:
+          channelMaxbytesOutgoing ?? this.channelMaxbytesOutgoing,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,

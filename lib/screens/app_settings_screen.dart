@@ -51,13 +51,6 @@ class AppSettingsScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildMessagingCard(context, settingsService),
                         const SizedBox(height: 16),
-                        _buildChannelResendTimeoutCard(
-                          context,
-                          settingsService,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSendingDelayCard(context, settingsService),
-                        const SizedBox(height: 16),
                         if (!kIsWeb) ...[
                           _buildTranslationCard(
                             context,
@@ -474,6 +467,13 @@ class AppSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Timing controls belong with message sending behavior.
+            const Divider(height: 1),
+            _buildChannelResendTimeoutTile(context, settingsService),
+            const Divider(height: 1),
+            _buildSendingDelayTile(context, settingsService),
+            const Divider(height: 1),
+            _buildChannelMaxbytesOutgoingTile(context, settingsService),
           ],
         ],
       ),
@@ -1423,37 +1423,44 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSendingDelayCard(
+  Widget _buildSendingDelayTile(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.schedule),
-        title: Text(context.l10n.settings_sendingDelayForCancellation),
-        subtitle: Text(
-          '${settingsService.settings.sendingDelayForCancellationSeconds}',
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showSendingDelayDialog(context, settingsService),
+    return ListTile(
+      leading: const Icon(Icons.schedule),
+      title: Text(context.l10n.settings_sendingDelayForCancellation),
+      subtitle: Text(
+        '${settingsService.settings.sendingDelayForCancellationSeconds}',
       ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showSendingDelayDialog(context, settingsService),
     );
   }
 
-  Widget _buildChannelResendTimeoutCard(
+  Widget _buildChannelResendTimeoutTile(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.send_time_extension_outlined),
-        title: Text(context.l10n.settings_channelResendTimeoutTitle),
-        subtitle: Text(
-          '${settingsService.settings.channelResendTimeoutSeconds}',
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showChannelResendTimeoutDialog(context, settingsService),
-      ),
+    return ListTile(
+      leading: const Icon(Icons.send_time_extension_outlined),
+      title: Text(context.l10n.settings_channelResendTimeoutTitle),
+      subtitle: Text('${settingsService.settings.channelResendTimeoutSeconds}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showChannelResendTimeoutDialog(context, settingsService),
+    );
+  }
+
+  Widget _buildChannelMaxbytesOutgoingTile(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return ListTile(
+      leading: const Icon(Icons.data_usage),
+      title: Text(context.l10n.settings_channelMaxbytesOutgoingTitle),
+      subtitle: Text('${settingsService.settings.channelMaxbytesOutgoing}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showChannelMaxbytesOutgoingDialog(context, settingsService),
     );
   }
 
@@ -1579,6 +1586,66 @@ class AppSettingsScreen extends StatelessWidget {
                 controller.text.trim(),
               );
               await settingsService.setChannelResendTimeoutSeconds(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChannelMaxbytesOutgoingDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.channelMaxbytesOutgoing.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_channelMaxbytesOutgoingTitle),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 320),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dialogContext.l10n.settings_channelMaxbytesOutgoingSubtitle,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                  ],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final value = AppSettings.normalizeChannelMaxbytesOutgoing(
+                controller.text.trim(),
+              );
+              await settingsService.setChannelMaxbytesOutgoing(value);
               if (!dialogContext.mounted) return;
               Navigator.pop(dialogContext);
             },

@@ -1216,6 +1216,18 @@ abstract class AppLocalizations {
   /// **'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages'**
   String get settings_channelResendTimeoutSubtitle;
 
+  /// No description provided for @settings_channelMaxbytesOutgoingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit the outgoing payload for channels, bytes'**
+  String get settings_channelMaxbytesOutgoingTitle;
+
+  /// No description provided for @settings_channelMaxbytesOutgoingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.'**
+  String get settings_channelMaxbytesOutgoingSubtitle;
+
   /// No description provided for @appSettings_title.
   ///
   /// In en, this message translates to:

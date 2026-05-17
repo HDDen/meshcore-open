@@ -2579,35 +2579,44 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _bleDebugLogService?.logFrame(data, outgoing: true);
 
-    if (_activeTransport == MeshCoreTransportType.usb) {
-      await _usbManager.write(data);
-      // Brief pause so the device firmware can process each frame before the
-      // next arrives. Without this, rapid-fire frames over USB can cause the
-      // device to miss responses (especially on reconnect).
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-    } else if (_activeTransport == MeshCoreTransportType.tcp) {
-      await _tcpConnector.write(data);
-    } else {
-      if (_rxCharacteristic == null) {
-        throw Exception("MeshCore RX characteristic not available");
-      }
-      // Prefer write without response when supported; fall back to write with response.
-      final properties = _rxCharacteristic!.properties;
-      final canWriteWithoutResponse = properties.writeWithoutResponse;
-      final canWriteWithResponse = properties.write;
-      if (!canWriteWithoutResponse && !canWriteWithResponse) {
-        throw Exception("MeshCore RX characteristic does not support write");
-      }
-      await _rxCharacteristic!.write(
-        data.toList(),
-        withoutResponse: canWriteWithoutResponse,
-      );
-    }
-    _trackPendingGenericAck(
+    // Register the expected OK before writing. Some transports can deliver the
+    // response quickly enough that waiting until after write races with _handleOk().
+    final pendingAck = _trackPendingGenericAck(
       data,
       channelSendQueueId: channelSendQueueId,
       expectsGenericAck: expectsGenericAck,
     );
+    try {
+      if (_activeTransport == MeshCoreTransportType.usb) {
+        await _usbManager.write(data);
+        // Brief pause so the device firmware can process each frame before the
+        // next arrives. Without this, rapid-fire frames over USB can cause the
+        // device to miss responses (especially on reconnect).
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      } else if (_activeTransport == MeshCoreTransportType.tcp) {
+        await _tcpConnector.write(data);
+      } else {
+        if (_rxCharacteristic == null) {
+          throw Exception("MeshCore RX characteristic not available");
+        }
+        // Prefer write without response when supported; fall back to write with response.
+        final properties = _rxCharacteristic!.properties;
+        final canWriteWithoutResponse = properties.writeWithoutResponse;
+        final canWriteWithResponse = properties.write;
+        if (!canWriteWithoutResponse && !canWriteWithResponse) {
+          throw Exception("MeshCore RX characteristic does not support write");
+        }
+        await _rxCharacteristic!.write(
+          data.toList(),
+          withoutResponse: canWriteWithoutResponse,
+        );
+      }
+    } catch (_) {
+      if (pendingAck != null) {
+        _pendingGenericAckQueue.remove(pendingAck);
+      }
+      rethrow;
+    }
   }
 
   Future<void> requestBatteryStatus({bool force = false}) async {
@@ -4754,9 +4763,7 @@ class MeshCoreConnector extends ChangeNotifier {
           } else if (contact?.type == advTypeRoom) {
             _notificationService.showMessageNotification(
               contactName: contact?.name ?? 'Unknown Room',
-              message: message.text.length > 4
-                  ? message.text.substring(4)
-                  : message.text,
+              message: message.text,
               contactId: message.senderKeyHex,
               badgeCount: getTotalUnreadCount(),
             );
@@ -4803,16 +4810,24 @@ class MeshCoreConnector extends ChangeNotifier {
         timestampRaw * 1000,
       );
 
-      if (txtType == 2) {
-        reader.skipBytes(4); // Skip extra 4 bytes for signed/plain variants
+      final flags = txtType;
+      final shiftedType = flags >> 2;
+      final rawType = flags;
+      final isSigned = shiftedType == txtTypeSigned || rawType == txtTypeSigned;
+      final Uint8List? roomAuthorPrefix;
+      if (isSigned) {
+        // Room-server pushed posts use signed/plain contact messages where this
+        // 4-byte "signature" field is actually the original author's pubkey
+        // prefix. Keep it as metadata; the text starts after these bytes.
+        roomAuthorPrefix = reader.readBytes(4);
+      } else {
+        roomAuthorPrefix = null;
       }
 
       final msgText = reader.readCString();
 
-      final flags = txtType;
-      final shiftedType = flags >> 2;
-      final rawType = flags;
-      final isPlain = shiftedType == txtTypePlain || rawType == txtTypePlain;
+      final isPlain =
+          shiftedType == txtTypePlain || rawType == txtTypePlain || isSigned;
       final isCli = shiftedType == txtTypeCliData || rawType == txtTypeCliData;
       if (!isPlain && !isCli) {
         appLogger.warn(
@@ -4850,9 +4865,7 @@ class MeshCoreConnector extends ChangeNotifier {
         wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
         pathLength: pathLength == 0xFF ? 0 : pathLength,
         pathBytes: Uint8List(0),
-        fourByteRoomContactKey: msgText.length >= 4
-            ? Uint8List.fromList(msgText.substring(0, 4).codeUnits)
-            : null,
+        fourByteRoomContactKey: roomAuthorPrefix,
       );
     } catch (e) {
       appLogger.warn('Error parsing contact direct message: $e');
@@ -6047,7 +6060,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (existing.isOutgoing && !incoming.isOutgoing) {
       final selfName = _selfName ?? 'Me';
-      if (incoming.senderName == selfName || existing.senderName == selfName) {
+      // Only our own radio echo should promote an outgoing message to a repeat.
+      // Bot replies may quote our text after @[...] is parsed away.
+      if (incoming.senderName == selfName) {
+        //if (incoming.senderName == selfName || existing.senderName == selfName) {
         return true;
       }
     }
@@ -6185,18 +6201,18 @@ class MeshCoreConnector extends ChangeNotifier {
     _scheduleReconnect();
   }
 
-  void _trackPendingGenericAck(
+  _PendingCommandAck? _trackPendingGenericAck(
     Uint8List data, {
     String? channelSendQueueId,
     required bool expectsGenericAck,
   }) {
-    if (!expectsGenericAck || data.isEmpty) return;
-    _pendingGenericAckQueue.add(
-      _PendingCommandAck(
-        commandCode: data[0],
-        channelSendQueueId: channelSendQueueId,
-      ),
+    if (!expectsGenericAck || data.isEmpty) return null;
+    final pendingAck = _PendingCommandAck(
+      commandCode: data[0],
+      channelSendQueueId: channelSendQueueId,
     );
+    _pendingGenericAckQueue.add(pendingAck);
+    return pendingAck;
   }
 
   String _nextReactionSendQueueId() {
