@@ -6,6 +6,8 @@ import 'l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/chrome_required_screen.dart';
+import 'screens/channel_chat_screen.dart';
+import 'screens/chat_screen.dart';
 import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
@@ -18,6 +20,7 @@ import 'services/notification_service.dart';
 import 'services/ble_debug_log_service.dart';
 import 'services/app_debug_log_service.dart';
 import 'services/background_service.dart';
+import 'services/window_activation_service.dart';
 import 'services/map_tile_cache_service.dart';
 import 'services/chat_text_scale_service.dart';
 import 'services/translation_service.dart';
@@ -132,6 +135,9 @@ https://creativecommons.org/licenses/by/4.0/
 }
 
 class MeshCoreApp extends StatelessWidget {
+  static final GlobalKey<NavigatorState> _navigatorKey =
+      GlobalKey<NavigatorState>();
+
   final MeshCoreConnector connector;
   final MessageRetryService retryService;
   final PathHistoryService pathHistoryService;
@@ -163,6 +169,8 @@ class MeshCoreApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    NotificationService().setTapHandler(_handleNotificationTap);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: connector),
@@ -182,6 +190,7 @@ class MeshCoreApp extends StatelessWidget {
         builder: (context, settingsService, child) {
           return MaterialApp(
             title: 'MeshCore Open',
+            navigatorKey: _navigatorKey,
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -258,6 +267,51 @@ class MeshCoreApp extends StatelessWidget {
       systemNavigationBarDividerColor: colorScheme.surface,
       systemNavigationBarContrastEnforced: false,
     );
+  }
+
+  Future<void> _handleNotificationTap(String payload) async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null || _navigatorKey.currentContext == null) return;
+    await WindowActivationService.restoreAndFocus();
+
+    final separatorIndex = payload.indexOf(':');
+    if (separatorIndex <= 0) return;
+    final type = payload.substring(0, separatorIndex);
+    final id = payload.substring(separatorIndex + 1);
+    if (id.isEmpty || id == 'null') return;
+
+    switch (type) {
+      case 'message':
+        final contacts = connector.allContacts.where(
+          (contact) => contact.publicKeyHex == id,
+        );
+        if (contacts.isEmpty) return;
+        final contact = contacts.first;
+        final unread = connector.getUnreadCountForContact(contact);
+        await navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                ChatScreen(contact: contact, initialUnreadCount: unread),
+          ),
+        );
+        break;
+      case 'channel':
+        final channelIndex = int.tryParse(id);
+        if (channelIndex == null) return;
+        final channels = connector.channels.where(
+          (channel) => channel.index == channelIndex,
+        );
+        if (channels.isEmpty) return;
+        final channel = channels.first;
+        final unread = connector.getUnreadCountForChannelIndex(channel.index);
+        await navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                ChannelChatScreen(channel: channel, initialUnreadCount: unread),
+          ),
+        );
+        break;
+    }
   }
 
   Locale? _localeFromSetting(String? languageCode) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform, File;
 import 'dart:ui';
 
@@ -8,6 +9,8 @@ import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
 
+typedef NotificationTapHandler = FutureOr<void> Function(String payload);
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -16,6 +19,8 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  NotificationTapHandler? _tapHandler;
+  String? _pendingTapPayload;
 
   // Locale for localized notification strings
   Locale _locale = const Locale('en');
@@ -23,6 +28,14 @@ class NotificationService {
   /// Set the locale for notification strings (call when app locale changes)
   void setLocale(Locale locale) {
     _locale = locale;
+  }
+
+  void setTapHandler(NotificationTapHandler handler) {
+    _tapHandler = handler;
+    final pendingPayload = _pendingTapPayload;
+    if (pendingPayload == null) return;
+    _pendingTapPayload = null;
+    unawaited(Future<void>.sync(() => handler(pendingPayload)));
   }
 
   AppLocalizations get _l10n => lookupAppLocalizations(_locale);
@@ -334,8 +347,12 @@ class NotificationService {
     final payload = response.payload;
     if (payload != null) {
       debugPrint('Notification tapped: $payload');
-      // Handle navigation based on payload
-      // This can be extended to navigate to specific screens
+      final handler = _tapHandler;
+      if (handler == null) {
+        _pendingTapPayload = payload;
+        return;
+      }
+      unawaited(Future<void>.sync(() => handler(payload)));
     }
   }
 
