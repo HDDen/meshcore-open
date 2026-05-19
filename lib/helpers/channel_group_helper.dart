@@ -105,7 +105,6 @@ List<int> reorderedChannelIndexesInGroup(
   int oldIndex,
   int newIndex,
 ) {
-  if (newIndex > oldIndex) newIndex -= 1;
   final reorderedIndexes = List<int>.from(group.channelIndexes);
   if (oldIndex < 0 || oldIndex >= reorderedIndexes.length) {
     return reorderedIndexes;

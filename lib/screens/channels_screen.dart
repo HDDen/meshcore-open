@@ -654,8 +654,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         buildDefaultDragHandles: false,
         itemCount: entries.length,
-        onReorder: (oldIndex, newIndex) {
-          if (newIndex > oldIndex) newIndex -= 1;
+        onReorderItem: (oldIndex, newIndex) {
           final reordered = List<ChannelGroupListEntry>.from(entries);
           final item = reordered.removeAt(oldIndex);
           reordered.insert(newIndex, item);
@@ -876,7 +875,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
       itemCount: channels.length,
-      onReorder: (oldIndex, newIndex) {
+      onReorderItem: (oldIndex, newIndex) {
         _reorderChannelsInGroup(connector, group, oldIndex, newIndex);
       },
       itemBuilder: (context, index) {
