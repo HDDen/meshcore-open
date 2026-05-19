@@ -224,6 +224,12 @@ const int reqTypeGetTelemetry = 0x03;
 const int reqTypeGetAccessList = 0x05;
 const int reqTypeGetNeighbors = 0x06;
 
+Uint8List buildTelemetryBinaryPayload() {
+  // Room servers/repeaters read byte 1 as an inverse telemetry permission mask.
+  // Zero means "request every telemetry field allowed for this contact".
+  return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
+}
+
 // Repeater response codes
 const int respServerLoginOk = 0;
 

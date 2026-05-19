@@ -210,7 +210,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       if (widget.contact.type != advTypeChat) {
         frame = buildSendBinaryReq(
           widget.contact.publicKey,
-          payload: Uint8List.fromList([reqTypeGetTelemetry]),
+          payload: buildTelemetryBinaryPayload(),
         );
       } else {
         frame = buildSendTelemetryReq(widget.contact.publicKey);
