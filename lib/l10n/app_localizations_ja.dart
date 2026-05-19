@@ -1154,6 +1154,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_changeWidgetColor => 'ウィジェットの色';
 
   @override
+  String get channels_changeWidgetTextColor => 'ウィジェットの文字色';
+
+  @override
   String get channels_changeGroupEmpty => 'ここはまだ空です';
 
   @override

@@ -601,6 +601,7 @@
     }
   },
   "channels_changeWidgetColor": "Widget's color",
+  "channels_changeWidgetTextColor": "Widget's text color",
   "channels_changeGroupEmpty": "It's empty here for now",
   "settings_cyr2latProfileAdd": "Add Cyr2Lat Profile",
   "settings_cyr2latProfileName": "Profile Name",

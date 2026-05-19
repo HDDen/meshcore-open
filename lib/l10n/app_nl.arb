@@ -1470,6 +1470,7 @@
   "channels_enterHashtag": "Voer hashtag in",
   "channels_hashtagHint": "bijv. #team",
   "channels_changeWidgetColor": "Widgetkleur",
+  "channels_changeWidgetTextColor": "Tekstkleur van widget",
   "channels_changeGroupEmpty": "Hier is het voorlopig leeg",
   "@neighbors_unknownContact": {
     "placeholders": {

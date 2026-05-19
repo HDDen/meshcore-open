@@ -1473,6 +1473,7 @@
   "channels_enterHashtag": "Gib Hashtag ein",
   "channels_hashtagHint": "z.B. #team",
   "channels_changeWidgetColor": "Widget-Farbe",
+  "channels_changeWidgetTextColor": "Textfarbe des Widgets",
   "channels_changeGroupEmpty": "Hier ist es vorerst leer",
   "@neighbors_unknownContact": {
     "placeholders": {

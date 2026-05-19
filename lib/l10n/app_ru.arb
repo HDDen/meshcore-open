@@ -252,6 +252,7 @@
   "channels_editChannelTitle": "Изменить канал {index}",
   "channels_smazCompression": "Сжатие SMAZ",
   "channels_changeWidgetColor": "Цвет виджета",
+  "channels_changeWidgetTextColor": "Цвет текста виджета",
   "channels_changeGroupEmpty": "Здесь пока пусто",
   "channels_cyr2latCompression": "Сжатие Cyr2Lat",
   "channels_cyr2latCompressionDscr": "Заменяет некоторые кириллические символы на латиницу при отправке.",

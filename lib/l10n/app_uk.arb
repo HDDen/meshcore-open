@@ -1481,6 +1481,7 @@
   "channels_enterHashtag": "Введіть хештег",
   "channels_hashtagHint": "напр. #команда",
   "channels_changeWidgetColor": "Колір віджета",
+  "channels_changeWidgetTextColor": "Колір тексту віджета",
   "channels_changeGroupEmpty": "Тут поки порожньо",
   "@neighbors_unknownContact": {
     "placeholders": {

@@ -1470,6 +1470,7 @@
   "channels_enterHashtag": "Ange hashtag",
   "channels_hashtagHint": "t.ex. #team",
   "channels_changeWidgetColor": "Widgetens färg",
+  "channels_changeWidgetTextColor": "Widgetens textfärg",
   "channels_changeGroupEmpty": "Det är tomt här än så länge",
   "@neighbors_unknownContact": {
     "placeholders": {

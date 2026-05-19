@@ -445,6 +445,7 @@
   "channels_enterHashtag": "输入标签",
   "channels_hashtagHint": "例如：#团队",
   "channels_changeWidgetColor": "小组件颜色",
+  "channels_changeWidgetTextColor": "小组件文字颜色",
   "channels_changeGroupEmpty": "这里暂时为空",
   "chat_noMessages": "暂无消息",
   "chat_sendMessageToStart": "发送消息开始对话",

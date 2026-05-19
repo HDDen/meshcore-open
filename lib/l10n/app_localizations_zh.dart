@@ -1135,6 +1135,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_changeWidgetColor => '小组件颜色';
 
   @override
+  String get channels_changeWidgetTextColor => '小组件文字颜色';
+
+  @override
   String get channels_changeGroupEmpty => '这里暂时为空';
 
   @override

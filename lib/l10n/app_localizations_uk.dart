@@ -1206,6 +1206,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_changeWidgetColor => 'Колір віджета';
 
   @override
+  String get channels_changeWidgetTextColor => 'Колір тексту віджета';
+
+  @override
   String get channels_changeGroupEmpty => 'Тут поки порожньо';
 
   @override

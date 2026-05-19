@@ -1216,6 +1216,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channels_changeWidgetColor => 'Couleur du widget';
 
   @override
+  String get channels_changeWidgetTextColor => 'Couleur du texte du widget';
+
+  @override
   String get channels_changeGroupEmpty => 'C\'est vide pour le moment';
 
   @override

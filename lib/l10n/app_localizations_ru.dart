@@ -1211,6 +1211,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_changeWidgetColor => 'Цвет виджета';
 
   @override
+  String get channels_changeWidgetTextColor => 'Цвет текста виджета';
+
+  @override
   String get channels_changeGroupEmpty => 'Здесь пока пусто';
 
   @override

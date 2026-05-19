@@ -1480,6 +1480,7 @@
   "channels_enterHashtag": "Wprowadź hashtag",
   "channels_hashtagHint": "np. #zespół",
   "channels_changeWidgetColor": "Kolor widżetu",
+  "channels_changeWidgetTextColor": "Kolor tekstu widżetu",
   "channels_changeGroupEmpty": "Na razie jest tu pusto",
   "@neighbors_unknownContact": {
     "placeholders": {

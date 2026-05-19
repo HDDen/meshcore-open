@@ -1200,6 +1200,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_changeWidgetColor => 'Farba widgetu';
 
   @override
+  String get channels_changeWidgetTextColor => 'Farba textu widgetu';
+
+  @override
   String get channels_changeGroupEmpty => 'Zatiaľ je tu prázdno';
 
   @override

@@ -1200,6 +1200,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_changeWidgetColor => 'Widgetkleur';
 
   @override
+  String get channels_changeWidgetTextColor => 'Tekstkleur van widget';
+
+  @override
   String get channels_changeGroupEmpty => 'Hier is het voorlopig leeg';
 
   @override

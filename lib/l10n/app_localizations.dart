@@ -2236,6 +2236,12 @@ abstract class AppLocalizations {
   /// **'Widget\'s color'**
   String get channels_changeWidgetColor;
 
+  /// No description provided for @channels_changeWidgetTextColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget\'s text color'**
+  String get channels_changeWidgetTextColor;
+
   /// No description provided for @channels_changeGroupEmpty.
   ///
   /// In en, this message translates to:

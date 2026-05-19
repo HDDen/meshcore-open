@@ -590,6 +590,7 @@
   "channels_enterHashtag": "해시태그 입력",
   "channels_hashtagHint": "예: #팀",
   "channels_changeWidgetColor": "위젯 색상",
+  "channels_changeWidgetTextColor": "위젯 텍스트 색상",
   "channels_changeGroupEmpty": "아직 여기는 비어 있습니다",
   "chat_noMessages": "아직 메시지가 없습니다.",
   "chat_sendMessageToStart": "시작하려면 메시지를 보내세요.",

@@ -1215,6 +1215,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_changeWidgetColor => 'Widget színe';
 
   @override
+  String get channels_changeWidgetTextColor => 'A widget szövegének színe';
+
+  @override
   String get channels_changeGroupEmpty => 'Itt egyelőre üres';
 
   @override

@@ -1197,6 +1197,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_changeWidgetColor => 'Barva gradnika';
 
   @override
+  String get channels_changeWidgetTextColor => 'Barva besedila gradnika';
+
+  @override
   String get channels_changeGroupEmpty => 'Tukaj je za zdaj prazno';
 
   @override

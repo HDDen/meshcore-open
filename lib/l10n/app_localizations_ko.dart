@@ -1149,6 +1149,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_changeWidgetColor => '위젯 색상';
 
   @override
+  String get channels_changeWidgetTextColor => '위젯 텍스트 색상';
+
+  @override
   String get channels_changeGroupEmpty => '아직 여기는 비어 있습니다';
 
   @override

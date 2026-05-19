@@ -22,6 +22,7 @@ import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
+import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
@@ -313,6 +314,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     int? dragIndex,
   }) {
     final unreadCount = connector.getUnreadCountForChannel(channel);
+    final widgetColorValue = connector.getChannelWidgetColor(channel.index);
+    final widgetColor = widgetColorValue == null
+        ? null
+        : Color(widgetColorValue);
+    final widgetTextColorValue = connector.getChannelWidgetTextColor(
+      channel.index,
+    );
+    final widgetTextColor = widgetTextColorValue == null
+        ? null
+        : Color(widgetTextColorValue);
 
     // Determine icon and colors based on channel type
     IconData icon;
@@ -349,6 +360,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return Card(
       key: ValueKey('channel_${channel.index}'),
       margin: const EdgeInsets.only(bottom: 12),
+      color: widgetColor,
       child: GestureDetector(
         onSecondaryTapUp: PlatformInfo.isDesktop
             ? (_) => _showChannelActions(
@@ -400,7 +412,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             channel.name.isEmpty
                 ? context.l10n.channels_channelIndex(channel.index)
                 : channel.name,
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: widgetTextColor,
+            ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -414,7 +429,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   index: dragIndex,
                   child: Icon(
                     Icons.drag_handle,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color:
+                        widgetTextColor ??
+                        Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
             ],
@@ -2058,6 +2075,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
+    int? selectedWidgetColor = connector.getChannelWidgetColor(channel.index);
+    int? selectedWidgetTextColor = connector.getChannelWidgetTextColor(
+      channel.index,
+    );
 
     showDialog(
       context: context,
@@ -2149,6 +2170,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                   ),
                 ],
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(dialogContext.l10n.channels_changeWidgetColor),
+                  trailing: ChannelWidgetColorValue(
+                    colorValue: selectedWidgetColor,
+                  ),
+                  onTap: () async {
+                    final selection = await showChannelWidgetColorPicker(
+                      dialogContext,
+                      selectedBackgroundColorValue: selectedWidgetColor,
+                      selectedTextColorValue: selectedWidgetTextColor,
+                    );
+                    if (selection == null) return;
+                    setState(() {
+                      selectedWidgetColor = selection.backgroundColorValue;
+                      selectedWidgetTextColor = selection.textColorValue;
+                    });
+                  },
+                ),
               ],
             ),
           ),
@@ -2187,6 +2228,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelCyr2LatProfileId(
                     channel.index,
                     selectedCyr2LatProfileId,
+                  );
+                  await connector.setChannelWidgetColor(
+                    channel.index,
+                    selectedWidgetColor,
+                  );
+                  await connector.setChannelWidgetTextColor(
+                    channel.index,
+                    selectedWidgetTextColor,
                   );
                   if (!context.mounted) return;
                   showDismissibleSnackBar(

@@ -1470,6 +1470,7 @@
   "channels_enterHashtag": "Inserisci hashtag",
   "channels_hashtagHint": "es. #team",
   "channels_changeWidgetColor": "Colore del widget",
+  "channels_changeWidgetTextColor": "Colore del testo del widget",
   "channels_changeGroupEmpty": "Qui per ora è vuoto",
   "@neighbors_unknownContact": {
     "placeholders": {

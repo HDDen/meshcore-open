@@ -1190,6 +1190,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_changeWidgetColor => 'Widgetens färg';
 
   @override
+  String get channels_changeWidgetTextColor => 'Widgetens textfärg';
+
+  @override
   String get channels_changeGroupEmpty => 'Det är tomt här än så länge';
 
   @override
