@@ -27,6 +27,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/unread_badge.dart';
+import '../helpers/channel_group_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'community_qr_scanner_screen.dart';
@@ -76,7 +77,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
     if (mounted) {
       setState(() {
-        _channelGroups = _orderedChannelGroups(groups);
+        _channelGroups = orderedChannelGroups(groups);
         _expandedChannelGroups
           ..clear()
           // Restore only groups that still exist after local edits/deletions.
@@ -610,7 +611,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       if (viewState.channelsSearchText.isEmpty) return true;
       final query = viewState.channelsSearchText.toLowerCase();
       return group.name.toLowerCase().contains(query) ||
-          _channelsForGroup(group, filteredChannels).isNotEmpty;
+          channelsForGroup(group, filteredChannels).isNotEmpty;
     }).toList();
     final ungroupedChannels = filteredChannels
         .where((channel) => !groupIndexSet.contains(channel.index))
@@ -645,30 +646,23 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         viewState.channelsSortOption == ChannelSortOption.manual &&
         viewState.channelsSearchText.isEmpty;
     if (canReorder) {
-      final entries = _buildManualChannelEntries(filteredChannels);
+      final entries = buildManualChannelEntries(
+        filteredChannels,
+        _channelGroups,
+      );
       return ReorderableListView.builder(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         buildDefaultDragHandles: false,
         itemCount: entries.length,
         onReorder: (oldIndex, newIndex) {
           if (newIndex > oldIndex) newIndex -= 1;
-          final reordered = List<_ChannelListEntry>.from(entries);
+          final reordered = List<ChannelGroupListEntry>.from(entries);
           final item = reordered.removeAt(oldIndex);
           reordered.insert(newIndex, item);
-          final reorderedGroups = [
-            for (var index = 0; index < reordered.length; index++)
-              if (reordered[index].group != null)
-                // Empty groups have no channel anchor, so keep their manual
-                // top-level position explicitly.
-                reordered[index].group!.copyWith(sortOrder: index),
-          ];
-          final orderedChannelIndexes = <int>[
-            for (final entry in reordered)
-              if (entry.group != null)
-                ...entry.group!.channelIndexes
-              else if (entry.channel != null)
-                entry.channel!.index,
-          ];
+          final reorderedGroups = channelGroupsFromManualEntries(reordered);
+          final orderedChannelIndexes = manualChannelOrderFromEntries(
+            reordered,
+          );
           setState(() {
             _channelGroups = reorderedGroups;
           });
@@ -729,70 +723,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
-  List<_ChannelListEntry> _buildManualChannelEntries(
-    List<Channel> orderedChannels,
-  ) {
-    final groupByChannel = _channelGroupByChannel(_channelGroups);
-    final emittedGroups = <String>{};
-    final entries = <_ChannelListEntry>[];
-    for (final channel in orderedChannels) {
-      final group = groupByChannel[channel.index];
-      if (group == null) {
-        entries.add(_ChannelListEntry.channel(channel));
-      } else if (emittedGroups.add(group.name)) {
-        entries.add(_ChannelListEntry.group(group));
-      }
-    }
-
-    for (final group in _channelGroups) {
-      if (emittedGroups.add(group.name)) {
-        final insertIndex = max(0, min(group.sortOrder, entries.length));
-        entries.insert(insertIndex, _ChannelListEntry.group(group));
-      }
-    }
-    return entries;
-  }
-
-  List<ChannelGroup> _orderedChannelGroups(List<ChannelGroup> groups) {
-    final indexedGroups = [
-      for (var index = 0; index < groups.length; index++)
-        MapEntry(
-          index,
-          groups[index].sortOrder < 0
-              ? groups[index].copyWith(sortOrder: index)
-              : groups[index],
-        ),
-    ];
-    indexedGroups.sort((a, b) {
-      final sortCompare = a.value.sortOrder.compareTo(b.value.sortOrder);
-      if (sortCompare != 0) return sortCompare;
-      return a.key.compareTo(b.key);
-    });
-    return [for (final entry in indexedGroups) entry.value];
-  }
-
   Set<int> _groupedChannelIndexes() {
-    return _channelGroupByChannel(_channelGroups).keys.toSet();
-  }
-
-  Map<int, ChannelGroup> _channelGroupByChannel(List<ChannelGroup> groups) {
-    return {
-      for (final group in groups)
-        for (final index in group.channelIndexes) index: group,
-    };
-  }
-
-  List<Channel> _channelsForGroup(
-    ChannelGroup group,
-    List<Channel> filteredChannels,
-  ) {
-    final byIndex = {
-      for (final channel in filteredChannels) channel.index: channel,
-    };
-    return [
-      for (final index in group.channelIndexes)
-        if (byIndex[index] != null) byIndex[index]!,
-    ];
+    return channelGroupByChannel(_channelGroups).keys.toSet();
   }
 
   Widget _buildChannelGroupTile(
@@ -807,7 +739,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }) {
     final isExpanded =
         forceExpanded || _expandedChannelGroups.contains(group.name);
-    final channels = _channelsForGroup(group, filteredChannels);
+    final channels = channelsForGroup(group, filteredChannels);
     final unreadCount = group.channelIndexes.fold<int>(
       0,
       (sum, index) => sum + connector.getUnreadCountForChannelIndex(index),
@@ -944,13 +876,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     int oldIndex,
     int newIndex,
   ) {
-    if (newIndex > oldIndex) newIndex -= 1;
-    final reorderedIndexes = List<int>.from(group.channelIndexes);
-    if (oldIndex < 0 || oldIndex >= reorderedIndexes.length) return;
-    final channelIndex = reorderedIndexes.removeAt(oldIndex);
-    final insertIndex = max(0, min(newIndex, reorderedIndexes.length));
-    reorderedIndexes.insert(insertIndex, channelIndex);
-
+    final reorderedIndexes = reorderedChannelIndexesInGroup(
+      group,
+      oldIndex,
+      newIndex,
+    );
     final updatedGroups = [
       for (final item in _channelGroups)
         if (item.name == group.name)
@@ -965,29 +895,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     unawaited(_saveChannelGroups());
 
     // Keep the device-level manual channel order aligned with local group order.
-    final orderedChannelIndexes = _manualChannelOrderForGroups(
+    final orderedChannelIndexes = manualChannelOrderForGroups(
       connector.channels,
       updatedGroups,
     );
     unawaited(connector.setChannelOrder(orderedChannelIndexes));
-  }
-
-  List<int> _manualChannelOrderForGroups(
-    List<Channel> orderedChannels,
-    List<ChannelGroup> groups,
-  ) {
-    final groupByChannel = _channelGroupByChannel(groups);
-    final emittedGroups = <String>{};
-    final orderedIndexes = <int>[];
-    for (final channel in orderedChannels) {
-      final group = groupByChannel[channel.index];
-      if (group == null) {
-        orderedIndexes.add(channel.index);
-      } else if (emittedGroups.add(group.name)) {
-        orderedIndexes.addAll(group.channelIndexes);
-      }
-    }
-    return orderedIndexes;
   }
 
   void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
@@ -1134,7 +1046,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       if (item.name != group.name) return item;
                       return item.copyWith(
                         name: name,
-                        channelIndexes: _selectedChannelIndexesForGroupEdit(
+                        channelIndexes: selectedChannelIndexesForGroupEdit(
                           group,
                           editableChannels,
                           selectedIndexes,
@@ -1158,26 +1070,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         },
       ),
     );
-  }
-
-  List<int> _selectedChannelIndexesForGroupEdit(
-    ChannelGroup group,
-    List<Channel> editableChannels,
-    Set<int> selectedIndexes,
-  ) {
-    final orderedIndexes = <int>[
-      // Preserve the current in-group order when editing membership/name.
-      for (final index in group.channelIndexes)
-        if (selectedIndexes.contains(index)) index,
-    ];
-    final existingIndexes = orderedIndexes.toSet();
-    for (final channel in editableChannels) {
-      if (selectedIndexes.contains(channel.index) &&
-          !existingIndexes.contains(channel.index)) {
-        orderedIndexes.add(channel.index);
-      }
-    }
-    return orderedIndexes;
   }
 
   String _channelDisplayName(BuildContext context, Channel channel) {
@@ -1413,7 +1305,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   return;
                                 }
                                 setState(() {
-                                  _channelGroups = _orderedChannelGroups([
+                                  _channelGroups = orderedChannelGroups([
                                     ChannelGroup(
                                       name: name,
                                       channelIndexes: const <int>[],
@@ -2558,15 +2450,4 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       ),
     );
   }
-}
-
-class _ChannelListEntry {
-  const _ChannelListEntry._({this.group, this.channel});
-
-  const _ChannelListEntry.group(ChannelGroup group) : this._(group: group);
-
-  const _ChannelListEntry.channel(Channel channel) : this._(channel: channel);
-
-  final ChannelGroup? group;
-  final Channel? channel;
 }
