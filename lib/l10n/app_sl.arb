@@ -33,6 +33,8 @@
   "common_remove": "Izbrisati",
   "common_enable": "Omogoči",
   "common_disable": "Izklopiti",
+  "common_autoRefresh": "Samodejno osveževanje",
+  "common_interval": "Časovni interval",
   "common_reboot": "Ponoviti",
   "common_loading": "Naložanje...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Število zahtev",
+  "telemetry_error": "Podatkov ni bilo mogoče pridobiti",
   "telemetry_noData": "Niso na voljo podatki o telemetriji.",
   "telemetry_channelTitle": "Kanal {channel}",
   "@telemetry_channelTitle": {

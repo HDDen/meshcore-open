@@ -33,6 +33,8 @@
   "common_remove": "Ta bort",
   "common_enable": "Aktivera",
   "common_disable": "Inaktivera",
+  "common_autoRefresh": "Automatisk uppdatering",
+  "common_interval": "Intervall",
   "common_reboot": "Start om",
   "common_loading": "Laddar...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Antal förfrågningar",
+  "telemetry_error": "Det gick inte att hämta data",
   "telemetry_noData": "Inga telemetridata tillgängliga.",
   "telemetry_channelTitle": "Kanal {channel}",
   "@telemetry_channelTitle": {

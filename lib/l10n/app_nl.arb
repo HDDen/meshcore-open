@@ -33,6 +33,8 @@
   "common_remove": "Verwijderen",
   "common_enable": "Activeren",
   "common_disable": "Uitschakelen",
+  "common_autoRefresh": "Automatisch vernieuwen",
+  "common_interval": "Tijdsinterval",
   "common_reboot": "Herstarten",
   "common_loading": "Laden...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Aantal aanvragen",
+  "telemetry_error": "Kan gegevens niet ophalen",
   "telemetry_noData": "Geen telemetriedata beschikbaar.",
   "telemetry_channelTitle": "Kanaal {channel}",
   "@telemetry_channelTitle": {

@@ -33,6 +33,8 @@
   "common_remove": "Eliminar",
   "common_enable": "Activar",
   "common_disable": "Desactivar",
+  "common_autoRefresh": "Actualización automática",
+  "common_interval": "Intervalo",
   "common_reboot": "Reiniciar",
   "common_loading": "Cargando...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Número de solicitudes",
+  "telemetry_error": "No se pudieron obtener los datos",
   "telemetry_noData": "No hay datos de telemetría disponibles.",
   "telemetry_channelTitle": "Canal {channel}",
   "@telemetry_channelTitle": {

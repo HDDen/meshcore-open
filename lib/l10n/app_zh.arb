@@ -34,6 +34,8 @@
   "common_remove": "移除",
   "common_enable": "启用",
   "common_disable": "禁用",
+  "common_autoRefresh": "自动刷新",
+  "common_interval": "间隔",
   "common_reboot": "重启",
   "common_loading": "正在加载...",
   "common_notAvailable": "—",
@@ -1314,6 +1316,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "请求次数",
+  "telemetry_error": "无法获取数据",
   "telemetry_noData": "暂无遥测数据",
   "telemetry_channelTitle": "频道 {channel}",
   "@telemetry_channelTitle": {

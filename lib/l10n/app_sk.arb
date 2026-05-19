@@ -33,6 +33,8 @@
   "common_remove": "Odstrániť",
   "common_enable": "Povolit",
   "common_disable": "Zakázať",
+  "common_autoRefresh": "Automatické obnovenie",
+  "common_interval": "Časový interval",
   "common_reboot": "Restartovať",
   "common_loading": "Načítavanie...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Počet požiadaviek",
+  "telemetry_error": "Nepodarilo sa získať údaje",
   "telemetry_noData": "Nejsú dostupné žiadne údaje z telemetrie.",
   "telemetry_channelTitle": "Kanál {channel}",
   "@telemetry_channelTitle": {

@@ -27,6 +27,8 @@
   "common_remove": "Eltávolít",
   "common_enable": "Engedélyezés",
   "common_disable": "Leteteszt",
+  "common_autoRefresh": "Automatikus frissítés",
+  "common_interval": "Intervallum",
   "common_reboot": "Újraindítás",
   "common_loading": "Betöltés...",
   "common_notAvailable": "—",
@@ -1470,6 +1472,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Kérések száma",
+  "telemetry_error": "Nem sikerült lekérni az adatokat",
   "telemetry_noData": "Nincsenek elérhető telemetriadatok.",
   "telemetry_channelTitle": "{channel} csatorna",
   "@telemetry_channelTitle": {

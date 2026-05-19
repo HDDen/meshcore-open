@@ -112,6 +112,12 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get common_autoRefresh => 'Automatikus frissítés';
+
+  @override
+  String get common_interval => 'Intervallum';
+
+  @override
   String get scanner_title => 'MeshCore nyitott';
 
   @override
@@ -3356,6 +3362,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String telemetry_temperatureValue(String celsius, String fahrenheit) {
     return '$celsius °C / $fahrenheit °F';
   }
+
+  @override
+  String get telemetry_autoFetchQuantity => 'Kérések száma';
+
+  @override
+  String get telemetry_error => 'Nem sikerült lekérni az adatokat';
 
   @override
   String get neighbors_receivedData => 'Kapott szomszédok adatait';

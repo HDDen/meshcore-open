@@ -112,6 +112,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get common_autoRefresh => '自動更新';
+
+  @override
+  String get common_interval => '間隔';
+
+  @override
   String get scanner_title => 'MeshCore オープン';
 
   @override
@@ -3163,6 +3169,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String telemetry_temperatureValue(String celsius, String fahrenheit) {
     return '$celsius℃ / $fahrenheit°F';
   }
+
+  @override
+  String get telemetry_autoFetchQuantity => 'リクエスト数';
+
+  @override
+  String get telemetry_error => 'データを取得できません';
 
   @override
   String get neighbors_receivedData => '近隣住民のデータを受信';

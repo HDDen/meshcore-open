@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/path_selection.dart';
 import '../models/app_settings.dart';
+import '../storage/prefs_manager.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/app_settings_service.dart';
@@ -15,6 +17,7 @@ import '../widgets/path_management_dialog.dart';
 import '../helpers/cayenne_lpp.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../widgets/telemetry_location_map.dart';
 
 class TelemetryScreen extends StatefulWidget {
   final Contact contact;
@@ -26,6 +29,13 @@ class TelemetryScreen extends StatefulWidget {
 }
 
 class _TelemetryScreenState extends State<TelemetryScreen> {
+  static const int _autoRefreshDefaultIntervalSeconds = 20;
+  static const int _autoRefreshDefaultQuantity = 10;
+  static const int _autoRefreshMinIntervalSeconds = 10;
+  static const int _autoRefreshMaxIntervalSeconds = 300;
+  static const int _autoRefreshMinQuantity = 1;
+  static const int _autoRefreshMaxQuantity = 10;
+
   int _tagData = 0;
 
   bool _isLoading = false;
@@ -36,6 +46,17 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   RepeaterCommandService? _commandService;
   PathSelection? _pendingStatusSelection;
   List<Map<String, dynamic>>? _parsedTelemetry;
+  final TextEditingController _autoRefreshIntervalController =
+      TextEditingController(text: '$_autoRefreshDefaultIntervalSeconds');
+  final TextEditingController _autoRefreshQuantityController =
+      TextEditingController(text: '$_autoRefreshDefaultQuantity');
+  Timer? _autoRefreshTimer;
+  bool _isAutoRefreshEnabled = false;
+  bool _activeTelemetryRequestIsAutoRefresh = false;
+  bool _autoRefreshLastAttemptFailed = false;
+  int _autoRefreshCurrentAttempt = 0;
+  int _autoRefreshTotalAttempts = 0;
+  int _autoRefreshIntervalSeconds = _autoRefreshDefaultIntervalSeconds;
 
   int _tripTime = 0;
 
@@ -62,6 +83,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     super.initState();
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     _commandService = RepeaterCommandService(connector);
+    _loadAutoRefreshSettings();
     _setupMessageListener();
     _loadTelemetry();
     _hasData = false;
@@ -81,17 +103,26 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           _tagData = reader.readUInt32LE();
           _tripTime = reader.readUInt32LE();
           _statusTimeout?.cancel();
+          final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
           _statusTimeout = Timer(Duration(milliseconds: _tripTime), () {
             if (!mounted) return;
             setState(() {
               _isLoading = false;
               _isLoaded = false;
+              if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
+                _autoRefreshLastAttemptFailed = true;
+              }
             });
-            showDismissibleSnackBar(
-              context,
-              content: Text(context.l10n.telemetry_requestTimeout),
-              backgroundColor: Colors.red,
-            );
+            if (!isAutoRefreshRequest) {
+              showDismissibleSnackBar(
+                context,
+                content: Text(context.l10n.telemetry_requestTimeout),
+                backgroundColor: Colors.red,
+              );
+            }
+            if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
+              _scheduleNextAutoRefreshAttempt();
+            }
             _recordTelemetryResult(false);
           });
         }
@@ -133,15 +164,22 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       );
     }
     if (!mounted) return;
+    final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
     setState(() {
       _parsedTelemetry = parsedTelemetry;
+      if (isAutoRefreshRequest) {
+        _autoRefreshLastAttemptFailed = false;
+      }
+      _activeTelemetryRequestIsAutoRefresh = false;
     });
 
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.telemetry_receivedData),
-      backgroundColor: Colors.green,
-    );
+    if (!isAutoRefreshRequest) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.telemetry_receivedData),
+        backgroundColor: Colors.green,
+      );
+    }
     _statusTimeout?.cancel();
     if (!mounted) return;
     setState(() {
@@ -149,14 +187,18 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       _isLoaded = true;
       _hasData = true;
     });
+    if (isAutoRefreshRequest) {
+      _scheduleNextAutoRefreshAttempt();
+    }
   }
 
-  Future<void> _loadTelemetry() async {
+  Future<void> _loadTelemetry({bool isAutoRefresh = false}) async {
     if (_commandService == null) return;
 
     setState(() {
       _isLoading = true;
       _isLoaded = false;
+      _activeTelemetryRequestIsAutoRefresh = isAutoRefresh;
     });
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
@@ -179,15 +221,74 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         setState(() {
           _isLoading = false;
           _isLoaded = false;
+          if (isAutoRefresh) {
+            _autoRefreshLastAttemptFailed = true;
+          }
+          _activeTelemetryRequestIsAutoRefresh = false;
         });
+        if (isAutoRefresh) {
+          _scheduleNextAutoRefreshAttempt();
+        }
 
-        showDismissibleSnackBar(
-          context,
-          content: Text(context.l10n.telemetry_errorLoading(e.toString())),
-          backgroundColor: Colors.red,
-        );
+        if (!isAutoRefresh) {
+          showDismissibleSnackBar(
+            context,
+            content: Text(context.l10n.telemetry_errorLoading(e.toString())),
+            backgroundColor: Colors.red,
+          );
+        }
       }
     }
+  }
+
+  void _loadAutoRefreshSettings() {
+    final prefs = PrefsManager.instance;
+    final contactKey = widget.contact.publicKeyHex;
+    final interval =
+        (prefs.getInt(_autoRefreshIntervalKey(contactKey)) ??
+                _autoRefreshDefaultIntervalSeconds)
+            .clamp(
+              _autoRefreshMinIntervalSeconds,
+              _autoRefreshMaxIntervalSeconds,
+            )
+            .toInt();
+    final quantity =
+        (prefs.getInt(_autoRefreshQuantityKey(contactKey)) ??
+                _autoRefreshDefaultQuantity)
+            .clamp(_autoRefreshMinQuantity, _autoRefreshMaxQuantity)
+            .toInt();
+
+    _autoRefreshIntervalSeconds = interval;
+    _autoRefreshIntervalController.text = interval.toString();
+    _autoRefreshQuantityController.text = quantity.toString();
+  }
+
+  Future<void> _saveAutoRefreshSettings() async {
+    final contactKey = widget.contact.publicKeyHex;
+    final interval = _clampControllerValue(
+      controller: _autoRefreshIntervalController,
+      min: _autoRefreshMinIntervalSeconds,
+      max: _autoRefreshMaxIntervalSeconds,
+      fallback: _autoRefreshIntervalSeconds,
+    );
+    final quantity = _clampControllerValue(
+      controller: _autoRefreshQuantityController,
+      min: _autoRefreshMinQuantity,
+      max: _autoRefreshMaxQuantity,
+      fallback: _autoRefreshDefaultQuantity,
+    );
+
+    final prefs = PrefsManager.instance;
+    await prefs.setInt(_autoRefreshIntervalKey(contactKey), interval);
+    await prefs.setInt(_autoRefreshQuantityKey(contactKey), quantity);
+  }
+
+  String _autoRefreshIntervalKey(String contactKey) {
+    return 'telemetry_auto_refresh_interval_$contactKey';
+  }
+
+  String _autoRefreshQuantityKey(String contactKey) {
+    return 'telemetry_auto_refresh_quantity_$contactKey';
   }
 
   void _recordTelemetryResult(bool success) {
@@ -205,9 +306,13 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
 
   @override
   void dispose() {
+    unawaited(_saveAutoRefreshSettings());
     _frameSubscription?.cancel();
     _commandService?.dispose();
     _statusTimeout?.cancel();
+    _autoRefreshTimer?.cancel();
+    _autoRefreshIntervalController.dispose();
+    _autoRefreshQuantityController.dispose();
     super.dispose();
   }
 
@@ -313,7 +418,9 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadTelemetry,
+            onPressed: (_isLoading || _isAutoRefreshEnabled)
+                ? null
+                : () => _loadTelemetry(),
             tooltip: l10n.repeater_refresh,
           ),
         ],
@@ -321,7 +428,8 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
-          onRefresh: _loadTelemetry,
+          onRefresh: () =>
+              _isAutoRefreshEnabled ? Future.value() : _loadTelemetry(),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -344,6 +452,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                     entry['channel'],
                     isImperialUnits,
                   ),
+              _buildAutoRefreshCard(),
             ],
           ),
         ),
@@ -407,12 +516,282 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                   l10n.telemetry_currentLabel,
                   l10n.telemetry_currentValue(entry.value.toString()),
                 )
+              else if (entry.key == 'gps')
+                _buildGpsInfo(entry.value)
               else
                 _buildInfoRow(entry.key, entry.value.toString()),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildAutoRefreshCard() {
+    final l10n = context.l10n;
+    final counterText = _autoRefreshCounterText();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.autorenew,
+                  color: Theme.of(context).textTheme.headlineSmall?.color,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.common_autoRefresh,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(),
+            _buildAutoRefreshNumberField(
+              controller: _autoRefreshIntervalController,
+              label: l10n.common_interval,
+              min: _autoRefreshMinIntervalSeconds,
+              max: _autoRefreshMaxIntervalSeconds,
+              fallback: _autoRefreshIntervalSeconds,
+            ),
+            const SizedBox(height: 12),
+            _buildAutoRefreshNumberField(
+              controller: _autoRefreshQuantityController,
+              label: l10n.telemetry_autoFetchQuantity,
+              min: _autoRefreshMinQuantity,
+              max: _autoRefreshMaxQuantity,
+              fallback: _autoRefreshDefaultQuantity,
+            ),
+            if (counterText != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                counterText,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _autoRefreshLastAttemptFailed
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _isLoading && !_isAutoRefreshEnabled
+                  ? null
+                  : _toggleAutoRefresh,
+              child: _isAutoRefreshEnabled
+                  ? SizedBox(
+                      width: double.infinity,
+                      height: 20,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Center(child: Text(l10n.common_disable)),
+                          const Positioned(
+                            right: 0,
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Text(l10n.common_enable),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAutoRefreshNumberField({
+    required TextEditingController controller,
+    required String label,
+    required int min,
+    required int max,
+    required int fallback,
+  }) {
+    return TextField(
+      controller: controller,
+      enabled: !_isAutoRefreshEnabled,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      onEditingComplete: () {
+        _clampControllerValue(
+          controller: controller,
+          min: min,
+          max: max,
+          fallback: fallback,
+        );
+        unawaited(_saveAutoRefreshSettings());
+        FocusScope.of(context).unfocus();
+      },
+      onSubmitted: (_) => unawaited(_saveAutoRefreshSettings()),
+      onTapOutside: (_) {
+        unawaited(_saveAutoRefreshSettings());
+        FocusScope.of(context).unfocus();
+      },
+    );
+  }
+
+  String? _autoRefreshCounterText() {
+    if (!_isAutoRefreshEnabled && _autoRefreshCurrentAttempt == 0) return null;
+    final counter = '$_autoRefreshCurrentAttempt/$_autoRefreshTotalAttempts';
+    if (_autoRefreshLastAttemptFailed) {
+      return '${context.l10n.telemetry_error}: $counter';
+    }
+    return counter;
+  }
+
+  void _toggleAutoRefresh() {
+    if (_isAutoRefreshEnabled) {
+      _stopAutoRefresh();
+      return;
+    }
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    final interval = _clampControllerValue(
+      controller: _autoRefreshIntervalController,
+      min: _autoRefreshMinIntervalSeconds,
+      max: _autoRefreshMaxIntervalSeconds,
+      fallback: _autoRefreshIntervalSeconds,
+    );
+    final quantity = _clampControllerValue(
+      controller: _autoRefreshQuantityController,
+      min: _autoRefreshMinQuantity,
+      max: _autoRefreshMaxQuantity,
+      fallback: _autoRefreshDefaultQuantity,
+    );
+    unawaited(_saveAutoRefreshSettings());
+
+    setState(() {
+      _isAutoRefreshEnabled = true;
+      _autoRefreshIntervalSeconds = interval;
+      _autoRefreshTotalAttempts = quantity;
+      _autoRefreshCurrentAttempt = 0;
+      _autoRefreshLastAttemptFailed = false;
+    });
+    _runAutoRefreshAttempt();
+  }
+
+  void _stopAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
+    if (!mounted) return;
+    setState(() {
+      _isAutoRefreshEnabled = false;
+    });
+  }
+
+  Future<void> _runAutoRefreshAttempt() async {
+    if (!_isAutoRefreshEnabled || !mounted) return;
+    if (_autoRefreshCurrentAttempt >= _autoRefreshTotalAttempts) {
+      _stopAutoRefresh();
+      return;
+    }
+
+    setState(() {
+      _autoRefreshCurrentAttempt += 1;
+    });
+    await _loadTelemetry(isAutoRefresh: true);
+  }
+
+  void _scheduleNextAutoRefreshAttempt() {
+    if (!_isAutoRefreshEnabled || !mounted) return;
+    _autoRefreshTimer?.cancel();
+    if (_autoRefreshCurrentAttempt >= _autoRefreshTotalAttempts) {
+      _stopAutoRefresh();
+      return;
+    }
+    // Start the interval only after the current request has finished: after a
+    // telemetry response, timeout, or send error. This keeps slow replies from
+    // shortening the intended pause between requests.
+    _autoRefreshTimer = Timer(
+      Duration(seconds: _autoRefreshIntervalSeconds),
+      _runAutoRefreshAttempt,
+    );
+  }
+
+  int _clampControllerValue({
+    required TextEditingController controller,
+    required int min,
+    required int max,
+    required int fallback,
+  }) {
+    final parsed = int.tryParse(controller.text);
+    final value = (parsed ?? fallback).clamp(min, max).toInt();
+    controller.text = value.toString();
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+    return value;
+  }
+
+  Widget _buildGpsInfo(dynamic value) {
+    final latitude = _readGpsValue(value, 'latitude');
+    final longitude = _readGpsValue(value, 'longitude');
+    final altitude = _readGpsValue(value, 'altitude');
+    final isValidPosition = _isValidGpsPosition(latitude, longitude);
+    final gpsText = isValidPosition
+        ? [
+            latitude!.toStringAsFixed(5),
+            longitude!.toStringAsFixed(5),
+            if (altitude != null) '${altitude.toStringAsFixed(1)} m',
+          ].join(', ')
+        : value.toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInfoRow('gps', gpsText),
+        if (isValidPosition)
+          TelemetryLocationMap(
+            // The map renders only after bounds validation, keeping malformed
+            // Cayenne payloads from creating an invalid FlutterMap center.
+            latitude: latitude!,
+            longitude: longitude!,
+            label: widget.contact.name,
+            contactType: widget.contact.type,
+            contactPublicKeyHex: widget.contact.publicKeyHex,
+          ),
+      ],
+    );
+  }
+
+  double? _readGpsValue(dynamic value, String key) {
+    if (value is! Map) return null;
+    final rawValue = value[key];
+    if (rawValue is num) return rawValue.toDouble();
+    return null;
+  }
+
+  bool _isValidGpsPosition(double? latitude, double? longitude) {
+    if (latitude == null || longitude == null) return false;
+    const double epsilon = 1e-6;
+    return (latitude.abs() > epsilon || longitude.abs() > epsilon) &&
+        latitude >= -90.0 &&
+        latitude <= 90.0 &&
+        longitude >= -180.0 &&
+        longitude <= 180.0;
   }
 
   Widget _buildInfoRow(String label, String value) {

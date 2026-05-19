@@ -27,6 +27,8 @@
   "common_remove": "제거",
   "common_enable": "활성화",
   "common_disable": "비활성화",
+  "common_autoRefresh": "자동 새로고침",
+  "common_interval": "간격",
   "common_reboot": "재부팅",
   "common_loading": "로딩 중...",
   "common_notAvailable": "—",
@@ -1470,6 +1472,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "요청 수",
+  "telemetry_error": "데이터를 가져올 수 없습니다",
   "telemetry_noData": "텔레메트리 데이터는 제공되지 않습니다.",
   "telemetry_channelTitle": "채널 {channel}",
   "@telemetry_channelTitle": {

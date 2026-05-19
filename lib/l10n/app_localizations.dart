@@ -328,6 +328,18 @@ abstract class AppLocalizations {
   /// **'{percent}%'**
   String common_percentValue(int percent);
 
+  /// No description provided for @common_autoRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Autorefresh'**
+  String get common_autoRefresh;
+
+  /// No description provided for @common_interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval'**
+  String get common_interval;
+
   /// No description provided for @scanner_title.
   ///
   /// In en, this message translates to:
@@ -5809,6 +5821,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{celsius}°C / {fahrenheit}°F'**
   String telemetry_temperatureValue(String celsius, String fahrenheit);
+
+  /// No description provided for @telemetry_autoFetchQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests quantity'**
+  String get telemetry_autoFetchQuantity;
+
+  /// No description provided for @telemetry_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to retrieve data'**
+  String get telemetry_error;
 
   /// No description provided for @neighbors_receivedData.
   ///

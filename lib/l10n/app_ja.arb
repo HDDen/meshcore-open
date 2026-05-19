@@ -27,6 +27,8 @@
   "common_remove": "削除",
   "common_enable": "有効化する",
   "common_disable": "無効化する",
+  "common_autoRefresh": "自動更新",
+  "common_interval": "間隔",
   "common_reboot": "再起動",
   "common_loading": "読み込み中...",
   "common_notAvailable": "—",
@@ -1470,6 +1472,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "リクエスト数",
+  "telemetry_error": "データを取得できません",
   "telemetry_noData": "テレメトリデータは利用できません。",
   "telemetry_channelTitle": "チャンネル {channel}",
   "@telemetry_channelTitle": {

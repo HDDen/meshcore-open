@@ -33,6 +33,8 @@
   "common_remove": "Изтрий",
   "common_enable": "Активирай",
   "common_disable": "Деактивирай",
+  "common_autoRefresh": "Автоматично обновяване",
+  "common_interval": "Интервал",
   "common_reboot": "Рестартирай",
   "common_loading": "Зареждане...",
   "common_notAvailable": "—",
@@ -1280,6 +1282,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Брой заявки",
+  "telemetry_error": "Неуспешно получаване на данни",
   "telemetry_noData": "Няма налични данни за телеметрията.",
   "telemetry_channelTitle": "Канал {channel}",
   "@telemetry_channelTitle": {

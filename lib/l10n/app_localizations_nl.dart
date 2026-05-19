@@ -112,6 +112,12 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get common_autoRefresh => 'Automatisch vernieuwen';
+
+  @override
+  String get common_interval => 'Tijdsinterval';
+
+  @override
   String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
@@ -3326,6 +3332,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String telemetry_temperatureValue(String celsius, String fahrenheit) {
     return '$celsius°C / $fahrenheit°F';
   }
+
+  @override
+  String get telemetry_autoFetchQuantity => 'Aantal aanvragen';
+
+  @override
+  String get telemetry_error => 'Kan gegevens niet ophalen';
 
   @override
   String get neighbors_receivedData => 'Ontvangen Buurdata';

@@ -112,6 +112,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get common_autoRefresh => '자동 새로고침';
+
+  @override
+  String get common_interval => '간격';
+
+  @override
   String get scanner_title => 'MeshCore 공개';
 
   @override
@@ -3165,6 +3171,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String telemetry_temperatureValue(String celsius, String fahrenheit) {
     return '$celsius°C / $fahrenheit°F';
   }
+
+  @override
+  String get telemetry_autoFetchQuantity => '요청 수';
+
+  @override
+  String get telemetry_error => '데이터를 가져올 수 없습니다';
 
   @override
   String get neighbors_receivedData => '이웃 정보 수집';

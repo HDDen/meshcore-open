@@ -112,6 +112,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get common_autoRefresh => '自动刷新';
+
+  @override
+  String get common_interval => '间隔';
+
+  @override
   String get scanner_title => '连接设备';
 
   @override
@@ -3068,6 +3074,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String telemetry_temperatureValue(String celsius, String fahrenheit) {
     return '$celsius°C / $fahrenheit°F';
   }
+
+  @override
+  String get telemetry_autoFetchQuantity => '请求次数';
+
+  @override
+  String get telemetry_error => '无法获取数据';
 
   @override
   String get neighbors_receivedData => '已接收邻居信息';

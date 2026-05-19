@@ -34,6 +34,8 @@
   "common_remove": "Прибрати",
   "common_enable": "Увімкнути",
   "common_disable": "Вимкнути",
+  "common_autoRefresh": "Автооновлення",
+  "common_interval": "Інтервал",
   "common_reboot": "Перезавантажити",
   "common_loading": "Завантаження...",
   "common_notAvailable": "—",
@@ -1291,6 +1293,8 @@
       }
     }
   },
+  "telemetry_autoFetchQuantity": "Кількість запитів",
+  "telemetry_error": "Не вдалося отримати дані",
   "telemetry_noData": "Дані телеметрії недоступні.",
   "telemetry_channelTitle": "Канал {channel}",
   "@telemetry_channelTitle": {
