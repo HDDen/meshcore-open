@@ -466,7 +466,6 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     int channel,
     bool isImperialUnits,
   ) {
-    final l10n = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -491,39 +490,162 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
             ),
             const Divider(),
             for (final entry in channelData.entries)
-              if (entry.key == 'voltage' && channel == 1)
-                _buildInfoRow(
-                  l10n.telemetry_batteryLabel,
-                  _batteryText(entry.value),
-                )
-              else if (entry.key == 'voltage')
-                _buildInfoRow(
-                  l10n.telemetry_voltageLabel,
-                  l10n.telemetry_voltageValue(entry.value.toString()),
-                )
-              else if (entry.key == 'temperature' && channel == 1)
-                _buildInfoRow(
-                  l10n.telemetry_mcuTemperatureLabel,
-                  _temperatureText(entry.value, isImperialUnits),
-                )
-              else if (entry.key == 'temperature')
-                _buildInfoRow(
-                  l10n.telemetry_temperatureLabel,
-                  _temperatureText(entry.value, isImperialUnits),
-                )
-              else if (entry.key == 'current' && channel == 1)
-                _buildInfoRow(
-                  l10n.telemetry_currentLabel,
-                  l10n.telemetry_currentValue(entry.value.toString()),
-                )
-              else if (entry.key == 'gps')
-                _buildGpsInfo(entry.value)
-              else
-                _buildInfoRow(entry.key, entry.value.toString()),
+              _buildTelemetryField(entry, channel, isImperialUnits),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildTelemetryField(
+    MapEntry<String, dynamic> entry,
+    int channel,
+    bool isImperialUnits,
+  ) {
+    if (entry.key == 'gps') {
+      return _buildGpsInfo(entry.value);
+    }
+
+    final display = _formatTelemetryField(
+      entry.key,
+      entry.value,
+      channel,
+      isImperialUnits,
+    );
+    return _buildInfoRow(display.label, display.value);
+  }
+
+  _TelemetryFieldDisplay _formatTelemetryField(
+    String key,
+    dynamic value,
+    int channel,
+    bool isImperialUnits,
+  ) {
+    final l10n = context.l10n;
+    final text = _telemetryValueText(value);
+
+    switch (key) {
+      case 'digitalInput':
+        return _TelemetryFieldDisplay(l10n.telemetry_digitalInputLabel, text);
+      case 'digitalOutput':
+        return _TelemetryFieldDisplay(l10n.telemetry_digitalOutputLabel, text);
+      case 'analogInput':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_analogInputLabel,
+          l10n.telemetry_analogValue(text),
+        );
+      case 'analogOutput':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_analogOutputLabel,
+          l10n.telemetry_analogValue(text),
+        );
+      case 'generic':
+        return _TelemetryFieldDisplay(l10n.telemetry_genericLabel, text);
+      case 'luminosity':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_luminosityLabel,
+          l10n.telemetry_luminosityValue(text),
+        );
+      case 'presence':
+        return _TelemetryFieldDisplay(l10n.telemetry_presenceLabel, text);
+      case 'temperature':
+        return _TelemetryFieldDisplay(
+          channel == 1
+              ? l10n.telemetry_mcuTemperatureLabel
+              : l10n.telemetry_temperatureLabel,
+          _temperatureText(value, isImperialUnits),
+        );
+      case 'humidity':
+        return _TelemetryFieldDisplay(l10n.telemetry_humidityLabel, text);
+      case 'accelerometer':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_accelerometerLabel,
+          _telemetryAxisText(value),
+        );
+      case 'pressure':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_pressureLabel,
+          l10n.telemetry_pressureValue(text),
+        );
+      case 'altitude':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_altitudeLabel,
+          l10n.telemetry_altitudeValue(text),
+        );
+      case 'voltage':
+        return _TelemetryFieldDisplay(
+          channel == 1
+              ? l10n.telemetry_batteryLabel
+              : l10n.telemetry_voltageLabel,
+          channel == 1
+              ? _batteryText(value)
+              : l10n.telemetry_voltageValue(text),
+        );
+      case 'current':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_currentLabel,
+          l10n.telemetry_currentValue(text),
+        );
+      case 'frequency':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_frequencyLabel,
+          l10n.telemetry_frequencyValue(text),
+        );
+      case 'percentage':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_percentageLabel,
+          l10n.telemetry_percentageValue(text),
+        );
+      case 'concentration':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_concentrationLabel,
+          l10n.telemetry_concentrationValue(text),
+        );
+      case 'power':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_powerLabel,
+          l10n.telemetry_powerValue(text),
+        );
+      case 'distance':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_distanceLabel,
+          l10n.telemetry_distanceValue(text),
+        );
+      case 'energy':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_energyLabel,
+          l10n.telemetry_energyValue(text),
+        );
+      case 'direction':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_directionLabel,
+          l10n.telemetry_directionValue(text),
+        );
+      case 'time':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_timeLabel,
+          _telemetryTimeText(value),
+        );
+      case 'gyrometer':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_gyrometerLabel,
+          _telemetryAxisText(value),
+        );
+      case 'colour':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_colourLabel,
+          _telemetryColorText(value),
+        );
+      case 'switch':
+        return _TelemetryFieldDisplay(l10n.telemetry_switchLabel, text);
+      case 'polyline':
+        return _TelemetryFieldDisplay(
+          l10n.telemetry_polylineLabel,
+          _telemetryMapText(value),
+        );
+      default:
+        return _TelemetryFieldDisplay(key, text);
+    }
   }
 
   Widget _buildAutoRefreshCard() {
@@ -762,7 +884,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('gps', gpsText),
+        _buildInfoRow(context.l10n.telemetry_gpsLabel, gpsText),
         if (isValidPosition)
           TelemetryLocationMap(
             // The map renders only after bounds validation, keeping malformed
@@ -792,6 +914,53 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         latitude <= 90.0 &&
         longitude >= -180.0 &&
         longitude <= 180.0;
+  }
+
+  String _telemetryValueText(dynamic value) {
+    if (value == null) return context.l10n.common_notAvailable;
+    if (value is double) {
+      return value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2);
+    }
+    if (value is num) {
+      return value.toString();
+    }
+    return value.toString();
+  }
+
+  String _telemetryAxisText(dynamic value) {
+    if (value is! Map) return _telemetryValueText(value);
+    final x = _telemetryValueText(value['x']);
+    final y = _telemetryValueText(value['y']);
+    final z = _telemetryValueText(value['z']);
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  String _telemetryColorText(dynamic value) {
+    if (value is! Map) return _telemetryValueText(value);
+    final red = _telemetryValueText(value['red']);
+    final green = _telemetryValueText(value['green']);
+    final blue = _telemetryValueText(value['blue']);
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  String _telemetryMapText(dynamic value) {
+    if (value is! Map) return _telemetryValueText(value);
+    return value.entries
+        .map((entry) => '${entry.key}: ${entry.value}')
+        .join(', ');
+  }
+
+  String _telemetryTimeText(dynamic value) {
+    if (value is! num || value <= 0) return _telemetryValueText(value);
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+      value.toInt() * 1000,
+      isUtc: true,
+    ).toLocal();
+    final localizations = MaterialLocalizations.of(context);
+    final time = localizations.formatTimeOfDay(
+      TimeOfDay.fromDateTime(dateTime),
+    );
+    return '${localizations.formatFullDate(dateTime)} $time';
   }
 
   Widget _buildInfoRow(String label, String value) {
@@ -861,4 +1030,11 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     }
     return '${tempC.toStringAsFixed(1)}°C';
   }
+}
+
+class _TelemetryFieldDisplay {
+  final String label;
+  final String value;
+
+  const _TelemetryFieldDisplay(this.label, this.value);
 }
