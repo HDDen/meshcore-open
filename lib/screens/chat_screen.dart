@@ -485,6 +485,8 @@ class _ChatScreenState extends State<ChatScreen> {
           final message = reversedMessages[messageIndex];
           String fourByteHex = '';
           if (contact.type == advTypeRoom) {
+            // Room-server messages carry the original author's 4-byte prefix
+            // separately from message.text; use it only for resolving the name.
             contact = _resolveContactFrom4Bytes(
               connector,
               message.fourByteRoomContactKey.isEmpty
@@ -509,7 +511,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     ? "${contact.name} [$fourByteHex]"
                     : contact.name,
                 sourceId: widget.contact.publicKeyHex,
-                isRoomServer: resolvedContact.type == advTypeRoom,
                 textScale: textScale,
                 onTap: () => _openMessagePath(message, contact),
                 onLongPress: () => _showMessageActions(message, contact),
@@ -1721,7 +1722,6 @@ class _ChatScreenState extends State<ChatScreen> {
 class _MessageBubble extends StatelessWidget {
   final Message message;
   final String senderName;
-  final bool isRoomServer;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
@@ -1732,7 +1732,6 @@ class _MessageBubble extends StatelessWidget {
     required this.message,
     required this.senderName,
     required this.sourceId,
-    required this.isRoomServer,
     required this.textScale,
     this.onTap,
     this.onLongPress,
@@ -1758,10 +1757,9 @@ class _MessageBubble extends StatelessWidget {
         : (isOutgoing ? colorScheme.onPrimary : colorScheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.7);
     const bodyFontSize = 14.0;
-    String messageText = message.text;
-    if (isRoomServer && !isOutgoing) {
-      messageText = message.text.substring(4.clamp(0, message.text.length));
-    }
+    // Do not strip room-server author bytes here: the parser stores them in
+    // fourByteRoomContactKey, so message.text is safe to render as-is.
+    final messageText = message.text;
     final translatedDisplayText =
         message.translatedText != null &&
             message.translatedText!.trim().isNotEmpty
