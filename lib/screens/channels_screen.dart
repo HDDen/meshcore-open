@@ -855,7 +855,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            _channelGroupEmptyText(context),
+            context.l10n.channels_changeGroupEmpty,
             style: TextStyle(color: emptyTextColor),
           ),
         ),
@@ -1184,10 +1184,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
   }
 
-  String _channelGroupEmptyText(BuildContext context) {
-    return context.l10n.channels_changeGroupEmpty;
-  }
-
   List<Channel> _filterAndSortChannels(
     List<Channel> channels,
     MeshCoreConnector connector,
@@ -1200,12 +1196,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         viewState.channelsSearchText.toLowerCase(),
       );
     }).toList();
-
-    int compareByName(Channel a, Channel b) {
-      final nameA = _normalizeChannelName(a);
-      final nameB = _normalizeChannelName(b);
-      return nameA.toLowerCase().compareTo(nameB.toLowerCase());
-    }
 
     switch (viewState.channelsSortOption) {
       case ChannelSortOption.manual:
@@ -1222,7 +1212,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               : bMessages.last.timestamp;
           final timeCompare = bLast.compareTo(aLast);
           if (timeCompare != 0) return timeCompare;
-          return compareByName(a, b);
+          return _compareChannelsByName(a, b);
         });
         break;
       case ChannelSortOption.unread:
@@ -1231,11 +1221,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           final bUnread = connector.getUnreadCountForChannel(b);
           final unreadCompare = bUnread.compareTo(aUnread);
           if (unreadCompare != 0) return unreadCompare;
-          return compareByName(a, b);
+          return _compareChannelsByName(a, b);
         });
         break;
       case ChannelSortOption.name:
-        filtered.sort(compareByName);
+        filtered.sort(_compareChannelsByName);
         break;
     }
 
