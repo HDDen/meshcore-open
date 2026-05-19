@@ -700,6 +700,9 @@ class AppLocalizationsHu extends AppLocalizations {
       'Adja meg a üzenetek részletes útvonal- és időzítési adatokat.';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

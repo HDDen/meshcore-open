@@ -699,6 +699,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывать подробные метаданные о маршрутизации и времени для сообщений';
 
   @override
+  String get appSettings_enableTimeSeconds =>
+      'Отображать секунды в информации о сообщении';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Показывать кнопку скрытия клавиатуры';
 

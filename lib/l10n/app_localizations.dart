@@ -1378,6 +1378,12 @@ abstract class AppLocalizations {
   /// **'Show detailed routing and timing metadata for messages'**
   String get appSettings_enableMessageTracingSubtitle;
 
+  /// No description provided for @appSettings_enableTimeSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Show seconds in message info'**
+  String get appSettings_enableTimeSeconds;
+
   /// No description provided for @appSettings_showKeyboardHidingButton.
   ///
   /// In en, this message translates to:

@@ -700,6 +700,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Afficher les métadonnées détaillées de routage et de synchronisation des messages';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

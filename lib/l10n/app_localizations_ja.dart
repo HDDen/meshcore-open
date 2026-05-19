@@ -670,6 +670,9 @@ class AppLocalizationsJa extends AppLocalizations {
       'メッセージに関する詳細な経路およびタイミングに関するメタデータを表示する';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

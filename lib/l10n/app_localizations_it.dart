@@ -698,6 +698,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Mostra metadati dettagliati su instradamento e tempi per i messaggi';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

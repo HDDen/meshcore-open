@@ -695,6 +695,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Detaillierte Routing- und Timing-Metadaten für Nachrichten anzeigen';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

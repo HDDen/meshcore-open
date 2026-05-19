@@ -123,6 +123,7 @@ class AppSettings {
   final bool mapShowMarkers;
   final bool mapShowGuessedLocations;
   final bool enableMessageTracing;
+  final bool enableTimeSeconds;
   final bool showKeyboardHidingButton;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
@@ -287,6 +288,7 @@ class AppSettings {
     this.mapShowMarkers = true,
     this.mapShowGuessedLocations = true,
     this.enableMessageTracing = false,
+    this.enableTimeSeconds = false,
     this.showKeyboardHidingButton = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
@@ -358,6 +360,7 @@ class AppSettings {
       'map_show_markers': mapShowMarkers,
       'map_show_guessed_locations': mapShowGuessedLocations,
       'enable_message_tracing': enableMessageTracing,
+      'enable_time_seconds': enableTimeSeconds,
       'show_keyboard_hiding_button': showKeyboardHidingButton,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
@@ -429,6 +432,7 @@ class AppSettings {
       mapShowGuessedLocations:
           json['map_show_guessed_locations'] as bool? ?? true,
       enableMessageTracing: json['enable_message_tracing'] as bool? ?? false,
+      enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
       showKeyboardHidingButton:
           json['show_keyboard_hiding_button'] as bool? ?? true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
@@ -554,6 +558,7 @@ class AppSettings {
     bool? mapShowMarkers,
     bool? mapShowGuessedLocations,
     bool? enableMessageTracing,
+    bool? enableTimeSeconds,
     bool? showKeyboardHidingButton,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
@@ -607,6 +612,7 @@ class AppSettings {
       mapShowGuessedLocations:
           mapShowGuessedLocations ?? this.mapShowGuessedLocations,
       enableMessageTracing: enableMessageTracing ?? this.enableMessageTracing,
+      enableTimeSeconds: enableTimeSeconds ?? this.enableTimeSeconds,
       showKeyboardHidingButton:
           showKeyboardHidingButton ?? this.showKeyboardHidingButton,
       mapCacheBounds: mapCacheBounds == _unset

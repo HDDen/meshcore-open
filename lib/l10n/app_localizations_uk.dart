@@ -695,6 +695,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Показувати детальні метадані про маршрутизацію та час для повідомлень';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

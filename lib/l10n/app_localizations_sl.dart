@@ -688,6 +688,9 @@ class AppLocalizationsSl extends AppLocalizations {
       'Prikaži podrobne metapodatke o usmerjanju in časovnem usklajevanju sporočil';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

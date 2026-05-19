@@ -670,6 +670,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '메시지에 대한 상세한 경로 및 시간 정보를 표시';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

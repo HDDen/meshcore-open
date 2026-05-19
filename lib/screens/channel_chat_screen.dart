@@ -78,6 +78,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   String? _cachedFormatLocale;
   late DateFormat _hmFormat;
+  late DateFormat _hmsFormat;
   late DateFormat _mdFormat;
 
   @override
@@ -685,6 +686,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final gifId = GifHelper.parseGif(message.text);
     final poi = parseMarkerText(message.text);
@@ -923,7 +925,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _formatTime(context, message.timestamp),
+                                _formatTime(
+                                  context,
+                                  message.timestamp,
+                                  enableSeconds: enableTimeSeconds,
+                                ),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[600],
@@ -1696,16 +1702,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return nameBytes + 2; // "<name>: "
   }
 
-  String _formatTime(BuildContext context, DateTime time) {
+  String _formatTime(
+    BuildContext context,
+    DateTime time, {
+    required bool enableSeconds,
+  }) {
     final now = DateTime.now();
     final diff = now.difference(time);
     final locale = Localizations.localeOf(context).toString();
     if (locale != _cachedFormatLocale) {
       _cachedFormatLocale = locale;
       _hmFormat = DateFormat.Hm(locale);
+      _hmsFormat = DateFormat.Hms(locale);
       _mdFormat = DateFormat.Md(locale);
     }
-    final hm = _hmFormat.format(time);
+    final hm = enableSeconds ? _hmsFormat.format(time) : _hmFormat.format(time);
 
     if (diff.inDays > 0) {
       return '${_mdFormat.format(time)} $hm';

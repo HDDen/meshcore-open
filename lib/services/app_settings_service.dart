@@ -100,6 +100,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(enableMessageTracing: value));
   }
 
+  Future<void> setEnableTimeSeconds(bool value) async {
+    await updateSettings(_settings.copyWith(enableTimeSeconds: value));
+  }
+
   Future<void> setShowKeyboardHidingButton(bool value) async {
     await updateSettings(_settings.copyWith(showKeyboardHidingButton: value));
   }

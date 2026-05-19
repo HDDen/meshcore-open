@@ -700,6 +700,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pokaż szczegółowe metadane trasowania i czasu dla wiadomości';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

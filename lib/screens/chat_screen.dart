@@ -1900,6 +1900,7 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final colorScheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
@@ -2122,7 +2123,10 @@ class _MessageBubble extends StatelessWidget {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  _formatTime(message.timestamp),
+                                  _formatTime(
+                                    message.timestamp,
+                                    enableSeconds: enableTimeSeconds,
+                                  ),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: metaColor,
@@ -2403,9 +2407,11 @@ class _MessageBubble extends StatelessWidget {
     return Icon(icon, size: 12, color: color);
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(DateTime time, {required bool enableSeconds}) {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+    if (!enableSeconds) return '$hour:$minute';
+    final second = time.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 }

@@ -686,6 +686,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Visa detaljerade metadata om dirigering och tidsinställningar för meddelanden';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

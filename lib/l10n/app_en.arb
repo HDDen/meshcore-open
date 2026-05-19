@@ -271,6 +271,7 @@
   "appSettings_languageUk": "Українська",
   "appSettings_enableMessageTracing": "Enable Message Tracing",
   "appSettings_enableMessageTracingSubtitle": "Show detailed routing and timing metadata for messages",
+  "appSettings_enableTimeSeconds": "Show seconds in message info",
   "appSettings_showKeyboardHidingButton": "Show keyboard hiding button",
   "appSettings_notifications": "Notifications",
   "appSettings_enableNotifications": "Enable Notifications",

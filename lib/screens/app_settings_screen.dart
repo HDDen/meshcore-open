@@ -129,6 +129,15 @@ class AppSettingsScreen extends StatelessWidget {
           ),
           const Divider(height: 1),
           SwitchListTile(
+            secondary: const Icon(Icons.timer_outlined),
+            title: Text(context.l10n.appSettings_enableTimeSeconds),
+            value: settingsService.settings.enableTimeSeconds,
+            onChanged: (value) {
+              settingsService.setEnableTimeSeconds(value);
+            },
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
             secondary: const Icon(Icons.keyboard_hide_outlined),
             title: Text(context.l10n.appSettings_showKeyboardHidingButton),
             value: settingsService.settings.showKeyboardHidingButton,

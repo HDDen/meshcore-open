@@ -684,6 +684,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show detailed routing and timing metadata for messages';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

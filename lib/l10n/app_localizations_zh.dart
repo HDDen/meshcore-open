@@ -660,6 +660,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_enableMessageTracingSubtitle => '显示消息的详细路由和时间元数据';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 

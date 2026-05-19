@@ -698,6 +698,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Mostrar metadados detalhados de roteamento e tempo para as mensagens';
 
   @override
+  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
       'Show keyboard hiding button';
 
