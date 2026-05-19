@@ -854,25 +854,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               firstChild: const SizedBox(width: double.infinity, height: 0),
               secondChild: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: channels.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(_channelGroupEmptyText(context)),
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          for (final channel in channels)
-                            _buildChannelTile(
-                              context,
-                              connector,
-                              channelMessageStore,
-                              channel,
-                            ),
-                        ],
-                      ),
+                child: _buildChannelGroupContent(
+                  context,
+                  connector,
+                  channelMessageStore,
+                  group,
+                  channels,
+                  canReorder: showDragHandle,
+                ),
               ),
               crossFadeState: isExpanded
                   ? CrossFadeState.showSecond
@@ -883,6 +872,113 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildChannelGroupContent(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    ChannelGroup group,
+    List<Channel> channels, {
+    required bool canReorder,
+  }) {
+    if (channels.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(_channelGroupEmptyText(context)),
+        ),
+      );
+    }
+
+    if (!canReorder) {
+      return Column(
+        children: [
+          for (final channel in channels)
+            _buildChannelTile(context, connector, channelMessageStore, channel),
+        ],
+      );
+    }
+
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      buildDefaultDragHandles: false,
+      itemCount: channels.length,
+      onReorder: (oldIndex, newIndex) {
+        _reorderChannelsInGroup(connector, group, oldIndex, newIndex);
+      },
+      itemBuilder: (context, index) {
+        final channel = channels[index];
+        return _buildChannelTile(
+          context,
+          connector,
+          channelMessageStore,
+          channel,
+          showDragHandle: true,
+          dragIndex: index,
+        );
+      },
+    );
+  }
+
+  void _reorderChannelsInGroup(
+    MeshCoreConnector connector,
+    ChannelGroup group,
+    int oldIndex,
+    int newIndex,
+  ) {
+    if (newIndex > oldIndex) newIndex -= 1;
+    final reorderedIndexes = List<int>.from(group.channelIndexes);
+    if (oldIndex < 0 || oldIndex >= reorderedIndexes.length) return;
+    final channelIndex = reorderedIndexes.removeAt(oldIndex);
+    final insertIndex = max(0, min(newIndex, reorderedIndexes.length));
+    reorderedIndexes.insert(insertIndex, channelIndex);
+
+    final updatedGroups = [
+      for (final item in _channelGroups)
+        if (item.name == group.name)
+          item.copyWith(channelIndexes: reorderedIndexes)
+        else
+          item,
+    ];
+
+    setState(() {
+      _channelGroups = updatedGroups;
+    });
+    unawaited(_saveChannelGroups());
+
+    // Keep the device-level manual channel order aligned with local group order.
+    final orderedChannelIndexes = _manualChannelOrderForGroups(
+      connector.channels,
+      updatedGroups,
+    );
+    unawaited(connector.setChannelOrder(orderedChannelIndexes));
+  }
+
+  List<int> _manualChannelOrderForGroups(
+    List<Channel> orderedChannels,
+    List<ChannelGroup> groups,
+  ) {
+    final groupByChannel = <int, ChannelGroup>{};
+    for (final group in groups) {
+      for (final index in group.channelIndexes) {
+        groupByChannel[index] = group;
+      }
+    }
+
+    final emittedGroups = <String>{};
+    final orderedIndexes = <int>[];
+    for (final channel in orderedChannels) {
+      final group = groupByChannel[channel.index];
+      if (group == null) {
+        orderedIndexes.add(channel.index);
+      } else if (emittedGroups.add(group.name)) {
+        orderedIndexes.addAll(group.channelIndexes);
+      }
+    }
+    return orderedIndexes;
   }
 
   void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
