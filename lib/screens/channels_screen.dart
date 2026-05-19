@@ -715,13 +715,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   List<_ChannelListEntry> _buildManualChannelEntries(
     List<Channel> orderedChannels,
   ) {
-    final groupByChannel = <int, ChannelGroup>{};
-    for (final group in _channelGroups) {
-      for (final index in group.channelIndexes) {
-        groupByChannel[index] = group;
-      }
-    }
-
+    final groupByChannel = _channelGroupByChannel(_channelGroups);
     final emittedGroups = <String>{};
     final entries = <_ChannelListEntry>[];
     for (final channel in orderedChannels) {
@@ -761,9 +755,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   Set<int> _groupedChannelIndexes() {
+    return _channelGroupByChannel(_channelGroups).keys.toSet();
+  }
+
+  Map<int, ChannelGroup> _channelGroupByChannel(List<ChannelGroup> groups) {
     return {
-      for (final group in _channelGroups)
-        for (final index in group.channelIndexes) index,
+      for (final group in groups)
+        for (final index in group.channelIndexes) index: group,
     };
   }
 
@@ -961,13 +959,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<Channel> orderedChannels,
     List<ChannelGroup> groups,
   ) {
-    final groupByChannel = <int, ChannelGroup>{};
-    for (final group in groups) {
-      for (final index in group.channelIndexes) {
-        groupByChannel[index] = group;
-      }
-    }
-
+    final groupByChannel = _channelGroupByChannel(groups);
     final emittedGroups = <String>{};
     final orderedIndexes = <int>[];
     for (final channel in orderedChannels) {
@@ -1125,11 +1117,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       if (item.name != group.name) return item;
                       return item.copyWith(
                         name: name,
-                        channelIndexes: [
-                          for (final channel in editableChannels)
-                            if (selectedIndexes.contains(channel.index))
-                              channel.index,
-                        ],
+                        channelIndexes: _selectedChannelIndexesForGroupEdit(
+                          group,
+                          editableChannels,
+                          selectedIndexes,
+                        ),
                       );
                     }).toList();
                     if (_expandedChannelGroups.remove(group.name)) {
@@ -1149,6 +1141,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         },
       ),
     );
+  }
+
+  List<int> _selectedChannelIndexesForGroupEdit(
+    ChannelGroup group,
+    List<Channel> editableChannels,
+    Set<int> selectedIndexes,
+  ) {
+    final orderedIndexes = <int>[
+      // Preserve the current in-group order when editing membership/name.
+      for (final index in group.channelIndexes)
+        if (selectedIndexes.contains(index)) index,
+    ];
+    final existingIndexes = orderedIndexes.toSet();
+    for (final channel in editableChannels) {
+      if (selectedIndexes.contains(channel.index) &&
+          !existingIndexes.contains(channel.index)) {
+        orderedIndexes.add(channel.index);
+      }
+    }
+    return orderedIndexes;
   }
 
   String _channelDisplayName(BuildContext context, Channel channel) {
