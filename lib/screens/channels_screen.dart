@@ -740,6 +740,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final isExpanded =
         forceExpanded || _expandedChannelGroups.contains(group.name);
     final channels = channelsForGroup(group, filteredChannels);
+    final groupWidgetColor = group.widgetColor == null
+        ? null
+        : Color(group.widgetColor!);
+    final groupWidgetTextColor = group.widgetTextColor == null
+        ? null
+        : Color(group.widgetTextColor!);
     final unreadCount = group.channelIndexes.fold<int>(
       0,
       (sum, index) => sum + connector.getUnreadCountForChannelIndex(index),
@@ -751,6 +757,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           : null,
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
+        color: groupWidgetColor,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -761,7 +768,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               visualDensity: const VisualDensity(vertical: -2),
               title: Text(
                 group.name,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: groupWidgetTextColor,
+                ),
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -770,14 +780,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     UnreadBadge(count: unreadCount),
                     const SizedBox(width: 8),
                   ],
-                  Icon(isExpanded ? Icons.remove : Icons.add),
+                  Icon(
+                    isExpanded ? Icons.remove : Icons.add,
+                    color: groupWidgetTextColor,
+                  ),
                   if (showDragHandle && dragIndex != null) ...[
                     const SizedBox(width: 8),
                     ReorderableDelayedDragStartListener(
                       index: dragIndex,
                       child: Icon(
                         Icons.drag_handle,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color:
+                            groupWidgetTextColor ??
+                            Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -808,6 +823,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   group,
                   channels,
                   canReorder: showDragHandle,
+                  emptyTextColor: groupWidgetTextColor,
                 ),
               ),
               crossFadeState: isExpanded
@@ -828,13 +844,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelGroup group,
     List<Channel> channels, {
     required bool canReorder,
+    Color? emptyTextColor,
   }) {
     if (channels.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Text(_channelGroupEmptyText(context)),
+          child: Text(
+            _channelGroupEmptyText(context),
+            style: TextStyle(color: emptyTextColor),
+          ),
         ),
       );
     }
@@ -939,6 +959,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final groupedIndexes = _groupedChannelIndexes();
     final nameController = TextEditingController(text: group.name);
     final selectedIndexes = <int>{...group.channelIndexes};
+    int? selectedWidgetColor = group.widgetColor;
+    int? selectedWidgetTextColor = group.widgetTextColor;
     final editableChannels =
         connector.channels
             .where(
@@ -977,6 +999,34 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                     ),
                     const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(context.l10n.channels_changeWidgetColor),
+                      trailing: ChannelWidgetColorValue(
+                        colorValue: selectedWidgetColor,
+                      ),
+                      onTap: () async {
+                        final selection = await showChannelWidgetColorPicker(
+                          dialogContext,
+                          selectedBackgroundColorValue: selectedWidgetColor,
+                          selectedTextColorValue: selectedWidgetTextColor,
+                        );
+                        if (selection == null) return;
+                        setDialogState(() {
+                          selectedWidgetColor = selection.backgroundColorValue;
+                          selectedWidgetTextColor = selection.textColorValue;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        context.l10n.channels_title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Expanded(
                       child: editableChannels.isEmpty
                           ? Center(
@@ -1051,6 +1101,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           editableChannels,
                           selectedIndexes,
                         ),
+                        widgetColor: selectedWidgetColor,
+                        widgetTextColor: selectedWidgetTextColor,
                       );
                     }).toList();
                     if (_expandedChannelGroups.remove(group.name)) {
