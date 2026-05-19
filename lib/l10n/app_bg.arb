@@ -1472,6 +1472,7 @@
   "channels_changeWidgetColor": "Цвят на виджета",
   "channels_changeWidgetTextColor": "Цвят на текста на виджета",
   "channels_changeGroupEmpty": "Тук засега е празно",
+  "channels_allowOrderingInGroup": "Разрешаване на подреждането на каналите в групата",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

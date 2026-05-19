@@ -1472,6 +1472,7 @@
   "channels_changeWidgetColor": "Widgetens färg",
   "channels_changeWidgetTextColor": "Widgetens textfärg",
   "channels_changeGroupEmpty": "Det är tomt här än så länge",
+  "channels_allowOrderingInGroup": "Tillåt sortering av kanaler i gruppen",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

@@ -740,6 +740,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final isExpanded =
         forceExpanded || _expandedChannelGroups.contains(group.name);
     final channels = channelsForGroup(group, filteredChannels);
+    if (!group.allowOrderingInGroup) {
+      channels.sort(_compareChannelsByName);
+    }
     final groupWidgetColor = group.widgetColor == null
         ? null
         : Color(group.widgetColor!);
@@ -822,7 +825,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   channelMessageStore,
                   group,
                   channels,
-                  canReorder: showDragHandle,
+                  canReorder: showDragHandle && group.allowOrderingInGroup,
                   emptyTextColor: groupWidgetTextColor,
                 ),
               ),
@@ -959,6 +962,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final groupedIndexes = _groupedChannelIndexes();
     final nameController = TextEditingController(text: group.name);
     final selectedIndexes = <int>{...group.channelIndexes};
+    bool allowOrderingInGroup = group.allowOrderingInGroup;
     int? selectedWidgetColor = group.widgetColor;
     int? selectedWidgetTextColor = group.widgetTextColor;
     final editableChannels =
@@ -1059,6 +1063,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               },
                             ),
                     ),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: allowOrderingInGroup,
+                      title: Text(context.l10n.channels_allowOrderingInGroup),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          allowOrderingInGroup = value ?? false;
+                        });
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -1096,13 +1111,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       if (item.name != group.name) return item;
                       return item.copyWith(
                         name: name,
-                        channelIndexes: selectedChannelIndexesForGroupEdit(
-                          group,
-                          editableChannels,
-                          selectedIndexes,
-                        ),
+                        channelIndexes: allowOrderingInGroup
+                            ? selectedChannelIndexesForGroupEdit(
+                                group,
+                                editableChannels,
+                                selectedIndexes,
+                              )
+                            : selectedChannelIndexesForGroupEditSorted(
+                                editableChannels,
+                                selectedIndexes,
+                                _compareChannelsByName,
+                              ),
                         widgetColor: selectedWidgetColor,
                         widgetTextColor: selectedWidgetTextColor,
+                        allowOrderingInGroup: allowOrderingInGroup,
                       );
                     }).toList();
                     if (_expandedChannelGroups.remove(group.name)) {
@@ -1218,6 +1240,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     return filtered;
+  }
+
+  int _compareChannelsByName(Channel a, Channel b) {
+    final nameA = _normalizeChannelName(a).toLowerCase();
+    final nameB = _normalizeChannelName(b).toLowerCase();
+    return nameA.compareTo(nameB);
   }
 
   String _normalizeChannelName(Channel channel) {

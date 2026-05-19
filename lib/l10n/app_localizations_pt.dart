@@ -1216,6 +1216,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channels_changeGroupEmpty => 'Ainda está vazio aqui';
 
   @override
+  String get channels_allowOrderingInGroup =>
+      'Permitir ordenar canais dentro do grupo';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Adicionar perfil Cyr2Lat';
 
   @override

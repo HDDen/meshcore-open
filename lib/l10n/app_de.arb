@@ -1475,6 +1475,7 @@
   "channels_changeWidgetColor": "Widget-Farbe",
   "channels_changeWidgetTextColor": "Textfarbe des Widgets",
   "channels_changeGroupEmpty": "Hier ist es vorerst leer",
+  "channels_allowOrderingInGroup": "Kanalsortierung innerhalb der Gruppe erlauben",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

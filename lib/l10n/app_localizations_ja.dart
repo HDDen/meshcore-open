@@ -1160,6 +1160,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_changeGroupEmpty => 'ここはまだ空です';
 
   @override
+  String get channels_allowOrderingInGroup => 'グループ内のチャンネルの並び替えを許可';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Cyr2Latプロファイルの追加';
 
   @override

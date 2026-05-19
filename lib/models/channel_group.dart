@@ -6,6 +6,7 @@ class ChannelGroup {
   final int sortOrder;
   final int? widgetColor;
   final int? widgetTextColor;
+  final bool allowOrderingInGroup;
 
   const ChannelGroup({
     required this.name,
@@ -13,6 +14,7 @@ class ChannelGroup {
     this.sortOrder = 0,
     this.widgetColor,
     this.widgetTextColor,
+    this.allowOrderingInGroup = false,
   });
 
   ChannelGroup copyWith({
@@ -21,6 +23,7 @@ class ChannelGroup {
     int? sortOrder,
     Object? widgetColor = _channelGroupUnset,
     Object? widgetTextColor = _channelGroupUnset,
+    bool? allowOrderingInGroup,
   }) {
     return ChannelGroup(
       name: name ?? this.name,
@@ -32,6 +35,7 @@ class ChannelGroup {
       widgetTextColor: widgetTextColor == _channelGroupUnset
           ? this.widgetTextColor
           : widgetTextColor as int?,
+      allowOrderingInGroup: allowOrderingInGroup ?? this.allowOrderingInGroup,
     );
   }
 
@@ -42,6 +46,7 @@ class ChannelGroup {
       'sort_order': sortOrder,
       'widget_color': widgetColor,
       'widget_text_color': widgetTextColor,
+      'allow_ordering_in_group': allowOrderingInGroup,
     };
   }
 
@@ -60,6 +65,9 @@ class ChannelGroup {
       widgetTextColor: int.tryParse(
         json['widget_text_color']?.toString() ?? '',
       ),
+      allowOrderingInGroup:
+          json['allow_ordering_in_group'] == true ||
+          json['allow_ordering_in_group']?.toString() == 'true',
     );
   }
 }

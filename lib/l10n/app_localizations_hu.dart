@@ -1221,6 +1221,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_changeGroupEmpty => 'Itt egyelőre üres';
 
   @override
+  String get channels_allowOrderingInGroup =>
+      'Csatornák rendezésének engedélyezése a csoporton belül';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Cyr2Lat-profil hozzáadása';
 
   @override

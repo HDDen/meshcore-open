@@ -153,3 +153,15 @@ List<int> selectedChannelIndexesForGroupEdit(
   }
   return orderedIndexes;
 }
+
+List<int> selectedChannelIndexesForGroupEditSorted(
+  List<Channel> editableChannels,
+  Set<int> selectedIndexes,
+  Comparator<Channel> compareChannels,
+) {
+  final selectedChannels = [
+    for (final channel in editableChannels)
+      if (selectedIndexes.contains(channel.index)) channel,
+  ]..sort(compareChannels);
+  return [for (final channel in selectedChannels) channel.index];
+}

@@ -1141,6 +1141,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_changeGroupEmpty => '这里暂时为空';
 
   @override
+  String get channels_allowOrderingInGroup => '允许在组内排序频道';
+
+  @override
   String get settings_cyr2latProfileAdd => '新增 Cyr2Lat 設定檔';
 
   @override

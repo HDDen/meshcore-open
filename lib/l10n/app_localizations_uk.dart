@@ -1212,6 +1212,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_changeGroupEmpty => 'Тут поки порожньо';
 
   @override
+  String get channels_allowOrderingInGroup =>
+      'Дозволити впорядкування каналів у групі';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Додати профіль Cyr2Lat';
 
   @override

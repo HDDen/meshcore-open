@@ -1203,6 +1203,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_changeGroupEmpty => 'Tukaj je za zdaj prazno';
 
   @override
+  String get channels_allowOrderingInGroup =>
+      'Dovoli razvrščanje kanalov v skupini';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Dodaj profil Cyr2Lat';
 
   @override

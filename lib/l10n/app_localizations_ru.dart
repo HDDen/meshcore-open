@@ -1217,6 +1217,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_changeGroupEmpty => 'Здесь пока пусто';
 
   @override
+  String get channels_allowOrderingInGroup =>
+      'Сортировка каналов внутри группы';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Добавить профиль Cyr2Lat';
 
   @override

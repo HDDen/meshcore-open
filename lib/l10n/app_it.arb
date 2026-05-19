@@ -1472,6 +1472,7 @@
   "channels_changeWidgetColor": "Colore del widget",
   "channels_changeWidgetTextColor": "Colore del testo del widget",
   "channels_changeGroupEmpty": "Qui per ora è vuoto",
+  "channels_allowOrderingInGroup": "Consenti l'ordinamento dei canali nel gruppo",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

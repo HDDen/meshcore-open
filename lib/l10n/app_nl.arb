@@ -1472,6 +1472,7 @@
   "channels_changeWidgetColor": "Widgetkleur",
   "channels_changeWidgetTextColor": "Tekstkleur van widget",
   "channels_changeGroupEmpty": "Hier is het voorlopig leeg",
+  "channels_allowOrderingInGroup": "Kanalen ordenen binnen de groep toestaan",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

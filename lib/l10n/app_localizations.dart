@@ -2248,6 +2248,12 @@ abstract class AppLocalizations {
   /// **'It\'s empty here for now'**
   String get channels_changeGroupEmpty;
 
+  /// No description provided for @channels_allowOrderingInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow channels ordering inside of group'**
+  String get channels_allowOrderingInGroup;
+
   /// No description provided for @settings_cyr2latProfileAdd.
   ///
   /// In en, this message translates to:
