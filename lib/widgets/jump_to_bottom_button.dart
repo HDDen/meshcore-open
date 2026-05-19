@@ -35,8 +35,9 @@ class JumpToBottomButton extends StatefulWidget {
   }
 
   static bool isKeyboardVisible() {
-    return WidgetsBinding.instance.platformDispatcher.views
-        .any((view) => view.viewInsets.bottom > 0);
+    return WidgetsBinding.instance.platformDispatcher.views.any(
+      (view) => view.viewInsets.bottom > 0,
+    );
   }
 
   @override

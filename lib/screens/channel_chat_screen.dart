@@ -595,9 +595,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               itemCount: itemCount + spacerItemCount,
                               itemBuilder: (context, index) {
                                 if (hasBottomSpacer && index == 0) {
-                                  return SizedBox(
-                                    height: bottomReservedExtent,
-                                  );
+                                  return SizedBox(height: bottomReservedExtent);
                                 }
                                 final adjustedIndex = index - spacerItemCount;
 
