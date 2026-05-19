@@ -3281,6 +3281,133 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Цифровий вхід';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Цифровий вихід';
+
+  @override
+  String get telemetry_analogInputLabel => 'Аналоговий вхід';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Аналоговий вихід';
+
+  @override
+  String get telemetry_genericLabel => 'Загальний датчик';
+
+  @override
+  String get telemetry_luminosityLabel => 'Освітленість';
+
+  @override
+  String get telemetry_presenceLabel => 'Присутність';
+
+  @override
+  String get telemetry_humidityLabel => 'Вологість';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Акселерометр';
+
+  @override
+  String get telemetry_pressureLabel => 'Тиск';
+
+  @override
+  String get telemetry_altitudeLabel => 'Висота';
+
+  @override
+  String get telemetry_frequencyLabel => 'Частота';
+
+  @override
+  String get telemetry_percentageLabel => 'Відсоток';
+
+  @override
+  String get telemetry_concentrationLabel => 'Концентрація';
+
+  @override
+  String get telemetry_powerLabel => 'Потужність';
+
+  @override
+  String get telemetry_distanceLabel => 'Відстань';
+
+  @override
+  String get telemetry_energyLabel => 'Енергія';
+
+  @override
+  String get telemetry_directionLabel => 'Напрямок';
+
+  @override
+  String get telemetry_timeLabel => 'Час';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Гірометр';
+
+  @override
+  String get telemetry_colourLabel => 'Колір';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Перемикач';
+
+  @override
+  String get telemetry_polylineLabel => 'Полілінія';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters м';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Гц';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa гПа';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux лк';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts Вт';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters м';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours кВт⋅год';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => 'Кількість запитів';
 
   @override

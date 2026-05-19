@@ -96,6 +96,34 @@ class CayenneLpp {
         }
 
         switch (type) {
+          case lppDigitalInput:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt8(),
+            });
+            break;
+          case lppDigitalOutput:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt8(),
+            });
+            break;
+          case lppAnalogInput:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readInt16BE() / 100,
+            });
+            break;
+          case lppAnalogOutput:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readInt16BE() / 100,
+            });
+            break;
           case lppGenericSensor:
             telemetry.add({
               'channel': channel,
@@ -131,11 +159,29 @@ class CayenneLpp {
               'value': buffer.readUInt8() / 2,
             });
             break;
+          case lppAccelerometer:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': {
+                'x': buffer.readInt16BE() / 1000,
+                'y': buffer.readInt16BE() / 1000,
+                'z': buffer.readInt16BE() / 1000,
+              },
+            });
+            break;
           case lppBarometricPressure:
             telemetry.add({
               'channel': channel,
               'type': type,
               'value': buffer.readUInt16BE() / 10,
+            });
+            break;
+          case lppAltitude:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readInt16BE(),
             });
             break;
           case lppVoltage:
@@ -150,6 +196,13 @@ class CayenneLpp {
               'channel': channel,
               'type': type,
               'value': buffer.readInt16BE() / 1000,
+            });
+            break;
+          case lppFrequency:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt32BE(),
             });
             break;
           case lppPercentage:
@@ -173,6 +226,56 @@ class CayenneLpp {
               'value': buffer.readUInt16BE(),
             });
             break;
+          case lppDistance:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt32BE() / 1000,
+            });
+            break;
+          case lppEnergy:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt32BE() / 1000,
+            });
+            break;
+          case lppDirection:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt16BE(),
+            });
+            break;
+          case lppUnixTime:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt32BE(),
+            });
+            break;
+          case lppGyrometer:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': {
+                'x': buffer.readInt16BE() / 100,
+                'y': buffer.readInt16BE() / 100,
+                'z': buffer.readInt16BE() / 100,
+              },
+            });
+            break;
+          case lppColour:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': {
+                'red': buffer.readUInt8(),
+                'green': buffer.readUInt8(),
+                'blue': buffer.readUInt8(),
+              },
+            });
+            break;
           case lppGps:
             telemetry.add({
               'channel': channel,
@@ -181,6 +284,24 @@ class CayenneLpp {
                 'latitude': buffer.readInt24BE() / 10000,
                 'longitude': buffer.readInt24BE() / 10000,
                 'altitude': buffer.readInt24BE() / 100,
+              },
+            });
+            break;
+          case lppSwitch:
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': buffer.readUInt8(),
+            });
+            break;
+          case lppPolyline:
+            final size = buffer.readUInt8();
+            telemetry.add({
+              'channel': channel,
+              'type': type,
+              'value': {
+                'size': size,
+                'data': _bytesToHex(_readPolylinePayload(buffer, size)),
               },
             });
             break;
@@ -216,6 +337,19 @@ class CayenneLpp {
         );
 
         switch (type) {
+          case lppDigitalInput:
+            channelData['values']['digitalInput'] = buffer.readUInt8();
+            break;
+          case lppDigitalOutput:
+            channelData['values']['digitalOutput'] = buffer.readUInt8();
+            break;
+          case lppAnalogInput:
+            channelData['values']['analogInput'] = buffer.readInt16BE() / 100.0;
+            break;
+          case lppAnalogOutput:
+            channelData['values']['analogOutput'] =
+                buffer.readInt16BE() / 100.0;
+            break;
           case lppGenericSensor:
             channelData['values']['generic'] = buffer.readUInt32BE();
             break;
@@ -231,14 +365,28 @@ class CayenneLpp {
           case lppRelativeHumidity:
             channelData['values']['humidity'] = buffer.readUInt8() / 2.0;
             break;
+          case lppAccelerometer:
+            channelData['values']['accelerometer'] = {
+              'x': buffer.readInt16BE() / 1000.0,
+              'y': buffer.readInt16BE() / 1000.0,
+              'z': buffer.readInt16BE() / 1000.0,
+            };
+            break;
           case lppBarometricPressure:
             channelData['values']['pressure'] = buffer.readUInt16BE() / 10.0;
+            break;
+          case lppAltitude:
+            // MeshCore encodes standalone barometric altitude as LPP type 121.
+            channelData['values']['altitude'] = buffer.readInt16BE();
             break;
           case lppVoltage:
             channelData['values']['voltage'] = buffer.readInt16BE() / 100.0;
             break;
           case lppCurrent:
             channelData['values']['current'] = buffer.readInt16BE() / 1000.0;
+            break;
+          case lppFrequency:
+            channelData['values']['frequency'] = buffer.readUInt32BE();
             break;
           case lppPercentage:
             channelData['values']['percentage'] = buffer.readUInt8();
@@ -249,6 +397,32 @@ class CayenneLpp {
           case lppPower:
             channelData['values']['power'] = buffer.readUInt16BE();
             break;
+          case lppDistance:
+            channelData['values']['distance'] = buffer.readUInt32BE() / 1000.0;
+            break;
+          case lppEnergy:
+            channelData['values']['energy'] = buffer.readUInt32BE() / 1000.0;
+            break;
+          case lppDirection:
+            channelData['values']['direction'] = buffer.readUInt16BE();
+            break;
+          case lppUnixTime:
+            channelData['values']['time'] = buffer.readUInt32BE();
+            break;
+          case lppGyrometer:
+            channelData['values']['gyrometer'] = {
+              'x': buffer.readInt16BE() / 100.0,
+              'y': buffer.readInt16BE() / 100.0,
+              'z': buffer.readInt16BE() / 100.0,
+            };
+            break;
+          case lppColour:
+            channelData['values']['colour'] = {
+              'red': buffer.readUInt8(),
+              'green': buffer.readUInt8(),
+              'blue': buffer.readUInt8(),
+            };
+            break;
           case lppGps:
             channelData['values']['gps'] = {
               'latitude': buffer.readInt24BE() / 10000.0,
@@ -256,22 +430,48 @@ class CayenneLpp {
               'altitude': buffer.readInt24BE() / 100.0,
             };
             break;
-          // Add more types as needed...
+          case lppSwitch:
+            channelData['values']['switch'] = buffer.readUInt8() != 0;
+            break;
+          case lppPolyline:
+            final size = buffer.readUInt8();
+            channelData['values']['polyline'] = {
+              'size': size,
+              'data': _bytesToHex(_readPolylinePayload(buffer, size)),
+            };
+            break;
           default:
-            //Stopped parsing to avoid misalignment
-            return channels.values.toList();
+            // Stop parsing to avoid losing alignment on an unknown LPP type.
+            return _sortedChannelValues(channels);
         }
       }
 
-      final List<Map<String, dynamic>> channelsOut = channels.values.toList();
-      channelsOut.sort((a, b) => a['channel'].compareTo(b['channel']));
-      return channelsOut;
+      return _sortedChannelValues(channels);
     } catch (e) {
       // Handle parsing errors, possibly due to malformed data
       appLogger.error('Error parsing Cayenne LPP data: $e');
-      return <
-        Map<String, dynamic>
-      >[]; // Return an empty list on error to avoid crashing the app
+      // Preserve any fields parsed before the malformed value.
+      return _sortedChannelValues(channels);
     }
+  }
+
+  static Uint8List _readPolylinePayload(BufferReader buffer, int size) {
+    final declaredPayloadSize = size > 0 ? size - 1 : 0;
+    final availablePayloadSize = declaredPayloadSize <= buffer.remaining
+        ? declaredPayloadSize
+        : buffer.remaining;
+    return buffer.readBytes(availablePayloadSize);
+  }
+
+  static List<Map<String, dynamic>> _sortedChannelValues(
+    Map<int, Map<String, dynamic>> channels,
+  ) {
+    final channelsOut = channels.values.toList();
+    channelsOut.sort((a, b) => a['channel'].compareTo(b['channel']));
+    return channelsOut;
+  }
+
+  static String _bytesToHex(Uint8List bytes) {
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 }

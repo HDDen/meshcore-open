@@ -5702,6 +5702,216 @@ abstract class AppLocalizations {
   /// **'{celsius}°C / {fahrenheit}°F'**
   String telemetry_temperatureValue(String celsius, String fahrenheit);
 
+  /// No description provided for @telemetry_digitalInputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital Input'**
+  String get telemetry_digitalInputLabel;
+
+  /// No description provided for @telemetry_digitalOutputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital Output'**
+  String get telemetry_digitalOutputLabel;
+
+  /// No description provided for @telemetry_analogInputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Analog Input'**
+  String get telemetry_analogInputLabel;
+
+  /// No description provided for @telemetry_analogOutputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Analog Output'**
+  String get telemetry_analogOutputLabel;
+
+  /// No description provided for @telemetry_genericLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Generic Sensor'**
+  String get telemetry_genericLabel;
+
+  /// No description provided for @telemetry_luminosityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Luminosity'**
+  String get telemetry_luminosityLabel;
+
+  /// No description provided for @telemetry_presenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Presence'**
+  String get telemetry_presenceLabel;
+
+  /// No description provided for @telemetry_humidityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get telemetry_humidityLabel;
+
+  /// No description provided for @telemetry_accelerometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Accelerometer'**
+  String get telemetry_accelerometerLabel;
+
+  /// No description provided for @telemetry_pressureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressure'**
+  String get telemetry_pressureLabel;
+
+  /// No description provided for @telemetry_altitudeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Altitude'**
+  String get telemetry_altitudeLabel;
+
+  /// No description provided for @telemetry_frequencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get telemetry_frequencyLabel;
+
+  /// No description provided for @telemetry_percentageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get telemetry_percentageLabel;
+
+  /// No description provided for @telemetry_concentrationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Concentration'**
+  String get telemetry_concentrationLabel;
+
+  /// No description provided for @telemetry_powerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get telemetry_powerLabel;
+
+  /// No description provided for @telemetry_distanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get telemetry_distanceLabel;
+
+  /// No description provided for @telemetry_energyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get telemetry_energyLabel;
+
+  /// No description provided for @telemetry_directionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get telemetry_directionLabel;
+
+  /// No description provided for @telemetry_timeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get telemetry_timeLabel;
+
+  /// No description provided for @telemetry_gyrometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gyrometer'**
+  String get telemetry_gyrometerLabel;
+
+  /// No description provided for @telemetry_colourLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get telemetry_colourLabel;
+
+  /// No description provided for @telemetry_gpsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get telemetry_gpsLabel;
+
+  /// No description provided for @telemetry_switchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get telemetry_switchLabel;
+
+  /// No description provided for @telemetry_polylineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Polyline'**
+  String get telemetry_polylineLabel;
+
+  /// No description provided for @telemetry_altitudeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{meters} m'**
+  String telemetry_altitudeValue(String meters);
+
+  /// No description provided for @telemetry_frequencyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{hertz} Hz'**
+  String telemetry_frequencyValue(String hertz);
+
+  /// No description provided for @telemetry_pressureValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{hpa} hPa'**
+  String telemetry_pressureValue(String hpa);
+
+  /// No description provided for @telemetry_luminosityValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{lux} lx'**
+  String telemetry_luminosityValue(String lux);
+
+  /// No description provided for @telemetry_powerValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{watts} W'**
+  String telemetry_powerValue(String watts);
+
+  /// No description provided for @telemetry_distanceValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{meters} m'**
+  String telemetry_distanceValue(String meters);
+
+  /// No description provided for @telemetry_energyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{kilowattHours} kWh'**
+  String telemetry_energyValue(String kilowattHours);
+
+  /// No description provided for @telemetry_directionValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{degrees}°'**
+  String telemetry_directionValue(String degrees);
+
+  /// No description provided for @telemetry_concentrationValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{ppm} ppm'**
+  String telemetry_concentrationValue(String ppm);
+
+  /// No description provided for @telemetry_percentageValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String telemetry_percentageValue(String percent);
+
+  /// No description provided for @telemetry_analogValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}'**
+  String telemetry_analogValue(String value);
+
   /// No description provided for @telemetry_autoFetchQuantity.
   ///
   /// In en, this message translates to:

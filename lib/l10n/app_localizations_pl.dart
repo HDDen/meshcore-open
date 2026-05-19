@@ -3295,6 +3295,133 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Wejście cyfrowe';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Wyjście cyfrowe';
+
+  @override
+  String get telemetry_analogInputLabel => 'Wejście analogowe';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Wyjście analogowe';
+
+  @override
+  String get telemetry_genericLabel => 'Czujnik ogólny';
+
+  @override
+  String get telemetry_luminosityLabel => 'Jasność';
+
+  @override
+  String get telemetry_presenceLabel => 'Obecność';
+
+  @override
+  String get telemetry_humidityLabel => 'Wilgotność';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Akcelerometr';
+
+  @override
+  String get telemetry_pressureLabel => 'Ciśnienie';
+
+  @override
+  String get telemetry_altitudeLabel => 'Wysokość';
+
+  @override
+  String get telemetry_frequencyLabel => 'Częstotliwość';
+
+  @override
+  String get telemetry_percentageLabel => 'Procent';
+
+  @override
+  String get telemetry_concentrationLabel => 'Stężenie';
+
+  @override
+  String get telemetry_powerLabel => 'Moc';
+
+  @override
+  String get telemetry_distanceLabel => 'Odległość';
+
+  @override
+  String get telemetry_energyLabel => 'Energia';
+
+  @override
+  String get telemetry_directionLabel => 'Kierunek';
+
+  @override
+  String get telemetry_timeLabel => 'Czas';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Żyrometr';
+
+  @override
+  String get telemetry_colourLabel => 'Kolor';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Przełącznik';
+
+  @override
+  String get telemetry_polylineLabel => 'Polilinia';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => 'Liczba żądań';
 
   @override

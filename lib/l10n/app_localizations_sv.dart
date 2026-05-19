@@ -3238,6 +3238,133 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Digital ingång';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Digital utgång';
+
+  @override
+  String get telemetry_analogInputLabel => 'Analog ingång';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Analog utgång';
+
+  @override
+  String get telemetry_genericLabel => 'Allmän sensor';
+
+  @override
+  String get telemetry_luminosityLabel => 'Ljusstyrka';
+
+  @override
+  String get telemetry_presenceLabel => 'Närvaro';
+
+  @override
+  String get telemetry_humidityLabel => 'Luftfuktighet';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Accelerometer';
+
+  @override
+  String get telemetry_pressureLabel => 'Tryck';
+
+  @override
+  String get telemetry_altitudeLabel => 'Höjd';
+
+  @override
+  String get telemetry_frequencyLabel => 'Frekvens';
+
+  @override
+  String get telemetry_percentageLabel => 'Procent';
+
+  @override
+  String get telemetry_concentrationLabel => 'Koncentration';
+
+  @override
+  String get telemetry_powerLabel => 'Effekt';
+
+  @override
+  String get telemetry_distanceLabel => 'Avstånd';
+
+  @override
+  String get telemetry_energyLabel => 'Energi';
+
+  @override
+  String get telemetry_directionLabel => 'Riktning';
+
+  @override
+  String get telemetry_timeLabel => 'Tid';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Gyrometer';
+
+  @override
+  String get telemetry_colourLabel => 'Färg';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Brytare';
+
+  @override
+  String get telemetry_polylineLabel => 'Polylinje';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => 'Antal förfrågningar';
 
   @override

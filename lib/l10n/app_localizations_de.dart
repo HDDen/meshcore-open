@@ -3289,6 +3289,133 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Digitaleingang';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Digitalausgang';
+
+  @override
+  String get telemetry_analogInputLabel => 'Analogeingang';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Analogausgang';
+
+  @override
+  String get telemetry_genericLabel => 'Allgemeiner Sensor';
+
+  @override
+  String get telemetry_luminosityLabel => 'Helligkeit';
+
+  @override
+  String get telemetry_presenceLabel => 'Anwesenheit';
+
+  @override
+  String get telemetry_humidityLabel => 'Luftfeuchtigkeit';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Beschleunigungsmesser';
+
+  @override
+  String get telemetry_pressureLabel => 'Druck';
+
+  @override
+  String get telemetry_altitudeLabel => 'Höhe';
+
+  @override
+  String get telemetry_frequencyLabel => 'Frequenz';
+
+  @override
+  String get telemetry_percentageLabel => 'Prozentsatz';
+
+  @override
+  String get telemetry_concentrationLabel => 'Konzentration';
+
+  @override
+  String get telemetry_powerLabel => 'Leistung';
+
+  @override
+  String get telemetry_distanceLabel => 'Entfernung';
+
+  @override
+  String get telemetry_energyLabel => 'Energie';
+
+  @override
+  String get telemetry_directionLabel => 'Richtung';
+
+  @override
+  String get telemetry_timeLabel => 'Zeit';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Gyroskop';
+
+  @override
+  String get telemetry_colourLabel => 'Farbe';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Schalter';
+
+  @override
+  String get telemetry_polylineLabel => 'Polylinie';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => 'Anzahl der Anfragen';
 
   @override

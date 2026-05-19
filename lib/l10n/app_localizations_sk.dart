@@ -3262,6 +3262,133 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Digitálny vstup';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Digitálny výstup';
+
+  @override
+  String get telemetry_analogInputLabel => 'Analógový vstup';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Analógový výstup';
+
+  @override
+  String get telemetry_genericLabel => 'Všeobecný senzor';
+
+  @override
+  String get telemetry_luminosityLabel => 'Osvetlenie';
+
+  @override
+  String get telemetry_presenceLabel => 'Prítomnosť';
+
+  @override
+  String get telemetry_humidityLabel => 'Vlhkosť';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Akcelerometer';
+
+  @override
+  String get telemetry_pressureLabel => 'Tlak';
+
+  @override
+  String get telemetry_altitudeLabel => 'Nadmorská výška';
+
+  @override
+  String get telemetry_frequencyLabel => 'Frekvencia';
+
+  @override
+  String get telemetry_percentageLabel => 'Percento';
+
+  @override
+  String get telemetry_concentrationLabel => 'Koncentrácia';
+
+  @override
+  String get telemetry_powerLabel => 'Výkon';
+
+  @override
+  String get telemetry_distanceLabel => 'Vzdialenosť';
+
+  @override
+  String get telemetry_energyLabel => 'Energia';
+
+  @override
+  String get telemetry_directionLabel => 'Smer';
+
+  @override
+  String get telemetry_timeLabel => 'Čas';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Gyrometer';
+
+  @override
+  String get telemetry_colourLabel => 'Farba';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Prepínač';
+
+  @override
+  String get telemetry_polylineLabel => 'Lomená čiara';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => 'Počet požiadaviek';
 
   @override

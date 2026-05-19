@@ -3103,6 +3103,133 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => '디지털 입력';
+
+  @override
+  String get telemetry_digitalOutputLabel => '디지털 출력';
+
+  @override
+  String get telemetry_analogInputLabel => '아날로그 입력';
+
+  @override
+  String get telemetry_analogOutputLabel => '아날로그 출력';
+
+  @override
+  String get telemetry_genericLabel => '일반 센서';
+
+  @override
+  String get telemetry_luminosityLabel => '조도';
+
+  @override
+  String get telemetry_presenceLabel => '존재 감지';
+
+  @override
+  String get telemetry_humidityLabel => '습도';
+
+  @override
+  String get telemetry_accelerometerLabel => '가속도계';
+
+  @override
+  String get telemetry_pressureLabel => '압력';
+
+  @override
+  String get telemetry_altitudeLabel => '고도';
+
+  @override
+  String get telemetry_frequencyLabel => '주파수';
+
+  @override
+  String get telemetry_percentageLabel => '백분율';
+
+  @override
+  String get telemetry_concentrationLabel => '농도';
+
+  @override
+  String get telemetry_powerLabel => '전력';
+
+  @override
+  String get telemetry_distanceLabel => '거리';
+
+  @override
+  String get telemetry_energyLabel => '에너지';
+
+  @override
+  String get telemetry_directionLabel => '방향';
+
+  @override
+  String get telemetry_timeLabel => '시간';
+
+  @override
+  String get telemetry_gyrometerLabel => '자이로미터';
+
+  @override
+  String get telemetry_colourLabel => '색상';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => '스위치';
+
+  @override
+  String get telemetry_polylineLabel => '폴리라인';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get telemetry_autoFetchQuantity => '요청 수';
 
   @override
