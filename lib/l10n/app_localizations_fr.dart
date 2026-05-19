@@ -1213,10 +1213,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => 'Couleur du widget';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => 'C\'est vide pour le moment';
 
   @override
   String get settings_cyr2latProfileAdd => 'Ajouter un profil Cyr2Lat';

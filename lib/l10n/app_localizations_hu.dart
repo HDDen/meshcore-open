@@ -1212,10 +1212,10 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => 'Widget színe';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => 'Itt egyelőre üres';
 
   @override
   String get settings_cyr2latProfileAdd => 'Cyr2Lat-profil hozzáadása';

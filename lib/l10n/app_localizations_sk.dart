@@ -1197,10 +1197,10 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => 'Farba widgetu';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => 'Zatiaľ je tu prázdno';
 
   @override
   String get settings_cyr2latProfileAdd => 'Pridať profil Cyr2Lat';

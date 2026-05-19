@@ -1206,10 +1206,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => 'Widget-Farbe';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => 'Hier ist es vorerst leer';
 
   @override
   String get settings_cyr2latProfileAdd => 'Cyr2Lat-Profil hinzufügen';

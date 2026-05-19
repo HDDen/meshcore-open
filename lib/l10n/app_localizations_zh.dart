@@ -1132,10 +1132,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => '小组件颜色';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => '这里暂时为空';
 
   @override
   String get settings_cyr2latProfileAdd => '新增 Cyr2Lat 設定檔';

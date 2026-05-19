@@ -589,6 +589,8 @@
   "channels_scanQrCodeComingSoon": "Hamarosan",
   "channels_enterHashtag": "Írja be a hashtaget",
   "channels_hashtagHint": "pl. #csapat",
+  "channels_changeWidgetColor": "Widget színe",
+  "channels_changeGroupEmpty": "Itt egyelőre üres",
   "chat_noMessages": "Még nincs üzenet.",
   "chat_sendMessageToStart": "Küldj egy üzenetet, hogy elindulj!",
   "chat_originalMessageNotFound": "A eredeti üzenet nem található.",

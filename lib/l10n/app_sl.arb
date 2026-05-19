@@ -1469,6 +1469,8 @@
   "channels_scanQrCodeComingSoon": "Prihajajoča",
   "channels_enterHashtag": "Vnesite hashtag",
   "channels_hashtagHint": "npr. #ekipa",
+  "channels_changeWidgetColor": "Barva gradnika",
+  "channels_changeGroupEmpty": "Tukaj je za zdaj prazno",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

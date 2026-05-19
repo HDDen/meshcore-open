@@ -1203,10 +1203,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get channels_changeWidgetColor => 'Widget\'s color';
+  String get channels_changeWidgetColor => 'Колір віджета';
 
   @override
-  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+  String get channels_changeGroupEmpty => 'Тут поки порожньо';
 
   @override
   String get settings_cyr2latProfileAdd => 'Додати профіль Cyr2Lat';

@@ -1469,6 +1469,8 @@
   "channels_scanQrCodeComingSoon": "Čoskoro",
   "channels_enterHashtag": "Zadajte hashtag",
   "channels_hashtagHint": "napr. #tím",
+  "channels_changeWidgetColor": "Farba widgetu",
+  "channels_changeGroupEmpty": "Zatiaľ je tu prázdno",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {

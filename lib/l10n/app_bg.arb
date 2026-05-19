@@ -1469,6 +1469,8 @@
   "channels_scanQrCodeComingSoon": "Ще излезе скоро",
   "channels_enterHashtag": "Въведете хаштаг",
   "channels_hashtagHint": "напр. #отбор",
+  "channels_changeWidgetColor": "Цвят на виджета",
+  "channels_changeGroupEmpty": "Тук засега е празно",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
