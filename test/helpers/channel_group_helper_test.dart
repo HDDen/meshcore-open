@@ -73,5 +73,13 @@ void main() {
         expect(selected, [3, 1, 2]);
       },
     );
+
+    test('reorders channels using the adjusted onReorderItem index', () {
+      final group = ChannelGroup(name: 'Group', channelIndexes: [1, 2, 3]);
+
+      final reordered = reorderedChannelIndexesInGroup(group, 0, 2);
+
+      expect(reordered, [2, 3, 1]);
+    });
   });
 }
