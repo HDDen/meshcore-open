@@ -1207,6 +1207,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get channels_changeWidgetColor => 'Widget\'s color';
+
+  @override
+  String get channels_changeGroupEmpty => 'It\'s empty here for now';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Añadir perfil Cyr2Lat';
 
   @override

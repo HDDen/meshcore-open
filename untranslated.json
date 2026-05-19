@@ -1,1 +1,81 @@
-{}
+{
+  "bg": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "de": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "es": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "fr": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "hu": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "it": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "ja": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "ko": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "nl": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "pl": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "pt": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "sk": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "sl": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "sv": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "uk": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ],
+
+  "zh": [
+    "channels_changeWidgetColor",
+    "channels_changeGroupEmpty"
+  ]
+}

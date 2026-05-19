@@ -2230,6 +2230,18 @@ abstract class AppLocalizations {
   /// **'Channel \"{name}\" updated'**
   String channels_channelUpdated(String name);
 
+  /// No description provided for @channels_changeWidgetColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget\'s color'**
+  String get channels_changeWidgetColor;
+
+  /// No description provided for @channels_changeGroupEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s empty here for now'**
+  String get channels_changeGroupEmpty;
+
   /// No description provided for @settings_cyr2latProfileAdd.
   ///
   /// In en, this message translates to:
