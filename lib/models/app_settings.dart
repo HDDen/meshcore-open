@@ -104,6 +104,28 @@ class TcpConnectionBookmark {
   }
 }
 
+class QuickAnswer {
+  final String id;
+  final String text;
+
+  const QuickAnswer({required this.id, required this.text});
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'text': text};
+  }
+
+  factory QuickAnswer.fromJson(Map<String, dynamic> json) {
+    return QuickAnswer(
+      id: json['id']?.toString() ?? '',
+      text: json['text']?.toString() ?? '',
+    );
+  }
+
+  QuickAnswer copyWith({String? id, String? text}) {
+    return QuickAnswer(id: id ?? this.id, text: text ?? this.text);
+  }
+}
+
 class AppSettings {
   static const Object _unset = Object();
   static const List<String> _standardCyr2LatProfileIds = [
@@ -159,6 +181,7 @@ class AppSettings {
   final List<TranslationModelRecord> translationDownloadedModels;
   final int mcmpTextLimit;
   final int channelMaxbytesOutgoing;
+  final List<QuickAnswer> quickAnswers;
   final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
@@ -238,6 +261,55 @@ class AppSettings {
       parsed = int.tryParse(value);
     }
     return (parsed ?? 0).clamp(0, maxChannelMaxbytesOutgoing).toInt();
+  }
+
+  static List<QuickAnswer> normalizeQuickAnswers(dynamic value) {
+    if (value is! List) return const [];
+    final usedIds = <String>{};
+    final answers = <QuickAnswer>[];
+    for (var index = 0; index < value.length; index++) {
+      final answer = _quickAnswerFrom(value[index], index);
+      if (answer.text.trim().isEmpty) continue;
+      final id = answer.id.trim().isEmpty
+          ? _legacyQuickAnswerId(answer.text, index)
+          : answer.id;
+      if (!usedIds.add(id)) continue;
+      // Preserve meaningful trailing spaces for command templates.
+      answers.add(answer.copyWith(id: id));
+    }
+    return List.unmodifiable(answers);
+  }
+
+  static QuickAnswer _quickAnswerFrom(dynamic entry, int index) {
+    if (entry is QuickAnswer) return entry;
+    if (entry is Map) {
+      return QuickAnswer.fromJson(Map<String, dynamic>.from(entry));
+    }
+    final text = entry?.toString() ?? '';
+    // Local dev builds stored plain strings before quick answers received
+    // stable ids. Keep this tolerant without writing a migration.
+    return QuickAnswer(id: _legacyQuickAnswerId(text, index), text: text);
+  }
+
+  static List<String> normalizeQuickAnswerIds(dynamic value) {
+    if (value is! List) return const [];
+    final usedIds = <String>{};
+    final ids = <String>[];
+    for (final entry in value) {
+      final id = entry?.toString() ?? '';
+      if (id.trim().isEmpty || !usedIds.add(id)) continue;
+      ids.add(id);
+    }
+    return List.unmodifiable(ids);
+  }
+
+  static String _legacyQuickAnswerId(String text, int index) {
+    var hash = 0x811c9dc5;
+    for (final codeUnit in text.codeUnits) {
+      hash ^= codeUnit;
+      hash = (hash * 0x01000193) & 0xffffffff;
+    }
+    return 'qa_${index}_${hash.toRadixString(16).padLeft(8, '0')}';
   }
 
   static int normalizeSendingDelayForCancellation(dynamic value) {
@@ -324,6 +396,7 @@ class AppSettings {
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
+    List<QuickAnswer>? quickAnswers,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -340,6 +413,7 @@ class AppSettings {
        channelMaxbytesOutgoing = normalizeChannelMaxbytesOutgoing(
          channelMaxbytesOutgoing,
        ),
+       quickAnswers = normalizeQuickAnswers(quickAnswers),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -400,6 +474,7 @@ class AppSettings {
           .toList(),
       'mcmp_text_limit': mcmpTextLimit,
       'channel_maxbytes_outgoing': channelMaxbytesOutgoing,
+      'quick_answers': quickAnswers.map((answer) => answer.toJson()).toList(),
       'sending_delay_for_cancellation_seconds':
           sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
@@ -512,6 +587,7 @@ class AppSettings {
           const [],
       mcmpTextLimit: json['mcmp_text_limit'],
       channelMaxbytesOutgoing: json['channel_maxbytes_outgoing'],
+      quickAnswers: normalizeQuickAnswers(json['quick_answers']),
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
@@ -594,6 +670,7 @@ class AppSettings {
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
+    List<QuickAnswer>? quickAnswers,
     int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -671,6 +748,7 @@ class AppSettings {
       mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
       channelMaxbytesOutgoing:
           channelMaxbytesOutgoing ?? this.channelMaxbytesOutgoing,
+      quickAnswers: quickAnswers ?? this.quickAnswers,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,

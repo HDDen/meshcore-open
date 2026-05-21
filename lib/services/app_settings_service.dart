@@ -403,6 +403,15 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setQuickAnswers(List<QuickAnswer> value) async {
+    await updateSettings(
+      _settings.copyWith(
+        // Keep stored replies normalized so empty rows never leak into UI lists.
+        quickAnswers: AppSettings.normalizeQuickAnswers(value),
+      ),
+    );
+  }
+
   Future<void> setSendingDelayForCancellationSeconds(int value) async {
     await updateSettings(
       _settings.copyWith(

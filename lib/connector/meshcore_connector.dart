@@ -306,9 +306,11 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
   final Map<String, bool> _contactSendingDelayEnabled = {};
+  final Map<String, List<String>> _contactQuickAnswerIds = {};
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
   final Map<int, bool> _channelSendingDelayEnabled = {};
+  final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
   final Map<String, int> _contactUnreadCount = {};
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
@@ -699,6 +701,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _ensureContactSendingDelaySettingLoaded(contactKeyHex);
   }
 
+  void ensureContactQuickAnswerIdsLoaded(String contactKeyHex) {
+    _ensureContactQuickAnswerIdsLoaded(contactKeyHex);
+  }
+
   bool isChannelSendingDelayEnabled(int channelIndex) {
     _ensureChannelSendingDelaySettingLoaded(channelIndex);
     return _channelSendingDelayEnabled[channelIndex] ?? false;
@@ -707,6 +713,34 @@ class MeshCoreConnector extends ChangeNotifier {
   bool isContactSendingDelayEnabled(String contactKeyHex) {
     _ensureContactSendingDelaySettingLoaded(contactKeyHex);
     return _contactSendingDelayEnabled[contactKeyHex] ?? false;
+  }
+
+  List<String> getChannelQuickAnswerIds(int channelIndex) {
+    _ensureChannelQuickAnswerIdsLoaded(channelIndex);
+    return List.unmodifiable(_channelQuickAnswerIds[channelIndex] ?? const []);
+  }
+
+  List<String> getContactQuickAnswerIds(String contactKeyHex) {
+    _ensureContactQuickAnswerIdsLoaded(contactKeyHex);
+    return List.unmodifiable(_contactQuickAnswerIds[contactKeyHex] ?? const []);
+  }
+
+  Future<List<String>> loadChannelQuickAnswerIds(int channelIndex) async {
+    final answers = await _channelSettingsStore.loadQuickAnswerIds(
+      channelIndex,
+    );
+    _channelQuickAnswerIds[channelIndex] = answers;
+    notifyListeners();
+    return List.unmodifiable(answers);
+  }
+
+  Future<List<String>> loadContactQuickAnswerIds(String contactKeyHex) async {
+    final answers = await _contactSettingsStore.loadQuickAnswerIds(
+      contactKeyHex,
+    );
+    _contactQuickAnswerIds[contactKeyHex] = answers;
+    notifyListeners();
+    return List.unmodifiable(answers);
   }
 
   Future<bool> loadContactSendingDelayEnabled(String contactKeyHex) async {
@@ -917,6 +951,28 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelQuickAnswerIds(
+    int channelIndex,
+    List<String> answers,
+  ) async {
+    final normalized = AppSettings.normalizeQuickAnswerIds(answers);
+    if (listEquals(_channelQuickAnswerIds[channelIndex], normalized)) return;
+    _channelQuickAnswerIds[channelIndex] = normalized;
+    await _channelSettingsStore.saveQuickAnswerIds(channelIndex, normalized);
+    notifyListeners();
+  }
+
+  Future<void> setContactQuickAnswerIds(
+    String contactKeyHex,
+    List<String> answers,
+  ) async {
+    final normalized = AppSettings.normalizeQuickAnswerIds(answers);
+    if (listEquals(_contactQuickAnswerIds[contactKeyHex], normalized)) return;
+    _contactQuickAnswerIds[contactKeyHex] = normalized;
+    await _contactSettingsStore.saveQuickAnswerIds(contactKeyHex, normalized);
+    notifyListeners();
+  }
+
   Future<void> _loadChannelOrder() async {
     _channelOrder = await _channelOrderStore.loadChannelOrder();
     _applyChannelOrder();
@@ -1055,6 +1111,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _ensureContactMcmpSettingLoaded(contact.publicKeyHex);
       _ensureContactSmazSettingLoaded(contact.publicKeyHex);
       _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
+      _ensureContactQuickAnswerIdsLoaded(contact.publicKeyHex);
     }
   }
 
@@ -1070,6 +1127,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     _channelSendingDelayEnabled.clear();
+    _channelQuickAnswerIds.clear();
     _channelWidgetColor.clear();
     _channelWidgetTextColor.clear();
     final channelCount = maxChannels ?? _maxChannels;
@@ -1080,6 +1138,8 @@ class MeshCoreConnector extends ChangeNotifier {
           .loadCyr2LatEnabled(i);
       _channelSendingDelayEnabled[i] = await _channelSettingsStore
           .loadSendingDelayEnabled(i);
+      _channelQuickAnswerIds[i] = await _channelSettingsStore
+          .loadQuickAnswerIds(i);
       _channelWidgetColor[i] = await _channelSettingsStore.loadWidgetColor(i);
       _channelWidgetTextColor[i] = await _channelSettingsStore
           .loadWidgetTextColor(i);
@@ -4941,6 +5001,15 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactQuickAnswerIdsLoaded(String contactKeyHex) {
+    if (_contactQuickAnswerIds.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadQuickAnswerIds(contactKeyHex).then((answers) {
+      if (listEquals(_contactQuickAnswerIds[contactKeyHex], answers)) return;
+      _contactQuickAnswerIds[contactKeyHex] = answers;
+      notifyListeners();
+    });
+  }
+
   void _ensureContactCyr2LatProfileLoaded(String contactKeyHex) {
     if (_contactCyr2LatProfileId.containsKey(contactKeyHex)) return;
     _contactSettingsStore.loadCyr2LatProfileId(contactKeyHex).then((profileId) {
@@ -4964,6 +5033,15 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSettingsStore.loadSendingDelayEnabled(channelIndex).then((enabled) {
       if (_channelSendingDelayEnabled[channelIndex] == enabled) return;
       _channelSendingDelayEnabled[channelIndex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureChannelQuickAnswerIdsLoaded(int channelIndex) {
+    if (_channelQuickAnswerIds.containsKey(channelIndex)) return;
+    _channelSettingsStore.loadQuickAnswerIds(channelIndex).then((answers) {
+      if (listEquals(_channelQuickAnswerIds[channelIndex], answers)) return;
+      _channelQuickAnswerIds[channelIndex] = answers;
       notifyListeners();
     });
   }

@@ -483,6 +483,8 @@ class AppSettingsScreen extends StatelessWidget {
             _buildSendingDelayTile(context, settingsService),
             const Divider(height: 1),
             _buildChannelMaxbytesOutgoingTile(context, settingsService),
+            const Divider(height: 1),
+            _buildQuickAnswersTile(context, settingsService),
           ],
         ],
       ),
@@ -1473,6 +1475,19 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildQuickAnswersTile(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return ListTile(
+      leading: const Icon(Icons.quickreply_outlined),
+      title: Text(context.l10n.settings_quickAnswersTitle),
+      subtitle: Text(context.l10n.settings_quickAnswersSubtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showQuickAnswersDialog(context, settingsService),
+    );
+  }
+
   void _showMcmpTextLimitDialog(
     BuildContext context,
     AppSettingsService settingsService,
@@ -1663,6 +1678,275 @@ class AppSettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showQuickAnswersDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController();
+    var answers = List<QuickAnswer>.from(settingsService.settings.quickAnswers);
+    String? addErrorText;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(dialogContext.l10n.settings_quickAnswersTitle),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.7,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      minLines: 2,
+                      maxLines: 2,
+                      onChanged: (_) {
+                        if (addErrorText == null) return;
+                        setState(() => addErrorText = null);
+                      },
+                      decoration: InputDecoration(
+                        labelText:
+                            dialogContext.l10n.settings_quickAnswersAddText,
+                        errorText: addErrorText,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            controller.clear();
+                            if (addErrorText != null) {
+                              setState(() => addErrorText = null);
+                            }
+                          },
+                          child: Text(dialogContext.l10n.common_clear),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () async {
+                            final text = controller.text;
+                            if (text.trim().isEmpty) return;
+                            if (answers.any((answer) => answer.text == text)) {
+                              setState(() {
+                                addErrorText = dialogContext
+                                    .l10n
+                                    .settings_quickAnswersExists;
+                              });
+                              return;
+                            }
+                            final updated = [
+                              ...answers,
+                              QuickAnswer(id: _newQuickAnswerId(), text: text),
+                            ];
+                            await settingsService.setQuickAnswers(updated);
+                            if (!dialogContext.mounted) return;
+                            setState(() {
+                              answers = updated;
+                              addErrorText = null;
+                              controller.clear();
+                            });
+                          },
+                          child: Text(dialogContext.l10n.common_add),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      itemCount: answers.length,
+                      onReorderItem: (oldIndex, newIndex) async {
+                        final updated = List<QuickAnswer>.from(answers);
+                        final item = updated.removeAt(oldIndex);
+                        updated.insert(newIndex, item);
+                        setState(() => answers = updated);
+                        await settingsService.setQuickAnswers(updated);
+                      },
+                      itemBuilder: (context, index) {
+                        final answer = answers[index];
+                        return _buildQuickAnswerListItem(
+                          dialogContext,
+                          answer.text,
+                          key: ValueKey(answer.id),
+                          dragIndex: index,
+                          onEdit: () async {
+                            final edited = await _showQuickAnswerEditDialog(
+                              dialogContext,
+                              answer.text,
+                              existingAnswers: [
+                                for (final existingAnswer in answers)
+                                  if (existingAnswer.id != answer.id)
+                                    existingAnswer.text,
+                              ],
+                            );
+                            if (edited == null || edited.trim().isEmpty) {
+                              return;
+                            }
+                            final updated = List<QuickAnswer>.from(answers)
+                              ..[index] = answer.copyWith(text: edited);
+                            await settingsService.setQuickAnswers(updated);
+                            if (!dialogContext.mounted) return;
+                            setState(() => answers = updated);
+                          },
+                          onDelete: () async {
+                            final updated = List<QuickAnswer>.from(answers)
+                              ..removeAt(index);
+                            await settingsService.setQuickAnswers(updated);
+                            if (!dialogContext.mounted) return;
+                            setState(() => answers = updated);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.l10n.common_close),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAnswerListItem(
+    BuildContext context,
+    String answer, {
+    required Key key,
+    required int dragIndex,
+    required VoidCallback onEdit,
+    required VoidCallback onDelete,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      key: key,
+      margin: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    answer,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ReorderableDelayedDragStartListener(
+                  index: dragIndex,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.drag_handle,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: onEdit,
+                  child: Text(context.l10n.common_edit),
+                ),
+                TextButton(
+                  onPressed: onDelete,
+                  child: Text(context.l10n.common_delete),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _showQuickAnswerEditDialog(
+    BuildContext context,
+    String answer, {
+    required List<String> existingAnswers,
+  }) {
+    final controller = TextEditingController(text: answer);
+    String? errorText;
+
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(dialogContext.l10n.settings_quickAnswersEditText),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: 2,
+            maxLines: 2,
+            onChanged: (_) {
+              if (errorText == null) return;
+              setState(() => errorText = null);
+            },
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              errorText: errorText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                final text = controller.text;
+                if (existingAnswers.contains(text)) {
+                  setState(() {
+                    errorText = dialogContext.l10n.settings_quickAnswersExists;
+                  });
+                  return;
+                }
+                Navigator.pop(dialogContext, text);
+              },
+              child: Text(dialogContext.l10n.common_save),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _newQuickAnswerId() {
+    return 'qa_${DateTime.now().microsecondsSinceEpoch}';
   }
 
   void _showAddCyr2LatProfileDialog(
@@ -1993,6 +2277,9 @@ class _TranslationUrlFieldState extends State<_TranslationUrlField> {
     );
   }
 }
+
+// ReorderableListView needs stable keys, while persisted quick answers stay
+// as plain strings.
 
 /// Dialog content for choosing the translation target language.
 /// Owns the search [TextEditingController] so it is properly disposed.

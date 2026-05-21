@@ -170,14 +170,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => '最近连接';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => '设置书签名称';
 
   @override
-  String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+  String get tcpBookmarksFavouritesSubtitle => '标记为收藏后，不会从连接历史中移除';
 
   @override
   String get usbScreenTitle => '通过USB连接';
@@ -576,19 +575,38 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle => '手动重发延迟';
 
   @override
-  String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+  String get settings_channelResendTimeoutSubtitle => '也会影响用于消除外发消息重复显示的内部机制';
 
   @override
-  String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+  String get settings_channelMaxbytesOutgoingTitle => '限制频道外发 payload，字节';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 USB，此限制约为 155 字节。';
+
+  @override
+  String get settings_quickAnswersTitle => '快捷回复';
+
+  @override
+  String get settings_quickAnswersSubtitle => '可作为快捷回复选择的短语列表。它们会在联系人/频道设置中分配。';
+
+  @override
+  String get settings_quickAnswersAddText => '请输入文本';
+
+  @override
+  String get settings_quickAnswersEditText => '编辑回复';
+
+  @override
+  String get settings_quickAnswersSelect => '启用这些回复';
+
+  @override
+  String get settings_quickAnswersExists => '已存在';
+
+  @override
+  String get settings_quickAnswersNotAdded => '你还没有为此聊天添加任何快捷回复！';
 
   @override
   String get appSettings_title => '应用设置';
@@ -666,11 +684,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_enableMessageTracingSubtitle => '显示消息的详细路由和时间元数据';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds => '在消息信息中显示秒';
 
   @override
-  String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+  String get appSettings_showKeyboardHidingButton => '显示隐藏键盘按钮';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1211,25 +1228,23 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'MCMP 文本粘贴限制';
 
   @override
-  String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+  String get settings_sendingDelayForCancellation => '用于取消的发送延迟';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => '使用发送延迟';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => '取消发送';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+  String get settings_doNotFilterMessagesOnChannels => '不要过滤频道中的自己消息';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      '默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题';
 
   @override
   String get channels_publicChannelAdded => '已添加公共频道';
@@ -1334,7 +1349,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return '请等待 $seconds 秒后再重新发送';
   }
 
   @override
@@ -4136,11 +4151,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP 压缩';
 
   @override
-  String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+  String get channels_mcmpCompressionDescription => '使用 mesh-compressor 模型';
 
   @override
   String get contact_typeChat => 'Chat';

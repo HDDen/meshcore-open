@@ -1,3 +1,4 @@
+import '../models/app_settings.dart';
 import '../utils/app_logger.dart';
 import 'prefs_manager.dart';
 
@@ -6,6 +7,8 @@ class ChannelSettingsStore {
   static const String _mcmpKeyPrefix = 'channel_mcmp_';
   static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
   static const String _sendingDelayKeyPrefix = 'channel_sending_delay_';
+  // Store quick answer ids, not text, so editing a reply keeps chat assignment.
+  static const String _quickAnswersKeyPrefix = 'channel_quick_answer_ids_';
   static const String _widgetColorKeyPrefix = 'channel_widget_color_';
   static const String _widgetTextColorKeyPrefix = 'channel_widget_text_color_';
 
@@ -17,6 +20,7 @@ class ChannelSettingsStore {
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
+  String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
   String get keyForWidgetColor => '$_widgetColorKeyPrefix$publicKeyHex';
   String get keyForWidgetTextColor => '$_widgetTextColorKeyPrefix$publicKeyHex';
 
@@ -127,6 +131,36 @@ class ChannelSettingsStore {
     final prefs = PrefsManager.instance;
     final key = '$keyForSendingDelay$channelIndex';
     await prefs.setBool(key, enabled);
+  }
+
+  Future<List<String>> loadQuickAnswerIds(int channelIndex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel quick answers.',
+      );
+      return const [];
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForQuickAnswerIds$channelIndex';
+    return AppSettings.normalizeQuickAnswerIds(prefs.getStringList(key));
+  }
+
+  Future<void> saveQuickAnswerIds(
+    int channelIndex,
+    List<String> answers,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel quick answers.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForQuickAnswerIds$channelIndex';
+    await prefs.setStringList(
+      key,
+      AppSettings.normalizeQuickAnswerIds(answers),
+    );
   }
 
   Future<String?> loadCyr2LatProfileId(int channelIndex) async {

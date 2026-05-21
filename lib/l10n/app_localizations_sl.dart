@@ -171,14 +171,14 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => 'Zadnje povezave';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'Nastavi ime zaznamka';
 
   @override
   String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+      'Ko je označena kot priljubljena, se ne odstrani iz zgodovine povezav';
 
   @override
   String get usbScreenTitle => 'Povežite preko USB';
@@ -603,19 +603,43 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle =>
+      'Zakasnitev ročnega ponovnega pošiljanja';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      'Vpliva tudi na notranji mehanizem za odpravljanje podvojenega prikaza odhodnih sporočil';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+      'Omeji odhodni payload kanalov, bajti';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      'Omejitev upošteva besedilo sporočila in ime pošiljatelja. Opaženo je bilo, da se po preseženi določeni velikosti sporočila v bajtih potrditve ponavljanja paketov prenehajo prenašati. To je posebej opazno pri povezavah BLE. Približni prag, pri katerem potrditve še delujejo, je 139 bajtov. Za USB je ta omejitev približno 155 bajtov.';
+
+  @override
+  String get settings_quickAnswersTitle => 'Hitri odgovori';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Seznam fraz, ki jih je mogoče izbrati kot hitre odgovore. Dodelijo se stikom/kanalom v njihovih nastavitvah.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Vnesite besedilo';
+
+  @override
+  String get settings_quickAnswersEditText => 'Uredi odgovor';
+
+  @override
+  String get settings_quickAnswersSelect => 'Omogoči te odgovore';
+
+  @override
+  String get settings_quickAnswersExists => 'Že obstaja';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Za ta klepet še niste dodali hitrih odgovorov!';
 
   @override
   String get appSettings_title => 'Nastavitve aplikacije';
@@ -694,11 +718,12 @@ class AppLocalizationsSl extends AppLocalizations {
       'Prikaži podrobne metapodatke o usmerjanju in časovnem usklajevanju sporočil';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds =>
+      'Prikaži sekunde v informacijah o sporočilu';
 
   @override
   String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+      'Prikaži gumb za skrivanje tipkovnice';
 
   @override
   String get appSettings_notifications => 'Obvestila';
@@ -1276,25 +1301,25 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'Omejitev lepljenja besedila MCMP';
 
   @override
   String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+      'Zakasnitev pošiljanja za preklic';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => 'Uporabi zakasnitev pošiljanja';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => 'prekliči pošiljanje';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Ne filtriraj lastnih sporočil v kanalih';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'Privzeto se lastna sporočila iz vaše node prezrejo. To povzroča težave pri nekaterih firmware z vgrajenim TerminalCLI';
 
   @override
   String get channels_publicChannelAdded => 'javna skupnost dodana';
@@ -1403,7 +1428,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return 'Pred ponovnim pošiljanjem počakajte $seconds sekund';
   }
 
   @override
@@ -4464,11 +4489,11 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'Stiskanje MCMP';
 
   @override
   String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+      'Uporaba modela mesh-compressor';
 
   @override
   String get contact_typeChat => 'Chat';

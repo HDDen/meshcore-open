@@ -614,6 +614,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
 
   @override
+  String get settings_quickAnswersTitle => 'Quick replies';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'A list of phrases available to select as quick replies. These are assigned to contacts/channels in their settings.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Please, enter your text';
+
+  @override
+  String get settings_quickAnswersEditText => 'Edit reply';
+
+  @override
+  String get settings_quickAnswersSelect => 'Enable this replies';
+
+  @override
+  String get settings_quickAnswersExists => 'Already exists';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'You haven\'t added any quick replies for this chat yet!';
+
+  @override
   String get appSettings_title => 'App Settings';
 
   @override

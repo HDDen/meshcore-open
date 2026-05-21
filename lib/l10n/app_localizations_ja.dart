@@ -170,14 +170,13 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => '最近の接続';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'ブックマーク名を設定';
 
   @override
-  String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+  String get tcpBookmarksFavouritesSubtitle => 'お気に入りに設定すると、接続履歴から削除されません';
 
   @override
   String get usbScreenTitle => 'USB経由で接続';
@@ -585,19 +584,40 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle => '手動再送信の遅延';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      '送信メッセージの重複表示を除去する内部メカニズムにも影響します';
 
   @override
-  String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+  String get settings_channelMaxbytesOutgoingTitle => 'チャンネルの送信payload制限、バイト';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      'この制限には、メッセージ本文と送信者名が含まれます。メッセージが一定のバイト数を超えると、パケット再送確認が送信されなくなることが確認されています。これはBLE接続で特に目立ちます。確認がまだ機能するおおよそのしきい値は139バイトです。USBでは、この制限は約155バイトです。';
+
+  @override
+  String get settings_quickAnswersTitle => 'クイック返信';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'クイック返信として選択できるフレーズのリストです。連絡先/チャンネルの設定で割り当てます。';
+
+  @override
+  String get settings_quickAnswersAddText => 'テキストを入力してください';
+
+  @override
+  String get settings_quickAnswersEditText => '返信を編集';
+
+  @override
+  String get settings_quickAnswersSelect => 'これらの返信を有効にする';
+
+  @override
+  String get settings_quickAnswersExists => '既に存在します';
+
+  @override
+  String get settings_quickAnswersNotAdded => 'このチャットにはまだクイック返信が追加されていません！';
 
   @override
   String get appSettings_title => 'アプリ設定';
@@ -676,11 +696,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'メッセージに関する詳細な経路およびタイミングに関するメタデータを表示する';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds => 'メッセージ情報に秒を表示';
 
   @override
-  String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+  String get appSettings_showKeyboardHidingButton => 'キーボード非表示ボタンを表示';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1230,25 +1249,24 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'MCMPテキスト貼り付け制限';
 
   @override
-  String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+  String get settings_sendingDelayForCancellation => 'キャンセル用の送信遅延';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => '送信遅延を使用';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => '送信をキャンセル';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'チャンネルで自分のメッセージをフィルターしない';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      '既定では、自分のノードからのメッセージは無視されます。組み込みTerminalCLIを持つ一部のファームウェアでは問題が発生します';
 
   @override
   String get channels_publicChannelAdded => 'パブリックチャンネルが追加されました';
@@ -1353,7 +1371,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return '再送信する前に$seconds秒待ってください';
   }
 
   @override
@@ -4259,11 +4277,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP圧縮';
 
   @override
-  String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+  String get channels_mcmpCompressionDescription => 'mesh-compressorモデルを使用';
 
   @override
   String get contact_typeChat => 'Chat';

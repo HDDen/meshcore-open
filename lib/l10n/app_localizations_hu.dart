@@ -172,14 +172,14 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => 'Legutóbbi kapcsolatok';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'Könyvjelző nevének beállítása';
 
   @override
   String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+      'Ha kedvencként van megjelölve, nem törlődik a kapcsolati előzményekből';
 
   @override
   String get usbScreenTitle => 'USB-en keresztül csatlakoztassuk';
@@ -614,19 +614,44 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle =>
+      'Kézi újraküldési késleltetés';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      'Hatással van a kimenő üzenetek duplikált megjelenítését megszüntető belső mechanizmusra is';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+      'Kimenő csatorna-payload korlátozása, bájt';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      'A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. USB esetén ez a határ körülbelül 155 bájt.';
+
+  @override
+  String get settings_quickAnswersTitle => 'Gyors válaszok';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Gyors válaszként kiválasztható kifejezések listája. Ezeket a névjegyekhez/csatornákhoz lehet rendelni a beállításaikban.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Kérjük, adja meg a szöveget';
+
+  @override
+  String get settings_quickAnswersEditText => 'Válasz szerkesztése';
+
+  @override
+  String get settings_quickAnswersSelect =>
+      'Ezeknek a válaszoknak az engedélyezése';
+
+  @override
+  String get settings_quickAnswersExists => 'Már létezik';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Ehhez a csevegéshez még nem adott hozzá gyors válaszokat!';
 
   @override
   String get appSettings_title => 'Alkalmazási beállítások';
@@ -706,11 +731,12 @@ class AppLocalizationsHu extends AppLocalizations {
       'Adja meg a üzenetek részletes útvonal- és időzítési adatokat.';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds =>
+      'Másodpercek megjelenítése az üzenetadatokban';
 
   @override
   String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+      'Billentyűzet elrejtése gomb megjelenítése';
 
   @override
   String get appSettings_notifications => 'Értesítések';
@@ -1293,25 +1319,25 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'MCMP szövegbeillesztési korlát';
 
   @override
   String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+      'Küldési késleltetés visszavonáshoz';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => 'Küldési késleltetés használata';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => 'küldés megszakítása';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Ne szűrje a saját üzeneteket a csatornákon';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'Alapértelmezés szerint a saját csomópont üzeneteit figyelmen kívül hagyja az alkalmazás. Ez problémákat okoz néhány beépített TerminalCLI-t használó firmware esetén';
 
   @override
   String get channels_publicChannelAdded => 'A nyilvános csatorna hozzáadva';
@@ -1423,7 +1449,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return 'Újraküldés előtt várjon $seconds másodpercet';
   }
 
   @override
@@ -4506,11 +4532,11 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP tömörítés';
 
   @override
   String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+      'mesh-compressor modell használata';
 
   @override
   String get contact_typeChat => 'Chat';

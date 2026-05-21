@@ -26,6 +26,7 @@ import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
 import '../widgets/unread_badge.dart';
@@ -1257,6 +1258,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
       connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSendingDelaySettingLoaded(contact.publicKeyHex);
+      connector.ensureContactQuickAnswerIdsLoaded(contact.publicKeyHex);
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
@@ -1266,6 +1268,9 @@ class _ContactsScreenState extends State<ContactsScreen>
         isRoom && connector.isContactCyr2LatEnabled(contact.publicKeyHex);
     bool sendingDelayEnabled =
         isRoom && connector.isContactSendingDelayEnabled(contact.publicKeyHex);
+    List<String> selectedQuickAnswerIds = isRoom
+        ? connector.getContactQuickAnswerIds(contact.publicKeyHex)
+        : const [];
     String? selectedCyr2LatProfileId = isRoom
         ? connector.getContactCyr2LatProfileId(contact.publicKeyHex)
         : null;
@@ -1466,6 +1471,27 @@ class _ContactsScreenState extends State<ContactsScreen>
                       );
                       setSheetState(() {
                         sendingDelayEnabled = value;
+                      });
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.quickreply_outlined),
+                    title: Text(context.l10n.settings_quickAnswersTitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      if (appSettingsService == null) return;
+                      final selection = await showQuickAnswersSelectionDialog(
+                        sheetContext,
+                        settingsService: appSettingsService,
+                        selectedAnswerIds: selectedQuickAnswerIds,
+                      );
+                      if (selection == null) return;
+                      await connector.setContactQuickAnswerIds(
+                        contact.publicKeyHex,
+                        selection,
+                      );
+                      setSheetState(() {
+                        selectedQuickAnswerIds = selection;
                       });
                     },
                   ),

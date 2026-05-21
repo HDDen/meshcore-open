@@ -25,6 +25,7 @@ import '../widgets/list_filter_widget.dart';
 import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/qr_code_display.dart';
+import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
@@ -2037,6 +2038,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
       channel.index,
     );
+    List<String> selectedQuickAnswerIds = connector.getChannelQuickAnswerIds(
+      channel.index,
+    );
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
@@ -2163,6 +2167,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.quickreply_outlined),
+                  title: Text(dialogContext.l10n.settings_quickAnswersTitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    final selection = await showQuickAnswersSelectionDialog(
+                      dialogContext,
+                      settingsService: appSettingsService,
+                      selectedAnswerIds: selectedQuickAnswerIds,
+                    );
+                    if (selection == null) return;
+                    setState(() {
+                      selectedQuickAnswerIds = selection;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text(dialogContext.l10n.channels_changeWidgetColor),
                   trailing: ChannelWidgetColorValue(
                     colorValue: selectedWidgetColor,
@@ -2226,6 +2248,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   await connector.setChannelSendingDelayEnabled(
                     channel.index,
                     sendingDelayEnabled,
+                  );
+                  await connector.setChannelQuickAnswerIds(
+                    channel.index,
+                    selectedQuickAnswerIds,
                   );
                   await connector.setChannelWidgetColor(
                     channel.index,

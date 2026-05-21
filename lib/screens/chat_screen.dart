@@ -20,6 +20,7 @@ import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/path_helper.dart';
+import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
@@ -42,6 +43,8 @@ import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/path_selection_dialog.dart';
+import '../widgets/quick_answers_selection_dialog.dart';
+import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/translated_message_content.dart';
 import '../utils/app_logger.dart';
@@ -706,12 +709,16 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filled(
-              icon: const Icon(Icons.send),
-              tooltip: context.l10n.chat_sendMessageTo(
-                _resolveContact(connector).name,
+            GestureDetector(
+              onLongPress: () => _showQuickAnswersPicker(connector),
+              onSecondaryTap: () => _showQuickAnswersPicker(connector),
+              child: IconButton.filled(
+                icon: const Icon(Icons.send),
+                tooltip: context.l10n.chat_sendMessageTo(
+                  _resolveContact(connector).name,
+                ),
+                onPressed: () => _sendMessage(connector),
               ),
-              onPressed: () => _sendMessage(connector),
             ),
           ],
         ),
@@ -728,6 +735,27 @@ class _ChatScreenState extends State<ChatScreen> {
           _textController.text = GifHelper.encodeGif(gifId);
         },
       ),
+    );
+  }
+
+  Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) async {
+    final selectedAnswerIds = await connector.loadContactQuickAnswerIds(
+      widget.contact.publicKeyHex,
+    );
+    if (!mounted) return;
+    final answer = await showQuickAnswersPickerDialog(
+      context,
+      answers: filterAvailableQuickAnswerTexts(
+        selectedAnswerIds: selectedAnswerIds,
+        globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
+      ),
+    );
+    if (answer == null) return;
+    if (!mounted) return;
+    insertQuickAnswerIntoComposer(
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      text: answer,
     );
   }
 
@@ -1364,6 +1392,7 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactSendingDelaySettingLoaded(
       widget.contact.publicKeyHex,
     );
+    connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
@@ -1371,6 +1400,9 @@ class _ChatScreenState extends State<ChatScreen> {
       contact.publicKeyHex,
     );
     bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
+      contact.publicKeyHex,
+    );
+    List<String> selectedQuickAnswerIds = connector.getContactQuickAnswerIds(
       contact.publicKeyHex,
     );
     String? selectedCyr2LatProfileId = connector.getContactCyr2LatProfileId(
@@ -1525,6 +1557,28 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                     setDialogState(() {
                       sendingDelayEnabled = value;
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.quickreply_outlined),
+                  title: Text(context.l10n.settings_quickAnswersTitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    final selection = await showQuickAnswersSelectionDialog(
+                      context,
+                      settingsService: appSettingsService,
+                      selectedAnswerIds: selectedQuickAnswerIds,
+                    );
+                    if (selection == null) return;
+                    await connector.setContactQuickAnswerIds(
+                      contact.publicKeyHex,
+                      selection,
+                    );
+                    setDialogState(() {
+                      selectedQuickAnswerIds = selection;
                     });
                   },
                 ),

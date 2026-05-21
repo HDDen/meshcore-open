@@ -17,6 +17,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/quick_answers_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
@@ -36,6 +37,7 @@ import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
+import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
@@ -1533,11 +1535,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.send),
-                tooltip: context.l10n.chat_sendMessage,
-                onPressed: _sendMessage,
-                color: Theme.of(context).colorScheme.primary,
+              GestureDetector(
+                onLongPress: _showQuickAnswersPicker,
+                onSecondaryTap: _showQuickAnswersPicker,
+                child: IconButton(
+                  icon: const Icon(Icons.send),
+                  tooltip: context.l10n.chat_sendMessage,
+                  onPressed: _sendMessage,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ],
           ),
@@ -1550,6 +1556,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;
     return '@[${replyingTo.senderName}] $text';
+  }
+
+  Future<void> _showQuickAnswersPicker() async {
+    final connector = context.read<MeshCoreConnector>();
+    final selectedAnswerIds = await connector.loadChannelQuickAnswerIds(
+      widget.channel.index,
+    );
+    if (!mounted) return;
+    final answer = await showQuickAnswersPickerDialog(
+      context,
+      answers: filterAvailableQuickAnswerTexts(
+        selectedAnswerIds: selectedAnswerIds,
+        globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
+      ),
+    );
+    if (answer == null) return;
+    if (!mounted) return;
+    insertQuickAnswerIntoComposer(
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      text: answer,
+    );
   }
 
   Future<void> _showTranslationOptions() async {

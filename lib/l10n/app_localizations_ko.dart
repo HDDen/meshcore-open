@@ -170,14 +170,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => '최근 연결';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => '북마크 이름 설정';
 
   @override
-  String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+  String get tcpBookmarksFavouritesSubtitle => '즐겨찾기로 표시하면 연결 기록에서 제거되지 않습니다';
 
   @override
   String get usbScreenTitle => 'USB를 통해 연결';
@@ -585,19 +584,40 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle => '수동 재전송 지연';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      '보낸 메시지가 중복 표시되는 것을 제거하는 내부 메커니즘에도 영향을 줍니다';
 
   @override
-  String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+  String get settings_channelMaxbytesOutgoingTitle => '채널의 발신 payload 제한, 바이트';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      '이 제한은 메시지 텍스트와 보낸 사람 이름을 함께 계산합니다. 메시지가 특정 바이트 수를 초과하면 패킷 반복 확인이 더 이상 전송되지 않는 것으로 관찰되었습니다. BLE 연결에서 특히 두드러집니다. 확인이 계속 작동하는 대략적인 임계값은 139바이트입니다. USB의 경우 이 제한은 약 155바이트입니다.';
+
+  @override
+  String get settings_quickAnswersTitle => '빠른 답장';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      '빠른 답장으로 선택할 수 있는 문구 목록입니다. 연락처/채널 설정에서 할당합니다.';
+
+  @override
+  String get settings_quickAnswersAddText => '텍스트를 입력하세요';
+
+  @override
+  String get settings_quickAnswersEditText => '답장 편집';
+
+  @override
+  String get settings_quickAnswersSelect => '이 답장 활성화';
+
+  @override
+  String get settings_quickAnswersExists => '이미 존재합니다';
+
+  @override
+  String get settings_quickAnswersNotAdded => '이 채팅에 빠른 답장을 아직 추가하지 않았습니다!';
 
   @override
   String get appSettings_title => '앱 설정';
@@ -676,11 +696,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '메시지에 대한 상세한 경로 및 시간 정보를 표시';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds => '메시지 정보에 초 표시';
 
   @override
-  String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+  String get appSettings_showKeyboardHidingButton => '키보드 숨기기 버튼 표시';
 
   @override
   String get appSettings_notifications => '알림';
@@ -1225,25 +1244,23 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'MCMP 텍스트 붙여넣기 제한';
 
   @override
-  String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+  String get settings_sendingDelayForCancellation => '취소를 위한 전송 지연';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => '전송 지연 사용';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => '전송 취소';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+  String get settings_doNotFilterMessagesOnChannels => '채널에서 내 메시지를 필터링하지 않음';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      '기본적으로 내 노드의 메시지는 무시됩니다. 내장 TerminalCLI가 있는 일부 펌웨어에서 문제가 발생합니다';
 
   @override
   String get channels_publicChannelAdded => '공개 채널 추가';
@@ -1348,7 +1365,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return '다시 보내기 전에 $seconds초 기다리세요';
   }
 
   @override
@@ -4260,11 +4277,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP 압축';
 
   @override
-  String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+  String get channels_mcmpCompressionDescription => 'mesh-compressor 모델 사용';
 
   @override
   String get contact_typeChat => 'Chat';

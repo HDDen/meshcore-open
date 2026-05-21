@@ -628,6 +628,29 @@ class AppLocalizationsRu extends AppLocalizations {
       'Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для usb этот лимит ~155 байт.';
 
   @override
+  String get settings_quickAnswersTitle => 'Быстрые ответы';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Список строк, доступных для выбора в качестве быстрого ответа. Назначаются для контактов/каналов в их настройках.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Введите текст ответа';
+
+  @override
+  String get settings_quickAnswersEditText => 'Редактирование ответа';
+
+  @override
+  String get settings_quickAnswersSelect => 'Включить эти ответы';
+
+  @override
+  String get settings_quickAnswersExists => 'Уже существует';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Вы еще не добавили быстрые ответы для этого чата!';
+
+  @override
   String get appSettings_title => 'Настройки приложения';
 
   @override

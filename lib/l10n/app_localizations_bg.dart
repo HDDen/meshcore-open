@@ -171,14 +171,14 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => 'Последни връзки';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'Задайте име за отметката';
 
   @override
   String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+      'Когато е отбелязана като любима, връзката не се премахва от историята';
 
   @override
   String get usbScreenTitle => 'Свържете се чрез USB';
@@ -614,19 +614,43 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle =>
+      'Забавяне при ръчно повторно изпращане';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      'Влияе и на вътрешния механизъм за премахване на дублирано показване на изходящи съобщения';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
+      'Ограничение на изходящия payload за канали, байтове';
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      'Ограничението отчита текста на съобщението плюс името на подателя. Наблюдавано е, че след като съобщението надхвърли определен брой байтове, потвържденията за повторение на пакета спират да се предават. Това е особено забележимо при BLE връзки. Приблизителният праг, при който потвържденията все още работят, е 139 байта. За USB този лимит е около 155 байта.';
+
+  @override
+  String get settings_quickAnswersTitle => 'Бързи отговори';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Списък с фрази, достъпни за избор като бързи отговори. Те се задават към контакти/канали в техните настройки.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Моля, въведете текст';
+
+  @override
+  String get settings_quickAnswersEditText => 'Редактиране на отговор';
+
+  @override
+  String get settings_quickAnswersSelect => 'Активиране на тези отговори';
+
+  @override
+  String get settings_quickAnswersExists => 'Вече съществува';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Все още не сте добавили бързи отговори за този чат!';
 
   @override
   String get appSettings_title => 'Настройки на приложението';
@@ -706,11 +730,12 @@ class AppLocalizationsBg extends AppLocalizations {
       'Показване на подробни метаданни за маршрутизация и синхронизация за съобщения';
 
   @override
-  String get appSettings_enableTimeSeconds => 'Show seconds in message info';
+  String get appSettings_enableTimeSeconds =>
+      'Показване на секундите в информацията за съобщението';
 
   @override
   String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+      'Показване на бутон за скриване на клавиатурата';
 
   @override
   String get appSettings_notifications => 'Уведомления';
@@ -1292,25 +1317,25 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'Лимит за поставяне на MCMP текст';
 
   @override
   String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+      'Забавяне на изпращането за отмяна';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => 'Използване на забавяне при изпращане';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => 'отмяна на изпращането';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Не филтрирай собствените съобщения в каналите';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'По подразбиране собствените съобщения от вашата нода се игнорират. Това създава проблеми при някои фърмуери с вграден TerminalCLI';
 
   @override
   String get channels_publicChannelAdded => 'Публичен канал добавен';
@@ -1418,7 +1443,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return 'Моля, изчакайте $seconds секунди преди повторно изпращане';
   }
 
   @override
@@ -4485,11 +4510,11 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP компресия';
 
   @override
   String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+      'Използване на модел mesh-compressor';
 
   @override
   String get contact_typeChat => 'Chat';

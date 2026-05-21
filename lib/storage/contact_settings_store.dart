@@ -1,3 +1,4 @@
+import '../models/app_settings.dart';
 import '../utils/app_logger.dart';
 import 'prefs_manager.dart';
 
@@ -6,6 +7,8 @@ class ContactSettingsStore {
   static const String _mcmpKeyPrefix = 'contact_mcmp_';
   static const String _cyr2latKeyPrefix = 'contact_cyr2lat_';
   static const String _sendingDelayKeyPrefix = 'contact_sending_delay_';
+  // Store quick answer ids, not text, so editing a reply keeps chat assignment.
+  static const String _quickAnswersKeyPrefix = 'contact_quick_answer_ids_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -15,6 +18,7 @@ class ContactSettingsStore {
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
+  String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
@@ -126,6 +130,36 @@ class ContactSettingsStore {
     final prefs = PrefsManager.instance;
     final key = '$keyForSendingDelay$contactKeyHex';
     await prefs.setBool(key, enabled);
+  }
+
+  Future<List<String>> loadQuickAnswerIds(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load contact quick answers.',
+      );
+      return const [];
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForQuickAnswerIds$contactKeyHex';
+    return AppSettings.normalizeQuickAnswerIds(prefs.getStringList(key));
+  }
+
+  Future<void> saveQuickAnswerIds(
+    String contactKeyHex,
+    List<String> answers,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save contact quick answers.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForQuickAnswerIds$contactKeyHex';
+    await prefs.setStringList(
+      key,
+      AppSettings.normalizeQuickAnswerIds(answers),
+    );
   }
 
   Future<String?> loadCyr2LatProfileId(String contactKeyHex) async {

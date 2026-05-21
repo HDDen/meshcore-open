@@ -1240,6 +1240,48 @@ abstract class AppLocalizations {
   /// **'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.'**
   String get settings_channelMaxbytesOutgoingSubtitle;
 
+  /// No description provided for @settings_quickAnswersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick replies'**
+  String get settings_quickAnswersTitle;
+
+  /// No description provided for @settings_quickAnswersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A list of phrases available to select as quick replies. These are assigned to contacts/channels in their settings.'**
+  String get settings_quickAnswersSubtitle;
+
+  /// No description provided for @settings_quickAnswersAddText.
+  ///
+  /// In en, this message translates to:
+  /// **'Please, enter your text'**
+  String get settings_quickAnswersAddText;
+
+  /// No description provided for @settings_quickAnswersEditText.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reply'**
+  String get settings_quickAnswersEditText;
+
+  /// No description provided for @settings_quickAnswersSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable this replies'**
+  String get settings_quickAnswersSelect;
+
+  /// No description provided for @settings_quickAnswersExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Already exists'**
+  String get settings_quickAnswersExists;
+
+  /// No description provided for @settings_quickAnswersNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t added any quick replies for this chat yet!'**
+  String get settings_quickAnswersNotAdded;
+
   /// No description provided for @appSettings_title.
   ///
   /// In en, this message translates to:
