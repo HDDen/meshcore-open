@@ -745,7 +745,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
     final answer = await showQuickAnswersPickerDialog(
       context,
-      answers: filterAvailableQuickAnswerTexts(
+      answerTexts: filterAvailableQuickAnswerTexts(
         selectedAnswerIds: selectedAnswerIds,
         globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
       ),

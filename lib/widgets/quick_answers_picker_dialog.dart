@@ -4,7 +4,7 @@ import '../l10n/l10n.dart';
 
 Future<String?> showQuickAnswersPickerDialog(
   BuildContext context, {
-  required List<String> answers,
+  required List<String> answerTexts,
 }) {
   return showDialog<String>(
     context: context,
@@ -16,16 +16,16 @@ Future<String?> showQuickAnswersPickerDialog(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.6,
           ),
-          child: answers.isEmpty
+          child: answerTexts.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(dialogContext.l10n.settings_quickAnswersNotAdded),
                 )
               : ListView.builder(
                   shrinkWrap: true,
-                  itemCount: answers.length,
+                  itemCount: answerTexts.length,
                   itemBuilder: (context, index) {
-                    final answer = answers[index];
+                    final answer = answerTexts[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(answer),

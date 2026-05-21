@@ -1748,7 +1748,10 @@ class AppSettingsScreen extends StatelessWidget {
                             }
                             final updated = [
                               ...answers,
-                              QuickAnswer(id: _newQuickAnswerId(), text: text),
+                              QuickAnswer(
+                                id: _newQuickAnswerId(answers),
+                                text: text,
+                              ),
                             ];
                             await settingsService.setQuickAnswers(updated);
                             if (!dialogContext.mounted) return;
@@ -1945,8 +1948,15 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
-  String _newQuickAnswerId() {
-    return 'qa_${DateTime.now().microsecondsSinceEpoch}';
+  String _newQuickAnswerId(List<QuickAnswer> existingAnswers) {
+    final existingIds = {for (final answer in existingAnswers) answer.id};
+    var seed = DateTime.now().microsecondsSinceEpoch;
+    var id = 'qa_$seed';
+    while (existingIds.contains(id)) {
+      seed++;
+      id = 'qa_$seed';
+    }
+    return id;
   }
 
   void _showAddCyr2LatProfileDialog(

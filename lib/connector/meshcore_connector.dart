@@ -726,21 +726,21 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<List<String>> loadChannelQuickAnswerIds(int channelIndex) async {
-    final answers = await _channelSettingsStore.loadQuickAnswerIds(
+    final answerIds = await _channelSettingsStore.loadQuickAnswerIds(
       channelIndex,
     );
-    _channelQuickAnswerIds[channelIndex] = answers;
+    _channelQuickAnswerIds[channelIndex] = answerIds;
     notifyListeners();
-    return List.unmodifiable(answers);
+    return List.unmodifiable(answerIds);
   }
 
   Future<List<String>> loadContactQuickAnswerIds(String contactKeyHex) async {
-    final answers = await _contactSettingsStore.loadQuickAnswerIds(
+    final answerIds = await _contactSettingsStore.loadQuickAnswerIds(
       contactKeyHex,
     );
-    _contactQuickAnswerIds[contactKeyHex] = answers;
+    _contactQuickAnswerIds[contactKeyHex] = answerIds;
     notifyListeners();
-    return List.unmodifiable(answers);
+    return List.unmodifiable(answerIds);
   }
 
   Future<bool> loadContactSendingDelayEnabled(String contactKeyHex) async {
@@ -953,9 +953,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> setChannelQuickAnswerIds(
     int channelIndex,
-    List<String> answers,
+    List<String> answerIds,
   ) async {
-    final normalized = AppSettings.normalizeQuickAnswerIds(answers);
+    final normalized = AppSettings.normalizeQuickAnswerIds(answerIds);
     if (listEquals(_channelQuickAnswerIds[channelIndex], normalized)) return;
     _channelQuickAnswerIds[channelIndex] = normalized;
     await _channelSettingsStore.saveQuickAnswerIds(channelIndex, normalized);
@@ -964,9 +964,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> setContactQuickAnswerIds(
     String contactKeyHex,
-    List<String> answers,
+    List<String> answerIds,
   ) async {
-    final normalized = AppSettings.normalizeQuickAnswerIds(answers);
+    final normalized = AppSettings.normalizeQuickAnswerIds(answerIds);
     if (listEquals(_contactQuickAnswerIds[contactKeyHex], normalized)) return;
     _contactQuickAnswerIds[contactKeyHex] = normalized;
     await _contactSettingsStore.saveQuickAnswerIds(contactKeyHex, normalized);
@@ -5003,9 +5003,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _ensureContactQuickAnswerIdsLoaded(String contactKeyHex) {
     if (_contactQuickAnswerIds.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadQuickAnswerIds(contactKeyHex).then((answers) {
-      if (listEquals(_contactQuickAnswerIds[contactKeyHex], answers)) return;
-      _contactQuickAnswerIds[contactKeyHex] = answers;
+    _contactSettingsStore.loadQuickAnswerIds(contactKeyHex).then((answerIds) {
+      if (listEquals(_contactQuickAnswerIds[contactKeyHex], answerIds)) return;
+      _contactQuickAnswerIds[contactKeyHex] = answerIds;
       notifyListeners();
     });
   }
@@ -5039,9 +5039,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _ensureChannelQuickAnswerIdsLoaded(int channelIndex) {
     if (_channelQuickAnswerIds.containsKey(channelIndex)) return;
-    _channelSettingsStore.loadQuickAnswerIds(channelIndex).then((answers) {
-      if (listEquals(_channelQuickAnswerIds[channelIndex], answers)) return;
-      _channelQuickAnswerIds[channelIndex] = answers;
+    _channelSettingsStore.loadQuickAnswerIds(channelIndex).then((answerIds) {
+      if (listEquals(_channelQuickAnswerIds[channelIndex], answerIds)) return;
+      _channelQuickAnswerIds[channelIndex] = answerIds;
       notifyListeners();
     });
   }

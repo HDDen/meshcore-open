@@ -147,7 +147,7 @@ class ChannelSettingsStore {
 
   Future<void> saveQuickAnswerIds(
     int channelIndex,
-    List<String> answers,
+    List<String> answerIds,
   ) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
@@ -159,7 +159,7 @@ class ChannelSettingsStore {
     final key = '$keyForQuickAnswerIds$channelIndex';
     await prefs.setStringList(
       key,
-      AppSettings.normalizeQuickAnswerIds(answers),
+      AppSettings.normalizeQuickAnswerIds(answerIds),
     );
   }
 

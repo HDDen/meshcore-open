@@ -146,7 +146,7 @@ class ContactSettingsStore {
 
   Future<void> saveQuickAnswerIds(
     String contactKeyHex,
-    List<String> answers,
+    List<String> answerIds,
   ) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
@@ -158,7 +158,7 @@ class ContactSettingsStore {
     final key = '$keyForQuickAnswerIds$contactKeyHex';
     await prefs.setStringList(
       key,
-      AppSettings.normalizeQuickAnswerIds(answers),
+      AppSettings.normalizeQuickAnswerIds(answerIds),
     );
   }
 
