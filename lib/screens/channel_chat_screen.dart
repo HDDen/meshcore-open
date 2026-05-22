@@ -1535,14 +1535,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onLongPress: _showQuickAnswersPicker,
-                onSecondaryTap: _showQuickAnswersPicker,
-                child: IconButton(
-                  icon: const Icon(Icons.send),
-                  tooltip: context.l10n.chat_sendMessage,
-                  onPressed: _sendMessage,
-                  color: Theme.of(context).colorScheme.primary,
+              Semantics(
+                button: true,
+                label: context.l10n.chat_sendMessage,
+                child: GestureDetector(
+                  onLongPress: _showQuickAnswersPicker,
+                  onSecondaryTap: _showQuickAnswersPicker,
+                  child: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: _sendMessage,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ],

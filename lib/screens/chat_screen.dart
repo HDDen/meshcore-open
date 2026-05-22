@@ -709,15 +709,18 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onLongPress: () => _showQuickAnswersPicker(connector),
-              onSecondaryTap: () => _showQuickAnswersPicker(connector),
-              child: IconButton.filled(
-                icon: const Icon(Icons.send),
-                tooltip: context.l10n.chat_sendMessageTo(
-                  _resolveContact(connector).name,
+            Semantics(
+              button: true,
+              label: context.l10n.chat_sendMessageTo(
+                _resolveContact(connector).name,
+              ),
+              child: GestureDetector(
+                onLongPress: () => _showQuickAnswersPicker(connector),
+                onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                child: IconButton.filled(
+                  icon: const Icon(Icons.send),
+                  onPressed: () => _sendMessage(connector),
                 ),
-                onPressed: () => _sendMessage(connector),
               ),
             ),
           ],
