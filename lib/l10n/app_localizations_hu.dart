@@ -3654,6 +3654,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channelPath_unknownRepeater => 'Tudatlan erősítő';
 
   @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Waiting for transmission via radio, sec';
+
+  @override
   String get community_title => 'Helyi közösség';
 
   @override

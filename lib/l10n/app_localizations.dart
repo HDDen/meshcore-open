@@ -6296,6 +6296,12 @@ abstract class AppLocalizations {
   /// **'Unknown Repeater'**
   String get channelPath_unknownRepeater;
 
+  /// No description provided for @channelPath_outgoingSentByRadioAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for transmission via radio, sec'**
+  String get channelPath_outgoingSentByRadioAt;
+
   /// No description provided for @community_title.
   ///
   /// In en, this message translates to:

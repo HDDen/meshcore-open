@@ -3337,6 +3337,8 @@ class MeshCoreConnector extends ChangeNotifier {
 
     final outboundText = prepareChannelOutboundText(channel.index, text);
     await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+    final sentByRadioAt = DateTime.now();
+    _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
     await sendFrame(
       buildSendChannelTextMsgFrame(channel.index, outboundText),
       channelSendQueueId: message.messageId,
@@ -3508,6 +3510,31 @@ class MeshCoreConnector extends ChangeNotifier {
       replyToSenderName: pending.replyToSenderName,
       replyToText: pending.replyToText,
     );
+  }
+
+  void _markChannelMessageSentByRadio(
+    String messageId,
+    DateTime sentByRadioAt,
+  ) {
+    for (final entry in _channelMessages.entries) {
+      final channelMessages = entry.value;
+      final index = channelMessages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (index < 0) continue;
+
+      final message = channelMessages[index];
+      if (!message.isOutgoing || message.sentByRadioAt != null) return;
+
+      // Keep the visible message timestamp unchanged; sentByRadioAt is only
+      // for matching late log-rx repeats after radio backoff/quiet waits.
+      channelMessages[index] = message.copyWith(sentByRadioAt: sentByRadioAt);
+      unawaited(
+        _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
+      );
+      notifyListeners();
+      return;
+    }
   }
 
   Future<void> removeContact(Contact contact) async {
@@ -6068,6 +6095,7 @@ class MeshCoreConnector extends ChangeNotifier {
         translationModelId: message.translationModelId,
         wasMcmpCompressed: message.wasMcmpCompressed,
         timestamp: message.timestamp,
+        sentByRadioAt: message.sentByRadioAt,
         isOutgoing: message.isOutgoing,
         status: message.status,
         repeats: message.repeats,
@@ -6192,8 +6220,9 @@ class MeshCoreConnector extends ChangeNotifier {
         (_appSettingsService?.settings.channelResendTimeoutSeconds ??
             AppSettings.defaultChannelResendTimeoutSeconds) *
         1000;
+    final existingRepeatAnchor = existing.sentByRadioAt ?? existing.timestamp;
     final diffMs =
-        (existing.timestamp.millisecondsSinceEpoch -
+        (existingRepeatAnchor.millisecondsSinceEpoch -
                 incoming.timestamp.millisecondsSinceEpoch)
             .abs();
     if (diffMs > repeatWindowMs) return false;

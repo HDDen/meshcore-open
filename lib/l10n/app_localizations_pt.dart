@@ -3635,6 +3635,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelPath_unknownRepeater => 'Repetidor Desconhecido';
 
   @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Waiting for transmission via radio, sec';
+
+  @override
   String get community_title => 'Comunidade';
 
   @override

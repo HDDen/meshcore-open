@@ -3351,6 +3351,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_unknownRepeater => '未知转发节点';
 
   @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Waiting for transmission via radio, sec';
+
+  @override
   String get community_title => '社区';
 
   @override

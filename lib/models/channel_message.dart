@@ -38,6 +38,8 @@ class ChannelMessage {
   final String? translationModelId;
   final bool wasMcmpCompressed;
   final DateTime timestamp;
+  // Internal TX anchor; UI keeps using timestamp as the visible compose time.
+  final DateTime? sentByRadioAt;
   final bool isOutgoing;
   final ChannelMessageStatus status;
   final List<Repeat> repeats;
@@ -64,6 +66,7 @@ class ChannelMessage {
     this.translationModelId,
     this.wasMcmpCompressed = false,
     required this.timestamp,
+    this.sentByRadioAt,
     required this.isOutgoing,
     this.status = ChannelMessageStatus.pending,
     this.repeats = const [],
@@ -108,6 +111,7 @@ class ChannelMessage {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    Object? sentByRadioAt = _unset,
     Map<String, int>? reactions,
   }) {
     return ChannelMessage(
@@ -129,6 +133,9 @@ class ChannelMessage {
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
       timestamp: timestamp,
+      sentByRadioAt: sentByRadioAt == _unset
+          ? this.sentByRadioAt
+          : sentByRadioAt as DateTime?,
       isOutgoing: isOutgoing,
       status: status ?? this.status,
       repeats: repeats ?? this.repeats,

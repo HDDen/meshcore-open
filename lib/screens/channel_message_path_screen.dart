@@ -120,6 +120,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
 
   Widget _buildSummaryCard(BuildContext context, {String? observedLabel}) {
     final l10n = context.l10n;
+    final outgoingRadioWaitSeconds = _outgoingRadioWaitSeconds(message);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -136,6 +137,11 @@ class ChannelMessagePathScreen extends StatelessWidget {
               l10n.channelPath_timeLabel,
               _formatTime(message.timestamp, l10n),
             ),
+            if (outgoingRadioWaitSeconds != null)
+              _buildDetailRow(
+                l10n.channelPath_outgoingSentByRadioAt,
+                outgoingRadioWaitSeconds.toString(),
+              ),
             if (message.repeatCount > 0)
               _buildDetailRow(
                 l10n.channelPath_repeatsLabel,
@@ -212,15 +218,23 @@ class ChannelMessagePathScreen extends StatelessWidget {
   String _formatTime(DateTime time, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(time);
+    final timeLabel =
+        '${time.hour}:${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
 
     if (diff.inDays > 0) {
-      final timeLabel =
-          '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
       return l10n.channelPath_timeWithDate(time.day, time.month, timeLabel);
     }
-    return l10n.channelPath_timeOnly(
-      '${time.hour}:${time.minute.toString().padLeft(2, '0')}',
-    );
+    return l10n.channelPath_timeOnly(timeLabel);
+  }
+
+  // Visible timestamp stays as compose time; sentByRadioAt is the actual TX anchor.
+  int? _outgoingRadioWaitSeconds(ChannelMessage message) {
+    if (!message.isOutgoing || message.sentByRadioAt == null) return null;
+    final waitSeconds = message.sentByRadioAt!
+        .difference(message.timestamp)
+        .inSeconds;
+    return waitSeconds < 0 ? 0 : waitSeconds;
   }
 
   String _formatPathLabel(int? pathLength, AppLocalizations l10n) {
@@ -253,15 +267,21 @@ class ChannelMessagePathScreen extends StatelessWidget {
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text(label, style: TextStyle(color: Colors.grey[600])),
-          ),
-          Expanded(child: Text(value)),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final labelWidth = min(170.0, constraints.maxWidth * 0.42);
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: labelWidth,
+                child: Text(label, style: TextStyle(color: Colors.grey[600])),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(value)),
+            ],
+          );
+        },
       ),
     );
   }

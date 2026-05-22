@@ -3450,6 +3450,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelPath_unknownRepeater => '알 수 없는 중계기';
 
   @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Waiting for transmission via radio, sec';
+
+  @override
   String get community_title => '지역 사회';
 
   @override

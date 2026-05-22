@@ -107,6 +107,7 @@ class ChannelMessageStore {
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'status': msg.status.index,
       'channelIndex': msg.channelIndex,
@@ -147,6 +148,9 @@ class ChannelMessageStore {
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      sentByRadioAt: json['sentByRadioAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
+          : null,
       isOutgoing: json['isOutgoing'] as bool,
       status: ChannelMessageStatus.values[json['status'] as int],
       repeatCount: (json['repeatCount'] as int?) ?? 0,

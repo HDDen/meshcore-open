@@ -782,6 +782,7 @@
   "channelPath_selectedPathLabel": "{label} • {prefixes}",
   "channelPath_noHopDetailsAvailable": "Детали хопов для этого пакета недоступны.",
   "channelPath_unknownRepeater": "Неизвестный репитер",
+  "channelPath_outgoingSentByRadioAt": "Ожидало отправки через радио, сек",
   "community_title": "Сообщество",
   "community_create": "Создать сообщество",
   "community_createDesc": "Создать новое сообщество и поделиться через QR-код.",

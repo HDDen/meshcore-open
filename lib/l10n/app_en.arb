@@ -1931,6 +1931,7 @@
   },
   "channelPath_noHopDetailsAvailable": "No hop details available for this packet.",
   "channelPath_unknownRepeater": "Unknown Repeater",
+  "channelPath_outgoingSentByRadioAt": "Waiting for transmission via radio, sec",
   "community_title": "Community",
   "community_create": "Create Community",
   "community_createDesc": "Create a new community and share via QR code.",

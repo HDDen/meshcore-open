@@ -3644,6 +3644,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_unknownRepeater => 'Неизвестный репитер';
 
   @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Ожидало отправки через радио, сек';
+
+  @override
   String get community_title => 'Сообщество';
 
   @override
