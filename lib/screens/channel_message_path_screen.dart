@@ -120,7 +120,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
 
   Widget _buildSummaryCard(BuildContext context, {String? observedLabel}) {
     final l10n = context.l10n;
-    final outgoingRadioWaitSeconds = _outgoingRadioWaitSeconds(message);
+    final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -137,10 +137,10 @@ class ChannelMessagePathScreen extends StatelessWidget {
               l10n.channelPath_timeLabel,
               _formatTime(message.timestamp, l10n),
             ),
-            if (outgoingRadioWaitSeconds != null)
+            if (outgoingRadioWaitLabel != null)
               _buildDetailRow(
                 l10n.channelPath_outgoingSentByRadioAt,
-                outgoingRadioWaitSeconds.toString(),
+                outgoingRadioWaitLabel,
               ),
             if (message.repeatCount > 0)
               _buildDetailRow(
@@ -229,12 +229,16 @@ class ChannelMessagePathScreen extends StatelessWidget {
   }
 
   // Visible timestamp stays as compose time; sentByRadioAt is the actual TX anchor.
-  int? _outgoingRadioWaitSeconds(ChannelMessage message) {
-    if (!message.isOutgoing || message.sentByRadioAt == null) return null;
+  String? _outgoingRadioWaitLabel(ChannelMessage message) {
+    if (!message.isOutgoing) return null;
+    if (message.sentByRadioWaitSeconds.isNotEmpty) {
+      return message.sentByRadioWaitSeconds.join('/');
+    }
+    if (message.sentByRadioAt == null) return null;
     final waitSeconds = message.sentByRadioAt!
         .difference(message.timestamp)
         .inSeconds;
-    return waitSeconds < 0 ? 0 : waitSeconds;
+    return (waitSeconds < 0 ? 0 : waitSeconds).toString();
   }
 
   String _formatPathLabel(int? pathLength, AppLocalizations l10n) {

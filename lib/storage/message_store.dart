@@ -95,6 +95,8 @@ class MessageStore {
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
       'sentAt': msg.sentAt?.millisecondsSinceEpoch,
+      'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
+      'sentByRadioWaitSeconds': msg.sentByRadioWaitSeconds,
       'deliveredAt': msg.deliveredAt?.millisecondsSinceEpoch,
       'tripTimeMs': msg.tripTimeMs,
       'pathLength': msg.pathLength,
@@ -140,6 +142,12 @@ class MessageStore {
       sentAt: json['sentAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['sentAt'] as int)
           : null,
+      sentByRadioAt: json['sentByRadioAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
+          : null,
+      sentByRadioWaitSeconds: (json['sentByRadioWaitSeconds'] as List<dynamic>?)
+          ?.map((value) => value as int)
+          .toList(),
       deliveredAt: json['deliveredAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['deliveredAt'] as int)
           : null,

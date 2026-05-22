@@ -29,6 +29,9 @@ class Message {
   final int? estimatedTimeoutMs;
   final int? expectedAckHash;
   final DateTime? sentAt;
+  // Internal TX anchor; UI keeps using timestamp as the visible compose time.
+  final DateTime? sentByRadioAt;
+  final List<int> sentByRadioWaitSeconds;
   final DateTime? deliveredAt;
   final int? tripTimeMs;
   final int? pathLength;
@@ -55,6 +58,8 @@ class Message {
     this.estimatedTimeoutMs,
     this.expectedAckHash,
     this.sentAt,
+    this.sentByRadioAt,
+    List<int>? sentByRadioWaitSeconds,
     this.deliveredAt,
     this.tripTimeMs,
     this.pathLength,
@@ -65,6 +70,7 @@ class Message {
   }) : messageId =
            messageId ??
            '${timestamp.millisecondsSinceEpoch}_${pubKeyToHex(senderKey)}_${text.hashCode}',
+       sentByRadioWaitSeconds = sentByRadioWaitSeconds ?? const [],
        pathBytes = pathBytes ?? Uint8List(0),
        fourByteRoomContactKey = fourByteRoomContactKey ?? Uint8List(0),
        reactions = reactions ?? {},
@@ -78,6 +84,8 @@ class Message {
     int? estimatedTimeoutMs,
     int? expectedAckHash,
     DateTime? sentAt,
+    Object? sentByRadioAt = _unset,
+    List<int>? sentByRadioWaitSeconds,
     DateTime? deliveredAt,
     int? tripTimeMs,
     int? pathLength,
@@ -119,6 +127,11 @@ class Message {
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,
       sentAt: sentAt ?? this.sentAt,
+      sentByRadioAt: sentByRadioAt == _unset
+          ? this.sentByRadioAt
+          : sentByRadioAt as DateTime?,
+      sentByRadioWaitSeconds:
+          sentByRadioWaitSeconds ?? this.sentByRadioWaitSeconds,
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
       pathLength: pathLength ?? this.pathLength,

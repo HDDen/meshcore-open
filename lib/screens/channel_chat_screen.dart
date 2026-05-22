@@ -709,6 +709,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final pendingSendDelaySeconds = connector.pendingChannelSendDelaySeconds(
       message.messageId,
     );
+    final outgoingRadioWaitSeconds = _outgoingRadioWaitSeconds(message);
 
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
@@ -937,6 +938,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   color: Colors.grey[600],
                                 ),
                               ),
+                              if (outgoingRadioWaitSeconds != null) ...[
+                                const SizedBox(width: 3),
+                                Text(
+                                  '($outgoingRadioWaitSeconds)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                               if (message.repeatCount > 0) ...[
                                 const SizedBox(width: 6),
                                 Icon(
@@ -1754,6 +1765,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } else {
       return hm;
     }
+  }
+
+  int? _outgoingRadioWaitSeconds(ChannelMessage message) {
+    if (!message.isOutgoing || message.sentByRadioAt == null) return null;
+    final waitSeconds = message.sentByRadioAt!
+        .difference(message.timestamp)
+        .inSeconds;
+    return waitSeconds < 0 ? 0 : waitSeconds;
   }
 
   void _showMessagePathInfo(ChannelMessage message) {

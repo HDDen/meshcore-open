@@ -1772,6 +1772,8 @@ class _ChatScreenState extends State<ChatScreen> {
       text: message.text,
       wasMcmpCompressed: message.wasMcmpCompressed,
       timestamp: message.timestamp,
+      sentByRadioAt: message.sentByRadioAt,
+      sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
       status: ChannelMessageStatus.sent,
       repeatCount: 0,
@@ -1972,6 +1974,7 @@ class _MessageBubble extends StatelessWidget {
         ? colorScheme.onErrorContainer
         : (isOutgoing ? colorScheme.onPrimary : colorScheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.7);
+    final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     const bodyFontSize = 14.0;
     // Do not strip room-server author bytes here: the parser stores them in
     // fourByteRoomContactKey, so message.text is safe to render as-is.
@@ -2152,7 +2155,7 @@ class _MessageBubble extends StatelessWidget {
                                   : EdgeInsets.zero,
                               child: Text(
                                 context.l10n.chat_retryCount(
-                                  message.retryCount,
+                                  message.retryCount + 1,
                                   context
                                       .read<AppSettingsService>()
                                       .settings
@@ -2189,6 +2192,14 @@ class _MessageBubble extends StatelessWidget {
                                     color: metaColor,
                                   ),
                                 ),
+                                if (outgoingRadioWaitLabel != null)
+                                  Text(
+                                    '($outgoingRadioWaitLabel)',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: metaColor,
+                                    ),
+                                  ),
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 4),
                                   _buildStatusIcon(metaColor),
@@ -2470,5 +2481,17 @@ class _MessageBubble extends StatelessWidget {
     if (!enableSeconds) return '$hour:$minute';
     final second = time.second.toString().padLeft(2, '0');
     return '$hour:$minute:$second';
+  }
+
+  String? _outgoingRadioWaitLabel(Message message) {
+    if (!message.isOutgoing) return null;
+    if (message.sentByRadioWaitSeconds.isNotEmpty) {
+      return message.sentByRadioWaitSeconds.join('/');
+    }
+    if (message.sentByRadioAt == null) return null;
+    final waitSeconds = message.sentByRadioAt!
+        .difference(message.timestamp)
+        .inSeconds;
+    return (waitSeconds < 0 ? 0 : waitSeconds).toString();
   }
 }

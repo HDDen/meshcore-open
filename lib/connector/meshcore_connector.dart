@@ -1235,16 +1235,17 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
-  Future<void> _sendMessageDirect(
+  Future<DateTime?> _sendMessageDirect(
     Contact contact,
     String text,
     int attempt,
     int timestampSeconds,
   ) async {
-    if (!isConnected || text.isEmpty) return;
+    if (!isConnected || text.isEmpty) return null;
     try {
       await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
       final outboundText = prepareContactOutboundText(contact, text);
+      final sentByRadioAt = DateTime.now();
       await sendFrame(
         buildSendTextMsgFrame(
           contact.publicKey,
@@ -1253,8 +1254,10 @@ class MeshCoreConnector extends ChangeNotifier {
           timestampSeconds: timestampSeconds,
         ),
       );
+      return sentByRadioAt;
     } catch (e) {
       appLogger.error('Failed to send message: $e', tag: 'Connector');
+      return null;
     }
   }
 
@@ -2964,6 +2967,14 @@ class MeshCoreConnector extends ChangeNotifier {
       _addMessage(contact.publicKeyHex, message);
       notifyListeners();
       final outboundText = prepareContactOutboundText(contact, text);
+      final sentByRadioAt = DateTime.now();
+      final waitSeconds = sentByRadioAt.difference(message.timestamp).inSeconds;
+      _updateMessage(
+        message.copyWith(
+          sentByRadioAt: sentByRadioAt,
+          sentByRadioWaitSeconds: [waitSeconds < 0 ? 0 : waitSeconds],
+        ),
+      );
       await sendFrame(buildSendTextMsgFrame(contact.publicKey, outboundText));
     }
   }

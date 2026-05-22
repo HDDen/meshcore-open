@@ -35,7 +35,7 @@ typedef AckHashMapping = ({
 });
 
 class RetryServiceConfig {
-  final void Function(Contact, String, int, int) sendMessage;
+  final Future<DateTime?> Function(Contact, String, int, int) sendMessage;
   final void Function(String, Message) addMessage;
   final void Function(Message) updateMessage;
   final Function(Contact)? clearContactPath;
@@ -279,6 +279,7 @@ class MessageRetryService extends ChangeNotifier {
 
     // Re-read after potential schedule update
     final effectiveMessage = _pendingMessages[messageId] ?? message;
+    final attemptStartedAt = DateTime.now();
 
     // Sync path settings with device before sending
     if (config.setContactPath != null && config.clearContactPath != null) {
@@ -352,7 +353,31 @@ class MessageRetryService extends ChangeNotifier {
       );
     }
 
-    config.sendMessage(contact, message.text, attempt, timestampSeconds);
+    final sentByRadioAt = await config.sendMessage(
+      contact,
+      message.text,
+      attempt,
+      timestampSeconds,
+    );
+    if (sentByRadioAt != null) {
+      final currentMessage = _pendingMessages[messageId];
+      if (currentMessage != null) {
+        final waitSeconds = sentByRadioAt
+            .difference(attemptStartedAt)
+            .inSeconds;
+        final clampedWaitSeconds = waitSeconds < 0 ? 0 : waitSeconds;
+        // Store the real TX anchor separately from the visible compose time.
+        final updatedMessage = currentMessage.copyWith(
+          sentByRadioAt: sentByRadioAt,
+          sentByRadioWaitSeconds: [
+            ...currentMessage.sentByRadioWaitSeconds,
+            clampedWaitSeconds,
+          ],
+        );
+        _pendingMessages[messageId] = updatedMessage;
+        config.updateMessage(updatedMessage);
+      }
+    }
   }
 
   bool updateMessageFromSent(int ackHash, int timeoutMs) {

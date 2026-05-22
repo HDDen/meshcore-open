@@ -567,7 +567,7 @@ void main() {
 
         retryService.initialize(
           RetryServiceConfig(
-            sendMessage: (_, _, _, _) {},
+            sendMessage: (_, _, _, _) async => DateTime.now(),
             addMessage: (_, message) => addedMessage = message,
             updateMessage: (_) {},
             clearContactPath: (_) {},
@@ -601,7 +601,7 @@ void main() {
 
       retryService.initialize(
         RetryServiceConfig(
-          sendMessage: (_, _, _, _) {},
+          sendMessage: (_, _, _, _) async => DateTime.now(),
           addMessage: (_, message) => addedMessage = message,
           updateMessage: (_) {},
           clearContactPath: (_) {},
