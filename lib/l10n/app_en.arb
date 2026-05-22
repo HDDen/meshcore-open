@@ -255,6 +255,7 @@
   "settings_quickAnswersSelect": "Enable this replies",
   "settings_quickAnswersExists": "Already exists",
   "settings_quickAnswersNotAdded": "You haven't added any quick replies for this chat yet!",
+  "settings_quickAnswersSendAtSelect": "Send on selection",
   "appSettings_title": "App Settings",
   "appSettings_appearance": "Appearance",
   "appSettings_theme": "Theme",

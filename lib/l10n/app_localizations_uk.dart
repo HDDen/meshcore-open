@@ -648,6 +648,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ви ще не додали швидкі відповіді для цього чату!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Налаштування застосунку';
 
   @override

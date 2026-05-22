@@ -1282,6 +1282,12 @@ abstract class AppLocalizations {
   /// **'You haven\'t added any quick replies for this chat yet!'**
   String get settings_quickAnswersNotAdded;
 
+  /// No description provided for @settings_quickAnswersSendAtSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Send on selection'**
+  String get settings_quickAnswersSendAtSelect;
+
   /// No description provided for @appSettings_title.
   ///
   /// In en, this message translates to:

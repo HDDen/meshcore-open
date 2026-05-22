@@ -107,22 +107,32 @@ class TcpConnectionBookmark {
 class QuickAnswer {
   final String id;
   final String text;
+  final bool sendAtSelect;
 
-  const QuickAnswer({required this.id, required this.text});
+  const QuickAnswer({
+    required this.id,
+    required this.text,
+    this.sendAtSelect = false,
+  });
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'text': text};
+    return {'id': id, 'text': text, 'sendAtSelect': sendAtSelect};
   }
 
   factory QuickAnswer.fromJson(Map<String, dynamic> json) {
     return QuickAnswer(
       id: json['id']?.toString() ?? '',
       text: json['text']?.toString() ?? '',
+      sendAtSelect: json['sendAtSelect'] == true,
     );
   }
 
-  QuickAnswer copyWith({String? id, String? text}) {
-    return QuickAnswer(id: id ?? this.id, text: text ?? this.text);
+  QuickAnswer copyWith({String? id, String? text, bool? sendAtSelect}) {
+    return QuickAnswer(
+      id: id ?? this.id,
+      text: text ?? this.text,
+      sendAtSelect: sendAtSelect ?? this.sendAtSelect,
+    );
   }
 }
 

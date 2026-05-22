@@ -651,6 +651,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вы еще не добавили быстрые ответы для этого чата!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Отправлять при выборе';
+
+  @override
   String get appSettings_title => 'Настройки приложения';
 
   @override

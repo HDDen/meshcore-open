@@ -648,6 +648,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du hast für diesen Chat noch keine Schnellantworten hinzugefügt!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'App-Einstellungen';
 
   @override

@@ -654,6 +654,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Nie dodano jeszcze szybkich odpowiedzi dla tego czatu!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Ustawienia aplikacji';
 
   @override

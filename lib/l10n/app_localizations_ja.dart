@@ -620,6 +620,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_quickAnswersNotAdded => 'このチャットにはまだクイック返信が追加されていません！';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'アプリ設定';
 
   @override

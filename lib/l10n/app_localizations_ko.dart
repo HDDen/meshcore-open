@@ -620,6 +620,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_quickAnswersNotAdded => '이 채팅에 빠른 답장을 아직 추가하지 않았습니다!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => '앱 설정';
 
   @override

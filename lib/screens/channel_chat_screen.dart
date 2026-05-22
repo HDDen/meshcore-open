@@ -1580,17 +1580,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (!mounted) return;
     final answer = await showQuickAnswersPickerDialog(
       context,
-      answerTexts: filterAvailableQuickAnswerTexts(
+      answers: filterAvailableQuickAnswers(
         selectedAnswerIds: selectedAnswerIds,
         globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
       ),
     );
     if (answer == null) return;
     if (!mounted) return;
+    if (answer.sendAtSelect) {
+      await _sendMessage(quickAnswerText: answer.text);
+      return;
+    }
     insertQuickAnswerIntoComposer(
       controller: _textController,
       focusNode: _textFieldFocusNode,
-      text: answer,
+      text: answer.text,
     );
   }
 
@@ -1606,9 +1610,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage({String? quickAnswerText}) async {
+    final rawText = quickAnswerText ?? _textController.text;
+    final text = quickAnswerText == null ? rawText.trim() : rawText;
+    if (text.trim().isEmpty) return;
 
     final now = DateTime.now();
     if (_lastChannelSendAt != null &&
@@ -1680,9 +1685,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _lastChannelSentText = messageText;
 
     final replyTarget = _replyingToMessage;
-    _textController.clear();
+    if (quickAnswerText == null) {
+      _textController.clear();
+      _textFieldFocusNode.requestFocus();
+    }
     _cancelReply();
-    _textFieldFocusNode.requestFocus();
     if (settings.sendingDelayForCancellationSeconds > 0 &&
         connector.isChannelSendingDelayEnabled(widget.channel.index)) {
       connector.scheduleChannelMessage(

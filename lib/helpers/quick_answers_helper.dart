@@ -2,14 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import '../models/app_settings.dart';
 
-List<String> filterAvailableQuickAnswerTexts({
+List<QuickAnswer> filterAvailableQuickAnswers({
   required List<String> selectedAnswerIds,
   required List<QuickAnswer> globalAnswers,
 }) {
   final answersById = {for (final answer in globalAnswers) answer.id: answer};
   return [
     for (final answerId in selectedAnswerIds)
-      if (answersById.containsKey(answerId)) answersById[answerId]!.text,
+      if (answersById.containsKey(answerId)) answersById[answerId]!,
   ];
 }
 

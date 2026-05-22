@@ -609,6 +609,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_quickAnswersNotAdded => '你还没有为此聊天添加任何快捷回复！';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => '应用设置';
 
   @override

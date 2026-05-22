@@ -654,6 +654,9 @@ class AppLocalizationsHu extends AppLocalizations {
       'Ehhez a csevegéshez még nem adott hozzá gyors válaszokat!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Alkalmazási beállítások';
 
   @override

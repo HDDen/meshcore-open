@@ -134,6 +134,7 @@
   "settings_quickAnswersSelect": "Включить эти ответы",
   "settings_quickAnswersExists": "Уже существует",
   "settings_quickAnswersNotAdded": "Вы еще не добавили быстрые ответы для этого чата!",
+  "settings_quickAnswersSendAtSelect": "Отправлять при выборе",
   "appSettings_title": "Настройки приложения",
   "appSettings_appearance": "Внешний вид",
   "appSettings_theme": "Тема",

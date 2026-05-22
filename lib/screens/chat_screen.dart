@@ -748,17 +748,21 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
     final answer = await showQuickAnswersPickerDialog(
       context,
-      answerTexts: filterAvailableQuickAnswerTexts(
+      answers: filterAvailableQuickAnswers(
         selectedAnswerIds: selectedAnswerIds,
         globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
       ),
     );
     if (answer == null) return;
     if (!mounted) return;
+    if (answer.sendAtSelect) {
+      await _sendMessage(connector, quickAnswerText: answer.text);
+      return;
+    }
     insertQuickAnswerIntoComposer(
       controller: _textController,
       focusNode: _textFieldFocusNode,
-      text: answer,
+      text: answer.text,
     );
   }
 
@@ -774,9 +778,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _sendMessage(MeshCoreConnector connector) async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage(
+    MeshCoreConnector connector, {
+    String? quickAnswerText,
+  }) async {
+    final rawText = quickAnswerText ?? _textController.text;
+    final text = quickAnswerText == null ? rawText.trim() : rawText;
+    if (text.trim().isEmpty) return;
 
     final now = DateTime.now();
     if (_lastTextSendAt != null &&
@@ -843,8 +851,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // end transform
 
-    _textController.clear();
-    _textFieldFocusNode.requestFocus();
+    if (quickAnswerText == null) {
+      _textController.clear();
+      _textFieldFocusNode.requestFocus();
+    }
     final contact = _resolveContact(connector);
     final useSendingDelay =
         settings.sendingDelayForCancellationSeconds > 0 &&

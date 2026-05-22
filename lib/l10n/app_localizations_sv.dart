@@ -640,6 +640,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Du har inte lagt till några snabbsvar för den här chatten ännu!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Appinställningar';
 
   @override

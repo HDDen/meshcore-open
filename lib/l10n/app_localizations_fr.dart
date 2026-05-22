@@ -652,6 +652,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous n’avez pas encore ajouté de réponses rapides pour cette discussion !';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Paramètres de l\'application';
 
   @override

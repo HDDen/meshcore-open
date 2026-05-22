@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../models/app_settings.dart';
 
-Future<String?> showQuickAnswersPickerDialog(
+Future<QuickAnswer?> showQuickAnswersPickerDialog(
   BuildContext context, {
-  required List<String> answerTexts,
+  required List<QuickAnswer> answers,
 }) {
-  return showDialog<String>(
+  return showDialog<QuickAnswer>(
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: Text(dialogContext.l10n.settings_quickAnswersTitle),
@@ -16,19 +17,34 @@ Future<String?> showQuickAnswersPickerDialog(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.6,
           ),
-          child: answerTexts.isEmpty
+          child: answers.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(dialogContext.l10n.settings_quickAnswersNotAdded),
                 )
               : ListView.builder(
                   shrinkWrap: true,
-                  itemCount: answerTexts.length,
+                  itemCount: answers.length,
                   itemBuilder: (context, index) {
-                    final answer = answerTexts[index];
+                    final answer = answers[index];
+                    final iconColor = Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant;
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(answer),
+                      title: Row(
+                        children: [
+                          Flexible(child: Text(answer.text)),
+                          if (answer.sendAtSelect) ...[
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.flash_on_outlined,
+                              size: 16,
+                              color: iconColor,
+                            ),
+                          ],
+                        ],
+                      ),
                       onTap: () => Navigator.pop(dialogContext, answer),
                     );
                   },

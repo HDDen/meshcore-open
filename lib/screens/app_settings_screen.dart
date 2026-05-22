@@ -1687,6 +1687,7 @@ class AppSettingsScreen extends StatelessWidget {
     final controller = TextEditingController();
     var answers = List<QuickAnswer>.from(settingsService.settings.quickAnswers);
     String? addErrorText;
+    var addSendAtSelect = false;
 
     showDialog(
       context: context,
@@ -1720,6 +1721,17 @@ class AppSettingsScreen extends StatelessWidget {
                         border: const OutlineInputBorder(),
                       ),
                     ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: addSendAtSelect,
+                      title: Text(
+                        dialogContext.l10n.settings_quickAnswersSendAtSelect,
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (value) {
+                        setState(() => addSendAtSelect = value ?? false);
+                      },
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -1751,6 +1763,7 @@ class AppSettingsScreen extends StatelessWidget {
                               QuickAnswer(
                                 id: _newQuickAnswerId(answers),
                                 text: text,
+                                sendAtSelect: addSendAtSelect,
                               ),
                             ];
                             await settingsService.setQuickAnswers(updated);
@@ -1758,6 +1771,7 @@ class AppSettingsScreen extends StatelessWidget {
                             setState(() {
                               answers = updated;
                               addErrorText = null;
+                              addSendAtSelect = false;
                               controller.clear();
                             });
                           },
@@ -1783,23 +1797,24 @@ class AppSettingsScreen extends StatelessWidget {
                         return _buildQuickAnswerListItem(
                           dialogContext,
                           answer.text,
+                          sendAtSelect: answer.sendAtSelect,
                           key: ValueKey(answer.id),
                           dragIndex: index,
                           onEdit: () async {
                             final edited = await _showQuickAnswerEditDialog(
                               dialogContext,
-                              answer.text,
+                              answer,
                               existingAnswers: [
                                 for (final existingAnswer in answers)
                                   if (existingAnswer.id != answer.id)
                                     existingAnswer.text,
                               ],
                             );
-                            if (edited == null || edited.trim().isEmpty) {
+                            if (edited == null || edited.text.trim().isEmpty) {
                               return;
                             }
                             final updated = List<QuickAnswer>.from(answers)
-                              ..[index] = answer.copyWith(text: edited);
+                              ..[index] = edited;
                             await settingsService.setQuickAnswers(updated);
                             if (!dialogContext.mounted) return;
                             setState(() => answers = updated);
@@ -1833,6 +1848,7 @@ class AppSettingsScreen extends StatelessWidget {
   Widget _buildQuickAnswerListItem(
     BuildContext context,
     String answer, {
+    required bool sendAtSelect,
     required Key key,
     required int dragIndex,
     required VoidCallback onEdit,
@@ -1857,6 +1873,14 @@ class AppSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (sendAtSelect) ...[
+                  Icon(
+                    Icons.flash_on_outlined,
+                    size: 14,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 ReorderableDelayedDragStartListener(
                   index: dragIndex,
                   child: SizedBox(
@@ -1897,32 +1921,49 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<String?> _showQuickAnswerEditDialog(
+  Future<QuickAnswer?> _showQuickAnswerEditDialog(
     BuildContext context,
-    String answer, {
+    QuickAnswer answer, {
     required List<String> existingAnswers,
   }) {
-    final controller = TextEditingController(text: answer);
+    final controller = TextEditingController(text: answer.text);
     String? errorText;
+    var sendAtSelect = answer.sendAtSelect;
 
-    return showDialog<String>(
+    return showDialog<QuickAnswer>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setState) => AlertDialog(
           title: Text(dialogContext.l10n.settings_quickAnswersEditText),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            minLines: 2,
-            maxLines: 2,
-            onChanged: (_) {
-              if (errorText == null) return;
-              setState(() => errorText = null);
-            },
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              errorText: errorText,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                minLines: 2,
+                maxLines: 2,
+                onChanged: (_) {
+                  if (errorText == null) return;
+                  setState(() => errorText = null);
+                },
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  errorText: errorText,
+                ),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: sendAtSelect,
+                title: Text(
+                  dialogContext.l10n.settings_quickAnswersSendAtSelect,
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                onChanged: (value) {
+                  setState(() => sendAtSelect = value ?? false);
+                },
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -1938,7 +1979,10 @@ class AppSettingsScreen extends StatelessWidget {
                   });
                   return;
                 }
-                Navigator.pop(dialogContext, text);
+                Navigator.pop(
+                  dialogContext,
+                  answer.copyWith(text: text, sendAtSelect: sendAtSelect),
+                );
               },
               child: Text(dialogContext.l10n.common_save),
             ),

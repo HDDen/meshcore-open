@@ -642,6 +642,9 @@ class AppLocalizationsSl extends AppLocalizations {
       'Za ta klepet še niste dodali hitrih odgovorov!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Nastavitve aplikacije';
 
   @override

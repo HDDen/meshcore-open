@@ -43,10 +43,25 @@ Future<List<String>?> showQuickAnswersSelectionDialog(
                     itemCount: orderedAnswers.length,
                     itemBuilder: (context, index) {
                       final answer = orderedAnswers[index];
+                      final iconColor = Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant;
                       return CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         value: draftSelection.contains(answer.id),
-                        title: Text(answer.text),
+                        title: Row(
+                          children: [
+                            Flexible(child: Text(answer.text)),
+                            if (answer.sendAtSelect) ...[
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.flash_on_outlined,
+                                size: 16,
+                                color: iconColor,
+                              ),
+                            ],
+                          ],
+                        ),
                         onChanged: (value) {
                           setState(() {
                             if (value == true) {

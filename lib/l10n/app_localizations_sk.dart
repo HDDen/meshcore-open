@@ -645,6 +645,9 @@ class AppLocalizationsSk extends AppLocalizations {
       'Pre tento chat ste ešte nepridali žiadne rýchle odpovede!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Nastavenia aplikácie';
 
   @override

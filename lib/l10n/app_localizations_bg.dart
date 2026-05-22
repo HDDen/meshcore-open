@@ -653,6 +653,9 @@ class AppLocalizationsBg extends AppLocalizations {
       'Все още не сте добавили бързи отговори за този чат!';
 
   @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+
+  @override
   String get appSettings_title => 'Настройки на приложението';
 
   @override
