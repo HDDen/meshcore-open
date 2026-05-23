@@ -29,6 +29,7 @@ import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
+import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
@@ -320,6 +321,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         appBar: AppBar(
           title: AppBarTitle(context.l10n.contacts_title),
           automaticallyImplyLeading: false,
+          bottom: const SyncProgressAppBarBottom(),
           actions: [
             PopupMenuButton(
               itemBuilder: (context) => [
@@ -608,15 +610,14 @@ class _ContactsScreenState extends State<ContactsScreen>
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
     final viewState = context.watch<UiViewStateService>();
     final contacts = connector.contacts;
-    final shouldShowStartupSpinner =
-        contacts.isEmpty &&
-        _groups.isEmpty &&
+    final waitingForInitialContacts =
         connector.isConnected &&
-        (connector.isLoadingContacts ||
-            connector.isLoadingChannels ||
-            connector.selfPublicKey == null);
+        !connector.hasLoadedContacts &&
+        !connector.isLoadingContacts;
+    final waitingForFirstContact =
+        connector.isLoadingContacts && contacts.isEmpty;
 
-    if (shouldShowStartupSpinner) {
+    if (waitingForInitialContacts || waitingForFirstContact) {
       return const Center(child: CircularProgressIndicator());
     }
 

@@ -12,6 +12,7 @@ import '../services/app_settings_service.dart';
 import '../services/notification_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/sync_progress_overlay.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/cyr2lat.dart';
 import 'map_cache_screen.dart';
@@ -25,6 +26,7 @@ class AppSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: AdaptiveAppBarTitle(context.l10n.appSettings_title),
         centerTitle: true,
+        bottom: const SyncProgressAppBarBottom(),
       ),
       body: SafeArea(
         top: false,

@@ -16,6 +16,7 @@ import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../widgets/sync_progress_overlay.dart';
 
 /// Convert device coding-rate value (1-4 on some firmware, 5-8 on others)
 /// to the UI enum range (always 5-8).
@@ -67,6 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           indicators: false,
           subtitle: false,
         ),
+        bottom: const SyncProgressAppBarBottom(),
       ),
       body: SafeArea(
         top: false,
