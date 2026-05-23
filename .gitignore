@@ -91,3 +91,5 @@ keystore.properties
 
 # Cloudflare Wrangler
 .wrangler
+__build-apk
+__build-ios
