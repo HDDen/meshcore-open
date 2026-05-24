@@ -38,13 +38,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
           message.pathVariants,
         );
 
-        final primaryPath = !channelMessage && !message.isOutgoing
-            ? Uint8List.fromList(primaryPathTmp.reversed.toList())
-            : primaryPathTmp;
         final hashByteWidth =
             (message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
+        final primaryPath = !channelMessage && !message.isOutgoing
+            ? _reversePathByHop(primaryPathTmp, hashByteWidth)
+            : primaryPathTmp;
         final hops = _buildPathHops(
           primaryPath,
           connector,
@@ -515,16 +515,15 @@ class _ChannelMessagePathMapScreenState
           primaryPath,
         );
 
-        final selectedPath =
-            ((!widget.message.isOutgoing && !widget.channelMessage) ||
-                (widget.message.isOutgoing && widget.channelMessage))
-            ? Uint8List.fromList(selectedPathTmp.reversed.toList())
-            : selectedPathTmp;
-
         final width =
             (widget.message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
+        final selectedPath =
+            ((!widget.message.isOutgoing && !widget.channelMessage) ||
+                (widget.message.isOutgoing && widget.channelMessage))
+            ? _reversePathByHop(selectedPathTmp, width)
+            : selectedPathTmp;
         final selectedIndex = _indexForPath(selectedPathTmp, observedPaths);
         final hops = _buildPathHops(
           selectedPath,
@@ -1110,6 +1109,17 @@ String _formatPathPrefixes(Uint8List pathBytes, int hashByteWidth) {
     pathBytes,
     hashByteWidth,
   ).map(PathHelper.formatHopHex).join(',');
+}
+
+Uint8List _reversePathByHop(Uint8List pathBytes, int hashByteWidth) {
+  final hops = PathHelper.splitPathBytes(pathBytes, hashByteWidth);
+  if (hops.length <= 1) return Uint8List.fromList(pathBytes);
+
+  final reversedBytes = <int>[];
+  for (final hop in hops.reversed) {
+    reversedBytes.addAll(hop);
+  }
+  return Uint8List.fromList(reversedBytes);
 }
 
 int _hopCountFromBytes(int byteCount, int hashByteWidth) {
