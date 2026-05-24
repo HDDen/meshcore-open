@@ -34,13 +34,16 @@ class WardriveDiscoveryResult {
 }
 
 class WardriveService extends ChangeNotifier {
-  WardriveService(this._connector);
+  WardriveService(this._connector) {
+    _loadSavedSamples();
+  }
 
   final MeshCoreConnector _connector;
   final Random _random = Random();
   final WardriveSampleStore _sampleStore = WardriveSampleStore();
   final Map<int, DateTime> _pendingDiscoveryTags = {};
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
+  final List<WardriveSample> _recentSamples = [];
   final Set<String> _currentDiscoveryPublicKeys = {};
 
   StreamSubscription<Uint8List>? _framesSubscription;
@@ -75,6 +78,7 @@ class WardriveService extends ChangeNotifier {
   int get savedSamplesCount => _savedSamplesCount;
   List<WardriveDiscoveryResult> get recentDiscoveries =>
       List.unmodifiable(_recentDiscoveries);
+  List<WardriveSample> get recentSamples => List.unmodifiable(_recentSamples);
   Set<String> get currentDiscoveryPublicKeys =>
       Set.unmodifiable(_currentDiscoveryPublicKeys);
 
@@ -82,8 +86,15 @@ class WardriveService extends ChangeNotifier {
     if (_isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
-    _savedSamplesCount = _sampleStore.count;
+    _loadSavedSamples();
     notifyListeners();
+  }
+
+  void _loadSavedSamples() {
+    _savedSamplesCount = _sampleStore.count;
+    _recentSamples
+      ..clear()
+      ..addAll(_sampleStore.loadRecent(limit: 100));
   }
 
   void stop() {
@@ -218,26 +229,49 @@ class WardriveService extends ChangeNotifier {
     }
 
     try {
-      await _sampleStore.add(
-        WardriveSample(
-          timestamp: result.timestamp,
-          phoneLocationAt: _lastPhoneLocationAt,
-          latitude: latitude,
-          longitude: longitude,
-          tag: result.tag,
-          nodeType: result.nodeType,
-          publicKeyHex: result.publicKeyHex,
-          snr: result.snr,
-          rssi: result.rssi,
-          responseTimeMs: result.responseTimeMs,
-        ),
+      final sample = WardriveSample(
+        timestamp: result.timestamp,
+        phoneLocationAt: _lastPhoneLocationAt,
+        latitude: latitude,
+        longitude: longitude,
+        tag: result.tag,
+        nodeType: result.nodeType,
+        publicKeyHex: result.publicKeyHex,
+        snr: result.snr,
+        rssi: result.rssi,
+        responseTimeMs: result.responseTimeMs,
       );
+      await _sampleStore.add(sample);
       _savedSamplesCount = _sampleStore.count;
       _lastSampleSavedAt = result.timestamp;
       _lastSampleError = null;
+      _recentSamples.insert(0, sample);
+      if (_recentSamples.length > 100) {
+        _recentSamples.removeRange(100, _recentSamples.length);
+      }
     } catch (error) {
       _lastSampleError = error.toString();
     }
+    notifyListeners();
+  }
+
+  String exportSamplesJson() {
+    return _sampleStore.exportJson();
+  }
+
+  Future<int> importSamplesJson(String rawJson) async {
+    final added = await _sampleStore.importJson(rawJson);
+    _loadSavedSamples();
+    notifyListeners();
+    return added;
+  }
+
+  Future<void> clearSamples() async {
+    await _sampleStore.clear();
+    _recentSamples.clear();
+    _savedSamplesCount = 0;
+    _lastSampleSavedAt = null;
+    _lastSampleError = null;
     notifyListeners();
   }
 

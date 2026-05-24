@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -21,6 +24,7 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_service.dart';
 import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
@@ -354,26 +358,42 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             .map((key) => key.toLowerCase())
             .toSet();
         final wardriveHighlightActive = wardrive.lastDiscoveryRequestAt != null;
+        final selfDisplayPosition = _selfDisplayPosition(connector, wardrive);
         final wardriveDiscoveryPolylines = _buildWardriveDiscoveryPolylines(
-          connector,
+          selfDisplayPosition,
           contactsWithLocation,
           wardriveAnsweredKeys,
         );
+        final wardriveSampleMarkers = wardrive.isRunning
+            ? _buildWardriveSampleMarkers(wardrive.recentSamples)
+            : const <Marker>[];
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
         double initialZoom = 10.0;
+        final wardriveSamplePoints = wardrive.isRunning
+            ? wardrive.recentSamples
+                  .map((sample) => LatLng(sample.latitude, sample.longitude))
+                  .toList()
+            : const <LatLng>[];
         final hasMapContent =
             contactsWithLocation.isNotEmpty ||
             sharedMarkers.isNotEmpty ||
+            wardriveSamplePoints.isNotEmpty ||
+            selfDisplayPosition != null ||
             _isSelectingPoi ||
             highlightPosition != null;
-        if (contactsWithLocation.isNotEmpty || sharedMarkers.isNotEmpty) {
-          final allPoints = [
+        if (contactsWithLocation.isNotEmpty ||
+            sharedMarkers.isNotEmpty ||
+            wardriveSamplePoints.isNotEmpty ||
+            selfDisplayPosition != null) {
+          final allPoints = <LatLng>[
             ...contactsWithLocation.map(
               (c) => LatLng(c.latitude!, c.longitude!),
             ),
             ...sharedMarkers.map((m) => m.position),
+            ...wardriveSamplePoints,
+            ?selfDisplayPosition,
           ];
           if (allPoints.length >= 3) {
             final latValues = allPoints.map((p) => p.latitude).toList();
@@ -464,9 +484,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                 if (!_isBuildingPathTrace)
                   IconButton(
                     icon: const Icon(Icons.radar),
-                    onPressed: () => _startPath(
-                      LatLng(connector.selfLatitude!, connector.selfLongitude!),
-                    ),
+                    onPressed: selfDisplayPosition == null
+                        ? null
+                        : () => _startPath(selfDisplayPosition),
                     tooltip: context.l10n.contacts_pathTrace,
                   ),
                 if (!_isBuildingPathTrace)
@@ -474,15 +494,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     icon: const LosIcon(),
                     onPressed: () {
                       final candidates = <LineOfSightEndpoint>[];
-                      if (connector.selfLatitude != null &&
-                          connector.selfLongitude != null) {
+                      if (selfDisplayPosition != null) {
                         candidates.add(
                           LineOfSightEndpoint(
                             label: context.l10n.pathTrace_you,
-                            point: LatLng(
-                              connector.selfLatitude!,
-                              connector.selfLongitude!,
-                            ),
+                            point: selfDisplayPosition,
                             color: Colors.teal,
                             icon: Icons.person_pin_circle,
                           ),
@@ -621,6 +637,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                       PolylineLayer(polylines: sharedMarkerPolylines),
                     if (wardriveDiscoveryPolylines.isNotEmpty)
                       PolylineLayer(polylines: wardriveDiscoveryPolylines),
+                    if (wardriveSampleMarkers.isNotEmpty)
+                      MarkerLayer(markers: wardriveSampleMarkers),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -651,13 +669,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                           wardriveAnsweredKeys: wardriveAnsweredKeys,
                         ),
                         ...sharedMarkers.map(_buildSharedMarker),
-                        if (connector.selfLatitude != null &&
-                            connector.selfLongitude != null)
+                        if (selfDisplayPosition != null)
                           Marker(
-                            point: LatLng(
-                              connector.selfLatitude!,
-                              connector.selfLongitude!,
-                            ),
+                            point: selfDisplayPosition,
                             width: 40,
                             height: 40,
                             child: IgnorePointer(
@@ -690,14 +704,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               ),
                             ),
                           ),
-                        if (_showNodeLabels &&
-                            connector.selfLatitude != null &&
-                            connector.selfLongitude != null)
+                        if (_showNodeLabels && selfDisplayPosition != null)
                           _buildNodeLabelMarker(
-                            point: LatLng(
-                              connector.selfLatitude!,
-                              connector.selfLongitude!,
-                            ),
+                            point: selfDisplayPosition,
                             label: context.l10n.pathTrace_you,
                           ),
                       ],
@@ -911,6 +920,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               const Icon(Icons.my_location, size: 16),
             ],
             const Spacer(),
+            _buildWardriveDataMenu(wardrive),
+            const SizedBox(width: 4),
             _buildWardriveCollapseButton(),
           ],
         ),
@@ -958,6 +969,227 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildWardriveDataMenu(WardriveService wardrive) {
+    return PopupMenuButton<String>(
+      tooltip: 'Wardrive data',
+      icon: const Icon(Icons.more_horiz, size: 18),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 160),
+      onSelected: (action) {
+        unawaited(_handleWardriveDataAction(action, wardrive));
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'export',
+          child: Row(
+            children: [
+              Icon(Icons.ios_share, size: 18),
+              SizedBox(width: 8),
+              Text('Export'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'import',
+          child: Row(
+            children: [
+              Icon(Icons.input, size: 18),
+              SizedBox(width: 8),
+              Text('Import'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'clear',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 18),
+              SizedBox(width: 8),
+              Text('Clear'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleWardriveDataAction(
+    String action,
+    WardriveService wardrive,
+  ) async {
+    switch (action) {
+      case 'export':
+        await _exportWardriveSamples(wardrive);
+        break;
+      case 'import':
+        await _showImportWardriveSamplesDialog(wardrive);
+        break;
+      case 'clear':
+        await _confirmClearWardriveSamples(wardrive);
+        break;
+    }
+  }
+
+  Future<void> _exportWardriveSamples(WardriveService wardrive) async {
+    if (wardrive.savedSamplesCount == 0) {
+      showDismissibleSnackBar(
+        context,
+        content: const Text('No wardrive samples to export.'),
+      );
+      return;
+    }
+
+    final json = wardrive.exportSamplesJson();
+    try {
+      await Clipboard.setData(ClipboardData(text: json));
+      await SharePlus.instance.share(
+        ShareParams(text: json, subject: 'meshcore-open wardrive samples'),
+      );
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: const Text('Wardrive samples exported and copied.'),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text('Wardrive export failed: $error'),
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  Future<void> _showImportWardriveSamplesDialog(
+    WardriveService wardrive,
+  ) async {
+    final controller = TextEditingController();
+    final clipboardData = await Clipboard.getData('text/plain');
+    final clipboardText = clipboardData?.text;
+    if (clipboardText != null &&
+        clipboardText.contains('meshcore-open-wardrive-samples')) {
+      controller.text = clipboardText;
+    }
+
+    if (!mounted) {
+      controller.dispose();
+      return;
+    }
+
+    final imported = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) {
+        String? errorText;
+        var isImporting = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Import wardrive samples'),
+            content: SizedBox(
+              width: 420,
+              child: TextField(
+                controller: controller,
+                minLines: 6,
+                maxLines: 10,
+                decoration: InputDecoration(
+                  hintText: 'Paste exported wardrive JSON here',
+                  errorText: errorText,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isImporting
+                    ? null
+                    : () => Navigator.of(dialogContext).pop(),
+                child: Text(context.l10n.common_cancel),
+              ),
+              FilledButton(
+                onPressed: isImporting
+                    ? null
+                    : () async {
+                        setDialogState(() {
+                          isImporting = true;
+                          errorText = null;
+                        });
+                        try {
+                          final added = await wardrive.importSamplesJson(
+                            controller.text,
+                          );
+                          if (!dialogContext.mounted) return;
+                          Navigator.of(dialogContext).pop(added);
+                        } catch (error) {
+                          if (!dialogContext.mounted) return;
+                          setDialogState(() {
+                            isImporting = false;
+                            errorText = error.toString();
+                          });
+                        }
+                      },
+                child: isImporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Import'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    controller.dispose();
+
+    if (!mounted || imported == null) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(
+        imported == 0
+            ? 'No new wardrive samples imported.'
+            : 'Imported $imported wardrive samples.',
+      ),
+    );
+  }
+
+  Future<void> _confirmClearWardriveSamples(WardriveService wardrive) async {
+    if (wardrive.savedSamplesCount == 0) {
+      showDismissibleSnackBar(
+        context,
+        content: const Text('No wardrive samples to clear.'),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear wardrive samples?'),
+        content: Text(
+          'This will delete ${wardrive.savedSamplesCount} saved samples from this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.l10n.common_clear),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    await wardrive.clearSamples();
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: const Text('Wardrive samples cleared.'),
     );
   }
 
@@ -1469,18 +1701,33 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     return answeredKeys.contains(contact.publicKeyHex.toLowerCase());
   }
 
-  List<Polyline> _buildWardriveDiscoveryPolylines(
+  LatLng? _selfDisplayPosition(
     MeshCoreConnector connector,
+    WardriveService wardrive,
+  ) {
+    final phoneLat = wardrive.lastPhoneLatitude;
+    final phoneLon = wardrive.lastPhoneLongitude;
+    if (wardrive.isRunning && phoneLat != null && phoneLon != null) {
+      // Wardrive uses the phone GPS only as a local map position; it must not
+      // be written into the node advert or persisted as the node coordinates.
+      return LatLng(phoneLat, phoneLon);
+    }
+
+    final selfLat = connector.selfLatitude;
+    final selfLon = connector.selfLongitude;
+    if (selfLat == null || selfLon == null) return null;
+    return LatLng(selfLat, selfLon);
+  }
+
+  List<Polyline> _buildWardriveDiscoveryPolylines(
+    LatLng? selfPoint,
     List<Contact> contacts,
     Set<String> answeredKeys,
   ) {
-    final selfLat = connector.selfLatitude;
-    final selfLon = connector.selfLongitude;
-    if (selfLat == null || selfLon == null || answeredKeys.isEmpty) {
+    if (selfPoint == null || answeredKeys.isEmpty) {
       return const <Polyline>[];
     }
 
-    final selfPoint = LatLng(selfLat, selfLon);
     return contacts
         .where(
           (contact) =>
@@ -1495,6 +1742,53 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           ),
         )
         .toList();
+  }
+
+  List<Marker> _buildWardriveSampleMarkers(List<WardriveSample> samples) {
+    final groups = <String, List<WardriveSample>>{};
+    for (final sample in samples) {
+      // Group nearby saved samples so one discovery request with several
+      // responders produces one readable map dot at the measurement point.
+      final key =
+          '${sample.latitude.toStringAsFixed(5)},${sample.longitude.toStringAsFixed(5)}';
+      groups.putIfAbsent(key, () => <WardriveSample>[]).add(sample);
+    }
+
+    return groups.values.map((group) {
+      final sample = group.first;
+      final count = group.length;
+      final size = min(26.0, 10.0 + count * 2.0);
+      return Marker(
+        point: LatLng(sample.latitude, sample.longitude),
+        width: max(24.0, size),
+        height: max(24.0, size),
+        child: IgnorePointer(
+          child: Container(
+            width: size,
+            height: size,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.greenAccent.withValues(alpha: 0.35),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.green.shade700.withValues(alpha: 0.8),
+                width: 1.5,
+              ),
+            ),
+            child: count > 1
+                ? Text(
+                    count.toString(),
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      );
+    }).toList();
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {

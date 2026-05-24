@@ -75,6 +75,7 @@ class WardriveSample {
 
 class WardriveSampleStore {
   static const _samplesKey = 'wardrive_samples_v1';
+  static const _exportFormat = 'meshcore-open-wardrive-samples';
   static const _maxSamples = 1000;
 
   Future<void> add(WardriveSample sample) async {
@@ -99,8 +100,81 @@ class WardriveSampleStore {
         .toList();
   }
 
+  String exportJson() {
+    return const JsonEncoder.withIndent('  ').convert({
+      'format': _exportFormat,
+      'version': 1,
+      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'samples': loadRecent(
+        limit: _maxSamples,
+      ).map((sample) => sample.toJson()).toList(),
+    });
+  }
+
+  Future<int> importJson(String rawJson) async {
+    final importedSamples = _decodeImport(rawJson);
+    if (importedSamples.isEmpty) return 0;
+
+    final prefs = PrefsManager.instance;
+    final existingSamples = loadRecent(limit: _maxSamples);
+    final knownKeys = existingSamples.map(_sampleKey).toSet();
+    final merged = <WardriveSample>[];
+    var added = 0;
+
+    for (final sample in importedSamples) {
+      if (knownKeys.add(_sampleKey(sample))) {
+        merged.add(sample);
+        added++;
+      }
+    }
+    merged.addAll(existingSamples);
+
+    await prefs.setStringList(
+      _samplesKey,
+      merged
+          .take(_maxSamples)
+          .map((sample) => jsonEncode(sample.toJson()))
+          .toList(),
+    );
+    return added;
+  }
+
+  Future<void> clear() async {
+    await PrefsManager.instance.remove(_samplesKey);
+  }
+
   int get count {
     return PrefsManager.instance.getStringList(_samplesKey)?.length ?? 0;
+  }
+
+  List<WardriveSample> _decodeImport(String rawJson) {
+    final decoded = jsonDecode(rawJson);
+    final rawSamples = decoded is Map
+        ? decoded['samples']
+        : decoded is List
+        ? decoded
+        : null;
+    if (rawSamples is! List) {
+      throw const FormatException('Wardrive samples JSON is invalid');
+    }
+
+    return rawSamples
+        .whereType<Map>()
+        .map(
+          (entry) => WardriveSample.fromJson(Map<String, Object?>.from(entry)),
+        )
+        .whereType<WardriveSample>()
+        .toList();
+  }
+
+  String _sampleKey(WardriveSample sample) {
+    return [
+      sample.timestamp.toIso8601String(),
+      sample.latitude.toStringAsFixed(7),
+      sample.longitude.toStringAsFixed(7),
+      sample.tag,
+      sample.publicKeyHex,
+    ].join('|');
   }
 
   WardriveSample? _decodeSample(String raw) {
