@@ -55,6 +55,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   final Set<String> _expandedChannelGroups = <String>{};
   List<Community> _communities = [];
   List<ChannelGroup> _channelGroups = [];
+  String _loadedChannelGroupsForPublicKey = '';
+  bool _isLoadingChannelGroups = false;
   Timer? _searchDebounce;
 
   ChannelMessageStore get _channelMessageStore => ChannelMessageStore();
@@ -74,12 +76,33 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   Future<void> _loadChannelGroups() async {
     final connector = context.read<MeshCoreConnector>();
-    _channelGroupStore.setPublicKeyHex = connector.selfPublicKeyHex;
-    final groups = await _channelGroupStore.loadGroups();
-    final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final publicKeyHex = connector.selfPublicKeyHex;
+    if (publicKeyHex.isEmpty ||
+        _isLoadingChannelGroups ||
+        _loadedChannelGroupsForPublicKey == publicKeyHex) {
+      return;
+    }
+
+    // Channel groups are stored per node, so wait until SELF_INFO gives us the
+    // node public key. Loading with an empty key would make grouped channels
+    // appear as a flat list on the initial Channels screen.
     if (mounted) {
       setState(() {
+        _isLoadingChannelGroups = true;
+      });
+    } else {
+      _isLoadingChannelGroups = true;
+    }
+
+    _channelGroupStore.setPublicKeyHex = publicKeyHex;
+    final groups = await _channelGroupStore.loadGroups();
+    final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final currentPublicKeyHex = connector.selfPublicKeyHex;
+    if (mounted && currentPublicKeyHex == publicKeyHex) {
+      setState(() {
         _channelGroups = orderedChannelGroups(groups);
+        _loadedChannelGroupsForPublicKey = publicKeyHex;
+        _isLoadingChannelGroups = false;
         _expandedChannelGroups
           ..clear()
           // Restore only groups that still exist after local edits/deletions.
@@ -89,6 +112,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           );
       });
+    } else {
+      _isLoadingChannelGroups = false;
     }
   }
 
@@ -129,6 +154,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final viewState = context.watch<UiViewStateService>();
+    final mutedChannelNames = context
+        .watch<AppSettingsService>()
+        .settings
+        .mutedChannels;
+
+    if (connector.selfPublicKeyHex.isNotEmpty &&
+        _loadedChannelGroupsForPublicKey != connector.selfPublicKeyHex &&
+        !_isLoadingChannelGroups) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_loadChannelGroups());
+        }
+      });
+    }
 
     final channelMessageStore = ChannelMessageStore();
     channelMessageStore.setPublicKeyHex = connector.selfPublicKeyHex;
@@ -202,8 +241,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 !connector.hasLoadedChannels && !connector.isLoadingChannels;
             final waitingForFirstChannel =
                 connector.isLoadingChannels && channels.isEmpty;
+            final waitingForChannelGroups =
+                connector.isConnected &&
+                (connector.selfPublicKeyHex.isEmpty ||
+                    _loadedChannelGroupsForPublicKey !=
+                        connector.selfPublicKeyHex);
 
-            if (waitingForInitialChannels || waitingForFirstChannel) {
+            if (waitingForInitialChannels ||
+                waitingForFirstChannel ||
+                waitingForChannelGroups) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -288,6 +334,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     channelMessageStore,
                     viewState,
                     filteredChannels,
+                    mutedChannelNames,
                   ),
                 ),
               ],
@@ -318,6 +365,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     MeshCoreConnector connector,
     ChannelMessageStore channelMessageStore,
     Channel channel, {
+    required bool isMuted,
     bool showDragHandle = false,
     int? dragIndex,
   }) {
@@ -428,6 +476,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (isMuted) ...[
+                Icon(
+                  Icons.notifications_off_outlined,
+                  size: 16,
+                  color:
+                      widgetTextColor ??
+                      Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+              ],
               if (unreadCount > 0) ...[
                 UnreadBadge(count: unreadCount),
                 const SizedBox(width: 4),
@@ -612,6 +670,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     UiViewStateService viewState,
     List<Channel> filteredChannels,
+    Set<String> mutedChannelNames,
   ) {
     final groupIndexSet = _groupedChannelIndexes();
     final visibleGroups = _channelGroups.where((group) {
@@ -687,6 +746,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 channelMessageStore,
                 group,
                 filteredChannels,
+                mutedChannelNames: mutedChannelNames,
                 showDragHandle: true,
                 dragIndex: index,
               ),
@@ -698,6 +758,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             connector,
             channelMessageStore,
             channel,
+            isMuted: mutedChannelNames.contains(channel.name),
             showDragHandle: true,
             dragIndex: index,
           );
@@ -713,14 +774,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelMessageStore,
           group,
           filteredChannels,
+          mutedChannelNames: mutedChannelNames,
           forceExpanded: viewState.channelsSearchText.isNotEmpty,
         ),
     ];
 
     children.addAll(
       ungroupedChannels.map(
-        (channel) =>
-            _buildChannelTile(context, connector, channelMessageStore, channel),
+        (channel) => _buildChannelTile(
+          context,
+          connector,
+          channelMessageStore,
+          channel,
+          isMuted: mutedChannelNames.contains(channel.name),
+        ),
       ),
     );
     return ListView(
@@ -739,6 +806,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     ChannelGroup group,
     List<Channel> filteredChannels, {
+    Set<String> mutedChannelNames = const {},
     bool forceExpanded = false,
     bool showDragHandle = false,
     int? dragIndex,
@@ -831,6 +899,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   channelMessageStore,
                   group,
                   channels,
+                  mutedChannelNames: mutedChannelNames,
                   canReorder: showDragHandle && group.allowOrderingInGroup,
                   emptyTextColor: groupWidgetTextColor,
                 ),
@@ -852,6 +921,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     ChannelGroup group,
     List<Channel> channels, {
+    Set<String> mutedChannelNames = const {},
     required bool canReorder,
     Color? emptyTextColor,
   }) {
@@ -872,7 +942,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       return Column(
         children: [
           for (final channel in channels)
-            _buildChannelTile(context, connector, channelMessageStore, channel),
+            _buildChannelTile(
+              context,
+              connector,
+              channelMessageStore,
+              channel,
+              isMuted: mutedChannelNames.contains(channel.name),
+            ),
         ],
       );
     }
@@ -892,6 +968,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           connector,
           channelMessageStore,
           channel,
+          isMuted: mutedChannelNames.contains(channel.name),
           showDragHandle: true,
           dragIndex: index,
         );
