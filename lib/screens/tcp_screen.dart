@@ -10,7 +10,7 @@ import '../services/app_settings_service.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'contacts_screen.dart';
+import 'channels_screen.dart';
 import 'usb_screen.dart';
 
 class TcpScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _TcpScreenState extends State<TcpScreen> {
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
   late final VoidCallback _connectionListener;
-  bool _navigatedToContacts = false;
+  bool _navigatedToChannels = false;
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _TcpScreenState extends State<TcpScreen> {
     _connectionListener = () {
       if (!mounted) return;
       if (_connector.state == MeshCoreConnectionState.disconnected) {
-        _navigatedToContacts = false;
+        _navigatedToChannels = false;
       }
     };
     _connector.addListener(_connectionListener);
@@ -56,7 +56,7 @@ class _TcpScreenState extends State<TcpScreen> {
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
-    if (!_navigatedToContacts &&
+    if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,14 +68,14 @@ class _TcpScreenState extends State<TcpScreen> {
 
   Future<void> _handleSuccessfulTcpConnection() async {
     if (!mounted) return;
-    _navigatedToContacts = true;
+    _navigatedToChannels = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
     await _settingsService.recordTcpConnection(host, port);
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ContactsScreen()),
+      MaterialPageRoute(builder: (_) => const ChannelsScreen()),
     );
   }
 

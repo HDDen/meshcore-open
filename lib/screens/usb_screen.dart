@@ -11,7 +11,7 @@ import '../utils/platform_info.dart';
 import '../utils/usb_port_labels.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'contacts_screen.dart';
+import 'channels_screen.dart';
 import 'scanner_screen.dart';
 import 'tcp_screen.dart';
 
@@ -25,7 +25,7 @@ class UsbScreen extends StatefulWidget {
 class _UsbScreenState extends State<UsbScreen> {
   final List<String> _ports = <String>[];
   bool _isLoadingPorts = true;
-  bool _navigatedToContacts = false;
+  bool _navigatedToChannels = false;
   bool _didScheduleInitialLoad = false;
   Timer? _hotPlugTimer;
   late final MeshCoreConnector _connector;
@@ -41,14 +41,14 @@ class _UsbScreenState extends State<UsbScreen> {
     _connectionListener = () {
       if (!mounted) return;
       if (_connector.state == MeshCoreConnectionState.disconnected) {
-        _navigatedToContacts = false;
+        _navigatedToChannels = false;
       }
       if (_connector.state == MeshCoreConnectionState.connected &&
           _connector.isUsbTransportConnected &&
-          !_navigatedToContacts) {
-        _navigatedToContacts = true;
+          !_navigatedToChannels) {
+        _navigatedToChannels = true;
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ContactsScreen()),
+          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
         );
       }
     };
@@ -72,7 +72,7 @@ class _UsbScreenState extends State<UsbScreen> {
     _hotPlugTimer?.cancel();
     _hotPlugTimer = null;
     _connector.removeListener(_connectionListener);
-    if (!_navigatedToContacts &&
+    if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.usb &&
         _connector.state != MeshCoreConnectionState.disconnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
