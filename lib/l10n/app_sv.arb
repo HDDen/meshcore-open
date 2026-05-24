@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Avancerad",
   "repeater_advancedSettingsSubtitle": "Ställjusteringsknappar för erfarna användare",
   "repeater_pathHashMode": "Hash-läge för sökväg",
-  "repeater_pathHashModeHelper": "Byte används för att koda denna repeaters ID i taggar för att upptäcka loopar/flödesvägar. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Versioner 1.13 och äldre har stöd för multi-byte-vägar – endast en gång när nätverket är aktiverat (från och med version 1.14).",
+  "repeater_pathHashModeHelper": "Byte som används för att koda denna repeaters ID i taggar för flood-väg/loopdetektering. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Firmware före v1.14 använde alltid 1-byte-vägar; v1.14 och nyare kan konfigureras för 2- eller 3-byte-vägar.",
   "repeater_txDelay": "Försening i Flood TX",
   "repeater_txDelayHelper": "Återöverföringsintervall för trafik under perioder med hög belastning, som en multiplikator av paketets överföringstid (0-2, standard 0,5). Högre värde = färre kollisioner, men långsammare leverans.",
   "repeater_directTxDelay": "Direkt TX-fördröjning",

@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Fortgeschritten",
   "repeater_advancedSettingsSubtitle": "Regler für erfahrene Bediener",
   "repeater_pathHashMode": "Hash-Modus für Pfade",
-  "repeater_pathHashModeHelper": "Bytes, die zur Kodierung der ID dieses Repeaters in Flood-Pfad-/Schleifen-Erkennung-Tags verwendet werden. 0 = 1 Byte (256 IDs, bis zu 64 Hops), 1 = 2 Bytes (65.000 IDs, bis zu 32 Hops), 2 = 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Firmware-Versionen 1.13 und älter verwenden mehrstellige Pfade – ab Version 1.14+ wird nur ein Pfad erstellt, sobald das Netzwerk aktiv ist.",
+  "repeater_pathHashModeHelper": "Bytes, die zur Kodierung der ID dieses Repeaters in Flood-Pfad-/Schleifen-Erkennung-Tags verwendet werden. 0 = 1 Byte (256 IDs, bis zu 64 Hops), 1 = 2 Bytes (65.000 IDs, bis zu 32 Hops), 2 = 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Firmware vor v1.14 verwendet immer 1-Byte-Pfade; ab v1.14 können 2- oder 3-Byte-Pfade eingestellt werden.",
   "repeater_txDelay": "Verzögerung bei Flood TX",
   "repeater_txDelayHelper": "Wiederholung des Abstands für Hochwasser-Verkehr, als Multiplikator der Übertragungszeit des Pakets (0-2, Standardwert 0,5). Höherer Wert = weniger Kollisionen, aber langsamere Übertragung.",
   "repeater_directTxDelay": "Direkter TX-Verzögerung",

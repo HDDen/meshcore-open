@@ -1,23 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import 'signal_ui.dart';
 
 Contact? _getRepeaterPrefixMatchNearLocation(
   List<Contact> contacts,
-  int pubkeyFirstByte, {
+  List<int> pubkeyPrefix, {
+  String? contactKeyHex,
   LatLng? searchPoint,
   bool preferFavorites = false,
 }) {
+  if (contactKeyHex != null) {
+    for (final c in contacts) {
+      if (c.publicKeyHex == contactKeyHex) {
+        return c;
+      }
+    }
+  }
+
   final candidates = contacts
       .where(
         (c) =>
-            c.publicKey.isNotEmpty &&
-            c.publicKey.first == pubkeyFirstByte &&
+            c.publicKey.length >= pubkeyPrefix.length &&
+            listEquals(
+              c.publicKey.sublist(0, pubkeyPrefix.length),
+              pubkeyPrefix,
+            ) &&
             (c.type == advTypeRepeater || c.type == advTypeRoom),
       )
       .toList();
@@ -162,7 +176,7 @@ class _SNRIndicatorState extends State<SNRIndicator> {
               ),
               if (directRepeater != null)
                 Text(
-                  '${directRepeaters.length}: ${directRepeater.pubkeyFirstByte.toRadixString(16).padLeft(2, '0')}: ${_formatLastUpdated(directRepeater.lastUpdated)}',
+                  '${directRepeaters.length}: ${directRepeater.pubkeyPrefixHex}: ${_formatLastUpdated(directRepeater.lastUpdated)}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -236,23 +250,22 @@ class _SNRIndicatorState extends State<SNRIndicator> {
 
                 final contact = _getRepeaterPrefixMatchNearLocation(
                   allContacts,
-                  repeater.pubkeyFirstByte,
+                  repeater.pubkeyPrefix,
+                  contactKeyHex: repeater.contactKeyHex,
                   searchPoint: selfPoint,
                   preferFavorites: true,
                 );
 
                 final name = contact?.name;
+                final prefixLabel = PathHelper.formatHopHex(
+                  repeater.pubkeyPrefix,
+                );
 
                 return Column(
                   children: [
                     ListTile(
                       leading: Icon(snrUi.icon, color: snrUi.color),
-                      title: Text(
-                        name ??
-                            repeater.pubkeyFirstByte
-                                .toRadixString(16)
-                                .padLeft(2, '0'),
-                      ),
+                      title: Text(name ?? prefixLabel),
                       subtitle: Text(
                         'SNR: ${repeater.snr.toStringAsFixed(1)} dB\n${l10n.snrIndicator_lastSeen}: ${_formatLastUpdated(repeater.lastUpdated)}',
                       ),

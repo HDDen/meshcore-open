@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Avançado",
   "repeater_advancedSettingsSubtitle": "Controles de ajuste para operadores experientes",
   "repeater_pathHashMode": "Modo de hash de caminho",
-  "repeater_pathHashModeHelper": "Bytes utilizados para codificar o ID deste repetidor nas tags de caminho/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). As versões 1.13 e anteriores do firmware não suportam caminhos multi-byte — apenas funcionam uma vez após a ativação da rede (a partir da versão 1.14+).",
+  "repeater_pathHashModeHelper": "Bytes usados para codificar o ID deste repetidor nas tags de caminho flood/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). O firmware anterior à v1.14 sempre usava caminhos de 1 byte; v1.14 e versões mais recentes podem ser configuradas para caminhos de 2 ou 3 bytes.",
   "repeater_txDelay": "Atraso na entrega em Flood, TX",
   "repeater_txDelayHelper": "Ajuste de espaçamento para tráfego de inundações, como um multiplicador do tempo de transmissão (0-2, padrão 0,5). Quanto maior, menos colisões, mas uma entrega mais lenta.",
   "repeater_directTxDelay": "Atraso direto no sinal TX",

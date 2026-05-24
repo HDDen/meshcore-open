@@ -1426,6 +1426,30 @@ abstract class AppLocalizations {
   /// **'Українська'**
   String get appSettings_languageUk;
 
+  /// No description provided for @repeater_pathHashModeOption0.
+  ///
+  /// In en, this message translates to:
+  /// **'0 - 1 byte'**
+  String get repeater_pathHashModeOption0;
+
+  /// No description provided for @repeater_pathHashModeOption1.
+  ///
+  /// In en, this message translates to:
+  /// **'1 - 2 bytes'**
+  String get repeater_pathHashModeOption1;
+
+  /// No description provided for @repeater_pathHashModeOption2.
+  ///
+  /// In en, this message translates to:
+  /// **'2 - 3 bytes'**
+  String get repeater_pathHashModeOption2;
+
+  /// No description provided for @repeater_pathHashModeOption3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 - 4 bytes'**
+  String get repeater_pathHashModeOption3;
+
   /// No description provided for @appSettings_enableMessageTracing.
   ///
   /// In en, this message translates to:
@@ -4673,7 +4697,7 @@ abstract class AppLocalizations {
   /// No description provided for @repeater_pathHashModeHelper.
   ///
   /// In en, this message translates to:
-  /// **'Bytes used to encode this repeater\'s ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). v1.13 and older firmware drops multi-byte paths — only raise once your network is on v1.14+.'**
+  /// **'Bytes used to encode this repeater\'s ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). Firmware before v1.14 always used 1-byte paths; v1.14 and newer can be configured for 2- or 3-byte paths.'**
   String get repeater_pathHashModeHelper;
 
   /// No description provided for @repeater_txDelay.

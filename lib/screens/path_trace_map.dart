@@ -7,6 +7,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/path_helper.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -37,15 +38,23 @@ String formatDistance(double distanceMeters, {required bool isImperial}) {
 }
 
 class PathTraceData {
-  final Uint8List pathData;
+  final List<Uint8List> pathData;
   final List<double> snrData;
-  final Map<int, Contact> pathContacts;
+  final Map<String, Contact> pathContacts;
 
   PathTraceData({
     required this.pathData,
     required this.snrData,
     required this.pathContacts,
   });
+}
+
+String _hopKey(Uint8List hopBytes) => PathHelper.formatHopHex(hopBytes);
+
+Uint8List _lastHopChunk(Uint8List path, int hopWidth) {
+  if (path.isEmpty) return Uint8List(0);
+  final width = hopWidth.clamp(1, path.length);
+  return Uint8List.fromList(path.sublist(path.length - width));
 }
 
 class PathTraceMapScreen extends StatefulWidget {
@@ -89,8 +98,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   bool _failed2Loaded = false;
   bool _hasData = false;
   PathTraceData? _traceData;
-  // Inferred positions for hops that have no GPS location, keyed by hop byte.
-  Map<int, LatLng> _inferredHopPositions = {};
+  // Inferred positions for hops that have no GPS location, keyed by hop prefix.
+  Map<String, LatLng> _inferredHopPositions = {};
   // Endpoint position for the target contact (GPS or guessed).
   LatLng? _targetContactPosition;
   bool _targetContactIsGuessed = false;
@@ -105,9 +114,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   Contact? _targetContact;
 
   String _formatPathPrefixes(Uint8List pathBytes) {
-    return pathBytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join(',');
+    return PathHelper.splitPathBytes(
+      pathBytes,
+      widget.pathHashByteWidth,
+    ).map(PathHelper.formatHopHex).join(',');
   }
 
   @override
@@ -188,44 +198,49 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   }
 
   Uint8List buildPath(Uint8List pathBytes) {
-    Uint8List traceBytes;
+    final pathHops = PathHelper.splitPathBytes(
+      pathBytes,
+      widget.pathHashByteWidth,
+    );
+    final hopWidth = widget.pathHashByteWidth.clamp(1, pubKeySize);
 
-    if (pathBytes.isEmpty) {
+    if (pathHops.isEmpty) {
       final pk = widget.targetContact?.publicKey;
-      final n = widget.pathHashByteWidth.clamp(1, pubKeySize);
-      if (pk != null && pk.length >= n) {
-        return Uint8List.fromList(pk.sublist(0, n));
+      if (pk != null && pk.length >= hopWidth) {
+        return Uint8List.fromList(pk.sublist(0, hopWidth));
       }
-      traceBytes = Uint8List(1);
-      traceBytes[0] = pk?[0] ?? 0;
-      return traceBytes;
+      return Uint8List.fromList(
+        pk != null && pk.isNotEmpty ? [pk[0]] : const [0],
+      );
     }
 
-    if (widget.targetContact?.type == advTypeRepeater ||
-        widget.targetContact?.type == advTypeRoom) {
-      final len = (pathBytes.length + pathBytes.length + 1);
-      traceBytes = Uint8List(len);
-      traceBytes[pathBytes.length] = widget.targetContact?.publicKey[0] ?? 0;
-      for (int i = 0; i < pathBytes.length; i++) {
-        traceBytes[i] = pathBytes[i];
-        if (i < pathBytes.length) {
-          traceBytes[len - 1 - i] = pathBytes[i];
-        }
+    final mirroredHops = <Uint8List>[...pathHops];
+    final isRepeaterOrRoom =
+        widget.targetContact?.type == advTypeRepeater ||
+        widget.targetContact?.type == advTypeRoom;
+    if (isRepeaterOrRoom) {
+      final pk = widget.targetContact?.publicKey;
+      if (pk != null && pk.length >= hopWidth) {
+        mirroredHops.add(Uint8List.fromList(pk.sublist(0, hopWidth)));
+      } else {
+        mirroredHops.add(
+          Uint8List.fromList(pk != null && pk.isNotEmpty ? [pk[0]] : const [0]),
+        );
       }
+      // For repeaters/rooms, include full reversed path
+      mirroredHops.addAll(pathHops.reversed);
     } else {
-      if (pathBytes.length < 2) {
-        return pathBytes[0] == 0 ? Uint8List(0) : pathBytes;
-      }
-      final len = (pathBytes.length + pathBytes.length - 1);
-      traceBytes = Uint8List(len);
-      for (int i = 0; i < pathBytes.length; i++) {
-        traceBytes[i] = pathBytes[i];
-        if (i < pathBytes.length - 1) {
-          traceBytes[len - 1 - i] = pathBytes[i];
-        }
+      // For non-repeater/room targets, reverse without duplicating the pivot hop
+      if (pathHops.length > 1) {
+        mirroredHops.addAll(pathHops.sublist(0, pathHops.length - 1).reversed);
       }
     }
-    return traceBytes;
+
+    final traceBytes = <int>[];
+    for (final hop in mirroredHops) {
+      traceBytes.addAll(hop);
+    }
+    return Uint8List.fromList(traceBytes);
   }
 
   Future<void> _doPathTrace() async {
@@ -329,13 +344,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       int pathLength = buffer.readUInt8();
       buffer.skipBytes(5); // Skip Flag byte and tag data
       buffer.skipBytes(4); // Skip auth code
-      Uint8List pathData = buffer.readBytes(pathLength);
+      final pathBytes = buffer.readBytes(pathLength);
+      final pathData = PathHelper.splitPathBytes(
+        pathBytes,
+        widget.pathHashByteWidth,
+      );
       List<double> snrData = buffer
           .readRemainingBytes()
           .map((snr) => snr.toSigned(8).toDouble() / 4)
           .toList();
 
-      Map<int, Contact> pathContacts = {};
+      Map<String, Contact> pathContacts = {};
       Contact lastContact = Contact(
         path: Uint8List(0),
         pathLength: 0,
@@ -347,7 +366,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         lastSeen: DateTime.now(),
       );
       if (widget.pathContacts != null) {
-        pathContacts = {for (var c in widget.pathContacts!) c.publicKey[0]: c};
+        final hopWidth = widget.pathHashByteWidth.clamp(1, pubKeySize);
+        pathContacts = {
+          for (var c in widget.pathContacts!)
+            if (c.publicKey.length >= hopWidth)
+              _hopKey(Uint8List.fromList(c.publicKey.sublist(0, hopWidth))): c,
+        };
       } else {
         final contacts = connector.allContactsUnfiltered;
         contacts.where((c) => c.type != advTypeChat).forEach((repeater) {
@@ -362,12 +386,14 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                   _maxRepeaterMatchDistanceMeters) {
             return; //skip reapeaters that are far away from the last one with known GPS, to avoid false matches
           }
-          for (var repeaterData in pathData) {
+          for (final repeaterData in pathData) {
+            final hopWidth = repeaterData.length;
+            if (repeater.publicKey.length < hopWidth) continue;
             if (listEquals(
-              repeater.publicKey.sublist(0, 1),
-              Uint8List.fromList([repeaterData]),
+              repeater.publicKey.sublist(0, hopWidth),
+              repeaterData,
             )) {
-              pathContacts[repeaterData] = repeater;
+              pathContacts[_hopKey(repeaterData)] = repeater;
               lastContact = repeater;
             }
           }
@@ -376,13 +402,18 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
 
       // For hops with no GPS contact, infer position from other contacts
       // with known GPS that share the same last-hop byte.
-      final Map<int, LatLng> inferredPositions = {};
+      final Map<String, LatLng> inferredPositions = {};
       for (final hop in pathData) {
-        final contact = pathContacts[hop];
+        final hopKey = _hopKey(hop);
+        final contact = pathContacts[hopKey];
         if (contact != null && contact.hasLocation) continue;
         final peers = connector.contacts
             .where(
-              (c) => c.hasLocation && c.path.isNotEmpty && c.path.last == hop,
+              (c) =>
+                  c.hasLocation &&
+                  c.path.isNotEmpty &&
+                  _hopKey(_lastHopChunk(c.path, widget.pathHashByteWidth)) ==
+                      hopKey,
             )
             .toList();
         if (peers.isNotEmpty) {
@@ -392,7 +423,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           final lon =
               peers.map((c) => c.longitude!).reduce((a, b) => a + b) /
               peers.length;
-          inferredPositions[hop] = LatLng(lat, lon);
+          inferredPositions[hopKey] = LatLng(lat, lon);
         }
       }
 
@@ -414,20 +445,24 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           final tc = _targetContact!;
           if (tc.hasLocation) {
             targetPos = LatLng(tc.latitude!, tc.longitude!);
-          } else if (widget.path.length > 1) {
+          } else if (pathData.length > 1) {
             // Infer from the last hop: average GPS contacts sharing that hop.
             // For a round-trip path (flipPathAround/reversePathAround), the target-side hop
             // sits in the middle of the symmetric sequence; .last is the local side.
             final lastHop = widget.reversePathAround
-                ? widget.path.first
-                : widget.path.last;
+                ? pathData.first
+                : pathData.last;
+            final lastHopKey = _hopKey(lastHop);
 
             final peers = connector.allContacts
                 .where(
                   (c) =>
                       c.hasLocation &&
                       c.path.isNotEmpty &&
-                      c.path.last == lastHop,
+                      _hopKey(
+                            _lastHopChunk(c.path, widget.pathHashByteWidth),
+                          ) ==
+                          lastHopKey,
                 )
                 .toList();
             if (peers.isNotEmpty) {
@@ -444,9 +479,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                 lon + offsetDeg * sin(angle),
               );
               targetGuessed = true;
-            } else if (inferredPositions.containsKey(lastHop)) {
-              final lat = inferredPositions[lastHop]!.latitude;
-              final lon = inferredPositions[lastHop]!.longitude;
+            } else if (inferredPositions.containsKey(lastHopKey)) {
+              final lat = inferredPositions[lastHopKey]!.latitude;
+              final lon = inferredPositions[lastHopKey]!.longitude;
               const offsetDeg = 0.003;
               final angle = (tc.publicKey[1] / 255.0) * 2 * pi;
               targetPos = LatLng(
@@ -456,7 +491,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
               targetGuessed = true;
             } else {
               // As a last resort, just place it at the same position as the last hop.
-              final contact = pathContacts[lastHop];
+              final contact = pathContacts[lastHopKey];
               if (contact != null && contact.hasLocation) {
                 const offsetDeg = 0.003;
                 final angle = (tc.publicKey[1] / 255.0) * 2 * pi;
@@ -474,21 +509,22 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
 
         _points = <LatLng>[];
         _points.add(LatLng(connector.selfLatitude!, connector.selfLongitude!));
-        int hopLast = 0;
-        int hopLastLast = 0;
+        String hopLast = '';
+        String hopLastLast = '';
         for (final hop in _traceData!.pathData) {
-          if (hop == hopLastLast && widget.flipPathAround) {
+          final hopKey = _hopKey(hop);
+          if (hopKey == hopLastLast && widget.flipPathAround) {
             break; //skip duplicate hops in round-trip paths
           }
-          final contact = _traceData!.pathContacts[hop];
+          final contact = _traceData!.pathContacts[hopKey];
           if (contact != null && contact.hasLocation) {
             _points.add(LatLng(contact.latitude!, contact.longitude!));
           } else {
-            final inferred = inferredPositions[hop];
+            final inferred = inferredPositions[hopKey];
             if (inferred != null) _points.add(inferred);
           }
           hopLastLast = hopLast;
-          hopLast = hop;
+          hopLast = hopKey;
         }
         if (targetPos != null) {
           if (_targetContact != null && _targetContact!.type == advTypeChat) {
@@ -511,7 +547,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         _initialZoom = _points.isNotEmpty ? 13.0 : 2.0;
         _bounds = _points.length > 1 ? LatLngBounds.fromPoints(_points) : null;
         _mapKey = ValueKey(
-          '${context.l10n.pathTrace_you},${_formatPathPrefixes(_traceData!.pathData)}',
+          '${context.l10n.pathTrace_you},${_traceData!.pathData.map(PathHelper.formatHopHex).join(',')}',
         );
         _pathDistanceMeters = getPathDistanceMeters(_points);
       });
@@ -613,29 +649,30 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   }
 
   List<Marker> _buildHopMarkers(
-    List<int> pathData, {
+    List<Uint8List> pathData, {
     required bool showLabels,
     required Contact? target,
   }) {
     final markers = <Marker>[];
-    int hopLast = 0;
-    int hopLastLast = 0;
+    String hopLast = '';
+    String hopLastLast = '';
     for (final hop in pathData) {
-      final contact = _traceData!.pathContacts[hop];
-      final inferred = _inferredHopPositions[hop];
+      final hopKey = _hopKey(hop);
+      final contact = _traceData!.pathContacts[hopKey];
+      final inferred = _inferredHopPositions[hopKey];
       final hasGps = contact != null && contact.hasLocation;
-      if (hop == hopLastLast && widget.flipPathAround) {
+      if (hopKey == hopLastLast && widget.flipPathAround) {
         continue; //skip duplicate hops in round-trip paths
       }
       if (!hasGps && inferred == null) {
         hopLastLast = hopLast;
-        hopLast = hop;
+        hopLast = hopKey;
         continue; //skip hops with no GPS and no inferred position
       }
       final point = hasGps
           ? LatLng(contact.latitude!, contact.longitude!)
           : inferred!;
-      final label = hop.toRadixString(16).padLeft(2, '0').toUpperCase();
+      final label = PathHelper.formatHopHex(hop);
 
       markers.add(
         Marker(
@@ -679,7 +716,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         );
       }
       hopLastLast = hopLast;
-      hopLast = hop;
+      hopLast = hopKey;
     }
 
     final selfLat = context.read<MeshCoreConnector>().selfLatitude;
@@ -807,29 +844,28 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   }
 
   String formatDirectionText(PathTraceData pathTraceData, int index) {
-    if (index == 0 || index == pathTraceData.snrData.length - 1) {
+    if (pathTraceData.pathData.isEmpty) {
+      return context.l10n.pathTrace_you;
+    }
+    if (index < 0 || index > pathTraceData.pathData.length) {
+      return context.l10n.pathTrace_you;
+    }
+
+    if (index == 0 || index == pathTraceData.pathData.length) {
       if (index == 0) {
         return context.l10n.pathTrace_you;
       } else {
-        final contactName = pathTraceData
-            .pathContacts[pathTraceData.pathData[pathTraceData.pathData.length -
-                1]]
-            ?.name;
-        final hex = pathTraceData.pathData[pathTraceData.pathData.length - 1]
-            .toRadixString(16)
-            .padLeft(2, '0')
-            .toUpperCase();
+        final hop = pathTraceData.pathData.last;
+        final contactName = pathTraceData.pathContacts[_hopKey(hop)]?.name;
+        final hex = PathHelper.formatHopHex(hop);
         return contactName != null
             ? "$hex: $contactName"
             : "$hex: ${context.l10n.channelPath_unknownRepeater}";
       }
     } else {
-      final contactName =
-          pathTraceData.pathContacts[pathTraceData.pathData[index - 1]]?.name;
-      final hex = pathTraceData.pathData[index - 1]
-          .toRadixString(16)
-          .padLeft(2, '0')
-          .toUpperCase();
+      final hop = pathTraceData.pathData[index - 1];
+      final contactName = pathTraceData.pathContacts[_hopKey(hop)]?.name;
+      final hex = PathHelper.formatHopHex(hop);
       return contactName != null
           ? "$hex: $contactName"
           : "$hex: ${context.l10n.channelPath_unknownRepeater}";
@@ -837,14 +873,18 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   }
 
   String formatDirectionSubText(PathTraceData pathTraceData, int index) {
-    if (index == 0 || index == pathTraceData.snrData.length - 1) {
+    if (pathTraceData.pathData.isEmpty) {
+      return context.l10n.pathTrace_you;
+    }
+    if (index < 0 || index > pathTraceData.pathData.length) {
+      return context.l10n.pathTrace_you;
+    }
+
+    if (index == 0 || index == pathTraceData.pathData.length) {
       if (index == 0) {
-        final contactName =
-            pathTraceData.pathContacts[pathTraceData.pathData[0]]?.name;
-        final hex = pathTraceData.pathData[0]
-            .toRadixString(16)
-            .padLeft(2, '0')
-            .toUpperCase();
+        final hop = pathTraceData.pathData.first;
+        final contactName = pathTraceData.pathContacts[_hopKey(hop)]?.name;
+        final hex = PathHelper.formatHopHex(hop);
         return contactName != null
             ? "$hex: $contactName"
             : "$hex: ${context.l10n.channelPath_unknownRepeater}";
@@ -852,12 +892,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         return context.l10n.pathTrace_you;
       }
     } else {
-      final contactName =
-          pathTraceData.pathContacts[pathTraceData.pathData[index]]?.name;
-      final hex = pathTraceData.pathData[index]
-          .toRadixString(16)
-          .padLeft(2, '0')
-          .toUpperCase();
+      final hop = pathTraceData.pathData[index];
+      final contactName = pathTraceData.pathContacts[_hopKey(hop)]?.name;
+      final hex = PathHelper.formatHopHex(hop);
       return contactName != null
           ? "$hex: $contactName"
           : "$hex: ${context.l10n.channelPath_unknownRepeater}";

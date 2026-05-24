@@ -726,6 +726,18 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appSettings_languageUk => 'Украинский';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Engedje meg a üzenetek nyomon követését';
 
@@ -2636,7 +2648,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'A byte-ok, amelyek az alábbi repeater-ek azonosítójának kódolására szolgálnak a flood-útvonal/ciklus-észlelő címkékben. 0=1 byte (256 azonosító, akár 64 útvonal), 1=2 byte (65 000 azonosító, akár 32 útvonal), 2=3 byte (16 millió azonosító, akár 21 útvonal). A v1.13-as verziótól kezdődően és az azt követő verziókban a több byte-os útvonalak megszűntek – csak egyetlen útvonal létesül, miután a hálózat a v1.14-es verzióra vagy az azt követő verzióra frissült.';
+      'A repeater azonosítójának kódolására használt byte-ok száma a flood-útvonal/ciklusészlelési címkékben. 0=1 byte (256 azonosító, legfeljebb 64 ugrás), 1=2 byte (65 000 azonosító, legfeljebb 32 ugrás), 2=3 byte (16 millió azonosító, legfeljebb 21 ugrás). A v1.14 előtti firmware mindig 1 byte-os útvonalakat használt; a v1.14 és újabb verziók 2 vagy 3 byte-os útvonalakra is konfigurálhatók.';
 
   @override
   String get repeater_txDelay => 'Flood TX késés';

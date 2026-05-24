@@ -573,9 +573,9 @@ Uint8List buildGetStatsFrame(int statsType) {
   return Uint8List.fromList([cmdGetStats, statsType & 0xFF]);
 }
 
-/// Path hash width on air: [61][0][mode], mode 0..2 → (mode+1) bytes per hop hash.
+/// Path hash width on air: [61][0][mode], mode 0..3 → (mode+1) bytes per hop hash.
 Uint8List buildSetPathHashModeFrame(int mode) {
-  final m = mode.clamp(0, 2);
+  final m = mode.clamp(0, 3).toInt();
   return Uint8List.fromList([cmdSetPathHashMode, 0, m]);
 }
 

@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Geavanceerd",
   "repeater_advancedSettingsSubtitle": "Regelhendels voor ervaren gebruikers",
   "repeater_pathHashMode": "Hash-modus voor paden",
-  "repeater_pathHashModeHelper": "Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID's, tot 64 hops), 1=2 bytes (65.000 ID's, tot 32 hops), 2=3 bytes (16 miljoen ID's, tot 21 hops). Versies 1.13 en ouder gebruiken multi-byte paden – alleen na het activeren van het netwerk.",
+  "repeater_pathHashModeHelper": "Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID's, tot 64 hops), 1=2 bytes (65.000 ID's, tot 32 hops), 2=3 bytes (16 miljoen ID's, tot 21 hops). Firmware vóór v1.14 gebruikte altijd 1-byte paden; v1.14 en nieuwer kunnen worden ingesteld op 2- of 3-byte paden.",
   "repeater_txDelay": "Vertraging bij Flood TX",
   "repeater_txDelayHelper": "Herzendinterval voor verkeer tijdens overstromingen, als een veelvoud van de tijd die het pakket nodig heeft (0-2, standaard 0.5). Een hoger getal betekent minder botsingen, maar ook een langere leveringstijd.",
   "repeater_directTxDelay": "Directe vertraging",

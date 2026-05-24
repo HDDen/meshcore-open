@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Avancé",
   "repeater_advancedSettingsSubtitle": "Molettes de réglage pour les opérateurs expérimentés",
   "repeater_pathHashMode": "Mode de hachage de chemin",
-  "repeater_pathHashModeHelper": "Octets utilisés pour encoder l'ID de ce routeur dans les balises de détection de flux/boucles. 0 = 1 octet (256 ID, jusqu'à 64 sauts), 1 = 2 octets (65 000 ID, jusqu'à 32 sauts), 2 = 3 octets (16 millions d'ID, jusqu'à 21 sauts). Les versions 1.13 et antérieures utilisent des chemins multi-octets ; à partir de la version 1.14, cela n'est plus nécessaire.",
+  "repeater_pathHashModeHelper": "Octets utilisés pour encoder l'ID de ce répéteur dans les balises de chemin flood/détection de boucle. 0=1 octet (256 ID, jusqu'à 64 sauts), 1=2 octets (65 000 ID, jusqu'à 32 sauts), 2=3 octets (16 millions d'ID, jusqu'à 21 sauts). Le firmware antérieur à v1.14 utilisait toujours des chemins d'1 octet; v1.14 et les versions ultérieures peuvent être configurées pour des chemins de 2 ou 3 octets.",
   "repeater_txDelay": "Retard dû aux inondations à Texas",
   "repeater_txDelayHelper": "Rétransmettre l'espacement pour le trafic de secours en cas de inondation, en multipliant le temps d'émission du paquet (0-2, valeur par défaut : 0,5). Une valeur plus élevée signifie moins de collisions, mais une vitesse de transmission plus lente.",
   "repeater_directTxDelay": "Retard de transmission direct",

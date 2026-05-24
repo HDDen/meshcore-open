@@ -725,6 +725,18 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageUk => 'Украински';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Разрешаване на проследяване на съобщения';
 
@@ -2629,7 +2641,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Байтовете, използвани за кодиране на идентификатора на този репитер в таговете за откриване на потоци/цикли, са: 0=1 байт (256 идентификатора, до 64 скача), 1=2 байта (65 000 идентификатора, до 32 скача), 2=3 байта (16 милиона идентификатора, до 21 скача). Версии 1.13 и по-стари версии на фърмуера използват многобайтови пътища – само след като мрежата е актуализирана до версия 1.14 или по-нова.';
+      'Байтовете, използвани за кодиране на идентификатора на този репитер в таговете за flood път/откриване на цикли. 0=1 байт (256 идентификатора, до 64 скока), 1=2 байта (65 000 идентификатора, до 32 скока), 2=3 байта (16 милиона идентификатора, до 21 скока). Фърмуер преди v1.14 винаги използва 1-байтови пътища; v1.14 и по-нови версии могат да се конфигурират за 2- или 3-байтови пътища.';
 
   @override
   String get repeater_txDelay => 'Забавяне на проекта \"Flood TX\"';

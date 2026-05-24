@@ -1142,7 +1142,7 @@
   "repeater_advancedSettings": "Zaawansowany",
   "repeater_advancedSettingsSubtitle": "Regulowane pokrętła dla doświadczonych operatorów",
   "repeater_pathHashMode": "Tryb haszujący ścieżkę",
-  "repeater_pathHashModeHelper": "Bity wykorzystywane do kodowania identyfikatora tego urządzenia w tagach ścieżek/detekcji pętli. 0=1 bity (256 identyfikatorów, do 64 skoków), 1=2 bity (65 000 identyfikatorów, do 32 skoków), 2=3 bity (1 600 000 identyfikatorów, do 21 skoków). Wersje 1.13 i wcześniejsze nie obsługują ścieżek wielobitowych – wykrywają tylko jedną, gdy sieć jest w wersji 1.14 lub nowszej.",
+  "repeater_pathHashModeHelper": "Bajty używane do kodowania identyfikatora tego repeatera w tagach ścieżki flood/wykrywania pętli. 0=1 bajt (256 identyfikatorów, do 64 skoków), 1=2 bajty (65 000 identyfikatorów, do 32 skoków), 2=3 bajty (16 milionów identyfikatorów, do 21 skoków). Firmware sprzed v1.14 zawsze używał ścieżek 1-bajtowych; v1.14 i nowsze można skonfigurować na ścieżki 2- lub 3-bajtowe.",
   "repeater_txDelay": "Opóźnienie w Flood, TX",
   "repeater_txDelayHelper": "Ustawienie odstępu dla ruchu związanego z powodzią, jako mnożnik czasu przesyłania pakietu (0-2, domyślnie 0,5). Wyższe wartości oznaczają mniejszą liczbę kolizji, ale wolniejszą prędkość przesyłania.",
   "repeater_directTxDelay": "Bezpośrednie opóźnienie sygnału TX",

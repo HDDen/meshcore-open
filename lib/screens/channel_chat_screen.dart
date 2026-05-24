@@ -18,6 +18,7 @@ import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
 import '../helpers/quick_answers_helper.dart';
+import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
@@ -712,6 +713,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       message.messageId,
     );
     final outgoingRadioWaitSeconds = _outgoingRadioWaitSeconds(message);
+    final displayPathHashWidth =
+        message.pathHashWidth ??
+        context.read<MeshCoreConnector>().pathHashByteWidth;
 
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
@@ -908,7 +912,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 : EdgeInsets.zero,
                             child: Text(
                               context.l10n.channels_via(
-                                _formatPathPrefixes(displayPath),
+                                _formatPathPrefixes(
+                                  displayPath,
+                                  displayPathHashWidth,
+                                ),
                               ),
                               style: TextStyle(
                                 fontSize: 11,
@@ -1916,6 +1923,35 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  void _resendMessage(ChannelMessage message) {
+    final remainingSeconds = _remainingResendWaitSeconds(message);
+    if (remainingSeconds != null) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_retryingMessageWait(remainingSeconds)),
+      );
+      return;
+    }
+
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    _lastChannelSendAt = DateTime.now();
+    _lastChannelSentText = message.text;
+    connector.sendChannelMessage(
+      widget.channel,
+      message.text,
+      originalText: message.originalText,
+      translatedLanguageCode: message.translatedLanguageCode,
+      translationModelId: message.translationModelId,
+      replyToMessageId: message.replyToMessageId,
+      replyToSenderName: message.replyToSenderName,
+      replyToText: message.replyToText,
+    );
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_retryingMessage),
+    );
+  }
+
   int? _remainingResendWaitSeconds(ChannelMessage message) {
     final resendTimeoutSeconds = context
         .read<AppSettingsService>()
@@ -1948,39 +1984,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return ((maxRemainingMs + 999) ~/ 1000).clamp(1, resendTimeoutSeconds);
   }
 
-  void _resendMessage(ChannelMessage message) {
-    final remainingSeconds = _remainingResendWaitSeconds(message);
-    if (remainingSeconds != null) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_retryingMessageWait(remainingSeconds)),
-      );
-      return;
-    }
-
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    _lastChannelSendAt = DateTime.now();
-    _lastChannelSentText = message.text;
-    connector.sendChannelMessage(
-      widget.channel,
-      message.text,
-      originalText: message.originalText,
-      translatedLanguageCode: message.translatedLanguageCode,
-      translationModelId: message.translationModelId,
-      replyToMessageId: message.replyToMessageId,
-      replyToSenderName: message.replyToSenderName,
-      replyToText: message.replyToText,
-    );
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.chat_retryingMessage),
-    );
-  }
-
-  String _formatPathPrefixes(Uint8List pathBytes) {
-    return pathBytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join(',');
+  String _formatPathPrefixes(Uint8List pathBytes, int pathHashByteWidth) {
+    return PathHelper.splitPathBytes(
+      pathBytes,
+      pathHashByteWidth,
+    ).map(PathHelper.formatHopHex).join(',');
   }
 }
 

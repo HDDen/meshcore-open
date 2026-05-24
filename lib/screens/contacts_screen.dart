@@ -1297,7 +1297,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         MaterialPageRoute(
                           builder: (context) => PathTraceMapScreen(
                             title: context.l10n.contacts_repeaterPing,
-                            path: Uint8List.fromList([contact.publicKey.first]),
+                            path: _contactPathPrefix(contact, hw),
                             targetContact: contact,
                             pathHashByteWidth: hw,
                           ),
@@ -1330,7 +1330,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                                 : context.l10n.contacts_roomPing,
                             path: contact.pathBytesForDisplay.isNotEmpty
                                 ? contact.pathBytesForDisplay
-                                : Uint8List.fromList([contact.publicKey.first]),
+                                : _contactPathPrefix(contact, hw),
                             flipPathAround:
                                 contact.pathBytesForDisplay.isNotEmpty,
                             targetContact: contact,
@@ -1581,6 +1581,16 @@ class _ContactsScreenState extends State<ContactsScreen>
         ),
       ),
     );
+  }
+
+  Uint8List _contactPathPrefix(Contact contact, int hashByteWidth) {
+    if (contact.publicKey.isEmpty) return Uint8List(0);
+    final width = hashByteWidth
+        .clamp(1, pubKeySize)
+        .toInt()
+        .clamp(1, contact.publicKey.length)
+        .toInt();
+    return Uint8List.fromList(contact.publicKey.sublist(0, width));
   }
 
   void _confirmDelete(
