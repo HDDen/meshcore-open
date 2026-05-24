@@ -55,6 +55,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   final Set<String> _expandedChannelGroups = <String>{};
   List<Community> _communities = [];
   List<ChannelGroup> _channelGroups = [];
+  String _loadedChannelGroupsForPublicKey = '';
+  bool _isLoadingChannelGroups = false;
   Timer? _searchDebounce;
 
   ChannelMessageStore get _channelMessageStore => ChannelMessageStore();
@@ -74,12 +76,33 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   Future<void> _loadChannelGroups() async {
     final connector = context.read<MeshCoreConnector>();
-    _channelGroupStore.setPublicKeyHex = connector.selfPublicKeyHex;
-    final groups = await _channelGroupStore.loadGroups();
-    final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final publicKeyHex = connector.selfPublicKeyHex;
+    if (publicKeyHex.isEmpty ||
+        _isLoadingChannelGroups ||
+        _loadedChannelGroupsForPublicKey == publicKeyHex) {
+      return;
+    }
+
+    // Channel groups are stored per node, so wait until SELF_INFO gives us the
+    // node public key. Loading with an empty key would make grouped channels
+    // appear as a flat list on the initial Channels screen.
     if (mounted) {
       setState(() {
+        _isLoadingChannelGroups = true;
+      });
+    } else {
+      _isLoadingChannelGroups = true;
+    }
+
+    _channelGroupStore.setPublicKeyHex = publicKeyHex;
+    final groups = await _channelGroupStore.loadGroups();
+    final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final currentPublicKeyHex = connector.selfPublicKeyHex;
+    if (mounted && currentPublicKeyHex == publicKeyHex) {
+      setState(() {
         _channelGroups = orderedChannelGroups(groups);
+        _loadedChannelGroupsForPublicKey = publicKeyHex;
+        _isLoadingChannelGroups = false;
         _expandedChannelGroups
           ..clear()
           // Restore only groups that still exist after local edits/deletions.
@@ -89,6 +112,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           );
       });
+    } else {
+      _isLoadingChannelGroups = false;
     }
   }
 
@@ -133,6 +158,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         .watch<AppSettingsService>()
         .settings
         .mutedChannels;
+
+    if (connector.selfPublicKeyHex.isNotEmpty &&
+        _loadedChannelGroupsForPublicKey != connector.selfPublicKeyHex &&
+        !_isLoadingChannelGroups) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_loadChannelGroups());
+        }
+      });
+    }
 
     final channelMessageStore = ChannelMessageStore();
     channelMessageStore.setPublicKeyHex = connector.selfPublicKeyHex;
@@ -206,8 +241,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 !connector.hasLoadedChannels && !connector.isLoadingChannels;
             final waitingForFirstChannel =
                 connector.isLoadingChannels && channels.isEmpty;
+            final waitingForChannelGroups =
+                connector.isConnected &&
+                (connector.selfPublicKeyHex.isEmpty ||
+                    _loadedChannelGroupsForPublicKey !=
+                        connector.selfPublicKeyHex);
 
-            if (waitingForInitialChannels || waitingForFirstChannel) {
+            if (waitingForInitialChannels ||
+                waitingForFirstChannel ||
+                waitingForChannelGroups) {
               return const Center(child: CircularProgressIndicator());
             }
 
