@@ -10,7 +10,7 @@ import '../services/app_settings_service.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'contacts_screen.dart';
+import 'channels_screen.dart';
 import 'usb_screen.dart';
 
 class TcpScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _TcpScreenState extends State<TcpScreen> {
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
   late final VoidCallback _connectionListener;
-  bool _navigatedToContacts = false;
+  bool _navigatedToChannels = false;
 
   @override
   void initState() {
@@ -45,7 +45,21 @@ class _TcpScreenState extends State<TcpScreen> {
     _connectionListener = () {
       if (!mounted) return;
       if (_connector.state == MeshCoreConnectionState.disconnected) {
-        _navigatedToContacts = false;
+        _navigatedToChannels = false;
+      }
+      if (_connector.state == MeshCoreConnectionState.connected &&
+          _connector.isTcpTransportConnected &&
+          !_navigatedToChannels) {
+        context.read<AppSettingsService>().setTcpServerAddress(
+          _hostController.text,
+        );
+        context.read<AppSettingsService>().setTcpServerPort(
+          int.tryParse(_portController.text) ?? 0,
+        );
+        _navigatedToChannels = true;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
+        );
       }
     };
     _connector.addListener(_connectionListener);
@@ -56,7 +70,8 @@ class _TcpScreenState extends State<TcpScreen> {
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
-    if (!_navigatedToContacts &&
+    _connector.removeListener(_connectionListener);
+    if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

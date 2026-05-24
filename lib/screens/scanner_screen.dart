@@ -11,7 +11,7 @@ import '../utils/app_logger.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/device_tile.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'contacts_screen.dart';
+import 'channels_screen.dart';
 import 'tcp_screen.dart';
 import 'usb_screen.dart';
 
@@ -46,7 +46,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         _changedNavigation = true;
         if (mounted) {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const ContactsScreen()),
+            MaterialPageRoute(builder: (context) => const ChannelsScreen()),
           );
         }
       }
