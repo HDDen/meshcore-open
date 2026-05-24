@@ -1868,6 +1868,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_pathTraceCancelled => 'パスの追跡は中止。';
 
   @override
+  String get map_wardrive => 'Wardrive';
+
+  @override
+  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+
+  @override
+  String get map_wardriveDiscoverySent => 'Wardrive discovery request sent.';
+
+  @override
+  String map_wardriveDiscoveryFailed(String error) {
+    return 'Wardrive discovery failed: $error';
+  }
+
+  @override
+  String map_wardriveRequests(int requests, int responses) {
+    return 'Requests: $requests  Responses: $responses';
+  }
+
+  @override
+  String map_wardriveLastRequest(String time) {
+    return 'Last request: $time';
+  }
+
+  @override
+  String get map_wardrivePhoneGpsNotUpdated => 'Phone GPS: not updated yet';
+
+  @override
+  String map_wardrivePhoneGpsError(String error) {
+    return 'Phone GPS: $error';
+  }
+
+  @override
+  String map_wardrivePhoneGps(String latitude, String longitude) {
+    return 'Phone GPS: $latitude, $longitude';
+  }
+
+  @override
+  String get map_wardriveNoResponses => 'No discovery responses yet.';
+
+  @override
   String get mapCache_title => 'オフライン用地図キャッシュ';
 
   @override

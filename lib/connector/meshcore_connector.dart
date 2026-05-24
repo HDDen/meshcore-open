@@ -4244,6 +4244,12 @@ class MeshCoreConnector extends ChangeNotifier {
       case pushCodePathUpdated:
         _handlePathUpdated(frame);
         break;
+      case pushCodeRawData:
+      case pushCodeControlData:
+        // Optional feature-specific services (for example wardrive) listen to
+        // receivedFrames directly; the main connector only needs to keep these
+        // push frames from falling through as unknown protocol traffic.
+        break;
       case pushCodeLoginSuccess:
         _handleLoginSuccess(frame);
         break;

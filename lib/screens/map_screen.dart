@@ -21,7 +21,9 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/wardrive_service.dart';
 import '../utils/contact_search.dart';
+import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -56,7 +58,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   // Zoom level at which node labels start to appear
   static const double _labelZoomThreshold = 14.0;
   static const double _mapMinZoom = 2.0;
@@ -76,8 +78,11 @@ class _MapScreenState extends State<MapScreen> {
   final List<Polyline> _polylines = [];
   bool _legendExpanded = false;
   bool _showNodeLabels = true;
+  bool _wardrivePanelCollapsed = false;
   List<_GuessedLocation> _cachedGuessedLocations = [];
   String _guessedLocationsCacheKey = '';
+  WardriveService? _wardriveService;
+  VoidCallback? _wardriveServiceListener;
 
   @override
   void initState() {
@@ -91,6 +96,29 @@ class _MapScreenState extends State<MapScreen> {
         }
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_wardriveService == null) {
+      _wardriveService = WardriveService(context.read<MeshCoreConnector>());
+      _wardriveServiceListener = () {
+        if (mounted) {
+          setState(() {});
+        }
+      };
+      _wardriveService!.addListener(_wardriveServiceListener!);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_wardriveServiceListener != null) {
+      _wardriveService?.removeListener(_wardriveServiceListener!);
+    }
+    _wardriveService?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRemovedMarkers() async {
@@ -207,6 +235,10 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Consumer3<MeshCoreConnector, AppSettingsService, PathHistoryService>(
       builder: (context, connector, settingsService, pathHistory, child) {
+        if (!checkConnectionAndNavigate(connector)) {
+          return const SizedBox.shrink();
+        }
+
         final tileCache = context.read<MapTileCacheService>();
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
         final settings = settingsService.settings;
@@ -317,6 +349,16 @@ class _MapScreenState extends State<MapScreen> {
             );
           }
         }
+        final wardrive = _wardriveService!;
+        final wardriveAnsweredKeys = wardrive.currentDiscoveryPublicKeys
+            .map((key) => key.toLowerCase())
+            .toSet();
+        final wardriveHighlightActive = wardrive.lastDiscoveryRequestAt != null;
+        final wardriveDiscoveryPolylines = _buildWardriveDiscoveryPolylines(
+          connector,
+          contactsWithLocation,
+          wardriveAnsweredKeys,
+        );
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
@@ -577,6 +619,8 @@ class _MapScreenState extends State<MapScreen> {
                       PolylineLayer(polylines: _polylines),
                     if (sharedMarkerPolylines.isNotEmpty)
                       PolylineLayer(polylines: sharedMarkerPolylines),
+                    if (wardriveDiscoveryPolylines.isNotEmpty)
+                      PolylineLayer(polylines: wardriveDiscoveryPolylines),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -596,11 +640,15 @@ class _MapScreenState extends State<MapScreen> {
                           ..._buildGuessedMarker(
                             guessedLocations,
                             showLabels: _showNodeLabels,
+                            wardriveHighlightActive: wardriveHighlightActive,
+                            wardriveAnsweredKeys: wardriveAnsweredKeys,
                           ),
                         ..._buildMarkers(
                           contactsWithLocation,
                           settings,
                           showLabels: _showNodeLabels,
+                          wardriveHighlightActive: wardriveHighlightActive,
+                          wardriveAnsweredKeys: wardriveAnsweredKeys,
                         ),
                         ...sharedMarkers.map(_buildSharedMarker),
                         if (connector.selfLatitude != null &&
@@ -664,6 +712,10 @@ class _MapScreenState extends State<MapScreen> {
                     sharedMarkers.length,
                     guessedLocations.length,
                   ),
+                if (!_isBuildingPathTrace &&
+                    (wardrive.isRunning ||
+                        wardrive.lastDiscoveryRequestAt != null))
+                  _buildWardriveStatusPanel(wardrive),
                 if (isDesktop)
                   _buildDesktopMapControls(
                     context,
@@ -684,14 +736,294 @@ class _MapScreenState extends State<MapScreen> {
                 channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
               ),
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => _showFilterDialog(context, settingsService),
-              tooltip: context.l10n.map_filterNodes,
-              child: const Icon(Icons.filter_list),
+            floatingActionButton: AnimatedBuilder(
+              animation: wardrive,
+              builder: (context, _) => _buildMapActionButtons(
+                context: context,
+                connector: connector,
+                settingsService: settingsService,
+                wardrive: wardrive,
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMapActionButtons({
+    required BuildContext context,
+    required MeshCoreConnector connector,
+    required AppSettingsService settingsService,
+    required WardriveService wardrive,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        FloatingActionButton.small(
+          heroTag: 'wardrive_toggle',
+          onPressed: () => _toggleWardrive(wardrive),
+          tooltip: 'Wardrive',
+          child: Icon(
+            wardrive.isRunning ? Icons.stop : Icons.directions_car_filled,
+          ),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton.small(
+          heroTag: 'wardrive_discovery',
+          onPressed: connector.isConnected
+              ? () => _sendWardriveDiscovery(context, wardrive)
+              : null,
+          tooltip: 'Zero-hop discovery',
+          child: wardrive.isSendingDiscovery
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.radar),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          onPressed: () => _showFilterDialog(context, settingsService),
+          tooltip: context.l10n.map_filterNodes,
+          child: const Icon(Icons.filter_list),
+        ),
+      ],
+    );
+  }
+
+  void _toggleWardrive(WardriveService wardrive) {
+    if (wardrive.isRunning) {
+      wardrive.stop();
+    } else {
+      wardrive.start();
+    }
+  }
+
+  Future<void> _sendWardriveDiscovery(
+    BuildContext context,
+    WardriveService wardrive,
+  ) async {
+    try {
+      await wardrive.sendZeroHopDiscoveryRequest();
+      if (!context.mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: const Text('Wardrive discovery request sent.'),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text('Wardrive discovery failed: $error'),
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  Widget _buildWardriveStatusPanel(WardriveService wardrive) {
+    final recent = wardrive.recentDiscoveries.take(4).toList();
+    return Positioned(
+      left: 16,
+      bottom: 16,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 300),
+        child: Material(
+          elevation: 4,
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: _wardrivePanelCollapsed
+                ? _buildCollapsedWardrivePanel(wardrive)
+                : _buildExpandedWardrivePanel(wardrive, recent),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsedWardrivePanel(WardriveService wardrive) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.directions_car_filled,
+          size: 18,
+          color: wardrive.isRunning
+              ? Colors.green
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 8),
+        const Text('Wardrive', style: TextStyle(fontWeight: FontWeight.w700)),
+        if (wardrive.isSendingDiscovery) ...[
+          const SizedBox(width: 8),
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
+        if (wardrive.isUpdatingLocation) ...[
+          const SizedBox(width: 8),
+          const Icon(Icons.my_location, size: 16),
+        ],
+        const SizedBox(width: 8),
+        _buildWardriveCollapseButton(),
+      ],
+    );
+  }
+
+  Widget _buildExpandedWardrivePanel(
+    WardriveService wardrive,
+    List<WardriveDiscoveryResult> recent,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.directions_car_filled,
+              size: 18,
+              color: wardrive.isRunning
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Wardrive',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            if (wardrive.isSendingDiscovery) ...[
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+            if (wardrive.isUpdatingLocation) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.my_location, size: 16),
+            ],
+            const Spacer(),
+            _buildWardriveCollapseButton(),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Requests: ${wardrive.discoveryRequestsSent}  Responses: ${wardrive.discoveryResponsesReceived}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Text(
+          'Samples saved: ${wardrive.savedSamplesCount}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Text(
+          _formatWardriveLocationStatus(wardrive),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: wardrive.lastLocationError == null
+                ? null
+                : Theme.of(context).colorScheme.error,
+          ),
+        ),
+        if (wardrive.lastDiscoveryRequestAt != null)
+          Text(
+            'Last request: ${_formatLastSeen(wardrive.lastDiscoveryRequestAt!)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        if (wardrive.lastSampleError != null)
+          Text(
+            'Sample save: ${wardrive.lastSampleError}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        if (recent.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          ...recent.map(_buildWardriveResultRow),
+        ] else ...[
+          const SizedBox(height: 8),
+          Text(
+            'No discovery responses yet.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildWardriveCollapseButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        setState(() {
+          _wardrivePanelCollapsed = !_wardrivePanelCollapsed;
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Icon(
+          _wardrivePanelCollapsed ? Icons.add : Icons.remove,
+          size: 16,
+        ),
+      ),
+    );
+  }
+
+  String _formatWardriveLocationStatus(WardriveService wardrive) {
+    final error = wardrive.lastLocationError;
+    if (error != null) {
+      return 'Phone GPS: $error';
+    }
+    final lat = wardrive.lastPhoneLatitude;
+    final lon = wardrive.lastPhoneLongitude;
+    if (lat == null || lon == null) {
+      return 'Phone GPS: not updated yet';
+    }
+    return 'Phone GPS: ${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+  }
+
+  Widget _buildWardriveResultRow(WardriveDiscoveryResult result) {
+    final responseTime = result.responseTimeMs == null
+        ? ''
+        : ' / ${result.responseTimeMs} ms';
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _getNodeIcon(result.nodeType),
+            size: 16,
+            color: _getNodeColor(result.nodeType),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 64,
+            child: Text(
+              result.publicKeyPrefix,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 
@@ -893,8 +1225,11 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _buildGuessedMarker(
     List<_GuessedLocation> guessed, {
     required bool showLabels,
+    bool wardriveHighlightActive = false,
+    Set<String> wardriveAnsweredKeys = const <String>{},
   }) {
     final markers = <Marker>[];
+    final foregroundMarkers = <Marker>[];
 
     for (final guess in guessed) {
       if (guess.contact.type == advTypeChat && _isBuildingPathTrace) {
@@ -902,6 +1237,11 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       final color = _getNodeColor(guess.contact.type);
+      final opacity = _wardriveNodeOpacity(
+        guess.contact,
+        active: wardriveHighlightActive,
+        answeredKeys: wardriveAnsweredKeys,
+      );
       final marker = Marker(
         point: guess.position,
         width: 35,
@@ -921,31 +1261,38 @@ class _MapScreenState extends State<MapScreen> {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: color.withValues(
-                alpha: guess.highConfidence ? 0.55 : 0.30,
+                alpha: (guess.highConfidence ? 0.55 : 0.30) * opacity,
               ),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: opacity),
+                width: 2,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.black.withValues(alpha: 0.3 * opacity),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.not_listed_location,
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: opacity),
               size: 20,
             ),
           ),
         ),
       );
 
-      markers.add(marker);
+      final targetMarkers =
+          _isWardriveAnswered(guess.contact, answeredKeys: wardriveAnsweredKeys)
+          ? foregroundMarkers
+          : markers;
+      targetMarkers.add(marker);
 
       if (showLabels) {
-        markers.add(
+        targetMarkers.add(
           _buildNodeLabelMarker(
             point: guess.position,
             label: guess.contact.name,
@@ -953,7 +1300,7 @@ class _MapScreenState extends State<MapScreen> {
         );
       }
     }
-    return markers;
+    return [...markers, ...foregroundMarkers];
   }
 
   List<Contact> _filterContactsBySettings(
@@ -1032,10 +1379,18 @@ class _MapScreenState extends State<MapScreen> {
     List<Contact> contacts,
     settings, {
     required bool showLabels,
+    bool wardriveHighlightActive = false,
+    Set<String> wardriveAnsweredKeys = const <String>{},
   }) {
     final markers = <Marker>[];
+    final foregroundMarkers = <Marker>[];
     final filteredContacts = _filterContactsBySettings(contacts, settings);
     for (final contact in filteredContacts) {
+      final opacity = _wardriveNodeOpacity(
+        contact,
+        active: wardriveHighlightActive,
+        answeredKeys: wardriveAnsweredKeys,
+      );
       final marker = Marker(
         point: LatLng(contact.latitude!, contact.longitude!),
         width: 35,
@@ -1052,13 +1407,16 @@ class _MapScreenState extends State<MapScreen> {
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: settings.mapShowOverlaps && !_isBuildingPathTrace
-                      ? Colors.red
-                      : _getNodeColor(contact.type),
+                      ? Colors.red.withValues(alpha: opacity)
+                      : _getNodeColor(contact.type).withValues(alpha: opacity),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: opacity),
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: Colors.black.withValues(alpha: 0.3 * opacity),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -1066,7 +1424,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 child: Icon(
                   _getNodeIcon(contact.type),
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: opacity),
                   size: 20,
                 ),
               ),
@@ -1075,9 +1433,13 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
 
-      markers.add(marker);
+      final targetMarkers =
+          _isWardriveAnswered(contact, answeredKeys: wardriveAnsweredKeys)
+          ? foregroundMarkers
+          : markers;
+      targetMarkers.add(marker);
       if (showLabels) {
-        markers.add(
+        targetMarkers.add(
           _buildNodeLabelMarker(
             point: LatLng(contact.latitude!, contact.longitude!),
             label: settings.mapShowOverlaps && !_isBuildingPathTrace
@@ -1088,7 +1450,51 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    return markers;
+    return [...markers, ...foregroundMarkers];
+  }
+
+  double _wardriveNodeOpacity(
+    Contact contact, {
+    required bool active,
+    required Set<String> answeredKeys,
+  }) {
+    if (!active) return 1.0;
+    return _isWardriveAnswered(contact, answeredKeys: answeredKeys) ? 1.0 : 0.3;
+  }
+
+  bool _isWardriveAnswered(
+    Contact contact, {
+    required Set<String> answeredKeys,
+  }) {
+    return answeredKeys.contains(contact.publicKeyHex.toLowerCase());
+  }
+
+  List<Polyline> _buildWardriveDiscoveryPolylines(
+    MeshCoreConnector connector,
+    List<Contact> contacts,
+    Set<String> answeredKeys,
+  ) {
+    final selfLat = connector.selfLatitude;
+    final selfLon = connector.selfLongitude;
+    if (selfLat == null || selfLon == null || answeredKeys.isEmpty) {
+      return const <Polyline>[];
+    }
+
+    final selfPoint = LatLng(selfLat, selfLon);
+    return contacts
+        .where(
+          (contact) =>
+              contact.hasLocation &&
+              answeredKeys.contains(contact.publicKeyHex.toLowerCase()),
+        )
+        .map(
+          (contact) => Polyline(
+            points: [selfPoint, LatLng(contact.latitude!, contact.longitude!)],
+            strokeWidth: 2.5,
+            color: Colors.greenAccent.withValues(alpha: 0.85),
+          ),
+        )
+        .toList();
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {

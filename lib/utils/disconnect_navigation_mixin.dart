@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../connector/meshcore_connector.dart';
+import '../screens/scanner_screen.dart';
 
 /// Mixin that automatically navigates back to scanner when disconnected.
 /// Use in State classes for screens that require active connection.
@@ -10,7 +11,10 @@ mixin DisconnectNavigationMixin<T extends StatefulWidget> on State<T> {
     if (!connector.isConnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const ScannerScreen()),
+            (route) => false,
+          );
         }
       });
       return false;

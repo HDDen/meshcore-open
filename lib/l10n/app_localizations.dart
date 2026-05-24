@@ -3538,6 +3538,66 @@ abstract class AppLocalizations {
   /// **'Path trace cancelled.'**
   String get map_pathTraceCancelled;
 
+  /// No description provided for @map_wardrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive'**
+  String get map_wardrive;
+
+  /// No description provided for @map_wardriveZeroHopDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero-hop discovery'**
+  String get map_wardriveZeroHopDiscovery;
+
+  /// No description provided for @map_wardriveDiscoverySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive discovery request sent.'**
+  String get map_wardriveDiscoverySent;
+
+  /// No description provided for @map_wardriveDiscoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive discovery failed: {error}'**
+  String map_wardriveDiscoveryFailed(String error);
+
+  /// No description provided for @map_wardriveRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests: {requests}  Responses: {responses}'**
+  String map_wardriveRequests(int requests, int responses);
+
+  /// No description provided for @map_wardriveLastRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Last request: {time}'**
+  String map_wardriveLastRequest(String time);
+
+  /// No description provided for @map_wardrivePhoneGpsNotUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone GPS: not updated yet'**
+  String get map_wardrivePhoneGpsNotUpdated;
+
+  /// No description provided for @map_wardrivePhoneGpsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone GPS: {error}'**
+  String map_wardrivePhoneGpsError(String error);
+
+  /// No description provided for @map_wardrivePhoneGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone GPS: {latitude}, {longitude}'**
+  String map_wardrivePhoneGps(String latitude, String longitude);
+
+  /// No description provided for @map_wardriveNoResponses.
+  ///
+  /// In en, this message translates to:
+  /// **'No discovery responses yet.'**
+  String get map_wardriveNoResponses;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

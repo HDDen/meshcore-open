@@ -206,6 +206,7 @@ const int cmdSendTelemetryReq = 39;
 const int cmdGetCustomVar = 40;
 const int cmdSetCustomVar = 41;
 const int cmdSendBinaryReq = 50;
+const int cmdSendControlData = 55;
 const int cmdGetStats = 56;
 const int cmdSendAnonReq = 57;
 const int cmdSetAutoAddConfig = 58;
@@ -224,10 +225,38 @@ const int reqTypeGetTelemetry = 0x03;
 const int reqTypeGetAccessList = 0x05;
 const int reqTypeGetNeighbors = 0x06;
 
+// Control data sub-types used by MeshCore discovery packets.
+const int controlSubtypeDiscoverReq = 0x08;
+const int controlSubtypeDiscoverResp = 0x09;
+
 Uint8List buildTelemetryBinaryPayload() {
   // Room servers/repeaters read byte 1 as an inverse telemetry permission mask.
   // Zero means "request every telemetry field allowed for this contact".
   return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
+}
+
+Uint8List buildSendControlDataFrame(Uint8List payload) {
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendControlData);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+Uint8List buildDiscoveryRequestPayload(
+  int tag, {
+  bool prefixOnly = false,
+  int typeMask = 1 << advTypeRepeater,
+}) {
+  final writer = BufferWriter();
+  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
+  // subtype 0x8, with the low bit selecting short/full public keys in replies.
+  writer.writeByte(
+    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
+  );
+  writer.writeByte(typeMask);
+  writer.writeUInt32LE(tag);
+  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
+  return writer.toBytes();
 }
 
 // Repeater response codes
@@ -264,6 +293,7 @@ const int pushCodeAdvert = 0x80;
 const int pushCodePathUpdated = 0x81;
 const int pushCodeSendConfirmed = 0x82;
 const int pushCodeMsgWaiting = 0x83;
+const int pushCodeRawData = 0x84;
 const int pushCodeLoginSuccess = 0x85;
 const int pushCodeLoginFail = 0x86;
 const int pushCodeStatusResponse = 0x87;
@@ -272,6 +302,7 @@ const int pushCodeTraceData = 0x89;
 const int pushCodeNewAdvert = 0x8A;
 const int pushCodeTelemetryResponse = 0x8B;
 const int pushCodeBinaryResponse = 0x8C;
+const int pushCodeControlData = 0x8E;
 
 // Contact/advertisement types
 const int advTypeChat = 1;
