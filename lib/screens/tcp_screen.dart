@@ -47,20 +47,6 @@ class _TcpScreenState extends State<TcpScreen> {
       if (_connector.state == MeshCoreConnectionState.disconnected) {
         _navigatedToChannels = false;
       }
-      if (_connector.state == MeshCoreConnectionState.connected &&
-          _connector.isTcpTransportConnected &&
-          !_navigatedToChannels) {
-        context.read<AppSettingsService>().setTcpServerAddress(
-          _hostController.text,
-        );
-        context.read<AppSettingsService>().setTcpServerPort(
-          int.tryParse(_portController.text) ?? 0,
-        );
-        _navigatedToChannels = true;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
-        );
-      }
     };
     _connector.addListener(_connectionListener);
   }
@@ -70,7 +56,6 @@ class _TcpScreenState extends State<TcpScreen> {
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
-    _connector.removeListener(_connectionListener);
     if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
@@ -83,14 +68,14 @@ class _TcpScreenState extends State<TcpScreen> {
 
   Future<void> _handleSuccessfulTcpConnection() async {
     if (!mounted) return;
-    _navigatedToContacts = true;
+    _navigatedToChannels = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
     await _settingsService.recordTcpConnection(host, port);
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ContactsScreen()),
+      MaterialPageRoute(builder: (_) => const ChannelsScreen()),
     );
   }
 
