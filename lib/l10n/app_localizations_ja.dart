@@ -692,6 +692,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_languageUk => 'ウクライナ語';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing => 'メッセージ追跡機能を有効にする';
 
   @override
@@ -2505,7 +2517,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'このリピーターのIDをフローパス/ループ検出タグにエンコードするために使用されるバイト数。 0=1バイト (256個のID、最大64ホップ)、1=2バイト (65,000個のID、最大32ホップ)、2=3バイト (160万個のID、最大21ホップ)。 v1.13およびそれ以前のファームウェアでは、マルチバイトパスがサポートされていません。 v1.14以降のバージョンでは、一度ネットワークが起動されると、パスが一度だけ検出されます。';
+      'このリピーターのIDをフラッド経路/ループ検出タグにエンコードするために使用するバイト数。0=1バイト (256 ID、最大64ホップ)、1=2バイト (65,000 ID、最大32ホップ)、2=3バイト (1,600万 ID、最大21ホップ)。v1.14より前のファームウェアは常に1バイト経路を使用していました。v1.14以降は2バイトまたは3バイト経路に設定できます。';
 
   @override
   String get repeater_txDelay => 'フロイド・TXでの遅延';

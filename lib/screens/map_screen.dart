@@ -5,13 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:meshcore_open/helpers/path_helper.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
-import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
+import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
@@ -265,11 +266,11 @@ class _MapScreenState extends State<MapScreen> {
         final anchorKeys = allContactsWithLocation
             .map(
               (c) =>
-                  '${c.publicKeyHex}:${c.latitude}:${c.longitude}:${c.path.isNotEmpty ? c.path.last : ""}',
+                  '${c.publicKeyHex}:${c.latitude}:${c.longitude}:${PathHelper.formatHopHex(c.path.isNotEmpty ? c.path.sublist(max(0, c.path.length - connector.pathHashByteWidth.clamp(1, 4))) : const [])}',
             )
             .join(',');
         final cacheKey =
-            '$filteredKeys|$anchorKeys|${pathHistory.version}:${connector.currentSf}:${connector.currentBwHz}:${connector.currentTxPower}:${settings.mapShowGuessedLocations}';
+            '$filteredKeys|$anchorKeys|${pathHistory.version}:${connector.pathHashByteWidth}:${connector.currentSf}:${connector.currentBwHz}:${connector.currentTxPower}:${settings.mapShowGuessedLocations}';
         if (cacheKey != _guessedLocationsCacheKey) {
           _guessedLocationsCacheKey = cacheKey;
           _cachedGuessedLocations = settings.mapShowGuessedLocations
@@ -278,6 +279,7 @@ class _MapScreenState extends State<MapScreen> {
                   allContactsWithLocation,
                   pathHistory,
                   maxRangeKm,
+                  connector.pathHashByteWidth,
                 )
               : [];
         }
@@ -698,22 +700,8 @@ class _MapScreenState extends State<MapScreen> {
     List<Contact> withLocation,
     PathHistoryService pathHistory,
     double? maxRangeKm,
+    int pathHashByteWidth,
   ) {
-    // Index known-location repeaters by their 1-byte hash.
-    // null value = two repeaters share the same hash byte (ambiguous collision).
-    final repeaterByHash = <int, Contact?>{};
-
-    for (final c in withLocation) {
-      if (c.type == advTypeRepeater) {
-        if (repeaterByHash.containsKey(c.publicKey[0])) {
-          repeaterByHash[c.publicKey[0]] =
-              null; // collision: can't disambiguate
-        } else {
-          repeaterByHash[c.publicKey[0]] = c;
-        }
-      }
-    }
-
     final result = <_GuessedLocation>[];
 
     for (final contact in allContacts) {
@@ -728,21 +716,31 @@ class _MapScreenState extends State<MapScreen> {
 
       // Collect the contact-side (last-hop) repeater from every known path.
       // path = [device-side hop, ..., contact-side hop]
-      // Only path.last is actually within radio range of the contact — using
-      // earlier bytes would anchor against our own side of the network.
+      // Only the last hop chunk is actually within radio range of the contact.
       final pathSets = <List<int>>[
         contact.path.toList(),
         ...pathHistory
             .getRecentPaths(contact.publicKeyHex)
             .map((r) => r.pathBytes),
       ];
-      final lastHopBytes = <int>{};
       for (final pathBytes in pathSets) {
         if (pathBytes.isEmpty) continue;
-        final lastHop = pathBytes.last;
-        lastHopBytes.add(lastHop);
-        final r = repeaterByHash[lastHop];
-        if (r != null) anchorSet.add(LatLng(r.latitude!, r.longitude!));
+        final hopWidth = pathHashByteWidth.clamp(1, 4);
+        final lastHop = pathBytes.sublist(max(0, pathBytes.length - hopWidth));
+        if (lastHop.isEmpty) continue;
+
+        for (final repeater in withLocation) {
+          if (repeater.type != advTypeRepeater) continue;
+          if (repeater.publicKey.length < lastHop.length) continue;
+          if (!listEquals(
+            repeater.publicKey.sublist(0, lastHop.length),
+            lastHop,
+          )) {
+            continue;
+          }
+          anchorSet.add(LatLng(repeater.latitude!, repeater.longitude!));
+          break;
+        }
       }
 
       // Filter anchors that are geometrically inconsistent with radio range.
@@ -995,11 +993,21 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       if (settings.mapShowOverlaps) {
+        final hopWidth = context
+            .read<MeshCoreConnector>()
+            .pathHashByteWidth
+            .clamp(1, pubKeySize)
+            .toInt();
         final hasOverlap = contacts
             .where(
               (c) =>
                   c.publicKeyHex != contact.publicKeyHex &&
-                  c.publicKey.first == contact.publicKey.first &&
+                  c.publicKey.length >= hopWidth &&
+                  contact.publicKey.length >= hopWidth &&
+                  listEquals(
+                    c.publicKey.sublist(0, hopWidth),
+                    contact.publicKey.sublist(0, hopWidth),
+                  ) &&
                   (c.type == advTypeRepeater || c.type == advTypeRoom) &&
                   (contact.type == advTypeRepeater ||
                       contact.type == advTypeRoom),
@@ -2294,10 +2302,15 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _addToPath(BuildContext context, Contact contact, {LatLng? position}) {
+    final connector = context.read<MeshCoreConnector>();
+    final hopWidth = min(
+      connector.pathHashByteWidth.clamp(1, pubKeySize),
+      contact.publicKey.length,
+    );
     setState(() {
-      _pathTrace.add(
-        contact.publicKey[0],
-      ); // Add first 16 bytes of public key to path trace
+      _pathTrace.addAll(
+        contact.publicKey.sublist(0, hopWidth),
+      ); // Add the hop-width prefix of the public key to the trace
       _pathTraceContacts.add(
         contact.copyWith(
           latitude: position?.latitude ?? contact.latitude,
@@ -2402,6 +2415,9 @@ class _MapScreenState extends State<MapScreen> {
                               title: l10n.contacts_pathTrace,
                               path: Uint8List.fromList(_pathTrace),
                               flipPathAround: true,
+                              pathHashByteWidth: context
+                                  .read<MeshCoreConnector>()
+                                  .pathHashByteWidth,
                             ),
                           ),
                         );

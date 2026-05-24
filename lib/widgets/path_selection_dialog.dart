@@ -12,6 +12,7 @@ class PathSelectionDialog extends StatefulWidget {
   final String? initialPath;
   final String? currentPathLabel;
   final VoidCallback? onRefresh;
+  final int pathHashByteWidth;
 
   const PathSelectionDialog({
     super.key,
@@ -20,6 +21,7 @@ class PathSelectionDialog extends StatefulWidget {
     this.initialPath,
     this.currentPathLabel,
     this.onRefresh,
+    this.pathHashByteWidth = 1,
   });
 
   @override
@@ -32,6 +34,7 @@ class PathSelectionDialog extends StatefulWidget {
     String? initialPath,
     String? currentPathLabel,
     VoidCallback? onRefresh,
+    int pathHashByteWidth = 1,
   }) {
     return showDialog<Uint8List?>(
       context: context,
@@ -41,6 +44,7 @@ class PathSelectionDialog extends StatefulWidget {
         initialPath: initialPath,
         currentPathLabel: currentPathLabel,
         onRefresh: onRefresh,
+        pathHashByteWidth: pathHashByteWidth,
       ),
     );
   }
@@ -73,10 +77,12 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
   }
 
   void _updateTextFromContacts() {
+    final width = widget.pathHashByteWidth.clamp(1, 4);
+    final hexCharsPerHop = width * 2;
     final pathParts = _selectedContacts
         .map((contact) {
-          if (contact.publicKeyHex.length >= 2) {
-            return contact.publicKeyHex.substring(0, 2);
+          if (contact.publicKeyHex.length >= hexCharsPerHop) {
+            return contact.publicKeyHex.substring(0, hexCharsPerHop);
           }
           return '';
         })
@@ -120,17 +126,19 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
         .toList();
     final pathBytesList = <int>[];
     final invalidPrefixes = <String>[];
+    final hexCharsPerHop = widget.pathHashByteWidth.clamp(1, 4) * 2;
 
     for (final id in pathIds) {
-      if (id.length < 2) {
+      if (id.length < hexCharsPerHop) {
         invalidPrefixes.add(id);
         continue;
       }
 
-      final prefix = id.substring(0, 2);
+      final prefix = id.substring(0, hexCharsPerHop);
       try {
-        final byte = int.parse(prefix, radix: 16);
-        pathBytesList.add(byte);
+        for (int i = 0; i < prefix.length; i += 2) {
+          pathBytesList.add(int.parse(prefix.substring(i, i + 2), radix: 16));
+        }
       } catch (e) {
         invalidPrefixes.add(id);
       }
@@ -149,8 +157,8 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
       return;
     }
 
-    // Check max path length (64 hops)
-    if (pathBytesList.length > 64) {
+    // Check max path size in bytes, as defined by the protocol.
+    if (pathBytesList.length > maxPathSize) {
       showDismissibleSnackBar(
         context,
         content: Text(l10n.path_tooLong),
@@ -312,7 +320,7 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
                           style: const TextStyle(fontSize: 14),
                         ),
                         subtitle: Text(
-                          '${contact.typeLabel(l10n)} • ${contact.publicKeyHex.substring(0, 2)}',
+                          '${contact.typeLabel(l10n)} • ${contact.publicKeyHex.substring(0, widget.pathHashByteWidth.clamp(1, 4) * 2)}',
                           style: const TextStyle(fontSize: 10),
                         ),
                         trailing: isSelected

@@ -46,6 +46,7 @@ class ChannelMessage {
   final List<Repeat> repeats;
   final int repeatCount;
   final int? pathLength;
+  final int? pathHashWidth;
   final Uint8List pathBytes;
   final List<Uint8List> pathVariants;
   final int? channelIndex;
@@ -74,6 +75,7 @@ class ChannelMessage {
     this.repeats = const [],
     this.repeatCount = 0,
     this.pathLength,
+    this.pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
     this.channelIndex,
@@ -102,6 +104,7 @@ class ChannelMessage {
     List<Repeat>? repeats,
     int? repeatCount,
     int? pathLength,
+    int? pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
     String? packetHash,
@@ -147,6 +150,7 @@ class ChannelMessage {
       repeats: repeats ?? this.repeats,
       repeatCount: repeatCount ?? this.repeatCount,
       pathLength: pathLength ?? this.pathLength,
+      pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,
       pathVariants: pathVariants ?? this.pathVariants,
       channelIndex: channelIndex,
@@ -173,6 +177,7 @@ class ChannelMessage {
 
       int pathLen;
       int txtType;
+      int? packetPathHashWidth;
       Uint8List pathBytes = Uint8List(0);
       int channelIdx;
       if (code == respCodeChannelMsgRecvV3) {
@@ -181,12 +186,18 @@ class ChannelMessage {
         final hasPath = (flags & 0x01) != 0;
         reader.skipBytes(1); // Skip reserved byte
         channelIdx = reader.readByte();
-        pathLen = reader.readInt8();
-        txtType = reader.readByte();
-        if (hasPath && pathLen > 0) {
-          reader.rewind(); // Rewind to read path length again for pathBytes
-          pathBytes = reader.readBytes(pathLen);
+        final pathByte = reader.readUInt8();
+        // pathByte packs: top 2 bits = hash width mode, low 6 bits = hop count
+        packetPathHashWidth = ((pathByte & 0xC0) >> 6) + 1;
+        final hopCount = pathByte & 0x3F;
+        pathLen = hopCount;
+        // If a path is present, read hopCount * width bytes
+        if (hasPath && hopCount > 0) {
+          final totalPathBytes = hopCount * packetPathHashWidth;
+          pathBytes = reader.readBytes(totalPathBytes);
         }
+        // After consuming optional path bytes, read the text type byte.
+        txtType = reader.readByte();
       } else {
         channelIdx = reader.readByte();
         pathLen = reader.readInt8();
@@ -229,6 +240,7 @@ class ChannelMessage {
         isOutgoing: false,
         status: ChannelMessageStatus.sent,
         pathLength: pathLen,
+        pathHashWidth: packetPathHashWidth,
         pathBytes: pathBytes,
         channelIndex: channelIdx,
       );

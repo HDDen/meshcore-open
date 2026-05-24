@@ -1132,7 +1132,7 @@
   "repeater_advancedSettings": "Pokročilé",
   "repeater_advancedSettingsSubtitle": "Ovládacie knopy pre skúsených operátorov",
   "repeater_pathHashMode": "Režim hashovania cesty",
-  "repeater_pathHashModeHelper": "Byty použité na zakódovanie ID tohto opakovača v tagoch pre trasu/detekciu slučky. 0 = 1 bytu (256 ID, až 64 skokov), 1 = 2 byty (65 000 ID, až 32 skokov), 2 = 3 byty (16 miliónov ID, až 21 skokov). Verzie 1.13 a staršie nepodporujú viacbytové trasy – fungujú len, keď je sieť aktivovaná.",
+  "repeater_pathHashModeHelper": "Bajty použité na zakódovanie ID tohto opakovača v tagoch flood trasy/detekcie slučky. 0=1 bajt (256 ID, až 64 skokov), 1=2 bajty (65 000 ID, až 32 skokov), 2=3 bajty (16 miliónov ID, až 21 skokov). Firmvér pred v1.14 vždy používal 1-bajtové trasy; v1.14 a novšie možno nakonfigurovať na 2- alebo 3-bajtové trasy.",
   "repeater_txDelay": "Zpoždanie v Flood, TX",
   "repeater_txDelayHelper": "Nastavenie pre opakované vysielanie pre dopravu počas povodní, ako násobok času, ktorý paket využije (0-2, výchoce hodnota 0,5). Vyššia hodnota znamená menej kolízii, ale pomalšie doručovanie.",
   "repeater_directTxDelay": "Priame oneskorenie TX",

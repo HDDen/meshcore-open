@@ -1,81 +1,152 @@
 {
   "bg": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "de": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "es": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "fr": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "hu": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "it": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "ja": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "ko": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "nl": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "pl": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "pt": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
+  ],
+
+  "ru": [
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3"
   ],
 
   "sk": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "sl": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "sv": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "uk": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ],
 
   "zh": [
     "settings_quickAnswersSendAtSelect",
+    "repeater_pathHashModeOption0",
+    "repeater_pathHashModeOption1",
+    "repeater_pathHashModeOption2",
+    "repeater_pathHashModeOption3",
     "channelPath_outgoingSentByRadioAt"
   ]
 }

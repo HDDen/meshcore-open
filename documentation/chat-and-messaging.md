@@ -21,6 +21,7 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 - **Action buttons**:
   - **Routing mode** (waves icon): Switch between Auto, Direct, and Flood routing
   - **Path management** (timeline icon): View recent paths with hop count, round-trip time, age, and success count. Paths are color-coded by direct repeater (green/yellow/red/blue for ranked repeaters, grey for unknown). Tap a path to activate it (the device verifies and confirms via snackbar), long-press to view full path details, set custom paths, or force flood mode. A warning banner appears when history reaches 100 entries.
+    - Custom path entry follows the device's current hash width, so multibyte paths are entered as comma-separated hex prefixes such as `A1B2,C1C2` when that mode is enabled.
   - **Info** (info icon): Contact info dialog showing type, path, GPS coordinates, public key, and SMAZ compression toggle
 
 ### Message List

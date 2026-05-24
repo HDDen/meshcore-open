@@ -935,16 +935,22 @@ class _ChatScreenState extends State<ChatScreen> {
             pathsWithRepeaters = paths.map((path) {
               final isDirectRepeater =
                   directRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  directRepeater.pubkeyFirstByte == path.pathBytes.first;
+                  directRepeater.matchesPathStart(
+                    path.pathBytes,
+                    connector.pathHashByteWidth,
+                  );
               final isSecondDirectRepeater =
                   secondDirectRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  secondDirectRepeater.pubkeyFirstByte == path.pathBytes.first;
+                  secondDirectRepeater.matchesPathStart(
+                    path.pathBytes,
+                    connector.pathHashByteWidth,
+                  );
               final isThirdDirectRepeater =
                   thirdDirectRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  thirdDirectRepeater.pubkeyFirstByte == path.pathBytes.first;
+                  thirdDirectRepeater.matchesPathStart(
+                    path.pathBytes,
+                    connector.pathHashByteWidth,
+                  );
 
               int ranking = -1;
               Color color = Colors.grey;
@@ -1241,7 +1247,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final allContacts = connector.allContacts;
 
     final formattedPath = PathHelper.formatPathHex(pathBytes);
-    final resolvedNames = PathHelper.resolvePathNames(pathBytes, allContacts);
+    final resolvedNames = PathHelper.resolvePathNames(
+      pathBytes,
+      allContacts,
+      connector.pathHashByteWidth,
+    );
 
     showDialog(
       context: context,
@@ -1725,6 +1735,7 @@ class _ChatScreenState extends State<ChatScreen> {
       title: context.l10n.chat_setCustomPath,
       currentPathLabel: currentPathLabel,
       onRefresh: connector.isConnected ? connector.getContacts : null,
+      pathHashByteWidth: connector.pathHashByteWidth,
     );
 
     appLogger.info(

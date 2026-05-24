@@ -724,6 +724,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainien';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Activer le traçage des messages';
 
@@ -2641,7 +2653,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Octets utilisés pour encoder l\'ID de ce routeur dans les balises de détection de flux/boucles. 0 = 1 octet (256 ID, jusqu\'à 64 sauts), 1 = 2 octets (65 000 ID, jusqu\'à 32 sauts), 2 = 3 octets (16 millions d\'ID, jusqu\'à 21 sauts). Les versions 1.13 et antérieures utilisent des chemins multi-octets ; à partir de la version 1.14, cela n\'est plus nécessaire.';
+      'Octets utilisés pour encoder l\'ID de ce répéteur dans les balises de chemin flood/détection de boucle. 0=1 octet (256 ID, jusqu\'à 64 sauts), 1=2 octets (65 000 ID, jusqu\'à 32 sauts), 2=3 octets (16 millions d\'ID, jusqu\'à 21 sauts). Le firmware antérieur à v1.14 utilisait toujours des chemins d\'1 octet; v1.14 et les versions ultérieures peuvent être configurées pour des chemins de 2 ou 3 octets.';
 
   @override
   String get repeater_txDelay => 'Retard dû aux inondations à Texas';
