@@ -33,7 +33,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
     return Consumer<MeshCoreConnector>(
       builder: (context, connector, _) {
         final l10n = context.l10n;
-        final primaryPathTmp = _selectPrimaryPath(
+        final primaryPath = _selectPrimaryPath(
           message.pathBytes,
           message.pathVariants,
         );
@@ -42,9 +42,6 @@ class ChannelMessagePathScreen extends StatelessWidget {
             (message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
-        final primaryPath = !channelMessage && !message.isOutgoing
-            ? _reversePathByHop(primaryPathTmp, hashByteWidth)
-            : primaryPathTmp;
         final hops = _buildPathHops(
           primaryPath,
           connector,
@@ -86,8 +83,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
                       title: context.l10n.contacts_repeaterPathTrace,
                       path: primaryPath,
                       flipPathAround: true,
-                      reversePathAround:
-                          !(!channelMessage && !message.isOutgoing),
+                      reversePathAround: false,
                       pathHashByteWidth: hashByteWidth,
                     ),
                   ),
@@ -509,7 +505,7 @@ class _ChannelMessagePathMapScreenState
           widget.message.pathVariants,
         );
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
-        final selectedPathTmp = _resolveSelectedPath(
+        final selectedPath = _resolveSelectedPath(
           _selectedPath,
           observedPaths,
           primaryPath,
@@ -519,12 +515,7 @@ class _ChannelMessagePathMapScreenState
             (widget.message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
-        final selectedPath =
-            ((!widget.message.isOutgoing && !widget.channelMessage) ||
-                (widget.message.isOutgoing && widget.channelMessage))
-            ? _reversePathByHop(selectedPathTmp, width)
-            : selectedPathTmp;
-        final selectedIndex = _indexForPath(selectedPathTmp, observedPaths);
+        final selectedIndex = _indexForPath(selectedPath, observedPaths);
         final hops = _buildPathHops(
           selectedPath,
           connector,
@@ -1109,17 +1100,6 @@ String _formatPathPrefixes(Uint8List pathBytes, int hashByteWidth) {
     pathBytes,
     hashByteWidth,
   ).map(PathHelper.formatHopHex).join(',');
-}
-
-Uint8List _reversePathByHop(Uint8List pathBytes, int hashByteWidth) {
-  final hops = PathHelper.splitPathBytes(pathBytes, hashByteWidth);
-  if (hops.length <= 1) return Uint8List.fromList(pathBytes);
-
-  final reversedBytes = <int>[];
-  for (final hop in hops.reversed) {
-    reversedBytes.addAll(hop);
-  }
-  return Uint8List.fromList(reversedBytes);
 }
 
 int _hopCountFromBytes(int byteCount, int hashByteWidth) {
