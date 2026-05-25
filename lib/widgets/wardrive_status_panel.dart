@@ -8,12 +8,23 @@ import '../helpers/wardrive_coverage_helper.dart';
 import '../l10n/l10n.dart';
 import '../services/wardrive_service.dart';
 
+enum WardriveDataAction {
+  start,
+  stop,
+  upload,
+  uploadSites,
+  autoUpload,
+  exportSamples,
+  importSamples,
+  clear,
+}
+
 class WardriveStatusPanel extends StatelessWidget {
   final WardriveService wardrive;
   final bool collapsed;
   final bool autoUploadEnabled;
   final VoidCallback onToggleCollapsed;
-  final ValueChanged<String> onDataAction;
+  final ValueChanged<WardriveDataAction> onDataAction;
   final ValueChanged<String> onIntervalSubmitted;
   final String Function(DateTime) formatLastSeen;
 
@@ -122,7 +133,7 @@ class WardriveStatusPanel extends StatelessWidget {
               const Icon(Icons.my_location, size: 16),
             ],
             const Spacer(),
-            _buildDataMenu(),
+            _buildDataMenu(context),
             const SizedBox(width: 4),
             _buildCollapseButton(),
           ],
@@ -136,7 +147,7 @@ class WardriveStatusPanel extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         Text(
-          'Samples saved: ${wardrive.savedSamplesCount}',
+          context.l10n.map_wardriveSamplesSaved(wardrive.savedSamplesCount),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         if (wardrive.hasMapState && wardrive.recentSamples.isNotEmpty)
@@ -144,7 +155,9 @@ class WardriveStatusPanel extends StatelessWidget {
         _buildAutoDiscoveryIntervalInput(context),
         if (wardrive.lastAutoDiscoveryError != null)
           Text(
-            'Auto discovery: ${wardrive.lastAutoDiscoveryError}',
+            context.l10n.map_wardriveAutoDiscoveryError(
+              wardrive.lastAutoDiscoveryError!,
+            ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.error,
             ),
@@ -166,7 +179,7 @@ class WardriveStatusPanel extends StatelessWidget {
           ),
         if (wardrive.lastSampleError != null)
           Text(
-            'Sample save: ${wardrive.lastSampleError}',
+            context.l10n.map_wardriveSampleSaveError(wardrive.lastSampleError!),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.error,
             ),
@@ -189,9 +202,9 @@ class WardriveStatusPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildDataMenu() {
-    return PopupMenuButton<String>(
-      tooltip: 'Wardrive data',
+  Widget _buildDataMenu(BuildContext context) {
+    return PopupMenuButton<WardriveDataAction>(
+      tooltip: context.l10n.map_wardriveDataTooltip,
       icon: const Icon(Icons.more_horiz, size: 18),
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 160),
@@ -200,7 +213,9 @@ class WardriveStatusPanel extends StatelessWidget {
         final errorColor = Theme.of(context).colorScheme.error;
         return [
           PopupMenuItem(
-            value: wardrive.isRunning ? 'stop' : 'start',
+            value: wardrive.isRunning
+                ? WardriveDataAction.stop
+                : WardriveDataAction.start,
             child: Row(
               children: [
                 Icon(
@@ -217,28 +232,28 @@ class WardriveStatusPanel extends StatelessWidget {
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
-            value: 'upload',
+          PopupMenuItem(
+            value: WardriveDataAction.upload,
             child: Row(
               children: [
-                Icon(Icons.cloud_upload, size: 18),
-                SizedBox(width: 8),
-                Text('Upload Data'),
-              ],
-            ),
-          ),
-          const PopupMenuItem(
-            value: 'upload-sites',
-            child: Row(
-              children: [
-                Icon(Icons.cloud_queue, size: 18),
-                SizedBox(width: 8),
-                Text('Manage Upload Sites'),
+                const Icon(Icons.cloud_upload, size: 18),
+                const SizedBox(width: 8),
+                Text(context.l10n.map_wardriveUploadData),
               ],
             ),
           ),
           PopupMenuItem(
-            value: 'autoupload',
+            value: WardriveDataAction.uploadSites,
+            child: Row(
+              children: [
+                const Icon(Icons.cloud_queue, size: 18),
+                const SizedBox(width: 8),
+                Text(context.l10n.map_wardriveManageUploadSites),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: WardriveDataAction.autoUpload,
             child: Row(
               children: [
                 IgnorePointer(
@@ -256,32 +271,32 @@ class WardriveStatusPanel extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Text('Autoupload'),
-              ],
-            ),
-          ),
-          const PopupMenuItem(
-            value: 'export',
-            child: Row(
-              children: [
-                Icon(Icons.ios_share, size: 18),
-                SizedBox(width: 8),
-                Text('Export'),
-              ],
-            ),
-          ),
-          const PopupMenuItem(
-            value: 'import',
-            child: Row(
-              children: [
-                Icon(Icons.input, size: 18),
-                SizedBox(width: 8),
-                Text('Import'),
+                Text(context.l10n.map_wardriveAutoUpload),
               ],
             ),
           ),
           PopupMenuItem(
-            value: 'clear',
+            value: WardriveDataAction.exportSamples,
+            child: Row(
+              children: [
+                const Icon(Icons.ios_share, size: 18),
+                const SizedBox(width: 8),
+                Text(context.l10n.map_wardriveExport),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: WardriveDataAction.importSamples,
+            child: Row(
+              children: [
+                const Icon(Icons.input, size: 18),
+                const SizedBox(width: 8),
+                Text(context.l10n.map_wardriveImport),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: WardriveDataAction.clear,
             child: Row(
               children: [
                 Icon(Icons.delete_outline, size: 18, color: errorColor),
@@ -304,7 +319,10 @@ class WardriveStatusPanel extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Auto discovery', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            context.l10n.map_wardriveAutoDiscovery,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(width: 8),
           SizedBox(
             width: 64,
@@ -315,7 +333,10 @@ class WardriveStatusPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Text('s', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            context.l10n.map_wardriveSecondsSuffix,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -331,7 +352,7 @@ class WardriveStatusPanel extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            'Coverage cells: ${summary.total}',
+            context.l10n.map_wardriveCoverageCells(summary.total),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           _buildCoverageLegendItem(context, Colors.green, summary.good),

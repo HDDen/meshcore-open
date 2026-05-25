@@ -3616,6 +3616,288 @@ abstract class AppLocalizations {
   /// **'No discovery responses yet.'**
   String get map_wardriveNoResponses;
 
+  /// No description provided for @map_wardriveDataTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive data'**
+  String get map_wardriveDataTooltip;
+
+  /// No description provided for @map_wardriveUploadData.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Data'**
+  String get map_wardriveUploadData;
+
+  /// No description provided for @map_wardriveManageUploadSites.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Upload Sites'**
+  String get map_wardriveManageUploadSites;
+
+  /// No description provided for @map_wardriveAutoUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Autoupload'**
+  String get map_wardriveAutoUpload;
+
+  /// No description provided for @map_wardriveExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get map_wardriveExport;
+
+  /// No description provided for @map_wardriveImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get map_wardriveImport;
+
+  /// No description provided for @map_wardriveAutoDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto discovery'**
+  String get map_wardriveAutoDiscovery;
+
+  /// No description provided for @map_wardriveSecondsSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'s'**
+  String get map_wardriveSecondsSuffix;
+
+  /// No description provided for @map_wardriveSamplesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Samples saved: {count}'**
+  String map_wardriveSamplesSaved(int count);
+
+  /// No description provided for @map_wardriveAutoDiscoveryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto discovery: {error}'**
+  String map_wardriveAutoDiscoveryError(String error);
+
+  /// No description provided for @map_wardriveSampleSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample save: {error}'**
+  String map_wardriveSampleSaveError(String error);
+
+  /// No description provided for @map_wardriveCoverageCells.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage cells: {count}'**
+  String map_wardriveCoverageCells(int count);
+
+  /// No description provided for @map_wardriveAutoUploadEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Autoupload enabled.'**
+  String get map_wardriveAutoUploadEnabled;
+
+  /// No description provided for @map_wardriveAutoUploadDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Autoupload disabled.'**
+  String get map_wardriveAutoUploadDisabled;
+
+  /// No description provided for @map_wardriveNoSamplesToUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'No wardrive samples to upload.'**
+  String get map_wardriveNoSamplesToUpload;
+
+  /// No description provided for @map_wardriveUploadingSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading samples...'**
+  String get map_wardriveUploadingSamples;
+
+  /// No description provided for @map_wardriveUploadingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading to {site}...'**
+  String map_wardriveUploadingTo(String site);
+
+  /// No description provided for @map_wardriveUploadBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch {current} of {total}'**
+  String map_wardriveUploadBatch(int current, int total);
+
+  /// No description provided for @map_wardriveUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive upload failed: {error}'**
+  String map_wardriveUploadFailed(String error);
+
+  /// No description provided for @map_wardriveUploadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Complete'**
+  String get map_wardriveUploadComplete;
+
+  /// No description provided for @map_wardriveUploadResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Results'**
+  String get map_wardriveUploadResults;
+
+  /// No description provided for @map_wardriveSamplesUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} samples uploaded'**
+  String map_wardriveSamplesUploaded(int count);
+
+  /// No description provided for @map_wardriveSelectUploadSites.
+  ///
+  /// In en, this message translates to:
+  /// **'Select which sites to upload to:'**
+  String get map_wardriveSelectUploadSites;
+
+  /// No description provided for @map_wardriveNoUploadSitesConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No upload sites configured'**
+  String get map_wardriveNoUploadSitesConfigured;
+
+  /// No description provided for @map_wardriveAddSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Site'**
+  String get map_wardriveAddSite;
+
+  /// No description provided for @map_wardriveUploadSitesUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload sites updated.'**
+  String get map_wardriveUploadSitesUpdated;
+
+  /// No description provided for @map_wardriveAddUploadSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Upload Site'**
+  String get map_wardriveAddUploadSite;
+
+  /// No description provided for @map_wardriveEditUploadSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Upload Site'**
+  String get map_wardriveEditUploadSite;
+
+  /// No description provided for @map_wardriveNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get map_wardriveNameLabel;
+
+  /// No description provided for @map_wardriveUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get map_wardriveUrlLabel;
+
+  /// No description provided for @map_wardriveNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get map_wardriveNameRequired;
+
+  /// No description provided for @map_wardriveNameExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already exists'**
+  String get map_wardriveNameExists;
+
+  /// No description provided for @map_wardriveValidUrlRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid URL is required'**
+  String get map_wardriveValidUrlRequired;
+
+  /// No description provided for @map_wardriveDeleteSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Site'**
+  String get map_wardriveDeleteSite;
+
+  /// No description provided for @map_wardriveDeleteSiteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String map_wardriveDeleteSiteConfirm(String name);
+
+  /// No description provided for @map_wardriveNoSamplesToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'No wardrive samples to export.'**
+  String get map_wardriveNoSamplesToExport;
+
+  /// No description provided for @map_wardriveExportShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'meshcore-open wardrive samples'**
+  String get map_wardriveExportShareText;
+
+  /// No description provided for @map_wardriveSamplesExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive samples exported as JSON file.'**
+  String get map_wardriveSamplesExported;
+
+  /// No description provided for @map_wardriveExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive export failed: {error}'**
+  String map_wardriveExportFailed(String error);
+
+  /// No description provided for @map_wardriveImportSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Import wardrive samples'**
+  String get map_wardriveImportSamples;
+
+  /// No description provided for @map_wardriveImportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste exported wardrive JSON here'**
+  String get map_wardriveImportHint;
+
+  /// No description provided for @map_wardriveNoNewSamplesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'No new wardrive samples imported.'**
+  String get map_wardriveNoNewSamplesImported;
+
+  /// No description provided for @map_wardriveSamplesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} wardrive samples.'**
+  String map_wardriveSamplesImported(int count);
+
+  /// No description provided for @map_wardriveNoSamplesToClear.
+  ///
+  /// In en, this message translates to:
+  /// **'No wardrive samples to clear.'**
+  String get map_wardriveNoSamplesToClear;
+
+  /// No description provided for @map_wardriveClearSamplesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear wardrive samples?'**
+  String get map_wardriveClearSamplesTitle;
+
+  /// No description provided for @map_wardriveClearSamplesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete {count} saved samples from this device.'**
+  String map_wardriveClearSamplesConfirm(int count);
+
+  /// No description provided for @map_wardriveSamplesCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive samples cleared.'**
+  String get map_wardriveSamplesCleared;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

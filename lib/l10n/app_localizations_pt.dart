@@ -1999,6 +1999,175 @@ class AppLocalizationsPt extends AppLocalizations {
   String get map_wardriveNoResponses => 'No discovery responses yet.';
 
   @override
+  String get map_wardriveDataTooltip => 'Wardrive data';
+
+  @override
+  String get map_wardriveUploadData => 'Upload Data';
+
+  @override
+  String get map_wardriveManageUploadSites => 'Manage Upload Sites';
+
+  @override
+  String get map_wardriveAutoUpload => 'Autoupload';
+
+  @override
+  String get map_wardriveExport => 'Export';
+
+  @override
+  String get map_wardriveImport => 'Import';
+
+  @override
+  String get map_wardriveAutoDiscovery => 'Auto discovery';
+
+  @override
+  String get map_wardriveSecondsSuffix => 's';
+
+  @override
+  String map_wardriveSamplesSaved(int count) {
+    return 'Samples saved: $count';
+  }
+
+  @override
+  String map_wardriveAutoDiscoveryError(String error) {
+    return 'Auto discovery: $error';
+  }
+
+  @override
+  String map_wardriveSampleSaveError(String error) {
+    return 'Sample save: $error';
+  }
+
+  @override
+  String map_wardriveCoverageCells(int count) {
+    return 'Coverage cells: $count';
+  }
+
+  @override
+  String get map_wardriveAutoUploadEnabled => 'Autoupload enabled.';
+
+  @override
+  String get map_wardriveAutoUploadDisabled => 'Autoupload disabled.';
+
+  @override
+  String get map_wardriveNoSamplesToUpload => 'No wardrive samples to upload.';
+
+  @override
+  String get map_wardriveUploadingSamples => 'Uploading samples...';
+
+  @override
+  String map_wardriveUploadingTo(String site) {
+    return 'Uploading to $site...';
+  }
+
+  @override
+  String map_wardriveUploadBatch(int current, int total) {
+    return 'Batch $current of $total';
+  }
+
+  @override
+  String map_wardriveUploadFailed(String error) {
+    return 'Wardrive upload failed: $error';
+  }
+
+  @override
+  String get map_wardriveUploadComplete => 'Upload Complete';
+
+  @override
+  String get map_wardriveUploadResults => 'Upload Results';
+
+  @override
+  String map_wardriveSamplesUploaded(int count) {
+    return '$count samples uploaded';
+  }
+
+  @override
+  String get map_wardriveSelectUploadSites =>
+      'Select which sites to upload to:';
+
+  @override
+  String get map_wardriveNoUploadSitesConfigured =>
+      'No upload sites configured';
+
+  @override
+  String get map_wardriveAddSite => 'Add Site';
+
+  @override
+  String get map_wardriveUploadSitesUpdated => 'Upload sites updated.';
+
+  @override
+  String get map_wardriveAddUploadSite => 'Add Upload Site';
+
+  @override
+  String get map_wardriveEditUploadSite => 'Edit Upload Site';
+
+  @override
+  String get map_wardriveNameLabel => 'Name';
+
+  @override
+  String get map_wardriveUrlLabel => 'URL';
+
+  @override
+  String get map_wardriveNameRequired => 'Name is required';
+
+  @override
+  String get map_wardriveNameExists => 'Name already exists';
+
+  @override
+  String get map_wardriveValidUrlRequired => 'Valid URL is required';
+
+  @override
+  String get map_wardriveDeleteSite => 'Delete Site';
+
+  @override
+  String map_wardriveDeleteSiteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToExport => 'No wardrive samples to export.';
+
+  @override
+  String get map_wardriveExportShareText => 'meshcore-open wardrive samples';
+
+  @override
+  String get map_wardriveSamplesExported =>
+      'Wardrive samples exported as JSON file.';
+
+  @override
+  String map_wardriveExportFailed(String error) {
+    return 'Wardrive export failed: $error';
+  }
+
+  @override
+  String get map_wardriveImportSamples => 'Import wardrive samples';
+
+  @override
+  String get map_wardriveImportHint => 'Paste exported wardrive JSON here';
+
+  @override
+  String get map_wardriveNoNewSamplesImported =>
+      'No new wardrive samples imported.';
+
+  @override
+  String map_wardriveSamplesImported(int count) {
+    return 'Imported $count wardrive samples.';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToClear => 'No wardrive samples to clear.';
+
+  @override
+  String get map_wardriveClearSamplesTitle => 'Clear wardrive samples?';
+
+  @override
+  String map_wardriveClearSamplesConfirm(int count) {
+    return 'This will delete $count saved samples from this device.';
+  }
+
+  @override
+  String get map_wardriveSamplesCleared => 'Wardrive samples cleared.';
+
+  @override
   String get mapCache_title => 'Cache de Mapa Offline';
 
   @override

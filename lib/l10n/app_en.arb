@@ -1028,6 +1028,140 @@
     }
   },
   "map_wardriveNoResponses": "No discovery responses yet.",
+  "map_wardriveDataTooltip": "Wardrive data",
+  "map_wardriveUploadData": "Upload Data",
+  "map_wardriveManageUploadSites": "Manage Upload Sites",
+  "map_wardriveAutoUpload": "Autoupload",
+  "map_wardriveExport": "Export",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Auto discovery",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Samples saved: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Auto discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Sample save: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Coverage cells: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Autoupload enabled.",
+  "map_wardriveAutoUploadDisabled": "Autoupload disabled.",
+  "map_wardriveNoSamplesToUpload": "No wardrive samples to upload.",
+  "map_wardriveUploadingSamples": "Uploading samples...",
+  "map_wardriveUploadingTo": "Uploading to {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Batch {current} of {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive upload failed: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Upload Complete",
+  "map_wardriveUploadResults": "Upload Results",
+  "map_wardriveSamplesUploaded": "{count} samples uploaded",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Select which sites to upload to:",
+  "map_wardriveNoUploadSitesConfigured": "No upload sites configured",
+  "map_wardriveAddSite": "Add Site",
+  "map_wardriveUploadSitesUpdated": "Upload sites updated.",
+  "map_wardriveAddUploadSite": "Add Upload Site",
+  "map_wardriveEditUploadSite": "Edit Upload Site",
+  "map_wardriveNameLabel": "Name",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveNameRequired": "Name is required",
+  "map_wardriveNameExists": "Name already exists",
+  "map_wardriveValidUrlRequired": "Valid URL is required",
+  "map_wardriveDeleteSite": "Delete Site",
+  "map_wardriveDeleteSiteConfirm": "Delete \"{name}\"?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "No wardrive samples to export.",
+  "map_wardriveExportShareText": "meshcore-open wardrive samples",
+  "map_wardriveSamplesExported": "Wardrive samples exported as JSON file.",
+  "map_wardriveExportFailed": "Wardrive export failed: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Import wardrive samples",
+  "map_wardriveImportHint": "Paste exported wardrive JSON here",
+  "map_wardriveNoNewSamplesImported": "No new wardrive samples imported.",
+  "map_wardriveSamplesImported": "Imported {count} wardrive samples.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "No wardrive samples to clear.",
+  "map_wardriveClearSamplesTitle": "Clear wardrive samples?",
+  "map_wardriveClearSamplesConfirm": "This will delete {count} saved samples from this device.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive samples cleared.",
   "mapCache_title": "Offline Map Cache",
   "mapCache_selectAreaFirst": "Select an area to cache first",
   "mapCache_noTilesToDownload": "No tiles to download for this area",

@@ -864,32 +864,32 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   }
 
   Future<void> _handleWardriveDataAction(
-    String action,
+    WardriveDataAction action,
     WardriveService wardrive,
   ) async {
     switch (action) {
-      case 'start':
+      case WardriveDataAction.start:
         wardrive.start();
         break;
-      case 'stop':
+      case WardriveDataAction.stop:
         wardrive.stop();
         break;
-      case 'upload':
+      case WardriveDataAction.upload:
         await _uploadWardriveSamples(wardrive);
         break;
-      case 'upload-sites':
+      case WardriveDataAction.uploadSites:
         await _manageWardriveUploadSites();
         break;
-      case 'autoupload':
+      case WardriveDataAction.autoUpload:
         await _toggleWardriveAutoUpload(wardrive);
         break;
-      case 'export':
+      case WardriveDataAction.exportSamples:
         await _exportWardriveSamples(wardrive);
         break;
-      case 'import':
+      case WardriveDataAction.importSamples:
         await _showImportWardriveSamplesDialog(wardrive);
         break;
-      case 'clear':
+      case WardriveDataAction.clear:
         await _confirmClearWardriveSamples(wardrive);
         break;
     }
@@ -905,7 +905,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     setState(() {});
     showDismissibleSnackBar(
       context,
-      content: Text('Autoupload ${enabled ? 'enabled' : 'disabled'}.'),
+      content: Text(
+        enabled
+            ? context.l10n.map_wardriveAutoUploadEnabled
+            : context.l10n.map_wardriveAutoUploadDisabled,
+      ),
     );
   }
 
@@ -913,7 +917,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (wardrive.savedSamplesCount == 0) {
       showDismissibleSnackBar(
         context,
-        content: const Text('No wardrive samples to upload.'),
+        content: Text(context.l10n.map_wardriveNoSamplesToUpload),
       );
       return;
     }
@@ -947,15 +951,18 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                   const SizedBox(height: 16),
                   Text(
                     currentSite.isEmpty
-                        ? 'Uploading samples...'
-                        : 'Uploading to $currentSite...',
+                        ? context.l10n.map_wardriveUploadingSamples
+                        : context.l10n.map_wardriveUploadingTo(currentSite),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   if (totalBatches > 1)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        'Batch $currentBatch of $totalBatches',
+                        context.l10n.map_wardriveUploadBatch(
+                          currentBatch,
+                          totalBatches,
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -1007,7 +1014,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       closeUploadDialog();
       showDismissibleSnackBar(
         context,
-        content: Text('Wardrive upload failed: $error'),
+        content: Text(context.l10n.map_wardriveUploadFailed(error.toString())),
         backgroundColor: Colors.red,
       );
     }
@@ -1020,7 +1027,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(allSuccess ? 'Upload Complete' : 'Upload Results'),
+        title: Text(
+          allSuccess
+              ? context.l10n.map_wardriveUploadComplete
+              : context.l10n.map_wardriveUploadResults,
+        ),
         content: SizedBox(
           width: 420,
           child: Column(
@@ -1056,7 +1067,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (!result.success) return result.message;
     final count = result.uploadedCount;
     if (count == null) return result.message;
-    return '$count samples uploaded';
+    return context.l10n.map_wardriveSamplesUploaded(count);
   }
 
   Future<void> _manageWardriveUploadSites() async {
@@ -1071,7 +1082,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Manage Upload Sites'),
+          title: Text(context.l10n.map_wardriveManageUploadSites),
           content: SizedBox(
             width: 460,
             child: ConstrainedBox(
@@ -1083,7 +1094,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Select which sites to upload to:',
+                    context.l10n.map_wardriveSelectUploadSites,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -1091,9 +1102,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                   const SizedBox(height: 8),
                   Flexible(
                     child: sites.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Text('No upload sites configured'),
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              context.l10n.map_wardriveNoUploadSitesConfigured,
+                            ),
                           )
                         : ListView.builder(
                             shrinkWrap: true,
@@ -1182,7 +1195,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                 });
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add Site'),
+              label: Text(context.l10n.map_wardriveAddSite),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -1203,7 +1216,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
-      content: const Text('Upload sites updated.'),
+      content: Text(context.l10n.map_wardriveUploadSitesUpdated),
     );
   }
 
@@ -1220,7 +1233,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         String? urlError;
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            title: Text(site == null ? 'Add Upload Site' : 'Edit Upload Site'),
+            title: Text(
+              site == null
+                  ? context.l10n.map_wardriveAddUploadSite
+                  : context.l10n.map_wardriveEditUploadSite,
+            ),
             content: SizedBox(
               width: 420,
               child: Column(
@@ -1229,7 +1246,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: 'Name',
+                      labelText: context.l10n.map_wardriveNameLabel,
                       errorText: nameError,
                       border: const OutlineInputBorder(),
                     ),
@@ -1238,7 +1255,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                   TextField(
                     controller: urlController,
                     decoration: InputDecoration(
-                      labelText: 'URL',
+                      labelText: context.l10n.map_wardriveUrlLabel,
                       errorText: urlError,
                       border: const OutlineInputBorder(),
                     ),
@@ -1264,15 +1281,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                   );
                   setDialogState(() {
                     nameError = name.isEmpty
-                        ? 'Name is required'
+                        ? context.l10n.map_wardriveNameRequired
                         : duplicateName
-                        ? 'Name already exists'
+                        ? context.l10n.map_wardriveNameExists
                         : null;
                     urlError =
                         parsedUri == null ||
                             !parsedUri.hasScheme ||
                             !parsedUri.hasAuthority
-                        ? 'Valid URL is required'
+                        ? context.l10n.map_wardriveValidUrlRequired
                         : null;
                   });
                   if (nameError != null || urlError != null) return;
@@ -1298,8 +1315,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Site'),
-        content: Text('Delete "${site.name}"?'),
+        title: Text(context.l10n.map_wardriveDeleteSite),
+        content: Text(context.l10n.map_wardriveDeleteSiteConfirm(site.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -1330,7 +1347,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (wardrive.savedSamplesCount == 0) {
       showDismissibleSnackBar(
         context,
-        content: const Text('No wardrive samples to export.'),
+        content: Text(context.l10n.map_wardriveNoSamplesToExport),
       );
       return;
     }
@@ -1338,11 +1355,12 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     final json = wardrive.exportSamplesJson();
     try {
       final fileName = 'meshcore_wardrive_${_wardriveExportTimestamp()}.json';
+      final shareText = context.l10n.map_wardriveExportShareText;
       await Clipboard.setData(ClipboardData(text: json));
       await SharePlus.instance.share(
         ShareParams(
-          subject: 'meshcore-open wardrive samples',
-          text: 'meshcore-open wardrive samples',
+          subject: shareText,
+          text: shareText,
           files: [
             XFile.fromData(
               Uint8List.fromList(utf8.encode(json)),
@@ -1355,13 +1373,13 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
-        content: const Text('Wardrive samples exported as JSON file.'),
+        content: Text(context.l10n.map_wardriveSamplesExported),
       );
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
-        content: Text('Wardrive export failed: $error'),
+        content: Text(context.l10n.map_wardriveExportFailed(error.toString())),
         backgroundColor: Colors.red,
       );
     }
@@ -1401,7 +1419,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         var isImporting = false;
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Import wardrive samples'),
+            title: Text(context.l10n.map_wardriveImportSamples),
             content: SizedBox(
               width: 420,
               child: TextField(
@@ -1409,7 +1427,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                 minLines: 6,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  hintText: 'Paste exported wardrive JSON here',
+                  hintText: context.l10n.map_wardriveImportHint,
                   errorText: errorText,
                   border: const OutlineInputBorder(),
                 ),
@@ -1450,7 +1468,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Import'),
+                    : Text(context.l10n.map_wardriveImport),
               ),
             ],
           ),
@@ -1464,8 +1482,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       context,
       content: Text(
         imported == 0
-            ? 'No new wardrive samples imported.'
-            : 'Imported $imported wardrive samples.',
+            ? context.l10n.map_wardriveNoNewSamplesImported
+            : context.l10n.map_wardriveSamplesImported(imported),
       ),
     );
   }
@@ -1474,7 +1492,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (wardrive.savedSamplesCount == 0) {
       showDismissibleSnackBar(
         context,
-        content: const Text('No wardrive samples to clear.'),
+        content: Text(context.l10n.map_wardriveNoSamplesToClear),
       );
       return;
     }
@@ -1482,9 +1500,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear wardrive samples?'),
+        title: Text(context.l10n.map_wardriveClearSamplesTitle),
         content: Text(
-          'This will delete ${wardrive.savedSamplesCount} saved samples from this device.',
+          context.l10n.map_wardriveClearSamplesConfirm(
+            wardrive.savedSamplesCount,
+          ),
         ),
         actions: [
           TextButton(
@@ -1504,7 +1524,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
-      content: const Text('Wardrive samples cleared.'),
+      content: Text(context.l10n.map_wardriveSamplesCleared),
     );
   }
 
