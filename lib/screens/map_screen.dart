@@ -793,11 +793,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       children: [
         FloatingActionButton.small(
           heroTag: 'wardrive_toggle',
-          onPressed: () => _toggleWardrive(wardrive),
+          onPressed: () => _openWardrivePanel(wardrive),
           tooltip: context.l10n.map_wardrive,
-          child: Icon(
-            wardrive.isRunning ? Icons.stop : Icons.directions_car_filled,
-          ),
+          child: const Icon(Icons.directions_car_filled),
         ),
         const SizedBox(height: 12),
         FloatingActionButton.small(
@@ -824,12 +822,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     );
   }
 
-  void _toggleWardrive(WardriveService wardrive) {
-    if (wardrive.isRunning) {
-      wardrive.stop();
-    } else {
-      wardrive.start();
-    }
+  void _openWardrivePanel(WardriveService wardrive) {
+    setState(() {
+      _wardrivePanelCollapsed = false;
+    });
+    wardrive.showMapState();
   }
 
   Future<void> _sendWardriveDiscovery(
@@ -871,6 +868,12 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     WardriveService wardrive,
   ) async {
     switch (action) {
+      case 'start':
+        wardrive.start();
+        break;
+      case 'stop':
+        wardrive.stop();
+        break;
       case 'upload':
         await _uploadWardriveSamples(wardrive);
         break;
@@ -1957,7 +1960,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           (contact) => Polyline(
             points: [selfPoint, LatLng(contact.latitude!, contact.longitude!)],
             strokeWidth: 2.5,
-            color: Colors.greenAccent.withValues(alpha: 0.85),
+            color: Colors.purpleAccent.withValues(alpha: 0.85),
           ),
         )
         .toList();

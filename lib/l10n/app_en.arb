@@ -975,6 +975,8 @@
   "map_removeLast": "Remove Last",
   "map_pathTraceCancelled": "Path trace cancelled.",
   "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Start",
+  "map_wardriveStop": "Stop",
   "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
   "map_wardriveDiscoverySent": "Wardrive discovery request sent.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery failed: {error}",

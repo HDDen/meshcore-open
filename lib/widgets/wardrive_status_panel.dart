@@ -196,74 +196,98 @@ class WardriveStatusPanel extends StatelessWidget {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 160),
       onSelected: onDataAction,
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'upload',
-          child: Row(
-            children: [
-              Icon(Icons.cloud_upload, size: 18),
-              SizedBox(width: 8),
-              Text('Upload Data'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'upload-sites',
-          child: Row(
-            children: [
-              Icon(Icons.cloud_queue, size: 18),
-              SizedBox(width: 8),
-              Text('Manage Upload Sites'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'autoupload',
-          child: Row(
-            children: [
-              IgnorePointer(
-                child: Checkbox(
-                  value: autoUploadEnabled,
-                  onChanged: (_) {},
-                  visualDensity: VisualDensity.compact,
+      itemBuilder: (context) {
+        final errorColor = Theme.of(context).colorScheme.error;
+        return [
+          PopupMenuItem(
+            value: wardrive.isRunning ? 'stop' : 'start',
+            child: Row(
+              children: [
+                Icon(
+                  wardrive.isRunning ? Icons.stop : Icons.play_arrow,
+                  size: 18,
                 ),
-              ),
-              const SizedBox(width: 4),
-              const Text('Autoupload'),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  wardrive.isRunning
+                      ? context.l10n.map_wardriveStop
+                      : context.l10n.map_wardriveStart,
+                ),
+              ],
+            ),
           ),
-        ),
-        const PopupMenuItem(
-          value: 'export',
-          child: Row(
-            children: [
-              Icon(Icons.ios_share, size: 18),
-              SizedBox(width: 8),
-              Text('Export'),
-            ],
+          const PopupMenuDivider(),
+          const PopupMenuItem(
+            value: 'upload',
+            child: Row(
+              children: [
+                Icon(Icons.cloud_upload, size: 18),
+                SizedBox(width: 8),
+                Text('Upload Data'),
+              ],
+            ),
           ),
-        ),
-        const PopupMenuItem(
-          value: 'import',
-          child: Row(
-            children: [
-              Icon(Icons.input, size: 18),
-              SizedBox(width: 8),
-              Text('Import'),
-            ],
+          const PopupMenuItem(
+            value: 'upload-sites',
+            child: Row(
+              children: [
+                Icon(Icons.cloud_queue, size: 18),
+                SizedBox(width: 8),
+                Text('Manage Upload Sites'),
+              ],
+            ),
           ),
-        ),
-        const PopupMenuItem(
-          value: 'clear',
-          child: Row(
-            children: [
-              Icon(Icons.delete_outline, size: 18),
-              SizedBox(width: 8),
-              Text('Clear'),
-            ],
+          PopupMenuItem(
+            value: 'autoupload',
+            child: Row(
+              children: [
+                IgnorePointer(
+                  child: Checkbox(
+                    value: autoUploadEnabled,
+                    onChanged: (_) {},
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text('Autoupload'),
+              ],
+            ),
           ),
-        ),
-      ],
+          const PopupMenuItem(
+            value: 'export',
+            child: Row(
+              children: [
+                Icon(Icons.ios_share, size: 18),
+                SizedBox(width: 8),
+                Text('Export'),
+              ],
+            ),
+          ),
+          const PopupMenuItem(
+            value: 'import',
+            child: Row(
+              children: [
+                Icon(Icons.input, size: 18),
+                SizedBox(width: 8),
+                Text('Import'),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'clear',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, size: 18, color: errorColor),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.common_clear,
+                  style: TextStyle(color: errorColor),
+                ),
+              ],
+            ),
+          ),
+        ];
+      },
     );
   }
 

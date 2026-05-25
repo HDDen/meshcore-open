@@ -119,6 +119,12 @@ class WardriveService extends ChangeNotifier {
   Set<String> get currentDiscoveryPublicKeys =>
       Set.unmodifiable(_currentDiscoveryPublicKeys);
 
+  void showMapState() {
+    if (_showMapState) return;
+    _showMapState = true;
+    notifyListeners();
+  }
+
   void start() {
     if (_isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);

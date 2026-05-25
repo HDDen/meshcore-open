@@ -3544,6 +3544,18 @@ abstract class AppLocalizations {
   /// **'Wardrive'**
   String get map_wardrive;
 
+  /// No description provided for @map_wardriveStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get map_wardriveStart;
+
+  /// No description provided for @map_wardriveStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get map_wardriveStop;
+
   /// No description provided for @map_wardriveZeroHopDiscovery.
   ///
   /// In en, this message translates to:

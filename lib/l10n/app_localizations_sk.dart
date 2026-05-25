@@ -1945,6 +1945,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get map_wardrive => 'Wardrive';
 
   @override
+  String get map_wardriveStart => 'Start';
+
+  @override
+  String get map_wardriveStop => 'Stop';
+
+  @override
   String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
 
   @override
