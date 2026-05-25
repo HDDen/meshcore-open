@@ -1158,6 +1158,8 @@ class _MapScreenState extends State<MapScreen>
         return context.l10n.map_wardriveUploadServerResponse(
           progress.statusCode ?? 200,
         );
+      case WardriveUploadStatusPhase.timeoutTreatedAsSuccess:
+        return context.l10n.map_wardriveUploadTimeoutTreatedAsSuccess;
       case WardriveUploadStatusPhase.serverError:
         return context.l10n.map_wardriveUploadServerError(
           progress.statusCode ?? 0,
@@ -1278,9 +1280,26 @@ class _MapScreenState extends State<MapScreen>
                                   });
                                 },
                                 title: Text(site.name),
-                                subtitle: Text(
-                                  site.url,
-                                  overflow: TextOverflow.ellipsis,
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      site.url,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      [
+                                        '${context.l10n.map_wardriveUploadBatchSize}: ${site.uploadBatchSize}',
+                                        if (site.treatTimeoutAsSuccess)
+                                          context
+                                              .l10n
+                                              .map_wardriveTreatTimeoutAsSuccess,
+                                      ].join(' • '),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
                                 ),
                                 secondary: Wrap(
                                   spacing: 4,
@@ -1375,11 +1394,16 @@ class _MapScreenState extends State<MapScreen>
   }) async {
     var nameValue = site?.name ?? '';
     var urlValue = site?.url ?? '';
+    var batchSizeValue =
+        (site?.uploadBatchSize ?? WardriveUploadService.defaultUploadBatchSize)
+            .toString();
+    var treatTimeoutAsSuccess = site?.treatTimeoutAsSuccess ?? false;
     final result = await showDialog<WardriveUploadSite>(
       context: context,
       builder: (dialogContext) {
         String? nameError;
         String? urlError;
+        String? batchSizeError;
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
             title: Text(
@@ -1389,30 +1413,58 @@ class _MapScreenState extends State<MapScreen>
             ),
             content: SizedBox(
               width: 420,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    initialValue: nameValue,
-                    onChanged: (value) => nameValue = value,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.map_wardriveNameLabel,
-                      errorText: nameError,
-                      border: const OutlineInputBorder(),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      initialValue: nameValue,
+                      onChanged: (value) => nameValue = value,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.map_wardriveNameLabel,
+                        errorText: nameError,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    initialValue: urlValue,
-                    onChanged: (value) => urlValue = value,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.map_wardriveUrlLabel,
-                      errorText: urlError,
-                      border: const OutlineInputBorder(),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      initialValue: urlValue,
+                      onChanged: (value) => urlValue = value,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.map_wardriveUrlLabel,
+                        errorText: urlError,
+                        border: const OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.url,
                     ),
-                    keyboardType: TextInputType.url,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      initialValue: batchSizeValue,
+                      onChanged: (value) => batchSizeValue = value,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.map_wardriveUploadBatchSize,
+                        errorText: batchSizeError,
+                        border: const OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                    const SizedBox(height: 4),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: treatTimeoutAsSuccess,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          treatTimeoutAsSuccess = value ?? false;
+                        });
+                      },
+                      title: Text(
+                        context.l10n.map_wardriveTreatTimeoutAsSuccess,
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -1424,6 +1476,7 @@ class _MapScreenState extends State<MapScreen>
                 onPressed: () {
                   final name = nameValue.trim();
                   final url = urlValue.trim();
+                  final batchSize = int.tryParse(batchSizeValue);
                   final parsedUri = Uri.tryParse(url);
                   final duplicateName = existingSites.any(
                     (existing) =>
@@ -1442,11 +1495,30 @@ class _MapScreenState extends State<MapScreen>
                             !parsedUri.hasAuthority
                         ? context.l10n.map_wardriveValidUrlRequired
                         : null;
+                    batchSizeError =
+                        batchSize == null ||
+                            batchSize <
+                                WardriveUploadService.minUploadBatchSize ||
+                            batchSize > WardriveUploadService.maxUploadBatchSize
+                        ? context.l10n.map_wardriveUploadBatchSizeInvalid(
+                            WardriveUploadService.minUploadBatchSize,
+                            WardriveUploadService.maxUploadBatchSize,
+                          )
+                        : null;
                   });
-                  if (nameError != null || urlError != null) return;
-                  Navigator.of(
-                    dialogContext,
-                  ).pop(WardriveUploadSite(name: name, url: url));
+                  if (nameError != null ||
+                      urlError != null ||
+                      batchSizeError != null) {
+                    return;
+                  }
+                  Navigator.of(dialogContext).pop(
+                    WardriveUploadSite(
+                      name: name,
+                      url: url,
+                      treatTimeoutAsSuccess: treatTimeoutAsSuccess,
+                      uploadBatchSize: batchSize!,
+                    ),
+                  );
                 },
                 child: Text(context.l10n.common_save),
               ),

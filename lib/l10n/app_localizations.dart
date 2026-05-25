@@ -3766,6 +3766,12 @@ abstract class AppLocalizations {
   /// **'Server processed data, response {statusCode}'**
   String map_wardriveUploadServerResponse(int statusCode);
 
+  /// No description provided for @map_wardriveUploadTimeoutTreatedAsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload timed out; marked as sent for this site'**
+  String get map_wardriveUploadTimeoutTreatedAsSuccess;
+
   /// No description provided for @map_wardriveUploadServerError.
   ///
   /// In en, this message translates to:
@@ -3849,6 +3855,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'URL'**
   String get map_wardriveUrlLabel;
+
+  /// No description provided for @map_wardriveUploadBatchSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload batch size'**
+  String get map_wardriveUploadBatchSize;
+
+  /// No description provided for @map_wardriveUploadBatchSizeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a value from {min} to {max}'**
+  String map_wardriveUploadBatchSizeInvalid(int min, int max);
+
+  /// No description provided for @map_wardriveTreatTimeoutAsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Treat timeout as success'**
+  String get map_wardriveTreatTimeoutAsSuccess;
 
   /// No description provided for @map_wardriveNameRequired.
   ///

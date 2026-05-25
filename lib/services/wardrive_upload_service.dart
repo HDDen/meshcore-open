@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -11,6 +12,7 @@ enum WardriveUploadStatusPhase {
   uploading,
   processingServer,
   serverResponse,
+  timeoutTreatedAsSuccess,
   serverError,
   requestError,
 }
@@ -49,7 +51,9 @@ class WardriveUploadService {
   static const int autoUploadBatchSize = 100;
   // Keep autoupload capped at 100 samples, but post smaller HTTP batches so a
   // slow upload endpoint is less likely to save data and time out before reply.
-  static const _postBatchSize = 50;
+  static const int defaultUploadBatchSize = 50;
+  static const int minUploadBatchSize = 1;
+  static const int maxUploadBatchSize = 1000;
   // Manual upload and autoupload can be triggered from different service
   // instances; keep one process-wide upload active to avoid duplicate posts.
   static bool _uploadInProgress = false;
@@ -225,9 +229,10 @@ class WardriveUploadService {
     }
 
     final batches = <List<WardriveSample>>[];
-    for (var i = 0; i < samples.length; i += _postBatchSize) {
-      final end = i + _postBatchSize < samples.length
-          ? i + _postBatchSize
+    final batchSize = _sanitizeUploadBatchSize(site.uploadBatchSize);
+    for (var i = 0; i < samples.length; i += batchSize) {
+      final end = i + batchSize < samples.length
+          ? i + batchSize
           : samples.length;
       batches.add(samples.sublist(i, end));
     }
@@ -249,6 +254,7 @@ class WardriveUploadService {
         sentSamples: sentSamples,
         totalSamples: samples.length,
         repeaterNames: repeaterNames,
+        treatTimeoutAsSuccess: site.treatTimeoutAsSuccess,
         onUploadProgress: onUploadProgress,
         cancelToken: cancelToken,
       );
@@ -279,6 +285,7 @@ class WardriveUploadService {
     required int totalBatches,
     required int sentSamples,
     required int totalSamples,
+    required bool treatTimeoutAsSuccess,
     Map<String, String>? repeaterNames,
     void Function(WardriveUploadProgress progress)? onUploadProgress,
     WardriveUploadCancelToken? cancelToken,
@@ -334,7 +341,9 @@ class WardriveUploadService {
         final streamedResponse = await responseFuture.timeout(
           const Duration(seconds: 60),
         );
-        final response = await http.Response.fromStream(streamedResponse);
+        final response = await http.Response.fromStream(
+          streamedResponse,
+        ).timeout(const Duration(seconds: 60));
 
         cancelToken?.throwIfCancelled();
         if (response.statusCode == 200) {
@@ -358,6 +367,30 @@ class WardriveUploadService {
           statusCode: response.statusCode,
         );
         lastError = 'Server error: ${response.statusCode}';
+      } on TimeoutException catch (error) {
+        if (treatTimeoutAsSuccess) {
+          // Some self-hosted endpoints save samples but keep the HTTP response
+          // open too long. This option is per-site to avoid losing data on
+          // ordinary network timeouts.
+          reportStatus(WardriveUploadStatusPhase.timeoutTreatedAsSuccess);
+          return WardriveUploadResult(
+            success: true,
+            message: 'Timed out after upload; treated as success',
+          );
+        }
+        cancelToken?.throwIfCancelled();
+        onUploadProgress?.call(
+          WardriveUploadProgress(
+            siteName: siteName,
+            currentBatch: currentBatch,
+            totalBatches: totalBatches,
+            phase: WardriveUploadStatusPhase.requestError,
+            sentSamples: sentSamples,
+            totalSamples: totalSamples,
+            error: error.toString(),
+          ),
+        );
+        lastError = error;
       } catch (error) {
         cancelToken?.throwIfCancelled();
         onUploadProgress?.call(
@@ -454,15 +487,31 @@ class WardriveUploadService {
       return <String, List<String>>{};
     }
   }
+
+  static int _sanitizeUploadBatchSize(int value) {
+    return value.clamp(minUploadBatchSize, maxUploadBatchSize).toInt();
+  }
 }
 
 class WardriveUploadSite {
   final String name;
   final String url;
+  final bool treatTimeoutAsSuccess;
+  final int uploadBatchSize;
 
-  const WardriveUploadSite({required this.name, required this.url});
+  const WardriveUploadSite({
+    required this.name,
+    required this.url,
+    this.treatTimeoutAsSuccess = false,
+    this.uploadBatchSize = WardriveUploadService.defaultUploadBatchSize,
+  });
 
-  Map<String, Object?> toJson() => {'name': name, 'url': url};
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'url': url,
+    'treatTimeoutAsSuccess': treatTimeoutAsSuccess,
+    'uploadBatchSize': uploadBatchSize,
+  };
 
   static WardriveUploadSite? fromJson(Map<String, Object?> json) {
     final name = json['name']?.toString().trim();
@@ -470,7 +519,19 @@ class WardriveUploadSite {
     if (name == null || name.isEmpty || url == null || url.isEmpty) {
       return null;
     }
-    return WardriveUploadSite(name: name, url: url);
+    final rawBatchSize = json['uploadBatchSize'];
+    final batchSize = rawBatchSize is num
+        ? rawBatchSize.toInt()
+        : (int.tryParse(rawBatchSize?.toString() ?? '') ??
+              WardriveUploadService.defaultUploadBatchSize);
+    return WardriveUploadSite(
+      name: name,
+      url: url,
+      treatTimeoutAsSuccess: json['treatTimeoutAsSuccess'] == true,
+      uploadBatchSize: WardriveUploadService._sanitizeUploadBatchSize(
+        batchSize,
+      ),
+    );
   }
 }
 

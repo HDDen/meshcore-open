@@ -1115,6 +1115,7 @@
   "map_wardriveUploadConnectionEstablished": "Connection established, uploading",
   "map_wardriveUploadProcessingServer": "Data uploaded, processing by server",
   "map_wardriveUploadServerResponse": "Server processed data, response {statusCode}",
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Upload timed out; marked as sent for this site",
   "@map_wardriveUploadServerResponse": {
     "placeholders": {
       "statusCode": {
@@ -1164,6 +1165,19 @@
   "map_wardriveEditUploadSite": "Edit Upload Site",
   "map_wardriveNameLabel": "Name",
   "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Upload batch size",
+  "map_wardriveUploadBatchSizeInvalid": "Use a value from {min} to {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Treat timeout as success",
   "map_wardriveNameRequired": "Name is required",
   "map_wardriveNameExists": "Name already exists",
   "map_wardriveValidUrlRequired": "Valid URL is required",

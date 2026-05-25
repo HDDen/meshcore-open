@@ -2007,6 +2007,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveUploadTimeoutTreatedAsSuccess =>
+      'Upload timed out; marked as sent for this site';
+
+  @override
   String map_wardriveUploadServerError(int statusCode) {
     return 'Server error $statusCode';
   }
@@ -2057,6 +2061,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_wardriveUrlLabel => 'URL';
+
+  @override
+  String get map_wardriveUploadBatchSize => 'Upload batch size';
+
+  @override
+  String map_wardriveUploadBatchSizeInvalid(int min, int max) {
+    return 'Use a value from $min to $max';
+  }
+
+  @override
+  String get map_wardriveTreatTimeoutAsSuccess => 'Treat timeout as success';
 
   @override
   String get map_wardriveNameRequired => 'Name is required';
