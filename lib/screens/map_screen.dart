@@ -26,6 +26,7 @@ import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_service.dart';
+import '../services/wardrive_upload_service.dart';
 import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
@@ -70,6 +71,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
 
   final MapController _mapController = MapController();
   final MapMarkerService _markerService = MapMarkerService();
+  final WardriveUploadService _wardriveUploadService = WardriveUploadService();
   final Set<String> _hiddenMarkerIds = {};
   Set<String> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
@@ -1001,6 +1003,26 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       },
       itemBuilder: (context) => [
         const PopupMenuItem(
+          value: 'upload',
+          child: Row(
+            children: [
+              Icon(Icons.cloud_upload, size: 18),
+              SizedBox(width: 8),
+              Text('Upload Data'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'upload-sites',
+          child: Row(
+            children: [
+              Icon(Icons.cloud_queue, size: 18),
+              SizedBox(width: 8),
+              Text('Manage Upload Sites'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
           value: 'export',
           child: Row(
             children: [
@@ -1163,6 +1185,12 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     WardriveService wardrive,
   ) async {
     switch (action) {
+      case 'upload':
+        await _uploadWardriveSamples(wardrive);
+        break;
+      case 'upload-sites':
+        await _manageWardriveUploadSites();
+        break;
       case 'export':
         await _exportWardriveSamples(wardrive);
         break;
@@ -1173,6 +1201,394 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         await _confirmClearWardriveSamples(wardrive);
         break;
     }
+  }
+
+  Future<void> _uploadWardriveSamples(WardriveService wardrive) async {
+    if (wardrive.savedSamplesCount == 0) {
+      showDismissibleSnackBar(
+        context,
+        content: const Text('No wardrive samples to upload.'),
+      );
+      return;
+    }
+
+    var currentSite = '';
+    var currentBatch = 0;
+    var totalBatches = 0;
+    StateSetter? setUploadState;
+
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setState) {
+            setUploadState = setState;
+            return AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    currentSite.isEmpty
+                        ? 'Uploading samples...'
+                        : 'Uploading to $currentSite...',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  if (totalBatches > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Batch $currentBatch of $totalBatches',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    try {
+      final results = await _wardriveUploadService.uploadToSelectedSites(
+        repeaterNames: _wardriveUploadRepeaterNames(),
+        onProgress: (siteName, current, total) {
+          setUploadState?.call(() {
+            currentSite = siteName;
+            currentBatch = current;
+            totalBatches = total;
+          });
+        },
+      );
+
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      await _showWardriveUploadResults(results);
+    } catch (error) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      showDismissibleSnackBar(
+        context,
+        content: Text('Wardrive upload failed: $error'),
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  Future<void> _showWardriveUploadResults(
+    Map<String, WardriveUploadResult> results,
+  ) async {
+    final allSuccess = results.values.every((result) => result.success);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(allSuccess ? 'Upload Complete' : 'Upload Results'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: results.entries
+                .map(
+                  (entry) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      entry.value.success
+                          ? Icons.check_circle
+                          : Icons.error_outline,
+                      color: entry.value.success ? Colors.green : Colors.red,
+                    ),
+                    title: Text(entry.key),
+                    subtitle: Text(_formatWardriveUploadResult(entry.value)),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(context.l10n.common_ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatWardriveUploadResult(WardriveUploadResult result) {
+    if (!result.success) return result.message;
+    final count = result.uploadedCount;
+    if (count == null) return result.message;
+    return '$count samples uploaded';
+  }
+
+  Future<void> _manageWardriveUploadSites() async {
+    final sites = List<WardriveUploadSite>.from(
+      await _wardriveUploadService.loadSites(),
+    );
+    final selectedNames = (await _wardriveUploadService.loadSelectedSiteNames())
+        .toSet();
+
+    if (!mounted) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Manage Upload Sites'),
+          content: SizedBox(
+            width: 460,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.65,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select which sites to upload to:',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: sites.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Text('No upload sites configured'),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: sites.length,
+                            itemBuilder: (context, index) {
+                              final site = sites[index];
+                              final selected = selectedNames.contains(
+                                site.name,
+                              );
+                              return CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                value: selected,
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    if (value == true) {
+                                      selectedNames.add(site.name);
+                                    } else {
+                                      selectedNames.remove(site.name);
+                                    }
+                                  });
+                                },
+                                title: Text(site.name),
+                                subtitle: Text(
+                                  site.url,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                secondary: Wrap(
+                                  spacing: 4,
+                                  children: [
+                                    IconButton(
+                                      tooltip: context.l10n.common_edit,
+                                      icon: const Icon(Icons.edit, size: 20),
+                                      onPressed: () async {
+                                        final edited =
+                                            await _showWardriveUploadSiteDialog(
+                                              site: site,
+                                              existingSites: sites,
+                                            );
+                                        if (edited == null) return;
+                                        setDialogState(() {
+                                          sites[index] = edited;
+                                          if (selectedNames.remove(site.name)) {
+                                            selectedNames.add(edited.name);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    IconButton(
+                                      tooltip: context.l10n.common_delete,
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        final confirmed =
+                                            await _confirmDeleteWardriveUploadSite(
+                                              site,
+                                            );
+                                        if (confirmed != true) return;
+                                        setDialogState(() {
+                                          sites.removeAt(index);
+                                          selectedNames.remove(site.name);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () async {
+                final site = await _showWardriveUploadSiteDialog(
+                  existingSites: sites,
+                );
+                if (site == null) return;
+                setDialogState(() {
+                  sites.add(site);
+                  selectedNames.add(site.name);
+                });
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Add Site'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(context.l10n.common_save),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) return;
+    await _wardriveUploadService.saveSites(sites);
+    await _wardriveUploadService.saveSelectedSiteNames(selectedNames.toList());
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: const Text('Upload sites updated.'),
+    );
+  }
+
+  Future<WardriveUploadSite?> _showWardriveUploadSiteDialog({
+    WardriveUploadSite? site,
+    required List<WardriveUploadSite> existingSites,
+  }) async {
+    final nameController = TextEditingController(text: site?.name ?? '');
+    final urlController = TextEditingController(text: site?.url ?? '');
+    final result = await showDialog<WardriveUploadSite>(
+      context: context,
+      builder: (dialogContext) {
+        String? nameError;
+        String? urlError;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Text(site == null ? 'Add Upload Site' : 'Edit Upload Site'),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      errorText: nameError,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: urlController,
+                    decoration: InputDecoration(
+                      labelText: 'URL',
+                      errorText: urlError,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.url,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(context.l10n.common_cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  final url = urlController.text.trim();
+                  final parsedUri = Uri.tryParse(url);
+                  final duplicateName = existingSites.any(
+                    (existing) =>
+                        existing.name != site?.name &&
+                        existing.name.toLowerCase() == name.toLowerCase(),
+                  );
+                  setDialogState(() {
+                    nameError = name.isEmpty
+                        ? 'Name is required'
+                        : duplicateName
+                        ? 'Name already exists'
+                        : null;
+                    urlError =
+                        parsedUri == null ||
+                            !parsedUri.hasScheme ||
+                            !parsedUri.hasAuthority
+                        ? 'Valid URL is required'
+                        : null;
+                  });
+                  if (nameError != null || urlError != null) return;
+                  Navigator.of(
+                    dialogContext,
+                  ).pop(WardriveUploadSite(name: name, url: url));
+                },
+                child: Text(context.l10n.common_save),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    nameController.dispose();
+    urlController.dispose();
+    return result;
+  }
+
+  Future<bool?> _confirmDeleteWardriveUploadSite(
+    WardriveUploadSite site,
+  ) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Site'),
+        content: Text('Delete "${site.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, String> _wardriveUploadRepeaterNames() {
+    final names = <String, String>{};
+    final contacts = context.read<MeshCoreConnector>().allContactsUnfiltered;
+    for (final contact in contacts) {
+      final key = contact.publicKeyHex.toUpperCase();
+      if (key.isNotEmpty && contact.name.isNotEmpty) {
+        names[key] = contact.name;
+      }
+    }
+    return names;
   }
 
   Future<void> _exportWardriveSamples(WardriveService wardrive) async {

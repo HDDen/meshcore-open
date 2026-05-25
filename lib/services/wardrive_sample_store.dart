@@ -311,6 +311,10 @@ class WardriveSampleStore {
         .toList();
   }
 
+  List<WardriveSample> loadAllSamples() {
+    return loadRecent(limit: _maxSamples);
+  }
+
   String exportJson({WardriveSession? activeSession}) {
     final sessions = loadSessions();
     if (activeSession != null &&
