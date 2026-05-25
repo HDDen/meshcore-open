@@ -1267,80 +1267,153 @@ class _MapScreenState extends State<MapScreen>
                               final selected = selectedNames.contains(
                                 site.name,
                               );
-                              return CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                value: selected,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    if (value == true) {
-                                      selectedNames.add(site.name);
-                                    } else {
-                                      selectedNames.remove(site.name);
-                                    }
-                                  });
-                                },
-                                title: Text(site.name),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      site.url,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      [
-                                        '${context.l10n.map_wardriveUploadBatchSize}: ${site.uploadBatchSize}',
-                                        if (site.treatTimeoutAsSuccess)
-                                          context
-                                              .l10n
-                                              .map_wardriveTreatTimeoutAsSuccess,
-                                      ].join(' • '),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
                                 ),
-                                secondary: Wrap(
-                                  spacing: 4,
-                                  children: [
-                                    IconButton(
-                                      tooltip: context.l10n.common_edit,
-                                      icon: const Icon(Icons.edit, size: 20),
-                                      onPressed: () async {
-                                        final edited =
-                                            await _showWardriveUploadSiteDialog(
-                                              site: site,
-                                              existingSites: sites,
-                                            );
-                                        if (edited == null) return;
-                                        setDialogState(() {
-                                          sites[index] = edited;
-                                          if (selectedNames.remove(site.name)) {
-                                            selectedNames.add(edited.name);
-                                          }
-                                        });
-                                      },
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).dividerColor.withValues(alpha: 0.45),
                                     ),
-                                    IconButton(
-                                      tooltip: context.l10n.common_delete,
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        size: 20,
-                                      ),
-                                      onPressed: () async {
-                                        final confirmed =
-                                            await _confirmDeleteWardriveUploadSite(
-                                              site,
-                                            );
-                                        if (confirmed != true) return;
-                                        setDialogState(() {
-                                          sites.removeAt(index);
-                                          selectedNames.remove(site.name);
-                                        });
-                                      },
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      10,
+                                      6,
+                                      6,
                                     ),
-                                  ],
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                site.name,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                site.url,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                [
+                                                  '${context.l10n.map_wardriveUploadBatchSize}: ${site.uploadBatchSize}',
+                                                  if (site
+                                                      .treatTimeoutAsSuccess)
+                                                    context
+                                                        .l10n
+                                                        .map_wardriveTreatTimeoutAsSuccess,
+                                                ].join(' • '),
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  IconButton(
+                                                    tooltip: context
+                                                        .l10n
+                                                        .common_edit,
+                                                    icon: const Icon(
+                                                      Icons.edit,
+                                                      size: 20,
+                                                    ),
+                                                    onPressed: () async {
+                                                      final edited =
+                                                          await _showWardriveUploadSiteDialog(
+                                                            site: site,
+                                                            existingSites:
+                                                                sites,
+                                                          );
+                                                      if (edited == null) {
+                                                        return;
+                                                      }
+                                                      setDialogState(() {
+                                                        sites[index] = edited;
+                                                        if (selectedNames
+                                                            .remove(
+                                                              site.name,
+                                                            )) {
+                                                          selectedNames.add(
+                                                            edited.name,
+                                                          );
+                                                        }
+                                                      });
+                                                    },
+                                                  ),
+                                                  IconButton(
+                                                    tooltip: context
+                                                        .l10n
+                                                        .common_delete,
+                                                    icon: const Icon(
+                                                      Icons.delete_outline,
+                                                      size: 20,
+                                                    ),
+                                                    onPressed: () async {
+                                                      final confirmed =
+                                                          await _confirmDeleteWardriveUploadSite(
+                                                            site,
+                                                          );
+                                                      if (confirmed != true) {
+                                                        return;
+                                                      }
+                                                      setDialogState(() {
+                                                        sites.removeAt(index);
+                                                        selectedNames.remove(
+                                                          site.name,
+                                                        );
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Checkbox(
+                                          value: selected,
+                                          onChanged: (value) {
+                                            setDialogState(() {
+                                              if (value == true) {
+                                                selectedNames.add(site.name);
+                                              } else {
+                                                selectedNames.remove(site.name);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               );
                             },
