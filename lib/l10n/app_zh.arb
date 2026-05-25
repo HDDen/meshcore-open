@@ -2384,5 +2384,268 @@
   "settings_companionDebugLog": "调试日志",
   "chat_newMessages": "新的消息",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 协议、响应和原始数据",
-  "repeater_chanUtil": "频道利用率"
+  "repeater_chanUtil": "频道利用率",
+  "settings_quickAnswersSendAtSelect": "选择时发送",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "开始",
+  "map_wardriveStop": "停止",
+  "map_wardriveZeroHopDiscovery": "零跳发现",
+  "map_wardriveDiscoverySent": "已发送 Wardrive 发现请求。",
+  "map_wardriveUploadCancelled": "Wardrive 上传已取消。",
+  "map_wardriveDiscoveryFailed": "Wardrive 发现失败：{error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "请求：{requests}  响应：{responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "上次请求：{time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "手机 GPS：尚未更新",
+  "map_wardrivePhoneGpsError": "手机 GPS：{error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "手机 GPS：{latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "还没有发现响应。",
+  "map_wardriveDataTooltip": "Wardrive 数据",
+  "map_wardriveUploadData": "上传数据",
+  "map_wardriveManageUploadSites": "管理上传站点",
+  "map_wardriveAutoUpload": "自动上传",
+  "map_wardriveScreenWakelock": "屏幕保持唤醒",
+  "map_wardriveExport": "导出",
+  "map_wardriveImport": "导入",
+  "map_wardriveAutoDiscovery": "自动发现",
+  "map_wardriveSecondsSuffix": "秒",
+  "map_wardriveSamplesSaved": "已保存样本：{count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "自动发现：{error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "样本保存：{error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "覆盖网格：{count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "自动上传已启用。",
+  "map_wardriveAutoUploadDisabled": "自动上传已禁用。",
+  "map_wardriveNoSamplesToUpload": "没有可上传的 wardrive 样本。",
+  "map_wardriveUploadingSamples": "正在上传样本...",
+  "map_wardriveUploadingTo": "正在上传到 {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "批次 {current}/{total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "正在发送 {sent}/{total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "目标：{site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "等待连接",
+  "map_wardriveUploadConnectionEstablished": "连接已建立，正在上传",
+  "map_wardriveUploadProcessingServer": "数据已上传，服务器处理中",
+  "map_wardriveUploadServerResponse": "服务器已处理数据，响应 {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "上传超时；此站点已标记为已发送",
+  "map_wardriveUploadServerError": "服务器错误 {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "上传错误：{error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive 上传失败：{error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "上传完成",
+  "map_wardriveUploadResults": "上传结果",
+  "map_wardriveSamplesUploaded": "已上传 {count} 个样本",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "选择要上传到的站点：",
+  "map_wardriveNoUploadSitesConfigured": "未配置上传站点",
+  "map_wardriveAddSite": "添加站点",
+  "map_wardriveUploadSitesUpdated": "上传站点已更新。",
+  "map_wardriveAddUploadSite": "添加上传站点",
+  "map_wardriveEditUploadSite": "编辑上传站点",
+  "map_wardriveNameLabel": "名称",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "上传批次大小",
+  "map_wardriveUploadBatchSizeInvalid": "请输入 {min} 到 {max} 之间的值",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "将超时视为成功",
+  "map_wardriveNameRequired": "名称为必填项",
+  "map_wardriveNameExists": "名称已存在",
+  "map_wardriveValidUrlRequired": "需要有效的 URL",
+  "map_wardriveDeleteSite": "删除站点",
+  "map_wardriveDeleteSiteConfirm": "删除“{name}”？",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "没有可导出的 wardrive 样本。",
+  "map_wardriveExportShareText": "meshcore-open wardrive 样本",
+  "map_wardriveSamplesExported": "Wardrive 样本已导出为 JSON 文件。",
+  "map_wardriveExportFailed": "Wardrive 导出失败：{error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "导入 wardrive 样本",
+  "map_wardriveImportHint": "在此粘贴导出的 wardrive JSON",
+  "map_wardriveNoNewSamplesImported": "没有导入新的 wardrive 样本。",
+  "map_wardriveSamplesImported": "已导入 {count} 个 wardrive 样本。",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive 导入失败：{error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "没有可清除的 wardrive 样本。",
+  "map_wardriveClearSamplesTitle": "清除 wardrive 样本？",
+  "map_wardriveClearSamplesConfirm": "这将从此设备删除 {count} 个已保存样本。",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive 样本已清除。",
+  "channelPath_outgoingSentByRadioAt": "等待通过无线电发送，秒"
 }

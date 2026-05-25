@@ -642,7 +642,7 @@ class AppLocalizationsSl extends AppLocalizations {
       'Za ta klepet še niste dodali hitrih odgovorov!';
 
   @override
-  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+  String get settings_quickAnswersSendAtSelect => 'Pošlji ob izbiri';
 
   @override
   String get appSettings_title => 'Nastavitve aplikacije';
@@ -1939,278 +1939,283 @@ class AppLocalizationsSl extends AppLocalizations {
   String get map_wardrive => 'Wardrive';
 
   @override
-  String get map_wardriveStart => 'Start';
+  String get map_wardriveStart => 'Začni';
 
   @override
-  String get map_wardriveStop => 'Stop';
+  String get map_wardriveStop => 'Ustavi';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Zero-hop odkrivanje';
 
   @override
-  String get map_wardriveDiscoverySent => 'Wardrive discovery request sent.';
+  String get map_wardriveDiscoverySent =>
+      'Zahteva za wardrive odkrivanje je poslana.';
 
   @override
-  String get map_wardriveUploadCancelled => 'Wardrive upload cancelled.';
+  String get map_wardriveUploadCancelled => 'Nalaganje wardrive je preklicano.';
 
   @override
   String map_wardriveDiscoveryFailed(String error) {
-    return 'Wardrive discovery failed: $error';
+    return 'Wardrive odkrivanje ni uspelo: $error';
   }
 
   @override
   String map_wardriveRequests(int requests, int responses) {
-    return 'Requests: $requests  Responses: $responses';
+    return 'Zahteve: $requests  Odgovori: $responses';
   }
 
   @override
   String map_wardriveLastRequest(String time) {
-    return 'Last request: $time';
+    return 'Zadnja zahteva: $time';
   }
 
   @override
-  String get map_wardrivePhoneGpsNotUpdated => 'Phone GPS: not updated yet';
+  String get map_wardrivePhoneGpsNotUpdated =>
+      'GPS telefona: še ni posodobljen';
 
   @override
   String map_wardrivePhoneGpsError(String error) {
-    return 'Phone GPS: $error';
+    return 'GPS telefona: $error';
   }
 
   @override
   String map_wardrivePhoneGps(String latitude, String longitude) {
-    return 'Phone GPS: $latitude, $longitude';
+    return 'GPS telefona: $latitude, $longitude';
   }
 
   @override
-  String get map_wardriveNoResponses => 'No discovery responses yet.';
+  String get map_wardriveNoResponses => 'Ni še odgovorov odkrivanja.';
 
   @override
-  String get map_wardriveDataTooltip => 'Wardrive data';
+  String get map_wardriveDataTooltip => 'Wardrive podatki';
 
   @override
-  String get map_wardriveUploadData => 'Upload Data';
+  String get map_wardriveUploadData => 'Naloži podatke';
 
   @override
-  String get map_wardriveManageUploadSites => 'Manage Upload Sites';
+  String get map_wardriveManageUploadSites => 'Upravljanje mest za nalaganje';
 
   @override
-  String get map_wardriveAutoUpload => 'Autoupload';
+  String get map_wardriveAutoUpload => 'Samodejno nalaganje';
 
   @override
-  String get map_wardriveScreenWakelock => 'Screen wakelock';
+  String get map_wardriveScreenWakelock => 'Wakelock zaslona';
 
   @override
-  String get map_wardriveExport => 'Export';
+  String get map_wardriveExport => 'Izvoz';
 
   @override
-  String get map_wardriveImport => 'Import';
+  String get map_wardriveImport => 'Uvoz';
 
   @override
-  String get map_wardriveAutoDiscovery => 'Auto discovery';
+  String get map_wardriveAutoDiscovery => 'Samodejno odkrivanje';
 
   @override
   String get map_wardriveSecondsSuffix => 's';
 
   @override
   String map_wardriveSamplesSaved(int count) {
-    return 'Samples saved: $count';
+    return 'Shranjeni vzorci: $count';
   }
 
   @override
   String map_wardriveAutoDiscoveryError(String error) {
-    return 'Auto discovery: $error';
+    return 'Samodejno odkrivanje: $error';
   }
 
   @override
   String map_wardriveSampleSaveError(String error) {
-    return 'Sample save: $error';
+    return 'Shranjevanje vzorca: $error';
   }
 
   @override
   String map_wardriveCoverageCells(int count) {
-    return 'Coverage cells: $count';
+    return 'Celice pokritosti: $count';
   }
 
   @override
-  String get map_wardriveAutoUploadEnabled => 'Autoupload enabled.';
+  String get map_wardriveAutoUploadEnabled => 'Samodejno nalaganje omogočeno.';
 
   @override
-  String get map_wardriveAutoUploadDisabled => 'Autoupload disabled.';
+  String get map_wardriveAutoUploadDisabled =>
+      'Samodejno nalaganje onemogočeno.';
 
   @override
-  String get map_wardriveNoSamplesToUpload => 'No wardrive samples to upload.';
+  String get map_wardriveNoSamplesToUpload =>
+      'Ni wardrive vzorcev za nalaganje.';
 
   @override
-  String get map_wardriveUploadingSamples => 'Uploading samples...';
+  String get map_wardriveUploadingSamples => 'Nalaganje vzorcev...';
 
   @override
   String map_wardriveUploadingTo(String site) {
-    return 'Uploading to $site...';
+    return 'Nalaganje na $site...';
   }
 
   @override
   String map_wardriveUploadBatch(int current, int total) {
-    return 'Batch $current of $total';
+    return 'Paket $current od $total';
   }
 
   @override
   String map_wardriveUploadSamplesProgress(int sent, int total) {
-    return 'Sending $sent of $total';
+    return 'Pošiljanje $sent od $total';
   }
 
   @override
   String map_wardriveUploadTarget(String site) {
-    return 'Target: $site';
+    return 'Cilj: $site';
   }
 
   @override
-  String get map_wardriveUploadWaitingConnection => 'Waiting for connection';
+  String get map_wardriveUploadWaitingConnection => 'Čakanje na povezavo';
 
   @override
   String get map_wardriveUploadConnectionEstablished =>
-      'Connection established, uploading';
+      'Povezava vzpostavljena, nalaganje';
 
   @override
   String get map_wardriveUploadProcessingServer =>
-      'Data uploaded, processing by server';
+      'Podatki naloženi, strežnik obdeluje';
 
   @override
   String map_wardriveUploadServerResponse(int statusCode) {
-    return 'Server processed data, response $statusCode';
+    return 'Strežnik je obdelal podatke, odgovor $statusCode';
   }
 
   @override
   String get map_wardriveUploadTimeoutTreatedAsSuccess =>
-      'Upload timed out; marked as sent for this site';
+      'Nalaganje je poteklo; za to mesto označeno kot poslano';
 
   @override
   String map_wardriveUploadServerError(int statusCode) {
-    return 'Server error $statusCode';
+    return 'Napaka strežnika $statusCode';
   }
 
   @override
   String map_wardriveUploadRequestError(String error) {
-    return 'Upload error: $error';
+    return 'Napaka nalaganja: $error';
   }
 
   @override
   String map_wardriveUploadFailed(String error) {
-    return 'Wardrive upload failed: $error';
+    return 'Nalaganje wardrive ni uspelo: $error';
   }
 
   @override
-  String get map_wardriveUploadComplete => 'Upload Complete';
+  String get map_wardriveUploadComplete => 'Nalaganje končano';
 
   @override
-  String get map_wardriveUploadResults => 'Upload Results';
+  String get map_wardriveUploadResults => 'Rezultati nalaganja';
 
   @override
   String map_wardriveSamplesUploaded(int count) {
-    return '$count samples uploaded';
+    return 'Naloženih vzorcev: $count';
   }
 
   @override
-  String get map_wardriveSelectUploadSites =>
-      'Select which sites to upload to:';
+  String get map_wardriveSelectUploadSites => 'Izberite mesta za nalaganje:';
 
   @override
   String get map_wardriveNoUploadSitesConfigured =>
-      'No upload sites configured';
+      'Ni nastavljenih mest za nalaganje';
 
   @override
-  String get map_wardriveAddSite => 'Add Site';
+  String get map_wardriveAddSite => 'Dodaj mesto';
 
   @override
-  String get map_wardriveUploadSitesUpdated => 'Upload sites updated.';
+  String get map_wardriveUploadSitesUpdated =>
+      'Mesta za nalaganje posodobljena.';
 
   @override
-  String get map_wardriveAddUploadSite => 'Add Upload Site';
+  String get map_wardriveAddUploadSite => 'Dodaj mesto za nalaganje';
 
   @override
-  String get map_wardriveEditUploadSite => 'Edit Upload Site';
+  String get map_wardriveEditUploadSite => 'Uredi mesto za nalaganje';
 
   @override
-  String get map_wardriveNameLabel => 'Name';
+  String get map_wardriveNameLabel => 'Ime';
 
   @override
   String get map_wardriveUrlLabel => 'URL';
 
   @override
-  String get map_wardriveUploadBatchSize => 'Upload batch size';
+  String get map_wardriveUploadBatchSize => 'Velikost paketa nalaganja';
 
   @override
   String map_wardriveUploadBatchSizeInvalid(int min, int max) {
-    return 'Use a value from $min to $max';
+    return 'Uporabite vrednost od $min do $max';
   }
 
   @override
-  String get map_wardriveTreatTimeoutAsSuccess => 'Treat timeout as success';
+  String get map_wardriveTreatTimeoutAsSuccess =>
+      'Časovno omejitev obravnavaj kot uspeh';
 
   @override
-  String get map_wardriveNameRequired => 'Name is required';
+  String get map_wardriveNameRequired => 'Ime je obvezno';
 
   @override
-  String get map_wardriveNameExists => 'Name already exists';
+  String get map_wardriveNameExists => 'Ime že obstaja';
 
   @override
-  String get map_wardriveValidUrlRequired => 'Valid URL is required';
+  String get map_wardriveValidUrlRequired => 'Zahtevan je veljaven URL';
 
   @override
-  String get map_wardriveDeleteSite => 'Delete Site';
+  String get map_wardriveDeleteSite => 'Izbriši mesto';
 
   @override
   String map_wardriveDeleteSiteConfirm(String name) {
-    return 'Delete \"$name\"?';
+    return 'Izbrisati »$name«?';
   }
 
   @override
-  String get map_wardriveNoSamplesToExport => 'No wardrive samples to export.';
+  String get map_wardriveNoSamplesToExport => 'Ni wardrive vzorcev za izvoz.';
 
   @override
-  String get map_wardriveExportShareText => 'meshcore-open wardrive samples';
+  String get map_wardriveExportShareText => 'wardrive vzorci meshcore-open';
 
   @override
   String get map_wardriveSamplesExported =>
-      'Wardrive samples exported as JSON file.';
+      'Wardrive vzorci izvoženi kot JSON datoteka.';
 
   @override
   String map_wardriveExportFailed(String error) {
-    return 'Wardrive export failed: $error';
+    return 'Izvoz wardrive ni uspel: $error';
   }
 
   @override
-  String get map_wardriveImportSamples => 'Import wardrive samples';
+  String get map_wardriveImportSamples => 'Uvozi wardrive vzorce';
 
   @override
-  String get map_wardriveImportHint => 'Paste exported wardrive JSON here';
+  String get map_wardriveImportHint => 'Sem prilepite izvoženi wardrive JSON';
 
   @override
   String get map_wardriveNoNewSamplesImported =>
-      'No new wardrive samples imported.';
+      'Ni bilo uvoženih novih wardrive vzorcev.';
 
   @override
   String map_wardriveSamplesImported(int count) {
-    return 'Imported $count wardrive samples.';
+    return 'Uvoženih wardrive vzorcev: $count.';
   }
 
   @override
   String map_wardriveImportFailed(String error) {
-    return 'Wardrive import failed: $error';
+    return 'Uvoz wardrive ni uspel: $error';
   }
 
   @override
-  String get map_wardriveNoSamplesToClear => 'No wardrive samples to clear.';
+  String get map_wardriveNoSamplesToClear => 'Ni wardrive vzorcev za brisanje.';
 
   @override
-  String get map_wardriveClearSamplesTitle => 'Clear wardrive samples?';
+  String get map_wardriveClearSamplesTitle => 'Izbrisati wardrive vzorce?';
 
   @override
   String map_wardriveClearSamplesConfirm(int count) {
-    return 'This will delete $count saved samples from this device.';
+    return 'To bo iz te naprave izbrisalo $count shranjenih vzorcev.';
   }
 
   @override
-  String get map_wardriveSamplesCleared => 'Wardrive samples cleared.';
+  String get map_wardriveSamplesCleared => 'Wardrive vzorci izbrisani.';
 
   @override
   String get mapCache_title =>
@@ -3910,7 +3915,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channelPath_outgoingSentByRadioAt =>
-      'Waiting for transmission via radio, sec';
+      'Čakanje na prenos prek radia, s';
 
   @override
   String get community_title => 'Skupnost';

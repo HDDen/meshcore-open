@@ -2359,5 +2359,268 @@
   "settings_companionDebugLogSubtitle": "Команди, відповіді та необроблена інформація для протоколів BLE/TCP/USB",
   "chat_newMessages": "Нові повідомлення",
   "chat_markAsUnread": "Позначити як непрочитане",
-  "repeater_chanUtil": "Використання каналу"
+  "repeater_chanUtil": "Використання каналу",
+  "settings_quickAnswersSendAtSelect": "Надсилати при виборі",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Старт",
+  "map_wardriveStop": "Стоп",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Запит wardrive discovery надіслано.",
+  "map_wardriveUploadCancelled": "Вивантаження wardrive скасовано.",
+  "map_wardriveDiscoveryFailed": "Wardrive discovery не вдалося: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Запити: {requests}  Відповіді: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Останній запит: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS телефона: ще не оновлено",
+  "map_wardrivePhoneGpsError": "GPS телефона: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS телефона: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Відповідей discovery ще немає.",
+  "map_wardriveDataTooltip": "Дані wardrive",
+  "map_wardriveUploadData": "Вивантажити дані",
+  "map_wardriveManageUploadSites": "Керування сайтами вивантаження",
+  "map_wardriveAutoUpload": "Автовивантаження",
+  "map_wardriveScreenWakelock": "Не вимикати екран",
+  "map_wardriveExport": "Експорт",
+  "map_wardriveImport": "Імпорт",
+  "map_wardriveAutoDiscovery": "Авто discovery",
+  "map_wardriveSecondsSuffix": "?",
+  "map_wardriveSamplesSaved": "Збережено семплів: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Авто discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Збереження семпла: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Комірок покриття: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Автовивантаження увімкнено.",
+  "map_wardriveAutoUploadDisabled": "Автовивантаження вимкнено.",
+  "map_wardriveNoSamplesToUpload": "Немає wardrive-семплів для вивантаження.",
+  "map_wardriveUploadingSamples": "Вивантаження семплів...",
+  "map_wardriveUploadingTo": "Вивантаження на {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Пакет {current} з {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Надсилання {sent} з {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Ціль: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Очікування з’єднання",
+  "map_wardriveUploadConnectionEstablished": "З’єднання встановлено, вивантаження",
+  "map_wardriveUploadProcessingServer": "Дані вивантажено, сервер обробляє",
+  "map_wardriveUploadServerResponse": "Сервер обробив дані, відповідь {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Вивантаження перевищило таймаут; позначено як надіслане для цього сайту",
+  "map_wardriveUploadServerError": "Помилка сервера {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Помилка вивантаження: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Вивантаження wardrive не вдалося: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Вивантаження завершено",
+  "map_wardriveUploadResults": "Результати вивантаження",
+  "map_wardriveSamplesUploaded": "Вивантажено семплів: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Виберіть сайти для вивантаження:",
+  "map_wardriveNoUploadSitesConfigured": "Сайти вивантаження не налаштовано",
+  "map_wardriveAddSite": "Додати сайт",
+  "map_wardriveUploadSitesUpdated": "Сайти вивантаження оновлено.",
+  "map_wardriveAddUploadSite": "Додати сайт вивантаження",
+  "map_wardriveEditUploadSite": "Редагувати сайт вивантаження",
+  "map_wardriveNameLabel": "Назва",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Розмір пакета вивантаження",
+  "map_wardriveUploadBatchSizeInvalid": "Використовуйте значення від {min} до {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Вважати таймаут успіхом",
+  "map_wardriveNameRequired": "Назва обов’язкова",
+  "map_wardriveNameExists": "Назва вже існує",
+  "map_wardriveValidUrlRequired": "Потрібен коректний URL",
+  "map_wardriveDeleteSite": "Видалити сайт",
+  "map_wardriveDeleteSiteConfirm": "Видалити «{name}»?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Немає wardrive-семплів для експорту.",
+  "map_wardriveExportShareText": "wardrive-семпли meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive-семпли експортовано у JSON-файл.",
+  "map_wardriveExportFailed": "Експорт wardrive не вдався: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Імпорт wardrive-семплів",
+  "map_wardriveImportHint": "Вставте експортований wardrive JSON сюди",
+  "map_wardriveNoNewSamplesImported": "Нових wardrive-семплів не імпортовано.",
+  "map_wardriveSamplesImported": "Імпортовано wardrive-семплів: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Імпорт wardrive не вдався: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Немає wardrive-семплів для очищення.",
+  "map_wardriveClearSamplesTitle": "Очистити wardrive-семпли?",
+  "map_wardriveClearSamplesConfirm": "Це видалить {count} збережених семплів з цього пристрою.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive-семпли очищено.",
+  "channelPath_outgoingSentByRadioAt": "Очікувало передавання через радіо, с"
 }

@@ -609,7 +609,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_quickAnswersNotAdded => '你还没有为此聊天添加任何快捷回复！';
 
   @override
-  String get settings_quickAnswersSendAtSelect => 'Send on selection';
+  String get settings_quickAnswersSendAtSelect => '选择时发送';
 
   @override
   String get appSettings_title => '应用设置';
@@ -1835,278 +1835,271 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardrive => 'Wardrive';
 
   @override
-  String get map_wardriveStart => 'Start';
+  String get map_wardriveStart => '开始';
 
   @override
-  String get map_wardriveStop => 'Stop';
+  String get map_wardriveStop => '停止';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => '零跳发现';
 
   @override
-  String get map_wardriveDiscoverySent => 'Wardrive discovery request sent.';
+  String get map_wardriveDiscoverySent => '已发送 Wardrive 发现请求。';
 
   @override
-  String get map_wardriveUploadCancelled => 'Wardrive upload cancelled.';
+  String get map_wardriveUploadCancelled => 'Wardrive 上传已取消。';
 
   @override
   String map_wardriveDiscoveryFailed(String error) {
-    return 'Wardrive discovery failed: $error';
+    return 'Wardrive 发现失败：$error';
   }
 
   @override
   String map_wardriveRequests(int requests, int responses) {
-    return 'Requests: $requests  Responses: $responses';
+    return '请求：$requests  响应：$responses';
   }
 
   @override
   String map_wardriveLastRequest(String time) {
-    return 'Last request: $time';
+    return '上次请求：$time';
   }
 
   @override
-  String get map_wardrivePhoneGpsNotUpdated => 'Phone GPS: not updated yet';
+  String get map_wardrivePhoneGpsNotUpdated => '手机 GPS：尚未更新';
 
   @override
   String map_wardrivePhoneGpsError(String error) {
-    return 'Phone GPS: $error';
+    return '手机 GPS：$error';
   }
 
   @override
   String map_wardrivePhoneGps(String latitude, String longitude) {
-    return 'Phone GPS: $latitude, $longitude';
+    return '手机 GPS：$latitude, $longitude';
   }
 
   @override
-  String get map_wardriveNoResponses => 'No discovery responses yet.';
+  String get map_wardriveNoResponses => '还没有发现响应。';
 
   @override
-  String get map_wardriveDataTooltip => 'Wardrive data';
+  String get map_wardriveDataTooltip => 'Wardrive 数据';
 
   @override
-  String get map_wardriveUploadData => 'Upload Data';
+  String get map_wardriveUploadData => '上传数据';
 
   @override
-  String get map_wardriveManageUploadSites => 'Manage Upload Sites';
+  String get map_wardriveManageUploadSites => '管理上传站点';
 
   @override
-  String get map_wardriveAutoUpload => 'Autoupload';
+  String get map_wardriveAutoUpload => '自动上传';
 
   @override
-  String get map_wardriveScreenWakelock => 'Screen wakelock';
+  String get map_wardriveScreenWakelock => '屏幕保持唤醒';
 
   @override
-  String get map_wardriveExport => 'Export';
+  String get map_wardriveExport => '导出';
 
   @override
-  String get map_wardriveImport => 'Import';
+  String get map_wardriveImport => '导入';
 
   @override
-  String get map_wardriveAutoDiscovery => 'Auto discovery';
+  String get map_wardriveAutoDiscovery => '自动发现';
 
   @override
-  String get map_wardriveSecondsSuffix => 's';
+  String get map_wardriveSecondsSuffix => '秒';
 
   @override
   String map_wardriveSamplesSaved(int count) {
-    return 'Samples saved: $count';
+    return '已保存样本：$count';
   }
 
   @override
   String map_wardriveAutoDiscoveryError(String error) {
-    return 'Auto discovery: $error';
+    return '自动发现：$error';
   }
 
   @override
   String map_wardriveSampleSaveError(String error) {
-    return 'Sample save: $error';
+    return '样本保存：$error';
   }
 
   @override
   String map_wardriveCoverageCells(int count) {
-    return 'Coverage cells: $count';
+    return '覆盖网格：$count';
   }
 
   @override
-  String get map_wardriveAutoUploadEnabled => 'Autoupload enabled.';
+  String get map_wardriveAutoUploadEnabled => '自动上传已启用。';
 
   @override
-  String get map_wardriveAutoUploadDisabled => 'Autoupload disabled.';
+  String get map_wardriveAutoUploadDisabled => '自动上传已禁用。';
 
   @override
-  String get map_wardriveNoSamplesToUpload => 'No wardrive samples to upload.';
+  String get map_wardriveNoSamplesToUpload => '没有可上传的 wardrive 样本。';
 
   @override
-  String get map_wardriveUploadingSamples => 'Uploading samples...';
+  String get map_wardriveUploadingSamples => '正在上传样本...';
 
   @override
   String map_wardriveUploadingTo(String site) {
-    return 'Uploading to $site...';
+    return '正在上传到 $site...';
   }
 
   @override
   String map_wardriveUploadBatch(int current, int total) {
-    return 'Batch $current of $total';
+    return '批次 $current/$total';
   }
 
   @override
   String map_wardriveUploadSamplesProgress(int sent, int total) {
-    return 'Sending $sent of $total';
+    return '正在发送 $sent/$total';
   }
 
   @override
   String map_wardriveUploadTarget(String site) {
-    return 'Target: $site';
+    return '目标：$site';
   }
 
   @override
-  String get map_wardriveUploadWaitingConnection => 'Waiting for connection';
+  String get map_wardriveUploadWaitingConnection => '等待连接';
 
   @override
-  String get map_wardriveUploadConnectionEstablished =>
-      'Connection established, uploading';
+  String get map_wardriveUploadConnectionEstablished => '连接已建立，正在上传';
 
   @override
-  String get map_wardriveUploadProcessingServer =>
-      'Data uploaded, processing by server';
+  String get map_wardriveUploadProcessingServer => '数据已上传，服务器处理中';
 
   @override
   String map_wardriveUploadServerResponse(int statusCode) {
-    return 'Server processed data, response $statusCode';
+    return '服务器已处理数据，响应 $statusCode';
   }
 
   @override
-  String get map_wardriveUploadTimeoutTreatedAsSuccess =>
-      'Upload timed out; marked as sent for this site';
+  String get map_wardriveUploadTimeoutTreatedAsSuccess => '上传超时；此站点已标记为已发送';
 
   @override
   String map_wardriveUploadServerError(int statusCode) {
-    return 'Server error $statusCode';
+    return '服务器错误 $statusCode';
   }
 
   @override
   String map_wardriveUploadRequestError(String error) {
-    return 'Upload error: $error';
+    return '上传错误：$error';
   }
 
   @override
   String map_wardriveUploadFailed(String error) {
-    return 'Wardrive upload failed: $error';
+    return 'Wardrive 上传失败：$error';
   }
 
   @override
-  String get map_wardriveUploadComplete => 'Upload Complete';
+  String get map_wardriveUploadComplete => '上传完成';
 
   @override
-  String get map_wardriveUploadResults => 'Upload Results';
+  String get map_wardriveUploadResults => '上传结果';
 
   @override
   String map_wardriveSamplesUploaded(int count) {
-    return '$count samples uploaded';
+    return '已上传 $count 个样本';
   }
 
   @override
-  String get map_wardriveSelectUploadSites =>
-      'Select which sites to upload to:';
+  String get map_wardriveSelectUploadSites => '选择要上传到的站点：';
 
   @override
-  String get map_wardriveNoUploadSitesConfigured =>
-      'No upload sites configured';
+  String get map_wardriveNoUploadSitesConfigured => '未配置上传站点';
 
   @override
-  String get map_wardriveAddSite => 'Add Site';
+  String get map_wardriveAddSite => '添加站点';
 
   @override
-  String get map_wardriveUploadSitesUpdated => 'Upload sites updated.';
+  String get map_wardriveUploadSitesUpdated => '上传站点已更新。';
 
   @override
-  String get map_wardriveAddUploadSite => 'Add Upload Site';
+  String get map_wardriveAddUploadSite => '添加上传站点';
 
   @override
-  String get map_wardriveEditUploadSite => 'Edit Upload Site';
+  String get map_wardriveEditUploadSite => '编辑上传站点';
 
   @override
-  String get map_wardriveNameLabel => 'Name';
+  String get map_wardriveNameLabel => '名称';
 
   @override
   String get map_wardriveUrlLabel => 'URL';
 
   @override
-  String get map_wardriveUploadBatchSize => 'Upload batch size';
+  String get map_wardriveUploadBatchSize => '上传批次大小';
 
   @override
   String map_wardriveUploadBatchSizeInvalid(int min, int max) {
-    return 'Use a value from $min to $max';
+    return '请输入 $min 到 $max 之间的值';
   }
 
   @override
-  String get map_wardriveTreatTimeoutAsSuccess => 'Treat timeout as success';
+  String get map_wardriveTreatTimeoutAsSuccess => '将超时视为成功';
 
   @override
-  String get map_wardriveNameRequired => 'Name is required';
+  String get map_wardriveNameRequired => '名称为必填项';
 
   @override
-  String get map_wardriveNameExists => 'Name already exists';
+  String get map_wardriveNameExists => '名称已存在';
 
   @override
-  String get map_wardriveValidUrlRequired => 'Valid URL is required';
+  String get map_wardriveValidUrlRequired => '需要有效的 URL';
 
   @override
-  String get map_wardriveDeleteSite => 'Delete Site';
+  String get map_wardriveDeleteSite => '删除站点';
 
   @override
   String map_wardriveDeleteSiteConfirm(String name) {
-    return 'Delete \"$name\"?';
+    return '删除“$name”？';
   }
 
   @override
-  String get map_wardriveNoSamplesToExport => 'No wardrive samples to export.';
+  String get map_wardriveNoSamplesToExport => '没有可导出的 wardrive 样本。';
 
   @override
-  String get map_wardriveExportShareText => 'meshcore-open wardrive samples';
+  String get map_wardriveExportShareText => 'meshcore-open wardrive 样本';
 
   @override
-  String get map_wardriveSamplesExported =>
-      'Wardrive samples exported as JSON file.';
+  String get map_wardriveSamplesExported => 'Wardrive 样本已导出为 JSON 文件。';
 
   @override
   String map_wardriveExportFailed(String error) {
-    return 'Wardrive export failed: $error';
+    return 'Wardrive 导出失败：$error';
   }
 
   @override
-  String get map_wardriveImportSamples => 'Import wardrive samples';
+  String get map_wardriveImportSamples => '导入 wardrive 样本';
 
   @override
-  String get map_wardriveImportHint => 'Paste exported wardrive JSON here';
+  String get map_wardriveImportHint => '在此粘贴导出的 wardrive JSON';
 
   @override
-  String get map_wardriveNoNewSamplesImported =>
-      'No new wardrive samples imported.';
+  String get map_wardriveNoNewSamplesImported => '没有导入新的 wardrive 样本。';
 
   @override
   String map_wardriveSamplesImported(int count) {
-    return 'Imported $count wardrive samples.';
+    return '已导入 $count 个 wardrive 样本。';
   }
 
   @override
   String map_wardriveImportFailed(String error) {
-    return 'Wardrive import failed: $error';
+    return 'Wardrive 导入失败：$error';
   }
 
   @override
-  String get map_wardriveNoSamplesToClear => 'No wardrive samples to clear.';
+  String get map_wardriveNoSamplesToClear => '没有可清除的 wardrive 样本。';
 
   @override
-  String get map_wardriveClearSamplesTitle => 'Clear wardrive samples?';
+  String get map_wardriveClearSamplesTitle => '清除 wardrive 样本？';
 
   @override
   String map_wardriveClearSamplesConfirm(int count) {
-    return 'This will delete $count saved samples from this device.';
+    return '这将从此设备删除 $count 个已保存样本。';
   }
 
   @override
-  String get map_wardriveSamplesCleared => 'Wardrive samples cleared.';
+  String get map_wardriveSamplesCleared => 'Wardrive 样本已清除。';
 
   @override
   String get mapCache_title => '离线地图缓存';
@@ -3643,8 +3636,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_unknownRepeater => '未知转发节点';
 
   @override
-  String get channelPath_outgoingSentByRadioAt =>
-      'Waiting for transmission via radio, sec';
+  String get channelPath_outgoingSentByRadioAt => '等待通过无线电发送，秒';
 
   @override
   String get community_title => '社区';

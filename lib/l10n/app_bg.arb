@@ -2379,5 +2379,268 @@
   "settings_companionDebugLogSubtitle": "Команди, отговори и сурови данни за протоколите BLE/TCP/USB",
   "chat_newMessages": "Нови съобщения",
   "settings_companionDebugLog": "Лог за отстраняване на грешки (за съпътстваща програма)",
-  "repeater_chanUtil": "Използване на канала"
+  "repeater_chanUtil": "Използване на канала",
+  "settings_quickAnswersSendAtSelect": "Изпращане при избор",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Старт",
+  "map_wardriveStop": "Стоп",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Заявката за wardrive discovery е изпратена.",
+  "map_wardriveUploadCancelled": "Качването на wardrive е отменено.",
+  "map_wardriveDiscoveryFailed": "Wardrive discovery неуспешно: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Заявки: {requests}  Отговори: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Последна заявка: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS на телефона: още не е обновен",
+  "map_wardrivePhoneGpsError": "GPS на телефона: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS на телефона: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Все още няма discovery отговори.",
+  "map_wardriveDataTooltip": "Данни на wardrive",
+  "map_wardriveUploadData": "Качване на данни",
+  "map_wardriveManageUploadSites": "Управление на сайтове за качване",
+  "map_wardriveAutoUpload": "Автокачване",
+  "map_wardriveScreenWakelock": "Задържане на екрана включен",
+  "map_wardriveExport": "Експорт",
+  "map_wardriveImport": "Импорт",
+  "map_wardriveAutoDiscovery": "Авто discovery",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Запазени семпли: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Авто discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Запазване на семпъл: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Клетки на покритие: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Автокачването е включено.",
+  "map_wardriveAutoUploadDisabled": "Автокачването е изключено.",
+  "map_wardriveNoSamplesToUpload": "Няма wardrive семпли за качване.",
+  "map_wardriveUploadingSamples": "Качване на семпли...",
+  "map_wardriveUploadingTo": "Качване към {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Пакет {current} от {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Изпращане {sent} от {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Цел: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Изчакване на връзка",
+  "map_wardriveUploadConnectionEstablished": "Връзката е установена, качване",
+  "map_wardriveUploadProcessingServer": "Данните са качени, сървърът обработва",
+  "map_wardriveUploadServerResponse": "Сървърът обработи данните, отговор {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Качването изтече по време; маркирано като изпратено за този сайт",
+  "map_wardriveUploadServerError": "Грешка на сървъра {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Грешка при качване: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Качването на wardrive е неуспешно: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Качването завърши",
+  "map_wardriveUploadResults": "Резултати от качването",
+  "map_wardriveSamplesUploaded": "Качени семпли: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Изберете сайтове за качване:",
+  "map_wardriveNoUploadSitesConfigured": "Няма настроени сайтове за качване",
+  "map_wardriveAddSite": "Добавяне на сайт",
+  "map_wardriveUploadSitesUpdated": "Сайтовете за качване са обновени.",
+  "map_wardriveAddUploadSite": "Добавяне на сайт за качване",
+  "map_wardriveEditUploadSite": "Редактиране на сайт за качване",
+  "map_wardriveNameLabel": "Име",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Размер на пакет за качване",
+  "map_wardriveUploadBatchSizeInvalid": "Използвайте стойност от {min} до {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Третирай таймаута като успех",
+  "map_wardriveNameRequired": "Името е задължително",
+  "map_wardriveNameExists": "Името вече съществува",
+  "map_wardriveValidUrlRequired": "Необходим е валиден URL",
+  "map_wardriveDeleteSite": "Изтриване на сайт",
+  "map_wardriveDeleteSiteConfirm": "Да се изтрие ли „{name}“?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Няма wardrive семпли за експорт.",
+  "map_wardriveExportShareText": "wardrive семпли от meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive семплите са експортирани като JSON файл.",
+  "map_wardriveExportFailed": "Експортът на wardrive е неуспешен: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Импорт на wardrive семпли",
+  "map_wardriveImportHint": "Поставете експортирания wardrive JSON тук",
+  "map_wardriveNoNewSamplesImported": "Няма импортирани нови wardrive семпли.",
+  "map_wardriveSamplesImported": "Импортирани wardrive семпли: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Импортът на wardrive е неуспешен: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Няма wardrive семпли за изчистване.",
+  "map_wardriveClearSamplesTitle": "Да се изчистят ли wardrive семплите?",
+  "map_wardriveClearSamplesConfirm": "Това ще изтрие {count} запазени семпли от устройството.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive семплите са изчистени.",
+  "channelPath_outgoingSentByRadioAt": "Изчакване за предаване по радио, сек"
 }

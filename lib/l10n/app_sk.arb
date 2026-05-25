@@ -2379,5 +2379,268 @@
   "settings_companionDebugLogSubtitle": "Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB",
   "settings_companionDebugLog": "Logovanie pre ladenie (sprievodný log)",
   "chat_newMessages": "Nové správy",
-  "repeater_chanUtil": "Využitie kanálu"
+  "repeater_chanUtil": "Využitie kanálu",
+  "settings_quickAnswersSendAtSelect": "Odoslať pri výbere",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Spustiť",
+  "map_wardriveStop": "Zastaviť",
+  "map_wardriveZeroHopDiscovery": "Zero-hop zisťovanie",
+  "map_wardriveDiscoverySent": "Požiadavka wardrive zisťovania bola odoslaná.",
+  "map_wardriveUploadCancelled": "Nahrávanie wardrive bolo zrušené.",
+  "map_wardriveDiscoveryFailed": "Wardrive zisťovanie zlyhalo: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Požiadavky: {requests}  Odpovede: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Posledná požiadavka: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS telefónu: zatiaľ neaktualizované",
+  "map_wardrivePhoneGpsError": "GPS telefónu: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS telefónu: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Zatiaľ žiadne odpovede zisťovania.",
+  "map_wardriveDataTooltip": "Wardrive údaje",
+  "map_wardriveUploadData": "Nahrať údaje",
+  "map_wardriveManageUploadSites": "Spravovať nahrávacie stránky",
+  "map_wardriveAutoUpload": "Automatické nahrávanie",
+  "map_wardriveScreenWakelock": "Wakelock obrazovky",
+  "map_wardriveExport": "Export",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Automatické zisťovanie",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Uložené vzorky: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Automatické zisťovanie: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Uloženie vzorky: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Bunky pokrytia: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Automatické nahrávanie zapnuté.",
+  "map_wardriveAutoUploadDisabled": "Automatické nahrávanie vypnuté.",
+  "map_wardriveNoSamplesToUpload": "Žiadne wardrive vzorky na nahranie.",
+  "map_wardriveUploadingSamples": "Nahrávanie vzoriek...",
+  "map_wardriveUploadingTo": "Nahrávanie na {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Dávka {current} z {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Odosielanie {sent} z {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cieľ: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Čakanie na pripojenie",
+  "map_wardriveUploadConnectionEstablished": "Pripojenie nadviazané, nahrávanie",
+  "map_wardriveUploadProcessingServer": "Údaje nahrané, server spracúva",
+  "map_wardriveUploadServerResponse": "Server spracoval údaje, odpoveď {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Nahrávanie prekročilo čas; pre túto stránku označené ako odoslané",
+  "map_wardriveUploadServerError": "Chyba servera {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Chyba nahrávania: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Nahrávanie wardrive zlyhalo: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Nahrávanie dokončené",
+  "map_wardriveUploadResults": "Výsledky nahrávania",
+  "map_wardriveSamplesUploaded": "Nahrané vzorky: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Vyberte stránky na nahranie:",
+  "map_wardriveNoUploadSitesConfigured": "Nie sú nakonfigurované žiadne nahrávacie stránky",
+  "map_wardriveAddSite": "Pridať stránku",
+  "map_wardriveUploadSitesUpdated": "Nahrávacie stránky aktualizované.",
+  "map_wardriveAddUploadSite": "Pridať nahrávaciu stránku",
+  "map_wardriveEditUploadSite": "Upraviť nahrávaciu stránku",
+  "map_wardriveNameLabel": "Názov",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Veľkosť dávky nahrávania",
+  "map_wardriveUploadBatchSizeInvalid": "Použite hodnotu od {min} do {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Považovať timeout za úspech",
+  "map_wardriveNameRequired": "Názov je povinný",
+  "map_wardriveNameExists": "Názov už existuje",
+  "map_wardriveValidUrlRequired": "Vyžaduje sa platná URL",
+  "map_wardriveDeleteSite": "Odstrániť stránku",
+  "map_wardriveDeleteSiteConfirm": "Odstrániť „{name}“?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Žiadne wardrive vzorky na export.",
+  "map_wardriveExportShareText": "wardrive vzorky meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive vzorky exportované ako JSON súbor.",
+  "map_wardriveExportFailed": "Export wardrive zlyhal: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importovať wardrive vzorky",
+  "map_wardriveImportHint": "Sem vložte exportovaný wardrive JSON",
+  "map_wardriveNoNewSamplesImported": "Neboli importované žiadne nové wardrive vzorky.",
+  "map_wardriveSamplesImported": "Importované wardrive vzorky: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Import wardrive zlyhal: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Žiadne wardrive vzorky na vymazanie.",
+  "map_wardriveClearSamplesTitle": "Vymazať wardrive vzorky?",
+  "map_wardriveClearSamplesConfirm": "Týmto sa z tohto zariadenia odstráni {count} uložených vzoriek.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive vzorky vymazané.",
+  "channelPath_outgoingSentByRadioAt": "Čakanie na prenos rádiom, s"
 }

@@ -1684,5 +1684,266 @@
   "repeater_cliHelpStatsCore": "(Только для серийного оборудования) Отображает основные статистические данные прошивки.",
   "settings_companionDebugLogSubtitle": "Команды, ответы и необработанные данные, используемые для протоколов BLE, TCP и USB.",
   "repeater_chanUtil": "Использование канала",
-  "settings_companionDebugLog": "Журнал отладки (для сопутствующего приложения)"
+  "settings_companionDebugLog": "Журнал отладки (для сопутствующего приложения)",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Старт",
+  "map_wardriveStop": "Стоп",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Запрос wardrive discovery отправлен.",
+  "map_wardriveUploadCancelled": "Выгрузка wardrive отменена.",
+  "map_wardriveDiscoveryFailed": "Wardrive discovery не удалось: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Запросы: {requests}  Ответы: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Последний запрос: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS телефона: ещё не обновлялся",
+  "map_wardrivePhoneGpsError": "GPS телефона: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS телефона: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Ответов discovery пока нет.",
+  "map_wardriveDataTooltip": "Данные wardrive",
+  "map_wardriveUploadData": "Выгрузить данные",
+  "map_wardriveManageUploadSites": "Управление сайтами выгрузки",
+  "map_wardriveAutoUpload": "Автовыгрузка",
+  "map_wardriveScreenWakelock": "Не гасить экран",
+  "map_wardriveExport": "Экспорт",
+  "map_wardriveImport": "Импорт",
+  "map_wardriveAutoDiscovery": "Авто discovery",
+  "map_wardriveSecondsSuffix": "?",
+  "map_wardriveSamplesSaved": "Сэмплов сохранено: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Авто discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Сохранение сэмпла: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Ячеек покрытия: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Автовыгрузка включена.",
+  "map_wardriveAutoUploadDisabled": "Автовыгрузка выключена.",
+  "map_wardriveNoSamplesToUpload": "Нет wardrive-сэмплов для выгрузки.",
+  "map_wardriveUploadingSamples": "Выгрузка сэмплов...",
+  "map_wardriveUploadingTo": "Выгрузка на {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Пакет {current} из {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Отправка {sent} из {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Цель: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Ожидание соединения",
+  "map_wardriveUploadConnectionEstablished": "Соединение установлено, выгрузка",
+  "map_wardriveUploadProcessingServer": "Данные выгружены, сервер обрабатывает",
+  "map_wardriveUploadServerResponse": "Сервер обработал данные, ответ {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Выгрузка превысила таймаут; отмечено как отправленное для этого сайта",
+  "map_wardriveUploadServerError": "Ошибка сервера {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Ошибка выгрузки: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Выгрузка wardrive не удалась: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Выгрузка завершена",
+  "map_wardriveUploadResults": "Результаты выгрузки",
+  "map_wardriveSamplesUploaded": "Выгружено сэмплов: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Выберите сайты для выгрузки:",
+  "map_wardriveNoUploadSitesConfigured": "Сайты выгрузки не настроены",
+  "map_wardriveAddSite": "Добавить сайт",
+  "map_wardriveUploadSitesUpdated": "Сайты выгрузки обновлены.",
+  "map_wardriveAddUploadSite": "Добавить сайт выгрузки",
+  "map_wardriveEditUploadSite": "Изменить сайт выгрузки",
+  "map_wardriveNameLabel": "Название",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Размер пакета выгрузки",
+  "map_wardriveUploadBatchSizeInvalid": "Используйте значение от {min} до {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Считать таймаут успехом",
+  "map_wardriveNameRequired": "Название обязательно",
+  "map_wardriveNameExists": "Название уже существует",
+  "map_wardriveValidUrlRequired": "Требуется корректный URL",
+  "map_wardriveDeleteSite": "Удалить сайт",
+  "map_wardriveDeleteSiteConfirm": "Удалить «{name}»?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Нет wardrive-сэмплов для экспорта.",
+  "map_wardriveExportShareText": "wardrive-сэмплы meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive-сэмплы экспортированы в JSON-файл.",
+  "map_wardriveExportFailed": "Экспорт wardrive не удался: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Импорт wardrive-сэмплов",
+  "map_wardriveImportHint": "Вставьте экспортированный wardrive JSON сюда",
+  "map_wardriveNoNewSamplesImported": "Новых wardrive-сэмплов не импортировано.",
+  "map_wardriveSamplesImported": "Импортировано wardrive-сэмплов: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Импорт wardrive не удался: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Нет wardrive-сэмплов для очистки.",
+  "map_wardriveClearSamplesTitle": "Очистить wardrive-сэмплы?",
+  "map_wardriveClearSamplesConfirm": "Это удалит {count} сохранённых сэмплов с этого устройства.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive-сэмплы очищены."
 }

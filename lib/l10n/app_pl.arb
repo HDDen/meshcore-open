@@ -2417,5 +2417,268 @@
   "settings_companionDebugLogSubtitle": "Polecenia, odpowiedzi i surowe dane związane z protokołami BLE/TCP/USB",
   "chat_markAsUnread": "Oznacz jako nieprzeczytane",
   "settings_companionDebugLog": "Log debugowania (dla pomocy w rozwiązywaniu problemów)",
-  "repeater_chanUtil": "Wykorzystanie kanału"
+  "repeater_chanUtil": "Wykorzystanie kanału",
+  "settings_quickAnswersSendAtSelect": "Wyślij po wybraniu",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Start",
+  "map_wardriveStop": "Stop",
+  "map_wardriveZeroHopDiscovery": "Wykrywanie zero-hop",
+  "map_wardriveDiscoverySent": "Wysłano żądanie wykrywania wardrive.",
+  "map_wardriveUploadCancelled": "Przesyłanie wardrive anulowane.",
+  "map_wardriveDiscoveryFailed": "Wykrywanie wardrive nie powiodło się: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Żądania: {requests}  Odpowiedzi: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Ostatnie żądanie: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS telefonu: jeszcze nie zaktualizowano",
+  "map_wardrivePhoneGpsError": "GPS telefonu: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS telefonu: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Brak odpowiedzi wykrywania.",
+  "map_wardriveDataTooltip": "Dane wardrive",
+  "map_wardriveUploadData": "Prześlij dane",
+  "map_wardriveManageUploadSites": "Zarządzaj witrynami przesyłania",
+  "map_wardriveAutoUpload": "Automatyczne przesyłanie",
+  "map_wardriveScreenWakelock": "Blokada wygaszania ekranu",
+  "map_wardriveExport": "Eksport",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Automatyczne wykrywanie",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Zapisane próbki: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Automatyczne wykrywanie: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Zapis próbki: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Komórki pokrycia: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Automatyczne przesyłanie włączone.",
+  "map_wardriveAutoUploadDisabled": "Automatyczne przesyłanie wyłączone.",
+  "map_wardriveNoSamplesToUpload": "Brak próbek wardrive do przesłania.",
+  "map_wardriveUploadingSamples": "Przesyłanie próbek...",
+  "map_wardriveUploadingTo": "Przesyłanie do {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Partia {current} z {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Wysyłanie {sent} z {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cel: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Oczekiwanie na połączenie",
+  "map_wardriveUploadConnectionEstablished": "Połączenie ustanowione, przesyłanie",
+  "map_wardriveUploadProcessingServer": "Dane przesłane, serwer przetwarza",
+  "map_wardriveUploadServerResponse": "Serwer przetworzył dane, odpowiedź {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Przesyłanie przekroczyło czas; oznaczono jako wysłane dla tej witryny",
+  "map_wardriveUploadServerError": "Błąd serwera {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Błąd przesyłania: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Przesyłanie wardrive nie powiodło się: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Przesyłanie zakończone",
+  "map_wardriveUploadResults": "Wyniki przesyłania",
+  "map_wardriveSamplesUploaded": "Przesłano próbek: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Wybierz witryny do przesyłania:",
+  "map_wardriveNoUploadSitesConfigured": "Nie skonfigurowano witryn przesyłania",
+  "map_wardriveAddSite": "Dodaj witrynę",
+  "map_wardriveUploadSitesUpdated": "Witryny przesyłania zaktualizowane.",
+  "map_wardriveAddUploadSite": "Dodaj witrynę przesyłania",
+  "map_wardriveEditUploadSite": "Edytuj witrynę przesyłania",
+  "map_wardriveNameLabel": "Nazwa",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Rozmiar partii przesyłania",
+  "map_wardriveUploadBatchSizeInvalid": "Użyj wartości od {min} do {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Traktuj timeout jako sukces",
+  "map_wardriveNameRequired": "Nazwa jest wymagana",
+  "map_wardriveNameExists": "Nazwa już istnieje",
+  "map_wardriveValidUrlRequired": "Wymagany jest prawidłowy URL",
+  "map_wardriveDeleteSite": "Usuń witrynę",
+  "map_wardriveDeleteSiteConfirm": "Usunąć „{name}”?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Brak próbek wardrive do eksportu.",
+  "map_wardriveExportShareText": "próbki wardrive meshcore-open",
+  "map_wardriveSamplesExported": "Próbki wardrive wyeksportowane jako plik JSON.",
+  "map_wardriveExportFailed": "Eksport wardrive nie powiódł się: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importuj próbki wardrive",
+  "map_wardriveImportHint": "Wklej tutaj wyeksportowany JSON wardrive",
+  "map_wardriveNoNewSamplesImported": "Nie zaimportowano nowych próbek wardrive.",
+  "map_wardriveSamplesImported": "Zaimportowano próbek wardrive: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Import wardrive nie powiódł się: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Brak próbek wardrive do wyczyszczenia.",
+  "map_wardriveClearSamplesTitle": "Wyczyścić próbki wardrive?",
+  "map_wardriveClearSamplesConfirm": "Spowoduje to usunięcie {count} zapisanych próbek z tego urządzenia.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Próbki wardrive wyczyszczone.",
+  "channelPath_outgoingSentByRadioAt": "Oczekiwanie na transmisję radiową, s"
 }

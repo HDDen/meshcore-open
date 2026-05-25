@@ -2379,5 +2379,268 @@
   "chat_markAsUnread": "Označiti kot neneobdelano",
   "chat_newMessages": "Nove novice",
   "settings_companionDebugLogSubtitle": "Navodila, odgovori in surova podatka za BLE/TCP/USB.",
-  "repeater_chanUtil": "Uporaba kanala"
+  "repeater_chanUtil": "Uporaba kanala",
+  "settings_quickAnswersSendAtSelect": "Pošlji ob izbiri",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Začni",
+  "map_wardriveStop": "Ustavi",
+  "map_wardriveZeroHopDiscovery": "Zero-hop odkrivanje",
+  "map_wardriveDiscoverySent": "Zahteva za wardrive odkrivanje je poslana.",
+  "map_wardriveUploadCancelled": "Nalaganje wardrive je preklicano.",
+  "map_wardriveDiscoveryFailed": "Wardrive odkrivanje ni uspelo: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Zahteve: {requests}  Odgovori: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Zadnja zahteva: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS telefona: še ni posodobljen",
+  "map_wardrivePhoneGpsError": "GPS telefona: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS telefona: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Ni še odgovorov odkrivanja.",
+  "map_wardriveDataTooltip": "Wardrive podatki",
+  "map_wardriveUploadData": "Naloži podatke",
+  "map_wardriveManageUploadSites": "Upravljanje mest za nalaganje",
+  "map_wardriveAutoUpload": "Samodejno nalaganje",
+  "map_wardriveScreenWakelock": "Wakelock zaslona",
+  "map_wardriveExport": "Izvoz",
+  "map_wardriveImport": "Uvoz",
+  "map_wardriveAutoDiscovery": "Samodejno odkrivanje",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Shranjeni vzorci: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Samodejno odkrivanje: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Shranjevanje vzorca: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Celice pokritosti: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Samodejno nalaganje omogočeno.",
+  "map_wardriveAutoUploadDisabled": "Samodejno nalaganje onemogočeno.",
+  "map_wardriveNoSamplesToUpload": "Ni wardrive vzorcev za nalaganje.",
+  "map_wardriveUploadingSamples": "Nalaganje vzorcev...",
+  "map_wardriveUploadingTo": "Nalaganje na {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Paket {current} od {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Pošiljanje {sent} od {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cilj: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Čakanje na povezavo",
+  "map_wardriveUploadConnectionEstablished": "Povezava vzpostavljena, nalaganje",
+  "map_wardriveUploadProcessingServer": "Podatki naloženi, strežnik obdeluje",
+  "map_wardriveUploadServerResponse": "Strežnik je obdelal podatke, odgovor {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Nalaganje je poteklo; za to mesto označeno kot poslano",
+  "map_wardriveUploadServerError": "Napaka strežnika {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Napaka nalaganja: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Nalaganje wardrive ni uspelo: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Nalaganje končano",
+  "map_wardriveUploadResults": "Rezultati nalaganja",
+  "map_wardriveSamplesUploaded": "Naloženih vzorcev: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Izberite mesta za nalaganje:",
+  "map_wardriveNoUploadSitesConfigured": "Ni nastavljenih mest za nalaganje",
+  "map_wardriveAddSite": "Dodaj mesto",
+  "map_wardriveUploadSitesUpdated": "Mesta za nalaganje posodobljena.",
+  "map_wardriveAddUploadSite": "Dodaj mesto za nalaganje",
+  "map_wardriveEditUploadSite": "Uredi mesto za nalaganje",
+  "map_wardriveNameLabel": "Ime",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Velikost paketa nalaganja",
+  "map_wardriveUploadBatchSizeInvalid": "Uporabite vrednost od {min} do {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Časovno omejitev obravnavaj kot uspeh",
+  "map_wardriveNameRequired": "Ime je obvezno",
+  "map_wardriveNameExists": "Ime že obstaja",
+  "map_wardriveValidUrlRequired": "Zahtevan je veljaven URL",
+  "map_wardriveDeleteSite": "Izbriši mesto",
+  "map_wardriveDeleteSiteConfirm": "Izbrisati »{name}«?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Ni wardrive vzorcev za izvoz.",
+  "map_wardriveExportShareText": "wardrive vzorci meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive vzorci izvoženi kot JSON datoteka.",
+  "map_wardriveExportFailed": "Izvoz wardrive ni uspel: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Uvozi wardrive vzorce",
+  "map_wardriveImportHint": "Sem prilepite izvoženi wardrive JSON",
+  "map_wardriveNoNewSamplesImported": "Ni bilo uvoženih novih wardrive vzorcev.",
+  "map_wardriveSamplesImported": "Uvoženih wardrive vzorcev: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Uvoz wardrive ni uspel: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Ni wardrive vzorcev za brisanje.",
+  "map_wardriveClearSamplesTitle": "Izbrisati wardrive vzorce?",
+  "map_wardriveClearSamplesConfirm": "To bo iz te naprave izbrisalo {count} shranjenih vzorcev.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive vzorci izbrisani.",
+  "channelPath_outgoingSentByRadioAt": "Čakanje na prenos prek radia, s"
 }

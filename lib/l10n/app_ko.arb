@@ -2417,5 +2417,268 @@
   "chat_newMessages": "새로운 메시지",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 명령어, 응답 및 원시 데이터",
   "chat_markAsUnread": "미리 읽지 않음으로 표시",
-  "repeater_chanUtil": "채널 활용도"
+  "repeater_chanUtil": "채널 활용도",
+  "settings_quickAnswersSendAtSelect": "선택 시 전송",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "시작",
+  "map_wardriveStop": "중지",
+  "map_wardriveZeroHopDiscovery": "제로 홉 탐색",
+  "map_wardriveDiscoverySent": "Wardrive 탐색 요청을 보냈습니다.",
+  "map_wardriveUploadCancelled": "Wardrive 업로드가 취소되었습니다.",
+  "map_wardriveDiscoveryFailed": "Wardrive 탐색 실패: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "요청: {requests}  응답: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "마지막 요청: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "휴대폰 GPS: 아직 업데이트되지 않음",
+  "map_wardrivePhoneGpsError": "휴대폰 GPS: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "휴대폰 GPS: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "아직 탐색 응답이 없습니다.",
+  "map_wardriveDataTooltip": "Wardrive 데이터",
+  "map_wardriveUploadData": "데이터 업로드",
+  "map_wardriveManageUploadSites": "업로드 사이트 관리",
+  "map_wardriveAutoUpload": "자동 업로드",
+  "map_wardriveScreenWakelock": "화면 꺼짐 방지",
+  "map_wardriveExport": "내보내기",
+  "map_wardriveImport": "가져오기",
+  "map_wardriveAutoDiscovery": "자동 탐색",
+  "map_wardriveSecondsSuffix": "초",
+  "map_wardriveSamplesSaved": "저장된 샘플: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "자동 탐색: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "샘플 저장: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "커버리지 셀: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "자동 업로드가 활성화되었습니다.",
+  "map_wardriveAutoUploadDisabled": "자동 업로드가 비활성화되었습니다.",
+  "map_wardriveNoSamplesToUpload": "업로드할 wardrive 샘플이 없습니다.",
+  "map_wardriveUploadingSamples": "샘플 업로드 중...",
+  "map_wardriveUploadingTo": "{site}에 업로드 중...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "배치 {current}/{total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "{sent}/{total} 전송 중",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "대상: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "연결 대기 중",
+  "map_wardriveUploadConnectionEstablished": "연결됨, 업로드 중",
+  "map_wardriveUploadProcessingServer": "데이터 업로드 완료, 서버 처리 중",
+  "map_wardriveUploadServerResponse": "서버 처리 완료, 응답 {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "업로드 시간이 초과되었습니다. 이 사이트에서는 전송됨으로 표시합니다",
+  "map_wardriveUploadServerError": "서버 오류 {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "업로드 오류: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive 업로드 실패: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "업로드 완료",
+  "map_wardriveUploadResults": "업로드 결과",
+  "map_wardriveSamplesUploaded": "{count}개 샘플 업로드됨",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "업로드할 사이트 선택:",
+  "map_wardriveNoUploadSitesConfigured": "설정된 업로드 사이트가 없습니다",
+  "map_wardriveAddSite": "사이트 추가",
+  "map_wardriveUploadSitesUpdated": "업로드 사이트가 업데이트되었습니다.",
+  "map_wardriveAddUploadSite": "업로드 사이트 추가",
+  "map_wardriveEditUploadSite": "업로드 사이트 편집",
+  "map_wardriveNameLabel": "이름",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "업로드 배치 크기",
+  "map_wardriveUploadBatchSizeInvalid": "{min}부터 {max}까지의 값을 사용하세요",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "시간 초과를 성공으로 처리",
+  "map_wardriveNameRequired": "이름은 필수입니다",
+  "map_wardriveNameExists": "이름이 이미 있습니다",
+  "map_wardriveValidUrlRequired": "유효한 URL이 필요합니다",
+  "map_wardriveDeleteSite": "사이트 삭제",
+  "map_wardriveDeleteSiteConfirm": "「{name}」을 삭제할까요?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "내보낼 wardrive 샘플이 없습니다.",
+  "map_wardriveExportShareText": "meshcore-open wardrive 샘플",
+  "map_wardriveSamplesExported": "Wardrive 샘플을 JSON 파일로 내보냈습니다.",
+  "map_wardriveExportFailed": "Wardrive 내보내기 실패: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Wardrive 샘플 가져오기",
+  "map_wardriveImportHint": "내보낸 wardrive JSON을 여기에 붙여넣으세요",
+  "map_wardriveNoNewSamplesImported": "새 wardrive 샘플을 가져오지 않았습니다.",
+  "map_wardriveSamplesImported": "Wardrive 샘플 {count}개를 가져왔습니다.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive 가져오기 실패: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "지울 wardrive 샘플이 없습니다.",
+  "map_wardriveClearSamplesTitle": "Wardrive 샘플을 지울까요?",
+  "map_wardriveClearSamplesConfirm": "이 기기에서 저장된 샘플 {count}개가 삭제됩니다.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive 샘플이 지워졌습니다.",
+  "channelPath_outgoingSentByRadioAt": "무선 전송 대기, 초"
 }

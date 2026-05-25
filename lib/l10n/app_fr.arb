@@ -2386,5 +2386,268 @@
   "chat_markAsUnread": "Signaler comme non lu",
   "chat_newMessages": "Nouveaux messages",
   "settings_companionDebugLogSubtitle": "Commandes, réponses et données brutes pour les protocoles BLE/TCP/USB",
-  "repeater_chanUtil": "Utilisation du canal"
+  "repeater_chanUtil": "Utilisation du canal",
+  "settings_quickAnswersSendAtSelect": "Envoyer à la sélection",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Démarrer",
+  "map_wardriveStop": "Arrêter",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Requête de discovery wardrive envoyée.",
+  "map_wardriveUploadCancelled": "Téléversement wardrive annulé.",
+  "map_wardriveDiscoveryFailed": "Discovery wardrive échouée : {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Requêtes : {requests}  Réponses : {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Dernière requête : {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS du téléphone : pas encore mis à jour",
+  "map_wardrivePhoneGpsError": "GPS du téléphone : {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS du téléphone : {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Aucune réponse de discovery pour le moment.",
+  "map_wardriveDataTooltip": "Données wardrive",
+  "map_wardriveUploadData": "Téléverser les données",
+  "map_wardriveManageUploadSites": "Gérer les sites de téléversement",
+  "map_wardriveAutoUpload": "Téléversement auto",
+  "map_wardriveScreenWakelock": "Wakelock écran",
+  "map_wardriveExport": "Exporter",
+  "map_wardriveImport": "Importer",
+  "map_wardriveAutoDiscovery": "Discovery auto",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Échantillons enregistrés : {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Discovery auto : {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Enregistrement échantillon : {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Cellules de couverture : {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Téléversement auto activé.",
+  "map_wardriveAutoUploadDisabled": "Téléversement auto désactivé.",
+  "map_wardriveNoSamplesToUpload": "Aucun échantillon wardrive à téléverser.",
+  "map_wardriveUploadingSamples": "Téléversement des échantillons...",
+  "map_wardriveUploadingTo": "Téléversement vers {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Lot {current} sur {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Envoi {sent} sur {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cible : {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Attente de connexion",
+  "map_wardriveUploadConnectionEstablished": "Connexion établie, téléversement",
+  "map_wardriveUploadProcessingServer": "Données téléversées, traitement serveur",
+  "map_wardriveUploadServerResponse": "Serveur a traité les données, réponse {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Téléversement expiré ; marqué comme envoyé pour ce site",
+  "map_wardriveUploadServerError": "Erreur serveur {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Erreur de téléversement : {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Téléversement wardrive échoué : {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Téléversement terminé",
+  "map_wardriveUploadResults": "Résultats du téléversement",
+  "map_wardriveSamplesUploaded": "{count} échantillons téléversés",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Sélectionnez les sites de téléversement :",
+  "map_wardriveNoUploadSitesConfigured": "Aucun site de téléversement configuré",
+  "map_wardriveAddSite": "Ajouter un site",
+  "map_wardriveUploadSitesUpdated": "Sites de téléversement mis à jour.",
+  "map_wardriveAddUploadSite": "Ajouter un site de téléversement",
+  "map_wardriveEditUploadSite": "Modifier le site de téléversement",
+  "map_wardriveNameLabel": "Nom",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Taille du lot de téléversement",
+  "map_wardriveUploadBatchSizeInvalid": "Utilisez une valeur de {min} à {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Traiter le timeout comme un succès",
+  "map_wardriveNameRequired": "Le nom est requis",
+  "map_wardriveNameExists": "Le nom existe déjà",
+  "map_wardriveValidUrlRequired": "URL valide requise",
+  "map_wardriveDeleteSite": "Supprimer le site",
+  "map_wardriveDeleteSiteConfirm": "Supprimer « {name} » ?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Aucun échantillon wardrive à exporter.",
+  "map_wardriveExportShareText": "échantillons wardrive meshcore-open",
+  "map_wardriveSamplesExported": "Échantillons wardrive exportés en fichier JSON.",
+  "map_wardriveExportFailed": "Export wardrive échoué : {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importer des échantillons wardrive",
+  "map_wardriveImportHint": "Collez ici le JSON wardrive exporté",
+  "map_wardriveNoNewSamplesImported": "Aucun nouvel échantillon wardrive importé.",
+  "map_wardriveSamplesImported": "{count} échantillons wardrive importés.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Import wardrive échoué : {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Aucun échantillon wardrive à effacer.",
+  "map_wardriveClearSamplesTitle": "Effacer les échantillons wardrive ?",
+  "map_wardriveClearSamplesConfirm": "Cela supprimera {count} échantillons enregistrés de cet appareil.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Échantillons wardrive effacés.",
+  "channelPath_outgoingSentByRadioAt": "Attente de transmission radio, s"
 }

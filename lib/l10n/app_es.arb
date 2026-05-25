@@ -2407,5 +2407,268 @@
   "chat_newMessages": "Nuevos mensajes",
   "settings_companionDebugLogSubtitle": "Comandos, respuestas y datos brutos para protocolos BLE/TCP/USB",
   "chat_markAsUnread": "Marcar como no leído",
-  "repeater_chanUtil": "Utilización del canal"
+  "repeater_chanUtil": "Utilización del canal",
+  "settings_quickAnswersSendAtSelect": "Enviar al seleccionar",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Iniciar",
+  "map_wardriveStop": "Detener",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Solicitud de discovery wardrive enviada.",
+  "map_wardriveUploadCancelled": "Carga de wardrive cancelada.",
+  "map_wardriveDiscoveryFailed": "Discovery wardrive falló: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Solicitudes: {requests}  Respuestas: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Última solicitud: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS del teléfono: aún no actualizado",
+  "map_wardrivePhoneGpsError": "GPS del teléfono: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS del teléfono: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Aún no hay respuestas de discovery.",
+  "map_wardriveDataTooltip": "Datos de wardrive",
+  "map_wardriveUploadData": "Subir datos",
+  "map_wardriveManageUploadSites": "Gestionar sitios de subida",
+  "map_wardriveAutoUpload": "Subida automática",
+  "map_wardriveScreenWakelock": "Wakelock de pantalla",
+  "map_wardriveExport": "Exportar",
+  "map_wardriveImport": "Importar",
+  "map_wardriveAutoDiscovery": "Discovery automático",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Muestras guardadas: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Discovery automático: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Guardado de muestra: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Celdas de cobertura: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Subida automática activada.",
+  "map_wardriveAutoUploadDisabled": "Subida automática desactivada.",
+  "map_wardriveNoSamplesToUpload": "No hay muestras wardrive para subir.",
+  "map_wardriveUploadingSamples": "Subiendo muestras...",
+  "map_wardriveUploadingTo": "Subiendo a {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Lote {current} de {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Enviando {sent} de {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Destino: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Esperando conexión",
+  "map_wardriveUploadConnectionEstablished": "Conexión establecida, subiendo",
+  "map_wardriveUploadProcessingServer": "Datos subidos, procesando en servidor",
+  "map_wardriveUploadServerResponse": "Servidor procesó los datos, respuesta {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "La subida agotó el tiempo; marcada como enviada para este sitio",
+  "map_wardriveUploadServerError": "Error del servidor {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Error de subida: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Subida wardrive fallida: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Subida completa",
+  "map_wardriveUploadResults": "Resultados de subida",
+  "map_wardriveSamplesUploaded": "{count} muestras subidas",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Selecciona sitios para subir:",
+  "map_wardriveNoUploadSitesConfigured": "No hay sitios de subida configurados",
+  "map_wardriveAddSite": "Añadir sitio",
+  "map_wardriveUploadSitesUpdated": "Sitios de subida actualizados.",
+  "map_wardriveAddUploadSite": "Añadir sitio de subida",
+  "map_wardriveEditUploadSite": "Editar sitio de subida",
+  "map_wardriveNameLabel": "Nombre",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Tamaño de lote de subida",
+  "map_wardriveUploadBatchSizeInvalid": "Usa un valor de {min} a {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Tratar timeout como éxito",
+  "map_wardriveNameRequired": "El nombre es obligatorio",
+  "map_wardriveNameExists": "El nombre ya existe",
+  "map_wardriveValidUrlRequired": "Se requiere una URL válida",
+  "map_wardriveDeleteSite": "Eliminar sitio",
+  "map_wardriveDeleteSiteConfirm": "¿Eliminar «{name}»?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "No hay muestras wardrive para exportar.",
+  "map_wardriveExportShareText": "muestras wardrive de meshcore-open",
+  "map_wardriveSamplesExported": "Muestras wardrive exportadas como archivo JSON.",
+  "map_wardriveExportFailed": "Exportación wardrive fallida: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importar muestras wardrive",
+  "map_wardriveImportHint": "Pega aquí el JSON wardrive exportado",
+  "map_wardriveNoNewSamplesImported": "No se importaron muestras wardrive nuevas.",
+  "map_wardriveSamplesImported": "Se importaron {count} muestras wardrive.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Importación wardrive fallida: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "No hay muestras wardrive para borrar.",
+  "map_wardriveClearSamplesTitle": "¿Borrar muestras wardrive?",
+  "map_wardriveClearSamplesConfirm": "Esto eliminará {count} muestras guardadas de este dispositivo.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Muestras wardrive borradas.",
+  "channelPath_outgoingSentByRadioAt": "Esperando transmisión por radio, s"
 }

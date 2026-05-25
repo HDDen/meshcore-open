@@ -2417,5 +2417,268 @@
   "settings_companionDebugLog": "同伴デバッグログ",
   "chat_newMessages": "新しいメッセージ",
   "chat_markAsUnread": "未読としてマークする",
-  "repeater_chanUtil": "チャンネルの利用状況"
+  "repeater_chanUtil": "チャンネルの利用状況",
+  "settings_quickAnswersSendAtSelect": "選択時に送信",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "開始",
+  "map_wardriveStop": "停止",
+  "map_wardriveZeroHopDiscovery": "ゼロホップ探索",
+  "map_wardriveDiscoverySent": "Wardrive 探索リクエストを送信しました。",
+  "map_wardriveUploadCancelled": "Wardrive アップロードをキャンセルしました。",
+  "map_wardriveDiscoveryFailed": "Wardrive 探索に失敗しました: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "リクエスト: {requests}  応答: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "最終リクエスト: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "電話の GPS: まだ更新されていません",
+  "map_wardrivePhoneGpsError": "電話の GPS: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "電話の GPS: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "探索応答はまだありません。",
+  "map_wardriveDataTooltip": "Wardrive データ",
+  "map_wardriveUploadData": "データをアップロード",
+  "map_wardriveManageUploadSites": "アップロード先を管理",
+  "map_wardriveAutoUpload": "自動アップロード",
+  "map_wardriveScreenWakelock": "画面をスリープさせない",
+  "map_wardriveExport": "エクスポート",
+  "map_wardriveImport": "インポート",
+  "map_wardriveAutoDiscovery": "自動探索",
+  "map_wardriveSecondsSuffix": "秒",
+  "map_wardriveSamplesSaved": "保存済みサンプル: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "自動探索: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "サンプル保存: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "カバレッジセル: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "自動アップロードを有効にしました。",
+  "map_wardriveAutoUploadDisabled": "自動アップロードを無効にしました。",
+  "map_wardriveNoSamplesToUpload": "アップロードする wardrive サンプルはありません。",
+  "map_wardriveUploadingSamples": "サンプルをアップロード中...",
+  "map_wardriveUploadingTo": "{site} にアップロード中...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "バッチ {current}/{total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "{sent}/{total} を送信中",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "送信先: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "接続を待機中",
+  "map_wardriveUploadConnectionEstablished": "接続完了、アップロード中",
+  "map_wardriveUploadProcessingServer": "データ送信完了、サーバー処理中",
+  "map_wardriveUploadServerResponse": "サーバー処理完了、応答 {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "アップロードがタイムアウトしました。このサイトでは送信済みとして扱います",
+  "map_wardriveUploadServerError": "サーバーエラー {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "アップロードエラー: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive アップロードに失敗しました: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "アップロード完了",
+  "map_wardriveUploadResults": "アップロード結果",
+  "map_wardriveSamplesUploaded": "{count} 件のサンプルをアップロードしました",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "アップロード先を選択:",
+  "map_wardriveNoUploadSitesConfigured": "アップロード先が設定されていません",
+  "map_wardriveAddSite": "サイトを追加",
+  "map_wardriveUploadSitesUpdated": "アップロード先を更新しました。",
+  "map_wardriveAddUploadSite": "アップロード先を追加",
+  "map_wardriveEditUploadSite": "アップロード先を編集",
+  "map_wardriveNameLabel": "名前",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "アップロードバッチサイズ",
+  "map_wardriveUploadBatchSizeInvalid": "{min} から {max} の値を使用してください",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "タイムアウトを成功として扱う",
+  "map_wardriveNameRequired": "名前は必須です",
+  "map_wardriveNameExists": "名前は既に存在します",
+  "map_wardriveValidUrlRequired": "有効な URL が必要です",
+  "map_wardriveDeleteSite": "サイトを削除",
+  "map_wardriveDeleteSiteConfirm": "「{name}」を削除しますか?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "エクスポートする wardrive サンプルはありません。",
+  "map_wardriveExportShareText": "meshcore-open wardrive サンプル",
+  "map_wardriveSamplesExported": "Wardrive サンプルを JSON ファイルとしてエクスポートしました。",
+  "map_wardriveExportFailed": "Wardrive エクスポートに失敗しました: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Wardrive サンプルをインポート",
+  "map_wardriveImportHint": "エクスポートした wardrive JSON をここに貼り付け",
+  "map_wardriveNoNewSamplesImported": "新しい wardrive サンプルはインポートされませんでした。",
+  "map_wardriveSamplesImported": "{count} 件の wardrive サンプルをインポートしました。",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive インポートに失敗しました: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "削除する wardrive サンプルはありません。",
+  "map_wardriveClearSamplesTitle": "Wardrive サンプルを削除しますか?",
+  "map_wardriveClearSamplesConfirm": "この端末から保存済みサンプル {count} 件を削除します。",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive サンプルを削除しました。",
+  "channelPath_outgoingSentByRadioAt": "無線送信待ち、秒"
 }
