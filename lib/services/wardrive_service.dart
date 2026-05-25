@@ -247,6 +247,13 @@ class WardriveService extends ChangeNotifier {
     int? pendingTag;
     try {
       await _updateNodeLocationFromPhone();
+      if (_lastPhoneLatitude == null || _lastPhoneLongitude == null) {
+        // Wardrive pings are location-bound measurements; skip the radio
+        // request if the phone did not provide a fresh GPS fix for this point.
+        throw StateError(
+          _lastLocationError ?? 'Phone GPS is not available for this request',
+        );
+      }
       if (!startWardrive &&
           _lastPhoneLatitude != null &&
           _lastPhoneLongitude != null) {
@@ -349,7 +356,7 @@ class WardriveService extends ChangeNotifier {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 8),
+          timeLimit: Duration(seconds: 15),
         ),
       );
       _lastPhoneLatitude = position.latitude;
@@ -359,6 +366,11 @@ class WardriveService extends ChangeNotifier {
       // Wardrive samples use the phone position as local measurement context;
       // do not write it into the connected node's advertised coordinates.
     } catch (error) {
+      // Do not reuse stale phone coordinates for wardrive samples if iOS/Android
+      // fails to provide a fresh GPS fix for the current request.
+      _lastPhoneLatitude = null;
+      _lastPhoneLongitude = null;
+      _lastPhoneLocationAt = null;
       _lastLocationError = error.toString();
     } finally {
       _isUpdatingLocation = false;
