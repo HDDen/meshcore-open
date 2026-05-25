@@ -921,7 +921,16 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     var currentSite = '';
     var currentBatch = 0;
     var totalBatches = 0;
+    var uploadDialogOpen = true;
     StateSetter? setUploadState;
+    final cancelToken = WardriveUploadCancelToken();
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+
+    void closeUploadDialog() {
+      if (!uploadDialogOpen) return;
+      uploadDialogOpen = false;
+      rootNavigator.pop();
+    }
 
     unawaited(
       showDialog<void>(
@@ -952,15 +961,28 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     ),
                 ],
               ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    cancelToken.cancel();
+                    closeUploadDialog();
+                  },
+                  child: Text(context.l10n.common_cancel),
+                ),
+              ],
             );
           },
         ),
-      ),
+      ).whenComplete(() {
+        uploadDialogOpen = false;
+        setUploadState = null;
+      }),
     );
 
     try {
       final results = await _wardriveUploadService.uploadToSelectedSites(
         repeaterNames: _wardriveUploadRepeaterNames(),
+        cancelToken: cancelToken,
         onProgress: (siteName, current, total) {
           setUploadState?.call(() {
             currentSite = siteName;
@@ -971,11 +993,18 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       );
 
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
+      closeUploadDialog();
       await _showWardriveUploadResults(results);
+    } on WardriveUploadCancelledException {
+      if (!mounted) return;
+      closeUploadDialog();
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.map_wardriveUploadCancelled),
+      );
     } catch (error) {
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
+      closeUploadDialog();
       showDismissibleSnackBar(
         context,
         content: Text('Wardrive upload failed: $error'),

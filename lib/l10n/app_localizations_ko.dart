@@ -1878,6 +1878,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_wardriveDiscoverySent => 'Wardrive discovery request sent.';
 
   @override
+  String get map_wardriveUploadCancelled => 'Wardrive upload cancelled.';
+
+  @override
   String map_wardriveDiscoveryFailed(String error) {
     return 'Wardrive discovery failed: $error';
   }

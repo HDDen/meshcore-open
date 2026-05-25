@@ -81,10 +81,12 @@ class WardriveUploadService {
   Future<Map<String, WardriveUploadResult>> uploadToSelectedSites({
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
+    WardriveUploadCancelToken? cancelToken,
   }) async {
     return _uploadToSelectedSites(
       repeaterNames: repeaterNames,
       onProgress: onProgress,
+      cancelToken: cancelToken,
     );
   }
 
@@ -101,6 +103,7 @@ class WardriveUploadService {
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
     int? maxSamplesPerSite,
+    WardriveUploadCancelToken? cancelToken,
   }) async {
     if (_uploadInProgress) {
       return {
@@ -116,6 +119,7 @@ class WardriveUploadService {
         repeaterNames: repeaterNames,
         onProgress: onProgress,
         maxSamplesPerSite: maxSamplesPerSite,
+        cancelToken: cancelToken,
       );
     } finally {
       _uploadInProgress = false;
@@ -126,7 +130,9 @@ class WardriveUploadService {
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
     int? maxSamplesPerSite,
+    WardriveUploadCancelToken? cancelToken,
   }) async {
+    cancelToken?.throwIfCancelled();
     final sites = await loadSites();
     final selectedNames = await loadSelectedSiteNames();
     final selectedSites = sites
@@ -143,11 +149,13 @@ class WardriveUploadService {
 
     final results = <String, WardriveUploadResult>{};
     for (final site in selectedSites) {
+      cancelToken?.throwIfCancelled();
       results[site.name] = await _uploadToSite(
         site,
         repeaterNames: repeaterNames,
         onProgress: onProgress,
         maxSamples: maxSamplesPerSite,
+        cancelToken: cancelToken,
       );
     }
     return results;
@@ -158,7 +166,9 @@ class WardriveUploadService {
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
     int? maxSamples,
+    WardriveUploadCancelToken? cancelToken,
   }) async {
+    cancelToken?.throwIfCancelled();
     final allSamples = _sampleStore.loadAllSamples();
     final uploadedIds = _loadUploadedSampleIds(site.url);
     final samples = allSamples
@@ -184,12 +194,14 @@ class WardriveUploadService {
 
     var totalCells = 0;
     for (var i = 0; i < batches.length; i++) {
+      cancelToken?.throwIfCancelled();
       onProgress?.call(site.name, i + 1, batches.length);
       final batch = batches[i];
       final result = await _postBatch(
         site.url,
         batch,
         repeaterNames: repeaterNames,
+        cancelToken: cancelToken,
       );
       if (!result.success) {
         return WardriveUploadResult(
@@ -214,12 +226,16 @@ class WardriveUploadService {
     String url,
     List<WardriveSample> samples, {
     Map<String, String>? repeaterNames,
+    WardriveUploadCancelToken? cancelToken,
   }) async {
     final appVersion = await _loadAppVersion();
     Object? lastError;
     for (var attempt = 0; attempt < 2; attempt++) {
+      cancelToken?.throwIfCancelled();
+      final client = http.Client();
+      cancelToken?.attachClient(client);
       try {
-        final response = await http
+        final response = await client
             .post(
               Uri.parse(url),
               headers: {'Content-Type': 'application/json'},
@@ -237,6 +253,7 @@ class WardriveUploadService {
             )
             .timeout(const Duration(seconds: 60));
 
+        cancelToken?.throwIfCancelled();
         if (response.statusCode == 200) {
           final decoded = response.body.isEmpty
               ? null
@@ -251,10 +268,15 @@ class WardriveUploadService {
         }
         lastError = 'Server error: ${response.statusCode}';
       } catch (error) {
+        cancelToken?.throwIfCancelled();
         lastError = error;
+      } finally {
+        cancelToken?.detachClient(client);
+        client.close();
       }
 
       if (attempt == 0) {
+        cancelToken?.throwIfCancelled();
         await Future<void>.delayed(const Duration(seconds: 2));
       }
     }
@@ -347,6 +369,44 @@ class WardriveUploadSite {
       return null;
     }
     return WardriveUploadSite(name: name, url: url);
+  }
+}
+
+class WardriveUploadCancelledException implements Exception {
+  const WardriveUploadCancelledException();
+
+  @override
+  String toString() => 'Wardrive upload cancelled';
+}
+
+class WardriveUploadCancelToken {
+  bool _isCancelled = false;
+  http.Client? _client;
+
+  bool get isCancelled => _isCancelled;
+
+  void cancel() {
+    _isCancelled = true;
+    _client?.close();
+  }
+
+  void attachClient(http.Client client) {
+    _client = client;
+    if (_isCancelled) {
+      client.close();
+    }
+  }
+
+  void detachClient(http.Client client) {
+    if (identical(_client, client)) {
+      _client = null;
+    }
+  }
+
+  void throwIfCancelled() {
+    if (_isCancelled) {
+      throw const WardriveUploadCancelledException();
+    }
   }
 }
 

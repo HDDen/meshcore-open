@@ -979,6 +979,7 @@
   "map_wardriveStop": "Stop",
   "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
   "map_wardriveDiscoverySent": "Wardrive discovery request sent.",
+  "map_wardriveUploadCancelled": "Wardrive upload cancelled.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery failed: {error}",
   "@map_wardriveDiscoveryFailed": {
     "placeholders": {

@@ -3568,6 +3568,12 @@ abstract class AppLocalizations {
   /// **'Wardrive discovery request sent.'**
   String get map_wardriveDiscoverySent;
 
+  /// No description provided for @map_wardriveUploadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive upload cancelled.'**
+  String get map_wardriveUploadCancelled;
+
   /// No description provided for @map_wardriveDiscoveryFailed.
   ///
   /// In en, this message translates to:
