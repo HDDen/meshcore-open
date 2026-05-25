@@ -925,6 +925,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     var currentSite = '';
     var currentBatch = 0;
     var totalBatches = 0;
+    WardriveUploadProgress? uploadProgress;
     var uploadDialogOpen = true;
     StateSetter? setUploadState;
     final cancelToken = WardriveUploadCancelToken();
@@ -966,6 +967,46 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
+                  if (uploadProgress != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Column(
+                        children: [
+                          Text(
+                            context.l10n.map_wardriveUploadSamplesProgress(
+                              uploadProgress!.sentSamples,
+                              uploadProgress!.totalSamples,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          if (uploadProgress!.siteName.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              context.l10n.map_wardriveUploadTarget(
+                                uploadProgress!.siteName,
+                              ),
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                          const SizedBox(height: 2),
+                          Text(
+                            _formatWardriveUploadProgress(
+                              context,
+                              uploadProgress!,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -997,6 +1038,14 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             totalBatches = total;
           });
         },
+        onUploadProgress: (progress) {
+          setUploadState?.call(() {
+            currentSite = progress.siteName;
+            currentBatch = progress.currentBatch;
+            totalBatches = progress.totalBatches;
+            uploadProgress = progress;
+          });
+        },
       );
 
       if (!mounted) return;
@@ -1017,6 +1066,32 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         content: Text(context.l10n.map_wardriveUploadFailed(error.toString())),
         backgroundColor: Colors.red,
       );
+    }
+  }
+
+  String _formatWardriveUploadProgress(
+    BuildContext context,
+    WardriveUploadProgress progress,
+  ) {
+    switch (progress.phase) {
+      case WardriveUploadStatusPhase.waitingForConnection:
+        return context.l10n.map_wardriveUploadWaitingConnection;
+      case WardriveUploadStatusPhase.uploading:
+        return context.l10n.map_wardriveUploadConnectionEstablished;
+      case WardriveUploadStatusPhase.processingServer:
+        return context.l10n.map_wardriveUploadProcessingServer;
+      case WardriveUploadStatusPhase.serverResponse:
+        return context.l10n.map_wardriveUploadServerResponse(
+          progress.statusCode ?? 200,
+        );
+      case WardriveUploadStatusPhase.serverError:
+        return context.l10n.map_wardriveUploadServerError(
+          progress.statusCode ?? 0,
+        );
+      case WardriveUploadStatusPhase.requestError:
+        return context.l10n.map_wardriveUploadRequestError(
+          progress.error ?? '',
+        );
     }
   }
 
@@ -1224,8 +1299,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     WardriveUploadSite? site,
     required List<WardriveUploadSite> existingSites,
   }) async {
-    final nameController = TextEditingController(text: site?.name ?? '');
-    final urlController = TextEditingController(text: site?.url ?? '');
+    var nameValue = site?.name ?? '';
+    var urlValue = site?.url ?? '';
     final result = await showDialog<WardriveUploadSite>(
       context: context,
       builder: (dialogContext) {
@@ -1243,8 +1318,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
-                    controller: nameController,
+                  TextFormField(
+                    initialValue: nameValue,
+                    onChanged: (value) => nameValue = value,
                     decoration: InputDecoration(
                       labelText: context.l10n.map_wardriveNameLabel,
                       errorText: nameError,
@@ -1252,8 +1328,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: urlController,
+                  TextFormField(
+                    initialValue: urlValue,
+                    onChanged: (value) => urlValue = value,
                     decoration: InputDecoration(
                       labelText: context.l10n.map_wardriveUrlLabel,
                       errorText: urlError,
@@ -1271,8 +1348,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               ),
               FilledButton(
                 onPressed: () {
-                  final name = nameController.text.trim();
-                  final url = urlController.text.trim();
+                  final name = nameValue.trim();
+                  final url = urlValue.trim();
                   final parsedUri = Uri.tryParse(url);
                   final duplicateName = existingSites.any(
                     (existing) =>
@@ -1304,8 +1381,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         );
       },
     );
-    nameController.dispose();
-    urlController.dispose();
     return result;
   }
 
@@ -1398,94 +1473,69 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   Future<void> _showImportWardriveSamplesDialog(
     WardriveService wardrive,
   ) async {
-    final controller = TextEditingController();
     final clipboardData = await Clipboard.getData('text/plain');
     final clipboardText = clipboardData?.text;
+    var importText = '';
     if (clipboardText != null &&
         (clipboardText.contains('meshcore_wardrive_data') ||
             clipboardText.contains('meshcore-open-wardrive-samples'))) {
-      controller.text = clipboardText;
+      importText = clipboardText;
     }
 
-    if (!mounted) {
-      controller.dispose();
-      return;
-    }
+    if (!mounted) return;
 
-    final imported = await showDialog<int>(
+    final rawJson = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        String? errorText;
-        var isImporting = false;
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: Text(context.l10n.map_wardriveImportSamples),
-            content: SizedBox(
-              width: 420,
-              child: TextField(
-                controller: controller,
-                minLines: 6,
-                maxLines: 10,
-                decoration: InputDecoration(
-                  hintText: context.l10n.map_wardriveImportHint,
-                  errorText: errorText,
-                  border: const OutlineInputBorder(),
-                ),
+        return AlertDialog(
+          title: Text(context.l10n.map_wardriveImportSamples),
+          content: SizedBox(
+            width: 420,
+            child: TextFormField(
+              initialValue: importText,
+              minLines: 6,
+              maxLines: 10,
+              onChanged: (value) => importText = value,
+              decoration: InputDecoration(
+                hintText: context.l10n.map_wardriveImportHint,
+                border: const OutlineInputBorder(),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: isImporting
-                    ? null
-                    : () => Navigator.of(dialogContext).pop(),
-                child: Text(context.l10n.common_cancel),
-              ),
-              FilledButton(
-                onPressed: isImporting
-                    ? null
-                    : () async {
-                        setDialogState(() {
-                          isImporting = true;
-                          errorText = null;
-                        });
-                        try {
-                          final added = await wardrive.importSamplesJson(
-                            controller.text,
-                          );
-                          if (!dialogContext.mounted) return;
-                          Navigator.of(dialogContext).pop(added);
-                        } catch (error) {
-                          if (!dialogContext.mounted) return;
-                          setDialogState(() {
-                            isImporting = false;
-                            errorText = error.toString();
-                          });
-                        }
-                      },
-                child: isImporting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(context.l10n.map_wardriveImport),
-              ),
-            ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(context.l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(importText),
+              child: Text(context.l10n.map_wardriveImport),
+            ),
+          ],
         );
       },
     );
-    controller.dispose();
 
-    if (!mounted || imported == null) return;
-    showDismissibleSnackBar(
-      context,
-      content: Text(
-        imported == 0
-            ? context.l10n.map_wardriveNoNewSamplesImported
-            : context.l10n.map_wardriveSamplesImported(imported),
-      ),
-    );
+    if (!mounted || rawJson == null) return;
+    try {
+      final imported = await wardrive.importSamplesJson(rawJson);
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(
+          imported == 0
+              ? context.l10n.map_wardriveNoNewSamplesImported
+              : context.l10n.map_wardriveSamplesImported(imported),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.map_wardriveImportFailed(error.toString())),
+        backgroundColor: Colors.red,
+      );
+    }
   }
 
   Future<void> _confirmClearWardriveSamples(WardriveService wardrive) async {

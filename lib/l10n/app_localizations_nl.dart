@@ -2056,6 +2056,42 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String map_wardriveUploadSamplesProgress(int sent, int total) {
+    return 'Sending $sent of $total';
+  }
+
+  @override
+  String map_wardriveUploadTarget(String site) {
+    return 'Target: $site';
+  }
+
+  @override
+  String get map_wardriveUploadWaitingConnection => 'Waiting for connection';
+
+  @override
+  String get map_wardriveUploadConnectionEstablished =>
+      'Connection established, uploading';
+
+  @override
+  String get map_wardriveUploadProcessingServer =>
+      'Data uploaded, processing by server';
+
+  @override
+  String map_wardriveUploadServerResponse(int statusCode) {
+    return 'Server processed data, response $statusCode';
+  }
+
+  @override
+  String map_wardriveUploadServerError(int statusCode) {
+    return 'Server error $statusCode';
+  }
+
+  @override
+  String map_wardriveUploadRequestError(String error) {
+    return 'Upload error: $error';
+  }
+
+  @override
   String map_wardriveUploadFailed(String error) {
     return 'Wardrive upload failed: $error';
   }
@@ -2142,6 +2178,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String map_wardriveSamplesImported(int count) {
     return 'Imported $count wardrive samples.';
+  }
+
+  @override
+  String map_wardriveImportFailed(String error) {
+    return 'Wardrive import failed: $error';
   }
 
   @override

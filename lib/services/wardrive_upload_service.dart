@@ -6,6 +6,37 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../storage/prefs_manager.dart';
 import 'wardrive_sample_store.dart';
 
+enum WardriveUploadStatusPhase {
+  waitingForConnection,
+  uploading,
+  processingServer,
+  serverResponse,
+  serverError,
+  requestError,
+}
+
+class WardriveUploadProgress {
+  final String siteName;
+  final int currentBatch;
+  final int totalBatches;
+  final WardriveUploadStatusPhase phase;
+  final int? statusCode;
+  final String? error;
+  final int sentSamples;
+  final int totalSamples;
+
+  const WardriveUploadProgress({
+    required this.siteName,
+    required this.currentBatch,
+    required this.totalBatches,
+    required this.phase,
+    required this.sentSamples,
+    required this.totalSamples,
+    this.statusCode,
+    this.error,
+  });
+}
+
 class WardriveUploadService {
   WardriveUploadService({WardriveSampleStore? sampleStore})
     : _sampleStore = sampleStore ?? WardriveSampleStore();
@@ -16,7 +47,9 @@ class WardriveUploadService {
   static const _uploadedSamplesKey = 'wardrive_uploaded_samples_v1';
   static const _autoUploadKey = 'wardrive_auto_upload_enabled_v1';
   static const int autoUploadBatchSize = 100;
-  static const _batchSize = autoUploadBatchSize;
+  // Keep autoupload capped at 100 samples, but post smaller HTTP batches so a
+  // slow upload endpoint is less likely to save data and time out before reply.
+  static const _postBatchSize = 50;
   // Manual upload and autoupload can be triggered from different service
   // instances; keep one process-wide upload active to avoid duplicate posts.
   static bool _uploadInProgress = false;
@@ -81,11 +114,13 @@ class WardriveUploadService {
   Future<Map<String, WardriveUploadResult>> uploadToSelectedSites({
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
+    void Function(WardriveUploadProgress progress)? onUploadProgress,
     WardriveUploadCancelToken? cancelToken,
   }) async {
     return _uploadToSelectedSites(
       repeaterNames: repeaterNames,
       onProgress: onProgress,
+      onUploadProgress: onUploadProgress,
       cancelToken: cancelToken,
     );
   }
@@ -95,13 +130,14 @@ class WardriveUploadService {
   }) async {
     return _uploadToSelectedSites(
       repeaterNames: repeaterNames,
-      maxSamplesPerSite: _batchSize,
+      maxSamplesPerSite: autoUploadBatchSize,
     );
   }
 
   Future<Map<String, WardriveUploadResult>> _uploadToSelectedSites({
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
+    void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamplesPerSite,
     WardriveUploadCancelToken? cancelToken,
   }) async {
@@ -118,6 +154,7 @@ class WardriveUploadService {
       return await _uploadToSelectedSitesUnlocked(
         repeaterNames: repeaterNames,
         onProgress: onProgress,
+        onUploadProgress: onUploadProgress,
         maxSamplesPerSite: maxSamplesPerSite,
         cancelToken: cancelToken,
       );
@@ -129,6 +166,7 @@ class WardriveUploadService {
   Future<Map<String, WardriveUploadResult>> _uploadToSelectedSitesUnlocked({
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
+    void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamplesPerSite,
     WardriveUploadCancelToken? cancelToken,
   }) async {
@@ -154,6 +192,7 @@ class WardriveUploadService {
         site,
         repeaterNames: repeaterNames,
         onProgress: onProgress,
+        onUploadProgress: onUploadProgress,
         maxSamples: maxSamplesPerSite,
         cancelToken: cancelToken,
       );
@@ -165,6 +204,7 @@ class WardriveUploadService {
     WardriveUploadSite site, {
     Map<String, String>? repeaterNames,
     void Function(String siteName, int current, int total)? onProgress,
+    void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamples,
     WardriveUploadCancelToken? cancelToken,
   }) async {
@@ -185,9 +225,9 @@ class WardriveUploadService {
     }
 
     final batches = <List<WardriveSample>>[];
-    for (var i = 0; i < samples.length; i += _batchSize) {
-      final end = i + _batchSize < samples.length
-          ? i + _batchSize
+    for (var i = 0; i < samples.length; i += _postBatchSize) {
+      final end = i + _postBatchSize < samples.length
+          ? i + _postBatchSize
           : samples.length;
       batches.add(samples.sublist(i, end));
     }
@@ -197,10 +237,19 @@ class WardriveUploadService {
       cancelToken?.throwIfCancelled();
       onProgress?.call(site.name, i + 1, batches.length);
       final batch = batches[i];
+      final sentSamples = batches
+          .take(i + 1)
+          .fold<int>(0, (total, batch) => total + batch.length);
       final result = await _postBatch(
         site.url,
         batch,
+        siteName: site.name,
+        currentBatch: i + 1,
+        totalBatches: batches.length,
+        sentSamples: sentSamples,
+        totalSamples: samples.length,
         repeaterNames: repeaterNames,
+        onUploadProgress: onUploadProgress,
         cancelToken: cancelToken,
       );
       if (!result.success) {
@@ -210,10 +259,10 @@ class WardriveUploadService {
               'Failed at batch ${i + 1}/${batches.length}: ${result.message}',
         );
       }
+      await _markUploaded(site.url, batch.map((sample) => sample.id));
       totalCells = result.totalCount ?? totalCells;
     }
 
-    await _markUploaded(site.url, samples.map((sample) => sample.id));
     return WardriveUploadResult(
       success: true,
       message: 'Upload Complete',
@@ -225,7 +274,13 @@ class WardriveUploadService {
   Future<WardriveUploadResult> _postBatch(
     String url,
     List<WardriveSample> samples, {
+    required String siteName,
+    required int currentBatch,
+    required int totalBatches,
+    required int sentSamples,
+    required int totalSamples,
     Map<String, String>? repeaterNames,
+    void Function(WardriveUploadProgress progress)? onUploadProgress,
     WardriveUploadCancelToken? cancelToken,
   }) async {
     final appVersion = await _loadAppVersion();
@@ -235,26 +290,58 @@ class WardriveUploadService {
       final client = http.Client();
       cancelToken?.attachClient(client);
       try {
-        final response = await client
-            .post(
-              Uri.parse(url),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'samples': samples
-                    .map(
-                      (sample) => _sampleToUploadJson(
-                        sample,
-                        repeaterNames: repeaterNames,
-                        appVersion: appVersion,
-                      ),
-                    )
-                    .toList(),
-              }),
-            )
-            .timeout(const Duration(seconds: 60));
+        void reportStatus(
+          WardriveUploadStatusPhase phase, {
+          int? statusCode,
+          String? error,
+        }) {
+          onUploadProgress?.call(
+            WardriveUploadProgress(
+              siteName: siteName,
+              currentBatch: currentBatch,
+              totalBatches: totalBatches,
+              phase: phase,
+              sentSamples: sentSamples,
+              totalSamples: totalSamples,
+              statusCode: statusCode,
+              error: error,
+            ),
+          );
+        }
+
+        final request = http.Request('POST', Uri.parse(url))
+          ..headers['Content-Type'] = 'application/json'
+          ..body = jsonEncode({
+            'samples': samples
+                .map(
+                  (sample) => _sampleToUploadJson(
+                    sample,
+                    repeaterNames: repeaterNames,
+                    appVersion: appVersion,
+                  ),
+                )
+                .toList(),
+          });
+
+        reportStatus(WardriveUploadStatusPhase.waitingForConnection);
+        await Future<void>.delayed(Duration.zero);
+        cancelToken?.throwIfCancelled();
+        reportStatus(WardriveUploadStatusPhase.uploading);
+        final responseFuture = client.send(request);
+        await Future<void>.delayed(Duration.zero);
+        cancelToken?.throwIfCancelled();
+        reportStatus(WardriveUploadStatusPhase.processingServer);
+        final streamedResponse = await responseFuture.timeout(
+          const Duration(seconds: 60),
+        );
+        final response = await http.Response.fromStream(streamedResponse);
 
         cancelToken?.throwIfCancelled();
         if (response.statusCode == 200) {
+          reportStatus(
+            WardriveUploadStatusPhase.serverResponse,
+            statusCode: response.statusCode,
+          );
           final decoded = response.body.isEmpty
               ? null
               : jsonDecode(response.body);
@@ -266,9 +353,24 @@ class WardriveUploadService {
                 : null,
           );
         }
+        reportStatus(
+          WardriveUploadStatusPhase.serverError,
+          statusCode: response.statusCode,
+        );
         lastError = 'Server error: ${response.statusCode}';
       } catch (error) {
         cancelToken?.throwIfCancelled();
+        onUploadProgress?.call(
+          WardriveUploadProgress(
+            siteName: siteName,
+            currentBatch: currentBatch,
+            totalBatches: totalBatches,
+            phase: WardriveUploadStatusPhase.requestError,
+            sentSamples: sentSamples,
+            totalSamples: totalSamples,
+            error: error.toString(),
+          ),
+        );
         lastError = error;
       } finally {
         cancelToken?.detachClient(client);

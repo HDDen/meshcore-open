@@ -3724,6 +3724,54 @@ abstract class AppLocalizations {
   /// **'Batch {current} of {total}'**
   String map_wardriveUploadBatch(int current, int total);
 
+  /// No description provided for @map_wardriveUploadSamplesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {sent} of {total}'**
+  String map_wardriveUploadSamplesProgress(int sent, int total);
+
+  /// No description provided for @map_wardriveUploadTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {site}'**
+  String map_wardriveUploadTarget(String site);
+
+  /// No description provided for @map_wardriveUploadWaitingConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for connection'**
+  String get map_wardriveUploadWaitingConnection;
+
+  /// No description provided for @map_wardriveUploadConnectionEstablished.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection established, uploading'**
+  String get map_wardriveUploadConnectionEstablished;
+
+  /// No description provided for @map_wardriveUploadProcessingServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Data uploaded, processing by server'**
+  String get map_wardriveUploadProcessingServer;
+
+  /// No description provided for @map_wardriveUploadServerResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Server processed data, response {statusCode}'**
+  String map_wardriveUploadServerResponse(int statusCode);
+
+  /// No description provided for @map_wardriveUploadServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error {statusCode}'**
+  String map_wardriveUploadServerError(int statusCode);
+
+  /// No description provided for @map_wardriveUploadRequestError.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload error: {error}'**
+  String map_wardriveUploadRequestError(String error);
+
   /// No description provided for @map_wardriveUploadFailed.
   ///
   /// In en, this message translates to:
@@ -3873,6 +3921,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Imported {count} wardrive samples.'**
   String map_wardriveSamplesImported(int count);
+
+  /// No description provided for @map_wardriveImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrive import failed: {error}'**
+  String map_wardriveImportFailed(String error);
 
   /// No description provided for @map_wardriveNoSamplesToClear.
   ///

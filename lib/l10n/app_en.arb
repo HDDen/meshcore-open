@@ -1091,6 +1091,52 @@
       }
     }
   },
+  "map_wardriveUploadSamplesProgress": "Sending {sent} of {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Target: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Waiting for connection",
+  "map_wardriveUploadConnectionEstablished": "Connection established, uploading",
+  "map_wardriveUploadProcessingServer": "Data uploaded, processing by server",
+  "map_wardriveUploadServerResponse": "Server processed data, response {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadServerError": "Server error {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Upload error: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_wardriveUploadFailed": "Wardrive upload failed: {error}",
   "@map_wardriveUploadFailed": {
     "placeholders": {
@@ -1148,6 +1194,14 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive import failed: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
       }
     }
   },
