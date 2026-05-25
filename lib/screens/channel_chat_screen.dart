@@ -1866,7 +1866,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     ),
                   );
                 },
-            ),
+              ),
             if (message.isOutgoing)
               ListTile(
                 leading: const Icon(Icons.send_outlined),
@@ -1875,7 +1875,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   Navigator.pop(sheetContext);
                   _resendMessage(message);
                 },
-                ),
+              ),
             if (!message.isOutgoing)
               ListTile(
                 leading: const Icon(Icons.mark_chat_unread_outlined),
