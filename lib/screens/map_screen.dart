@@ -364,9 +364,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           contactsWithLocation,
           wardriveAnsweredKeys,
         );
-        final wardriveSampleMarkers = wardrive.isRunning
-            ? _buildWardriveSampleMarkers(wardrive.recentSamples)
-            : const <Marker>[];
+        final wardriveCoveragePolygons = wardrive.isRunning
+            ? _buildWardriveCoveragePolygons(wardrive.recentSamples)
+            : const <Polygon>[];
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
@@ -637,8 +637,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                       PolylineLayer(polylines: sharedMarkerPolylines),
                     if (wardriveDiscoveryPolylines.isNotEmpty)
                       PolylineLayer(polylines: wardriveDiscoveryPolylines),
-                    if (wardriveSampleMarkers.isNotEmpty)
-                      MarkerLayer(markers: wardriveSampleMarkers),
+                    if (wardriveCoveragePolygons.isNotEmpty)
+                      PolygonLayer(polygons: wardriveCoveragePolygons),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -816,7 +816,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     WardriveService wardrive,
   ) async {
     try {
-      await wardrive.sendZeroHopDiscoveryRequest();
+      await wardrive.sendZeroHopDiscoveryRequest(
+        startWardrive: wardrive.isRunning,
+      );
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
@@ -867,6 +869,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         ),
         const SizedBox(width: 8),
         const Text('Wardrive', style: TextStyle(fontWeight: FontWeight.w700)),
+        _WardriveCountdownText(wardrive: wardrive),
         if (wardrive.isSendingDiscovery) ...[
           const SizedBox(width: 8),
           const SizedBox(
@@ -907,6 +910,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               'Wardrive',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
+            _WardriveCountdownText(wardrive: wardrive),
             if (wardrive.isSendingDiscovery) ...[
               const SizedBox(width: 8),
               const SizedBox(
@@ -934,6 +938,17 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           'Samples saved: ${wardrive.savedSamplesCount}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
+        if (wardrive.isRunning && wardrive.recentSamples.isNotEmpty)
+          _buildWardriveCoverageSummary(wardrive.recentSamples),
+        if (wardrive.isRunning)
+          _buildWardriveAutoDiscoveryIntervalInput(wardrive),
+        if (wardrive.lastAutoDiscoveryError != null)
+          Text(
+            'Auto discovery: ${wardrive.lastAutoDiscoveryError}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
         Text(
           _formatWardriveLocationStatus(wardrive),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1016,6 +1031,130 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     );
   }
 
+  Widget _buildWardriveAutoDiscoveryIntervalInput(WardriveService wardrive) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Auto discovery', style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 64,
+            height: 32,
+            child: TextFormField(
+              key: ValueKey(
+                'wardrive-auto-${wardrive.autoDiscoveryIntervalSeconds}',
+              ),
+              initialValue: wardrive.autoDiscoveryIntervalSeconds.toString(),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onFieldSubmitted: (value) =>
+                  _updateWardriveAutoDiscoveryInterval(wardrive, value),
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text('s', style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  void _updateWardriveAutoDiscoveryInterval(
+    WardriveService wardrive,
+    String value,
+  ) {
+    final seconds = int.tryParse(value);
+    if (seconds == null) return;
+    wardrive.setAutoDiscoveryIntervalSeconds(seconds);
+  }
+
+  Widget _buildWardriveCoverageSummary(List<WardriveSample> samples) {
+    final cells = _buildWardriveCoverageCells(samples);
+    var good = 0;
+    var fair = 0;
+    var weak = 0;
+    var dead = 0;
+    for (final cell in cells) {
+      if (cell.successCount == 0 && cell.failedCount > 0) {
+        dead++;
+      } else {
+        final total = cell.successCount + cell.failedCount;
+        if (total == 0) {
+          weak++;
+          continue;
+        }
+        final successRate = cell.successCount / total;
+        if (successRate >= 0.66) {
+          good++;
+        } else if (successRate >= 0.33) {
+          fair++;
+        } else {
+          weak++;
+        }
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            'Coverage cells: ${cells.length}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          _buildWardriveCoverageLegendItem(Colors.green, good),
+          _buildWardriveCoverageLegendItem(Colors.amber, fair),
+          _buildWardriveCoverageLegendItem(Colors.redAccent, weak),
+          _buildWardriveDeadZoneLegendItem(dead),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWardriveCoverageLegendItem(Color color, int count) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
+  Widget _buildWardriveDeadZoneLegendItem(int count) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.close, size: 10, color: Colors.redAccent),
+        const SizedBox(width: 3),
+        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
   Future<void> _handleWardriveDataAction(
     String action,
     WardriveService wardrive,
@@ -1070,7 +1209,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     final clipboardData = await Clipboard.getData('text/plain');
     final clipboardText = clipboardData?.text;
     if (clipboardText != null &&
-        clipboardText.contains('meshcore-open-wardrive-samples')) {
+        (clipboardText.contains('meshcore_wardrive_data') ||
+            clipboardText.contains('meshcore-open-wardrive-samples'))) {
       controller.text = clipboardText;
     }
 
@@ -1707,9 +1847,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   ) {
     final phoneLat = wardrive.lastPhoneLatitude;
     final phoneLon = wardrive.lastPhoneLongitude;
-    if (wardrive.isRunning && phoneLat != null && phoneLon != null) {
-      // Wardrive uses the phone GPS only as a local map position; it must not
-      // be written into the node advert or persisted as the node coordinates.
+    if (wardrive.usesPhoneLocationForDisplay &&
+        phoneLat != null &&
+        phoneLon != null) {
+      // Wardrive/manual discovery use phone GPS only as a local map position;
+      // do not write it into the node advert or persisted node coordinates.
       return LatLng(phoneLat, phoneLon);
     }
 
@@ -1744,51 +1886,179 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         .toList();
   }
 
-  List<Marker> _buildWardriveSampleMarkers(List<WardriveSample> samples) {
+  List<Polygon> _buildWardriveCoveragePolygons(List<WardriveSample> samples) {
+    return _buildWardriveCoverageCells(samples)
+        .map((cell) {
+          final bounds = cell.bounds;
+          if (bounds == null) return null;
+          final color = _wardriveCoverageColor(cell);
+          return Polygon(
+            // Wardrive coverage is drawn as geohash blocks, matching the
+            // standalone app's coverage squares instead of point markers.
+            points: [
+              LatLng(bounds.south, bounds.west),
+              LatLng(bounds.south, bounds.east),
+              LatLng(bounds.north, bounds.east),
+              LatLng(bounds.north, bounds.west),
+            ],
+            color: color.withValues(alpha: _wardriveCoverageOpacity(cell)),
+            borderColor: color.withValues(alpha: 0.95),
+            borderStrokeWidth: cell.successCount == 0 && cell.failedCount > 0
+                ? 1.5
+                : 1,
+          );
+        })
+        .whereType<Polygon>()
+        .toList();
+  }
+
+  List<_WardriveCoverageCell> _buildWardriveCoverageCells(
+    List<WardriveSample> samples,
+  ) {
     final groups = <String, List<WardriveSample>>{};
     for (final sample in samples) {
-      // Group nearby saved samples so one discovery request with several
-      // responders produces one readable map dot at the measurement point.
-      final key =
-          '${sample.latitude.toStringAsFixed(5)},${sample.longitude.toStringAsFixed(5)}';
+      // Match the standalone wardrive app: coverage cells are geohash blocks,
+      // while individual samples keep their higher-precision geohash.
+      final key = _wardriveCoverageHash(sample);
       groups.putIfAbsent(key, () => <WardriveSample>[]).add(sample);
     }
 
-    return groups.values.map((group) {
-      final sample = group.first;
-      final count = group.length;
-      final size = min(26.0, 10.0 + count * 2.0);
-      return Marker(
-        point: LatLng(sample.latitude, sample.longitude),
-        width: max(24.0, size),
-        height: max(24.0, size),
-        child: IgnorePointer(
-          child: Container(
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.greenAccent.withValues(alpha: 0.35),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.green.shade700.withValues(alpha: 0.8),
-                width: 1.5,
-              ),
-            ),
-            child: count > 1
-                ? Text(
-                    count.toString(),
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      );
-    }).toList();
+    return groups.values
+        .map((group) {
+          final coverageHash = _wardriveCoverageHash(group.first);
+          final bounds = _decodeWardriveGeohashBounds(coverageHash);
+          var successCount = 0;
+          var failedCount = 0;
+          for (final sample in group) {
+            if (sample.pingSuccess == true) {
+              successCount++;
+            } else if (sample.pingSuccess == false) {
+              failedCount++;
+            }
+          }
+          if (successCount == 0 && failedCount == 0) return null;
+          return _WardriveCoverageCell(
+            bounds: bounds,
+            successCount: successCount,
+            failedCount: failedCount,
+          );
+        })
+        .whereType<_WardriveCoverageCell>()
+        .toList();
+  }
+
+  String _wardriveCoverageHash(WardriveSample sample) {
+    const precision = 7;
+    if (sample.geohash.length >= precision) {
+      return sample.geohash.substring(0, precision);
+    }
+    return _encodeWardriveGeohash(
+      sample.latitude,
+      sample.longitude,
+      precision: precision,
+    );
+  }
+
+  String _encodeWardriveGeohash(
+    double latitude,
+    double longitude, {
+    required int precision,
+  }) {
+    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+    var latMin = -90.0;
+    var latMax = 90.0;
+    var lonMin = -180.0;
+    var lonMax = 180.0;
+    var evenBit = true;
+    var bit = 0;
+    var ch = 0;
+    final hash = StringBuffer();
+
+    while (hash.length < precision) {
+      if (evenBit) {
+        final mid = (lonMin + lonMax) / 2;
+        if (longitude >= mid) {
+          ch = (ch << 1) + 1;
+          lonMin = mid;
+        } else {
+          ch <<= 1;
+          lonMax = mid;
+        }
+      } else {
+        final mid = (latMin + latMax) / 2;
+        if (latitude >= mid) {
+          ch = (ch << 1) + 1;
+          latMin = mid;
+        } else {
+          ch <<= 1;
+          latMax = mid;
+        }
+      }
+      evenBit = !evenBit;
+
+      if (++bit == 5) {
+        hash.write(base32[ch]);
+        bit = 0;
+        ch = 0;
+      }
+    }
+
+    return hash.toString();
+  }
+
+  _WardriveGeohashBounds? _decodeWardriveGeohashBounds(String hash) {
+    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+    var latMin = -90.0;
+    var latMax = 90.0;
+    var lonMin = -180.0;
+    var lonMax = 180.0;
+    var evenBit = true;
+
+    for (final rune in hash.toLowerCase().runes) {
+      final value = base32.indexOf(String.fromCharCode(rune));
+      if (value < 0) return null;
+      for (var mask = 16; mask != 0; mask >>= 1) {
+        if (evenBit) {
+          final mid = (lonMin + lonMax) / 2;
+          if ((value & mask) != 0) {
+            lonMin = mid;
+          } else {
+            lonMax = mid;
+          }
+        } else {
+          final mid = (latMin + latMax) / 2;
+          if ((value & mask) != 0) {
+            latMin = mid;
+          } else {
+            latMax = mid;
+          }
+        }
+        evenBit = !evenBit;
+      }
+    }
+
+    return _WardriveGeohashBounds(
+      south: latMin,
+      west: lonMin,
+      north: latMax,
+      east: lonMax,
+    );
+  }
+
+  Color _wardriveCoverageColor(_WardriveCoverageCell cell) {
+    final total = cell.successCount + cell.failedCount;
+    if (total == 0) return Colors.grey;
+    final successRate = cell.successCount / total;
+    if (successRate >= 0.66) return Colors.green;
+    if (successRate >= 0.33) return Colors.amber;
+    return Colors.redAccent;
+  }
+
+  double _wardriveCoverageOpacity(_WardriveCoverageCell cell) {
+    if (cell.successCount >= 20) return 0.7;
+    if (cell.successCount >= 10) return 0.5;
+    if (cell.successCount >= 5) return 0.4;
+    return 0.3;
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {
@@ -3159,6 +3429,92 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       ),
     );
   }
+}
+
+class _WardriveCountdownText extends StatefulWidget {
+  final WardriveService wardrive;
+
+  const _WardriveCountdownText({required this.wardrive});
+
+  @override
+  State<_WardriveCountdownText> createState() => _WardriveCountdownTextState();
+}
+
+class _WardriveCountdownTextState extends State<_WardriveCountdownText> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTimer();
+  }
+
+  @override
+  void didUpdateWidget(_WardriveCountdownText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _syncTimer() {
+    _timer?.cancel();
+    if (!widget.wardrive.isRunning) return;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nextAt = widget.wardrive.nextAutoDiscoveryAt;
+    if (!widget.wardrive.isRunning || nextAt == null) {
+      return const SizedBox.shrink();
+    }
+
+    final remaining = nextAt.difference(DateTime.now()).inSeconds;
+    final seconds = remaining < 0 ? 0 : remaining;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Text(
+        '(${seconds}s)',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _WardriveCoverageCell {
+  final _WardriveGeohashBounds? bounds;
+  final int successCount;
+  final int failedCount;
+
+  const _WardriveCoverageCell({
+    required this.bounds,
+    required this.successCount,
+    required this.failedCount,
+  });
+}
+
+class _WardriveGeohashBounds {
+  final double south;
+  final double west;
+  final double north;
+  final double east;
+
+  const _WardriveGeohashBounds({
+    required this.south,
+    required this.west,
+    required this.north,
+    required this.east,
+  });
 }
 
 class _GuessedLocation {

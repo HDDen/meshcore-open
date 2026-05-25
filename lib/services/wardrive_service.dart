@@ -41,13 +41,24 @@ class WardriveService extends ChangeNotifier {
   final MeshCoreConnector _connector;
   final Random _random = Random();
   final WardriveSampleStore _sampleStore = WardriveSampleStore();
-  final Map<int, DateTime> _pendingDiscoveryTags = {};
+  final Map<int, _WardriveDiscoveryRequest> _pendingDiscoveryRequests = {};
+  final Map<int, int> _discoveryResponsesByTag = {};
+  final Map<int, Timer> _discoveryFailureTimers = {};
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
   final List<WardriveSample> _recentSamples = [];
   final Set<String> _currentDiscoveryPublicKeys = {};
+  static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 20);
+  static const Duration _discoveryResponseWindow = Duration(seconds: 10);
+  static const int minAutoDiscoveryIntervalSeconds = 5;
+  static const int maxAutoDiscoveryIntervalSeconds = 300;
+  static const int _recentSamplesLimit = 1000;
 
   StreamSubscription<Uint8List>? _framesSubscription;
+  Timer? _autoDiscoveryTimer;
+  Timer? _oneShotDiscoveryTimer;
   bool _isRunning = false;
+  bool _acceptOneShotDiscoveryResponses = false;
+  bool _usePhoneLocationForDisplay = false;
   bool _isSendingDiscovery = false;
   bool _isUpdatingLocation = false;
   int _discoveryRequestsSent = 0;
@@ -59,10 +70,15 @@ class WardriveService extends ChangeNotifier {
   DateTime? _lastPhoneLocationAt;
   String? _lastLocationError;
   String? _lastSampleError;
+  String? _lastAutoDiscoveryError;
+  DateTime? _nextAutoDiscoveryAt;
   DateTime? _lastSampleSavedAt;
+  Duration _autoDiscoveryInterval = defaultAutoDiscoveryInterval;
   int _savedSamplesCount = 0;
 
   bool get isRunning => _isRunning;
+  bool get usesPhoneLocationForDisplay =>
+      _isRunning || _usePhoneLocationForDisplay;
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isUpdatingLocation => _isUpdatingLocation;
   int get discoveryRequestsSent => _discoveryRequestsSent;
@@ -74,6 +90,10 @@ class WardriveService extends ChangeNotifier {
   DateTime? get lastPhoneLocationAt => _lastPhoneLocationAt;
   String? get lastLocationError => _lastLocationError;
   String? get lastSampleError => _lastSampleError;
+  String? get lastAutoDiscoveryError => _lastAutoDiscoveryError;
+  DateTime? get nextAutoDiscoveryAt => _nextAutoDiscoveryAt;
+  Duration get autoDiscoveryInterval => _autoDiscoveryInterval;
+  int get autoDiscoveryIntervalSeconds => _autoDiscoveryInterval.inSeconds;
   DateTime? get lastSampleSavedAt => _lastSampleSavedAt;
   int get savedSamplesCount => _savedSamplesCount;
   List<WardriveDiscoveryResult> get recentDiscoveries =>
@@ -86,7 +106,9 @@ class WardriveService extends ChangeNotifier {
     if (_isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
+    _lastAutoDiscoveryError = null;
     _loadSavedSamples();
+    _scheduleAutoDiscovery(const Duration(milliseconds: 250));
     notifyListeners();
   }
 
@@ -94,34 +116,91 @@ class WardriveService extends ChangeNotifier {
     _savedSamplesCount = _sampleStore.count;
     _recentSamples
       ..clear()
-      ..addAll(_sampleStore.loadRecent(limit: 100));
+      ..addAll(_sampleStore.loadRecent(limit: _recentSamplesLimit));
   }
 
   void stop() {
     if (!_isRunning) return;
     _isRunning = false;
-    _pendingDiscoveryTags.clear();
+    _autoDiscoveryTimer?.cancel();
+    _autoDiscoveryTimer = null;
+    _oneShotDiscoveryTimer?.cancel();
+    _oneShotDiscoveryTimer = null;
+    _acceptOneShotDiscoveryResponses = false;
+    _usePhoneLocationForDisplay = false;
+    _clearDiscoveryTracking();
     _currentDiscoveryPublicKeys.clear();
     _lastDiscoveryRequestAt = null;
     _lastLocationError = null;
     _lastSampleError = null;
+    _lastAutoDiscoveryError = null;
+    _nextAutoDiscoveryAt = null;
     notifyListeners();
   }
 
-  Future<void> sendZeroHopDiscoveryRequest() async {
+  void _scheduleAutoDiscovery(Duration delay) {
+    _autoDiscoveryTimer?.cancel();
+    if (!_isRunning) {
+      _nextAutoDiscoveryAt = null;
+      return;
+    }
+
+    _nextAutoDiscoveryAt = DateTime.now().add(delay);
+    _autoDiscoveryTimer = Timer(delay, () {
+      unawaited(_runAutoDiscoveryCycle());
+    });
+  }
+
+  Future<void> _runAutoDiscoveryCycle() async {
+    if (!_isRunning) return;
+    if (!_connector.isConnected) {
+      stop();
+      return;
+    }
+
+    try {
+      await sendZeroHopDiscoveryRequest();
+      _lastAutoDiscoveryError = null;
+    } catch (error) {
+      _lastAutoDiscoveryError = error.toString();
+    } finally {
+      if (_isRunning) notifyListeners();
+    }
+  }
+
+  Future<void> sendZeroHopDiscoveryRequest({bool startWardrive = true}) async {
     if (!_connector.isConnected) {
       throw StateError('Not connected to a MeshCore device');
     }
-    if (_isSendingDiscovery) return;
+    if (_isSendingDiscovery) {
+      if (_isRunning) {
+        _scheduleAutoDiscovery(_autoDiscoveryInterval);
+        notifyListeners();
+      }
+      return;
+    }
 
-    start();
+    if (startWardrive) {
+      start();
+    } else {
+      _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
+      _acceptOneShotDiscoveryResponses = true;
+      _oneShotDiscoveryTimer?.cancel();
+    }
     _isSendingDiscovery = true;
     notifyListeners();
 
     final previousDiscoveryKeys = Set<String>.from(_currentDiscoveryPublicKeys);
     final previousRequestAt = _lastDiscoveryRequestAt;
+    int? pendingTag;
     try {
       await _updateNodeLocationFromPhone();
+      if (!startWardrive &&
+          _lastPhoneLatitude != null &&
+          _lastPhoneLongitude != null) {
+        _usePhoneLocationForDisplay = true;
+        notifyListeners();
+      }
 
       // Wardrive discovery starts with a local advert so nearby nodes can
       // refresh us before the follow-up discovery request asks who can hear it.
@@ -129,14 +208,41 @@ class WardriveService extends ChangeNotifier {
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final tag = _random.nextInt(0x7fffffff);
+      pendingTag = tag;
       final payload = buildDiscoveryRequestPayload(tag, prefixOnly: false);
       final startedAt = DateTime.now();
       _currentDiscoveryPublicKeys.clear();
-      _pendingDiscoveryTags[tag] = startedAt;
+      _pendingDiscoveryRequests[tag] = _WardriveDiscoveryRequest(
+        startedAt: startedAt,
+        latitude: _lastPhoneLatitude,
+        longitude: _lastPhoneLongitude,
+        phoneLocationAt: _lastPhoneLocationAt,
+      );
+      if (_isRunning) {
+        _discoveryResponsesByTag[tag] = 0;
+        _discoveryFailureTimers[tag]?.cancel();
+        _discoveryFailureTimers[tag] = Timer(_discoveryResponseWindow, () {
+          unawaited(_saveFailedSampleIfNoResponses(tag));
+        });
+      }
       await _connector.sendFrame(buildSendControlDataFrame(payload));
       _lastDiscoveryRequestAt = startedAt;
       _discoveryRequestsSent++;
+      if (!startWardrive) {
+        _oneShotDiscoveryTimer = Timer(const Duration(seconds: 10), () {
+          _acceptOneShotDiscoveryResponses = false;
+          notifyListeners();
+        });
+      }
     } catch (_) {
+      if (!startWardrive) {
+        _acceptOneShotDiscoveryResponses = false;
+        _oneShotDiscoveryTimer?.cancel();
+        _oneShotDiscoveryTimer = null;
+      }
+      if (pendingTag != null) {
+        _clearDiscoveryTracking(pendingTag);
+      }
       _currentDiscoveryPublicKeys
         ..clear()
         ..addAll(previousDiscoveryKeys);
@@ -144,8 +250,23 @@ class WardriveService extends ChangeNotifier {
       rethrow;
     } finally {
       _isSendingDiscovery = false;
+      if (_isRunning) {
+        _scheduleAutoDiscovery(_autoDiscoveryInterval);
+      }
       notifyListeners();
     }
+  }
+
+  void setAutoDiscoveryIntervalSeconds(int seconds) {
+    final clamped = seconds.clamp(
+      minAutoDiscoveryIntervalSeconds,
+      maxAutoDiscoveryIntervalSeconds,
+    );
+    _autoDiscoveryInterval = Duration(seconds: clamped);
+    if (_isRunning) {
+      _scheduleAutoDiscovery(_autoDiscoveryInterval);
+    }
+    notifyListeners();
   }
 
   Future<void> _updateNodeLocationFromPhone() async {
@@ -191,7 +312,9 @@ class WardriveService extends ChangeNotifier {
   }
 
   void _handleFrame(Uint8List frame) {
-    if (!_isRunning || frame.isEmpty) return;
+    if ((!_isRunning && !_acceptOneShotDiscoveryResponses) || frame.isEmpty) {
+      return;
+    }
     if (frame[0] != pushCodeControlData) return;
 
     final result = _parseDiscoveryResponseFrame(frame);
@@ -199,7 +322,13 @@ class WardriveService extends ChangeNotifier {
 
     _discoveryResponsesReceived++;
     _lastDiscoveryResponseAt = result.timestamp;
-    unawaited(_saveSample(result));
+    if (_discoveryResponsesByTag.containsKey(result.tag)) {
+      _discoveryResponsesByTag[result.tag] =
+          (_discoveryResponsesByTag[result.tag] ?? 0) + 1;
+    }
+    if (_isRunning) {
+      unawaited(_saveSample(result));
+    }
     _currentDiscoveryPublicKeys.add(result.publicKeyHex);
     _recentDiscoveries.removeWhere(
       (entry) => entry.publicKeyHex == result.publicKeyHex,
@@ -220,8 +349,9 @@ class WardriveService extends ChangeNotifier {
   }
 
   Future<void> _saveSample(WardriveDiscoveryResult result) async {
-    final latitude = _lastPhoneLatitude;
-    final longitude = _lastPhoneLongitude;
+    final request = _pendingDiscoveryRequests[result.tag];
+    final latitude = request?.latitude ?? _lastPhoneLatitude;
+    final longitude = request?.longitude ?? _lastPhoneLongitude;
     if (latitude == null || longitude == null) {
       _lastSampleError = 'Phone GPS is not available for this sample';
       notifyListeners();
@@ -229,9 +359,9 @@ class WardriveService extends ChangeNotifier {
     }
 
     try {
-      final sample = WardriveSample(
+      final sample = WardriveSample.fromDiscovery(
         timestamp: result.timestamp,
-        phoneLocationAt: _lastPhoneLocationAt,
+        phoneLocationAt: request?.phoneLocationAt ?? _lastPhoneLocationAt,
         latitude: latitude,
         longitude: longitude,
         tag: result.tag,
@@ -241,18 +371,53 @@ class WardriveService extends ChangeNotifier {
         rssi: result.rssi,
         responseTimeMs: result.responseTimeMs,
       );
-      await _sampleStore.add(sample);
-      _savedSamplesCount = _sampleStore.count;
-      _lastSampleSavedAt = result.timestamp;
-      _lastSampleError = null;
-      _recentSamples.insert(0, sample);
-      if (_recentSamples.length > 100) {
-        _recentSamples.removeRange(100, _recentSamples.length);
-      }
+      await _persistSample(sample);
     } catch (error) {
       _lastSampleError = error.toString();
     }
     notifyListeners();
+  }
+
+  Future<void> _saveFailedSampleIfNoResponses(int tag) async {
+    final request = _pendingDiscoveryRequests[tag];
+    final responseCount = _discoveryResponsesByTag[tag] ?? 0;
+    _clearDiscoveryTracking(tag);
+    if (!_isRunning || request == null || responseCount > 0) return;
+
+    final latitude = request.latitude;
+    final longitude = request.longitude;
+    if (latitude == null || longitude == null) {
+      _lastSampleError = 'Phone GPS is not available for this sample';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      // No discovery responses for this tag means this measurement point is a
+      // dead zone; keep it as pingSuccess=false for wardrive coverage exports.
+      final sample = WardriveSample.fromDiscoveryFailure(
+        timestamp: DateTime.now(),
+        phoneLocationAt: request.phoneLocationAt,
+        latitude: latitude,
+        longitude: longitude,
+        tag: tag,
+      );
+      await _persistSample(sample);
+    } catch (error) {
+      _lastSampleError = error.toString();
+    }
+    notifyListeners();
+  }
+
+  Future<void> _persistSample(WardriveSample sample) async {
+    await _sampleStore.add(sample);
+    _savedSamplesCount = _sampleStore.count;
+    _lastSampleSavedAt = sample.timestamp;
+    _lastSampleError = null;
+    _recentSamples.insert(0, sample);
+    if (_recentSamples.length > _recentSamplesLimit) {
+      _recentSamples.removeRange(_recentSamplesLimit, _recentSamples.length);
+    }
   }
 
   String exportSamplesJson() {
@@ -308,10 +473,10 @@ class WardriveService extends ChangeNotifier {
         : Uint8List(0);
     if (publicKeyBytes.isEmpty) return null;
 
-    final startedAt = _pendingDiscoveryTags[tag];
-    final responseTimeMs = startedAt == null
+    final request = _pendingDiscoveryRequests[tag];
+    final responseTimeMs = request == null
         ? null
-        : DateTime.now().difference(startedAt).inMilliseconds;
+        : DateTime.now().difference(request.startedAt).inMilliseconds;
 
     return WardriveDiscoveryResult(
       timestamp: DateTime.now(),
@@ -341,7 +506,40 @@ class WardriveService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _autoDiscoveryTimer?.cancel();
+    _oneShotDiscoveryTimer?.cancel();
+    _clearDiscoveryTracking();
     _framesSubscription?.cancel();
     super.dispose();
   }
+
+  void _clearDiscoveryTracking([int? tag]) {
+    if (tag == null) {
+      for (final timer in _discoveryFailureTimers.values) {
+        timer.cancel();
+      }
+      _discoveryFailureTimers.clear();
+      _discoveryResponsesByTag.clear();
+      _pendingDiscoveryRequests.clear();
+      return;
+    }
+
+    _discoveryFailureTimers.remove(tag)?.cancel();
+    _discoveryResponsesByTag.remove(tag);
+    _pendingDiscoveryRequests.remove(tag);
+  }
+}
+
+class _WardriveDiscoveryRequest {
+  final DateTime startedAt;
+  final double? latitude;
+  final double? longitude;
+  final DateTime? phoneLocationAt;
+
+  const _WardriveDiscoveryRequest({
+    required this.startedAt,
+    required this.latitude,
+    required this.longitude,
+    required this.phoneLocationAt,
+  });
 }
