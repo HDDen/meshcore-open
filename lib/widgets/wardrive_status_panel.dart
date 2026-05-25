@@ -243,8 +243,8 @@ class WardriveStatusPanel extends StatelessWidget {
               children: [
                 IgnorePointer(
                   child: SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: 20,
+                    height: 20,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Checkbox(
