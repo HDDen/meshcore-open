@@ -427,7 +427,9 @@ class WardriveService extends ChangeNotifier {
 
     try {
       final sample = WardriveSample.fromDiscovery(
-        timestamp: result.timestamp,
+        // Match standalone wardrive: successful sample timestamp is the moment
+        // the sample is created/saved, not an earlier packet parsing timestamp.
+        timestamp: DateTime.now(),
         phoneLocationAt: request?.phoneLocationAt ?? _lastPhoneLocationAt,
         latitude: latitude,
         longitude: longitude,
