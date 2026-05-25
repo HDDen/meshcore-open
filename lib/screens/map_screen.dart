@@ -105,14 +105,18 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_wardriveService == null) {
-      _wardriveService = WardriveService(context.read<MeshCoreConnector>());
+    final wardriveService = context.read<WardriveService>();
+    if (_wardriveService != wardriveService) {
+      if (_wardriveServiceListener != null) {
+        _wardriveService?.removeListener(_wardriveServiceListener!);
+      }
+      _wardriveService = wardriveService;
       _wardriveServiceListener = () {
         if (mounted) {
           setState(() {});
         }
       };
-      _wardriveService!.addListener(_wardriveServiceListener!);
+      wardriveService.addListener(_wardriveServiceListener!);
     }
   }
 
@@ -121,7 +125,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (_wardriveServiceListener != null) {
       _wardriveService?.removeListener(_wardriveServiceListener!);
     }
-    _wardriveService?.dispose();
     super.dispose();
   }
 
@@ -1087,15 +1090,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     var weak = 0;
     var dead = 0;
     for (final cell in cells) {
-      if (cell.successCount == 0 && cell.failedCount > 0) {
+      if (cell.received == 0 && cell.lost > 0) {
         dead++;
       } else {
-        final total = cell.successCount + cell.failedCount;
+        final total = cell.received + cell.lost;
         if (total == 0) {
           weak++;
           continue;
         }
-        final successRate = cell.successCount / total;
+        final successRate = cell.received / total;
         if (successRate >= 0.66) {
           good++;
         } else if (successRate >= 0.33) {
@@ -1903,9 +1906,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             ],
             color: color.withValues(alpha: _wardriveCoverageOpacity(cell)),
             borderColor: color.withValues(alpha: 0.95),
-            borderStrokeWidth: cell.successCount == 0 && cell.failedCount > 0
-                ? 1.5
-                : 1,
+            borderStrokeWidth: cell.received == 0 && cell.lost > 0 ? 1.5 : 1,
           );
         })
         .whereType<Polygon>()
@@ -1927,24 +1928,67 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         .map((group) {
           final coverageHash = _wardriveCoverageHash(group.first);
           final bounds = _decodeWardriveGeohashBounds(coverageHash);
-          var successCount = 0;
-          var failedCount = 0;
-          for (final sample in group) {
-            if (sample.pingSuccess == true) {
-              successCount++;
-            } else if (sample.pingSuccess == false) {
-              failedCount++;
-            }
+          final stats = _buildWardriveCoverageStats(group);
+          if (stats.received == 0 && stats.lost == 0) {
+            return null;
           }
-          if (successCount == 0 && failedCount == 0) return null;
           return _WardriveCoverageCell(
             bounds: bounds,
-            successCount: successCount,
-            failedCount: failedCount,
+            received: stats.received,
+            lost: stats.lost,
           );
         })
         .whereType<_WardriveCoverageCell>()
         .toList();
+  }
+
+  _WardriveCoverageStats _buildWardriveCoverageStats(
+    List<WardriveSample> samples,
+  ) {
+    final sortedSamples = List<WardriveSample>.from(samples)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    var received = 0.0;
+    var lost = 0.0;
+
+    for (var i = 0; i < sortedSamples.length; i++) {
+      final sample = sortedSamples[i];
+      if (sample.pingSuccess == null) continue;
+
+      var weight = 1.0;
+      final ageInDays = DateTime.now().difference(sample.timestamp).inDays;
+      if (ageInDays > 30) {
+        weight = 0.2;
+      } else if (ageInDays > 7) {
+        weight = 0.5;
+      } else if (ageInDays > 1) {
+        weight = 0.8;
+      }
+
+      final newerSamples = sortedSamples.sublist(0, i > 10 ? 10 : i);
+      if (newerSamples.isNotEmpty) {
+        var contradictions = 0;
+        var agreements = 0;
+        for (final newer in newerSamples) {
+          if (newer.pingSuccess == null) continue;
+          if (newer.pingSuccess != sample.pingSuccess) {
+            contradictions++;
+          } else {
+            agreements++;
+          }
+        }
+        if (contradictions > agreements && contradictions >= 2) {
+          weight *= 0.1;
+        }
+      }
+
+      if (sample.pingSuccess == true) {
+        received += weight;
+      } else if (sample.pingSuccess == false) {
+        lost += weight;
+      }
+    }
+
+    return _WardriveCoverageStats(received: received, lost: lost);
   }
 
   String _wardriveCoverageHash(WardriveSample sample) {
@@ -2046,18 +2090,21 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   }
 
   Color _wardriveCoverageColor(_WardriveCoverageCell cell) {
-    final total = cell.successCount + cell.failedCount;
+    final total = cell.received + cell.lost;
     if (total == 0) return Colors.grey;
-    final successRate = cell.successCount / total;
-    if (successRate >= 0.66) return Colors.green;
-    if (successRate >= 0.33) return Colors.amber;
-    return Colors.redAccent;
+    final successRate = cell.received / total;
+    return Color.lerp(
+          const Color(0xFFD32F2F),
+          const Color(0xFF00C853),
+          successRate,
+        ) ??
+        const Color(0xFF00C853);
   }
 
   double _wardriveCoverageOpacity(_WardriveCoverageCell cell) {
-    if (cell.successCount >= 20) return 0.7;
-    if (cell.successCount >= 10) return 0.5;
-    if (cell.successCount >= 5) return 0.4;
+    if (cell.received >= 20) return 0.7;
+    if (cell.received >= 10) return 0.5;
+    if (cell.received >= 5) return 0.4;
     return 0.3;
   }
 
@@ -3493,14 +3540,21 @@ class _WardriveCountdownTextState extends State<_WardriveCountdownText> {
 
 class _WardriveCoverageCell {
   final _WardriveGeohashBounds? bounds;
-  final int successCount;
-  final int failedCount;
+  final double received;
+  final double lost;
 
   const _WardriveCoverageCell({
     required this.bounds,
-    required this.successCount,
-    required this.failedCount,
+    required this.received,
+    required this.lost,
   });
+}
+
+class _WardriveCoverageStats {
+  final double received;
+  final double lost;
+
+  const _WardriveCoverageStats({required this.received, required this.lost});
 }
 
 class _WardriveGeohashBounds {

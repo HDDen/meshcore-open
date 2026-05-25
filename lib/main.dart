@@ -26,6 +26,7 @@ import 'services/chat_text_scale_service.dart';
 import 'services/translation_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
+import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'helpers/mesh_compressor.dart';
 import 'utils/app_logger.dart';
@@ -51,6 +52,10 @@ void main() async {
   final translationService = TranslationService(appSettingsService);
   final uiViewStateService = UiViewStateService();
   final timeoutPredictionService = TimeoutPredictionService(storage);
+  final wardriveService = WardriveService(
+    connector,
+    backgroundService: backgroundService,
+  );
 
   // Load settings
   await appSettingsService.loadSettings();
@@ -109,6 +114,7 @@ void main() async {
       translationService: translationService,
       uiViewStateService: uiViewStateService,
       timeoutPredictionService: timeoutPredictionService,
+      wardriveService: wardriveService,
     ),
   );
 }
@@ -150,6 +156,7 @@ class MeshCoreApp extends StatelessWidget {
   final TranslationService translationService;
   final UiViewStateService uiViewStateService;
   final TimeoutPredictionService timeoutPredictionService;
+  final WardriveService wardriveService;
 
   const MeshCoreApp({
     super.key,
@@ -165,6 +172,7 @@ class MeshCoreApp extends StatelessWidget {
     required this.translationService,
     required this.uiViewStateService,
     required this.timeoutPredictionService,
+    required this.wardriveService,
   });
 
   @override
@@ -185,6 +193,7 @@ class MeshCoreApp extends StatelessWidget {
         Provider.value(value: storage),
         Provider.value(value: mapTileCacheService),
         ChangeNotifierProvider.value(value: timeoutPredictionService),
+        ChangeNotifierProvider.value(value: wardriveService),
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {

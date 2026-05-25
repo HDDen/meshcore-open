@@ -234,10 +234,60 @@ class WardriveSample {
   }
 }
 
+class WardriveSession {
+  final DateTime startTime;
+  final DateTime? endTime;
+  final double distanceMeters;
+  final int sampleCount;
+  final int pingCount;
+  final int successCount;
+  final String? notes;
+
+  const WardriveSession({
+    required this.startTime,
+    required this.endTime,
+    required this.distanceMeters,
+    required this.sampleCount,
+    required this.pingCount,
+    required this.successCount,
+    required this.notes,
+  });
+
+  Map<String, Object?> toJson() {
+    return {
+      'startTime': startTime.toIso8601String(),
+      'endTime': endTime?.toIso8601String(),
+      'distanceMeters': distanceMeters,
+      'sampleCount': sampleCount,
+      'pingCount': pingCount,
+      'successCount': successCount,
+      'notes': notes,
+    };
+  }
+
+  static WardriveSession? fromJson(Map<String, Object?> json) {
+    final startTime = DateTime.tryParse(json['startTime']?.toString() ?? '');
+    if (startTime == null) return null;
+
+    final endTimeText = json['endTime']?.toString();
+    return WardriveSession(
+      startTime: startTime,
+      endTime: endTimeText == null ? null : DateTime.tryParse(endTimeText),
+      distanceMeters: (json['distanceMeters'] as num?)?.toDouble() ?? 0.0,
+      sampleCount: (json['sampleCount'] as num?)?.toInt() ?? 0,
+      pingCount: (json['pingCount'] as num?)?.toInt() ?? 0,
+      successCount: (json['successCount'] as num?)?.toInt() ?? 0,
+      notes: json['notes']?.toString(),
+    );
+  }
+}
+
 class WardriveSampleStore {
   static const _samplesKey = 'wardrive_samples_v1';
+  static const _sessionsKey = 'wardrive_sessions_v1';
   static const _exportFormat = 'meshcore_wardrive_data';
   static const _maxSamples = 1000;
+  static const _maxSessions = 200;
 
   Future<void> add(WardriveSample sample) async {
     final prefs = PrefsManager.instance;
@@ -261,19 +311,28 @@ class WardriveSampleStore {
         .toList();
   }
 
-  String exportJson() {
+  String exportJson({WardriveSession? activeSession}) {
+    final sessions = loadSessions();
+    if (activeSession != null &&
+        !sessions.any(
+          (session) => session.startTime == activeSession.startTime,
+        )) {
+      sessions.insert(0, activeSession);
+    }
+
     return const JsonEncoder.withIndent('  ').convert({
       '_format': _exportFormat,
       '_version': 1,
       'samples': loadRecent(
         limit: _maxSamples,
       ).map((sample) => sample.toJson()).toList(),
-      'sessions': const <Object>[],
+      'sessions': sessions.map((session) => session.toJson()).toList(),
     });
   }
 
   Future<int> importJson(String rawJson) async {
     final importedSamples = _decodeImport(rawJson);
+    await _importSessions(rawJson: rawJson);
     if (importedSamples.isEmpty) return 0;
 
     final prefs = PrefsManager.instance;
@@ -302,10 +361,26 @@ class WardriveSampleStore {
 
   Future<void> clear() async {
     await PrefsManager.instance.remove(_samplesKey);
+    await PrefsManager.instance.remove(_sessionsKey);
   }
 
   int get count {
     return PrefsManager.instance.getStringList(_samplesKey)?.length ?? 0;
+  }
+
+  Future<void> addSession(WardriveSession session) async {
+    final prefs = PrefsManager.instance;
+    final sessions = prefs.getStringList(_sessionsKey) ?? const <String>[];
+    final nextSessions = <String>[
+      jsonEncode(session.toJson()),
+      ...sessions.take(_maxSessions - 1),
+    ];
+    await prefs.setStringList(_sessionsKey, nextSessions);
+  }
+
+  List<WardriveSession> loadSessions() {
+    final sessions = PrefsManager.instance.getStringList(_sessionsKey) ?? [];
+    return sessions.map(_decodeSession).whereType<WardriveSession>().toList();
   }
 
   List<WardriveSample> _decodeImport(String rawJson) {
@@ -315,6 +390,9 @@ class WardriveSampleStore {
         : decoded is List
         ? decoded
         : null;
+    if (rawSamples == null && decoded is Map && decoded['sessions'] is List) {
+      return const <WardriveSample>[];
+    }
     if (rawSamples is! List) {
       throw const FormatException('Wardrive samples JSON is invalid');
     }
@@ -328,6 +406,40 @@ class WardriveSampleStore {
         .toList();
   }
 
+  Future<void> _importSessions({required String rawJson}) async {
+    final decoded = jsonDecode(rawJson);
+    if (decoded is! Map || decoded['sessions'] is! List) return;
+
+    final incomingSessions = (decoded['sessions'] as List)
+        .whereType<Map>()
+        .map(
+          (entry) => WardriveSession.fromJson(Map<String, Object?>.from(entry)),
+        )
+        .whereType<WardriveSession>()
+        .toList();
+    if (incomingSessions.isEmpty) return;
+
+    final existingSessions = loadSessions();
+    final knownStarts = existingSessions
+        .map((session) => session.startTime.toIso8601String())
+        .toSet();
+    final merged = <WardriveSession>[];
+    for (final session in incomingSessions) {
+      if (knownStarts.add(session.startTime.toIso8601String())) {
+        merged.add(session);
+      }
+    }
+    merged.addAll(existingSessions);
+
+    await PrefsManager.instance.setStringList(
+      _sessionsKey,
+      merged
+          .take(_maxSessions)
+          .map((session) => jsonEncode(session.toJson()))
+          .toList(),
+    );
+  }
+
   String _sampleKey(WardriveSample sample) {
     return sample.id;
   }
@@ -337,6 +449,16 @@ class WardriveSampleStore {
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return null;
       return WardriveSample.fromJson(Map<String, Object?>.from(decoded));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  WardriveSession? _decodeSession(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return WardriveSession.fromJson(Map<String, Object?>.from(decoded));
     } catch (_) {
       return null;
     }

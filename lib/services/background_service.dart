@@ -6,6 +6,9 @@ import '../utils/platform_info.dart';
 
 class BackgroundService {
   bool _initialized = false;
+  // Multiple app features can keep the foreground service alive independently.
+  // Stop it only after the last active feature releases its reason.
+  final Set<String> _keepAliveReasons = {};
   String? Function()? _languageOverrideProvider;
 
   /// Allows the app to expose its current language override (e.g. from
@@ -38,8 +41,9 @@ class BackgroundService {
     _initialized = true;
   }
 
-  Future<void> start() async {
+  Future<void> start({String reason = 'connection'}) async {
     if (!PlatformInfo.isAndroid) return;
+    _keepAliveReasons.add(reason);
     if (!_initialized) {
       await initialize();
     }
@@ -70,8 +74,11 @@ class BackgroundService {
     return AppLocalizations.delegate.load(match);
   }
 
-  Future<void> stop() async {
+  Future<void> stop({String reason = 'connection'}) async {
     if (!PlatformInfo.isAndroid) return;
+    _keepAliveReasons.remove(reason);
+    if (_keepAliveReasons.isNotEmpty) return;
+
     final running = await FlutterForegroundTask.isRunningService;
     if (!running) return;
     await FlutterForegroundTask.stopService();

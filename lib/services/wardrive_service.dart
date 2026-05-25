@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import 'background_service.dart';
 import 'wardrive_sample_store.dart';
 
 class WardriveDiscoveryResult {
@@ -34,11 +35,13 @@ class WardriveDiscoveryResult {
 }
 
 class WardriveService extends ChangeNotifier {
-  WardriveService(this._connector) {
+  WardriveService(this._connector, {BackgroundService? backgroundService})
+    : _backgroundService = backgroundService {
     _loadSavedSamples();
   }
 
   final MeshCoreConnector _connector;
+  final BackgroundService? _backgroundService;
   final Random _random = Random();
   final WardriveSampleStore _sampleStore = WardriveSampleStore();
   final Map<int, _WardriveDiscoveryRequest> _pendingDiscoveryRequests = {};
@@ -73,8 +76,12 @@ class WardriveService extends ChangeNotifier {
   String? _lastAutoDiscoveryError;
   DateTime? _nextAutoDiscoveryAt;
   DateTime? _lastSampleSavedAt;
+  DateTime? _sessionStartedAt;
   Duration _autoDiscoveryInterval = defaultAutoDiscoveryInterval;
   int _savedSamplesCount = 0;
+  int _sessionSampleCount = 0;
+  int _sessionPingCount = 0;
+  int _sessionSuccessCount = 0;
 
   bool get isRunning => _isRunning;
   bool get usesPhoneLocationForDisplay =>
@@ -106,6 +113,8 @@ class WardriveService extends ChangeNotifier {
     if (_isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
+    unawaited(_backgroundService?.start(reason: 'wardrive'));
+    _startSession();
     _lastAutoDiscoveryError = null;
     _loadSavedSamples();
     _scheduleAutoDiscovery(const Duration(milliseconds: 250));
@@ -121,7 +130,9 @@ class WardriveService extends ChangeNotifier {
 
   void stop() {
     if (!_isRunning) return;
+    _finishSession();
     _isRunning = false;
+    unawaited(_backgroundService?.stop(reason: 'wardrive'));
     _autoDiscoveryTimer?.cancel();
     _autoDiscoveryTimer = null;
     _oneShotDiscoveryTimer?.cancel();
@@ -411,6 +422,7 @@ class WardriveService extends ChangeNotifier {
 
   Future<void> _persistSample(WardriveSample sample) async {
     await _sampleStore.add(sample);
+    _recordSessionSample(sample);
     _savedSamplesCount = _sampleStore.count;
     _lastSampleSavedAt = sample.timestamp;
     _lastSampleError = null;
@@ -421,7 +433,7 @@ class WardriveService extends ChangeNotifier {
   }
 
   String exportSamplesJson() {
-    return _sampleStore.exportJson();
+    return _sampleStore.exportJson(activeSession: _activeSessionSnapshot());
   }
 
   Future<int> importSamplesJson(String rawJson) async {
@@ -435,9 +447,57 @@ class WardriveService extends ChangeNotifier {
     await _sampleStore.clear();
     _recentSamples.clear();
     _savedSamplesCount = 0;
+    _sessionSampleCount = 0;
+    _sessionPingCount = 0;
+    _sessionSuccessCount = 0;
     _lastSampleSavedAt = null;
     _lastSampleError = null;
     notifyListeners();
+  }
+
+  void _startSession() {
+    _sessionStartedAt = DateTime.now();
+    _sessionSampleCount = 0;
+    _sessionPingCount = 0;
+    _sessionSuccessCount = 0;
+  }
+
+  void _recordSessionSample(WardriveSample sample) {
+    if (_sessionStartedAt == null) return;
+    _sessionSampleCount++;
+    if (sample.pingSuccess != null) {
+      _sessionPingCount++;
+    }
+    if (sample.pingSuccess == true) {
+      _sessionSuccessCount++;
+    }
+  }
+
+  void _finishSession() {
+    final session = _activeSessionSnapshot(endTime: DateTime.now());
+    if (session == null) return;
+    // Keep session export compatible with the standalone wardrive app. Distance
+    // tracking is not ported yet, so distanceMeters intentionally remains 0.
+    unawaited(_sampleStore.addSession(session));
+    _sessionStartedAt = null;
+    _sessionSampleCount = 0;
+    _sessionPingCount = 0;
+    _sessionSuccessCount = 0;
+  }
+
+  WardriveSession? _activeSessionSnapshot({DateTime? endTime}) {
+    final startedAt = _sessionStartedAt;
+    if (startedAt == null) return null;
+
+    return WardriveSession(
+      startTime: startedAt,
+      endTime: endTime,
+      distanceMeters: 0,
+      sampleCount: _sessionSampleCount,
+      pingCount: _sessionPingCount,
+      successCount: _sessionSuccessCount,
+      notes: null,
+    );
   }
 
   WardriveDiscoveryResult? _parseDiscoveryResponseFrame(Uint8List frame) {
@@ -506,6 +566,8 @@ class WardriveService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _finishSession();
+    unawaited(_backgroundService?.stop(reason: 'wardrive'));
     _autoDiscoveryTimer?.cancel();
     _oneShotDiscoveryTimer?.cancel();
     _clearDiscoveryTracking();
