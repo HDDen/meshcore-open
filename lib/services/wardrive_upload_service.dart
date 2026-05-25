@@ -372,7 +372,16 @@ class WardriveUploadService {
           // Some self-hosted endpoints save samples but keep the HTTP response
           // open too long. This option is per-site to avoid losing data on
           // ordinary network timeouts.
-          reportStatus(WardriveUploadStatusPhase.timeoutTreatedAsSuccess);
+          onUploadProgress?.call(
+            WardriveUploadProgress(
+              siteName: siteName,
+              currentBatch: currentBatch,
+              totalBatches: totalBatches,
+              phase: WardriveUploadStatusPhase.timeoutTreatedAsSuccess,
+              sentSamples: sentSamples,
+              totalSamples: totalSamples,
+            ),
+          );
           return WardriveUploadResult(
             success: true,
             message: 'Timed out after upload; treated as success',
