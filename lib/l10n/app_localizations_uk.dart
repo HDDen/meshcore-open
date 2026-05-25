@@ -2023,7 +2023,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_wardriveAutoDiscovery => 'Авто discovery';
 
   @override
-  String get map_wardriveSecondsSuffix => '?';
+  String get map_wardriveSecondsSuffix => 'с';
 
   @override
   String map_wardriveSamplesSaved(int count) {

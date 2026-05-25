@@ -2430,7 +2430,7 @@
   "map_wardriveExport": "Експорт",
   "map_wardriveImport": "Імпорт",
   "map_wardriveAutoDiscovery": "Авто discovery",
-  "map_wardriveSecondsSuffix": "?",
+  "map_wardriveSecondsSuffix": "с",
   "map_wardriveSamplesSaved": "Збережено семплів: {count}",
   "@map_wardriveSamplesSaved": {
     "placeholders": {
