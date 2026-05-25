@@ -1032,6 +1032,7 @@
   "map_wardriveUploadData": "Upload Data",
   "map_wardriveManageUploadSites": "Manage Upload Sites",
   "map_wardriveAutoUpload": "Autoupload",
+  "map_wardriveScreenWakelock": "Screen wakelock",
   "map_wardriveExport": "Export",
   "map_wardriveImport": "Import",
   "map_wardriveAutoDiscovery": "Auto discovery",

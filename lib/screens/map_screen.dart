@@ -12,6 +12,7 @@ import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -27,6 +28,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_upload_service.dart';
 import '../utils/contact_search.dart';
+import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/wardrive_coverage_helper.dart';
@@ -64,7 +66,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
+class _MapScreenState extends State<MapScreen>
+    with DisconnectNavigationMixin, RouteAware {
   // Zoom level at which node labels start to appear
   static const double _labelZoomThreshold = 14.0;
   static const double _mapMinZoom = 2.0;
@@ -90,6 +93,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   String _guessedLocationsCacheKey = '';
   WardriveService? _wardriveService;
   VoidCallback? _wardriveServiceListener;
+  PageRoute<dynamic>? _observedRoute;
+  bool _isCurrentRouteActive = false;
+  bool _wardriveScreenWakelockActive = false;
 
   @override
   void initState() {
@@ -108,6 +114,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic> && _observedRoute != route) {
+      if (_observedRoute != null) {
+        appRouteObserver.unsubscribe(this);
+      }
+      _observedRoute = route;
+      _isCurrentRouteActive = route.isCurrent;
+      appRouteObserver.subscribe(this, route);
+    }
     final wardriveService = context.read<WardriveService>();
     if (_wardriveService != wardriveService) {
       if (_wardriveServiceListener != null) {
@@ -115,21 +130,71 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       }
       _wardriveService = wardriveService;
       _wardriveServiceListener = () {
+        _syncWardriveScreenWakelock();
         if (mounted) {
           setState(() {});
         }
       };
       wardriveService.addListener(_wardriveServiceListener!);
     }
+    _syncWardriveScreenWakelock();
   }
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
+    _disableWardriveScreenWakelock();
     if (_wardriveServiceListener != null) {
       _wardriveService?.removeListener(_wardriveServiceListener!);
     }
     _wardriveService?.clearMapState();
     super.dispose();
+  }
+
+  @override
+  void didPush() {
+    _isCurrentRouteActive = true;
+    _syncWardriveScreenWakelock();
+  }
+
+  @override
+  void didPopNext() {
+    _isCurrentRouteActive = true;
+    _syncWardriveScreenWakelock();
+  }
+
+  @override
+  void didPushNext() {
+    _isCurrentRouteActive = false;
+    _syncWardriveScreenWakelock();
+  }
+
+  @override
+  void didPop() {
+    _isCurrentRouteActive = false;
+    _syncWardriveScreenWakelock();
+  }
+
+  void _syncWardriveScreenWakelock() {
+    final wardrive = _wardriveService;
+    final shouldEnable =
+        _isCurrentRouteActive &&
+        (wardrive?.isRunning ?? false) &&
+        (wardrive?.screenWakelockEnabled ?? false);
+    if (_wardriveScreenWakelockActive == shouldEnable) return;
+    _wardriveScreenWakelockActive = shouldEnable;
+    // Wakelock is screen-local: wardrive may keep running in background, but
+    // the display is kept awake only while the map route is actually visible.
+    final action = shouldEnable
+        ? WakelockPlus.enable()
+        : WakelockPlus.disable();
+    unawaited(action.catchError((_) {}));
+  }
+
+  void _disableWardriveScreenWakelock() {
+    if (!_wardriveScreenWakelockActive) return;
+    _wardriveScreenWakelockActive = false;
+    unawaited(WakelockPlus.disable().catchError((_) {}));
   }
 
   Future<void> _loadRemovedMarkers() async {
@@ -734,6 +799,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     collapsed: _wardrivePanelCollapsed,
                     autoUploadEnabled:
                         _wardriveUploadService.isAutoUploadEnabledSync,
+                    screenWakelockEnabled: wardrive.screenWakelockEnabled,
                     onToggleCollapsed: () {
                       setState(() {
                         _wardrivePanelCollapsed = !_wardrivePanelCollapsed;
@@ -883,6 +949,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       case WardriveDataAction.autoUpload:
         await _toggleWardriveAutoUpload(wardrive);
         break;
+      case WardriveDataAction.screenWakelock:
+        await _toggleWardriveScreenWakelock(wardrive);
+        break;
       case WardriveDataAction.exportSamples:
         await _exportWardriveSamples(wardrive);
         break;
@@ -911,6 +980,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             : context.l10n.map_wardriveAutoUploadDisabled,
       ),
     );
+  }
+
+  Future<void> _toggleWardriveScreenWakelock(WardriveService wardrive) async {
+    await wardrive.setScreenWakelockEnabled(!wardrive.screenWakelockEnabled);
+    _syncWardriveScreenWakelock();
   }
 
   Future<void> _uploadWardriveSamples(WardriveService wardrive) async {

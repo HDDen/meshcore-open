@@ -30,6 +30,7 @@ import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'helpers/mesh_compressor.dart';
 import 'utils/app_logger.dart';
+import 'utils/app_route_observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -200,6 +201,7 @@ class MeshCoreApp extends StatelessWidget {
           return MaterialApp(
             title: 'MeshCore Open',
             navigatorKey: _navigatorKey,
+            navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [
               AppLocalizations.delegate,

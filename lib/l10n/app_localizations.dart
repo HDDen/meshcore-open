@@ -3640,6 +3640,12 @@ abstract class AppLocalizations {
   /// **'Autoupload'**
   String get map_wardriveAutoUpload;
 
+  /// No description provided for @map_wardriveScreenWakelock.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen wakelock'**
+  String get map_wardriveScreenWakelock;
+
   /// No description provided for @map_wardriveExport.
   ///
   /// In en, this message translates to:

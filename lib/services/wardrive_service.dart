@@ -60,6 +60,8 @@ class WardriveService extends ChangeNotifier {
   static const int _recentSamplesLimit = 3000;
   static const String _autoDiscoveryIntervalSecondsKey =
       'wardrive_auto_discovery_interval_seconds_v1';
+  static const String _screenWakelockEnabledKey =
+      'wardrive_screen_wakelock_enabled_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
   Timer? _autoDiscoveryTimer;
@@ -71,6 +73,7 @@ class WardriveService extends ChangeNotifier {
   bool _usePhoneLocationForDisplay = false;
   bool _isSendingDiscovery = false;
   bool _isUpdatingLocation = false;
+  bool _screenWakelockEnabled = false;
   bool _isAutoUploadInProgress = false;
   int _discoveryRequestsSent = 0;
   int _discoveryResponsesReceived = 0;
@@ -98,6 +101,7 @@ class WardriveService extends ChangeNotifier {
       hasMapState && (_isRunning || _usePhoneLocationForDisplay);
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isUpdatingLocation => _isUpdatingLocation;
+  bool get screenWakelockEnabled => _screenWakelockEnabled;
   int get discoveryRequestsSent => _discoveryRequestsSent;
   int get discoveryResponsesReceived => _discoveryResponsesReceived;
   DateTime? get lastDiscoveryRequestAt => _lastDiscoveryRequestAt;
@@ -149,13 +153,23 @@ class WardriveService extends ChangeNotifier {
     final seconds = PrefsManager.instance.getInt(
       _autoDiscoveryIntervalSecondsKey,
     );
-    if (seconds == null) return;
-    _autoDiscoveryInterval = Duration(
-      seconds: seconds.clamp(
-        minAutoDiscoveryIntervalSeconds,
-        maxAutoDiscoveryIntervalSeconds,
-      ),
-    );
+    if (seconds != null) {
+      _autoDiscoveryInterval = Duration(
+        seconds: seconds.clamp(
+          minAutoDiscoveryIntervalSeconds,
+          maxAutoDiscoveryIntervalSeconds,
+        ),
+      );
+    }
+    _screenWakelockEnabled =
+        PrefsManager.instance.getBool(_screenWakelockEnabledKey) ?? false;
+  }
+
+  Future<void> setScreenWakelockEnabled(bool enabled) async {
+    if (_screenWakelockEnabled == enabled) return;
+    _screenWakelockEnabled = enabled;
+    await PrefsManager.instance.setBool(_screenWakelockEnabledKey, enabled);
+    notifyListeners();
   }
 
   void stop() {

@@ -2016,6 +2016,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Autoupload';
 
   @override
+  String get map_wardriveScreenWakelock => 'Screen wakelock';
+
+  @override
   String get map_wardriveExport => 'Export';
 
   @override

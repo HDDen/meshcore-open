@@ -14,6 +14,7 @@ enum WardriveDataAction {
   upload,
   uploadSites,
   autoUpload,
+  screenWakelock,
   exportSamples,
   importSamples,
   clear,
@@ -23,6 +24,7 @@ class WardriveStatusPanel extends StatelessWidget {
   final WardriveService wardrive;
   final bool collapsed;
   final bool autoUploadEnabled;
+  final bool screenWakelockEnabled;
   final VoidCallback onToggleCollapsed;
   final ValueChanged<WardriveDataAction> onDataAction;
   final ValueChanged<String> onIntervalSubmitted;
@@ -33,6 +35,7 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.wardrive,
     required this.collapsed,
     required this.autoUploadEnabled,
+    required this.screenWakelockEnabled,
     required this.onToggleCollapsed,
     required this.onDataAction,
     required this.onIntervalSubmitted,
@@ -256,22 +259,19 @@ class WardriveStatusPanel extends StatelessWidget {
             value: WardriveDataAction.autoUpload,
             child: Row(
               children: [
-                IgnorePointer(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Checkbox(
-                        value: autoUploadEnabled,
-                        onChanged: (_) {},
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildMenuCheckbox(autoUploadEnabled),
                 const SizedBox(width: 4),
                 Text(context.l10n.map_wardriveAutoUpload),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: WardriveDataAction.screenWakelock,
+            child: Row(
+              children: [
+                _buildMenuCheckbox(screenWakelockEnabled),
+                const SizedBox(width: 4),
+                Text(context.l10n.map_wardriveScreenWakelock),
               ],
             ),
           ),
@@ -310,6 +310,23 @@ class WardriveStatusPanel extends StatelessWidget {
           ),
         ];
       },
+    );
+  }
+
+  Widget _buildMenuCheckbox(bool value) {
+    return IgnorePointer(
+      child: SizedBox(
+        width: 20,
+        height: 20,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Checkbox(
+            value: value,
+            onChanged: (_) {},
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+      ),
     );
   }
 
