@@ -286,7 +286,7 @@ class WardriveSampleStore {
   static const _samplesKey = 'wardrive_samples_v1';
   static const _sessionsKey = 'wardrive_sessions_v1';
   static const _exportFormat = 'meshcore_wardrive_data';
-  static const _maxSamples = 1000;
+  static const _maxSamples = 3000;
   static const _maxSessions = 200;
 
   Future<void> add(WardriveSample sample) async {

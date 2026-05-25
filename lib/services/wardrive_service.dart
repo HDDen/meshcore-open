@@ -6,8 +6,10 @@ import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../storage/prefs_manager.dart';
 import 'background_service.dart';
 import 'wardrive_sample_store.dart';
+import 'wardrive_upload_service.dart';
 
 class WardriveDiscoveryResult {
   final DateTime timestamp;
@@ -37,6 +39,7 @@ class WardriveDiscoveryResult {
 class WardriveService extends ChangeNotifier {
   WardriveService(this._connector, {BackgroundService? backgroundService})
     : _backgroundService = backgroundService {
+    _loadSavedSettings();
     _loadSavedSamples();
   }
 
@@ -54,16 +57,21 @@ class WardriveService extends ChangeNotifier {
   static const Duration _discoveryResponseWindow = Duration(seconds: 10);
   static const int minAutoDiscoveryIntervalSeconds = 5;
   static const int maxAutoDiscoveryIntervalSeconds = 300;
-  static const int _recentSamplesLimit = 1000;
+  static const int _recentSamplesLimit = 3000;
+  static const String _autoDiscoveryIntervalSecondsKey =
+      'wardrive_auto_discovery_interval_seconds_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
   Timer? _autoDiscoveryTimer;
   Timer? _oneShotDiscoveryTimer;
+  Timer? _autoUploadTimer;
   bool _isRunning = false;
   bool _acceptOneShotDiscoveryResponses = false;
+  bool _showMapState = false;
   bool _usePhoneLocationForDisplay = false;
   bool _isSendingDiscovery = false;
   bool _isUpdatingLocation = false;
+  bool _isAutoUploadInProgress = false;
   int _discoveryRequestsSent = 0;
   int _discoveryResponsesReceived = 0;
   DateTime? _lastDiscoveryRequestAt;
@@ -78,14 +86,16 @@ class WardriveService extends ChangeNotifier {
   DateTime? _lastSampleSavedAt;
   DateTime? _sessionStartedAt;
   Duration _autoDiscoveryInterval = defaultAutoDiscoveryInterval;
+  final WardriveUploadService _uploadService = WardriveUploadService();
   int _savedSamplesCount = 0;
   int _sessionSampleCount = 0;
   int _sessionPingCount = 0;
   int _sessionSuccessCount = 0;
 
   bool get isRunning => _isRunning;
+  bool get hasMapState => _isRunning || _showMapState;
   bool get usesPhoneLocationForDisplay =>
-      _isRunning || _usePhoneLocationForDisplay;
+      hasMapState && (_isRunning || _usePhoneLocationForDisplay);
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isUpdatingLocation => _isUpdatingLocation;
   int get discoveryRequestsSent => _discoveryRequestsSent;
@@ -113,6 +123,7 @@ class WardriveService extends ChangeNotifier {
     if (_isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
+    _showMapState = true;
     unawaited(_backgroundService?.start(reason: 'wardrive'));
     _startSession();
     _lastAutoDiscoveryError = null;
@@ -128,6 +139,19 @@ class WardriveService extends ChangeNotifier {
       ..addAll(_sampleStore.loadRecent(limit: _recentSamplesLimit));
   }
 
+  void _loadSavedSettings() {
+    final seconds = PrefsManager.instance.getInt(
+      _autoDiscoveryIntervalSecondsKey,
+    );
+    if (seconds == null) return;
+    _autoDiscoveryInterval = Duration(
+      seconds: seconds.clamp(
+        minAutoDiscoveryIntervalSeconds,
+        maxAutoDiscoveryIntervalSeconds,
+      ),
+    );
+  }
+
   void stop() {
     if (!_isRunning) return;
     _finishSession();
@@ -138,10 +162,20 @@ class WardriveService extends ChangeNotifier {
     _oneShotDiscoveryTimer?.cancel();
     _oneShotDiscoveryTimer = null;
     _acceptOneShotDiscoveryResponses = false;
-    _usePhoneLocationForDisplay = false;
     _clearDiscoveryTracking();
+    _lastAutoDiscoveryError = null;
+    _nextAutoDiscoveryAt = null;
+    notifyListeners();
+  }
+
+  void clearMapState() {
+    if (_isRunning) return;
+    _showMapState = false;
+    _usePhoneLocationForDisplay = false;
     _currentDiscoveryPublicKeys.clear();
+    _recentDiscoveries.clear();
     _lastDiscoveryRequestAt = null;
+    _lastDiscoveryResponseAt = null;
     _lastLocationError = null;
     _lastSampleError = null;
     _lastAutoDiscoveryError = null;
@@ -194,6 +228,7 @@ class WardriveService extends ChangeNotifier {
     if (startWardrive) {
       start();
     } else {
+      _showMapState = true;
       _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
       _acceptOneShotDiscoveryResponses = true;
       _oneShotDiscoveryTimer?.cancel();
@@ -274,6 +309,9 @@ class WardriveService extends ChangeNotifier {
       maxAutoDiscoveryIntervalSeconds,
     );
     _autoDiscoveryInterval = Duration(seconds: clamped);
+    unawaited(
+      PrefsManager.instance.setInt(_autoDiscoveryIntervalSecondsKey, clamped),
+    );
     if (_isRunning) {
       _scheduleAutoDiscovery(_autoDiscoveryInterval);
     }
@@ -430,6 +468,51 @@ class WardriveService extends ChangeNotifier {
     if (_recentSamples.length > _recentSamplesLimit) {
       _recentSamples.removeRange(_recentSamplesLimit, _recentSamples.length);
     }
+    _scheduleAutoUpload();
+  }
+
+  void _scheduleAutoUpload() {
+    if (!_uploadService.isAutoUploadEnabledSync || _autoUploadTimer != null) {
+      return;
+    }
+    _autoUploadTimer = Timer(const Duration(seconds: 2), () {
+      _autoUploadTimer = null;
+      unawaited(runAutoUpload());
+    });
+  }
+
+  Future<void> runAutoUpload() async {
+    if (_isAutoUploadInProgress || !_uploadService.isAutoUploadEnabledSync) {
+      return;
+    }
+    _isAutoUploadInProgress = true;
+    try {
+      final results = await _uploadService.uploadNextBatchToSelectedSites(
+        repeaterNames: _wardriveUploadRepeaterNames(),
+      );
+      final uploadedFullBatch = results.values.any(
+        (result) =>
+            result.success &&
+            (result.uploadedCount ?? 0) >=
+                WardriveUploadService.autoUploadBatchSize,
+      );
+      if (uploadedFullBatch && _uploadService.isAutoUploadEnabledSync) {
+        _scheduleAutoUpload();
+      }
+    } finally {
+      _isAutoUploadInProgress = false;
+    }
+  }
+
+  Map<String, String> _wardriveUploadRepeaterNames() {
+    final names = <String, String>{};
+    for (final contact in _connector.allContactsUnfiltered) {
+      final key = contact.publicKeyHex.toUpperCase();
+      if (key.isNotEmpty && contact.name.isNotEmpty) {
+        names[key] = contact.name;
+      }
+    }
+    return names;
   }
 
   String exportSamplesJson() {
@@ -570,6 +653,7 @@ class WardriveService extends ChangeNotifier {
     unawaited(_backgroundService?.stop(reason: 'wardrive'));
     _autoDiscoveryTimer?.cancel();
     _oneShotDiscoveryTimer?.cancel();
+    _autoUploadTimer?.cancel();
     _clearDiscoveryTracking();
     _framesSubscription?.cancel();
     super.dispose();

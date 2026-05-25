@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:collection';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -24,14 +24,15 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
-import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_upload_service.dart';
 import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../helpers/wardrive_coverage_helper.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../widgets/wardrive_status_panel.dart';
 import '../icons/los_icon.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
@@ -127,6 +128,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     if (_wardriveServiceListener != null) {
       _wardriveService?.removeListener(_wardriveServiceListener!);
     }
+    _wardriveService?.clearMapState();
     super.dispose();
   }
 
@@ -369,14 +371,14 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           contactsWithLocation,
           wardriveAnsweredKeys,
         );
-        final wardriveCoveragePolygons = wardrive.isRunning
-            ? _buildWardriveCoveragePolygons(wardrive.recentSamples)
+        final wardriveCoveragePolygons = wardrive.hasMapState
+            ? WardriveCoverageHelper.buildPolygons(wardrive.recentSamples)
             : const <Polygon>[];
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
         double initialZoom = 10.0;
-        final wardriveSamplePoints = wardrive.isRunning
+        final wardriveSamplePoints = wardrive.hasMapState
             ? wardrive.recentSamples
                   .map((sample) => LatLng(sample.latitude, sample.longitude))
                   .toList()
@@ -726,10 +728,24 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     sharedMarkers.length,
                     guessedLocations.length,
                   ),
-                if (!_isBuildingPathTrace &&
-                    (wardrive.isRunning ||
-                        wardrive.lastDiscoveryRequestAt != null))
-                  _buildWardriveStatusPanel(wardrive),
+                if (!_isBuildingPathTrace && wardrive.hasMapState)
+                  WardriveStatusPanel(
+                    wardrive: wardrive,
+                    collapsed: _wardrivePanelCollapsed,
+                    autoUploadEnabled:
+                        _wardriveUploadService.isAutoUploadEnabledSync,
+                    onToggleCollapsed: () {
+                      setState(() {
+                        _wardrivePanelCollapsed = !_wardrivePanelCollapsed;
+                      });
+                    },
+                    onDataAction: (action) {
+                      unawaited(_handleWardriveDataAction(action, wardrive));
+                    },
+                    onIntervalSubmitted: (value) =>
+                        _updateWardriveAutoDiscoveryInterval(wardrive, value),
+                    formatLastSeen: _formatLastSeen,
+                  ),
                 if (isDesktop)
                   _buildDesktopMapControls(
                     context,
@@ -778,7 +794,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         FloatingActionButton.small(
           heroTag: 'wardrive_toggle',
           onPressed: () => _toggleWardrive(wardrive),
-          tooltip: 'Wardrive',
+          tooltip: context.l10n.map_wardrive,
           child: Icon(
             wardrive.isRunning ? Icons.stop : Icons.directions_car_filled,
           ),
@@ -789,7 +805,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           onPressed: connector.isConnected
               ? () => _sendWardriveDiscovery(context, wardrive)
               : null,
-          tooltip: 'Zero-hop discovery',
+          tooltip: context.l10n.map_wardriveZeroHopDiscovery,
           child: wardrive.isSendingDiscovery
               ? const SizedBox(
                   width: 18,
@@ -827,273 +843,18 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
-        content: const Text('Wardrive discovery request sent.'),
+        content: Text(context.l10n.map_wardriveDiscoverySent),
       );
     } catch (error) {
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
-        content: Text('Wardrive discovery failed: $error'),
+        content: Text(
+          context.l10n.map_wardriveDiscoveryFailed(error.toString()),
+        ),
         backgroundColor: Colors.red,
       );
     }
-  }
-
-  Widget _buildWardriveStatusPanel(WardriveService wardrive) {
-    final recent = wardrive.recentDiscoveries.take(4).toList();
-    return Positioned(
-      left: 16,
-      bottom: 16,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 300),
-        child: Material(
-          elevation: 4,
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: _wardrivePanelCollapsed
-                ? _buildCollapsedWardrivePanel(wardrive)
-                : _buildExpandedWardrivePanel(wardrive, recent),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCollapsedWardrivePanel(WardriveService wardrive) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.directions_car_filled,
-          size: 18,
-          color: wardrive.isRunning
-              ? Colors.green
-              : Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 8),
-        const Text('Wardrive', style: TextStyle(fontWeight: FontWeight.w700)),
-        _WardriveCountdownText(wardrive: wardrive),
-        if (wardrive.isSendingDiscovery) ...[
-          const SizedBox(width: 8),
-          const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ],
-        if (wardrive.isUpdatingLocation) ...[
-          const SizedBox(width: 8),
-          const Icon(Icons.my_location, size: 16),
-        ],
-        const SizedBox(width: 8),
-        _buildWardriveCollapseButton(),
-      ],
-    );
-  }
-
-  Widget _buildExpandedWardrivePanel(
-    WardriveService wardrive,
-    List<WardriveDiscoveryResult> recent,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.directions_car_filled,
-              size: 18,
-              color: wardrive.isRunning
-                  ? Colors.green
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Wardrive',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            _WardriveCountdownText(wardrive: wardrive),
-            if (wardrive.isSendingDiscovery) ...[
-              const SizedBox(width: 8),
-              const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
-            if (wardrive.isUpdatingLocation) ...[
-              const SizedBox(width: 8),
-              const Icon(Icons.my_location, size: 16),
-            ],
-            const Spacer(),
-            _buildWardriveDataMenu(wardrive),
-            const SizedBox(width: 4),
-            _buildWardriveCollapseButton(),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Requests: ${wardrive.discoveryRequestsSent}  Responses: ${wardrive.discoveryResponsesReceived}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        Text(
-          'Samples saved: ${wardrive.savedSamplesCount}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        if (wardrive.isRunning && wardrive.recentSamples.isNotEmpty)
-          _buildWardriveCoverageSummary(wardrive.recentSamples),
-        if (wardrive.isRunning)
-          _buildWardriveAutoDiscoveryIntervalInput(wardrive),
-        if (wardrive.lastAutoDiscoveryError != null)
-          Text(
-            'Auto discovery: ${wardrive.lastAutoDiscoveryError}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.error,
-            ),
-          ),
-        Text(
-          _formatWardriveLocationStatus(wardrive),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: wardrive.lastLocationError == null
-                ? null
-                : Theme.of(context).colorScheme.error,
-          ),
-        ),
-        if (wardrive.lastDiscoveryRequestAt != null)
-          Text(
-            'Last request: ${_formatLastSeen(wardrive.lastDiscoveryRequestAt!)}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        if (wardrive.lastSampleError != null)
-          Text(
-            'Sample save: ${wardrive.lastSampleError}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.error,
-            ),
-          ),
-        if (recent.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-          ...recent.map(_buildWardriveResultRow),
-        ] else ...[
-          const SizedBox(height: 8),
-          Text(
-            'No discovery responses yet.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildWardriveDataMenu(WardriveService wardrive) {
-    return PopupMenuButton<String>(
-      tooltip: 'Wardrive data',
-      icon: const Icon(Icons.more_horiz, size: 18),
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 160),
-      onSelected: (action) {
-        unawaited(_handleWardriveDataAction(action, wardrive));
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'upload',
-          child: Row(
-            children: [
-              Icon(Icons.cloud_upload, size: 18),
-              SizedBox(width: 8),
-              Text('Upload Data'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'upload-sites',
-          child: Row(
-            children: [
-              Icon(Icons.cloud_queue, size: 18),
-              SizedBox(width: 8),
-              Text('Manage Upload Sites'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'export',
-          child: Row(
-            children: [
-              Icon(Icons.ios_share, size: 18),
-              SizedBox(width: 8),
-              Text('Export'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'import',
-          child: Row(
-            children: [
-              Icon(Icons.input, size: 18),
-              SizedBox(width: 8),
-              Text('Import'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'clear',
-          child: Row(
-            children: [
-              Icon(Icons.delete_outline, size: 18),
-              SizedBox(width: 8),
-              Text('Clear'),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWardriveAutoDiscoveryIntervalInput(WardriveService wardrive) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Auto discovery', style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            height: 32,
-            child: TextFormField(
-              key: ValueKey(
-                'wardrive-auto-${wardrive.autoDiscoveryIntervalSeconds}',
-              ),
-              initialValue: wardrive.autoDiscoveryIntervalSeconds.toString(),
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                border: OutlineInputBorder(),
-              ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onFieldSubmitted: (value) =>
-                  _updateWardriveAutoDiscoveryInterval(wardrive, value),
-              onTapOutside: (_) => FocusScope.of(context).unfocus(),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text('s', style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
   }
 
   void _updateWardriveAutoDiscoveryInterval(
@@ -1103,81 +864,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     final seconds = int.tryParse(value);
     if (seconds == null) return;
     wardrive.setAutoDiscoveryIntervalSeconds(seconds);
-  }
-
-  Widget _buildWardriveCoverageSummary(List<WardriveSample> samples) {
-    final cells = _buildWardriveCoverageCells(samples);
-    var good = 0;
-    var fair = 0;
-    var weak = 0;
-    var dead = 0;
-    for (final cell in cells) {
-      if (cell.received == 0 && cell.lost > 0) {
-        dead++;
-      } else {
-        final total = cell.received + cell.lost;
-        if (total == 0) {
-          weak++;
-          continue;
-        }
-        final successRate = cell.received / total;
-        if (successRate >= 0.66) {
-          good++;
-        } else if (successRate >= 0.33) {
-          fair++;
-        } else {
-          weak++;
-        }
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Coverage cells: ${cells.length}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          _buildWardriveCoverageLegendItem(Colors.green, good),
-          _buildWardriveCoverageLegendItem(Colors.amber, fair),
-          _buildWardriveCoverageLegendItem(Colors.redAccent, weak),
-          _buildWardriveDeadZoneLegendItem(dead),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWardriveCoverageLegendItem(Color color, int count) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 3),
-        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
-      ],
-    );
-  }
-
-  Widget _buildWardriveDeadZoneLegendItem(int count) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.close, size: 10, color: Colors.redAccent),
-        const SizedBox(width: 3),
-        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
-      ],
-    );
   }
 
   Future<void> _handleWardriveDataAction(
@@ -1191,6 +877,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       case 'upload-sites':
         await _manageWardriveUploadSites();
         break;
+      case 'autoupload':
+        await _toggleWardriveAutoUpload(wardrive);
+        break;
       case 'export':
         await _exportWardriveSamples(wardrive);
         break;
@@ -1201,6 +890,20 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         await _confirmClearWardriveSamples(wardrive);
         break;
     }
+  }
+
+  Future<void> _toggleWardriveAutoUpload(WardriveService wardrive) async {
+    final enabled = !_wardriveUploadService.isAutoUploadEnabledSync;
+    await _wardriveUploadService.setAutoUploadEnabled(enabled);
+    if (enabled) {
+      unawaited(wardrive.runAutoUpload());
+    }
+    if (!mounted) return;
+    setState(() {});
+    showDismissibleSnackBar(
+      context,
+      content: Text('Autoupload ${enabled ? 'enabled' : 'disabled'}.'),
+    );
   }
 
   Future<void> _uploadWardriveSamples(WardriveService wardrive) async {
@@ -1602,14 +1305,25 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
 
     final json = wardrive.exportSamplesJson();
     try {
+      final fileName = 'meshcore_wardrive_${_wardriveExportTimestamp()}.json';
       await Clipboard.setData(ClipboardData(text: json));
       await SharePlus.instance.share(
-        ShareParams(text: json, subject: 'meshcore-open wardrive samples'),
+        ShareParams(
+          subject: 'meshcore-open wardrive samples',
+          text: 'meshcore-open wardrive samples',
+          files: [
+            XFile.fromData(
+              Uint8List.fromList(utf8.encode(json)),
+              mimeType: 'application/json',
+              name: fileName,
+            ),
+          ],
+        ),
       );
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
-        content: const Text('Wardrive samples exported and copied.'),
+        content: const Text('Wardrive samples exported as JSON file.'),
       );
     } catch (error) {
       if (!mounted) return;
@@ -1619,6 +1333,16 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         backgroundColor: Colors.red,
       );
     }
+  }
+
+  String _wardriveExportTimestamp() {
+    return DateTime.now()
+        .toUtc()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .replaceAll('.', '-')
+        .replaceAll('T', '_')
+        .replaceAll('Z', '');
   }
 
   Future<void> _showImportWardriveSamplesDialog(
@@ -1749,72 +1473,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     showDismissibleSnackBar(
       context,
       content: const Text('Wardrive samples cleared.'),
-    );
-  }
-
-  Widget _buildWardriveCollapseButton() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () {
-        setState(() {
-          _wardrivePanelCollapsed = !_wardrivePanelCollapsed;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(2),
-        child: Icon(
-          _wardrivePanelCollapsed ? Icons.add : Icons.remove,
-          size: 16,
-        ),
-      ),
-    );
-  }
-
-  String _formatWardriveLocationStatus(WardriveService wardrive) {
-    final error = wardrive.lastLocationError;
-    if (error != null) {
-      return 'Phone GPS: $error';
-    }
-    final lat = wardrive.lastPhoneLatitude;
-    final lon = wardrive.lastPhoneLongitude;
-    if (lat == null || lon == null) {
-      return 'Phone GPS: not updated yet';
-    }
-    return 'Phone GPS: ${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
-  }
-
-  Widget _buildWardriveResultRow(WardriveDiscoveryResult result) {
-    final responseTime = result.responseTimeMs == null
-        ? ''
-        : ' / ${result.responseTimeMs} ms';
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getNodeIcon(result.nodeType),
-            size: 16,
-            color: _getNodeColor(result.nodeType),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            child: Text(
-              result.publicKeyPrefix,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
     );
   }
 
@@ -2303,225 +1961,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
           ),
         )
         .toList();
-  }
-
-  List<Polygon> _buildWardriveCoveragePolygons(List<WardriveSample> samples) {
-    return _buildWardriveCoverageCells(samples)
-        .map((cell) {
-          final bounds = cell.bounds;
-          if (bounds == null) return null;
-          final color = _wardriveCoverageColor(cell);
-          return Polygon(
-            // Wardrive coverage is drawn as geohash blocks, matching the
-            // standalone app's coverage squares instead of point markers.
-            points: [
-              LatLng(bounds.south, bounds.west),
-              LatLng(bounds.south, bounds.east),
-              LatLng(bounds.north, bounds.east),
-              LatLng(bounds.north, bounds.west),
-            ],
-            color: color.withValues(alpha: _wardriveCoverageOpacity(cell)),
-            borderColor: color.withValues(alpha: 0.95),
-            borderStrokeWidth: cell.received == 0 && cell.lost > 0 ? 1.5 : 1,
-          );
-        })
-        .whereType<Polygon>()
-        .toList();
-  }
-
-  List<_WardriveCoverageCell> _buildWardriveCoverageCells(
-    List<WardriveSample> samples,
-  ) {
-    final groups = <String, List<WardriveSample>>{};
-    for (final sample in samples) {
-      // Match the standalone wardrive app: coverage cells are geohash blocks,
-      // while individual samples keep their higher-precision geohash.
-      final key = _wardriveCoverageHash(sample);
-      groups.putIfAbsent(key, () => <WardriveSample>[]).add(sample);
-    }
-
-    return groups.values
-        .map((group) {
-          final coverageHash = _wardriveCoverageHash(group.first);
-          final bounds = _decodeWardriveGeohashBounds(coverageHash);
-          final stats = _buildWardriveCoverageStats(group);
-          if (stats.received == 0 && stats.lost == 0) {
-            return null;
-          }
-          return _WardriveCoverageCell(
-            bounds: bounds,
-            received: stats.received,
-            lost: stats.lost,
-          );
-        })
-        .whereType<_WardriveCoverageCell>()
-        .toList();
-  }
-
-  _WardriveCoverageStats _buildWardriveCoverageStats(
-    List<WardriveSample> samples,
-  ) {
-    final sortedSamples = List<WardriveSample>.from(samples)
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    var received = 0.0;
-    var lost = 0.0;
-
-    for (var i = 0; i < sortedSamples.length; i++) {
-      final sample = sortedSamples[i];
-      if (sample.pingSuccess == null) continue;
-
-      var weight = 1.0;
-      final ageInDays = DateTime.now().difference(sample.timestamp).inDays;
-      if (ageInDays > 30) {
-        weight = 0.2;
-      } else if (ageInDays > 7) {
-        weight = 0.5;
-      } else if (ageInDays > 1) {
-        weight = 0.8;
-      }
-
-      final newerSamples = sortedSamples.sublist(0, i > 10 ? 10 : i);
-      if (newerSamples.isNotEmpty) {
-        var contradictions = 0;
-        var agreements = 0;
-        for (final newer in newerSamples) {
-          if (newer.pingSuccess == null) continue;
-          if (newer.pingSuccess != sample.pingSuccess) {
-            contradictions++;
-          } else {
-            agreements++;
-          }
-        }
-        if (contradictions > agreements && contradictions >= 2) {
-          weight *= 0.1;
-        }
-      }
-
-      if (sample.pingSuccess == true) {
-        received += weight;
-      } else if (sample.pingSuccess == false) {
-        lost += weight;
-      }
-    }
-
-    return _WardriveCoverageStats(received: received, lost: lost);
-  }
-
-  String _wardriveCoverageHash(WardriveSample sample) {
-    const precision = 7;
-    if (sample.geohash.length >= precision) {
-      return sample.geohash.substring(0, precision);
-    }
-    return _encodeWardriveGeohash(
-      sample.latitude,
-      sample.longitude,
-      precision: precision,
-    );
-  }
-
-  String _encodeWardriveGeohash(
-    double latitude,
-    double longitude, {
-    required int precision,
-  }) {
-    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-    var latMin = -90.0;
-    var latMax = 90.0;
-    var lonMin = -180.0;
-    var lonMax = 180.0;
-    var evenBit = true;
-    var bit = 0;
-    var ch = 0;
-    final hash = StringBuffer();
-
-    while (hash.length < precision) {
-      if (evenBit) {
-        final mid = (lonMin + lonMax) / 2;
-        if (longitude >= mid) {
-          ch = (ch << 1) + 1;
-          lonMin = mid;
-        } else {
-          ch <<= 1;
-          lonMax = mid;
-        }
-      } else {
-        final mid = (latMin + latMax) / 2;
-        if (latitude >= mid) {
-          ch = (ch << 1) + 1;
-          latMin = mid;
-        } else {
-          ch <<= 1;
-          latMax = mid;
-        }
-      }
-      evenBit = !evenBit;
-
-      if (++bit == 5) {
-        hash.write(base32[ch]);
-        bit = 0;
-        ch = 0;
-      }
-    }
-
-    return hash.toString();
-  }
-
-  _WardriveGeohashBounds? _decodeWardriveGeohashBounds(String hash) {
-    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-    var latMin = -90.0;
-    var latMax = 90.0;
-    var lonMin = -180.0;
-    var lonMax = 180.0;
-    var evenBit = true;
-
-    for (final rune in hash.toLowerCase().runes) {
-      final value = base32.indexOf(String.fromCharCode(rune));
-      if (value < 0) return null;
-      for (var mask = 16; mask != 0; mask >>= 1) {
-        if (evenBit) {
-          final mid = (lonMin + lonMax) / 2;
-          if ((value & mask) != 0) {
-            lonMin = mid;
-          } else {
-            lonMax = mid;
-          }
-        } else {
-          final mid = (latMin + latMax) / 2;
-          if ((value & mask) != 0) {
-            latMin = mid;
-          } else {
-            latMax = mid;
-          }
-        }
-        evenBit = !evenBit;
-      }
-    }
-
-    return _WardriveGeohashBounds(
-      south: latMin,
-      west: lonMin,
-      north: latMax,
-      east: lonMax,
-    );
-  }
-
-  Color _wardriveCoverageColor(_WardriveCoverageCell cell) {
-    final total = cell.received + cell.lost;
-    if (total == 0) return Colors.grey;
-    final successRate = cell.received / total;
-    return Color.lerp(
-          const Color(0xFFD32F2F),
-          const Color(0xFF00C853),
-          successRate,
-        ) ??
-        const Color(0xFF00C853);
-  }
-
-  double _wardriveCoverageOpacity(_WardriveCoverageCell cell) {
-    if (cell.received >= 20) return 0.7;
-    if (cell.received >= 10) return 0.5;
-    if (cell.received >= 5) return 0.4;
-    return 0.3;
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {
@@ -3892,99 +3331,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       ),
     );
   }
-}
-
-class _WardriveCountdownText extends StatefulWidget {
-  final WardriveService wardrive;
-
-  const _WardriveCountdownText({required this.wardrive});
-
-  @override
-  State<_WardriveCountdownText> createState() => _WardriveCountdownTextState();
-}
-
-class _WardriveCountdownTextState extends State<_WardriveCountdownText> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncTimer();
-  }
-
-  @override
-  void didUpdateWidget(_WardriveCountdownText oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncTimer();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _syncTimer() {
-    _timer?.cancel();
-    if (!widget.wardrive.isRunning) return;
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final nextAt = widget.wardrive.nextAutoDiscoveryAt;
-    if (!widget.wardrive.isRunning || nextAt == null) {
-      return const SizedBox.shrink();
-    }
-
-    final remaining = nextAt.difference(DateTime.now()).inSeconds;
-    final seconds = remaining < 0 ? 0 : remaining;
-    return Padding(
-      padding: const EdgeInsets.only(left: 6),
-      child: Text(
-        '(${seconds}s)',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-class _WardriveCoverageCell {
-  final _WardriveGeohashBounds? bounds;
-  final double received;
-  final double lost;
-
-  const _WardriveCoverageCell({
-    required this.bounds,
-    required this.received,
-    required this.lost,
-  });
-}
-
-class _WardriveCoverageStats {
-  final double received;
-  final double lost;
-
-  const _WardriveCoverageStats({required this.received, required this.lost});
-}
-
-class _WardriveGeohashBounds {
-  final double south;
-  final double west;
-  final double north;
-  final double east;
-
-  const _WardriveGeohashBounds({
-    required this.south,
-    required this.west,
-    required this.north,
-    required this.east,
-  });
 }
 
 class _GuessedLocation {

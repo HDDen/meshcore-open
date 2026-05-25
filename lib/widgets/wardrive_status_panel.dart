@@ -1,0 +1,515 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../connector/meshcore_protocol.dart';
+import '../helpers/wardrive_coverage_helper.dart';
+import '../l10n/l10n.dart';
+import '../services/wardrive_service.dart';
+
+class WardriveStatusPanel extends StatelessWidget {
+  final WardriveService wardrive;
+  final bool collapsed;
+  final bool autoUploadEnabled;
+  final VoidCallback onToggleCollapsed;
+  final ValueChanged<String> onDataAction;
+  final ValueChanged<String> onIntervalSubmitted;
+  final String Function(DateTime) formatLastSeen;
+
+  const WardriveStatusPanel({
+    super.key,
+    required this.wardrive,
+    required this.collapsed,
+    required this.autoUploadEnabled,
+    required this.onToggleCollapsed,
+    required this.onDataAction,
+    required this.onIntervalSubmitted,
+    required this.formatLastSeen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final recent = wardrive.recentDiscoveries.take(4).toList();
+    return Positioned(
+      left: 16,
+      bottom: 16,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 300),
+        child: Material(
+          elevation: 4,
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: collapsed
+                ? _buildCollapsedPanel(context)
+                : _buildExpandedPanel(context, recent),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsedPanel(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.directions_car_filled,
+          size: 18,
+          color: wardrive.isRunning
+              ? Colors.green
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          context.l10n.map_wardrive,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        _WardriveCountdownText(wardrive: wardrive),
+        if (wardrive.isSendingDiscovery) ...[
+          const SizedBox(width: 8),
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
+        if (wardrive.isUpdatingLocation) ...[
+          const SizedBox(width: 8),
+          const Icon(Icons.my_location, size: 16),
+        ],
+        const SizedBox(width: 8),
+        _buildCollapseButton(),
+      ],
+    );
+  }
+
+  Widget _buildExpandedPanel(
+    BuildContext context,
+    List<WardriveDiscoveryResult> recent,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.directions_car_filled,
+              size: 18,
+              color: wardrive.isRunning
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.map_wardrive,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            _WardriveCountdownText(wardrive: wardrive),
+            if (wardrive.isSendingDiscovery) ...[
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+            if (wardrive.isUpdatingLocation) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.my_location, size: 16),
+            ],
+            const Spacer(),
+            _buildDataMenu(),
+            const SizedBox(width: 4),
+            _buildCollapseButton(),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.map_wardriveRequests(
+            wardrive.discoveryRequestsSent,
+            wardrive.discoveryResponsesReceived,
+          ),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Text(
+          'Samples saved: ${wardrive.savedSamplesCount}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (wardrive.hasMapState && wardrive.recentSamples.isNotEmpty)
+          _buildCoverageSummary(context),
+        if (wardrive.isRunning) _buildAutoDiscoveryIntervalInput(context),
+        if (wardrive.lastAutoDiscoveryError != null)
+          Text(
+            'Auto discovery: ${wardrive.lastAutoDiscoveryError}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        Text(
+          _formatLocationStatus(context),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: wardrive.lastLocationError == null
+                ? null
+                : Theme.of(context).colorScheme.error,
+          ),
+        ),
+        if (wardrive.lastDiscoveryRequestAt != null)
+          Text(
+            context.l10n.map_wardriveLastRequest(
+              formatLastSeen(wardrive.lastDiscoveryRequestAt!),
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        if (wardrive.lastSampleError != null)
+          Text(
+            'Sample save: ${wardrive.lastSampleError}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        if (recent.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          ...recent.map((result) => _buildResultRow(context, result)),
+        ] else ...[
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.map_wardriveNoResponses,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDataMenu() {
+    return PopupMenuButton<String>(
+      tooltip: 'Wardrive data',
+      icon: const Icon(Icons.more_horiz, size: 18),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 160),
+      onSelected: onDataAction,
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'upload',
+          child: Row(
+            children: [
+              Icon(Icons.cloud_upload, size: 18),
+              SizedBox(width: 8),
+              Text('Upload Data'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'upload-sites',
+          child: Row(
+            children: [
+              Icon(Icons.cloud_queue, size: 18),
+              SizedBox(width: 8),
+              Text('Manage Upload Sites'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'autoupload',
+          child: Row(
+            children: [
+              IgnorePointer(
+                child: Checkbox(
+                  value: autoUploadEnabled,
+                  onChanged: (_) {},
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Text('Autoupload'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'export',
+          child: Row(
+            children: [
+              Icon(Icons.ios_share, size: 18),
+              SizedBox(width: 8),
+              Text('Export'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'import',
+          child: Row(
+            children: [
+              Icon(Icons.input, size: 18),
+              SizedBox(width: 8),
+              Text('Import'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'clear',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 18),
+              SizedBox(width: 8),
+              Text('Clear'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAutoDiscoveryIntervalInput(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Auto discovery', style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 64,
+            height: 32,
+            child: TextFormField(
+              key: ValueKey(
+                'wardrive-auto-${wardrive.autoDiscoveryIntervalSeconds}',
+              ),
+              initialValue: wardrive.autoDiscoveryIntervalSeconds.toString(),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onFieldSubmitted: onIntervalSubmitted,
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text('s', style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoverageSummary(BuildContext context) {
+    final summary = WardriveCoverageHelper.buildSummary(wardrive.recentSamples);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            'Coverage cells: ${summary.total}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          _buildCoverageLegendItem(context, Colors.green, summary.good),
+          _buildCoverageLegendItem(context, Colors.amber, summary.fair),
+          _buildCoverageLegendItem(context, Colors.redAccent, summary.weak),
+          _buildDeadZoneLegendItem(context, summary.dead),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoverageLegendItem(
+    BuildContext context,
+    Color color,
+    int count,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
+  Widget _buildDeadZoneLegendItem(BuildContext context, int count) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.close, size: 10, color: Colors.redAccent),
+        const SizedBox(width: 3),
+        Text(count.toString(), style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
+  Widget _buildCollapseButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onToggleCollapsed,
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Icon(collapsed ? Icons.add : Icons.remove, size: 16),
+      ),
+    );
+  }
+
+  String _formatLocationStatus(BuildContext context) {
+    final error = wardrive.lastLocationError;
+    if (error != null) {
+      return context.l10n.map_wardrivePhoneGpsError(error);
+    }
+    final lat = wardrive.lastPhoneLatitude;
+    final lon = wardrive.lastPhoneLongitude;
+    if (lat == null || lon == null) {
+      return context.l10n.map_wardrivePhoneGpsNotUpdated;
+    }
+    return context.l10n.map_wardrivePhoneGps(
+      lat.toStringAsFixed(5),
+      lon.toStringAsFixed(5),
+    );
+  }
+
+  Widget _buildResultRow(BuildContext context, WardriveDiscoveryResult result) {
+    final responseTime = result.responseTimeMs == null
+        ? ''
+        : ' / ${result.responseTimeMs} ms';
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _getNodeIcon(result.nodeType),
+            size: 16,
+            color: _getNodeColor(result.nodeType),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 64,
+            child: Text(
+              result.publicKeyPrefix,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getNodeColor(int type) {
+    switch (type) {
+      case advTypeChat:
+        return Colors.blue;
+      case advTypeRepeater:
+        return Colors.green;
+      case advTypeRoom:
+        return Colors.purple;
+      case advTypeSensor:
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getNodeIcon(int type) {
+    switch (type) {
+      case advTypeChat:
+        return Icons.person;
+      case advTypeRepeater:
+        return Icons.router;
+      case advTypeRoom:
+        return Icons.meeting_room;
+      case advTypeSensor:
+        return Icons.sensors;
+      default:
+        return Icons.device_unknown;
+    }
+  }
+}
+
+class _WardriveCountdownText extends StatefulWidget {
+  final WardriveService wardrive;
+
+  const _WardriveCountdownText({required this.wardrive});
+
+  @override
+  State<_WardriveCountdownText> createState() => _WardriveCountdownTextState();
+}
+
+class _WardriveCountdownTextState extends State<_WardriveCountdownText> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTimer();
+  }
+
+  @override
+  void didUpdateWidget(_WardriveCountdownText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _syncTimer() {
+    _timer?.cancel();
+    if (!widget.wardrive.isRunning) return;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nextAt = widget.wardrive.nextAutoDiscoveryAt;
+    if (!widget.wardrive.isRunning || nextAt == null) {
+      return const SizedBox.shrink();
+    }
+
+    final remaining = nextAt.difference(DateTime.now()).inSeconds;
+    final seconds = remaining < 0 ? 0 : remaining;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Text(
+        '(${seconds}s)',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
