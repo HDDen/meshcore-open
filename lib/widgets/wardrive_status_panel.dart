@@ -141,7 +141,7 @@ class WardriveStatusPanel extends StatelessWidget {
         ),
         if (wardrive.hasMapState && wardrive.recentSamples.isNotEmpty)
           _buildCoverageSummary(context),
-        if (wardrive.isRunning) _buildAutoDiscoveryIntervalInput(context),
+        _buildAutoDiscoveryIntervalInput(context),
         if (wardrive.lastAutoDiscoveryError != null)
           Text(
             'Auto discovery: ${wardrive.lastAutoDiscoveryError}',
@@ -242,10 +242,17 @@ class WardriveStatusPanel extends StatelessWidget {
             child: Row(
               children: [
                 IgnorePointer(
-                  child: Checkbox(
-                    value: autoUploadEnabled,
-                    onChanged: (_) {},
-                    visualDensity: VisualDensity.compact,
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Checkbox(
+                        value: autoUploadEnabled,
+                        onChanged: (_) {},
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -302,25 +309,9 @@ class WardriveStatusPanel extends StatelessWidget {
           SizedBox(
             width: 64,
             height: 32,
-            child: TextFormField(
-              key: ValueKey(
-                'wardrive-auto-${wardrive.autoDiscoveryIntervalSeconds}',
-              ),
-              initialValue: wardrive.autoDiscoveryIntervalSeconds.toString(),
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                border: OutlineInputBorder(),
-              ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onFieldSubmitted: onIntervalSubmitted,
-              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            child: _WardriveIntervalInput(
+              seconds: wardrive.autoDiscoveryIntervalSeconds,
+              onSubmitted: onIntervalSubmitted,
             ),
           ),
           const SizedBox(width: 4),
@@ -534,6 +525,91 @@ class _WardriveCountdownTextState extends State<_WardriveCountdownText> {
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+class _WardriveIntervalInput extends StatefulWidget {
+  final int seconds;
+  final ValueChanged<String> onSubmitted;
+
+  const _WardriveIntervalInput({
+    required this.seconds,
+    required this.onSubmitted,
+  });
+
+  @override
+  State<_WardriveIntervalInput> createState() => _WardriveIntervalInputState();
+}
+
+class _WardriveIntervalInputState extends State<_WardriveIntervalInput> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.seconds.toString());
+    _focusNode = FocusNode()..addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_WardriveIntervalInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && oldWidget.seconds != widget.seconds) {
+      _controller.text = widget.seconds.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode
+      ..removeListener(_handleFocusChange)
+      ..dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _submit();
+    }
+  }
+
+  void _submit() {
+    final value = _controller.text;
+    if (value.isEmpty) return;
+    widget.onSubmitted(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.bodySmall,
+      decoration: const InputDecoration(
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        border: OutlineInputBorder(),
+      ),
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (value) {
+        if (value.isNotEmpty) {
+          widget.onSubmitted(value);
+        }
+      },
+      onEditingComplete: () {
+        _submit();
+        FocusScope.of(context).unfocus();
+      },
+      onFieldSubmitted: (_) => _submit(),
+      onTapOutside: (_) {
+        _submit();
+        FocusScope.of(context).unfocus();
+      },
     );
   }
 }
