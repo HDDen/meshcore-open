@@ -3640,6 +3640,12 @@ abstract class AppLocalizations {
   /// **'Autoupload'**
   String get map_wardriveAutoUpload;
 
+  /// No description provided for @map_wardriveReUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reupload'**
+  String get map_wardriveReUpload;
+
   /// No description provided for @map_wardriveScreenWakelock.
   ///
   /// In en, this message translates to:
@@ -3669,6 +3675,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'s'**
   String get map_wardriveSecondsSuffix;
+
+  /// No description provided for @map_wardriveSamplesNoNew.
+  ///
+  /// In en, this message translates to:
+  /// **'No new samples to upload'**
+  String get map_wardriveSamplesNoNew;
 
   /// No description provided for @map_wardriveSamplesSaved.
   ///

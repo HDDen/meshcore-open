@@ -2021,6 +2021,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Автокачване';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => 'Задържане на екрана включен';
 
   @override
@@ -2034,6 +2037,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => 's';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

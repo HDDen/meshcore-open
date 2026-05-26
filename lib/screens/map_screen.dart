@@ -987,7 +987,10 @@ class _MapScreenState extends State<MapScreen>
     _syncWardriveScreenWakelock();
   }
 
-  Future<void> _uploadWardriveSamples(WardriveService wardrive) async {
+  Future<void> _uploadWardriveSamples(
+    WardriveService wardrive, {
+    bool includeUploaded = false,
+  }) async {
     if (wardrive.savedSamplesCount == 0) {
       showDismissibleSnackBar(
         context,
@@ -1105,6 +1108,7 @@ class _MapScreenState extends State<MapScreen>
       final results = await _wardriveUploadService.uploadToSelectedSites(
         repeaterNames: _wardriveUploadRepeaterNames(),
         cancelToken: cancelToken,
+        includeUploaded: includeUploaded,
         onProgress: (siteName, current, total) {
           setUploadState?.call(() {
             currentSite = siteName;
@@ -1124,7 +1128,10 @@ class _MapScreenState extends State<MapScreen>
 
       if (!mounted) return;
       closeUploadDialog();
-      await _showWardriveUploadResults(results);
+      final reuploadRequested = await _showWardriveUploadResults(results);
+      if (reuploadRequested && mounted) {
+        await _uploadWardriveSamples(wardrive, includeUploaded: true);
+      }
     } on WardriveUploadCancelledException {
       if (!mounted) return;
       closeUploadDialog();
@@ -1171,11 +1178,12 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  Future<void> _showWardriveUploadResults(
+  Future<bool> _showWardriveUploadResults(
     Map<String, WardriveUploadResult> results,
   ) async {
     final allSuccess = results.values.every((result) => result.success);
-    await showDialog<void>(
+    final canReupload = _canReuploadWardriveResults(results);
+    final reuploadRequested = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
@@ -1205,17 +1213,34 @@ class _MapScreenState extends State<MapScreen>
           ),
         ),
         actions: [
+          if (canReupload)
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(context.l10n.map_wardriveReUpload),
+            ),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(context.l10n.common_ok),
           ),
         ],
       ),
     );
+    return reuploadRequested ?? false;
+  }
+
+  bool _canReuploadWardriveResults(Map<String, WardriveUploadResult> results) {
+    return results.isNotEmpty &&
+        results.values.every(
+          (result) =>
+              result.success &&
+              result.uploadedCount == null &&
+              result.noNewSamples,
+        );
   }
 
   String _formatWardriveUploadResult(WardriveUploadResult result) {
     if (!result.success) return result.message;
+    if (result.noNewSamples) return context.l10n.map_wardriveSamplesNoNew;
     final count = result.uploadedCount;
     if (count == null) return result.message;
     return context.l10n.map_wardriveSamplesUploaded(count);

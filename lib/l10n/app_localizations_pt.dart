@@ -2011,6 +2011,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Autoupload';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => 'Screen wakelock';
 
   @override
@@ -2024,6 +2027,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => 's';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

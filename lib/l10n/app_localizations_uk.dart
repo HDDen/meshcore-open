@@ -2011,6 +2011,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Автовивантаження';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => 'Не вимикати екран';
 
   @override
@@ -2024,6 +2027,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => 'с';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

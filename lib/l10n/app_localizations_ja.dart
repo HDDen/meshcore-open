@@ -1929,6 +1929,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_wardriveAutoUpload => '自動アップロード';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => '画面をスリープさせない';
 
   @override
@@ -1942,6 +1945,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => '秒';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

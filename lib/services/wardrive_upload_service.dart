@@ -51,7 +51,7 @@ class WardriveUploadService {
   static const int autoUploadBatchSize = 100;
   // Keep autoupload capped at 100 samples, but post smaller HTTP batches so a
   // slow upload endpoint is less likely to save data and time out before reply.
-  static const int defaultUploadBatchSize = 50;
+  static const int defaultUploadBatchSize = 100;
   static const int minUploadBatchSize = 1;
   static const int maxUploadBatchSize = 1000;
   // Manual upload and autoupload can be triggered from different service
@@ -120,12 +120,14 @@ class WardriveUploadService {
     void Function(String siteName, int current, int total)? onProgress,
     void Function(WardriveUploadProgress progress)? onUploadProgress,
     WardriveUploadCancelToken? cancelToken,
+    bool includeUploaded = false,
   }) async {
     return _uploadToSelectedSites(
       repeaterNames: repeaterNames,
       onProgress: onProgress,
       onUploadProgress: onUploadProgress,
       cancelToken: cancelToken,
+      includeUploaded: includeUploaded,
     );
   }
 
@@ -144,6 +146,7 @@ class WardriveUploadService {
     void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamplesPerSite,
     WardriveUploadCancelToken? cancelToken,
+    bool includeUploaded = false,
   }) async {
     if (_uploadInProgress) {
       return {
@@ -161,6 +164,7 @@ class WardriveUploadService {
         onUploadProgress: onUploadProgress,
         maxSamplesPerSite: maxSamplesPerSite,
         cancelToken: cancelToken,
+        includeUploaded: includeUploaded,
       );
     } finally {
       _uploadInProgress = false;
@@ -173,6 +177,7 @@ class WardriveUploadService {
     void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamplesPerSite,
     WardriveUploadCancelToken? cancelToken,
+    bool includeUploaded = false,
   }) async {
     cancelToken?.throwIfCancelled();
     final sites = await loadSites();
@@ -199,6 +204,7 @@ class WardriveUploadService {
         onUploadProgress: onUploadProgress,
         maxSamples: maxSamplesPerSite,
         cancelToken: cancelToken,
+        includeUploaded: includeUploaded,
       );
     }
     return results;
@@ -211,20 +217,22 @@ class WardriveUploadService {
     void Function(WardriveUploadProgress progress)? onUploadProgress,
     int? maxSamples,
     WardriveUploadCancelToken? cancelToken,
+    bool includeUploaded = false,
   }) async {
     cancelToken?.throwIfCancelled();
     final allSamples = _sampleStore.loadAllSamples();
     final uploadedIds = _loadUploadedSampleIds(site.url);
     final samples = allSamples
         .where((sample) => sample.pingSuccess != null)
-        .where((sample) => !uploadedIds.contains(sample.id))
+        .where((sample) => includeUploaded || !uploadedIds.contains(sample.id))
         .take(maxSamples ?? allSamples.length)
         .toList();
 
     if (samples.isEmpty) {
       return const WardriveUploadResult(
         success: true,
-        message: 'No new samples to upload',
+        message: '',
+        noNewSamples: true,
       );
     }
 
@@ -587,11 +595,13 @@ class WardriveUploadResult {
   final String message;
   final int? uploadedCount;
   final int? totalCount;
+  final bool noNewSamples;
 
   const WardriveUploadResult({
     required this.success,
     required this.message,
     this.uploadedCount,
     this.totalCount,
+    this.noNewSamples = false,
   });
 }

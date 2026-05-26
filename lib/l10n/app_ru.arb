@@ -1750,11 +1750,13 @@
   "map_wardriveUploadData": "Выгрузить данные",
   "map_wardriveManageUploadSites": "Управление сайтами выгрузки",
   "map_wardriveAutoUpload": "Автовыгрузка",
+  "map_wardriveReUpload": "Перевыгрузить",
   "map_wardriveScreenWakelock": "Не гасить экран",
   "map_wardriveExport": "Экспорт",
   "map_wardriveImport": "Импорт",
   "map_wardriveAutoDiscovery": "Авто discovery",
   "map_wardriveSecondsSuffix": "с",
+  "map_wardriveSamplesNoNew": "Нет новых сэмплов для выгрузки",
   "map_wardriveSamplesSaved": "Сэмплов сохранено: {count}",
   "@map_wardriveSamplesSaved": {
     "placeholders": {

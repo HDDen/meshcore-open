@@ -2028,6 +2028,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Automatikus feltöltés';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => 'Képernyő ébren tartása';
 
   @override
@@ -2041,6 +2044,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => 'mp';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

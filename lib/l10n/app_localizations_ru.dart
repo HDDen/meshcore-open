@@ -2018,6 +2018,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Автовыгрузка';
 
   @override
+  String get map_wardriveReUpload => 'Перевыгрузить';
+
+  @override
   String get map_wardriveScreenWakelock => 'Не гасить экран';
 
   @override
@@ -2031,6 +2034,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => 'с';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'Нет новых сэмплов для выгрузки';
 
   @override
   String map_wardriveSamplesSaved(int count) {

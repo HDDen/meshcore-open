@@ -1893,6 +1893,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardriveAutoUpload => '自动上传';
 
   @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
   String get map_wardriveScreenWakelock => '屏幕保持唤醒';
 
   @override
@@ -1906,6 +1909,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_wardriveSecondsSuffix => '秒';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
 
   @override
   String map_wardriveSamplesSaved(int count) {

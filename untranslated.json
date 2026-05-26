@@ -1,4 +1,29 @@
 {
+  "bg": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "de": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "es": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "fr": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "hu": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
   "it": [
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
@@ -22,11 +47,13 @@
     "map_wardriveUploadData",
     "map_wardriveManageUploadSites",
     "map_wardriveAutoUpload",
+    "map_wardriveReUpload",
     "map_wardriveScreenWakelock",
     "map_wardriveExport",
     "map_wardriveImport",
     "map_wardriveAutoDiscovery",
     "map_wardriveSecondsSuffix",
+    "map_wardriveSamplesNoNew",
     "map_wardriveSamplesSaved",
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
@@ -80,6 +107,16 @@
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
     "channelPath_outgoingSentByRadioAt"
+  ],
+
+  "ja": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "ko": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
   ],
 
   "nl": [
@@ -105,11 +142,13 @@
     "map_wardriveUploadData",
     "map_wardriveManageUploadSites",
     "map_wardriveAutoUpload",
+    "map_wardriveReUpload",
     "map_wardriveScreenWakelock",
     "map_wardriveExport",
     "map_wardriveImport",
     "map_wardriveAutoDiscovery",
     "map_wardriveSecondsSuffix",
+    "map_wardriveSamplesNoNew",
     "map_wardriveSamplesSaved",
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
@@ -163,6 +202,11 @@
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
     "channelPath_outgoingSentByRadioAt"
+  ],
+
+  "pl": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
   ],
 
   "pt": [
@@ -188,11 +232,13 @@
     "map_wardriveUploadData",
     "map_wardriveManageUploadSites",
     "map_wardriveAutoUpload",
+    "map_wardriveReUpload",
     "map_wardriveScreenWakelock",
     "map_wardriveExport",
     "map_wardriveImport",
     "map_wardriveAutoDiscovery",
     "map_wardriveSecondsSuffix",
+    "map_wardriveSamplesNoNew",
     "map_wardriveSamplesSaved",
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
@@ -248,6 +294,16 @@
     "channelPath_outgoingSentByRadioAt"
   ],
 
+  "sk": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "sl": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
   "sv": [
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
@@ -271,11 +327,13 @@
     "map_wardriveUploadData",
     "map_wardriveManageUploadSites",
     "map_wardriveAutoUpload",
+    "map_wardriveReUpload",
     "map_wardriveScreenWakelock",
     "map_wardriveExport",
     "map_wardriveImport",
     "map_wardriveAutoDiscovery",
     "map_wardriveSecondsSuffix",
+    "map_wardriveSamplesNoNew",
     "map_wardriveSamplesSaved",
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
@@ -329,5 +387,15 @@
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
     "channelPath_outgoingSentByRadioAt"
+  ],
+
+  "uk": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
+  ],
+
+  "zh": [
+    "map_wardriveReUpload",
+    "map_wardriveSamplesNoNew"
   ]
 }

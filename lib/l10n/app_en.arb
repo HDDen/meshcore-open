@@ -1032,11 +1032,13 @@
   "map_wardriveUploadData": "Upload Data",
   "map_wardriveManageUploadSites": "Manage Upload Sites",
   "map_wardriveAutoUpload": "Autoupload",
+  "map_wardriveReUpload": "Reupload",
   "map_wardriveScreenWakelock": "Screen wakelock",
   "map_wardriveExport": "Export",
   "map_wardriveImport": "Import",
   "map_wardriveAutoDiscovery": "Auto discovery",
   "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesNoNew": "No new samples to upload",
   "map_wardriveSamplesSaved": "Samples saved: {count}",
   "@map_wardriveSamplesSaved": {
     "placeholders": {
