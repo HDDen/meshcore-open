@@ -2316,7 +2316,16 @@ class _MapScreenState extends State<MapScreen>
     Contact contact, {
     required Set<String> answeredKeys,
   }) {
-    return answeredKeys.contains(contact.publicKeyHex.toLowerCase());
+    final contactKey = contact.publicKeyHex.toLowerCase();
+    return answeredKeys.any((answeredKey) {
+      // Discovery responses may contain either a full public key or a shorter
+      // key prefix. Match both forms so every responder is highlighted.
+      if (answeredKey == contactKey) return true;
+      final shortest = min(answeredKey.length, contactKey.length);
+      if (shortest < 8) return false;
+      return answeredKey.startsWith(contactKey) ||
+          contactKey.startsWith(answeredKey);
+    });
   }
 
   LatLng? _selfDisplayPosition(
@@ -2352,7 +2361,7 @@ class _MapScreenState extends State<MapScreen>
         .where(
           (contact) =>
               contact.hasLocation &&
-              answeredKeys.contains(contact.publicKeyHex.toLowerCase()),
+              _isWardriveAnswered(contact, answeredKeys: answeredKeys),
         )
         .map(
           (contact) => Polyline(

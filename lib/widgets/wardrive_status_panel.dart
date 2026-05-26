@@ -45,7 +45,7 @@ class WardriveStatusPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recent = wardrive.recentDiscoveries.take(4).toList();
+    final recent = wardrive.recentDiscoveries;
     return Positioned(
       left: 16,
       bottom: 16,
@@ -200,7 +200,22 @@ class WardriveStatusPanel extends StatelessWidget {
           const SizedBox(height: 8),
           const Divider(height: 1),
           const SizedBox(height: 8),
-          ...recent.map((result) => _buildResultRow(context, result)),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 150),
+            child: Scrollbar(
+              thumbVisibility: recent.length > 4,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...recent.map(
+                      (result) => _buildResultRow(context, result),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ] else ...[
           const SizedBox(height: 8),
           Text(
