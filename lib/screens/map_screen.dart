@@ -21,6 +21,7 @@ import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
+import '../storage/prefs_manager.dart';
 import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
@@ -72,6 +73,7 @@ class _MapScreenState extends State<MapScreen>
   static const double _labelZoomThreshold = 14.0;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
+  static const String _mapStatsCollapsedKey = 'map_stats_collapsed_v1';
 
   final MapController _mapController = MapController();
   final MapMarkerService _markerService = MapMarkerService();
@@ -87,6 +89,7 @@ class _MapScreenState extends State<MapScreen>
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
   bool _legendExpanded = false;
+  bool _mapStatsCollapsed = false;
   bool _showNodeLabels = true;
   bool _wardrivePanelCollapsed = false;
   List<_GuessedLocation> _cachedGuessedLocations = [];
@@ -100,6 +103,7 @@ class _MapScreenState extends State<MapScreen>
   @override
   void initState() {
     super.initState();
+    _loadMapStatsCollapsedState();
     _loadRemovedMarkers();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -195,6 +199,18 @@ class _MapScreenState extends State<MapScreen>
     if (!_wardriveScreenWakelockActive) return;
     _wardriveScreenWakelockActive = false;
     unawaited(WakelockPlus.disable().catchError((_) {}));
+  }
+
+  void _loadMapStatsCollapsedState() {
+    _mapStatsCollapsed =
+        PrefsManager.instance.getBool(_mapStatsCollapsedKey) ?? false;
+  }
+
+  void _setMapStatsCollapsed(bool collapsed) {
+    setState(() {
+      _mapStatsCollapsed = collapsed;
+    });
+    unawaited(PrefsManager.instance.setBool(_mapStatsCollapsedKey, collapsed));
   }
 
   Future<void> _loadRemovedMarkers() async {
@@ -2416,7 +2432,7 @@ class _MapScreenState extends State<MapScreen>
   Widget _buildLegend(
     List<Contact> contacts,
     List<Contact> contactsWithLocation,
-    settings,
+    AppSettings settings,
     int markerCount,
     int guessedCount,
   ) {
@@ -2433,168 +2449,242 @@ class _MapScreenState extends State<MapScreen>
 
     final nodeCount = filteredContacts.length;
     final nodeCountAll = filteredContactsAll.length;
+    final totalVisibleNodes =
+        nodeCount + (settings.mapShowGuessedLocations ? guessedCount : 0);
 
     return Positioned(
       top: 16,
       right: 16,
       child: Card(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                setState(() {
-                  _legendExpanded = !_legendExpanded;
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+        child: _mapStatsCollapsed
+            ? InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _setMapStatsCollapsed(false),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context.l10n.map_nodesCount(totalVisibleNodes),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.expand_more, size: 18),
+                    ],
+                  ),
+                ),
+              )
+            : _buildExpandedMapStats(
+                settings,
+                nodeCount,
+                nodeCountAll,
+                markerCount,
+                guessedCount,
+                totalVisibleNodes,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedMapStats(
+    AppSettings settings,
+    int nodeCount,
+    int nodeCountAll,
+    int markerCount,
+    int guessedCount,
+    int totalVisibleNodes,
+  ) {
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 34),
+          child: _buildExpandedMapStatsContent(
+            settings,
+            nodeCount,
+            nodeCountAll,
+            markerCount,
+            guessedCount,
+            totalVisibleNodes,
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+            iconSize: 18,
+            onPressed: () => _setMapStatsCollapsed(true),
+            icon: const Icon(Icons.expand_less),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandedMapStatsContent(
+    AppSettings settings,
+    int nodeCount,
+    int nodeCountAll,
+    int markerCount,
+    int guessedCount,
+    int totalVisibleNodes,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _legendExpanded = !_legendExpanded;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Text(
+                      context.l10n.map_nodesCount(totalVisibleNodes),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Row(
                       children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         Text(
-                          context.l10n.map_nodesCount(
-                            nodeCount +
-                                (settings.mapShowGuessedLocations
-                                    ? guessedCount
-                                    : 0),
-                          ),
+                          ": $nodeCount",
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
                         ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            Text(
-                              ": $nodeCount",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.wrong_location,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            Text(
-                              ": ${nodeCountAll - nodeCount}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.add_outlined,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            Text(
-                              ": $nodeCountAll",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.wrong_location,
+                          size: 16,
+                          color: Colors.grey,
                         ),
                         Text(
-                          context.l10n.map_pinsCount(markerCount),
+                          ": ${nodeCountAll - nodeCount}",
                           style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(width: 8),
-                    AnimatedRotation(
-                      turns: _legendExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: const Icon(Icons.expand_more, size: 20),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.add_outlined,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        Text(
+                          ": $nodeCountAll",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 6),
-                    _buildLegendItem(
-                      Icons.person,
-                      context.l10n.map_chat,
-                      Colors.blue,
-                    ),
-                    _buildLegendItem(
-                      Icons.router,
-                      context.l10n.map_repeater,
-                      Colors.green,
-                    ),
-                    _buildLegendItem(
-                      Icons.meeting_room,
-                      context.l10n.map_room,
-                      Colors.purple,
-                    ),
-                    _buildLegendItem(
-                      Icons.sensors,
-                      context.l10n.map_sensor,
-                      Colors.orange,
-                    ),
-                    _buildLegendItem(
-                      Icons.flag,
-                      context.l10n.map_pinDm,
-                      Colors.blue,
-                    ),
-                    _buildLegendItem(
-                      Icons.flag,
-                      context.l10n.map_pinPrivate,
-                      Colors.purple,
-                    ),
-                    _buildLegendItem(
-                      Icons.flag,
-                      context.l10n.map_pinPublic,
-                      Colors.orange,
-                    ),
-                    if (settings.mapShowGuessedLocations && guessedCount > 0)
-                      _buildLegendItem(
-                        Icons.not_listed_location,
-                        context.l10n.map_guessedLocation,
-                        Colors.grey,
+                    Text(
+                      context.l10n.map_pinsCount(markerCount),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
+                    ),
                   ],
                 ),
-              ),
-              crossFadeState: _legendExpanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 200),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: _legendExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(Icons.expand_more, size: 20),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 6),
+                _buildLegendItem(
+                  Icons.person,
+                  context.l10n.map_chat,
+                  Colors.blue,
+                ),
+                _buildLegendItem(
+                  Icons.router,
+                  context.l10n.map_repeater,
+                  Colors.green,
+                ),
+                _buildLegendItem(
+                  Icons.meeting_room,
+                  context.l10n.map_room,
+                  Colors.purple,
+                ),
+                _buildLegendItem(
+                  Icons.sensors,
+                  context.l10n.map_sensor,
+                  Colors.orange,
+                ),
+                _buildLegendItem(
+                  Icons.flag,
+                  context.l10n.map_pinDm,
+                  Colors.blue,
+                ),
+                _buildLegendItem(
+                  Icons.flag,
+                  context.l10n.map_pinPrivate,
+                  Colors.purple,
+                ),
+                _buildLegendItem(
+                  Icons.flag,
+                  context.l10n.map_pinPublic,
+                  Colors.orange,
+                ),
+                if (settings.mapShowGuessedLocations && guessedCount > 0)
+                  _buildLegendItem(
+                    Icons.not_listed_location,
+                    context.l10n.map_guessedLocation,
+                    Colors.grey,
+                  ),
+              ],
+            ),
+          ),
+          crossFadeState: _legendExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
     );
   }
 
