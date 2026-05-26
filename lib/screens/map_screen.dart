@@ -867,7 +867,7 @@ class _MapScreenState extends State<MapScreen>
         FloatingActionButton.small(
           heroTag: 'wardrive_discovery',
           onPressed: connector.isConnected
-              ? () => _sendWardriveDiscovery(context, wardrive)
+              ? () => _sendWardriveDiscovery(wardrive)
               : null,
           tooltip: context.l10n.map_wardriveZeroHopDiscovery,
           child: wardrive.isSendingDiscovery
@@ -895,28 +895,13 @@ class _MapScreenState extends State<MapScreen>
     wardrive.showMapState();
   }
 
-  Future<void> _sendWardriveDiscovery(
-    BuildContext context,
-    WardriveService wardrive,
-  ) async {
+  Future<void> _sendWardriveDiscovery(WardriveService wardrive) async {
     try {
       await wardrive.sendZeroHopDiscoveryRequest(
         startWardrive: wardrive.isRunning,
       );
-      if (!context.mounted) return;
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.map_wardriveDiscoverySent),
-      );
     } catch (error) {
-      if (!context.mounted) return;
-      showDismissibleSnackBar(
-        context,
-        content: Text(
-          context.l10n.map_wardriveDiscoveryFailed(error.toString()),
-        ),
-        backgroundColor: Colors.red,
-      );
+      debugPrint('[Wardrive] Discovery request failed: $error');
     }
   }
 

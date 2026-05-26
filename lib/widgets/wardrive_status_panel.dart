@@ -187,7 +187,15 @@ class WardriveStatusPanel extends StatelessWidget {
               color: Theme.of(context).colorScheme.error,
             ),
           ),
-        if (recent.isNotEmpty) ...[
+        if (wardrive.hasDiscoveryRequestWithoutResponses) ...[
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.map_wardriveDiscoverySent,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ] else if (recent.isNotEmpty) ...[
           const SizedBox(height: 8),
           const Divider(height: 1),
           const SizedBox(height: 8),

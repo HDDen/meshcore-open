@@ -122,6 +122,8 @@ class WardriveService extends ChangeNotifier {
   List<WardriveSample> get recentSamples => List.unmodifiable(_recentSamples);
   Set<String> get currentDiscoveryPublicKeys =>
       Set.unmodifiable(_currentDiscoveryPublicKeys);
+  bool get hasDiscoveryRequestWithoutResponses =>
+      _lastDiscoveryRequestAt != null && _currentDiscoveryPublicKeys.isEmpty;
 
   void showMapState() {
     if (_showMapState) return;
