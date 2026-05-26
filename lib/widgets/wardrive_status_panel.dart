@@ -208,9 +208,7 @@ class WardriveStatusPanel extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...recent.map(
-                      (result) => _buildResultRow(context, result),
-                    ),
+                    ...recent.map((result) => _buildResultRow(context, result)),
                   ],
                 ),
               ),
