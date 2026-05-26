@@ -73,9 +73,12 @@ class _MapScreenState extends State<MapScreen>
   static const double _labelZoomThreshold = 14.0;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
+  static const double _wardrivePanelBottomInset = 16.0;
   static const String _mapStatsCollapsedKey = 'map_stats_collapsed_v1';
 
   final MapController _mapController = MapController();
+  final GlobalKey _mapBodyKey = GlobalKey();
+  final GlobalKey _wardrivePanelKey = GlobalKey();
   final MapMarkerService _markerService = MapMarkerService();
   final WardriveUploadService _wardriveUploadService = WardriveUploadService();
   final Set<String> _hiddenMarkerIds = {};
@@ -650,6 +653,7 @@ class _MapScreenState extends State<MapScreen>
               ],
             ),
             body: Stack(
+              key: _mapBodyKey,
               children: [
                 FlutterMap(
                   mapController: _mapController,
@@ -815,6 +819,7 @@ class _MapScreenState extends State<MapScreen>
                 if (!_isBuildingPathTrace && wardrive.hasMapState)
                   WardriveStatusPanel(
                     wardrive: wardrive,
+                    panelKey: _wardrivePanelKey,
                     collapsed: _wardrivePanelCollapsed,
                     autoUploadEnabled:
                         _wardriveUploadService.isAutoUploadEnabledSync,
@@ -2351,10 +2356,54 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
 
+    _moveMapToWardriveResponder(LatLng(contact.latitude!, contact.longitude!));
+  }
+
+  void _moveMapToWardriveResponder(LatLng point) {
+    final zoom = _mapController.camera.zoom;
+    final offsetPixels = _wardriveVisibleAreaOffsetPixels();
+
     _mapController.move(
-      LatLng(contact.latitude!, contact.longitude!),
-      _mapController.camera.zoom,
+      _latLngWithVerticalPixelOffset(point, zoom, offsetPixels),
+      zoom,
     );
+  }
+
+  double _wardriveVisibleAreaOffsetPixels() {
+    final mapHeight = _heightForKey(_mapBodyKey);
+    final panelHeight = _heightForKey(_wardrivePanelKey);
+    if (mapHeight == null || panelHeight == null) return 0;
+    final coveredBottom = (panelHeight + _wardrivePanelBottomInset)
+        .clamp(0.0, mapHeight)
+        .toDouble();
+    // Center the selected point in the visible vertical area above the panel.
+    return coveredBottom / 2;
+  }
+
+  double? _heightForKey(GlobalKey key) {
+    final renderObject = key.currentContext?.findRenderObject();
+    if (renderObject is RenderBox && renderObject.hasSize) {
+      return renderObject.size.height;
+    }
+    return null;
+  }
+
+  LatLng _latLngWithVerticalPixelOffset(
+    LatLng point,
+    double zoom,
+    double offsetPixels,
+  ) {
+    const tileSize = 256.0;
+    final scale = tileSize * pow(2.0, zoom);
+    final sinLat = sin(point.latitude * pi / 180).clamp(-0.9999, 0.9999);
+    final pointY = (0.5 - log((1 + sinLat) / (1 - sinLat)) / (4 * pi)) * scale;
+
+    // Move the map center south in Mercator pixels, so the selected responder
+    // appears above center and not hidden behind the wardrive panel.
+    final centerY = pointY + offsetPixels;
+    final mercatorN = pi - 2 * pi * centerY / scale;
+    final centerLat = 180 / pi * atan((exp(mercatorN) - exp(-mercatorN)) / 2);
+    return LatLng(centerLat, point.longitude);
   }
 
   LatLng? _selfDisplayPosition(

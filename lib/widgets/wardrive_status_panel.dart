@@ -27,6 +27,7 @@ class WardriveStatusPanel extends StatelessWidget {
   final bool autoUploadEnabled;
   final bool screenWakelockEnabled;
   final Map<String, String> repeaterNames;
+  final Key? panelKey;
   final VoidCallback onToggleCollapsed;
   final ValueChanged<WardriveDataAction> onDataAction;
   final ValueChanged<WardriveDiscoveryResult> onResultSelected;
@@ -40,6 +41,7 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.autoUploadEnabled,
     required this.screenWakelockEnabled,
     required this.repeaterNames,
+    this.panelKey,
     required this.onToggleCollapsed,
     required this.onDataAction,
     required this.onResultSelected,
@@ -54,6 +56,7 @@ class WardriveStatusPanel extends StatelessWidget {
       left: 16,
       bottom: 16,
       child: ConstrainedBox(
+        key: panelKey,
         constraints: const BoxConstraints(maxWidth: 300),
         child: Material(
           elevation: 4,
