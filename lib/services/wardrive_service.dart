@@ -54,6 +54,7 @@ class WardriveService extends ChangeNotifier {
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
   final List<WardriveSample> _recentSamples = [];
   final Set<String> _currentDiscoveryPublicKeys = {};
+  int? _currentDiscoveryTag;
   static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 25);
   static const Duration _discoveryResponseWindow = Duration(seconds: 10);
   static const int minAutoDiscoveryIntervalSeconds = 5;
@@ -226,6 +227,7 @@ class WardriveService extends ChangeNotifier {
     _usePhoneLocationForDisplay = false;
     _currentDiscoveryPublicKeys.clear();
     _recentDiscoveries.clear();
+    _currentDiscoveryTag = null;
     _lastDiscoveryRequestAt = null;
     _lastDiscoveryResponseAt = null;
     _lastLocationError = null;
@@ -289,6 +291,10 @@ class WardriveService extends ChangeNotifier {
     notifyListeners();
 
     final previousDiscoveryKeys = Set<String>.from(_currentDiscoveryPublicKeys);
+    final previousDiscoveries = List<WardriveDiscoveryResult>.from(
+      _recentDiscoveries,
+    );
+    final previousCurrentDiscoveryTag = _currentDiscoveryTag;
     final previousRequestAt = _lastDiscoveryRequestAt;
     int? pendingTag;
     try {
@@ -317,6 +323,8 @@ class WardriveService extends ChangeNotifier {
       final payload = buildDiscoveryRequestPayload(tag, prefixOnly: false);
       final startedAt = DateTime.now();
       _currentDiscoveryPublicKeys.clear();
+      _recentDiscoveries.clear();
+      _currentDiscoveryTag = tag;
       _pendingDiscoveryRequests[tag] = _WardriveDiscoveryRequest(
         startedAt: startedAt,
         latitude: _lastPhoneLatitude,
@@ -336,6 +344,7 @@ class WardriveService extends ChangeNotifier {
       if (!startWardrive) {
         _oneShotDiscoveryTimer = Timer(const Duration(seconds: 10), () {
           _acceptOneShotDiscoveryResponses = false;
+          _clearDiscoveryTracking(tag);
           notifyListeners();
         });
       }
@@ -351,6 +360,10 @@ class WardriveService extends ChangeNotifier {
       _currentDiscoveryPublicKeys
         ..clear()
         ..addAll(previousDiscoveryKeys);
+      _recentDiscoveries
+        ..clear()
+        ..addAll(previousDiscoveries);
+      _currentDiscoveryTag = previousCurrentDiscoveryTag;
       _lastDiscoveryRequestAt = previousRequestAt;
       rethrow;
     } finally {
@@ -433,6 +446,10 @@ class WardriveService extends ChangeNotifier {
     final result = _parseDiscoveryResponseFrame(frame);
     if (result == null) return;
 
+    final isKnownRequest = _pendingDiscoveryRequests.containsKey(result.tag);
+    if (!isKnownRequest) return;
+    final isCurrentRequest = result.tag == _currentDiscoveryTag;
+
     _discoveryResponsesReceived++;
     _lastDiscoveryResponseAt = result.timestamp;
     if (_discoveryResponsesByTag.containsKey(result.tag)) {
@@ -442,13 +459,17 @@ class WardriveService extends ChangeNotifier {
     if (_isRunning) {
       unawaited(_saveSample(result));
     }
-    _currentDiscoveryPublicKeys.add(result.publicKeyHex);
-    _recentDiscoveries.removeWhere(
-      (entry) => entry.publicKeyHex == result.publicKeyHex,
-    );
-    _recentDiscoveries.insert(0, result);
-    if (_recentDiscoveries.length > 50) {
-      _recentDiscoveries.removeRange(50, _recentDiscoveries.length);
+    if (isCurrentRequest) {
+      // Keep the map highlight and panel list scoped to the latest discovery
+      // request. Late responses from an older tag may still be saved as samples.
+      _currentDiscoveryPublicKeys.add(result.publicKeyHex);
+      _recentDiscoveries.removeWhere(
+        (entry) => entry.publicKeyHex == result.publicKeyHex,
+      );
+      _recentDiscoveries.insert(0, result);
+      if (_recentDiscoveries.length > 50) {
+        _recentDiscoveries.removeRange(50, _recentDiscoveries.length);
+      }
     }
 
     final pubKeyBytes = _publicKeyBytesFromHex(result.publicKeyHex);
@@ -733,12 +754,16 @@ class WardriveService extends ChangeNotifier {
       _discoveryFailureTimers.clear();
       _discoveryResponsesByTag.clear();
       _pendingDiscoveryRequests.clear();
+      _currentDiscoveryTag = null;
       return;
     }
 
     _discoveryFailureTimers.remove(tag)?.cancel();
     _discoveryResponsesByTag.remove(tag);
     _pendingDiscoveryRequests.remove(tag);
+    if (_currentDiscoveryTag == tag) {
+      _currentDiscoveryTag = null;
+    }
   }
 }
 
