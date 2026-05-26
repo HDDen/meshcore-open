@@ -4132,6 +4132,12 @@ class MeshCoreConnector extends ChangeNotifier {
     if (completed) {
       _hasLoadedChannels = true;
       _previousChannelsCache.clear();
+    } else if (_channels.isEmpty && _previousChannelsCache.isNotEmpty) {
+      // A failed initial sync should not leave the UI empty/spinning forever.
+      // Restore the pre-sync list so cached channels remain usable.
+      _channels.addAll(_previousChannelsCache);
+      _applyChannelOrder();
+      _recalculateCachedChannelsUnreadTotal();
     }
 
     if (isConnected) {
@@ -4139,6 +4145,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     // Keep cache on failure/disconnection for future attempts
+    if (!completed) {
+      notifyListeners();
+    }
   }
 
   void _startPostChannelInitialQueuedMessageSync() {
