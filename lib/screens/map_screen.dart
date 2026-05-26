@@ -819,6 +819,7 @@ class _MapScreenState extends State<MapScreen>
                     autoUploadEnabled:
                         _wardriveUploadService.isAutoUploadEnabledSync,
                     screenWakelockEnabled: wardrive.screenWakelockEnabled,
+                    repeaterNames: _wardriveUploadRepeaterNames(),
                     onToggleCollapsed: () {
                       setState(() {
                         _wardrivePanelCollapsed = !_wardrivePanelCollapsed;
@@ -827,6 +828,8 @@ class _MapScreenState extends State<MapScreen>
                     onDataAction: (action) {
                       unawaited(_handleWardriveDataAction(action, wardrive));
                     },
+                    onResultSelected: (result) =>
+                        _focusWardriveResponder(connector, result),
                     onIntervalSubmitted: (value) =>
                         _updateWardriveAutoDiscoveryInterval(wardrive, value),
                     formatLastSeen: _formatLastSeen,
@@ -2316,16 +2319,42 @@ class _MapScreenState extends State<MapScreen>
     Contact contact, {
     required Set<String> answeredKeys,
   }) {
-    final contactKey = contact.publicKeyHex.toLowerCase();
-    return answeredKeys.any((answeredKey) {
-      // Discovery responses may contain either a full public key or a shorter
-      // key prefix. Match both forms so every responder is highlighted.
-      if (answeredKey == contactKey) return true;
-      final shortest = min(answeredKey.length, contactKey.length);
-      if (shortest < 8) return false;
-      return answeredKey.startsWith(contactKey) ||
-          contactKey.startsWith(answeredKey);
-    });
+    return answeredKeys.any(
+      (answeredKey) => _publicKeysMatch(contact.publicKeyHex, answeredKey),
+    );
+  }
+
+  bool _publicKeysMatch(String first, String second) {
+    final firstKey = first.toLowerCase();
+    final secondKey = second.toLowerCase();
+    if (firstKey == secondKey) return true;
+    final shortest = min(firstKey.length, secondKey.length);
+    if (shortest < 8) return false;
+    return firstKey.startsWith(secondKey) || secondKey.startsWith(firstKey);
+  }
+
+  void _focusWardriveResponder(
+    MeshCoreConnector connector,
+    WardriveDiscoveryResult result,
+  ) {
+    final contact = connector.allContactsUnfiltered
+        .where(
+          (contact) =>
+              _publicKeysMatch(contact.publicKeyHex, result.publicKeyHex),
+        )
+        .firstOrNull;
+    if (contact == null || !contact.hasLocation) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.map_wardriveRepNoLocation),
+      );
+      return;
+    }
+
+    _mapController.move(
+      LatLng(contact.latitude!, contact.longitude!),
+      _mapController.camera.zoom,
+    );
   }
 
   LatLng? _selfDisplayPosition(

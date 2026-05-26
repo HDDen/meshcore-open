@@ -2280,6 +2280,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive-сэмплы очищены.';
 
   @override
+  String get map_wardriveRepNoLocation =>
+      'Местоположение репитера не предоставлено';
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

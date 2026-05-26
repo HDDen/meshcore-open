@@ -26,8 +26,10 @@ class WardriveStatusPanel extends StatelessWidget {
   final bool collapsed;
   final bool autoUploadEnabled;
   final bool screenWakelockEnabled;
+  final Map<String, String> repeaterNames;
   final VoidCallback onToggleCollapsed;
   final ValueChanged<WardriveDataAction> onDataAction;
+  final ValueChanged<WardriveDiscoveryResult> onResultSelected;
   final ValueChanged<String> onIntervalSubmitted;
   final String Function(DateTime) formatLastSeen;
 
@@ -37,8 +39,10 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.collapsed,
     required this.autoUploadEnabled,
     required this.screenWakelockEnabled,
+    required this.repeaterNames,
     required this.onToggleCollapsed,
     required this.onDataAction,
+    required this.onResultSelected,
     required this.onIntervalSubmitted,
     required this.formatLastSeen,
   });
@@ -510,35 +514,72 @@ class WardriveStatusPanel extends StatelessWidget {
     final responseTime = result.responseTimeMs == null
         ? ''
         : ' / ${result.responseTimeMs} ms';
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getNodeIcon(result.nodeType),
-            size: 16,
-            color: _getNodeColor(result.nodeType),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            child: Text(
-              result.publicKeyPrefix,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+    final repeaterName = _repeaterNameFor(result);
+    return InkWell(
+      onTap: () => onResultSelected(result),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (repeaterName != null)
+              Text(
+                repeaterName,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getNodeIcon(result.nodeType),
+                  size: 16,
+                  color: _getNodeColor(result.nodeType),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 64,
+                  child: Text(
+                    result.publicKeyPrefix,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String? _repeaterNameFor(WardriveDiscoveryResult result) {
+    final resultKey = result.publicKeyHex.toUpperCase();
+    final name = repeaterNames[resultKey];
+    if (name != null && name.isNotEmpty) return name;
+
+    for (final entry in repeaterNames.entries) {
+      final contactKey = entry.key.toUpperCase();
+      final shortest = contactKey.length < resultKey.length
+          ? contactKey.length
+          : resultKey.length;
+      if (shortest < 8) continue;
+      if (contactKey.startsWith(resultKey) ||
+          resultKey.startsWith(contactKey)) {
+        return entry.value;
+      }
+    }
+
+    return null;
   }
 
   Color _getNodeColor(int type) {

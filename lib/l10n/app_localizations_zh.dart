@@ -2145,6 +2145,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive 样本已清除。';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => '离线地图缓存';
 
   @override

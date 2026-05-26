@@ -13,7 +13,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "de": [
@@ -30,7 +31,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "es": [
@@ -47,7 +49,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "fr": [
@@ -64,7 +67,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "hu": [
@@ -81,7 +85,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "it": [
@@ -178,6 +183,7 @@
     "map_wardriveClearSamplesTitle",
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
+    "map_wardriveRepNoLocation",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -195,7 +201,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "ko": [
@@ -212,7 +219,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "nl": [
@@ -309,6 +317,7 @@
     "map_wardriveClearSamplesTitle",
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
+    "map_wardriveRepNoLocation",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -326,7 +335,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "pt": [
@@ -423,6 +433,7 @@
     "map_wardriveClearSamplesTitle",
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
+    "map_wardriveRepNoLocation",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -440,7 +451,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "sl": [
@@ -457,7 +469,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "sv": [
@@ -554,6 +567,7 @@
     "map_wardriveClearSamplesTitle",
     "map_wardriveClearSamplesConfirm",
     "map_wardriveSamplesCleared",
+    "map_wardriveRepNoLocation",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -571,7 +585,8 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ],
 
   "zh": [
@@ -588,6 +603,7 @@
     "map_wardriveCoverageStreet",
     "map_wardriveCoverageStreetSubtitle",
     "map_wardriveCoverageBuilding",
-    "map_wardriveCoverageBuildingSubtitle"
+    "map_wardriveCoverageBuildingSubtitle",
+    "map_wardriveRepNoLocation"
   ]
 }

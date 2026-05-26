@@ -2281,6 +2281,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive-Samples gelöscht.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => 'Offline-Karten-Cache';
 
   @override

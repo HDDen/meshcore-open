@@ -2286,6 +2286,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive семплите са изчистени.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => 'Кеш на офлайн карти';
 
   @override

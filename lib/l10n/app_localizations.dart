@@ -4066,6 +4066,12 @@ abstract class AppLocalizations {
   /// **'Wardrive samples cleared.'**
   String get map_wardriveSamplesCleared;
 
+  /// No description provided for @map_wardriveRepNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater location not provided'**
+  String get map_wardriveRepNoLocation;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

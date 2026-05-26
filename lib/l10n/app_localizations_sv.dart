@@ -2250,6 +2250,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive samples cleared.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => 'Offline Kartcache';
 
   @override

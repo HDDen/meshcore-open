@@ -2177,6 +2177,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive 샘플이 지워졌습니다.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => '오프라인 지도 캐시';
 
   @override

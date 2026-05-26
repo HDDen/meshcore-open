@@ -2293,6 +2293,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Échantillons wardrive effacés.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => 'Cache de Carte Hors Ligne';
 
   @override

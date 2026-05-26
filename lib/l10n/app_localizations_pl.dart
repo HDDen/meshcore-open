@@ -2294,6 +2294,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Próbki wardrive wyczyszczone.';
 
   @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
   String get mapCache_title => 'Pamięć podręczna map offline';
 
   @override

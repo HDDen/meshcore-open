@@ -1962,5 +1962,6 @@
       }
     }
   },
-  "map_wardriveSamplesCleared": "Wardrive-сэмплы очищены."
+  "map_wardriveSamplesCleared": "Wardrive-сэмплы очищены.",
+  "map_wardriveRepNoLocation": "Местоположение репитера не предоставлено"
 }
