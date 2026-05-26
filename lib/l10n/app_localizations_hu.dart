@@ -4182,6 +4182,16 @@ class AppLocalizationsHu extends AppLocalizations {
       'Ellenőrzi a zeneszerző fordítási ikon alapértékét.';
 
   @override
+  String get translation_autoIncomingTitle => 'Üzenetek automatikus fordítása';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automatikusan lefordítja az üzeneteket az értesítésekhez, valamint a csevegésekhez vagy csatornákhoz.';
+
+  @override
+  String get translation_translateMessage => 'Üzenet fordítása';
+
+  @override
   String get translation_targetLanguage => 'Célnyelv';
 
   @override

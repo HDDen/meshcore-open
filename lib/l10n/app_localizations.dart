@@ -7114,6 +7114,24 @@ abstract class AppLocalizations {
   /// **'Controls the default state of the composer translation icon.'**
   String get translation_composerSubtitle;
 
+  /// No description provided for @translation_autoIncomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-translate incoming messages'**
+  String get translation_autoIncomingTitle;
+
+  /// No description provided for @translation_autoIncomingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translates Messages for notification and for chat or channel automatically.'**
+  String get translation_autoIncomingSubtitle;
+
+  /// No description provided for @translation_translateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate message'**
+  String get translation_translateMessage;
+
   /// No description provided for @translation_targetLanguage.
   ///
   /// In en, this message translates to:

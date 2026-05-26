@@ -4086,6 +4086,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Controls the default state of the composer translation icon.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Auto-translate incoming messages';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Translates Messages for notification and for chat or channel automatically.';
+
+  @override
+  String get translation_translateMessage => 'Translate message';
+
+  @override
   String get translation_targetLanguage => 'Target language';
 
   @override

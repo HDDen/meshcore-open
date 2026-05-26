@@ -4162,6 +4162,16 @@ class AppLocalizationsBg extends AppLocalizations {
       'Контролира началния статус на иконата за превод, създадена от композитора.';
 
   @override
+  String get translation_autoIncomingTitle => 'Автоматичен превод на съобщения';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Превежда автоматично съобщенията за известия, както и за чатове или канали.';
+
+  @override
+  String get translation_translateMessage => 'Преведи съобщението';
+
+  @override
   String get translation_targetLanguage => 'Целеви език';
 
   @override

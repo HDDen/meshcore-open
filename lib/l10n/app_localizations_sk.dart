@@ -4142,6 +4142,16 @@ class AppLocalizationsSk extends AppLocalizations {
       'Riadi výchoce stav ikony pre preklad, ktorú používa program.';
 
   @override
+  String get translation_autoIncomingTitle => 'Automaticky prekladať správy';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automaticky prekladá správy pre upozornenia aj pre čet alebo kanál.';
+
+  @override
+  String get translation_translateMessage => 'Preložiť správu';
+
+  @override
   String get translation_targetLanguage => 'Cieľový jazyk';
 
   @override

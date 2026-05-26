@@ -4147,6 +4147,16 @@ class AppLocalizationsNl extends AppLocalizations {
       'Stelt de standaardstatus van het pictogram voor de vertaling van de componist in.';
 
   @override
+  String get translation_autoIncomingTitle => 'Berichten automatisch vertalen';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Vertaalt berichten automatisch voor meldingen en voor chats of kanalen.';
+
+  @override
+  String get translation_translateMessage => 'Bericht vertalen';
+
+  @override
   String get translation_targetLanguage => 'Doeltaal';
 
   @override

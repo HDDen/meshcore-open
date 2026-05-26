@@ -4194,6 +4194,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Contrôle l\'état par défaut de l\'icône de traduction du composant.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Traduire automatiquement les messages';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Traduit automatiquement les messages pour les notifications et pour les discussions ou les canaux.';
+
+  @override
+  String get translation_translateMessage => 'Traduire le message';
+
+  @override
   String get translation_targetLanguage => 'Langue cible';
 
   @override

@@ -4185,6 +4185,17 @@ class AppLocalizationsPl extends AppLocalizations {
       'Kontroluje domyślny stan ikony tłumaczenia w edytorze.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Automatycznie tłumacz wiadomości';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automatycznie tłumaczy wiadomości do powiadomień oraz do czatów lub kanałów.';
+
+  @override
+  String get translation_translateMessage => 'Przetłumacz wiadomość';
+
+  @override
   String get translation_targetLanguage => 'Język docelowy';
 
   @override

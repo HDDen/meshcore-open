@@ -4114,6 +4114,17 @@ class AppLocalizationsSv extends AppLocalizations {
       'Styr standardtillståndet för kompositorns översättningsikon.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Översätt meddelanden automatiskt';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Översätter meddelanden automatiskt för aviseringar och för chattar eller kanaler.';
+
+  @override
+  String get translation_translateMessage => 'Översätt meddelande';
+
+  @override
   String get translation_targetLanguage => 'Målmedvetet språk';
 
   @override

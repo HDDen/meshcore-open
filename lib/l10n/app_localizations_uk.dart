@@ -4177,6 +4177,17 @@ class AppLocalizationsUk extends AppLocalizations {
       'Контролює стан ікон перекладу, який використовується за замовчуванням.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Автоматично перекладати повідомлення';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Автоматично перекладає повідомлення для сповіщень, а також для чатів і каналів.';
+
+  @override
+  String get translation_translateMessage => 'Перекласти повідомлення';
+
+  @override
   String get translation_targetLanguage => 'Цільова мова';
 
   @override

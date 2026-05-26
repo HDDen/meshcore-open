@@ -4160,6 +4160,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Controla o estado padrão do ícone de tradução do compositor.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Traduzir mensagens automaticamente';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Traduz automaticamente mensagens para notificações e para chats ou canais.';
+
+  @override
+  String get translation_translateMessage => 'Traduzir mensagem';
+
+  @override
   String get translation_targetLanguage => 'Língua-alvo';
 
   @override

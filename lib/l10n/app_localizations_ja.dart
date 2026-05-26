@@ -3942,6 +3942,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get translation_composerSubtitle => '作曲家翻訳アイコンのデフォルト状態を制御する。';
 
   @override
+  String get translation_autoIncomingTitle => 'メッセージを自動翻訳';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      '通知やチャット、チャンネルのメッセージを自動的に翻訳します。';
+
+  @override
+  String get translation_translateMessage => 'メッセージを翻訳';
+
+  @override
   String get translation_targetLanguage => '翻訳対象言語';
 
   @override

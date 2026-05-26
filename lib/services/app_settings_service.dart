@@ -235,6 +235,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(translationEnabled: value));
   }
 
+  Future<void> setAutoTranslateIncomingMessages(bool value) async {
+    await updateSettings(
+      _settings.copyWith(autoTranslateIncomingMessages: value),
+    );
+  }
+
   Future<void> setTranslationTargetLanguageCode(String? value) async {
     await updateSettings(
       _settings.copyWith(translationTargetLanguageCode: value),

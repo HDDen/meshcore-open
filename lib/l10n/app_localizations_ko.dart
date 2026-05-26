@@ -3943,6 +3943,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get translation_composerSubtitle => '컴포저 번역 아이콘의 기본 상태를 제어합니다.';
 
   @override
+  String get translation_autoIncomingTitle => '메시지 자동 번역';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      '알림과 채팅 또는 채널의 메시지를 자동으로 번역합니다.';
+
+  @override
+  String get translation_translateMessage => '메시지 번역';
+
+  @override
   String get translation_targetLanguage => '목표 언어';
 
   @override

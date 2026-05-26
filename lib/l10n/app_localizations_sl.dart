@@ -4140,6 +4140,16 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ureja privzeto stanje ikone za prevod, ki jo uporablja avtor.';
 
   @override
+  String get translation_autoIncomingTitle => 'Samodejno prevajaj sporočila';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Samodejno prevaja sporočila za obvestila ter za klepete ali kanale.';
+
+  @override
+  String get translation_translateMessage => 'Prevedi sporočilo';
+
+  @override
   String get translation_targetLanguage => 'Ciljna jezika';
 
   @override

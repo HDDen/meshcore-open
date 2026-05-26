@@ -3817,6 +3817,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translation_composerSubtitle => '控制作曲家翻译图标的默认状态。';
 
   @override
+  String get translation_autoIncomingTitle => '自动翻译消息';
+
+  @override
+  String get translation_autoIncomingSubtitle => '自动为通知以及聊天或频道翻译消息。';
+
+  @override
+  String get translation_translateMessage => '翻译消息';
+
+  @override
   String get translation_targetLanguage => '目标语言';
 
   @override

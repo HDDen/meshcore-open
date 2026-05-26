@@ -4178,6 +4178,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управляет исходным состоянием значка перевода, предоставляемого редактором.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Автоматически переводить сообщения';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Автоматически переводит сообщения для уведомлений, а также для чатов и каналов.';
+
+  @override
+  String get translation_translateMessage => 'Перевести сообщение';
+
+  @override
   String get translation_targetLanguage => 'Целевой язык';
 
   @override

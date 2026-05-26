@@ -1578,6 +1578,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _showMessageActions(Message message, Contact contact) {
+    final translationService = context.read<TranslationService>();
+    final canTranslateMessage =
+        translationService.canTranslateIncoming(
+          text: message.text,
+          isCli: message.isCli,
+          isOutgoing: message.isOutgoing,
+        ) &&
+        (message.translatedText?.trim().isEmpty ?? true);
+
     showModalBottomSheet(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -1611,6 +1620,21 @@ class _ChatScreenState extends State<ChatScreen> {
                 _copyMessageText(message.text);
               },
             ),
+            if (canTranslateMessage)
+              ListTile(
+                leading: const Icon(Icons.translate),
+                title: Text(context.l10n.translation_translateMessage),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  unawaited(
+                    context.read<MeshCoreConnector>().translateContactMessage(
+                      widget.contact.publicKeyHex,
+                      message,
+                      manualTranslation: true,
+                    ),
+                  );
+                },
+              ),
             if (!message.isOutgoing)
               ListTile(
                 leading: const Icon(Icons.mark_chat_unread_outlined),

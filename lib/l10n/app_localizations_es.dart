@@ -4164,6 +4164,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Controla el estado predeterminado del icono de traducción del compositor.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Traducir mensajes automáticamente';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Traduce mensajes para notificaciones y para chats o canales automáticamente.';
+
+  @override
+  String get translation_translateMessage => 'Traducir mensaje';
+
+  @override
   String get translation_targetLanguage => 'Idioma de destino';
 
   @override
