@@ -2059,6 +2059,43 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveCoverageResolution => 'Детализация покрытия';
+
+  @override
+  String get map_wardriveCoverageResolutionPrompt =>
+      'Выберите размер блоков покрытия (размер = сторона блока):';
+
+  @override
+  String get map_wardriveCoverageRegional => 'Региональный';
+
+  @override
+  String get map_wardriveCoverageRegionalSubtitle => '~20 км (точность 4)';
+
+  @override
+  String get map_wardriveCoverageCity => 'На уровне города';
+
+  @override
+  String get map_wardriveCoverageCitySubtitle => '~5 км (точность 5)';
+
+  @override
+  String get map_wardriveCoverageNeighborhood => 'Район';
+
+  @override
+  String get map_wardriveCoverageNeighborhoodSubtitle => '~1,2 км (точность 6)';
+
+  @override
+  String get map_wardriveCoverageStreet => 'Уровень улицы';
+
+  @override
+  String get map_wardriveCoverageStreetSubtitle => '~153 м (точность 7)';
+
+  @override
+  String get map_wardriveCoverageBuilding => 'Уровень здания';
+
+  @override
+  String get map_wardriveCoverageBuildingSubtitle => '~38 м (точность 8)';
+
+  @override
   String get map_wardriveAutoUploadEnabled => 'Автовыгрузка включена.';
 
   @override

@@ -21,8 +21,15 @@ class WardriveCoverageSummary {
 }
 
 class WardriveCoverageHelper {
-  static List<Polygon> buildPolygons(List<WardriveSample> samples) {
-    return _buildCells(samples)
+  static const int defaultCoveragePrecision = 7;
+  static const int minCoveragePrecision = 4;
+  static const int maxCoveragePrecision = 8;
+
+  static List<Polygon> buildPolygons(
+    List<WardriveSample> samples, {
+    int coveragePrecision = defaultCoveragePrecision,
+  }) {
+    return _buildCells(samples, coveragePrecision: coveragePrecision)
         .map((cell) {
           final bounds = cell.bounds;
           if (bounds == null) return null;
@@ -45,8 +52,11 @@ class WardriveCoverageHelper {
         .toList();
   }
 
-  static WardriveCoverageSummary buildSummary(List<WardriveSample> samples) {
-    final cells = _buildCells(samples);
+  static WardriveCoverageSummary buildSummary(
+    List<WardriveSample> samples, {
+    int coveragePrecision = defaultCoveragePrecision,
+  }) {
+    final cells = _buildCells(samples, coveragePrecision: coveragePrecision);
     var good = 0;
     var fair = 0;
     var weak = 0;
@@ -80,18 +90,24 @@ class WardriveCoverageHelper {
     );
   }
 
-  static List<_WardriveCoverageCell> _buildCells(List<WardriveSample> samples) {
+  static List<_WardriveCoverageCell> _buildCells(
+    List<WardriveSample> samples, {
+    required int coveragePrecision,
+  }) {
     final groups = <String, List<WardriveSample>>{};
     for (final sample in samples) {
       // Match the standalone wardrive app: coverage cells are geohash blocks,
       // while individual samples keep their higher-precision geohash.
-      final key = _coverageHash(sample);
+      final key = _coverageHash(sample, precision: coveragePrecision);
       groups.putIfAbsent(key, () => <WardriveSample>[]).add(sample);
     }
 
     return groups.values
         .map((group) {
-          final coverageHash = _coverageHash(group.first);
+          final coverageHash = _coverageHash(
+            group.first,
+            precision: coveragePrecision,
+          );
           final bounds = _decodeGeohashBounds(coverageHash);
           final stats = _buildStats(group);
           if (stats.received == 0 && stats.lost == 0) {
@@ -154,8 +170,7 @@ class WardriveCoverageHelper {
     return _WardriveCoverageStats(received: received, lost: lost);
   }
 
-  static String _coverageHash(WardriveSample sample) {
-    const precision = 7;
+  static String _coverageHash(WardriveSample sample, {required int precision}) {
     if (sample.geohash.length >= precision) {
       return sample.geohash.substring(0, precision);
     }

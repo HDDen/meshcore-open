@@ -1071,6 +1071,18 @@
       }
     }
   },
+  "map_wardriveCoverageResolution": "Coverage Resolution",
+  "map_wardriveCoverageResolutionPrompt": "Choose the size of coverage squares (size = block side length):",
+  "map_wardriveCoverageRegional": "Regional",
+  "map_wardriveCoverageRegionalSubtitle": "~20km (precision 4)",
+  "map_wardriveCoverageCity": "City-level",
+  "map_wardriveCoverageCitySubtitle": "~5km (precision 5)",
+  "map_wardriveCoverageNeighborhood": "Neighborhood",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1.2km (precision 6)",
+  "map_wardriveCoverageStreet": "Street-level",
+  "map_wardriveCoverageStreetSubtitle": "~153m (precision 7)",
+  "map_wardriveCoverageBuilding": "Building-level",
+  "map_wardriveCoverageBuildingSubtitle": "~38m (precision 8)",
   "map_wardriveAutoUploadEnabled": "Autoupload enabled.",
   "map_wardriveAutoUploadDisabled": "Autoupload disabled.",
   "map_wardriveNoSamplesToUpload": "No wardrive samples to upload.",

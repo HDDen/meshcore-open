@@ -1,27 +1,87 @@
 {
   "bg": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "de": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "es": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "fr": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "hu": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "it": [
@@ -58,6 +118,18 @@
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
     "map_wardriveCoverageCells",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveAutoUploadEnabled",
     "map_wardriveAutoUploadDisabled",
     "map_wardriveNoSamplesToUpload",
@@ -111,12 +183,36 @@
 
   "ja": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "ko": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "nl": [
@@ -153,6 +249,18 @@
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
     "map_wardriveCoverageCells",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveAutoUploadEnabled",
     "map_wardriveAutoUploadDisabled",
     "map_wardriveNoSamplesToUpload",
@@ -206,7 +314,19 @@
 
   "pl": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "pt": [
@@ -243,6 +363,18 @@
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
     "map_wardriveCoverageCells",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveAutoUploadEnabled",
     "map_wardriveAutoUploadDisabled",
     "map_wardriveNoSamplesToUpload",
@@ -296,12 +428,36 @@
 
   "sk": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "sl": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "sv": [
@@ -338,6 +494,18 @@
     "map_wardriveAutoDiscoveryError",
     "map_wardriveSampleSaveError",
     "map_wardriveCoverageCells",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveAutoUploadEnabled",
     "map_wardriveAutoUploadDisabled",
     "map_wardriveNoSamplesToUpload",
@@ -391,11 +559,35 @@
 
   "uk": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ],
 
   "zh": [
     "map_wardriveReUpload",
-    "map_wardriveSamplesNoNew"
+    "map_wardriveSamplesNoNew",
+    "map_wardriveCoverageResolution",
+    "map_wardriveCoverageResolutionPrompt",
+    "map_wardriveCoverageRegional",
+    "map_wardriveCoverageRegionalSubtitle",
+    "map_wardriveCoverageCity",
+    "map_wardriveCoverageCitySubtitle",
+    "map_wardriveCoverageNeighborhood",
+    "map_wardriveCoverageNeighborhoodSubtitle",
+    "map_wardriveCoverageStreet",
+    "map_wardriveCoverageStreetSubtitle",
+    "map_wardriveCoverageBuilding",
+    "map_wardriveCoverageBuildingSubtitle"
   ]
 }

@@ -437,7 +437,10 @@ class _MapScreenState extends State<MapScreen>
           wardriveAnsweredKeys,
         );
         final wardriveCoveragePolygons = wardrive.hasMapState
-            ? WardriveCoverageHelper.buildPolygons(wardrive.recentSamples)
+            ? WardriveCoverageHelper.buildPolygons(
+                wardrive.recentSamples,
+                coveragePrecision: wardrive.coveragePrecision,
+              )
             : const <Polygon>[];
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
@@ -937,6 +940,9 @@ class _MapScreenState extends State<MapScreen>
       case WardriveDataAction.screenWakelock:
         await _toggleWardriveScreenWakelock(wardrive);
         break;
+      case WardriveDataAction.coverageResolution:
+        await _setWardriveCoverageResolution(wardrive);
+        break;
       case WardriveDataAction.exportSamples:
         await _exportWardriveSamples(wardrive);
         break;
@@ -970,6 +976,64 @@ class _MapScreenState extends State<MapScreen>
   Future<void> _toggleWardriveScreenWakelock(WardriveService wardrive) async {
     await wardrive.setScreenWakelockEnabled(!wardrive.screenWakelockEnabled);
     _syncWardriveScreenWakelock();
+  }
+
+  Future<void> _setWardriveCoverageResolution(WardriveService wardrive) async {
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.map_wardriveCoverageResolution),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(context.l10n.map_wardriveCoverageResolutionPrompt),
+            const SizedBox(height: 16),
+            for (final option in _wardriveCoverageResolutionOptions())
+              ListTile(
+                title: Text(option.title),
+                subtitle: Text(option.subtitle),
+                trailing: option.precision == wardrive.coveragePrecision
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.of(dialogContext).pop(option.precision),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    if (selected == null) return;
+    await wardrive.setCoveragePrecision(selected);
+  }
+
+  List<_WardriveCoverageResolutionOption> _wardriveCoverageResolutionOptions() {
+    return [
+      _WardriveCoverageResolutionOption(
+        precision: 4,
+        title: context.l10n.map_wardriveCoverageRegional,
+        subtitle: context.l10n.map_wardriveCoverageRegionalSubtitle,
+      ),
+      _WardriveCoverageResolutionOption(
+        precision: 5,
+        title: context.l10n.map_wardriveCoverageCity,
+        subtitle: context.l10n.map_wardriveCoverageCitySubtitle,
+      ),
+      _WardriveCoverageResolutionOption(
+        precision: 6,
+        title: context.l10n.map_wardriveCoverageNeighborhood,
+        subtitle: context.l10n.map_wardriveCoverageNeighborhoodSubtitle,
+      ),
+      _WardriveCoverageResolutionOption(
+        precision: 7,
+        title: context.l10n.map_wardriveCoverageStreet,
+        subtitle: context.l10n.map_wardriveCoverageStreetSubtitle,
+      ),
+      _WardriveCoverageResolutionOption(
+        precision: 8,
+        title: context.l10n.map_wardriveCoverageBuilding,
+        subtitle: context.l10n.map_wardriveCoverageBuildingSubtitle,
+      ),
+    ];
   }
 
   Future<void> _uploadWardriveSamples(
@@ -3708,6 +3772,18 @@ String buildSharedMarkerKey({
   final normalizedFlags = flags.trim().toLowerCase();
   final scope = isChannel ? 'ch' : 'dm';
   return '$scope|$sourceId|$normalizedFrom|$normalizedLabel|$normalizedFlags';
+}
+
+class _WardriveCoverageResolutionOption {
+  final int precision;
+  final String title;
+  final String subtitle;
+
+  const _WardriveCoverageResolutionOption({
+    required this.precision,
+    required this.title,
+    required this.subtitle,
+  });
 }
 
 class _SharedMarker {

@@ -1789,6 +1789,18 @@
       }
     }
   },
+  "map_wardriveCoverageResolution": "Детализация покрытия",
+  "map_wardriveCoverageResolutionPrompt": "Выберите размер блоков покрытия (размер = сторона блока):",
+  "map_wardriveCoverageRegional": "Региональный",
+  "map_wardriveCoverageRegionalSubtitle": "~20 км (точность 4)",
+  "map_wardriveCoverageCity": "На уровне города",
+  "map_wardriveCoverageCitySubtitle": "~5 км (точность 5)",
+  "map_wardriveCoverageNeighborhood": "Район",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1,2 км (точность 6)",
+  "map_wardriveCoverageStreet": "Уровень улицы",
+  "map_wardriveCoverageStreetSubtitle": "~153 м (точность 7)",
+  "map_wardriveCoverageBuilding": "Уровень здания",
+  "map_wardriveCoverageBuildingSubtitle": "~38 м (точность 8)",
   "map_wardriveAutoUploadEnabled": "Автовыгрузка включена.",
   "map_wardriveAutoUploadDisabled": "Автовыгрузка выключена.",
   "map_wardriveNoSamplesToUpload": "Нет wardrive-сэмплов для выгрузки.",

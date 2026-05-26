@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/wardrive_coverage_helper.dart';
 import '../storage/prefs_manager.dart';
 import 'background_service.dart';
 import 'wardrive_sample_store.dart';
@@ -62,6 +63,7 @@ class WardriveService extends ChangeNotifier {
       'wardrive_auto_discovery_interval_seconds_v1';
   static const String _screenWakelockEnabledKey =
       'wardrive_screen_wakelock_enabled_v1';
+  static const String _coveragePrecisionKey = 'wardrive_coverage_precision_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
   Timer? _autoDiscoveryTimer;
@@ -94,6 +96,7 @@ class WardriveService extends ChangeNotifier {
   int _sessionSampleCount = 0;
   int _sessionPingCount = 0;
   int _sessionSuccessCount = 0;
+  int _coveragePrecision = WardriveCoverageHelper.defaultCoveragePrecision;
 
   bool get isRunning => _isRunning;
   bool get hasMapState => _isRunning || _showMapState;
@@ -117,6 +120,7 @@ class WardriveService extends ChangeNotifier {
   int get autoDiscoveryIntervalSeconds => _autoDiscoveryInterval.inSeconds;
   DateTime? get lastSampleSavedAt => _lastSampleSavedAt;
   int get savedSamplesCount => _savedSamplesCount;
+  int get coveragePrecision => _coveragePrecision;
   List<WardriveDiscoveryResult> get recentDiscoveries =>
       List.unmodifiable(_recentDiscoveries);
   List<WardriveSample> get recentSamples => List.unmodifiable(_recentSamples);
@@ -165,12 +169,38 @@ class WardriveService extends ChangeNotifier {
     }
     _screenWakelockEnabled =
         PrefsManager.instance.getBool(_screenWakelockEnabledKey) ?? false;
+    final savedCoveragePrecision = PrefsManager.instance.getInt(
+      _coveragePrecisionKey,
+    );
+    if (savedCoveragePrecision != null) {
+      _coveragePrecision = savedCoveragePrecision
+          .clamp(
+            WardriveCoverageHelper.minCoveragePrecision,
+            WardriveCoverageHelper.maxCoveragePrecision,
+          )
+          .toInt();
+    }
   }
 
   Future<void> setScreenWakelockEnabled(bool enabled) async {
     if (_screenWakelockEnabled == enabled) return;
     _screenWakelockEnabled = enabled;
     await PrefsManager.instance.setBool(_screenWakelockEnabledKey, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setCoveragePrecision(int precision) async {
+    final clamped = precision
+        .clamp(
+          WardriveCoverageHelper.minCoveragePrecision,
+          WardriveCoverageHelper.maxCoveragePrecision,
+        )
+        .toInt();
+    if (_coveragePrecision == clamped) return;
+    _coveragePrecision = clamped;
+    await PrefsManager.instance.setInt(_coveragePrecisionKey, clamped);
+    // The stored samples keep their original high-precision geohash; changing
+    // this value only rebuilds coverage aggregation on listeners.
     notifyListeners();
   }
 

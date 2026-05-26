@@ -15,6 +15,7 @@ enum WardriveDataAction {
   uploadSites,
   autoUpload,
   screenWakelock,
+  coverageResolution,
   exportSamples,
   importSamples,
   clear,
@@ -284,6 +285,29 @@ class WardriveStatusPanel extends StatelessWidget {
             ),
           ),
           PopupMenuItem(
+            value: WardriveDataAction.coverageResolution,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.grid_on, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(context.l10n.map_wardriveCoverageResolution),
+                      Text(
+                        _coverageResolutionDescription(context),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem(
             value: WardriveDataAction.exportSamples,
             child: Row(
               children: [
@@ -338,6 +362,23 @@ class WardriveStatusPanel extends StatelessWidget {
     );
   }
 
+  String _coverageResolutionDescription(BuildContext context) {
+    switch (wardrive.coveragePrecision) {
+      case 4:
+        return context.l10n.map_wardriveCoverageRegionalSubtitle;
+      case 5:
+        return context.l10n.map_wardriveCoverageCitySubtitle;
+      case 6:
+        return context.l10n.map_wardriveCoverageNeighborhoodSubtitle;
+      case 7:
+        return context.l10n.map_wardriveCoverageStreetSubtitle;
+      case 8:
+        return context.l10n.map_wardriveCoverageBuildingSubtitle;
+      default:
+        return context.l10n.map_wardriveCoverageStreetSubtitle;
+    }
+  }
+
   Widget _buildAutoDiscoveryIntervalInput(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
@@ -368,7 +409,10 @@ class WardriveStatusPanel extends StatelessWidget {
   }
 
   Widget _buildCoverageSummary(BuildContext context) {
-    final summary = WardriveCoverageHelper.buildSummary(wardrive.recentSamples);
+    final summary = WardriveCoverageHelper.buildSummary(
+      wardrive.recentSamples,
+      coveragePrecision: wardrive.coveragePrecision,
+    );
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Wrap(

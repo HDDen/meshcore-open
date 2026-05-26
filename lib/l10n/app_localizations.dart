@@ -3706,6 +3706,78 @@ abstract class AppLocalizations {
   /// **'Coverage cells: {count}'**
   String map_wardriveCoverageCells(int count);
 
+  /// No description provided for @map_wardriveCoverageResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage Resolution'**
+  String get map_wardriveCoverageResolution;
+
+  /// No description provided for @map_wardriveCoverageResolutionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the size of coverage squares (size = block side length):'**
+  String get map_wardriveCoverageResolutionPrompt;
+
+  /// No description provided for @map_wardriveCoverageRegional.
+  ///
+  /// In en, this message translates to:
+  /// **'Regional'**
+  String get map_wardriveCoverageRegional;
+
+  /// No description provided for @map_wardriveCoverageRegionalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'~20km (precision 4)'**
+  String get map_wardriveCoverageRegionalSubtitle;
+
+  /// No description provided for @map_wardriveCoverageCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City-level'**
+  String get map_wardriveCoverageCity;
+
+  /// No description provided for @map_wardriveCoverageCitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'~5km (precision 5)'**
+  String get map_wardriveCoverageCitySubtitle;
+
+  /// No description provided for @map_wardriveCoverageNeighborhood.
+  ///
+  /// In en, this message translates to:
+  /// **'Neighborhood'**
+  String get map_wardriveCoverageNeighborhood;
+
+  /// No description provided for @map_wardriveCoverageNeighborhoodSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'~1.2km (precision 6)'**
+  String get map_wardriveCoverageNeighborhoodSubtitle;
+
+  /// No description provided for @map_wardriveCoverageStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Street-level'**
+  String get map_wardriveCoverageStreet;
+
+  /// No description provided for @map_wardriveCoverageStreetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'~153m (precision 7)'**
+  String get map_wardriveCoverageStreetSubtitle;
+
+  /// No description provided for @map_wardriveCoverageBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Building-level'**
+  String get map_wardriveCoverageBuilding;
+
+  /// No description provided for @map_wardriveCoverageBuildingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'~38m (precision 8)'**
+  String get map_wardriveCoverageBuildingSubtitle;
+
   /// No description provided for @map_wardriveAutoUploadEnabled.
   ///
   /// In en, this message translates to:
