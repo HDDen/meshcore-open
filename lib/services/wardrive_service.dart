@@ -53,7 +53,7 @@ class WardriveService extends ChangeNotifier {
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
   final List<WardriveSample> _recentSamples = [];
   final Set<String> _currentDiscoveryPublicKeys = {};
-  static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 20);
+  static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 25);
   static const Duration _discoveryResponseWindow = Duration(seconds: 10);
   static const int minAutoDiscoveryIntervalSeconds = 5;
   static const int maxAutoDiscoveryIntervalSeconds = 300;
