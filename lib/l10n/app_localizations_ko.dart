@@ -2180,6 +2180,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_wardriveRepNoLocation => 'Repeater location not provided';
 
   @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Please wait $seconds seconds before retrying discovery';
+  }
+
+  @override
   String get mapCache_title => '오프라인 지도 캐시';
 
   @override

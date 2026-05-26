@@ -2284,6 +2284,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Местоположение репитера не предоставлено';
 
   @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Подождите $seconds секунд перед повтором';
+  }
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

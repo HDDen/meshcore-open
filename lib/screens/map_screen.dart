@@ -74,6 +74,7 @@ class _MapScreenState extends State<MapScreen>
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
   static const double _wardrivePanelBottomInset = 16.0;
+  static const Duration _wardriveDiscoveryRetryDelay = Duration(seconds: 10);
   static const String _mapStatsCollapsedKey = 'map_stats_collapsed_v1';
 
   final MapController _mapController = MapController();
@@ -102,6 +103,7 @@ class _MapScreenState extends State<MapScreen>
   PageRoute<dynamic>? _observedRoute;
   bool _isCurrentRouteActive = false;
   bool _wardriveScreenWakelockActive = false;
+  DateTime? _wardriveDiscoveryRetryAt;
 
   @override
   void initState() {
@@ -923,13 +925,44 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Future<void> _sendWardriveDiscovery(WardriveService wardrive) async {
+    if (wardrive.isSendingDiscovery) return;
+
+    final waitSeconds = _wardriveDiscoveryWaitSeconds();
+    if (waitSeconds != null) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.map_wardriveDiscoveryWait(waitSeconds)),
+      );
+      return;
+    }
+
     try {
       await wardrive.sendZeroHopDiscoveryRequest(
         startWardrive: wardrive.isRunning,
       );
+      if (!mounted) return;
+      setState(() {
+        _wardriveDiscoveryRetryAt = DateTime.now().add(
+          _wardriveDiscoveryRetryDelay,
+        );
+      });
     } catch (error) {
       debugPrint('[Wardrive] Discovery request failed: $error');
     }
+  }
+
+  int? _wardriveDiscoveryWaitSeconds() {
+    final retryAt = _wardriveDiscoveryRetryAt;
+    if (retryAt == null) return null;
+    final remaining = retryAt.difference(DateTime.now());
+    if (remaining.inMicroseconds <= 0) {
+      _wardriveDiscoveryRetryAt = null;
+      return null;
+    }
+    return (remaining.inMilliseconds / Duration.millisecondsPerSecond)
+        .ceil()
+        .clamp(1, _wardriveDiscoveryRetryDelay.inSeconds)
+        .toInt();
   }
 
   void _updateWardriveAutoDiscoveryInterval(

@@ -2277,6 +2277,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_wardriveRepNoLocation => 'Repeater location not provided';
 
   @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Please wait $seconds seconds before retrying discovery';
+  }
+
+  @override
   String get mapCache_title => 'Офлайн-кеш карти';
 
   @override

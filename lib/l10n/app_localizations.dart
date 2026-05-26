@@ -4072,6 +4072,12 @@ abstract class AppLocalizations {
   /// **'Repeater location not provided'**
   String get map_wardriveRepNoLocation;
 
+  /// No description provided for @map_wardriveDiscoveryWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait {seconds} seconds before retrying discovery'**
+  String map_wardriveDiscoveryWait(Object seconds);
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:
