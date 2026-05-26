@@ -1057,16 +1057,6 @@ class _MapScreenState extends State<MapScreen>
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
-                          if (uploadProgress!.siteName.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              context.l10n.map_wardriveUploadTarget(
-                                uploadProgress!.siteName,
-                              ),
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
                           const SizedBox(height: 2),
                           Text(
                             _formatWardriveUploadProgress(
