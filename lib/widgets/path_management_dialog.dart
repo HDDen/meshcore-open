@@ -158,16 +158,17 @@ class _PathManagementDialogState extends State<_PathManagementDialog> {
     );
 
     if (result != null && context.mounted) {
+      final hopsCount = result.length ~/ connector.pathHashByteWidth;
       await connector.setPathOverride(
         currentContact,
-        pathLen: result.length,
+        pathLen: hopsCount,
         pathBytes: result,
       );
 
       if (!context.mounted) return;
       showDismissibleSnackBar(
         context,
-        content: Text(l10n.chat_hopsCount(result.length)),
+        content: Text(l10n.chat_hopsCount(hopsCount)),
         duration: const Duration(seconds: 2),
       );
     }
@@ -361,11 +362,10 @@ class _PathManagementDialogState extends State<_PathManagementDialog> {
                             final pathBytes = Uint8List.fromList(
                               path.pathBytes,
                             );
-                            final pathLength = path.pathBytes.length;
 
                             await connector.setPathOverride(
                               currentContact,
-                              pathLen: pathLength,
+                              pathLen: path.hopCount,
                               pathBytes: pathBytes,
                             );
 

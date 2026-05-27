@@ -112,6 +112,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   double _pathDistanceMeters = 0.0;
   bool _showNodeLabels = true;
   Contact? _targetContact;
+  Uint8List? _sentTagBytes;
 
   String _formatPathPrefixes(Uint8List pathBytes) {
     return PathHelper.splitPathBytes(
@@ -204,36 +205,39 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     );
     final hopWidth = widget.pathHashByteWidth.clamp(1, pubKeySize);
 
-    if (pathHops.isEmpty) {
-      final pk = widget.targetContact?.publicKey;
-      if (pk != null && pk.length >= hopWidth) {
-        return Uint8List.fromList(pk.sublist(0, hopWidth));
+    // Compute targetPrefix if targetContact is provided
+    Uint8List? targetPrefix;
+    if (widget.targetContact != null) {
+      final pk = widget.targetContact!.publicKey;
+      if (pk.isNotEmpty) {
+        final len = pk.length >= hopWidth ? hopWidth : pk.length;
+        targetPrefix = Uint8List.fromList(pk.sublist(0, len));
       }
-      return Uint8List.fromList(
-        pk != null && pk.isNotEmpty ? [pk[0]] : const [0],
-      );
     }
 
-    final mirroredHops = <Uint8List>[...pathHops];
-    final isRepeaterOrRoom =
-        widget.targetContact?.type == advTypeRepeater ||
-        widget.targetContact?.type == advTypeRoom;
-    if (isRepeaterOrRoom) {
-      final pk = widget.targetContact?.publicKey;
-      if (pk != null && pk.length >= hopWidth) {
-        mirroredHops.add(Uint8List.fromList(pk.sublist(0, hopWidth)));
-      } else {
-        mirroredHops.add(
-          Uint8List.fromList(pk != null && pk.isNotEmpty ? [pk[0]] : const [0]),
-        );
+    final outboundHops = <Uint8List>[...pathHops];
+    if (targetPrefix != null) {
+      // Check if targetPrefix is already the last hop in pathHops to avoid duplication
+      bool alreadyEndedWithTarget = false;
+      if (pathHops.isNotEmpty) {
+        if (listEquals(pathHops.last, targetPrefix)) {
+          alreadyEndedWithTarget = true;
+        }
       }
-      // For repeaters/rooms, include full reversed path
-      mirroredHops.addAll(pathHops.reversed);
-    } else {
-      // For non-repeater/room targets, reverse without duplicating the pivot hop
-      if (pathHops.length > 1) {
-        mirroredHops.addAll(pathHops.sublist(0, pathHops.length - 1).reversed);
+      if (!alreadyEndedWithTarget) {
+        outboundHops.add(targetPrefix);
       }
+    }
+
+    if (outboundHops.isEmpty) {
+      return Uint8List(0);
+    }
+
+    final mirroredHops = <Uint8List>[...outboundHops];
+    if (outboundHops.length > 1) {
+      mirroredHops.addAll(
+        outboundHops.sublist(0, outboundHops.length - 1).reversed,
+      );
     }
 
     final traceBytes = <int>[];
@@ -264,11 +268,21 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     );
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    final sentTag = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    _sentTagBytes = Uint8List(4)
+      ..[0] = sentTag & 0xFF
+      ..[1] = (sentTag >> 8) & 0xFF
+      ..[2] = (sentTag >> 16) & 0xFF
+      ..[3] = (sentTag >> 24) & 0xFF;
+
+    final flags = (widget.pathHashByteWidth - 1).clamp(0, 3);
+    final tracePayload = path.isEmpty ? Uint8List.fromList([0x00]) : path;
+
     final frame = buildTraceReq(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      0, //flags
-      0, //auth
-      payload: path,
+      sentTag,
+      0, // auth
+      flags, // flag
+      payload: tracePayload,
     );
     connector.sendFrame(frame);
   }
@@ -312,15 +326,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         }
 
         // Check if it's a binary response
-        if (frame.length > 8 &&
+        if (frame.length >= 12 &&
             code == pushCodeTraceData &&
-            listEquals(frame.sublist(4, 8), tagData)) {
+            (listEquals(frame.sublist(4, 8), _sentTagBytes) ||
+                listEquals(frame.sublist(4, 8), tagData))) {
           _timeoutTimer?.cancel();
           if (!mounted) return;
-          frameBuffer.skipBytes(3); //reserved + path length + flag
-          if (listEquals(frameBuffer.readBytes(4), tagData)) {
-            _handleTraceResponse(frame);
-          }
+          _handleTraceResponse(frame);
         }
       } catch (e) {
         _timeoutTimer?.cancel();
@@ -341,14 +353,26 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     final buffer = BufferReader(frame);
     try {
       buffer.skipBytes(2); // Skip push code and reserved byte
-      int pathLength = buffer.readUInt8();
+      final pathLenByte = buffer.readUInt8();
+      int hopCount = 0;
+      int width = widget.pathHashByteWidth; // fallback
+      int pathLength = 0;
+      if (pathLenByte != 0xFF) {
+        final mode = (pathLenByte & 0xC0) >> 6;
+        if (mode > 0) {
+          hopCount = pathLenByte & 0x3F;
+          width = mode + 1;
+          pathLength = hopCount * width;
+        } else {
+          width = widget.pathHashByteWidth;
+          pathLength = pathLenByte;
+          hopCount = pathLength ~/ width;
+        }
+      }
       buffer.skipBytes(5); // Skip Flag byte and tag data
       buffer.skipBytes(4); // Skip auth code
       final pathBytes = buffer.readBytes(pathLength);
-      final pathData = PathHelper.splitPathBytes(
-        pathBytes,
-        widget.pathHashByteWidth,
-      );
+      final pathData = PathHelper.splitPathBytes(pathBytes, width);
       List<double> snrData = buffer
           .readRemainingBytes()
           .map((snr) => snr.toSigned(8).toDouble() / 4)

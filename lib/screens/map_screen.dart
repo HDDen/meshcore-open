@@ -4116,9 +4116,10 @@ class _MapScreenState extends State<MapScreen>
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
               SelectableText(
-                _pathTrace
-                    .map((b) => b.toRadixString(16).padLeft(2, '0'))
-                    .join(','),
+                PathHelper.splitPathBytes(
+                  _pathTrace,
+                  context.read<MeshCoreConnector>().pathHashByteWidth,
+                ).map(PathHelper.formatHopHex).join(','),
                 style: TextStyle(fontSize: 18),
               ),
               // const SizedBox(height: 6),
@@ -4139,6 +4140,10 @@ class _MapScreenState extends State<MapScreen>
                             builder: (context) => PathTraceMapScreen(
                               title: l10n.contacts_pathTrace,
                               path: Uint8List.fromList(_pathTrace),
+                              flipPathAround: true,
+                              targetContact: _pathTraceContacts.isNotEmpty
+                                  ? _pathTraceContacts.last
+                                  : null,
                               pathHashByteWidth: hashW,
                               pathContacts: _pathTraceContacts,
                             ),
@@ -4161,9 +4166,13 @@ class _MapScreenState extends State<MapScreen>
                               title: l10n.contacts_pathTrace,
                               path: Uint8List.fromList(_pathTrace),
                               flipPathAround: true,
+                              targetContact: _pathTraceContacts.isNotEmpty
+                                  ? _pathTraceContacts.last
+                                  : null,
                               pathHashByteWidth: context
                                   .read<MeshCoreConnector>()
                                   .pathHashByteWidth,
+                              pathContacts: _pathTraceContacts,
                             ),
                           ),
                         );

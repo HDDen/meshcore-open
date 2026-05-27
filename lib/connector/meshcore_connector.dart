@@ -3119,9 +3119,10 @@ class MeshCoreConnector extends ChangeNotifier {
       if (!isConnected) return;
 
       final mode = _pathHashByteWidth - 1;
-      final encodedPathLen = (pathLen >= 0 && pathLen != 0xFF)
-          ? (pathLen | (mode << 6))
-          : pathLen;
+      if (pathLen < 0 || pathLen > 0x3F) {
+        return;
+      }
+      final encodedPathLen = pathLen | (mode << 6);
       await sendFrame(
         buildUpdateContactPathFrame(
           contact.publicKey,
@@ -3142,7 +3143,7 @@ class MeshCoreConnector extends ChangeNotifier {
       );
       if (idx != -1) {
         _contacts[idx] = _contacts[idx].copyWith(
-          pathLength: customPath.length,
+          pathLength: pathLen,
           path: customPath,
         );
         notifyListeners();
@@ -5243,7 +5244,7 @@ class MeshCoreConnector extends ChangeNotifier {
         isCli: isCli,
         status: MessageStatus.delivered,
         wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
-        pathLength: pathLength == 0xFF ? 0 : pathLength,
+        pathLength: pathLength == 0xFF ? -1 : (pathLength & 0x3F),
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: roomAuthorPrefix,
       );
@@ -6873,6 +6874,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final packet = BufferReader(frame);
     int payloadType = 0;
     Uint8List pathBytes = Uint8List(0);
+    int pathHashWidth = 1;
     try {
       packet.skipBytes(1); // Skip frame type byte
       packet.skipBytes(1); // Skip SNR byte
@@ -6887,6 +6889,7 @@ class MeshCoreConnector extends ChangeNotifier {
       //final payloadVer = (header >> 6) & 0x03;
       final pathLenRaw = packet.readByte();
       final pathByteLen = _decodePathByteLen(pathLenRaw);
+      pathHashWidth = _decodePathHashWidth(pathLenRaw);
       pathBytes = packet.readBytes(pathByteLen);
     } catch (e) {
       appLogger.warn('Malformed RX frame: $e', tag: 'Connector');
@@ -6934,7 +6937,9 @@ class MeshCoreConnector extends ChangeNotifier {
         publicKey: publicKey,
         name: name,
         type: type,
-        pathLength: pathBytes.isEmpty ? -1 : pathBytes.length,
+        pathLength: pathBytes.isEmpty
+            ? -1
+            : (pathBytes.length ~/ pathHashWidth),
         path: Uint8List.fromList(
           pathBytes.reversed.toList(),
         ), // Store path in reverse for easier use in outgoing messages
@@ -7019,7 +7024,7 @@ class MeshCoreConnector extends ChangeNotifier {
         publicKey: publicKey,
         name: name,
         type: type,
-        pathLength: path.length,
+        pathLength: path.isEmpty ? -1 : (path.length ~/ pathHashWidth),
         path: Uint8List.fromList(
           path.reversed.toList(),
         ), // Store path in reverse for easier use in outgoing messages
@@ -7071,7 +7076,7 @@ class MeshCoreConnector extends ChangeNotifier {
         longitude: hasLocation ? longitude : existing.longitude,
         name: hasName ? name : existing.name,
         path: Uint8List.fromList(path.reversed.toList()),
-        pathLength: path.length,
+        pathLength: path.isEmpty ? -1 : (path.length ~/ pathHashWidth),
         lastMessageAt: mergedLastMessageAt,
         lastSeen: DateTime.fromMillisecondsSinceEpoch(timestamp * 1000),
         pathOverride: existing.pathOverride, // Preserve user's path choice
@@ -7233,10 +7238,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool _contactKeyMatchesPrefix(String contactKeyHex, List<int> pubkeyPrefix) {
-    final prefixHex = pubkeyPrefix
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+    // Normalize both sides to upper-case hex to avoid case-sensitive mismatches.
+    final normalizedPrefixHex = pubkeyPrefix
+        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
         .join();
-    return contactKeyHex.startsWith(prefixHex);
+    final normalizedContactKeyHex = contactKeyHex.toUpperCase();
+    return normalizedContactKeyHex.startsWith(normalizedPrefixHex);
   }
 
   void _handleAutoAddConfig(Uint8List frame) {
@@ -7363,12 +7370,14 @@ const int _cipherMacSize = 2;
 /// Decodes the firmware's encoded path_len byte into actual byte length.
 /// Bits 0-5: hash count (0-63), Bits 6-7: hash size code (0=1byte, 1=2bytes, 2=3bytes).
 int _decodePathByteLen(int pathLenRaw) {
+  if (pathLenRaw == 0xFF || pathLenRaw == 0) return 0;
   final hashCount = pathLenRaw & 63;
   final hashSize = _decodePathHashWidth(pathLenRaw);
   return hashCount * hashSize;
 }
 
 int _decodePathHashWidth(int pathLenRaw) {
+  if (pathLenRaw == 0xFF) return 1;
   return ((pathLenRaw >> 6) & 0x03) + 1;
 }
 

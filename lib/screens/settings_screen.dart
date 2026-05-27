@@ -351,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _pathHashModeSubtitle(int pathHashByteWidth) {
-    final width = pathHashByteWidth.clamp(1, 3).toInt();
+    final width = pathHashByteWidth.clamp(1, 4).toInt();
     final mode = width - 1;
     final unit = width == 1 ? 'byte' : 'bytes';
     return 'Mode $mode - $width $unit per hop';
