@@ -1109,6 +1109,18 @@ class _MapScreenState extends State<MapScreen>
     var currentBatch = 0;
     var totalBatches = 0;
     WardriveUploadProgress? uploadProgress;
+    WardriveUploadProgress effectiveUploadProgress() {
+      return uploadProgress ??
+          WardriveUploadProgress(
+            siteName: currentSite,
+            currentBatch: currentBatch,
+            totalBatches: totalBatches,
+            phase: WardriveUploadStatusPhase.waitingForConnection,
+            sentSamples: 0,
+            totalSamples: wardrive.savedSamplesCount,
+          );
+    }
+
     var uploadDialogOpen = true;
     StateSetter? setUploadState;
     final cancelToken = WardriveUploadCancelToken();
@@ -1127,6 +1139,7 @@ class _MapScreenState extends State<MapScreen>
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, setState) {
             setUploadState = setState;
+            final progress = effectiveUploadProgress();
             return AlertDialog(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1139,47 +1152,43 @@ class _MapScreenState extends State<MapScreen>
                         : context.l10n.map_wardriveUploadingTo(currentSite),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  if (totalBatches > 1)
+                  if (progress.totalBatches > 1)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         context.l10n.map_wardriveUploadBatch(
-                          currentBatch,
-                          totalBatches,
+                          progress.currentBatch,
+                          progress.totalBatches,
                         ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
-                  if (uploadProgress != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Column(
-                        children: [
-                          Text(
-                            context.l10n.map_wardriveUploadSamplesProgress(
-                              uploadProgress!.sentSamples,
-                              uploadProgress!.totalSamples,
-                            ),
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                      children: [
+                        Text(
+                          context.l10n.map_wardriveUploadSamplesProgress(
+                            progress.sentSamples,
+                            progress.totalSamples,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _formatWardriveUploadProgress(
-                              context,
-                              uploadProgress!,
-                            ),
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatWardriveUploadProgress(context, progress),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
               actions: [
