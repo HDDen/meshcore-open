@@ -20,7 +20,8 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   Stream<Uint8List> get receivedFrames => _receivedFramesController.stream;
 
   @override
-  Uint8List? get selfPublicKey => Uint8List.fromList(List.generate(32, (i) => i));
+  Uint8List? get selfPublicKey =>
+      Uint8List.fromList(List.generate(32, (i) => i));
 
   @override
   double? get selfLatitude => 48.8566;
@@ -60,9 +61,7 @@ Widget _buildTestApp({
       ChangeNotifierProvider<AppSettingsService>(
         create: (_) => AppSettingsService(),
       ),
-      Provider<MapTileCacheService>(
-        create: (_) => MapTileCacheService(),
-      ),
+      Provider<MapTileCacheService>(create: (_) => MapTileCacheService()),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -73,7 +72,9 @@ Widget _buildTestApp({
 }
 
 void main() {
-  testWidgets('PathTraceMapScreen parses response frames correctly', (tester) async {
+  testWidgets('PathTraceMapScreen parses response frames correctly', (
+    tester,
+  ) async {
     final connector = _FakeMeshCoreConnector();
 
     final screen = PathTraceMapScreen(
@@ -89,7 +90,7 @@ void main() {
     expect(connector.sentFrames.length, 1);
     final sentFrame = connector.sentFrames.first;
     expect(sentFrame[0], cmdSendTracePath);
-    
+
     // Extract the tag sent in the request (bytes 1-4)
     final tag = sentFrame.sublist(1, 5);
 
@@ -126,7 +127,7 @@ void main() {
     // auth bytes (8..11) = 0
     pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
     pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
-    
+
     connector.emitFrame(pushTraceFrame);
     // pump multiple times to handle async tasks
     await tester.pumpAndSettle();
@@ -135,66 +136,73 @@ void main() {
     expect(find.text('Path trace not available.'), findsNothing);
   });
 
-  testWidgets('PathTraceMapScreen parses multi-byte encoded path trace response correctly', (tester) async {
-    final connector = _FakeMeshCoreConnector();
+  testWidgets(
+    'PathTraceMapScreen parses multi-byte encoded path trace response correctly',
+    (tester) async {
+      final connector = _FakeMeshCoreConnector();
 
-    final screen = PathTraceMapScreen(
-      title: 'Test Trace Multi-byte',
-      path: Uint8List.fromList([0x12, 0x34]),
-      pathHashByteWidth: 2,
-    );
+      final screen = PathTraceMapScreen(
+        title: 'Test Trace Multi-byte',
+        path: Uint8List.fromList([0x12, 0x34]),
+        pathHashByteWidth: 2,
+      );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
-    await tester.pump();
+      await tester.pumpWidget(
+        _buildTestApp(connector: connector, child: screen),
+      );
+      await tester.pump();
 
-    // Verify a send request was made
-    expect(connector.sentFrames.length, 1);
-    final sentFrame = connector.sentFrames.first;
-    expect(sentFrame[0], cmdSendTracePath);
-    
-    // Extract the tag sent in the request (bytes 1-4)
-    final tag = sentFrame.sublist(1, 5);
+      // Verify a send request was made
+      expect(connector.sentFrames.length, 1);
+      final sentFrame = connector.sentFrames.first;
+      expect(sentFrame[0], cmdSendTracePath);
 
-    // Emit respCodeSent (6)
-    final respCodeSentFrame = Uint8List(10);
-    respCodeSentFrame[0] = respCodeSent;
-    respCodeSentFrame[1] = 0;
-    respCodeSentFrame.setRange(2, 6, tag);
-    respCodeSentFrame[6] = 0x88;
-    respCodeSentFrame[7] = 0x13;
-    respCodeSentFrame[8] = 0x00;
-    respCodeSentFrame[9] = 0x00;
+      // Extract the tag sent in the request (bytes 1-4)
+      final tag = sentFrame.sublist(1, 5);
 
-    connector.emitFrame(respCodeSentFrame);
-    await tester.pump();
+      // Emit respCodeSent (6)
+      final respCodeSentFrame = Uint8List(10);
+      respCodeSentFrame[0] = respCodeSent;
+      respCodeSentFrame[1] = 0;
+      respCodeSentFrame.setRange(2, 6, tag);
+      respCodeSentFrame[6] = 0x88;
+      respCodeSentFrame[7] = 0x13;
+      respCodeSentFrame[8] = 0x00;
+      respCodeSentFrame[9] = 0x00;
 
-    // Now emit PUSH_CODE_TRACE_DATA (0x89)
-    // Structure:
-    // Offset 0: pushCodeTraceData (0x89)
-    // Offset 1: reserved (0)
-    // Offset 2: pathLength (65) -> mode 1 (width 2), 1 hop
-    // Offset 3: flag (0)
-    // Offset 4..7: tag
-    // Offset 8..11: auth (0)
-    // Offset 12..13: pathBytes [0x12, 0x34]
-    // Offset 14..15: SNR bytes [12, 16]
-    final pushTraceFrame = Uint8List(16);
-    pushTraceFrame[0] = pushCodeTraceData;
-    pushTraceFrame[1] = 0; // reserved
-    pushTraceFrame[2] = 65; // pathLength encoded (mode 1, 1 hop -> 2 bytes)
-    pushTraceFrame[3] = 0; // flag
-    pushTraceFrame.setRange(4, 8, tag);
-    pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
-    pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
-    
-    connector.emitFrame(pushTraceFrame);
-    await tester.pumpAndSettle();
+      connector.emitFrame(respCodeSentFrame);
+      await tester.pump();
 
-    // Verify it parsed correctly (should not show the unavailable message)
-    expect(find.text('Path trace not available.'), findsNothing);
-  });
+      // Now emit PUSH_CODE_TRACE_DATA (0x89)
+      // Structure:
+      // Offset 0: pushCodeTraceData (0x89)
+      // Offset 1: reserved (0)
+      // Offset 2: pathLength (65) -> mode 1 (width 2), 1 hop
+      // Offset 3: flag (0)
+      // Offset 4..7: tag
+      // Offset 8..11: auth (0)
+      // Offset 12..13: pathBytes [0x12, 0x34]
+      // Offset 14..15: SNR bytes [12, 16]
+      final pushTraceFrame = Uint8List(16);
+      pushTraceFrame[0] = pushCodeTraceData;
+      pushTraceFrame[1] = 0; // reserved
+      pushTraceFrame[2] = 65; // pathLength encoded (mode 1, 1 hop -> 2 bytes)
+      pushTraceFrame[3] = 0; // flag
+      pushTraceFrame.setRange(4, 8, tag);
+      pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
+      pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
 
-  testWidgets('PathTraceMapScreen buildPath: Direct repeater ping (0-hop)', (tester) async {
+      connector.emitFrame(pushTraceFrame);
+      await tester.pumpAndSettle();
+
+      // Verify it parsed correctly (should not show the unavailable message)
+      expect(find.text('Path trace not available.'), findsNothing);
+    },
+  );
+
+  testWidgets('PathTraceMapScreen buildPath: Direct repeater ping (0-hop)', (
+    tester,
+  ) async {
     final connector = _FakeMeshCoreConnector();
     final target = Contact(
       publicKey: Uint8List.fromList([0xAA, 0xBB, 0xCC]),
@@ -223,7 +231,9 @@ void main() {
     expect(payload, Uint8List.fromList([0xAA]));
   });
 
-  testWidgets('PathTraceMapScreen buildPath: 1-hop chat contact trace', (tester) async {
+  testWidgets('PathTraceMapScreen buildPath: 1-hop chat contact trace', (
+    tester,
+  ) async {
     final connector = _FakeMeshCoreConnector();
     final target = Contact(
       publicKey: Uint8List.fromList([0xCC, 0xDD, 0xEE]),
@@ -252,7 +262,9 @@ void main() {
     expect(payload, Uint8List.fromList([0xBB, 0xCC, 0xBB]));
   });
 
-  testWidgets('PathTraceMapScreen buildPath: Multi-hop chat contact trace', (tester) async {
+  testWidgets('PathTraceMapScreen buildPath: Multi-hop chat contact trace', (
+    tester,
+  ) async {
     final connector = _FakeMeshCoreConnector();
     final target = Contact(
       publicKey: Uint8List.fromList([0x33, 0x44, 0x55]),
@@ -281,28 +293,35 @@ void main() {
     expect(payload, Uint8List.fromList([0x11, 0x22, 0x33, 0x22, 0x11]));
   });
 
-  testWidgets('PathTraceMapScreen buildPath: Map trace with null target contact', (tester) async {
-    final connector = _FakeMeshCoreConnector();
+  testWidgets(
+    'PathTraceMapScreen buildPath: Map trace with null target contact',
+    (tester) async {
+      final connector = _FakeMeshCoreConnector();
 
-    final screen = PathTraceMapScreen(
-      title: 'Map Trace No Target',
-      path: Uint8List.fromList([0x11, 0x22]),
-      targetContact: null,
-      flipPathAround: true,
-      pathHashByteWidth: 1,
-    );
+      final screen = PathTraceMapScreen(
+        title: 'Map Trace No Target',
+        path: Uint8List.fromList([0x11, 0x22]),
+        targetContact: null,
+        flipPathAround: true,
+        pathHashByteWidth: 1,
+      );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
-    await tester.pump();
+      await tester.pumpWidget(
+        _buildTestApp(connector: connector, child: screen),
+      );
+      await tester.pump();
 
-    expect(connector.sentFrames.length, 1);
-    final sentFrame = connector.sentFrames.first;
-    expect(sentFrame[0], cmdSendTracePath);
-    final payload = sentFrame.sublist(10);
-    expect(payload, Uint8List.fromList([0x11, 0x22, 0x11]));
-  });
+      expect(connector.sentFrames.length, 1);
+      final sentFrame = connector.sentFrames.first;
+      expect(sentFrame[0], cmdSendTracePath);
+      final payload = sentFrame.sublist(10);
+      expect(payload, Uint8List.fromList([0x11, 0x22, 0x11]));
+    },
+  );
 
-  testWidgets('PathTraceMapScreen parses raw byte length fallback correctly', (tester) async {
+  testWidgets('PathTraceMapScreen parses raw byte length fallback correctly', (
+    tester,
+  ) async {
     final connector = _FakeMeshCoreConnector();
 
     final screen = PathTraceMapScreen(
@@ -343,7 +362,7 @@ void main() {
     pushTraceFrame.setRange(4, 8, tag);
     pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
     pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
-    
+
     connector.emitFrame(pushTraceFrame);
     await tester.pumpAndSettle();
 

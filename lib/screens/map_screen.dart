@@ -2373,7 +2373,7 @@ class _MapScreenState extends State<MapScreen> {
                 PathHelper.splitPathBytes(
                   _pathTrace,
                   context.read<MeshCoreConnector>().pathHashByteWidth,
-                ).map(PathHelper.formatHopHex).join(',') ,
+                ).map(PathHelper.formatHopHex).join(','),
                 style: TextStyle(fontSize: 18),
               ),
               // const SizedBox(height: 6),

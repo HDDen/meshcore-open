@@ -536,85 +536,107 @@ void main() {
       },
     );
 
-    test('MessageStore decodes and migrates legacy mode-encoded message paths', () async {
-      final store = MessageStore()..publicKeyHex = '1234567890';
-      final contactKeyHex = pubKeyToHex(Uint8List(32)..[0] = 0xAA);
-      
-      final rawPath = Uint8List(64);
-      final messageJson = [
-        {
-          'senderKey': base64Encode(Uint8List(32)..[0] = 0xAA),
-          'text': 'Hello',
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-          'isOutgoing': false,
-          'status': 2, // delivered
-          'messageId': 'msg_1',
-          'pathLength': 64, // encoded pathLength (mode 1, 0 hops)
-          'pathBytes': base64Encode(rawPath),
-        }
-      ];
-      
-      final prefs = PrefsManager.instance;
-      await prefs.setString('${store.keyFor}$contactKeyHex', jsonEncode(messageJson));
-      
-      final messages = await store.loadMessages(contactKeyHex);
-      expect(messages, hasLength(1));
-      expect(messages.first.pathLength, equals(0));
-      expect(messages.first.pathBytes, isEmpty);
-    });
+    test(
+      'MessageStore decodes and migrates legacy mode-encoded message paths',
+      () async {
+        final store = MessageStore()..publicKeyHex = '1234567890';
+        final contactKeyHex = pubKeyToHex(Uint8List(32)..[0] = 0xAA);
 
-    test('ChannelMessageStore decodes and migrates legacy mode-encoded paths', () async {
-      final store = ChannelMessageStore()..publicKeyHex = '1234567890';
-      final channelIndex = 1;
-      
-      final rawPath = Uint8List(64)..[0] = 0xBB..[1] = 0xCC; 
-      final messageJson = [
-        {
-          'senderName': 'Alice',
-          'text': 'Hello',
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-          'isOutgoing': false,
-          'status': 2,
-          'channelIndex': channelIndex,
-          'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
-          'pathBytes': base64Encode(rawPath),
-        }
-      ];
-      
-      final prefs = PrefsManager.instance;
-      await prefs.setString('${store.keyFor}$channelIndex', jsonEncode(messageJson));
-      
-      final messages = await store.loadChannelMessages(channelIndex);
-      expect(messages, hasLength(1));
-      expect(messages.first.pathLength, equals(1));
-      expect(messages.first.pathBytes, equals(Uint8List.fromList([0xBB, 0xCC])));
-      expect(messages.first.pathHashWidth, equals(2));
-    });
+        final rawPath = Uint8List(64);
+        final messageJson = [
+          {
+            'senderKey': base64Encode(Uint8List(32)..[0] = 0xAA),
+            'text': 'Hello',
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+            'isOutgoing': false,
+            'status': 2, // delivered
+            'messageId': 'msg_1',
+            'pathLength': 64, // encoded pathLength (mode 1, 0 hops)
+            'pathBytes': base64Encode(rawPath),
+          },
+        ];
 
-    test('ContactDiscoveryStore decodes and migrates legacy mode-encoded paths', () async {
-      final store = ContactDiscoveryStore();
-      
-      final rawPath = Uint8List(64)..[0] = 0x11..[1] = 0x22;
-      final contactJson = [
-        {
-          'publicKey': base64Encode(Uint8List(32)..[0] = 0xBB),
-          'name': 'DiscoveredNode',
-          'type': 1,
-          'flags': 0,
-          'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
-          'path': base64Encode(rawPath),
-          'lastSeen': DateTime.now().millisecondsSinceEpoch,
-          'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
-        }
-      ];
-      
-      final prefs = PrefsManager.instance;
-      await prefs.setString('discovered_contacts', jsonEncode(contactJson));
-      
-      final contacts = await store.loadContacts();
-      expect(contacts, hasLength(1));
-      expect(contacts.first.pathLength, equals(1));
-      expect(contacts.first.path, equals(Uint8List.fromList([0x11, 0x22])));
-    });
+        final prefs = PrefsManager.instance;
+        await prefs.setString(
+          '${store.keyFor}$contactKeyHex',
+          jsonEncode(messageJson),
+        );
+
+        final messages = await store.loadMessages(contactKeyHex);
+        expect(messages, hasLength(1));
+        expect(messages.first.pathLength, equals(0));
+        expect(messages.first.pathBytes, isEmpty);
+      },
+    );
+
+    test(
+      'ChannelMessageStore decodes and migrates legacy mode-encoded paths',
+      () async {
+        final store = ChannelMessageStore()..publicKeyHex = '1234567890';
+        final channelIndex = 1;
+
+        final rawPath = Uint8List(64)
+          ..[0] = 0xBB
+          ..[1] = 0xCC;
+        final messageJson = [
+          {
+            'senderName': 'Alice',
+            'text': 'Hello',
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+            'isOutgoing': false,
+            'status': 2,
+            'channelIndex': channelIndex,
+            'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
+            'pathBytes': base64Encode(rawPath),
+          },
+        ];
+
+        final prefs = PrefsManager.instance;
+        await prefs.setString(
+          '${store.keyFor}$channelIndex',
+          jsonEncode(messageJson),
+        );
+
+        final messages = await store.loadChannelMessages(channelIndex);
+        expect(messages, hasLength(1));
+        expect(messages.first.pathLength, equals(1));
+        expect(
+          messages.first.pathBytes,
+          equals(Uint8List.fromList([0xBB, 0xCC])),
+        );
+        expect(messages.first.pathHashWidth, equals(2));
+      },
+    );
+
+    test(
+      'ContactDiscoveryStore decodes and migrates legacy mode-encoded paths',
+      () async {
+        final store = ContactDiscoveryStore();
+
+        final rawPath = Uint8List(64)
+          ..[0] = 0x11
+          ..[1] = 0x22;
+        final contactJson = [
+          {
+            'publicKey': base64Encode(Uint8List(32)..[0] = 0xBB),
+            'name': 'DiscoveredNode',
+            'type': 1,
+            'flags': 0,
+            'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
+            'path': base64Encode(rawPath),
+            'lastSeen': DateTime.now().millisecondsSinceEpoch,
+            'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
+          },
+        ];
+
+        final prefs = PrefsManager.instance;
+        await prefs.setString('discovered_contacts', jsonEncode(contactJson));
+
+        final contacts = await store.loadContacts();
+        expect(contacts, hasLength(1));
+        expect(contacts.first.pathLength, equals(1));
+        expect(contacts.first.path, equals(Uint8List.fromList([0x11, 0x22])));
+      },
+    );
   });
 }

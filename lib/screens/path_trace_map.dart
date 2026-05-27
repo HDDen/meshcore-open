@@ -328,7 +328,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         // Check if it's a binary response
         if (frame.length >= 12 &&
             code == pushCodeTraceData &&
-            (listEquals(frame.sublist(4, 8), _sentTagBytes) || listEquals(frame.sublist(4, 8), tagData))) {
+            (listEquals(frame.sublist(4, 8), _sentTagBytes) ||
+                listEquals(frame.sublist(4, 8), tagData))) {
           _timeoutTimer?.cancel();
           if (!mounted) return;
           _handleTraceResponse(frame);
@@ -371,10 +372,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       buffer.skipBytes(5); // Skip Flag byte and tag data
       buffer.skipBytes(4); // Skip auth code
       final pathBytes = buffer.readBytes(pathLength);
-      final pathData = PathHelper.splitPathBytes(
-        pathBytes,
-        width,
-      );
+      final pathData = PathHelper.splitPathBytes(pathBytes, width);
       List<double> snrData = buffer
           .readRemainingBytes()
           .map((snr) => snr.toSigned(8).toDouble() / 4)
