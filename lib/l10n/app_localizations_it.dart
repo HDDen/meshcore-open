@@ -541,6 +541,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Un client Flutter open-source per i dispositivi di rete mesh LoRa Core di MeshCore.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Dati di elevazione LOS: Open-Meteo (CC BY 4.0)';
 

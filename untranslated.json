@@ -1,5 +1,7 @@
 {
   "bg": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -19,6 +21,8 @@
   ],
 
   "de": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -38,6 +42,8 @@
   ],
 
   "es": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -57,6 +63,8 @@
   ],
 
   "fr": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -76,6 +84,8 @@
   ],
 
   "hu": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -95,6 +105,8 @@
   ],
 
   "it": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
     "repeater_pathHashModeOption1",
@@ -194,6 +206,8 @@
   ],
 
   "ja": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -213,6 +227,8 @@
   ],
 
   "ko": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -232,6 +248,8 @@
   ],
 
   "nl": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
     "repeater_pathHashModeOption1",
@@ -331,6 +349,8 @@
   ],
 
   "pl": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -350,6 +370,8 @@
   ],
 
   "pt": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
     "repeater_pathHashModeOption1",
@@ -449,6 +471,8 @@
   ],
 
   "sk": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -468,6 +492,8 @@
   ],
 
   "sl": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -487,6 +513,8 @@
   ],
 
   "sv": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "settings_quickAnswersSendAtSelect",
     "repeater_pathHashModeOption0",
     "repeater_pathHashModeOption1",
@@ -586,6 +614,8 @@
   ],
 
   "uk": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
@@ -605,6 +635,8 @@
   ],
 
   "zh": [
+    "settings_aboutModDescription",
+    "settings_aboutModLink",
     "map_wardriveReUpload",
     "map_wardriveSamplesNoNew",
     "map_wardriveCoverageResolution",
