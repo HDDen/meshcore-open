@@ -72,6 +72,7 @@ dependencies:
   ml_algo: ^16.0.0
   ml_dataframe: ^1.0.0
   llamadart: '>=0.6.8 <0.7.0'
+  flutter_langdetect: ^0.0.1
 
 hooks:
   user_defines:

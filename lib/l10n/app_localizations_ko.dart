@@ -513,6 +513,14 @@ class AppLocalizationsKo extends AppLocalizations {
       'MeshCore LoRa 메시 네트워크 장치를 위한 오픈 소스 Flutter 클라이언트.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'LOS 고도 데이터: Open-Meteo (CC BY 4.0)';
 
@@ -4186,6 +4194,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get translation_composerSubtitle => '컴포저 번역 아이콘의 기본 상태를 제어합니다.';
+
+  @override
+  String get translation_autoIncomingTitle => '메시지 자동 번역';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      '알림과 채팅 또는 채널의 메시지를 자동으로 번역합니다.';
+
+  @override
+  String get translation_translateMessage => '메시지 번역';
 
   @override
   String get translation_targetLanguage => '목표 언어';

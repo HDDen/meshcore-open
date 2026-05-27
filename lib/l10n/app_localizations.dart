@@ -1084,6 +1084,18 @@ abstract class AppLocalizations {
   /// **'An open-source Flutter client for MeshCore LoRa mesh networking devices.'**
   String get settings_aboutDescription;
 
+  /// No description provided for @settings_aboutModDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.'**
+  String get settings_aboutModDescription;
+
+  /// No description provided for @settings_aboutModLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Mod group on Telegram: https://t.me/mcoadvanced'**
+  String get settings_aboutModLink;
+
   /// No description provided for @settings_aboutOpenMeteoAttribution.
   ///
   /// In en, this message translates to:
@@ -7545,6 +7557,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Controls the default state of the composer translation icon.'**
   String get translation_composerSubtitle;
+
+  /// No description provided for @translation_autoIncomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-translate incoming messages'**
+  String get translation_autoIncomingTitle;
+
+  /// No description provided for @translation_autoIncomingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translates Messages for notification and for chat or channel automatically.'**
+  String get translation_autoIncomingSubtitle;
+
+  /// No description provided for @translation_translateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate message'**
+  String get translation_translateMessage;
 
   /// No description provided for @translation_targetLanguage.
   ///

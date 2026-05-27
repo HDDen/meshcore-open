@@ -540,6 +540,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Открытое клиентское приложение на Flutter для устройств MeshCore с LoRa-сетями.';
 
   @override
+  String get settings_aboutModDescription =>
+      'Модификация «Advanced» базируется на оригинальном meshcore_open и предоставляет изменения, предложенные в репозиторий оригинального приложения или специфичные для территории использования, и поэтому не оформленные в виде PR.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Группа модификации в TG: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Данные о высоте LOS: Open-Meteo (CC BY 4.0)';
 
@@ -4430,6 +4438,17 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get translation_composerSubtitle =>
       'Управляет исходным состоянием значка перевода, предоставляемого редактором.';
+
+  @override
+  String get translation_autoIncomingTitle =>
+      'Автоматически переводить сообщения';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Автоматически переводит сообщения для уведомлений, а также для чатов и каналов.';
+
+  @override
+  String get translation_translateMessage => 'Перевести сообщение';
 
   @override
   String get translation_targetLanguage => 'Целевой язык';

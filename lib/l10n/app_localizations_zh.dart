@@ -505,6 +505,14 @@ class AppLocalizationsZh extends AppLocalizations {
       '一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'LOS 高程数据:Open-Meteo (CC BY 4.0)';
 
@@ -4060,6 +4068,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translation_composerSubtitle => '控制作曲家翻译图标的默认状态。';
+
+  @override
+  String get translation_autoIncomingTitle => '自动翻译消息';
+
+  @override
+  String get translation_autoIncomingSubtitle => '自动为通知以及聊天或频道翻译消息。';
+
+  @override
+  String get translation_translateMessage => '翻译消息';
 
   @override
   String get translation_targetLanguage => '目标语言';

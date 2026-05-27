@@ -541,6 +541,14 @@ class AppLocalizationsHu extends AppLocalizations {
       'Egy nyílt forráskódú Flutter kliens a MeshCore LoRa hálózati eszközök számára.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'LOS magassági adatok: Open-Meteo (CC BY 4.0)';
 
@@ -4435,6 +4443,16 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get translation_composerSubtitle =>
       'Ellenőrzi a zeneszerző fordítási ikon alapértékét.';
+
+  @override
+  String get translation_autoIncomingTitle => 'Üzenetek automatikus fordítása';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automatikusan lefordítja az üzeneteket az értesítésekhez, valamint a csevegésekhez vagy csatornákhoz.';
+
+  @override
+  String get translation_translateMessage => 'Üzenet fordítása';
 
   @override
   String get translation_targetLanguage => 'Célnyelv';

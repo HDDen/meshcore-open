@@ -535,6 +535,14 @@ class AppLocalizationsSk extends AppLocalizations {
       'Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Údaje o nadmorskej výške LOS: Open-Meteo (CC BY 4.0)';
 
@@ -4394,6 +4402,16 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get translation_composerSubtitle =>
       'Riadi výchoce stav ikony pre preklad, ktorú používa program.';
+
+  @override
+  String get translation_autoIncomingTitle => 'Automaticky prekladať správy';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automaticky prekladá správy pre upozornenia aj pre čet alebo kanál.';
+
+  @override
+  String get translation_translateMessage => 'Preložiť správu';
 
   @override
   String get translation_targetLanguage => 'Cieľový jazyk';

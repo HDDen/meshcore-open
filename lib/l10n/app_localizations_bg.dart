@@ -543,6 +543,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Отворен софтуер за Flutter клиент за MeshCore LoRa мрежови устройства.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Данни за надморска височина на LOS: Open-Meteo (CC BY 4.0)';
 
@@ -4414,6 +4422,16 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get translation_composerSubtitle =>
       'Контролира началния статус на иконата за превод, създадена от композитора.';
+
+  @override
+  String get translation_autoIncomingTitle => 'Автоматичен превод на съобщения';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Превежда автоматично съобщенията за известия, както и за чатове или канали.';
+
+  @override
+  String get translation_translateMessage => 'Преведи съобщението';
 
   @override
   String get translation_targetLanguage => 'Целеви език';
