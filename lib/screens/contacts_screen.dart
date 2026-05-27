@@ -1297,8 +1297,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                         MaterialPageRoute(
                           builder: (context) => PathTraceMapScreen(
                             title: context.l10n.contacts_repeaterPing,
-                            path: _contactPathPrefix(contact, hw),
-                            targetContact: contact,
+                            path: contact.pathBytesForDisplay.isNotEmpty
+                            ? contact.pathBytesForDisplay
+                            : _contactPathPrefix(contact, hw),
+                            flipPathAround: true,
+                        targetContact: contact,
                             pathHashByteWidth: hw,
                           ),
                         ),
@@ -1332,7 +1335,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                                 ? contact.pathBytesForDisplay
                                 : _contactPathPrefix(contact, hw),
                             flipPathAround:
-                                contact.pathBytesForDisplay.isNotEmpty,
+                                true,
                             targetContact: contact,
                             pathHashByteWidth: hw,
                           ),

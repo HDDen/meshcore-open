@@ -37,6 +37,7 @@ The connector reads a single-mode byte and clamps to `0..3`, so the supported ho
 Paths in messages and storage consist of:
 
 - **`pathLength`**: Encoded path length in bytes as carried by the frame/header. This is not the hop count when `pathHashByteWidth > 1`.
+  - Note: on-air headers carry `pathLength` as a byte count. However, in the app's data model and storage the `pathLength` field is stored as the decoded hop count (number of hops). When reading or writing model objects (contacts, messages, storage), treat `pathLength` as the hop count; when constructing frames use the encoded byte length.
 - **`pathBytes`**: Raw bytes of the path, grouped by `pathHashByteWidth`
 - **`hopCount`**: Derived display value computed from bytes and width: `(byteCount + hashByteWidth - 1) ~/ hashByteWidth`
 - **Example**: With `pathHashByteWidth=2`, a 3-hop path needs 6 bytes, so `pathLength = 6` and `hopCount = 3`:

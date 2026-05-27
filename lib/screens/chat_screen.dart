@@ -1093,12 +1093,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                 final pathBytes = Uint8List.fromList(
                                   path.pathBytes,
                                 );
-                                final pathLength = path.pathBytes.length;
-
                                 // Set the path override to persist user's choice
                                 await connector.setPathOverride(
                                   _resolveContact(connector),
-                                  pathLen: pathLength,
+                                  pathLen: path.hopCount,
                                   pathBytes: pathBytes,
                                 );
 
@@ -1759,9 +1757,10 @@ class _ChatScreenState extends State<ChatScreen> {
       'Calling setPathOverride for ${widget.contact.name}',
       tag: 'ChatScreen',
     );
+    final hopsCount = result.length ~/ connector.pathHashByteWidth;
     await connector.setPathOverride(
       _resolveContact(connector),
-      pathLen: result.length,
+      pathLen: hopsCount,
       pathBytes: result,
     );
     appLogger.info('setPathOverride completed', tag: 'ChatScreen');
@@ -1771,7 +1770,7 @@ class _ChatScreenState extends State<ChatScreen> {
       connector,
       _resolveContact(connector),
       result,
-      result.length,
+      hopsCount,
     );
   }
 

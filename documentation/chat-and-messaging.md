@@ -88,7 +88,7 @@ When a direct message is sent:
 
 1. The app computes an expected ACK hash: `SHA256([timestamp][attempt][text][selfPubKey])[0:4]` — matching the firmware's hash calculation. If SMAZ compression is enabled, the compressed text (not the original) is hashed
 2. On device acknowledgment (`RESP_CODE_SENT`), the message transitions to "sent" and a timeout timer starts
-3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate)
+3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate). Note: in app code and storage `pathLength` refers to the stored hop count (number of hops) in the message/contact model — not the on-air encoded byte length — so the formula above uses the model hop count.
 4. On timeout, the message is retried with **exponential backoff**: `1000 × 2^retryCount` ms (1s, 2s, 4s, 8s, 16s...)
 5. **Max retries**: Configurable (default 5, range 2–10)
 6. After max retries, the message is marked "failed" — but a **30-second grace window** remains during which a late ACK can still resolve the message to "delivered"
