@@ -637,6 +637,26 @@ class WardriveService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<int> deleteSamplesForCoverageHash({
+    required String coverageHash,
+    required int coveragePrecision,
+  }) async {
+    final removed = await _sampleStore.removeWhere(
+      (sample) =>
+          sample.pingSuccess != null &&
+          WardriveCoverageHelper.coverageHashForSample(
+                sample,
+                precision: coveragePrecision,
+              ) ==
+              coverageHash,
+    );
+    if (removed == 0) return 0;
+
+    _loadSavedSamples();
+    notifyListeners();
+    return removed;
+  }
+
   void _startSession() {
     _sessionStartedAt = DateTime.now();
     _sessionSampleCount = 0;

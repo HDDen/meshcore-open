@@ -4096,6 +4096,12 @@ abstract class AppLocalizations {
   /// **'Follow my location'**
   String get map_wardriveFollowMe;
 
+  /// No description provided for @map_wardriveDeleteBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete block'**
+  String get map_wardriveDeleteBlock;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

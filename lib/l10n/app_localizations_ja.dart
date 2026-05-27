@@ -2203,6 +2203,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_wardriveFollowMe => 'Follow my location';
 
   @override
+  String get map_wardriveDeleteBlock => 'Delete block';
+
+  @override
   String get mapCache_title => 'オフライン用地図キャッシュ';
 
   @override

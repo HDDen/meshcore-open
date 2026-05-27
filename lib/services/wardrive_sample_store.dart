@@ -315,6 +315,26 @@ class WardriveSampleStore {
     return loadRecent(limit: _maxSamples);
   }
 
+  Future<int> removeWhere(bool Function(WardriveSample sample) test) async {
+    final samples = loadRecent(limit: _maxSamples);
+    final remaining = <WardriveSample>[];
+    var removed = 0;
+    for (final sample in samples) {
+      if (test(sample)) {
+        removed++;
+      } else {
+        remaining.add(sample);
+      }
+    }
+    if (removed == 0) return 0;
+
+    await PrefsManager.instance.setStringList(
+      _samplesKey,
+      remaining.map((sample) => jsonEncode(sample.toStorageJson())).toList(),
+    );
+    return removed;
+  }
+
   String exportJson({WardriveSession? activeSession}) {
     final sessions = loadSessions();
     if (activeSession != null &&

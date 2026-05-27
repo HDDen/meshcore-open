@@ -744,7 +744,16 @@ class _MapScreenState extends State<MapScreen>
 
                       _selectWardriveCoverageAt(wardrive, latLng);
                     },
-                    onLongPress: (_, latLng) {
+                    onSecondaryTap: (tapPosition, latLng) {
+                      unawaited(
+                        _showWardriveCoverageBlockMenu(
+                          wardrive: wardrive,
+                          point: latLng,
+                          globalPosition: tapPosition.global,
+                        ),
+                      );
+                    },
+                    onLongPress: (tapPosition, latLng) {
                       if (_isSelectingPoi) {
                         setState(() {
                           _isSelectingPoi = false;
@@ -758,10 +767,14 @@ class _MapScreenState extends State<MapScreen>
                         );
                         return;
                       }
-                      _showShareMarkerAtPositionSheet(
-                        context: context,
-                        connector: connector,
-                        position: latLng,
+
+                      unawaited(
+                        _handleMapLongPress(
+                          connector: connector,
+                          wardrive: wardrive,
+                          point: latLng,
+                          globalPosition: tapPosition.global,
+                        ),
                       );
                     },
                     onPositionChanged: (camera, hasGesture) {
@@ -2484,7 +2497,93 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _selectWardriveCoverageAt(WardriveService wardrive, LatLng point) {
-    if (!wardrive.hasMapState || wardrive.recentSamples.isEmpty) return;
+    final block = _wardriveCoverageBlockAt(wardrive, point);
+    if (block == null) {
+      if (_selectedWardriveCoverageHash != null) {
+        setState(_clearSelectedWardriveCoverage);
+      }
+      return;
+    }
+
+    setState(() {
+      _selectedWardriveCoverageHash = block.hash;
+      _selectedWardriveCoveragePrecision = block.precision;
+    });
+  }
+
+  Future<void> _handleMapLongPress({
+    required MeshCoreConnector connector,
+    required WardriveService wardrive,
+    required LatLng point,
+    required Offset globalPosition,
+  }) async {
+    final handled = await _showWardriveCoverageBlockMenu(
+      wardrive: wardrive,
+      point: point,
+      globalPosition: globalPosition,
+    );
+    if (handled || !mounted) return;
+
+    _showShareMarkerAtPositionSheet(
+      context: context,
+      connector: connector,
+      position: point,
+    );
+  }
+
+  Future<bool> _showWardriveCoverageBlockMenu({
+    required WardriveService wardrive,
+    required LatLng point,
+    required Offset globalPosition,
+  }) async {
+    final block = _wardriveCoverageBlockAt(wardrive, point);
+    if (block == null) return false;
+
+    final overlay = Overlay.of(context).context.findRenderObject();
+    if (overlay is! RenderBox) return false;
+    final selected = await showMenu<_WardriveCoverageBlockAction>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(globalPosition, globalPosition),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem(
+          value: _WardriveCoverageBlockAction.delete,
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              Text(context.l10n.map_wardriveDeleteBlock),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (!mounted || selected == null) return true;
+
+    switch (selected) {
+      case _WardriveCoverageBlockAction.delete:
+        final removed = await wardrive.deleteSamplesForCoverageHash(
+          coverageHash: block.hash,
+          coveragePrecision: block.precision,
+        );
+        if (!mounted) return true;
+        if (removed > 0) {
+          setState(_clearSelectedWardriveCoverage);
+        }
+        return true;
+    }
+  }
+
+  _WardriveCoverageBlock? _wardriveCoverageBlockAt(
+    WardriveService wardrive,
+    LatLng point,
+  ) {
+    if (!wardrive.hasMapState || wardrive.recentSamples.isEmpty) return null;
 
     final precision = wardrive.coveragePrecision;
     final hash = WardriveCoverageHelper.coverageHashForCoordinates(
@@ -2492,7 +2591,7 @@ class _MapScreenState extends State<MapScreen>
       point.longitude,
       precision: precision,
     );
-    final hasSamples = wardrive.recentSamples.any(
+    final samples = wardrive.recentSamples.where(
       (sample) =>
           sample.pingSuccess != null &&
           WardriveCoverageHelper.coverageHashForSample(
@@ -2501,17 +2600,8 @@ class _MapScreenState extends State<MapScreen>
               ) ==
               hash,
     );
-    if (!hasSamples) {
-      if (_selectedWardriveCoverageHash != null) {
-        setState(_clearSelectedWardriveCoverage);
-      }
-      return;
-    }
-
-    setState(() {
-      _selectedWardriveCoverageHash = hash;
-      _selectedWardriveCoveragePrecision = precision;
-    });
+    if (samples.isEmpty) return null;
+    return _WardriveCoverageBlock(hash: hash, precision: precision);
   }
 
   void _clearSelectedWardriveCoverage() {
@@ -4183,6 +4273,15 @@ class _WardriveCoverageResolutionOption {
     required this.title,
     required this.subtitle,
   });
+}
+
+enum _WardriveCoverageBlockAction { delete }
+
+class _WardriveCoverageBlock {
+  final String hash;
+  final int precision;
+
+  const _WardriveCoverageBlock({required this.hash, required this.precision});
 }
 
 class _SharedMarker {
