@@ -105,6 +105,8 @@
   "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "Открытое клиентское приложение на Flutter для устройств MeshCore с LoRa-сетями.",
+  "settings_aboutModDescription": "Модификация «Advanced» базируется на оригинальном meshcore_open и предоставляет изменения, предложенные в репозиторий оригинального приложения или специфичные для территории использования, и поэтому не оформленные в виде PR.",
+  "settings_aboutModLink": "Группа модификации в TG: https://t.me/mcoadvanced",
   "settings_infoName": "Имя",
   "settings_infoId": "ID",
   "settings_infoStatus": "Статус",

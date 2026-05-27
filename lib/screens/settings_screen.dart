@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
 import '../models/radio_settings.dart';
 import '../services/app_debug_log_service.dart';
@@ -840,8 +841,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         const SizedBox(height: 16),
         Text(l10n.settings_aboutDescription),
+        const SizedBox(height: 12),
+        LinkHandler.buildLinkifyText(
+          context: context,
+          text: _formatAboutModLink(l10n.settings_aboutModLink),
+          style: DefaultTextStyle.of(context).style,
+        ),
+        const SizedBox(height: 8),
+        Text(l10n.settings_aboutModDescription),
       ],
     );
+  }
+
+  String _formatAboutModLink(String text) {
+    const url = 'https://t.me/mcoadvanced';
+    return text.contains('\n$url') ? text : text.replaceFirst(url, '\n$url');
   }
 
   Future<void> _gpxExport(
