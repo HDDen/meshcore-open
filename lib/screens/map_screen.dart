@@ -27,6 +27,7 @@ import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/wardrive_service.dart';
+import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_upload_service.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
@@ -105,6 +106,10 @@ class _MapScreenState extends State<MapScreen>
   bool _wardriveScreenWakelockActive = false;
   DateTime? _wardriveDiscoveryRetryAt;
   DateTime? _lastFollowedWardriveLocationAt;
+  // Non-null means the map is showing responders for a tapped coverage block
+  // instead of the latest live discovery request.
+  String? _selectedWardriveCoverageHash;
+  int? _selectedWardriveCoveragePrecision;
 
   @override
   void initState() {
@@ -480,16 +485,28 @@ class _MapScreenState extends State<MapScreen>
           }
         }
         final wardrive = _wardriveService!;
-        final wardriveAnsweredKeys = wardrive.currentDiscoveryPublicKeys
-            .map((key) => key.toLowerCase())
-            .toSet();
-        final wardriveHighlightActive = wardrive.lastDiscoveryRequestAt != null;
-        final selfDisplayPosition = _selfDisplayPosition(connector, wardrive);
-        final wardriveDiscoveryPolylines = _buildWardriveDiscoveryPolylines(
-          selfDisplayPosition,
-          contactsWithLocation,
-          wardriveAnsweredKeys,
+        final selectedCoverageSamples = _selectedWardriveCoverageSamples(
+          wardrive,
         );
+        final hasSelectedCoverage = selectedCoverageSamples.isNotEmpty;
+        final wardriveAnsweredKeys = hasSelectedCoverage
+            ? _wardriveResponderKeysFromSamples(selectedCoverageSamples)
+            : wardrive.currentDiscoveryPublicKeys
+                  .map((key) => key.toLowerCase())
+                  .toSet();
+        final wardriveHighlightActive =
+            hasSelectedCoverage || wardrive.lastDiscoveryRequestAt != null;
+        final selfDisplayPosition = _selfDisplayPosition(connector, wardrive);
+        final wardriveDiscoveryPolylines = hasSelectedCoverage
+            ? _buildWardriveCoveragePolylines(
+                selectedCoverageSamples,
+                contactsWithLocation,
+              )
+            : _buildWardriveDiscoveryPolylines(
+                selfDisplayPosition,
+                contactsWithLocation,
+                wardriveAnsweredKeys,
+              );
         final wardriveCoveragePolygons = wardrive.hasMapState
             ? WardriveCoverageHelper.buildPolygons(
                 wardrive.recentSamples,
@@ -722,7 +739,10 @@ class _MapScreenState extends State<MapScreen>
                           defaultLabel: context.l10n.map_pointOfInterest,
                           flags: 'poi',
                         );
+                        return;
                       }
+
+                      _selectWardriveCoverageAt(wardrive, latLng);
                     },
                     onLongPress: (_, latLng) {
                       if (_isSelectingPoi) {
@@ -765,10 +785,10 @@ class _MapScreenState extends State<MapScreen>
                       PolylineLayer(polylines: _polylines),
                     if (sharedMarkerPolylines.isNotEmpty)
                       PolylineLayer(polylines: sharedMarkerPolylines),
-                    if (wardriveDiscoveryPolylines.isNotEmpty)
-                      PolylineLayer(polylines: wardriveDiscoveryPolylines),
                     if (wardriveCoveragePolygons.isNotEmpty)
                       PolygonLayer(polygons: wardriveCoveragePolygons),
+                    if (wardriveDiscoveryPolylines.isNotEmpty)
+                      PolylineLayer(polylines: wardriveDiscoveryPolylines),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -979,6 +999,7 @@ class _MapScreenState extends State<MapScreen>
         _wardriveDiscoveryRetryAt = DateTime.now().add(
           _wardriveDiscoveryRetryDelay,
         );
+        _clearSelectedWardriveCoverage();
       });
     } catch (error) {
       debugPrint('[Wardrive] Discovery request failed: $error');
@@ -1103,6 +1124,8 @@ class _MapScreenState extends State<MapScreen>
 
     if (selected == null) return;
     await wardrive.setCoveragePrecision(selected);
+    if (!mounted) return;
+    setState(_clearSelectedWardriveCoverage);
   }
 
   List<_WardriveCoverageResolutionOption> _wardriveCoverageResolutionOptions() {
@@ -1963,6 +1986,7 @@ class _MapScreenState extends State<MapScreen>
     if (confirmed != true) return;
     await wardrive.clearSamples();
     if (!mounted) return;
+    setState(_clearSelectedWardriveCoverage);
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.map_wardriveSamplesCleared),
@@ -2422,6 +2446,79 @@ class _MapScreenState extends State<MapScreen>
     return firstKey.startsWith(secondKey) || secondKey.startsWith(firstKey);
   }
 
+  List<WardriveSample> _selectedWardriveCoverageSamples(
+    WardriveService wardrive,
+  ) {
+    final selectedHash = _selectedWardriveCoverageHash;
+    final selectedPrecision = _selectedWardriveCoveragePrecision;
+    if (selectedHash == null ||
+        selectedPrecision == null ||
+        selectedPrecision != wardrive.coveragePrecision) {
+      return const <WardriveSample>[];
+    }
+
+    return wardrive.recentSamples
+        .where(
+          (sample) =>
+              WardriveCoverageHelper.coverageHashForSample(
+                sample,
+                precision: selectedPrecision,
+              ) ==
+              selectedHash,
+        )
+        .toList();
+  }
+
+  Set<String> _wardriveResponderKeysFromSamples(List<WardriveSample> samples) {
+    return samples
+        .where((sample) => sample.pingSuccess == true)
+        .map(_wardriveResponderKeyFromSample)
+        .where((key) => key.isNotEmpty)
+        .map((key) => key.toLowerCase())
+        .toSet();
+  }
+
+  String _wardriveResponderKeyFromSample(WardriveSample sample) {
+    if (sample.publicKeyHex.isNotEmpty) return sample.publicKeyHex;
+    return sample.path ?? '';
+  }
+
+  void _selectWardriveCoverageAt(WardriveService wardrive, LatLng point) {
+    if (!wardrive.hasMapState || wardrive.recentSamples.isEmpty) return;
+
+    final precision = wardrive.coveragePrecision;
+    final hash = WardriveCoverageHelper.coverageHashForCoordinates(
+      point.latitude,
+      point.longitude,
+      precision: precision,
+    );
+    final hasSamples = wardrive.recentSamples.any(
+      (sample) =>
+          sample.pingSuccess != null &&
+          WardriveCoverageHelper.coverageHashForSample(
+                sample,
+                precision: precision,
+              ) ==
+              hash,
+    );
+    if (!hasSamples) {
+      if (_selectedWardriveCoverageHash != null) {
+        setState(_clearSelectedWardriveCoverage);
+      }
+      return;
+    }
+
+    setState(() {
+      _selectedWardriveCoverageHash = hash;
+      _selectedWardriveCoveragePrecision = precision;
+    });
+  }
+
+  void _clearSelectedWardriveCoverage() {
+    _selectedWardriveCoverageHash = null;
+    _selectedWardriveCoveragePrecision = null;
+  }
+
   void _focusWardriveResponder(
     MeshCoreConnector connector,
     WardriveDiscoveryResult result,
@@ -2533,6 +2630,47 @@ class _MapScreenState extends State<MapScreen>
           ),
         )
         .toList();
+  }
+
+  List<Polyline> _buildWardriveCoveragePolylines(
+    List<WardriveSample> samples,
+    List<Contact> contacts,
+  ) {
+    final latestSampleByResponder = <String, WardriveSample>{};
+    for (final sample in samples) {
+      if (sample.pingSuccess != true) continue;
+      final key = _wardriveResponderKeyFromSample(sample).toLowerCase();
+      if (key.isEmpty) continue;
+      final existing = latestSampleByResponder[key];
+      if (existing == null || sample.timestamp.isAfter(existing.timestamp)) {
+        latestSampleByResponder[key] = sample;
+      }
+    }
+
+    final polylines = <Polyline>[];
+    for (final entry in latestSampleByResponder.entries) {
+      final contact = contacts
+          .where(
+            (contact) =>
+                contact.hasLocation &&
+                _publicKeysMatch(contact.publicKeyHex, entry.key),
+          )
+          .firstOrNull;
+      if (contact == null) continue;
+
+      final sample = entry.value;
+      polylines.add(
+        Polyline(
+          points: [
+            LatLng(sample.latitude, sample.longitude),
+            LatLng(contact.latitude!, contact.longitude!),
+          ],
+          strokeWidth: 2.5,
+          color: Colors.purpleAccent.withValues(alpha: 0.85),
+        ),
+      );
+    }
+    return polylines;
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {

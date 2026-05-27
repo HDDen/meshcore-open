@@ -90,6 +90,21 @@ class WardriveCoverageHelper {
     );
   }
 
+  static String coverageHashForSample(
+    WardriveSample sample, {
+    required int precision,
+  }) {
+    return _coverageHash(sample, precision: precision);
+  }
+
+  static String coverageHashForCoordinates(
+    double latitude,
+    double longitude, {
+    required int precision,
+  }) {
+    return _encodeGeohash(latitude, longitude, precision: precision);
+  }
+
   static List<_WardriveCoverageCell> _buildCells(
     List<WardriveSample> samples, {
     required int coveragePrecision,
