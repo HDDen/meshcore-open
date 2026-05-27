@@ -2297,6 +2297,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Следовать за мной';
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

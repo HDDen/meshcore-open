@@ -1249,6 +1249,7 @@
   "map_wardriveSamplesCleared": "Wardrive samples cleared.",
   "map_wardriveRepNoLocation": "Repeater location not provided",
   "map_wardriveDiscoveryWait": "Please wait {seconds} seconds before retrying discovery",
+  "map_wardriveFollowMe": "Follow my location",
   "mapCache_title": "Offline Map Cache",
   "mapCache_selectAreaFirst": "Select an area to cache first",
   "mapCache_noTilesToDownload": "No tiles to download for this area",

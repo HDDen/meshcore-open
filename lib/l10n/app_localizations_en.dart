@@ -2253,6 +2253,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => 'Offline Map Cache';
 
   @override

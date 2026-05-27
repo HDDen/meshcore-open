@@ -2284,6 +2284,9 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => 'Offline Mapa Pamäť';
 
   @override

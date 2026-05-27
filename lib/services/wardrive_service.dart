@@ -64,6 +64,7 @@ class WardriveService extends ChangeNotifier {
       'wardrive_auto_discovery_interval_seconds_v1';
   static const String _screenWakelockEnabledKey =
       'wardrive_screen_wakelock_enabled_v1';
+  static const String _followMeEnabledKey = 'wardrive_follow_me_enabled_v1';
   static const String _coveragePrecisionKey = 'wardrive_coverage_precision_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
@@ -77,6 +78,7 @@ class WardriveService extends ChangeNotifier {
   bool _isSendingDiscovery = false;
   bool _isUpdatingLocation = false;
   bool _screenWakelockEnabled = false;
+  bool _followMeEnabled = false;
   bool _isAutoUploadInProgress = false;
   int _discoveryRequestsSent = 0;
   int _discoveryResponsesReceived = 0;
@@ -106,6 +108,7 @@ class WardriveService extends ChangeNotifier {
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isUpdatingLocation => _isUpdatingLocation;
   bool get screenWakelockEnabled => _screenWakelockEnabled;
+  bool get followMeEnabled => _followMeEnabled;
   int get discoveryRequestsSent => _discoveryRequestsSent;
   int get discoveryResponsesReceived => _discoveryResponsesReceived;
   DateTime? get lastDiscoveryRequestAt => _lastDiscoveryRequestAt;
@@ -170,6 +173,8 @@ class WardriveService extends ChangeNotifier {
     }
     _screenWakelockEnabled =
         PrefsManager.instance.getBool(_screenWakelockEnabledKey) ?? false;
+    _followMeEnabled =
+        PrefsManager.instance.getBool(_followMeEnabledKey) ?? false;
     final savedCoveragePrecision = PrefsManager.instance.getInt(
       _coveragePrecisionKey,
     );
@@ -187,6 +192,13 @@ class WardriveService extends ChangeNotifier {
     if (_screenWakelockEnabled == enabled) return;
     _screenWakelockEnabled = enabled;
     await PrefsManager.instance.setBool(_screenWakelockEnabledKey, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setFollowMeEnabled(bool enabled) async {
+    if (_followMeEnabled == enabled) return;
+    _followMeEnabled = enabled;
+    await PrefsManager.instance.setBool(_followMeEnabledKey, enabled);
     notifyListeners();
   }
 

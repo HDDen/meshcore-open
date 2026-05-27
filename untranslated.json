@@ -17,7 +17,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "de": [
@@ -38,7 +39,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "es": [
@@ -59,7 +61,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "fr": [
@@ -80,7 +83,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "hu": [
@@ -101,7 +105,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "it": [
@@ -202,6 +207,7 @@
     "map_wardriveSamplesCleared",
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -223,7 +229,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "ko": [
@@ -244,7 +251,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "nl": [
@@ -345,6 +353,7 @@
     "map_wardriveSamplesCleared",
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -366,7 +375,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "pt": [
@@ -467,6 +477,7 @@
     "map_wardriveSamplesCleared",
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -488,7 +499,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "sl": [
@@ -509,7 +521,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "sv": [
@@ -610,6 +623,7 @@
     "map_wardriveSamplesCleared",
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe",
     "channelPath_outgoingSentByRadioAt"
   ],
 
@@ -631,7 +645,8 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ],
 
   "zh": [
@@ -652,6 +667,7 @@
     "map_wardriveCoverageBuilding",
     "map_wardriveCoverageBuildingSubtitle",
     "map_wardriveRepNoLocation",
-    "map_wardriveDiscoveryWait"
+    "map_wardriveDiscoveryWait",
+    "map_wardriveFollowMe"
   ]
 }

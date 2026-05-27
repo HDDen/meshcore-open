@@ -2302,6 +2302,9 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => 'Кеш на офлайн карти';
 
   @override

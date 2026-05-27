@@ -2309,6 +2309,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => 'Cache de Carte Hors Ligne';
 
   @override

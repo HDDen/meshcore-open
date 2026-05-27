@@ -4090,6 +4090,12 @@ abstract class AppLocalizations {
   /// **'Please wait {seconds} seconds before retrying discovery'**
   String map_wardriveDiscoveryWait(Object seconds);
 
+  /// No description provided for @map_wardriveFollowMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow my location'**
+  String get map_wardriveFollowMe;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

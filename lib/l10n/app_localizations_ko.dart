@@ -2193,6 +2193,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => '오프라인 지도 캐시';
 
   @override

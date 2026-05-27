@@ -15,6 +15,7 @@ enum WardriveDataAction {
   uploadSites,
   autoUpload,
   screenWakelock,
+  followMe,
   coverageResolution,
   exportSamples,
   importSamples,
@@ -26,6 +27,7 @@ class WardriveStatusPanel extends StatelessWidget {
   final bool collapsed;
   final bool autoUploadEnabled;
   final bool screenWakelockEnabled;
+  final bool followMeEnabled;
   final Map<String, String> repeaterNames;
   final Key? panelKey;
   final VoidCallback onToggleCollapsed;
@@ -40,6 +42,7 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.collapsed,
     required this.autoUploadEnabled,
     required this.screenWakelockEnabled,
+    required this.followMeEnabled,
     required this.repeaterNames,
     this.panelKey,
     required this.onToggleCollapsed,
@@ -301,6 +304,16 @@ class WardriveStatusPanel extends StatelessWidget {
                 _buildMenuCheckbox(screenWakelockEnabled),
                 const SizedBox(width: 4),
                 Text(context.l10n.map_wardriveScreenWakelock),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: WardriveDataAction.followMe,
+            child: Row(
+              children: [
+                _buildMenuCheckbox(followMeEnabled),
+                const SizedBox(width: 4),
+                Text(context.l10n.map_wardriveFollowMe),
               ],
             ),
           ),

@@ -104,6 +104,7 @@ class _MapScreenState extends State<MapScreen>
   bool _isCurrentRouteActive = false;
   bool _wardriveScreenWakelockActive = false;
   DateTime? _wardriveDiscoveryRetryAt;
+  DateTime? _lastFollowedWardriveLocationAt;
 
   @override
   void initState() {
@@ -140,6 +141,7 @@ class _MapScreenState extends State<MapScreen>
       _wardriveService = wardriveService;
       _wardriveServiceListener = () {
         _syncWardriveScreenWakelock();
+        _syncWardriveFollowMe();
         if (mounted) {
           setState(() {});
         }
@@ -147,6 +149,7 @@ class _MapScreenState extends State<MapScreen>
       wardriveService.addListener(_wardriveServiceListener!);
     }
     _syncWardriveScreenWakelock();
+    _syncWardriveFollowMe();
   }
 
   @override
@@ -164,12 +167,14 @@ class _MapScreenState extends State<MapScreen>
   void didPush() {
     _isCurrentRouteActive = true;
     _syncWardriveScreenWakelock();
+    _syncWardriveFollowMe();
   }
 
   @override
   void didPopNext() {
     _isCurrentRouteActive = true;
     _syncWardriveScreenWakelock();
+    _syncWardriveFollowMe();
   }
 
   @override
@@ -204,6 +209,34 @@ class _MapScreenState extends State<MapScreen>
     if (!_wardriveScreenWakelockActive) return;
     _wardriveScreenWakelockActive = false;
     unawaited(WakelockPlus.disable().catchError((_) {}));
+  }
+
+  void _syncWardriveFollowMe({bool force = false}) {
+    final wardrive = _wardriveService;
+    final locationAt = wardrive?.lastPhoneLocationAt;
+    final latitude = wardrive?.lastPhoneLatitude;
+    final longitude = wardrive?.lastPhoneLongitude;
+    if (!_isCurrentRouteActive ||
+        !(wardrive?.isRunning ?? false) ||
+        !(wardrive?.followMeEnabled ?? false) ||
+        locationAt == null ||
+        latitude == null ||
+        longitude == null) {
+      return;
+    }
+    if (!force && _lastFollowedWardriveLocationAt == locationAt) return;
+    _lastFollowedWardriveLocationAt = locationAt;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final currentWardrive = _wardriveService;
+      if (!_isCurrentRouteActive ||
+          !(currentWardrive?.isRunning ?? false) ||
+          !(currentWardrive?.followMeEnabled ?? false)) {
+        return;
+      }
+      _moveMapToWardrivePoint(LatLng(latitude, longitude));
+    });
   }
 
   void _loadMapStatsCollapsedState() {
@@ -826,6 +859,7 @@ class _MapScreenState extends State<MapScreen>
                     autoUploadEnabled:
                         _wardriveUploadService.isAutoUploadEnabledSync,
                     screenWakelockEnabled: wardrive.screenWakelockEnabled,
+                    followMeEnabled: wardrive.followMeEnabled,
                     repeaterNames: _wardriveUploadRepeaterNames(),
                     onToggleCollapsed: () {
                       setState(() {
@@ -997,6 +1031,9 @@ class _MapScreenState extends State<MapScreen>
       case WardriveDataAction.screenWakelock:
         await _toggleWardriveScreenWakelock(wardrive);
         break;
+      case WardriveDataAction.followMe:
+        await _toggleWardriveFollowMe(wardrive);
+        break;
       case WardriveDataAction.coverageResolution:
         await _setWardriveCoverageResolution(wardrive);
         break;
@@ -1033,6 +1070,11 @@ class _MapScreenState extends State<MapScreen>
   Future<void> _toggleWardriveScreenWakelock(WardriveService wardrive) async {
     await wardrive.setScreenWakelockEnabled(!wardrive.screenWakelockEnabled);
     _syncWardriveScreenWakelock();
+  }
+
+  Future<void> _toggleWardriveFollowMe(WardriveService wardrive) async {
+    await wardrive.setFollowMeEnabled(!wardrive.followMeEnabled);
+    _syncWardriveFollowMe(force: wardrive.followMeEnabled);
   }
 
   Future<void> _setWardriveCoverageResolution(WardriveService wardrive) async {
@@ -2398,10 +2440,10 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
 
-    _moveMapToWardriveResponder(LatLng(contact.latitude!, contact.longitude!));
+    _moveMapToWardrivePoint(LatLng(contact.latitude!, contact.longitude!));
   }
 
-  void _moveMapToWardriveResponder(LatLng point) {
+  void _moveMapToWardrivePoint(LatLng point) {
     final zoom = _mapController.camera.zoom;
     final offsetPixels = _wardriveVisibleAreaOffsetPixels();
 

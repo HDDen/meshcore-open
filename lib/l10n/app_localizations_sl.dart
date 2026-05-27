@@ -2277,6 +2277,9 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title =>
       'Omrezni predpomnilnik zemljeških zemljejevskih slik';
 

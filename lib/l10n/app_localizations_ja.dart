@@ -2200,6 +2200,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => 'オフライン用地図キャッシュ';
 
   @override

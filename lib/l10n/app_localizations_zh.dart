@@ -2161,6 +2161,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
   String get mapCache_title => '离线地图缓存';
 
   @override
