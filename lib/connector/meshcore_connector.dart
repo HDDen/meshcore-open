@@ -7144,13 +7144,12 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     final pathStartIndex = path.isNotEmpty ? path.length - hashWidth : 0;
-    final publicKeyPrefixEnd = math.min(hashWidth, contact.publicKey.length).toInt();
+    final publicKeyPrefixEnd = math
+        .min(hashWidth, contact.publicKey.length)
+        .toInt();
     final pubkeyPrefix = path.isNotEmpty
         ? path.sublist(pathStartIndex)
-        : contact.publicKey.sublist(
-            0,
-            publicKeyPrefixEnd,
-          );
+        : contact.publicKey.sublist(0, publicKeyPrefixEnd);
     final contactKeyHex = _resolveDirectRepeaterContactKeyHex(
       contact,
       pubkeyPrefix,
