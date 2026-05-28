@@ -583,11 +583,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   labelText: l10n.repeater_pathHashMode,
                   border: const OutlineInputBorder(),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 0, child: Text('0 - 1 byte')),
-                  DropdownMenuItem(value: 1, child: Text('1 - 2 bytes')),
-                  DropdownMenuItem(value: 2, child: Text('2 - 3 bytes')),
-                  DropdownMenuItem(value: 3, child: Text('3 - 4 bytes')),
+                items: [
+                  DropdownMenuItem(
+                    value: 0,
+                    child: Text(l10n.repeater_pathHashModeOption0),
+                  ),
+                  DropdownMenuItem(
+                    value: 1,
+                    child: Text(l10n.repeater_pathHashModeOption1),
+                  ),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text(l10n.repeater_pathHashModeOption2),
+                  ),
+                  DropdownMenuItem(
+                    value: 3,
+                    child: Text(l10n.repeater_pathHashModeOption3),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value == null) return;

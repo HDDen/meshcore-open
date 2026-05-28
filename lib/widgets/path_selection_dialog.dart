@@ -126,7 +126,8 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
         .toList();
     final pathBytesList = <int>[];
     final invalidPrefixes = <String>[];
-    final hexCharsPerHop = widget.pathHashByteWidth.clamp(1, 4) * 2;
+    final pathHashByteWidth = widget.pathHashByteWidth.clamp(1, 4).toInt();
+    final hexCharsPerHop = pathHashByteWidth * 2;
 
     for (final id in pathIds) {
       if (id.length < hexCharsPerHop) {
@@ -157,8 +158,12 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
       return;
     }
 
-    // Check max path size in bytes, as defined by the protocol.
-    if (pathBytesList.length > maxPathSize) {
+    final hopCount = pathBytesList.length ~/ pathHashByteWidth;
+    final maxHopCountByBytes = maxPathSize ~/ pathHashByteWidth;
+    final maxHopCount = maxHopCountByBytes < 0x3F ? maxHopCountByBytes : 0x3F;
+
+    // path_len stores hop count in 6 bits and the path buffer is byte-limited.
+    if (hopCount > maxHopCount || pathBytesList.length > maxPathSize) {
       showDismissibleSnackBar(
         context,
         content: Text(l10n.path_tooLong),
@@ -235,7 +240,7 @@ class _PathSelectionDialogState extends State<PathSelectionDialog> {
                   helperText: l10n.path_helperMaxHops,
                 ),
                 textCapitalization: TextCapitalization.characters,
-                maxLength: 191, // 64 hops * 2 chars + 63 commas
+                maxLength: 188, // 63 one-byte hops * 2 chars + 62 commas
               ),
               const SizedBox(height: 16),
               const Divider(),
