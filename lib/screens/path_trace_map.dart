@@ -57,6 +57,12 @@ Uint8List _lastHopChunk(Uint8List path, int hopWidth) {
   return Uint8List.fromList(path.sublist(path.length - width));
 }
 
+bool _matchesHopPrefix(Uint8List a, Uint8List b) {
+  if (a.isEmpty || b.isEmpty) return false;
+  final width = min(a.length, b.length);
+  return listEquals(a.sublist(0, width), b.sublist(0, width));
+}
+
 class PathTraceMapScreen extends StatefulWidget {
   final String title;
   final Uint8List path;
@@ -114,11 +120,75 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   Contact? _targetContact;
   Uint8List? _sentTagBytes;
 
-  String _formatPathPrefixes(Uint8List pathBytes) {
+  String _formatPathPrefixes(Uint8List pathBytes, [int? hashByteWidth]) {
     return PathHelper.splitPathBytes(
       pathBytes,
-      widget.pathHashByteWidth,
+      hashByteWidth ?? widget.pathHashByteWidth,
     ).map(PathHelper.formatHopHex).join(',');
+  }
+
+  int _traceHashByteWidth(int pathHashByteWidth) {
+    final width = pathHashByteWidth.clamp(1, pubKeySize).toInt();
+    if (width <= 1) return 1;
+    if (width == 2) return 2;
+    // Trace packets encode hash width as 1 << flags, so 3-byte path hashes
+    // must be traced with a 4-byte public-key prefix.
+    return 4;
+  }
+
+  int _traceFlagsForHashWidth(int traceHashByteWidth) {
+    if (traceHashByteWidth <= 1) return 0;
+    if (traceHashByteWidth == 2) return 1;
+    return 2;
+  }
+
+  Uint8List _reversePathByHop(Uint8List pathBytes, int hopWidth) {
+    final reversedHops = PathHelper.splitPathBytes(
+      pathBytes,
+      hopWidth,
+    ).reversed;
+    final bytes = <int>[];
+    for (final hop in reversedHops) {
+      bytes.addAll(hop);
+    }
+    return Uint8List.fromList(bytes);
+  }
+
+  Uint8List? _expandHopForTrace(
+    Uint8List hop,
+    int traceHashByteWidth,
+    MeshCoreConnector connector,
+  ) {
+    if (hop.length == traceHashByteWidth) return hop;
+
+    final candidates = <Contact>[
+      ...?widget.pathContacts,
+      if (widget.targetContact != null) widget.targetContact!,
+      ...connector.allContactsUnfiltered,
+    ];
+    for (final contact in candidates) {
+      if (contact.publicKey.length < traceHashByteWidth) continue;
+      if (!listEquals(contact.publicKey.sublist(0, hop.length), hop)) continue;
+      return Uint8List.fromList(
+        contact.publicKey.sublist(0, traceHashByteWidth),
+      );
+    }
+    return null;
+  }
+
+  Uint8List? _tracePathFromBytes(
+    Uint8List pathBytes,
+    int traceHashByteWidth,
+    MeshCoreConnector connector,
+  ) {
+    final hops = PathHelper.splitPathBytes(pathBytes, widget.pathHashByteWidth);
+    final traceBytes = <int>[];
+    for (final hop in hops) {
+      final traceHop = _expandHopForTrace(hop, traceHashByteWidth, connector);
+      if (traceHop == null) return null;
+      traceBytes.addAll(traceHop);
+    }
+    return Uint8List.fromList(traceBytes);
   }
 
   @override
@@ -198,12 +268,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     );
   }
 
-  Uint8List buildPath(Uint8List pathBytes) {
+  Uint8List? buildPath(
+    Uint8List pathBytes,
+    int traceHashByteWidth,
+    MeshCoreConnector connector,
+  ) {
     final pathHops = PathHelper.splitPathBytes(
       pathBytes,
       widget.pathHashByteWidth,
     );
-    final hopWidth = widget.pathHashByteWidth.clamp(1, pubKeySize);
+    final hopWidth = traceHashByteWidth.clamp(1, pubKeySize).toInt();
 
     // Compute targetPrefix if targetContact is provided
     Uint8List? targetPrefix;
@@ -215,12 +289,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       }
     }
 
-    final outboundHops = <Uint8List>[...pathHops];
+    final outboundHops = <Uint8List>[];
+    for (final hop in pathHops) {
+      final traceHop = _expandHopForTrace(hop, traceHashByteWidth, connector);
+      if (traceHop == null) return null;
+      outboundHops.add(traceHop);
+    }
     if (targetPrefix != null) {
       // Check if targetPrefix is already the last hop in pathHops to avoid duplication
       bool alreadyEndedWithTarget = false;
-      if (pathHops.isNotEmpty) {
-        if (listEquals(pathHops.last, targetPrefix)) {
+      if (outboundHops.isNotEmpty) {
+        if (listEquals(outboundHops.last, targetPrefix)) {
           alreadyEndedWithTarget = true;
         }
       }
@@ -255,19 +334,32 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       });
     }
 
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    final traceHashByteWidth = _traceHashByteWidth(widget.pathHashByteWidth);
     final pathTmp = widget.reversePathAround
-        ? Uint8List.fromList(widget.path.reversed.toList())
+        ? _reversePathByHop(widget.path, widget.pathHashByteWidth)
         : widget.path;
 
-    final path = widget.flipPathAround ? buildPath(pathTmp) : pathTmp;
+    final path = widget.flipPathAround
+        ? buildPath(pathTmp, traceHashByteWidth, connector)
+        : _tracePathFromBytes(pathTmp, traceHashByteWidth, connector);
+
+    if (path == null) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _failed2Loaded = true;
+      });
+      return;
+    }
 
     appLogger.info(
-      'Initiating path trace with path: ${_formatPathPrefixes(path)}',
+      'Initiating path trace with path: '
+      '${_formatPathPrefixes(path, traceHashByteWidth)}',
       tag: 'PathTraceMapScreen',
       noNotify: !mounted,
     );
 
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final sentTag = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     _sentTagBytes = Uint8List(4)
       ..[0] = sentTag & 0xFF
@@ -275,7 +367,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       ..[2] = (sentTag >> 16) & 0xFF
       ..[3] = (sentTag >> 24) & 0xFF;
 
-    final flags = (widget.pathHashByteWidth - 1).clamp(0, 3);
+    final flags = _traceFlagsForHashWidth(traceHashByteWidth);
     final tracePayload = path.isEmpty ? Uint8List.fromList([0x00]) : path;
 
     final frame = buildTraceReq(
@@ -354,23 +446,19 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     try {
       buffer.skipBytes(2); // Skip push code and reserved byte
       final pathLenByte = buffer.readUInt8();
-      int hopCount = 0;
-      int width = widget.pathHashByteWidth; // fallback
-      int pathLength = 0;
-      if (pathLenByte != 0xFF) {
-        final mode = (pathLenByte & 0xC0) >> 6;
-        if (mode > 0) {
-          hopCount = pathLenByte & 0x3F;
-          width = mode + 1;
-          pathLength = hopCount * width;
-        } else {
-          width = widget.pathHashByteWidth;
-          pathLength = pathLenByte;
-          hopCount = pathLength ~/ width;
+      final flags = buffer.readUInt8();
+      buffer.skipBytes(4); // Skip tag data
+      buffer.skipBytes(4); // Skip auth code
+      var width = _traceHashByteWidth(1 << (flags & 0x03));
+      var pathLength = pathLenByte == 0xFF ? 0 : pathLenByte;
+      if (pathLength > buffer.remaining && (pathLenByte & 0xC0) != 0) {
+        final packedWidth = ((pathLenByte & 0xC0) >> 6) + 1;
+        final packedLength = (pathLenByte & 0x3F) * packedWidth;
+        if (packedLength <= buffer.remaining) {
+          width = packedWidth;
+          pathLength = packedLength;
         }
       }
-      buffer.skipBytes(5); // Skip Flag byte and tag data
-      buffer.skipBytes(4); // Skip auth code
       final pathBytes = buffer.readBytes(pathLength);
       final pathData = PathHelper.splitPathBytes(pathBytes, width);
       List<double> snrData = buffer
@@ -390,7 +478,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         lastSeen: DateTime.now(),
       );
       if (widget.pathContacts != null) {
-        final hopWidth = widget.pathHashByteWidth.clamp(1, pubKeySize);
+        final hopWidth = width.clamp(1, pubKeySize).toInt();
         pathContacts = {
           for (var c in widget.pathContacts!)
             if (c.publicKey.length >= hopWidth)
@@ -436,8 +524,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
               (c) =>
                   c.hasLocation &&
                   c.path.isNotEmpty &&
-                  _hopKey(_lastHopChunk(c.path, widget.pathHashByteWidth)) ==
-                      hopKey,
+                  _matchesHopPrefix(
+                    _lastHopChunk(c.path, widget.pathHashByteWidth),
+                    hop,
+                  ),
             )
             .toList();
         if (peers.isNotEmpty) {
@@ -483,10 +573,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                   (c) =>
                       c.hasLocation &&
                       c.path.isNotEmpty &&
-                      _hopKey(
-                            _lastHopChunk(c.path, widget.pathHashByteWidth),
-                          ) ==
-                          lastHopKey,
+                      _matchesHopPrefix(
+                        _lastHopChunk(c.path, widget.pathHashByteWidth),
+                        lastHop,
+                      ),
                 )
                 .toList();
             if (peers.isNotEmpty) {
@@ -697,6 +787,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           ? LatLng(contact.latitude!, contact.longitude!)
           : inferred!;
       final label = PathHelper.formatHopHex(hop);
+      final shortLabel = label.length > 2 ? label.substring(0, 2) : label;
+      final fullLabel = label.length > 2
+          ? (contact?.name != null ? '$label: ${contact!.name}' : label)
+          : (contact?.name ?? label);
 
       markers.add(
         Marker(
@@ -721,7 +815,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
             ),
             alignment: Alignment.center,
             child: Text(
-              hasGps ? label : '~$label',
+              hasGps ? shortLabel : '~$shortLabel',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -732,12 +826,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
         ),
       );
       if (showLabels) {
-        markers.add(
-          _buildNodeLabelMarker(
-            point: point,
-            label: contact?.name ?? '~$label',
-          ),
-        );
+        markers.add(_buildNodeLabelMarker(point: point, label: fullLabel));
       }
       hopLastLast = hopLast;
       hopLast = hopKey;

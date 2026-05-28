@@ -21,10 +21,10 @@ class PathHelper {
   ) {
     if (pathBytes.isEmpty) return const [];
 
-    final width = hashByteWidth.clamp(1, 4);
+    final width = hashByteWidth.clamp(1, 4).toInt();
     final hops = <Uint8List>[];
     for (int i = 0; i < pathBytes.length; i += width) {
-      final endIdx = (i + width).clamp(0, pathBytes.length);
+      final endIdx = (i + width).clamp(0, pathBytes.length).toInt();
       final hopBytes = pathBytes.sublist(i, endIdx);
       if (hopBytes.isNotEmpty) {
         hops.add(Uint8List.fromList(hopBytes));
