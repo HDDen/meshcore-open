@@ -20,6 +20,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -45,6 +46,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -70,6 +72,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -95,6 +98,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -120,6 +124,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -224,6 +229,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
@@ -250,6 +256,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -275,6 +282,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -379,6 +387,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
@@ -405,6 +414,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -509,6 +519,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
@@ -535,6 +546,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -560,6 +572,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -664,6 +677,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
@@ -690,6 +704,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ],
@@ -715,6 +730,7 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
+    "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
   ]

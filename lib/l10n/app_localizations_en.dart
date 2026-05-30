@@ -3843,6 +3843,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelPath_repeaterHops => 'Repeater Hops';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Hop details are not provided for this packet.';
 

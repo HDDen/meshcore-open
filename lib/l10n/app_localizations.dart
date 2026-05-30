@@ -6746,6 +6746,12 @@ abstract class AppLocalizations {
   /// **'Repeater Hops'**
   String get channelPath_repeaterHops;
 
+  /// No description provided for @channelPath_repeaterHopsHighTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Increased path trace timeout (10s*hops)'**
+  String get channelPath_repeaterHopsHighTimeout;
+
   /// No description provided for @channelPath_noHopDetails.
   ///
   /// In en, this message translates to:

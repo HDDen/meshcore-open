@@ -3863,6 +3863,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channelPath_repeaterHops => 'Återupptagningssteg';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Detaljer för denna paket är inte angivna.';
 

@@ -761,6 +761,7 @@
   "channelPath_viewMap": "Посмотреть на карте",
   "channelPath_otherObservedPaths": "Другие наблюдаемые пути",
   "channelPath_repeaterHops": "Хопы через репитеры",
+  "channelPath_repeaterHopsHighTimeout": "Увеличенный таймаут трассировки пути (10 сек*хопы)",
   "channelPath_noHopDetails": "Детали хопов для этого пакета не предоставлены.",
   "channelPath_messageDetails": "Детали сообщения",
   "channelPath_senderLabel": "Отправитель",

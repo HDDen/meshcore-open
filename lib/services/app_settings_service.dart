@@ -72,6 +72,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(mapShowOtherNodes: value));
   }
 
+  Future<void> setPathTraceHighTimeoutEnabled(bool value) async {
+    await updateSettings(
+      _settings.copyWith(pathTraceHighTimeoutEnabled: value),
+    );
+  }
+
   Future<void> setMapShowOverlaps(bool value) async {
     await updateSettings(_settings.copyWith(mapShowOverlaps: value));
   }

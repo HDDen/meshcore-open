@@ -3901,6 +3901,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelPath_repeaterHops => 'Saltos do Repetidor';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Os detalhes do pacote não estão disponíveis.';
 

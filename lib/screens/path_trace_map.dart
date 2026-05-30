@@ -93,6 +93,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   static const double _labelZoomThreshold = 8.5;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
+  static const Duration _traceTimeoutPerHop = Duration(seconds: 10);
   //miles to meters conversion for filtering out repeaters that are too far from the last known GPS hop to be a likely match, to avoid false matches that throw off the inferred positions of other hops in the path
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
@@ -119,6 +120,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   bool _showNodeLabels = true;
   Contact? _targetContact;
   Uint8List? _sentTagBytes;
+  Duration? _traceTimeoutFloor;
 
   String _formatPathPrefixes(Uint8List pathBytes, [int? hashByteWidth]) {
     return PathHelper.splitPathBytes(
@@ -369,6 +371,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
 
     final flags = _traceFlagsForHashWidth(traceHashByteWidth);
     final tracePayload = path.isEmpty ? Uint8List.fromList([0x00]) : path;
+    final settings = context.read<AppSettingsService>().settings;
+    if (settings.pathTraceHighTimeoutEnabled) {
+      final traceHopCount = path.isEmpty
+          ? 1
+          : PathHelper.splitPathBytes(path, traceHashByteWidth).length;
+      _traceTimeoutFloor = Duration(
+        milliseconds: _traceTimeoutPerHop.inMilliseconds * traceHopCount,
+      );
+    } else {
+      _traceTimeoutFloor = null;
+    }
 
     final frame = buildTraceReq(
       sentTag,
@@ -393,19 +406,22 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           frameBuffer.skipBytes(1); //reserved
           tagData = frameBuffer.readBytes(4);
           final timeoutMilliseconds = frameBuffer.readUInt32LE();
-
-          // Start timeout timer for trace response
-          _timeoutTimer?.cancel();
-          _timeoutTimer = Timer(
-            Duration(milliseconds: timeoutMilliseconds),
-            () {
-              if (!mounted) return;
-              setState(() {
-                _isLoading = false;
-                _failed2Loaded = true;
-              });
-            },
+          final timeoutFloorMilliseconds =
+              _traceTimeoutFloor?.inMilliseconds ?? 0;
+          final timeoutDuration = Duration(
+            milliseconds: max(timeoutMilliseconds, timeoutFloorMilliseconds),
           );
+
+          // Firmware returns its own estimate; keep a client-side lower bound
+          // so longer paths have enough time to collect all hop responses.
+          _timeoutTimer?.cancel();
+          _timeoutTimer = Timer(timeoutDuration, () {
+            if (!mounted) return;
+            setState(() {
+              _isLoading = false;
+              _failed2Loaded = true;
+            });
+          });
         }
 
         if (code == respCodeErr) {

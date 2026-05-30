@@ -3928,6 +3928,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channelPath_repeaterHops => 'Adat továbbító lépések';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Ez a csomag nem tartalmaz részletes információkat a \"hop\" (vagy más hasonló) szót használó kifejezésekről.';
 

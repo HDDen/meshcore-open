@@ -3613,6 +3613,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_repeaterHops => '转发节点跳数';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails => '此数据包未提供详细信息';
 
   @override

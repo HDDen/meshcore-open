@@ -2118,6 +2118,7 @@
   "channelPath_viewMap": "View map",
   "channelPath_otherObservedPaths": "Other Observed Paths",
   "channelPath_repeaterHops": "Repeater Hops",
+  "channelPath_repeaterHopsHighTimeout": "Increased path trace timeout (10s*hops)",
   "channelPath_noHopDetails": "Hop details are not provided for this packet.",
   "channelPath_messageDetails": "Message Details",
   "channelPath_senderLabel": "Sender",

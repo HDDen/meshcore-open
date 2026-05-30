@@ -3917,6 +3917,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channelPath_repeaterHops => 'Повтарящи се скокове';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Детайлите за пакета не са предоставени.';
 

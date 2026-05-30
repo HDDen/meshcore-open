@@ -3714,6 +3714,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channelPath_repeaterHops => 'ホップの繰り返し';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails => 'このパッケージに関する詳細な情報は提供されていません。';
 
   @override

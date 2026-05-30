@@ -3713,6 +3713,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelPath_repeaterHops => '반복 홉';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
+
+  @override
   String get channelPath_noHopDetails => '이 패키지에 대한 자세한 정보는 제공되지 않습니다.';
 
   @override

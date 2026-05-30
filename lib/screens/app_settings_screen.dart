@@ -538,6 +538,15 @@ class AppSettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.more_time_outlined),
+            title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
+            value: settingsService.settings.pathTraceHighTimeoutEnabled,
+            onChanged: (value) {
+              settingsService.setPathTraceHighTimeoutEnabled(value);
+            },
+          ),
+          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.timer_outlined),
             title: Text(context.l10n.appSettings_timeFilter),

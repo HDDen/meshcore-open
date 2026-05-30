@@ -3916,6 +3916,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_repeaterHops => 'Хопы через репитеры';
 
   @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Увеличенный таймаут трассировки пути (10 сек*хопы)';
+
+  @override
   String get channelPath_noHopDetails =>
       'Детали хопов для этого пакета не предоставлены.';
 
