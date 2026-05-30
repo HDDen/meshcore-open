@@ -3544,8 +3544,8 @@ class MeshCoreConnector extends ChangeNotifier {
     try {
       await sendFrame(buildSetFloodScopeFrame(getChannelRegion(channel.index)));
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-    final sentByRadioAt = DateTime.now();
-    _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
+      final sentByRadioAt = DateTime.now();
+      _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
       await sendFrame(
         buildSendChannelTextMsgFrame(channel.index, outboundText),
         channelSendQueueId: message.messageId,
