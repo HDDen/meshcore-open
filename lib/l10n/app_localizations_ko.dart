@@ -3996,6 +3996,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get listFilter_removeFromFavorites => '즐겨찾에서 제거';
 
   @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
+
+  @override
   String get listFilter_users => '사용자';
 
   @override

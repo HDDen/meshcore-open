@@ -4222,6 +4222,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'Törölj a kedvencekből';
 
   @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
+
+  @override
   String get listFilter_users => 'Felhasználók';
 
   @override

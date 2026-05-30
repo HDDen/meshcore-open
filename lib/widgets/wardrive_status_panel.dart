@@ -531,6 +531,10 @@ class WardriveStatusPanel extends StatelessWidget {
         ? ''
         : ' / ${result.responseTimeMs} ms';
     final repeaterName = _repeaterNameFor(result);
+    final isIgnored = wardrive.isRepeaterIgnored(result.publicKeyHex);
+    final ignoredStyle = isIgnored
+        ? TextStyle(color: Theme.of(context).colorScheme.error)
+        : null;
     return InkWell(
       onTap: () => onResultSelected(result),
       child: Padding(
@@ -542,9 +546,10 @@ class WardriveStatusPanel extends StatelessWidget {
               Text(
                 repeaterName,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: ignoredStyle?.color,
+                ),
               ),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -552,7 +557,7 @@ class WardriveStatusPanel extends StatelessWidget {
                 Icon(
                   _getNodeIcon(result.nodeType),
                   size: 16,
-                  color: _getNodeColor(result.nodeType),
+                  color: ignoredStyle?.color ?? _getNodeColor(result.nodeType),
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
@@ -562,13 +567,16 @@ class WardriveStatusPanel extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: ignoredStyle?.color,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: ignoredStyle?.color),
                 ),
               ],
             ),

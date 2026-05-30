@@ -2360,6 +2360,8 @@
   "listFilter_favorites": "Favorites",
   "listFilter_addToFavorites": "Add to favorites",
   "listFilter_removeFromFavorites": "Remove from favorites",
+  "listFilter_removeFromWardrive": "Ignore in Wardrive",
+  "listFilter_returnToWardrive": "Return to Wardrive",
   "listFilter_users": "Users",
   "listFilter_repeaters": "Repeaters",
   "listFilter_roomServers": "Room servers",

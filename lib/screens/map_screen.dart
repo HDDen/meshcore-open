@@ -507,6 +507,7 @@ class _MapScreenState extends State<MapScreen>
                 selfDisplayPosition,
                 contactsWithLocation,
                 wardriveAnsweredKeys,
+                wardrive,
               );
         final wardriveCoveragePolygons = wardrive.hasMapState
             ? WardriveCoverageHelper.buildPolygons(
@@ -2704,25 +2705,70 @@ class _MapScreenState extends State<MapScreen>
     LatLng? selfPoint,
     List<Contact> contacts,
     Set<String> answeredKeys,
+    WardriveService wardrive,
   ) {
     if (selfPoint == null || answeredKeys.isEmpty) {
       return const <Polyline>[];
     }
 
-    return contacts
-        .where(
-          (contact) =>
-              contact.hasLocation &&
-              _isWardriveAnswered(contact, answeredKeys: answeredKeys),
-        )
-        .map(
-          (contact) => Polyline(
-            points: [selfPoint, LatLng(contact.latitude!, contact.longitude!)],
-            strokeWidth: 2.5,
-            color: Colors.purpleAccent.withValues(alpha: 0.85),
-          ),
-        )
-        .toList();
+    final polylines = <Polyline>[];
+    for (final contact in contacts.where(
+      (contact) =>
+          contact.hasLocation &&
+          _isWardriveAnswered(contact, answeredKeys: answeredKeys),
+    )) {
+      final contactPoint = LatLng(contact.latitude!, contact.longitude!);
+      final isIgnored = wardrive.isRepeaterIgnored(contact.publicKeyHex);
+      polylines.addAll(
+        _buildWardriveResponderLine(
+          selfPoint,
+          contactPoint,
+          isIgnored: isIgnored,
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  List<Polyline> _buildWardriveResponderLine(
+    LatLng from,
+    LatLng to, {
+    required bool isIgnored,
+  }) {
+    if (!isIgnored) {
+      return [
+        Polyline(
+          points: [from, to],
+          strokeWidth: 2.5,
+          color: Colors.purpleAccent.withValues(alpha: 0.85),
+        ),
+      ];
+    }
+
+    final polylines = <Polyline>[];
+    const segments = 16;
+    for (var i = 0; i < segments; i += 2) {
+      final start = i / segments;
+      final end = (i + 1) / segments;
+      polylines.add(
+        Polyline(
+          points: [
+            _interpolateLatLng(from, to, start),
+            _interpolateLatLng(from, to, end),
+          ],
+          strokeWidth: 2.5,
+          color: Colors.redAccent.withValues(alpha: 0.9),
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  LatLng _interpolateLatLng(LatLng from, LatLng to, double t) {
+    return LatLng(
+      from.latitude + (to.latitude - from.latitude) * t,
+      from.longitude + (to.longitude - from.longitude) * t,
+    );
   }
 
   List<Polyline> _buildWardriveCoveragePolylines(

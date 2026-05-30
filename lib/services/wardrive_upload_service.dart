@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../storage/prefs_manager.dart';
+import 'wardrive_ignore_store.dart';
 import 'wardrive_sample_store.dart';
 
 enum WardriveUploadStatusPhase {
@@ -221,9 +222,16 @@ class WardriveUploadService {
   }) async {
     cancelToken?.throwIfCancelled();
     final allSamples = _sampleStore.loadAllSamples();
+    final ignoredRepeaters = WardriveIgnoreStore().loadIgnoredRepeaters();
     final uploadedIds = _loadUploadedSampleIds(site.url);
     final samples = allSamples
         .where((sample) => sample.pingSuccess != null)
+        .where(
+          (sample) => !WardriveIgnoreStore.containsMatchingKey(
+            ignoredRepeaters,
+            sample.publicKeyHex,
+          ),
+        )
         .where((sample) => includeUploaded || !uploadedIds.contains(sample.id))
         .take(maxSamples ?? allSamples.length)
         .toList();

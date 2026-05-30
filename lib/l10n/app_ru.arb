@@ -1081,6 +1081,8 @@
   "listFilter_addToFavorites": "Добавить в избранное",
   "listFilter_favorites": "Избранное",
   "listFilter_removeFromFavorites": "Удалить из избранного",
+  "listFilter_removeFromWardrive": "Игнорировать в Wardrive",
+  "listFilter_returnToWardrive": "Учитывать в Wardrive",
   "@contacts_searchFavorites": {
     "placeholders": {
       "number": {

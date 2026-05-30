@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../storage/prefs_manager.dart';
+import 'wardrive_ignore_store.dart';
 
 class WardriveSample {
   final String id;
@@ -335,7 +336,10 @@ class WardriveSampleStore {
     return removed;
   }
 
-  String exportJson({WardriveSession? activeSession}) {
+  String exportJson({
+    WardriveSession? activeSession,
+    Set<String> ignoredRepeaterKeys = const <String>{},
+  }) {
     final sessions = loadSessions();
     if (activeSession != null &&
         !sessions.any(
@@ -347,9 +351,15 @@ class WardriveSampleStore {
     return const JsonEncoder.withIndent('  ').convert({
       '_format': _exportFormat,
       '_version': 1,
-      'samples': loadRecent(
-        limit: _maxSamples,
-      ).map((sample) => sample.toJson()).toList(),
+      'samples': loadRecent(limit: _maxSamples)
+          .where(
+            (sample) => !WardriveIgnoreStore.containsMatchingKey(
+              ignoredRepeaterKeys,
+              sample.publicKeyHex,
+            ),
+          )
+          .map((sample) => sample.toJson())
+          .toList(),
       'sessions': sessions.map((session) => session.toJson()).toList(),
     });
   }

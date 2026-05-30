@@ -19,7 +19,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "de": [
@@ -42,7 +44,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "es": [
@@ -65,7 +69,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "fr": [
@@ -88,7 +94,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "hu": [
@@ -111,7 +119,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "it": [
@@ -214,7 +224,9 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
-    "channelPath_outgoingSentByRadioAt"
+    "channelPath_outgoingSentByRadioAt",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "ja": [
@@ -237,7 +249,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "ko": [
@@ -260,7 +274,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "nl": [
@@ -363,7 +379,9 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
-    "channelPath_outgoingSentByRadioAt"
+    "channelPath_outgoingSentByRadioAt",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "pl": [
@@ -386,7 +404,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "pt": [
@@ -489,7 +509,9 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
-    "channelPath_outgoingSentByRadioAt"
+    "channelPath_outgoingSentByRadioAt",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "sk": [
@@ -512,7 +534,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "sl": [
@@ -535,7 +559,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "sv": [
@@ -638,7 +664,9 @@
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
     "map_wardriveDeleteBlock",
-    "channelPath_outgoingSentByRadioAt"
+    "channelPath_outgoingSentByRadioAt",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "uk": [
@@ -661,7 +689,9 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ],
 
   "zh": [
@@ -684,6 +714,8 @@
     "map_wardriveRepNoLocation",
     "map_wardriveDiscoveryWait",
     "map_wardriveFollowMe",
-    "map_wardriveDeleteBlock"
+    "map_wardriveDeleteBlock",
+    "listFilter_removeFromWardrive",
+    "listFilter_returnToWardrive"
   ]
 }

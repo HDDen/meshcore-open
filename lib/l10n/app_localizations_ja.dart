@@ -3997,6 +3997,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'お気に入りから削除';
 
   @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
+
+  @override
   String get listFilter_users => '利用者';
 
   @override

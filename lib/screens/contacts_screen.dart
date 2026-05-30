@@ -17,6 +17,7 @@ import '../l10n/contact_localization.dart';
 import '../models/contact_group.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
+import '../services/wardrive_service.dart';
 import '../utils/contact_search.dart';
 import '../storage/contact_group_store.dart';
 import '../utils/dialog_utils.dart';
@@ -1251,6 +1252,9 @@ class _ContactsScreenState extends State<ContactsScreen>
     final isRepeater = contact.type == advTypeRepeater;
     final isRoom = contact.type == advTypeRoom;
     final isFavorite = contact.isFavorite;
+    final wardrive = context.read<WardriveService>();
+    bool ignoredInWardrive =
+        isRepeater && wardrive.isRepeaterIgnored(contact.publicKeyHex);
     final appSettingsService = isRoom
         ? Provider.of<AppSettingsService>(context, listen: false)
         : null;
@@ -1550,6 +1554,32 @@ class _ContactsScreenState extends State<ContactsScreen>
                     );
                   },
                 ),
+                if (isRepeater)
+                  ListTile(
+                    leading: Icon(
+                      ignoredInWardrive
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: ignoredInWardrive
+                          ? Colors.green
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                    title: Text(
+                      ignoredInWardrive
+                          ? context.l10n.listFilter_returnToWardrive
+                          : context.l10n.listFilter_removeFromWardrive,
+                    ),
+                    onTap: () async {
+                      final nextIgnoredInWardrive = !ignoredInWardrive;
+                      setSheetState(() {
+                        ignoredInWardrive = nextIgnoredInWardrive;
+                      });
+                      await wardrive.setRepeaterIgnored(
+                        contact.publicKeyHex,
+                        nextIgnoredInWardrive,
+                      );
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.copy),
                   title: Text(context.l10n.contacts_ShareContact),

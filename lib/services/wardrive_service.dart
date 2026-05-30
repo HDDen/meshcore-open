@@ -9,6 +9,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../storage/prefs_manager.dart';
 import 'background_service.dart';
+import 'wardrive_ignore_store.dart';
 import 'wardrive_sample_store.dart';
 import 'wardrive_upload_service.dart';
 
@@ -48,12 +49,14 @@ class WardriveService extends ChangeNotifier {
   final BackgroundService? _backgroundService;
   final Random _random = Random();
   final WardriveSampleStore _sampleStore = WardriveSampleStore();
+  final WardriveIgnoreStore _ignoreStore = WardriveIgnoreStore();
   final Map<int, _WardriveDiscoveryRequest> _pendingDiscoveryRequests = {};
   final Map<int, int> _discoveryResponsesByTag = {};
   final Map<int, Timer> _discoveryFailureTimers = {};
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
   final List<WardriveSample> _recentSamples = [];
   final Set<String> _currentDiscoveryPublicKeys = {};
+  final Set<String> _ignoredRepeaterKeys = {};
   int? _currentDiscoveryTag;
   static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 25);
   static const Duration _discoveryResponseWindow = Duration(seconds: 10);
@@ -127,11 +130,35 @@ class WardriveService extends ChangeNotifier {
   int get coveragePrecision => _coveragePrecision;
   List<WardriveDiscoveryResult> get recentDiscoveries =>
       List.unmodifiable(_recentDiscoveries);
-  List<WardriveSample> get recentSamples => List.unmodifiable(_recentSamples);
+  List<WardriveSample> get recentSamples {
+    return List.unmodifiable(
+      _recentSamples.where(
+        (sample) => !WardriveIgnoreStore.containsMatchingKey(
+          _ignoredRepeaterKeys,
+          sample.publicKeyHex,
+        ),
+      ),
+    );
+  }
+
   Set<String> get currentDiscoveryPublicKeys =>
       Set.unmodifiable(_currentDiscoveryPublicKeys);
+  Set<String> get ignoredRepeaterKeys => Set.unmodifiable(_ignoredRepeaterKeys);
   bool get hasDiscoveryRequestWithoutResponses =>
       _lastDiscoveryRequestAt != null && _currentDiscoveryPublicKeys.isEmpty;
+
+  bool isRepeaterIgnored(String publicKeyHex) {
+    return WardriveIgnoreStore.containsMatchingKey(
+      _ignoredRepeaterKeys,
+      publicKeyHex,
+    );
+  }
+
+  Future<void> setRepeaterIgnored(String publicKeyHex, bool ignored) async {
+    await _ignoreStore.setIgnoredRepeater(publicKeyHex, ignored);
+    _loadIgnoredRepeaters();
+    notifyListeners();
+  }
 
   void showMapState() {
     if (_showMapState) return;
@@ -160,6 +187,7 @@ class WardriveService extends ChangeNotifier {
   }
 
   void _loadSavedSettings() {
+    _loadIgnoredRepeaters();
     final seconds = PrefsManager.instance.getInt(
       _autoDiscoveryIntervalSecondsKey,
     );
@@ -186,6 +214,12 @@ class WardriveService extends ChangeNotifier {
           )
           .toInt();
     }
+  }
+
+  void _loadIgnoredRepeaters() {
+    _ignoredRepeaterKeys
+      ..clear()
+      ..addAll(_ignoreStore.loadIgnoredRepeaters());
   }
 
   Future<void> setScreenWakelockEnabled(bool enabled) async {
@@ -464,16 +498,19 @@ class WardriveService extends ChangeNotifier {
 
     _discoveryResponsesReceived++;
     _lastDiscoveryResponseAt = result.timestamp;
-    if (_discoveryResponsesByTag.containsKey(result.tag)) {
+    final isIgnored = isRepeaterIgnored(result.publicKeyHex);
+    if (!isIgnored && _discoveryResponsesByTag.containsKey(result.tag)) {
       _discoveryResponsesByTag[result.tag] =
           (_discoveryResponsesByTag[result.tag] ?? 0) + 1;
     }
-    if (_isRunning) {
+    if (_isRunning && !isIgnored) {
       unawaited(_saveSample(result));
     }
     if (isCurrentRequest) {
       // Keep the map highlight and panel list scoped to the latest discovery
       // request. Late responses from an older tag may still be saved as samples.
+      // Ignored repeaters still stay visible as responders on the live map,
+      // but they are excluded from saved coverage statistics and upload.
       _currentDiscoveryPublicKeys.add(result.publicKeyHex);
       _recentDiscoveries.removeWhere(
         (entry) => entry.publicKeyHex == result.publicKeyHex,
@@ -615,7 +652,10 @@ class WardriveService extends ChangeNotifier {
   }
 
   String exportSamplesJson() {
-    return _sampleStore.exportJson(activeSession: _activeSessionSnapshot());
+    return _sampleStore.exportJson(
+      activeSession: _activeSessionSnapshot(),
+      ignoredRepeaterKeys: _ignoredRepeaterKeys,
+    );
   }
 
   Future<int> importSamplesJson(String rawJson) async {

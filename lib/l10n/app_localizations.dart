@@ -78,8 +78,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,8 +86,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -100,13 +98,12 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -127,7 +124,7 @@ abstract class AppLocalizations {
     Locale('sl'),
     Locale('sv'),
     Locale('uk'),
-    Locale('zh'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
@@ -4226,12 +4223,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'N {north}, S {south}, E {east}, W {west}'**
-  String mapCache_boundsLabel(
-    String north,
-    String south,
-    String east,
-    String west,
-  );
+  String mapCache_boundsLabel(String north, String south, String east, String west);
 
   /// No description provided for @time_justNow.
   ///
@@ -4789,12 +4781,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{days} days {hours}h {minutes}m {seconds}s'**
-  String repeater_daysHoursMinsSecs(
-    int days,
-    int hours,
-    int minutes,
-    int seconds,
-  );
+  String repeater_daysHoursMinsSecs(int days, int hours, int minutes, int seconds);
 
   /// No description provided for @repeater_packetTxTotal.
   ///
@@ -7226,6 +7213,18 @@ abstract class AppLocalizations {
   /// **'Remove from favorites'**
   String get listFilter_removeFromFavorites;
 
+  /// No description provided for @listFilter_removeFromWardrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore in Wardrive'**
+  String get listFilter_removeFromWardrive;
+
+  /// No description provided for @listFilter_returnToWardrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Wardrive'**
+  String get listFilter_returnToWardrive;
+
   /// No description provided for @listFilter_users.
   ///
   /// In en, this message translates to:
@@ -7386,23 +7385,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{distance} {distanceUnit}, clear LOS, min clearance {clearance} {heightUnit}'**
-  String losProfileClear(
-    String distance,
-    String distanceUnit,
-    String clearance,
-    String heightUnit,
-  );
+  String losProfileClear(String distance, String distanceUnit, String clearance, String heightUnit);
 
   /// No description provided for @losProfileBlocked.
   ///
   /// In en, this message translates to:
   /// **'{distance} {distanceUnit}, blocked by {obstruction} {heightUnit}'**
-  String losProfileBlocked(
-    String distance,
-    String distanceUnit,
-    String obstruction,
-    String heightUnit,
-  );
+  String losProfileBlocked(String distance, String distanceUnit, String obstruction, String heightUnit);
 
   /// No description provided for @losStatusChecking.
   ///
@@ -7498,12 +7487,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{distance} {distanceUnit} • {obstruction} {heightUnit}'**
-  String losBlockedSpotChip(
-    String distance,
-    String distanceUnit,
-    String obstruction,
-    String heightUnit,
-  );
+  String losBlockedSpotChip(String distance, String distanceUnit, String obstruction, String heightUnit);
 
   /// No description provided for @losSelectedObstructionTitle.
   ///
@@ -7515,13 +7499,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).'**
-  String losSelectedObstructionDetails(
-    String obstruction,
-    String heightUnit,
-    String distanceFromA,
-    String distanceUnit,
-    String distanceFromB,
-  );
+  String losSelectedObstructionDetails(String obstruction, String heightUnit, String distanceFromA, String distanceUnit, String distanceFromB);
 
   /// No description provided for @losFrequencyLabel.
   ///
@@ -7545,12 +7523,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Starting from k={baselineK} at {baselineFreq} MHz, the calculation adjusts the k-factor for the current {frequencyMHz} MHz band, which defines the curved radio horizon cap.'**
-  String losFrequencyDialogDescription(
-    double baselineK,
-    double baselineFreq,
-    double frequencyMHz,
-    double kFactor,
-  );
+  String losFrequencyDialogDescription(double baselineK, double baselineFreq, double frequencyMHz, double kFactor);
 
   /// No description provided for @contacts_pathTrace.
   ///
@@ -8363,8 +8336,7 @@ abstract class AppLocalizations {
   String get contact_typeUnknown;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -8373,76 +8345,41 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => <String>[
-    'bg',
-    'de',
-    'en',
-    'es',
-    'fr',
-    'hu',
-    'it',
-    'ja',
-    'ko',
-    'nl',
-    'pl',
-    'pt',
-    'ru',
-    'sk',
-    'sl',
-    'sv',
-    'uk',
-    'zh',
-  ].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['bg', 'de', 'en', 'es', 'fr', 'hu', 'it', 'ja', 'ko', 'nl', 'pl', 'pt', 'ru', 'sk', 'sl', 'sv', 'uk', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'bg':
-      return AppLocalizationsBg();
-    case 'de':
-      return AppLocalizationsDe();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'es':
-      return AppLocalizationsEs();
-    case 'fr':
-      return AppLocalizationsFr();
-    case 'hu':
-      return AppLocalizationsHu();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'ja':
-      return AppLocalizationsJa();
-    case 'ko':
-      return AppLocalizationsKo();
-    case 'nl':
-      return AppLocalizationsNl();
-    case 'pl':
-      return AppLocalizationsPl();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'ru':
-      return AppLocalizationsRu();
-    case 'sk':
-      return AppLocalizationsSk();
-    case 'sl':
-      return AppLocalizationsSl();
-    case 'sv':
-      return AppLocalizationsSv();
-    case 'uk':
-      return AppLocalizationsUk();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'bg': return AppLocalizationsBg();
+    case 'de': return AppLocalizationsDe();
+    case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'fr': return AppLocalizationsFr();
+    case 'hu': return AppLocalizationsHu();
+    case 'it': return AppLocalizationsIt();
+    case 'ja': return AppLocalizationsJa();
+    case 'ko': return AppLocalizationsKo();
+    case 'nl': return AppLocalizationsNl();
+    case 'pl': return AppLocalizationsPl();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+    case 'sk': return AppLocalizationsSk();
+    case 'sl': return AppLocalizationsSl();
+    case 'sv': return AppLocalizationsSv();
+    case 'uk': return AppLocalizationsUk();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

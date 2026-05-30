@@ -4210,6 +4210,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'Премахване от списъка с любими';
 
   @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
+
+  @override
   String get listFilter_users => 'Потребители';
 
   @override
