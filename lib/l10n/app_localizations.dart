@@ -760,6 +760,60 @@ abstract class AppLocalizations {
   /// **'Radio settings updated'**
   String get settings_radioSettingsUpdated;
 
+  /// No description provided for @settings_regionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Regions'**
+  String get settings_regionSettings;
+
+  /// No description provided for @settings_regionSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage stored regions'**
+  String get settings_regionSettingsSubtitle;
+
+  /// No description provided for @settings_regionManagement_screenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Region Management'**
+  String get settings_regionManagement_screenTitle;
+
+  /// No description provided for @settings_regionNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter region name'**
+  String get settings_regionNameHint;
+
+  /// No description provided for @settings_regionAddRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Add region'**
+  String get settings_regionAddRegion;
+
+  /// No description provided for @settings_regionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Region Name'**
+  String get settings_regionName;
+
+  /// No description provided for @settings_regionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Region deleted'**
+  String get settings_regionDeleted;
+
+  /// No description provided for @settings_deleteRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Region'**
+  String get settings_deleteRegion;
+
+  /// No description provided for @settings_deleteRegionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{region}\" from region list?'**
+  String settings_deleteRegionConfirm(String region);
+
   /// No description provided for @settings_location.
   ///
   /// In en, this message translates to:
@@ -2601,6 +2655,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. #team'**
   String get channels_hashtagHint;
+
+  /// No description provided for @channels_regionSetTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Region: {region}'**
+  String channels_regionSetTo(String region);
+
+  /// No description provided for @channels_regionNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Region: none'**
+  String get channels_regionNotSet;
+
+  /// No description provided for @channels_regionSelect_Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a region'**
+  String get channels_regionSelect_Title;
+
+  /// No description provided for @channels_clearRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear region'**
+  String get channels_clearRegion;
 
   /// No description provided for @chat_noMessages.
   ///

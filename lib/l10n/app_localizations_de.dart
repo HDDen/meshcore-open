@@ -358,6 +358,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'Funkparameter aktualisiert';
 
   @override
+  String get settings_regionSettings => 'Regionen';
+
+  @override
+  String get settings_regionSettingsSubtitle =>
+      'Gespeicherte Regionen verwalten';
+
+  @override
+  String get settings_regionManagement_screenTitle => 'Regions-Verwaltung';
+
+  @override
+  String get settings_regionNameHint => 'Regions-Namen eingeben';
+
+  @override
+  String get settings_regionAddRegion => 'Region hinzufügen';
+
+  @override
+  String get settings_regionName => 'Regions-Name';
+
+  @override
+  String get settings_regionDeleted => 'Region entfernt';
+
+  @override
+  String get settings_deleteRegion => 'Region entfernen';
+
+  @override
+  String settings_deleteRegionConfirm(String region) {
+    return 'Region \"$region\" aus der Liste entfernen?';
+  }
+
+  @override
   String get settings_location => 'Ort';
 
   @override
@@ -1415,6 +1445,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get channels_hashtagHint => 'z.B. #team';
+
+  @override
+  String channels_regionSetTo(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_regionNotSet => 'Region: keine';
+
+  @override
+  String get channels_regionSelect_Title => 'Region auswählen';
+
+  @override
+  String get channels_clearRegion => 'Region zurücksetzen';
 
   @override
   String get chat_noMessages => 'Noch keine Nachrichten.';

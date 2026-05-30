@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:meshcore_open/storage/region_store.dart';
 import 'package:pointycastle/export.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -38,6 +39,7 @@ import 'meshcore_connector_tcp.dart';
 import '../storage/channel_message_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
+import '../storage/channel_region_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
@@ -331,6 +333,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final MessageStore _messageStore = MessageStore();
   final ChannelOrderStore _channelOrderStore = ChannelOrderStore();
   final ChannelSettingsStore _channelSettingsStore = ChannelSettingsStore();
+  final ChannelRegionStore _channelRegionStore = ChannelRegionStore();
   final ContactSettingsStore _contactSettingsStore = ContactSettingsStore();
   final ContactStore _contactStore = ContactStore();
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
@@ -343,6 +346,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, String?> _channelCyr2LatProfileId = {};
   final Map<int, int?> _channelWidgetColor = {};
   final Map<int, int?> _channelWidgetTextColor = {};
+  final Map<int, Region> _channelRegions = {};
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactMcmpEnabled = {};
@@ -734,6 +738,14 @@ class MeshCoreConnector extends ChangeNotifier {
     _ensureContactMcmpSettingLoaded(contactKeyHex);
   }
 
+  bool hasChannelRegion(int channelIndex) {
+    return _channelRegions[channelIndex] != '';
+  }
+
+  Region getChannelRegion(int channelIndex) {
+    return _channelRegions[channelIndex] ?? '';
+  }
+
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
     _ensureContactSmazSettingLoaded(contactKeyHex);
   }
@@ -1028,6 +1040,14 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelRegion(int channelIndex, String region) async {
+    _channelRegions[channelIndex] = await _channelRegionStore.saveRegion(
+      channelIndex,
+      region,
+    );
+    notifyListeners();
+  }
+
   Future<void> _loadChannelOrder() async {
     _channelOrder = await _channelOrderStore.loadChannelOrder();
     _applyChannelOrder();
@@ -1185,6 +1205,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelQuickAnswerIds.clear();
     _channelWidgetColor.clear();
     _channelWidgetTextColor.clear();
+    _channelRegions.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       _channelMcmpEnabled[i] = await _channelSettingsStore.loadMcmpEnabled(i);
@@ -1198,6 +1219,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _channelWidgetColor[i] = await _channelSettingsStore.loadWidgetColor(i);
       _channelWidgetTextColor[i] = await _channelSettingsStore
           .loadWidgetTextColor(i);
+      _channelRegions[i] = await _channelRegionStore.loadRegion(i);
     }
   }
 
@@ -3484,12 +3506,19 @@ class MeshCoreConnector extends ChangeNotifier {
       // Send the reaction to the device (don't add as a visible message)
       final reactionQueueId = _nextReactionSendQueueId();
       _pendingChannelSentQueue.add(reactionQueueId);
-      await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-      await sendFrame(
-        buildSendChannelTextMsgFrame(channel.index, text),
-        channelSendQueueId: reactionQueueId,
-        expectsGenericAck: true,
-      );
+      try {
+        await sendFrame(
+          buildSetFloodScopeFrame(getChannelRegion(channel.index)),
+        );
+        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+        await sendFrame(
+          buildSendChannelTextMsgFrame(channel.index, text),
+          channelSendQueueId: reactionQueueId,
+          expectsGenericAck: true,
+        );
+      } finally {
+        await sendFrame(buildSetFloodScopeFrame(''));
+      }
       return;
     }
 
@@ -3512,14 +3541,19 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
 
     final outboundText = prepareChannelOutboundText(channel.index, text);
-    await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+    try {
+      await sendFrame(buildSetFloodScopeFrame(getChannelRegion(channel.index)));
+      await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
     final sentByRadioAt = DateTime.now();
     _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
-    await sendFrame(
-      buildSendChannelTextMsgFrame(channel.index, outboundText),
-      channelSendQueueId: message.messageId,
-      expectsGenericAck: true,
-    );
+      await sendFrame(
+        buildSendChannelTextMsgFrame(channel.index, outboundText),
+        channelSendQueueId: message.messageId,
+        expectsGenericAck: true,
+      );
+    } finally {
+      await sendFrame(buildSetFloodScopeFrame(''));
+    }
   }
 
   List<Message> getPendingContactMessages(String contactKeyHex) {
@@ -4465,6 +4499,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _messageStore.setPublicKeyHex = selfPublicKeyHex;
     _channelOrderStore.setPublicKeyHex = selfPublicKeyHex;
     _channelSettingsStore.setPublicKeyHex = selfPublicKeyHex;
+    _channelRegionStore.setPublicKeyHex = selfPublicKeyHex;
     _contactSettingsStore.setPublicKeyHex = selfPublicKeyHex;
     _contactStore.setPublicKeyHex = selfPublicKeyHex;
     _channelStore.setPublicKeyHex = selfPublicKeyHex;

@@ -154,6 +154,22 @@
   "settings_radioSettings": "Radio Settings",
   "settings_radioSettingsSubtitle": "Frequency, power, spreading factor",
   "settings_radioSettingsUpdated": "Radio settings updated",
+  "settings_regionSettings": "Regions",
+  "settings_regionSettingsSubtitle": "Manage stored regions",
+  "settings_regionManagement_screenTitle": "Region Management",
+  "settings_regionNameHint": "Enter region name",
+  "settings_regionAddRegion": "Add region",
+  "settings_regionName": "Region Name",
+  "settings_regionDeleted": "Region deleted",
+  "settings_deleteRegion": "Delete Region",
+  "settings_deleteRegionConfirm": "Remove \"{region}\" from region list?",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_location": "Location",
   "settings_locationSubtitle": "GPS coordinates",
   "settings_locationUpdated": "Location and GPS settings updated",
@@ -669,6 +685,18 @@
   "channels_scanQrCodeComingSoon": "Coming soon",
   "channels_enterHashtag": "Enter hashtag",
   "channels_hashtagHint": "e.g. #team",
+  "channels_regionSetTo": "Region: {region}",
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "channels_regionNotSet": "Region: none",
+  "channels_regionSelect_Title": "Select a region",
+  "channels_clearRegion": "Clear region",
   "chat_noMessages": "No messages yet",
   "chat_sendMessage": "Send message",
   "chat_sendMessageTo": "Send a message to {contactName}",

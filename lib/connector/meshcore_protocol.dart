@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/widgets.dart';
 
 // Buffer Reader - sequential binary data reader with pointer tracking
@@ -212,6 +213,7 @@ const int cmdSendAnonReq = 57;
 const int cmdSetAutoAddConfig = 58;
 const int cmdGetAutoAddConfig = 59;
 const int cmdSetPathHashMode = 61;
+const int cmdSetFloodScope = 54;
 
 // Text message types
 const int txtTypePlain = 0;
@@ -986,4 +988,19 @@ Uint8List buildSendTelemetryReq(Uint8List? pubKey) {
     writer.writeBytes(Uint8List(4)); // reserved bytes
   }
   return writer.toBytes();
+}
+
+//Build CMD_SET_FLOOD_SCOPE
+// Format: [cmd][scope]
+Uint8List buildSetFloodScopeFrame(String region) {
+  if (region == '') {
+    // reset scope
+    return Uint8List.fromList([cmdSetFloodScope, 0]);
+  }
+
+  final name = region.startsWith('#') ? region : '#$region';
+  final hash = crypto.sha256.convert(utf8.encode(name)).bytes;
+  final scope = Uint8List.fromList(hash.sublist(0, 16));
+
+  return Uint8List.fromList([cmdSetFloodScope, 0, ...scope]);
 }

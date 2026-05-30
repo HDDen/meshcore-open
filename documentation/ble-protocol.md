@@ -119,6 +119,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 40 | CMD_GET_CUSTOM_VAR | Get custom variables |
 | 41 | CMD_SET_CUSTOM_VAR | Set a custom variable |
 | 50 | CMD_SEND_BINARY_REQ | Send binary request |
+| 54 | CMD_SET_FLOOD_SCOPE | Set flood routing scope (v8+) |
 | 57 | CMD_SEND_ANON_REQ | Send anonymous request |
 | 58 | CMD_SET_AUTO_ADD_CONFIG | Set auto-add configuration |
 | 59 | CMD_GET_AUTO_ADD_CONFIG | Get auto-add configuration |
