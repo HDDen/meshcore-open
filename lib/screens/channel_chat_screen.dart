@@ -2027,6 +2027,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       pathHashByteWidth,
     ).map(PathHelper.formatHopHex).join(',');
   }
+
   Future<void> openRegionSelectDialog(Channel channel) async {
     await showDialog(
       context: context,
@@ -2135,7 +2136,6 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
     );
   }
 }
-
 
 class _SwipeReplyBubble extends StatefulWidget {
   final double maxSwipeOffset;
