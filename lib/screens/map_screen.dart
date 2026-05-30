@@ -4156,6 +4156,27 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
+  void _openPathTraceResult({required bool flipPathAround}) {
+    final hashW = context.read<MeshCoreConnector>().pathHashByteWidth;
+    // Keep the path editor active behind the result screen, so returning from
+    // the trace map restores the selected repeaters for quick adjustments.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PathTraceMapScreen(
+          title: context.l10n.contacts_pathTrace,
+          path: Uint8List.fromList(_pathTrace),
+          flipPathAround: flipPathAround,
+          targetContact: _pathTraceContacts.isNotEmpty
+              ? _pathTraceContacts.last
+              : null,
+          pathHashByteWidth: hashW,
+          pathContacts: _pathTraceContacts,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPathTraceOverlay() {
     final l10n = context.l10n;
     final isImperial =
@@ -4199,56 +4220,15 @@ class _MapScreenState extends State<MapScreen>
                 children: [
                   if (_pathTrace.isNotEmpty)
                     IconButton(
-                      onPressed: () {
-                        final hashW = context
-                            .read<MeshCoreConnector>()
-                            .pathHashByteWidth;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PathTraceMapScreen(
-                              title: l10n.contacts_pathTrace,
-                              path: Uint8List.fromList(_pathTrace),
-                              flipPathAround: true,
-                              targetContact: _pathTraceContacts.isNotEmpty
-                                  ? _pathTraceContacts.last
-                                  : null,
-                              pathHashByteWidth: hashW,
-                              pathContacts: _pathTraceContacts,
-                            ),
-                          ),
-                        );
-                        setState(() {
-                          _isBuildingPathTrace = false;
-                        });
-                      },
+                      onPressed: () =>
+                          _openPathTraceResult(flipPathAround: true),
                       tooltip: l10n.map_runTrace,
                       icon: const Icon(Icons.arrow_forward_outlined),
                     ),
                   if (_pathTrace.isNotEmpty)
                     IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PathTraceMapScreen(
-                              title: l10n.contacts_pathTrace,
-                              path: Uint8List.fromList(_pathTrace),
-                              flipPathAround: true,
-                              targetContact: _pathTraceContacts.isNotEmpty
-                                  ? _pathTraceContacts.last
-                                  : null,
-                              pathHashByteWidth: context
-                                  .read<MeshCoreConnector>()
-                                  .pathHashByteWidth,
-                              pathContacts: _pathTraceContacts,
-                            ),
-                          ),
-                        );
-                        setState(() {
-                          _isBuildingPathTrace = false;
-                        });
-                      },
+                      onPressed: () =>
+                          _openPathTraceResult(flipPathAround: true),
                       tooltip: l10n.map_runTraceWithReturnPath,
                       icon: const Icon(Icons.replay),
                     ),
