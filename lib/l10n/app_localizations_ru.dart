@@ -372,6 +372,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_regionAddRegion => 'Add region';
 
   @override
+  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+
+  @override
+  String get settings_regionFetchRegionsFail => 'No regions were found';
+
+  @override
+  String get settings_regionFetchRegionsAlreadyExists =>
+      'This region has already been added';
+
+  @override
   String get settings_regionName => 'Region Name';
 
   @override

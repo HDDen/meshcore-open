@@ -790,6 +790,24 @@ abstract class AppLocalizations {
   /// **'Add region'**
   String get settings_regionAddRegion;
 
+  /// No description provided for @settings_regionFetchRegions.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch regions from repeaters'**
+  String get settings_regionFetchRegions;
+
+  /// No description provided for @settings_regionFetchRegionsFail.
+  ///
+  /// In en, this message translates to:
+  /// **'No regions were found'**
+  String get settings_regionFetchRegionsFail;
+
+  /// No description provided for @settings_regionFetchRegionsAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This region has already been added'**
+  String get settings_regionFetchRegionsAlreadyExists;
+
   /// No description provided for @settings_regionName.
   ///
   /// In en, this message translates to:

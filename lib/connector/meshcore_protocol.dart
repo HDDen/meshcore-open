@@ -237,29 +237,7 @@ Uint8List buildTelemetryBinaryPayload() {
   return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
 }
 
-Uint8List buildSendControlDataFrame(Uint8List payload) {
-  final writer = BufferWriter();
-  writer.writeByte(cmdSendControlData);
-  writer.writeBytes(payload);
-  return writer.toBytes();
-}
-
-Uint8List buildDiscoveryRequestPayload(
-  int tag, {
-  bool prefixOnly = false,
-  int typeMask = 1 << advTypeRepeater,
-}) {
-  final writer = BufferWriter();
-  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
-  // subtype 0x8, with the low bit selecting short/full public keys in replies.
-  writer.writeByte(
-    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
-  );
-  writer.writeByte(typeMask);
-  writer.writeUInt32LE(tag);
-  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
-  return writer.toBytes();
-}
+const int anonReqTypeRegions = 0x01;
 
 // Repeater response codes
 const int respServerLoginOk = 0;
@@ -892,6 +870,67 @@ Uint8List buildSendBinaryReq(Uint8List repeaterPubKey, {Uint8List? payload}) {
   if (payload != null && payload.isNotEmpty) {
     writer.writeBytes(payload);
   }
+  return writer.toBytes();
+}
+
+Uint8List buildSendControlDataFrame(Uint8List payload) {
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendControlData);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+Uint8List buildDiscoveryRequestPayload(
+  int tag, {
+  bool prefixOnly = false,
+  int typeMask = 1 << advTypeRepeater,
+}) {
+  final writer = BufferWriter();
+  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
+  // subtype 0x8, with the low bit selecting short/full public keys in replies.
+  writer.writeByte(
+    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
+  );
+  writer.writeByte(typeMask);
+  writer.writeUInt32LE(tag);
+  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
+  return writer.toBytes();
+}
+
+Uint8List _reversePathByHop(Uint8List path, int pathHashWidth) {
+  if (path.isEmpty) return Uint8List(0);
+  final width = pathHashWidth.clamp(1, 4).toInt();
+  if (path.length % width != 0) {
+    return Uint8List.fromList(path.reversed.toList());
+  }
+
+  final reversed = Uint8List(path.length);
+  final hops = path.length ~/ width;
+  for (var i = 0; i < hops; i++) {
+    final from = (hops - 1 - i) * width;
+    reversed.setRange(i * width, (i + 1) * width, path, from);
+  }
+  return reversed;
+}
+
+// Build CMD_SEND_ANON_REQ frame.
+// Payload format for regions: [anon_req_type][reply_path_len][reply_path...].
+Uint8List buildSendAnonReqFrame(
+  Uint8List repeaterPubKey, {
+  required int requestType,
+  Uint8List? replyPath,
+  int replyHopCount = 0,
+  int pathHashWidth = pathHashSize,
+}) {
+  final width = pathHashWidth.clamp(1, 4).toInt();
+  final path = replyPath ?? Uint8List(0);
+  final encodedPathLen = ((width - 1) << 6) | (replyHopCount & 0x3F);
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendAnonReq);
+  writer.writeBytes(repeaterPubKey);
+  writer.writeByte(requestType);
+  writer.writeByte(encodedPathLen);
+  writer.writeBytes(_reversePathByHop(path, width));
   return writer.toBytes();
 }
 
