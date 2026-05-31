@@ -42,6 +42,12 @@ class _TelemetryLocationMapState extends State<TelemetryLocationMap> {
   LatLng get _position => LatLng(widget.latitude, widget.longitude);
 
   @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant TelemetryLocationMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.latitude == widget.latitude &&

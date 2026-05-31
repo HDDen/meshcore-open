@@ -17,8 +17,8 @@ import '../widgets/path_management_dialog.dart';
 import '../helpers/cayenne_lpp.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
-import '../widgets/telemetry_location_map.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../widgets/telemetry_location_map.dart';
 
 class TelemetryScreen extends StatefulWidget {
   final Contact contact;
