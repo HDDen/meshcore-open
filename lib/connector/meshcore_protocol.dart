@@ -237,6 +237,30 @@ Uint8List buildTelemetryBinaryPayload() {
   return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
 }
 
+Uint8List buildSendControlDataFrame(Uint8List payload) {
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendControlData);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+Uint8List buildDiscoveryRequestPayload(
+  int tag, {
+  bool prefixOnly = false,
+  int typeMask = 1 << advTypeRepeater,
+}) {
+  final writer = BufferWriter();
+  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
+  // subtype 0x8, with the low bit selecting short/full public keys in replies.
+  writer.writeByte(
+    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
+  );
+  writer.writeByte(typeMask);
+  writer.writeUInt32LE(tag);
+  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
+  return writer.toBytes();
+}
+
 const int anonReqTypeRegions = 0x01;
 
 // Repeater response codes
@@ -873,30 +897,6 @@ Uint8List buildSendBinaryReq(Uint8List repeaterPubKey, {Uint8List? payload}) {
   return writer.toBytes();
 }
 
-Uint8List buildSendControlDataFrame(Uint8List payload) {
-  final writer = BufferWriter();
-  writer.writeByte(cmdSendControlData);
-  writer.writeBytes(payload);
-  return writer.toBytes();
-}
-
-Uint8List buildDiscoveryRequestPayload(
-  int tag, {
-  bool prefixOnly = false,
-  int typeMask = 1 << advTypeRepeater,
-}) {
-  final writer = BufferWriter();
-  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
-  // subtype 0x8, with the low bit selecting short/full public keys in replies.
-  writer.writeByte(
-    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
-  );
-  writer.writeByte(typeMask);
-  writer.writeUInt32LE(tag);
-  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
-  return writer.toBytes();
-}
-
 Uint8List _reversePathByHop(Uint8List path, int pathHashWidth) {
   if (path.isEmpty) return Uint8List(0);
   final width = pathHashWidth.clamp(1, 4).toInt();
@@ -922,7 +922,9 @@ Uint8List buildSendAnonReqFrame(
   int replyHopCount = 0,
   int pathHashWidth = pathHashSize,
 }) {
-  final width = pathHashWidth.clamp(1, 4).toInt();
+  // Current MeshCore firmware reserves path-hash mode 3 (4-byte hashes), so
+  // anon reply paths must stay in the supported 1..3 byte range.
+  final width = pathHashWidth.clamp(1, 3).toInt();
   final path = replyPath ?? Uint8List(0);
   final encodedPathLen = ((width - 1) << 6) | (replyHopCount & 0x3F);
   final writer = BufferWriter();

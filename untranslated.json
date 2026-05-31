@@ -42,6 +42,9 @@
   ],
 
   "de": [
+    "settings_regionFetchRegions",
+    "settings_regionFetchRegionsFail",
+    "settings_regionFetchRegionsAlreadyExists",
     "settings_aboutModDescription",
     "settings_aboutModLink",
     "map_wardriveReUpload",
@@ -65,12 +68,6 @@
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
     "listFilter_returnToWardrive"
-  ],
-
-  "de": [
-    "settings_regionFetchRegions",
-    "settings_regionFetchRegionsFail",
-    "settings_regionFetchRegionsAlreadyExists"
   ],
 
   "es": [
