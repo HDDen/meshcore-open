@@ -120,7 +120,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   }
 
   void _sendCommand({bool showDebug = false}) async {
-    final command = _commandController.text.trim();
+    // Preserve whitespace-only CLI payloads: repeaters may treat " " as a
+    // meaningful command/input, so only reject truly empty text.
+    final command = _commandController.text;
     if (command.isEmpty) return;
 
     setState(() {
@@ -334,7 +336,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
             tooltip: l10n.repeater_debugNextCommand,
             onPressed: () {
               // Set a flag or just send next command with debug
-              if (_commandController.text.trim().isNotEmpty) {
+              if (_commandController.text.isNotEmpty) {
                 _sendCommand(showDebug: true);
               } else {
                 showDismissibleSnackBar(
