@@ -32,3 +32,9 @@
 
 ## Commit & Pull Request Guidelines
 - Keep commit subjects short and action-focused; PRs should describe behavior changes, link issues, include screenshots for UI changes, and call out BLE protocol changes explicitly.
+
+## Memory
+
+Use MCP agentmemory at the start of each task to recall relevant project context.
+At the end of each task, save durable decisions, project conventions, user preferences, and unresolved follow-ups to agentmemory.
+Do not save secrets, tokens, passwords, or temporarydebug-only details.
