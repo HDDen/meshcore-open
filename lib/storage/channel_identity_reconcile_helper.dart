@@ -46,18 +46,28 @@ class ChannelIdentityReconcileHelper {
           if (channel.index != receivedChannel.index) channel,
         if (!receivedChannel.isEmpty) receivedChannel,
       ];
+      final deltaOldToNewIndex = <int, int>{};
+      final deltaUnmatchedNewIndexes = <int>{};
 
       if (receivedChannel.isEmpty) {
-        session.unmatchedNewIndexes.add(receivedChannel.index);
+        if (session.unmatchedNewIndexes.add(receivedChannel.index)) {
+          deltaUnmatchedNewIndexes.add(receivedChannel.index);
+        }
       } else {
         final oldChannel = _findPreviousMatch(
           session.previousChannels,
           receivedChannel,
         );
         if (oldChannel == null) {
-          session.unmatchedNewIndexes.add(receivedChannel.index);
+          if (session.unmatchedNewIndexes.add(receivedChannel.index)) {
+            deltaUnmatchedNewIndexes.add(receivedChannel.index);
+          }
         } else {
+          final previousMappedIndex = session.oldToNewIndex[oldChannel.index];
           session.oldToNewIndex[oldChannel.index] = receivedChannel.index;
+          if (previousMappedIndex != receivedChannel.index) {
+            deltaOldToNewIndex[oldChannel.index] = receivedChannel.index;
+          }
           session.unmatchedNewIndexes.remove(receivedChannel.index);
         }
       }
@@ -66,6 +76,8 @@ class ChannelIdentityReconcileHelper {
         session,
         currentChannels: projectedChannels,
         finalized: false,
+        remapIndexes: deltaOldToNewIndex,
+        unmatchedIndexes: deltaUnmatchedNewIndexes,
       );
     } catch (error, stackTrace) {
       appLogger.error(
@@ -208,12 +220,14 @@ class ChannelIdentityReconcileHelper {
       snapshots[index] = _readIndexedPrefs(scopedKey, index);
     }
 
+    final originalChannelOrder = prefs.getString(_channelOrderKey(scopedKey));
     return _ChannelIdentitySyncSession(
       scopedKey: scopedKey,
       previousChannels: previousChannels.where((c) => !c.isEmpty).toList(),
       allIndexedIndexes: allIndexedIndexes,
       snapshots: snapshots,
-      originalChannelOrder: prefs.getString(_channelOrderKey(scopedKey)),
+      originalChannelOrder: originalChannelOrder,
+      originalChannelOrderValues: _parseIndexList(originalChannelOrder ?? ''),
       originalChannelGroups: prefs.getString(_channelGroupsKey(scopedKey)),
     );
   }
@@ -222,18 +236,31 @@ class ChannelIdentityReconcileHelper {
     _ChannelIdentitySyncSession session, {
     required List<Channel> currentChannels,
     required bool finalized,
+    Map<int, int>? remapIndexes,
+    Set<int>? unmatchedIndexes,
   }) async {
     final remapChanged = await _remapIndexedPrefs(
       session,
       currentChannels.where((c) => !c.isEmpty).toList(),
       finalized: finalized,
+      remapIndexes: remapIndexes,
+      unmatchedIndexes: unmatchedIndexes,
     );
-    final orderChanged = await _remapChannelOrder(session, finalized);
-    final groupsChanged = await _remapChannelGroups(session, finalized);
+    final orderChanged = finalized
+        ? await _remapChannelOrder(session, finalized)
+        : false;
+    final groupsChanged = finalized
+        ? await _remapChannelGroups(session, finalized)
+        : false;
     final remappedIndexesChanged = session.oldToNewIndex.entries.any(
       (entry) => entry.key != entry.value,
     );
-    final affectedIndexes = _affectedIndexes(session, finalized);
+    final affectedIndexes = _affectedIndexes(
+      session,
+      finalized,
+      remapIndexes: remapIndexes,
+      unmatchedIndexes: unmatchedIndexes,
+    );
     final changed =
         remapChanged ||
         orderChanged ||
@@ -276,18 +303,26 @@ class ChannelIdentityReconcileHelper {
 
   Set<int> _affectedIndexes(
     _ChannelIdentitySyncSession session,
-    bool finalized,
-  ) {
+    bool finalized, {
+    Map<int, int>? remapIndexes,
+    Set<int>? unmatchedIndexes,
+  }) {
     if (finalized) {
+      final movedIndexes = session.oldToNewIndex.entries.where(
+        (entry) => entry.key != entry.value,
+      );
+      final removedPreviousIndexes = session.previousChannels
+          .map((channel) => channel.index)
+          .where((index) => !session.oldToNewIndex.containsKey(index));
       return {
-        ...session.allIndexedIndexes,
-        ...session.previousChannels.map((channel) => channel.index),
-        ...session.oldToNewIndex.values,
+        ...movedIndexes.map((entry) => entry.key),
+        ...movedIndexes.map((entry) => entry.value),
         ...session.unmatchedNewIndexes,
+        ...removedPreviousIndexes,
       };
     }
 
-    return {...session.oldToNewIndex.values, ...session.unmatchedNewIndexes};
+    return {...?remapIndexes?.values, ...?unmatchedIndexes};
   }
 
   Channel? _findPreviousMatch(List<Channel> previous, Channel current) {
@@ -359,12 +394,23 @@ class ChannelIdentityReconcileHelper {
     _ChannelIdentitySyncSession session,
     List<Channel> currentChannels, {
     required bool finalized,
+    Map<int, int>? remapIndexes,
+    Set<int>? unmatchedIndexes,
   }) async {
     var changed = false;
     final targetKeys = <String>{};
-    for (final entry in session.oldToNewIndex.entries) {
+    final indexesToRemap = finalized
+        ? session.oldToNewIndex
+        : remapIndexes ?? const <int, int>{};
+    for (final entry in indexesToRemap.entries) {
       final values =
           session.snapshots[entry.key] ?? const <_IndexedPrefSnapshot>[];
+      if (entry.key == entry.value) {
+        for (final value in values) {
+          targetKeys.add(value.keyFor(session.scopedKey, entry.value));
+        }
+        continue;
+      }
       for (final value in values) {
         final key = value.keyFor(session.scopedKey, entry.value);
         final nextValue = _valueForNewIndex(value, entry.value);
@@ -379,10 +425,7 @@ class ChannelIdentityReconcileHelper {
             ...session.previousChannels.map((channel) => channel.index),
             ...currentChannels.map((channel) => channel.index),
           }
-        : <int>{
-            ...session.oldToNewIndex.values,
-            ...session.unmatchedNewIndexes,
-          };
+        : <int>{...indexesToRemap.values, ...?unmatchedIndexes};
     changed =
         await _clearIndexedData(
           session.scopedKey,
@@ -456,7 +499,11 @@ class ChannelIdentityReconcileHelper {
   ) {
     final raw = session.originalChannelOrder;
     if (raw == null || raw.isEmpty) return const [];
-    return _remapIndexList(_parseIndexList(raw), session, finalized);
+    return _remapIndexList(
+      session.originalChannelOrderValues,
+      session,
+      finalized,
+    );
   }
 
   Future<bool> _remapChannelGroups(
@@ -658,6 +705,7 @@ class _ChannelIdentitySyncSession {
   final Set<int> allIndexedIndexes;
   final Map<int, List<_IndexedPrefSnapshot>> snapshots;
   final String? originalChannelOrder;
+  final List<int> originalChannelOrderValues;
   final String? originalChannelGroups;
   final Map<int, int> oldToNewIndex = {};
   final Set<int> unmatchedNewIndexes = {};
@@ -668,6 +716,7 @@ class _ChannelIdentitySyncSession {
     required this.allIndexedIndexes,
     required this.snapshots,
     required this.originalChannelOrder,
+    required this.originalChannelOrderValues,
     required this.originalChannelGroups,
   });
 }

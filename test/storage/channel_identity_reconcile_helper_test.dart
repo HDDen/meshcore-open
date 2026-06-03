@@ -202,8 +202,9 @@ void main() {
       channelStore: store,
     );
 
+    expect(betaFirst.affectedIndexes, equals({0}));
     expect(both, isNotNull);
-    expect(both!.affectedIndexes, equals({0, 1}));
+    expect(both!.affectedIndexes, equals({1}));
     expect(prefs.getBool('channel_mcmp_${scopedKey}0'), isTrue);
     expect(prefs.getBool('channel_smaz_${scopedKey}1'), isTrue);
     expect(prefs.containsKey('channel_smaz_${scopedKey}0'), isFalse);

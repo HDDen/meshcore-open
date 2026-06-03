@@ -4266,7 +4266,7 @@ class MeshCoreConnector extends ChangeNotifier {
         ..clear()
         ..addAll(reconciliation.channels);
       _channelOrder = reconciliation.channelOrder;
-      if (reconciliation.changed) {
+      if (reconciliation.changed && reconciliation.affectedIndexes.isNotEmpty) {
         await _reloadReconciledChannelData(reconciliation.affectedIndexes);
       }
     }
@@ -6154,17 +6154,25 @@ class MeshCoreConnector extends ChangeNotifier {
       ..clear()
       ..addAll(reconciliation.channels);
     _channelOrder = reconciliation.channelOrder;
-    if (reconciliation.changed) {
-      await _reloadReconciledChannelData(reconciliation.affectedIndexes);
+    if (reconciliation.changed && reconciliation.affectedIndexes.isNotEmpty) {
+      await _reloadReconciledChannelData(
+        reconciliation.affectedIndexes,
+        loadInactiveMessages: false,
+      );
     }
   }
 
-  Future<void> _reloadReconciledChannelData(Set<int> channelIndexes) async {
+  Future<void> _reloadReconciledChannelData(
+    Set<int> channelIndexes, {
+    bool loadInactiveMessages = true,
+  }) async {
     for (final channelIndex in channelIndexes) {
       if (channelIndex < 0 || channelIndex >= _maxChannels) continue;
       await _loadChannelSettingsForIndex(channelIndex);
       _channelMessages.remove(channelIndex);
-      await _loadChannelMessages(channelIndex, notify: false);
+      if (loadInactiveMessages || _activeChannelIndex == channelIndex) {
+        await _loadChannelMessages(channelIndex, notify: false);
+      }
     }
   }
 
