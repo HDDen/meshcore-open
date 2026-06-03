@@ -37,6 +37,7 @@ import '../services/notification_service.dart';
 import 'meshcore_connector_usb.dart';
 import 'meshcore_connector_tcp.dart';
 import '../storage/channel_message_store.dart';
+import '../storage/channel_identity_reconcile_helper.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
@@ -334,6 +335,8 @@ class MeshCoreConnector extends ChangeNotifier {
   BleDebugLogService? _bleDebugLogService;
   AppDebugLogService? _appDebugLogService;
   final ChannelMessageStore _channelMessageStore = ChannelMessageStore();
+  final ChannelIdentityReconcileHelper _channelIdentityReconcileHelper =
+      ChannelIdentityReconcileHelper();
   final MessageStore _messageStore = MessageStore();
   final ChannelOrderStore _channelOrderStore = ChannelOrderStore();
   final ChannelSettingsStore _channelSettingsStore = ChannelSettingsStore();
@@ -1205,6 +1208,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
+    _channelCyr2LatProfileId.clear();
     _channelSendingDelayEnabled.clear();
     _channelQuickAnswerIds.clear();
     _channelWidgetColor.clear();
@@ -4160,7 +4164,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Check if we've requested all channels
     if (_nextChannelIndexToRequest >= _totalChannelsToRequest) {
-      _completeChannelSync();
+      await _completeChannelSync();
       return;
     }
 
@@ -4229,19 +4233,39 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  void _completeChannelSync() {
+  Future<void> _completeChannelSync() async {
     _channelSyncTimeout?.cancel();
 
     debugPrint(
       '[ChannelSync] Sync complete: received ${_channels.length}/$_totalChannelsToRequest channels',
     );
 
-    _cleanupChannelSync(completed: true);
+    final reconciliation = await _channelIdentityReconcileHelper
+        .reconcileAfterSync(
+          publicKeyHex: selfPublicKeyHex,
+          previousChannelsCache: _previousChannelsCache,
+          currentChannels: _channels,
+          channelStore: _channelStore,
+          channelOrderStore: _channelOrderStore,
+        );
+    if (reconciliation != null) {
+      _channels
+        ..clear()
+        ..addAll(reconciliation.channels);
+      _channelOrder = reconciliation.channelOrder;
+      if (reconciliation.changed) {
+        await loadChannelSettings(maxChannels: _maxChannels);
+        _channelMessages.clear();
+        await loadAllChannelMessages(maxChannels: _maxChannels);
+      }
+    }
 
     // Cache channels for offline use
     _cachedChannels = List<Channel>.from(_channels);
-    unawaited(_channelStore.saveChannels(_channels));
+    await _channelStore.saveChannels(_channels);
     _recalculateCachedChannelsUnreadTotal();
+
+    _cleanupChannelSync(completed: true);
 
     // Apply ordering and notify UI
     _applyChannelOrder();
@@ -4257,10 +4281,14 @@ class MeshCoreConnector extends ChangeNotifier {
     _nextChannelIndexToRequest = 0;
     _totalChannelsToRequest = 0;
 
+    _channelIdentityReconcileHelper.resetSyncSession();
+
     if (completed) {
       _hasLoadedChannels = true;
       _previousChannelsCache.clear();
-    } else if (_channels.isEmpty && _previousChannelsCache.isNotEmpty) {
+    }
+
+    if (!completed && _channels.isEmpty && _previousChannelsCache.isNotEmpty) {
       // A failed initial sync should not leave the UI empty/spinning forever.
       // Restore the pre-sync list so cached channels remain usable.
       _channels.addAll(_previousChannelsCache);
@@ -4432,7 +4460,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _handleLogRxData(frame);
         break;
       case respCodeChannelInfo:
-        _handleChannelInfo(frame);
+        unawaited(_handleChannelInfo(frame));
         break;
       case respCodeAutoAddConfig:
         _handleAutoAddConfig(frame);
@@ -6020,7 +6048,7 @@ class MeshCoreConnector extends ChangeNotifier {
     return true;
   }
 
-  void _handleChannelInfo(Uint8List frame) {
+  Future<void> _handleChannelInfo(Uint8List frame) async {
     final channel = Channel.fromFrame(frame);
     if (channel == null) return;
 
@@ -6047,7 +6075,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
         // Only add non-empty channels
         if (!channel.isEmpty) {
-          _channels.add(channel);
+          await _reconcileSyncedChannel(channel, addWhenDisabled: true);
+        } else {
+          await _reconcileSyncedChannel(channel, addWhenDisabled: false);
         }
 
         // Move to next channel
@@ -6064,7 +6094,7 @@ class MeshCoreConnector extends ChangeNotifier {
         // Add it anyway but don't advance sync
         if (!channel.isEmpty &&
             !_channels.any((c) => c.index == channel.index)) {
-          _channels.add(channel);
+          await _reconcileSyncedChannel(channel, addWhenDisabled: true);
         }
         return;
       }
@@ -6089,6 +6119,34 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!_isLoadingChannels) {
       _applyChannelOrder();
       notifyListeners();
+    }
+  }
+
+  Future<void> _reconcileSyncedChannel(
+    Channel channel, {
+    required bool addWhenDisabled,
+  }) async {
+    final reconciliation = await _channelIdentityReconcileHelper
+        .reconcileChannelDuringSync(
+          publicKeyHex: selfPublicKeyHex,
+          previousChannelsCache: _previousChannelsCache,
+          currentChannels: _channels,
+          receivedChannel: channel,
+          channelStore: _channelStore,
+        );
+    if (reconciliation == null) {
+      if (addWhenDisabled) _channels.add(channel);
+      return;
+    }
+
+    _channels
+      ..clear()
+      ..addAll(reconciliation.channels);
+    _channelOrder = reconciliation.channelOrder;
+    if (reconciliation.changed) {
+      await loadChannelSettings(maxChannels: _maxChannels);
+      _channelMessages.clear();
+      await loadAllChannelMessages(maxChannels: _maxChannels);
     }
   }
 
