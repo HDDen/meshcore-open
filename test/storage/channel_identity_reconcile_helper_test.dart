@@ -161,6 +161,7 @@ void main() {
 
     expect(result, isNotNull);
     expect(result!.changed, isTrue);
+    expect(result.affectedIndexes, equals({0}));
     expect(result.channels.single.name, equals('New'));
     expect(result.channels.single.unreadCount, equals(0));
     expect(prefs.containsKey('channel_smaz_${scopedKey}0'), isFalse);
@@ -202,6 +203,7 @@ void main() {
     );
 
     expect(both, isNotNull);
+    expect(both!.affectedIndexes, equals({0, 1}));
     expect(prefs.getBool('channel_mcmp_${scopedKey}0'), isTrue);
     expect(prefs.getBool('channel_smaz_${scopedKey}1'), isTrue);
     expect(prefs.containsKey('channel_smaz_${scopedKey}0'), isFalse);

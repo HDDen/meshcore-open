@@ -1062,7 +1062,10 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   /// Load persisted channel messages for a specific channel
-  Future<void> _loadChannelMessages(int channelIndex) async {
+  Future<void> _loadChannelMessages(
+    int channelIndex, {
+    bool notify = true,
+  }) async {
     final allMessages = await _channelMessageStore.loadChannelMessages(
       channelIndex,
     );
@@ -1073,7 +1076,7 @@ class MeshCoreConnector extends ChangeNotifier {
           : allMessages;
 
       _channelMessages[channelIndex] = windowedMessages;
-      notifyListeners();
+      if (notify) notifyListeners();
     }
   }
 
@@ -1216,19 +1219,29 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelRegions.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
-      _channelMcmpEnabled[i] = await _channelSettingsStore.loadMcmpEnabled(i);
-      _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
-      _channelCyr2LatEnabled[i] = await _channelSettingsStore
-          .loadCyr2LatEnabled(i);
-      _channelSendingDelayEnabled[i] = await _channelSettingsStore
-          .loadSendingDelayEnabled(i);
-      _channelQuickAnswerIds[i] = await _channelSettingsStore
-          .loadQuickAnswerIds(i);
-      _channelWidgetColor[i] = await _channelSettingsStore.loadWidgetColor(i);
-      _channelWidgetTextColor[i] = await _channelSettingsStore
-          .loadWidgetTextColor(i);
-      _channelRegions[i] = await _channelRegionStore.loadRegion(i);
+      await _loadChannelSettingsForIndex(i);
     }
+  }
+
+  Future<void> _loadChannelSettingsForIndex(int channelIndex) async {
+    _channelCyr2LatProfileId.remove(channelIndex);
+    _channelMcmpEnabled[channelIndex] = await _channelSettingsStore
+        .loadMcmpEnabled(channelIndex);
+    _channelSmazEnabled[channelIndex] = await _channelSettingsStore
+        .loadSmazEnabled(channelIndex);
+    _channelCyr2LatEnabled[channelIndex] = await _channelSettingsStore
+        .loadCyr2LatEnabled(channelIndex);
+    _channelSendingDelayEnabled[channelIndex] = await _channelSettingsStore
+        .loadSendingDelayEnabled(channelIndex);
+    _channelQuickAnswerIds[channelIndex] = await _channelSettingsStore
+        .loadQuickAnswerIds(channelIndex);
+    _channelWidgetColor[channelIndex] = await _channelSettingsStore
+        .loadWidgetColor(channelIndex);
+    _channelWidgetTextColor[channelIndex] = await _channelSettingsStore
+        .loadWidgetTextColor(channelIndex);
+    _channelRegions[channelIndex] = await _channelRegionStore.loadRegion(
+      channelIndex,
+    );
   }
 
   /// After an incoming DM or channel message, wait before TX so we do not
@@ -4254,9 +4267,7 @@ class MeshCoreConnector extends ChangeNotifier {
         ..addAll(reconciliation.channels);
       _channelOrder = reconciliation.channelOrder;
       if (reconciliation.changed) {
-        await loadChannelSettings(maxChannels: _maxChannels);
-        _channelMessages.clear();
-        await loadAllChannelMessages(maxChannels: _maxChannels);
+        await _reloadReconciledChannelData(reconciliation.affectedIndexes);
       }
     }
 
@@ -6144,9 +6155,16 @@ class MeshCoreConnector extends ChangeNotifier {
       ..addAll(reconciliation.channels);
     _channelOrder = reconciliation.channelOrder;
     if (reconciliation.changed) {
-      await loadChannelSettings(maxChannels: _maxChannels);
-      _channelMessages.clear();
-      await loadAllChannelMessages(maxChannels: _maxChannels);
+      await _reloadReconciledChannelData(reconciliation.affectedIndexes);
+    }
+  }
+
+  Future<void> _reloadReconciledChannelData(Set<int> channelIndexes) async {
+    for (final channelIndex in channelIndexes) {
+      if (channelIndex < 0 || channelIndex >= _maxChannels) continue;
+      await _loadChannelSettingsForIndex(channelIndex);
+      _channelMessages.remove(channelIndex);
+      await _loadChannelMessages(channelIndex, notify: false);
     }
   }
 

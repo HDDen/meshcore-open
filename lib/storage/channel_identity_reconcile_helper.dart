@@ -97,6 +97,7 @@ class ChannelIdentityReconcileHelper {
           channels: List<Channel>.from(currentChannels),
           channelOrder: channelOrder,
           changed: false,
+          affectedIndexes: const {},
         );
       }
 
@@ -140,6 +141,7 @@ class ChannelIdentityReconcileHelper {
         channels: List<Channel>.from(currentChannels),
         channelOrder: const [],
         changed: false,
+        affectedIndexes: const {},
       );
     }
 
@@ -231,6 +233,7 @@ class ChannelIdentityReconcileHelper {
     final remappedIndexesChanged = session.oldToNewIndex.entries.any(
       (entry) => entry.key != entry.value,
     );
+    final affectedIndexes = _affectedIndexes(session, finalized);
     final changed =
         remapChanged ||
         orderChanged ||
@@ -267,7 +270,24 @@ class ChannelIdentityReconcileHelper {
       channels: channels,
       channelOrder: _remapChannelOrderValues(session, finalized),
       changed: changed,
+      affectedIndexes: affectedIndexes,
     );
+  }
+
+  Set<int> _affectedIndexes(
+    _ChannelIdentitySyncSession session,
+    bool finalized,
+  ) {
+    if (finalized) {
+      return {
+        ...session.allIndexedIndexes,
+        ...session.previousChannels.map((channel) => channel.index),
+        ...session.oldToNewIndex.values,
+        ...session.unmatchedNewIndexes,
+      };
+    }
+
+    return {...session.oldToNewIndex.values, ...session.unmatchedNewIndexes};
   }
 
   Channel? _findPreviousMatch(List<Channel> previous, Channel current) {
@@ -622,11 +642,13 @@ class ChannelIdentityReconcileResult {
   final List<Channel> channels;
   final List<int> channelOrder;
   final bool changed;
+  final Set<int> affectedIndexes;
 
   const ChannelIdentityReconcileResult({
     required this.channels,
     required this.channelOrder,
     required this.changed,
+    required this.affectedIndexes,
   });
 }
 
