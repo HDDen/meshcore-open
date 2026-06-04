@@ -38,7 +38,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "de": [
@@ -67,7 +71,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "es": [
@@ -109,7 +117,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "fr": [
@@ -151,7 +163,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "hu": [
@@ -193,7 +209,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "it": [
@@ -315,7 +335,11 @@
     "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "ja": [
@@ -357,7 +381,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "ko": [
@@ -399,7 +427,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "nl": [
@@ -521,7 +553,11 @@
     "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "pl": [
@@ -563,7 +599,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "pt": [
@@ -685,7 +725,11 @@
     "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "sk": [
@@ -727,7 +771,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "sl": [
@@ -769,7 +817,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "sv": [
@@ -891,7 +943,11 @@
     "channelPath_repeaterHopsHighTimeout",
     "channelPath_outgoingSentByRadioAt",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "uk": [
@@ -933,7 +989,11 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ],
 
   "zh": [
@@ -975,6 +1035,10 @@
     "map_wardriveDeleteBlock",
     "channelPath_repeaterHopsHighTimeout",
     "listFilter_removeFromWardrive",
-    "listFilter_returnToWardrive"
+    "listFilter_returnToWardrive",
+    "channels_copyPath",
+    "channels_copyPathExtended",
+    "channels_copiedPath",
+    "channels_copyPathFailed"
   ]
 }

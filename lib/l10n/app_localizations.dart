@@ -8446,6 +8446,30 @@ abstract class AppLocalizations {
   /// **'Using mesh-compressor model'**
   String get channels_mcmpCompressionDescription;
 
+  /// No description provided for @channels_copyPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy message path'**
+  String get channels_copyPath;
+
+  /// No description provided for @channels_copyPathExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy message path (extended)'**
+  String get channels_copyPathExtended;
+
+  /// No description provided for @channels_copiedPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Message path copied'**
+  String get channels_copiedPath;
+
+  /// No description provided for @channels_copyPathFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying message path failed'**
+  String get channels_copyPathFailed;
+
   /// No description provided for @contact_typeChat.
   ///
   /// In en, this message translates to:

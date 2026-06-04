@@ -2022,5 +2022,9 @@
   "channels_regionSetTo": "Регион: {region}",
   "channels_regionNotSet": "Регион: отсутствует",
   "channels_regionSelect_Title": "Назначить регион",
-  "channels_clearRegion": "Очистить региональность"
+  "channels_clearRegion": "Очистить региональность",
+  "channels_copyPath": "Скопировать путь сообщения",
+  "channels_copyPathExtended": "Скопировать путь сообщения (расширенно)",
+  "channels_copiedPath": "Путь сообщения скопирован",
+  "channels_copyPathFailed": "Не удалось скопировать путь сообщения"
 }

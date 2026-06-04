@@ -4976,6 +4976,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verwendet das mesh-compressor-Modell';
 
   @override
+  String get channels_copyPath => 'Copy message path';
+
+  @override
+  String get channels_copyPathExtended => 'Copy message path (extended)';
+
+  @override
+  String get channels_copiedPath => 'Message path copied';
+
+  @override
+  String get channels_copyPathFailed => 'Copying message path failed';
+
+  @override
   String get contact_typeChat => 'Chat';
 
   @override

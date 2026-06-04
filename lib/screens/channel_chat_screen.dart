@@ -1899,6 +1899,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 },
               ),
             ListTile(
+              leading: const Icon(Icons.route_outlined),
+              title: Text(context.l10n.channels_copyPath),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                unawaited(_copyMessagePath(message));
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.delete_outline),
               title: Text(context.l10n.common_delete),
               onTap: () async {
@@ -1949,6 +1957,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       context,
       content: Text(context.l10n.chat_messageCopied),
     );
+  }
+
+  Future<void> _copyMessagePath(ChannelMessage message) async {
+    try {
+      final pathText = _messagePathText(message);
+      await Clipboard.setData(ClipboardData(text: pathText));
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_copiedPath),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      final colorScheme = Theme.of(context).colorScheme;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_copyPathFailed),
+        backgroundColor: colorScheme.errorContainer,
+      );
+    }
   }
 
   Future<void> _deleteMessage(ChannelMessage message) async {
@@ -2026,6 +2054,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       pathBytes,
       pathHashByteWidth,
     ).map(PathHelper.formatHopHex).join(',');
+  }
+
+  String _messagePathText(ChannelMessage message) {
+    final pathBytes = message.pathBytes.isNotEmpty
+        ? message.pathBytes
+        : (message.pathVariants.isNotEmpty
+              ? message.pathVariants.first
+              : Uint8List(0));
+    if (pathBytes.isEmpty) return 'Direct';
+    final pathHashWidth =
+        message.pathHashWidth ??
+        context.read<MeshCoreConnector>().pathHashByteWidth;
+    return PathHelper.splitPathBytes(
+      pathBytes,
+      pathHashWidth,
+    ).map(PathHelper.formatHopHex).join(', ');
   }
 
   Future<void> openRegionSelectDialog(Channel channel) async {

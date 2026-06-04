@@ -361,7 +361,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionSettingsSubtitle =>
-      'Управление сохранёнными регионами';
+      'Управление хранилищем регионов';
 
   @override
   String get settings_regionManagement_screenTitle => 'Управление регионами';
@@ -373,7 +373,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_regionAddRegion => 'Добавить регион';
 
   @override
-  String get settings_regionFetchRegions => 'Запросить регионы из репитеров';
+  String get settings_regionFetchRegions => 'Запросить регионы у репитеров';
 
   @override
   String get settings_regionFetchRegionsFail => 'Регионы не обнаружены';
@@ -1464,7 +1464,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_regionNotSet => 'Регион: отсутствует';
 
   @override
-  String get channels_regionSelect_Title => 'Выбрать регион';
+  String get channels_regionSelect_Title => 'Назначить регион';
 
   @override
   String get channels_clearRegion => 'Очистить региональность';
@@ -4972,6 +4972,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get channels_mcmpCompressionDescription =>
       'Используется метод и модель mesh-compressor';
+
+  @override
+  String get channels_copyPath => 'Скопировать путь сообщения';
+
+  @override
+  String get channels_copyPathExtended =>
+      'Скопировать путь сообщения (расширенно)';
+
+  @override
+  String get channels_copiedPath => 'Путь сообщения скопирован';
+
+  @override
+  String get channels_copyPathFailed => 'Не удалось скопировать путь сообщения';
 
   @override
   String get contact_typeChat => 'Чат';

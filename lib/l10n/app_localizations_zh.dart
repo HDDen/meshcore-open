@@ -4582,6 +4582,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_mcmpCompressionDescription => '使用 mesh-compressor 模型';
 
   @override
+  String get channels_copyPath => 'Copy message path';
+
+  @override
+  String get channels_copyPathExtended => 'Copy message path (extended)';
+
+  @override
+  String get channels_copiedPath => 'Message path copied';
+
+  @override
+  String get channels_copyPathFailed => 'Copying message path failed';
+
+  @override
   String get contact_typeChat => 'Chat';
 
   @override
