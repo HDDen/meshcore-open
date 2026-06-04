@@ -2008,11 +2008,11 @@
   "map_wardriveFollowMe": "Следовать за мной",
   "map_wardriveDeleteBlock": "Удалить блок",
   "settings_regionSettings": "Регионы",
-  "settings_regionSettingsSubtitle": "Управление сохранёнными регионами",
+  "settings_regionSettingsSubtitle": "Управление хранилищем регионов",
   "settings_regionManagement_screenTitle": "Управление регионами",
   "settings_regionNameHint": "Введите имя региона",
   "settings_regionAddRegion": "Добавить регион",
-  "settings_regionFetchRegions": "Запросить регионы из репитеров",
+  "settings_regionFetchRegions": "Запросить регионы у репитеров",
   "settings_regionFetchRegionsFail": "Регионы не обнаружены",
   "settings_regionFetchRegionsAlreadyExists": "Этот регион уже добавлен",
   "settings_regionName": "Имя региона",
@@ -2021,6 +2021,6 @@
   "settings_deleteRegionConfirm": "Удалить \"{region}\" из списка регионов?",
   "channels_regionSetTo": "Регион: {region}",
   "channels_regionNotSet": "Регион: отсутствует",
-  "channels_regionSelect_Title": "Выбрать регион",
+  "channels_regionSelect_Title": "Назначить регион",
   "channels_clearRegion": "Очистить региональность"
 }
