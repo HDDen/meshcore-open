@@ -27,6 +27,7 @@ import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
+import '../models/contact.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
@@ -1907,6 +1908,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.account_tree_outlined),
+              title: Text(context.l10n.channels_copyPathExtended),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                unawaited(_copyMessagePath(message, extended: true));
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.delete_outline),
               title: Text(context.l10n.common_delete),
               onTap: () async {
@@ -1959,9 +1968,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Future<void> _copyMessagePath(ChannelMessage message) async {
+  Future<void> _copyMessagePath(
+    ChannelMessage message, {
+    bool extended = false,
+  }) async {
     try {
-      final pathText = _messagePathText(message);
+      final pathText = _messagePathText(message, extended: extended);
       await Clipboard.setData(ClipboardData(text: pathText));
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -2056,7 +2068,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ).map(PathHelper.formatHopHex).join(',');
   }
 
-  String _messagePathText(ChannelMessage message) {
+  String _messagePathText(ChannelMessage message, {bool extended = false}) {
     final pathBytes = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty
@@ -2066,10 +2078,57 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final pathHashWidth =
         message.pathHashWidth ??
         context.read<MeshCoreConnector>().pathHashByteWidth;
-    return PathHelper.splitPathBytes(
-      pathBytes,
-      pathHashWidth,
-    ).map(PathHelper.formatHopHex).join(', ');
+    final hops = PathHelper.splitPathBytes(pathBytes, pathHashWidth);
+    if (!extended) {
+      return hops.map(PathHelper.formatHopHex).join(', ');
+    }
+    return _extendedMessagePathText(hops, pathHashWidth);
+  }
+
+  String _extendedMessagePathText(List<Uint8List> hops, int pathHashWidth) {
+    final connector = context.read<MeshCoreConnector>();
+    final contactsByPrefix = <String, List<Contact>>{};
+    final width = pathHashWidth.clamp(1, 4).toInt();
+
+    for (final contact in connector.allContacts) {
+      if (contact.publicKey.isEmpty) continue;
+      if (contact.type != advTypeRepeater && contact.type != advTypeRoom) {
+        continue;
+      }
+      final keyBytes = contact.publicKey.sublist(
+        0,
+        math.min(width, contact.publicKey.length),
+      );
+      final key = PathHelper.formatHopHex(keyBytes);
+      contactsByPrefix.putIfAbsent(key, () => []).add(contact);
+    }
+
+    for (final contacts in contactsByPrefix.values) {
+      contacts.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
+    }
+    final collidedPrefixes = contactsByPrefix.entries
+        .where((entry) => entry.value.length > 1)
+        .map((entry) => entry.key)
+        .toSet();
+
+    return hops
+        .map((hop) {
+          final prefix = PathHelper.formatHopHex(hop);
+          final candidates = contactsByPrefix[prefix];
+          final contact = candidates == null || candidates.isEmpty
+              ? null
+              : candidates.removeAt(0);
+          final contactName = contact?.name.trim() ?? '';
+          final name =
+              contactName.isEmpty || contactName.toLowerCase() == 'unknown'
+              ? '-'
+              : contactName;
+          final prefixLabel = collidedPrefixes.contains(prefix)
+              ? '!$prefix'
+              : prefix;
+          return '$prefixLabel: $name';
+        })
+        .join('\n');
   }
 
   Future<void> openRegionSelectDialog(Channel channel) async {
