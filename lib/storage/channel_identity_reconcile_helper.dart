@@ -494,16 +494,20 @@ class ChannelIdentityReconcileHelper {
     final raw = session.originalChannelOrder;
     if (raw == null || raw.isEmpty) return false;
 
+    final key = _channelOrderKey(session.scopedKey);
+    final currentRaw = prefs.getString(key);
+    if (currentRaw != raw) {
+      // User changed manual order while sync was still running; keep that
+      // fresher state instead of rewriting it from the stale sync snapshot.
+      return false;
+    }
+
     final remapped = _remapChannelOrderValues(session, finalized);
-    final currentRaw = prefs.getString(_channelOrderKey(session.scopedKey));
     if (_prefValueEquals(_parseIndexList(currentRaw ?? ''), remapped)) {
       return false;
     }
 
-    await prefs.setString(
-      _channelOrderKey(session.scopedKey),
-      jsonEncode(remapped),
-    );
+    await prefs.setString(key, jsonEncode(remapped));
     return true;
   }
 
@@ -529,6 +533,13 @@ class ChannelIdentityReconcileHelper {
     if (raw == null || raw.isEmpty) return false;
 
     try {
+      final key = _channelGroupsKey(session.scopedKey);
+      if (prefs.getString(key) != raw) {
+        // Group membership was edited while sync was still running. Do not
+        // restore older slot-based membership from the sync snapshot.
+        return false;
+      }
+
       final decoded = jsonDecode(raw);
       if (decoded is! List) return false;
       final remappedGroups = <dynamic>[];
@@ -546,10 +557,10 @@ class ChannelIdentityReconcileHelper {
       }
 
       final encoded = jsonEncode(remappedGroups);
-      if (prefs.getString(_channelGroupsKey(session.scopedKey)) == encoded) {
+      if (prefs.getString(key) == encoded) {
         return false;
       }
-      await prefs.setString(_channelGroupsKey(session.scopedKey), encoded);
+      await prefs.setString(key, encoded);
       return true;
     } catch (_) {
       // Bad group JSON should not block channel sync.
@@ -590,9 +601,6 @@ class ChannelIdentityReconcileHelper {
         continue;
       }
       if (finalized || session.unmatchedNewIndexes.contains(index)) {
-        if (session.sanitizedUnmatchedNewIndexes.contains(index)) {
-          if (seen.add(index)) remapped.add(index);
-        }
         continue;
       }
       if (seen.add(index)) remapped.add(index);

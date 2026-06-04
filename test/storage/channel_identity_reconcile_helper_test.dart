@@ -240,6 +240,57 @@ void main() {
     },
   );
 
+  test('removes stale group membership for reused channel slots', () async {
+    final prefs = PrefsManager.instance;
+    await prefs.setString('channel_order_$scopedKey', jsonEncode([0]));
+    await prefs.setString(
+      'channel_groups$scopedKey',
+      jsonEncode([
+        {
+          'name': 'Old group',
+          'channels': [0],
+        },
+      ]),
+    );
+
+    final store = ChannelStore()..setPublicKeyHex = publicKeyHex;
+    final orderStore = ChannelOrderStore()..setPublicKeyHex = publicKeyHex;
+    await store.saveChannels([
+      Channel.fromHex(0, 'Deleted', '0000000000000000000000000000000f'),
+    ]);
+
+    final helper = ChannelIdentityReconcileHelper();
+    final received = Channel.fromHex(
+      0,
+      'New',
+      '00000000000000000000000000000010',
+    );
+    await helper.reconcileChannelDuringSync(
+      publicKeyHex: publicKeyHex,
+      previousChannelsCache: const [],
+      currentChannels: const [],
+      receivedChannel: received,
+      channelStore: store,
+    );
+
+    await helper.reconcileAfterSync(
+      publicKeyHex: publicKeyHex,
+      previousChannelsCache: const [],
+      currentChannels: [received],
+      channelStore: store,
+      channelOrderStore: orderStore,
+    );
+
+    expect(
+      jsonDecode(prefs.getString('channel_order_$scopedKey')!),
+      equals([]),
+    );
+    final groups =
+        jsonDecode(prefs.getString('channel_groups$scopedKey')!)
+            as List<dynamic>;
+    expect(groups.single['channels'], equals([]));
+  });
+
   test('uses sync snapshot when channels swap indexes incrementally', () async {
     final prefs = PrefsManager.instance;
     await prefs.setBool('channel_smaz_${scopedKey}0', true);
