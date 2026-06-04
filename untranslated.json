@@ -688,25 +688,6 @@
     "listFilter_returnToWardrive"
   ],
 
-  "ru": [
-    "settings_regionSettings",
-    "settings_regionSettingsSubtitle",
-    "settings_regionManagement_screenTitle",
-    "settings_regionNameHint",
-    "settings_regionAddRegion",
-    "settings_regionFetchRegions",
-    "settings_regionFetchRegionsFail",
-    "settings_regionFetchRegionsAlreadyExists",
-    "settings_regionName",
-    "settings_regionDeleted",
-    "settings_deleteRegion",
-    "settings_deleteRegionConfirm",
-    "channels_regionSetTo",
-    "channels_regionNotSet",
-    "channels_regionSelect_Title",
-    "channels_clearRegion"
-  ],
-
   "sk": [
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
