@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/storage/channel_identity_reconcile_helper.dart';
+import 'package:meshcore_open/storage/channel_order_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -166,6 +167,78 @@ void main() {
     expect(result.channels.single.unreadCount, equals(0));
     expect(prefs.containsKey('channel_smaz_${scopedKey}0'), isFalse);
   });
+
+  test(
+    'keeps data written to a new channel before full sync finalizes',
+    () async {
+      final prefs = PrefsManager.instance;
+      await prefs.setBool('channel_smaz_${scopedKey}0', true);
+
+      final store = ChannelStore()..setPublicKeyHex = publicKeyHex;
+      final orderStore = ChannelOrderStore()..setPublicKeyHex = publicKeyHex;
+      await store.saveChannels([
+        Channel.fromHex(0, 'Deleted', '0000000000000000000000000000000d'),
+      ]);
+
+      final helper = ChannelIdentityReconcileHelper();
+      final received = Channel.fromHex(
+        0,
+        'New',
+        '0000000000000000000000000000000e',
+      );
+      final duringSync = await helper.reconcileChannelDuringSync(
+        publicKeyHex: publicKeyHex,
+        previousChannelsCache: const [],
+        currentChannels: const [],
+        receivedChannel: received,
+        channelStore: store,
+      );
+
+      expect(duringSync, isNotNull);
+      expect(prefs.containsKey('channel_smaz_${scopedKey}0'), isFalse);
+
+      await prefs.setString('channel_region_${scopedKey}0', 'EU');
+      await prefs.setString(
+        'channel_messages_${scopedKey}0',
+        jsonEncode([
+          {'channelIndex': 0, 'text': 'fresh'},
+        ]),
+      );
+      await prefs.setString('channel_order_$scopedKey', jsonEncode([0]));
+      await prefs.setString(
+        'channel_groups$scopedKey',
+        jsonEncode([
+          {
+            'name': 'Fresh group',
+            'channels': [0],
+          },
+        ]),
+      );
+
+      final finalized = await helper.reconcileAfterSync(
+        publicKeyHex: publicKeyHex,
+        previousChannelsCache: const [],
+        currentChannels: [received],
+        channelStore: store,
+        channelOrderStore: orderStore,
+      );
+
+      expect(finalized, isNotNull);
+      expect(prefs.getString('channel_region_${scopedKey}0'), equals('EU'));
+      final messages =
+          jsonDecode(prefs.getString('channel_messages_${scopedKey}0')!)
+              as List<dynamic>;
+      expect(messages.single['text'], equals('fresh'));
+      expect(
+        jsonDecode(prefs.getString('channel_order_$scopedKey')!),
+        equals([0]),
+      );
+      final groups =
+          jsonDecode(prefs.getString('channel_groups$scopedKey')!)
+              as List<dynamic>;
+      expect(groups.single['channels'], equals([0]));
+    },
+  );
 
   test('uses sync snapshot when channels swap indexes incrementally', () async {
     final prefs = PrefsManager.instance;

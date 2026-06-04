@@ -72,13 +72,17 @@ class ChannelIdentityReconcileHelper {
         }
       }
 
-      return await _applySession(
+      final result = await _applySession(
         session,
         currentChannels: projectedChannels,
         finalized: false,
         remapIndexes: deltaOldToNewIndex,
         unmatchedIndexes: deltaUnmatchedNewIndexes,
       );
+      if (!receivedChannel.isEmpty) {
+        session.sanitizedUnmatchedNewIndexes.addAll(deltaUnmatchedNewIndexes);
+      }
+      return result;
     } catch (error, stackTrace) {
       appLogger.error(
         'Failed to reconcile received channel: $error\n$stackTrace',
@@ -419,6 +423,16 @@ class ChannelIdentityReconcileHelper {
       }
     }
 
+    if (finalized) {
+      for (final index in session.sanitizedUnmatchedNewIndexes) {
+        for (final key in _indexedKeysForIndex(session.scopedKey, index)) {
+          if (PrefsManager.instance.containsKey(key)) {
+            targetKeys.add(key);
+          }
+        }
+      }
+    }
+
     final impactedIndexes = finalized
         ? <int>{
             ...session.allIndexedIndexes,
@@ -576,6 +590,9 @@ class ChannelIdentityReconcileHelper {
         continue;
       }
       if (finalized || session.unmatchedNewIndexes.contains(index)) {
+        if (session.sanitizedUnmatchedNewIndexes.contains(index)) {
+          if (seen.add(index)) remapped.add(index);
+        }
         continue;
       }
       if (seen.add(index)) remapped.add(index);
@@ -709,6 +726,7 @@ class _ChannelIdentitySyncSession {
   final String? originalChannelGroups;
   final Map<int, int> oldToNewIndex = {};
   final Set<int> unmatchedNewIndexes = {};
+  final Set<int> sanitizedUnmatchedNewIndexes = {};
 
   _ChannelIdentitySyncSession({
     required this.scopedKey,

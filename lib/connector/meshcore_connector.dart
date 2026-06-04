@@ -317,6 +317,8 @@ class MeshCoreConnector extends ChangeNotifier {
   // Channel syncing state (sequential pattern)
   bool _isSyncingChannels = false;
   bool _channelSyncInFlight = false;
+  bool _pendingChannelSyncRestart = false;
+  int? _pendingChannelSyncRestartMaxChannels;
   Timer? _channelSyncTimeout;
   int _channelSyncRetries = 0;
   int _nextChannelIndexToRequest = 0;
@@ -4137,7 +4139,19 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> getChannels({int? maxChannels, bool force = false}) async {
     if (!isConnected) return;
     if (_isSyncingChannels) {
-      debugPrint('[ChannelSync] Already syncing channels, ignoring request');
+      if (force) {
+        debugPrint(
+          '[ChannelSync] Sync already active, scheduling forced restart',
+        );
+        _pendingChannelSyncRestart = true;
+        _pendingChannelSyncRestartMaxChannels =
+            maxChannels ?? _pendingChannelSyncRestartMaxChannels;
+        if (!_channelSyncInFlight) {
+          unawaited(_restartPendingChannelSync());
+        }
+      } else {
+        debugPrint('[ChannelSync] Already syncing channels, ignoring request');
+      }
       return;
     }
 
@@ -4174,6 +4188,11 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     if (_channelSyncInFlight) return;
+
+    if (_pendingChannelSyncRestart) {
+      await _restartPendingChannelSync();
+      return;
+    }
 
     // Check if we've requested all channels
     if (_nextChannelIndexToRequest >= _totalChannelsToRequest) {
@@ -4249,6 +4268,11 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _completeChannelSync() async {
     _channelSyncTimeout?.cancel();
 
+    if (_pendingChannelSyncRestart) {
+      await _restartPendingChannelSync();
+      return;
+    }
+
     debugPrint(
       '[ChannelSync] Sync complete: received ${_channels.length}/$_totalChannelsToRequest channels',
     );
@@ -4315,6 +4339,34 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!completed) {
       notifyListeners();
     }
+  }
+
+  Future<void> _restartPendingChannelSync() async {
+    if (!_pendingChannelSyncRestart || _channelSyncInFlight) return;
+    final maxChannels = _pendingChannelSyncRestartMaxChannels;
+    _pendingChannelSyncRestart = false;
+    _pendingChannelSyncRestartMaxChannels = null;
+
+    debugPrint('[ChannelSync] Restarting forced channel sync');
+
+    _channelSyncTimeout?.cancel();
+    _isSyncingChannels = false;
+    _channelSyncInFlight = false;
+    _isLoadingChannels = false;
+    _channelSyncRetries = 0;
+    _nextChannelIndexToRequest = 0;
+    _totalChannelsToRequest = 0;
+    _channelIdentityReconcileHelper.resetSyncSession();
+
+    if (_previousChannelsCache.isNotEmpty) {
+      _channels
+        ..clear()
+        ..addAll(_previousChannelsCache);
+      _applyChannelOrder();
+      _recalculateCachedChannelsUnreadTotal();
+    }
+
+    await getChannels(maxChannels: maxChannels, force: true);
   }
 
   void _startPostChannelInitialQueuedMessageSync() {
