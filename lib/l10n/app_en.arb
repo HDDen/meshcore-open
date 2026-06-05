@@ -2837,7 +2837,7 @@
   "settings_copyMsgPathEditTemplateTitle": "Edit template",
   "settings_copyMsgPathEditTemplateDscr": "Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n\\n - line break",
   "settings_copyMsgPathEditFinalTitle": "Final message",
-  "settings_copyMsgPathEditFinalDscr": "Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\\n - line break",
+  "settings_copyMsgPathEditFinalDscr": "Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n\\n - line break",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",

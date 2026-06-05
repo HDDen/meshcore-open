@@ -2033,5 +2033,5 @@
   "settings_copyMsgPathEditTemplateTitle": "Редактирование шаблона",
   "settings_copyMsgPathEditTemplateDscr": "Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n\\n - перенос строки",
   "settings_copyMsgPathEditFinalTitle": "Итоговое сообщение",
-  "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\\n - перенос строки"
+  "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n\\n - перенос строки"
 }
