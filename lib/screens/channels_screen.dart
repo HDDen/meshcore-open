@@ -581,11 +581,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final color = textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Text(
       label,
-      style: TextStyle(
-        color: color,
-        fontSize: 11,
-        letterSpacing: 0,
-      ),
+      style: TextStyle(color: color, fontSize: 11, letterSpacing: 0),
     );
   }
 

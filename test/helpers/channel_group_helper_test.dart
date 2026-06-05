@@ -45,11 +45,7 @@ void main() {
       final entries = buildManualChannelEntries(
         [channel(1, 'Alpha'), channel(2, 'Public')],
         const [
-          ChannelGroup(
-            name: 'Group',
-            channelNames: ['Alpha'],
-            sortOrder: 1,
-          ),
+          ChannelGroup(name: 'Group', channelNames: ['Alpha'], sortOrder: 1),
         ],
       );
 
