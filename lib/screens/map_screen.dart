@@ -894,6 +894,7 @@ class _MapScreenState extends State<MapScreen>
                     autoUploadEnabled:
                         _wardriveUploadService.isAutoUploadEnabledSync,
                     screenWakelockEnabled: wardrive.screenWakelockEnabled,
+                    inBackgroundEnabled: wardrive.runInBackgroundEnabled,
                     followMeEnabled: wardrive.followMeEnabled,
                     repeaterNames: _wardriveUploadRepeaterNames(),
                     onToggleCollapsed: () {
@@ -1067,6 +1068,9 @@ class _MapScreenState extends State<MapScreen>
       case WardriveDataAction.screenWakelock:
         await _toggleWardriveScreenWakelock(wardrive);
         break;
+      case WardriveDataAction.inBackground:
+        await _toggleWardriveInBackground(wardrive);
+        break;
       case WardriveDataAction.followMe:
         await _toggleWardriveFollowMe(wardrive);
         break;
@@ -1106,6 +1110,21 @@ class _MapScreenState extends State<MapScreen>
   Future<void> _toggleWardriveScreenWakelock(WardriveService wardrive) async {
     await wardrive.setScreenWakelockEnabled(!wardrive.screenWakelockEnabled);
     _syncWardriveScreenWakelock();
+  }
+
+  Future<void> _toggleWardriveInBackground(WardriveService wardrive) async {
+    try {
+      await wardrive.setRunInBackgroundEnabled(
+        !wardrive.runInBackgroundEnabled,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Colors.red,
+      );
+    }
   }
 
   Future<void> _toggleWardriveFollowMe(WardriveService wardrive) async {

@@ -7,6 +7,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../l10n/l10n.dart';
 import '../services/wardrive_service.dart';
+import '../utils/platform_info.dart';
 
 enum WardriveDataAction {
   start,
@@ -15,6 +16,7 @@ enum WardriveDataAction {
   uploadSites,
   autoUpload,
   screenWakelock,
+  inBackground,
   followMe,
   coverageResolution,
   exportSamples,
@@ -27,6 +29,7 @@ class WardriveStatusPanel extends StatelessWidget {
   final bool collapsed;
   final bool autoUploadEnabled;
   final bool screenWakelockEnabled;
+  final bool inBackgroundEnabled;
   final bool followMeEnabled;
   final Map<String, String> repeaterNames;
   final Key? panelKey;
@@ -42,6 +45,7 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.collapsed,
     required this.autoUploadEnabled,
     required this.screenWakelockEnabled,
+    required this.inBackgroundEnabled,
     required this.followMeEnabled,
     required this.repeaterNames,
     this.panelKey,
@@ -307,6 +311,17 @@ class WardriveStatusPanel extends StatelessWidget {
               ],
             ),
           ),
+          if (PlatformInfo.isAndroid)
+            PopupMenuItem(
+              value: WardriveDataAction.inBackground,
+              child: Row(
+                children: [
+                  _buildMenuCheckbox(inBackgroundEnabled),
+                  const SizedBox(width: 4),
+                  Text(context.l10n.map_wardriveInBackground),
+                ],
+              ),
+            ),
           PopupMenuItem(
             value: WardriveDataAction.followMe,
             child: Row(

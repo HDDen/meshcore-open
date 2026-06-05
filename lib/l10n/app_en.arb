@@ -1283,6 +1283,7 @@
   "map_wardriveDiscoveryWait": "Please wait {seconds} seconds before retrying discovery",
   "map_wardriveFollowMe": "Follow my location",
   "map_wardriveDeleteBlock": "Delete block",
+  "map_wardriveInBackground": "Run in background",
   "mapCache_title": "Offline Map Cache",
   "mapCache_selectAreaFirst": "Select an area to cache first",
   "mapCache_noTilesToDownload": "No tiles to download for this area",

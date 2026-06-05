@@ -2008,6 +2008,7 @@
   "map_wardriveDiscoveryWait": "Подождите {seconds} секунд перед повтором",
   "map_wardriveFollowMe": "Следовать за мной",
   "map_wardriveDeleteBlock": "Удалить блок",
+  "map_wardriveInBackground": "Работать в фоне",
   "settings_regionSettings": "Регионы",
   "settings_regionSettingsSubtitle": "Управление хранилищем регионов",
   "settings_regionManagement_screenTitle": "Управление регионами",

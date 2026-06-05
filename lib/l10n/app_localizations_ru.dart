@@ -2360,6 +2360,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveDeleteBlock => 'Удалить блок';
 
   @override
+  String get map_wardriveInBackground => 'Работать в фоне';
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

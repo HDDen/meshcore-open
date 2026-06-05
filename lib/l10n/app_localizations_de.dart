@@ -2360,6 +2360,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get map_wardriveDeleteBlock => 'Delete block';
 
   @override
+  String get map_wardriveInBackground => 'Run in background';
+
+  @override
   String get mapCache_title => 'Offline-Karten-Cache';
 
   @override

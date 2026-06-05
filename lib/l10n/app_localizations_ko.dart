@@ -2255,6 +2255,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_wardriveDeleteBlock => 'Delete block';
 
   @override
+  String get map_wardriveInBackground => 'Run in background';
+
+  @override
   String get mapCache_title => '오프라인 지도 캐시';
 
   @override

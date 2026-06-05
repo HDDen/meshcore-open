@@ -4204,6 +4204,12 @@ abstract class AppLocalizations {
   /// **'Delete block'**
   String get map_wardriveDeleteBlock;
 
+  /// No description provided for @map_wardriveInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Run in background'**
+  String get map_wardriveInBackground;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

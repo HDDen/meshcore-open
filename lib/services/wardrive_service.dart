@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../storage/prefs_manager.dart';
+import '../utils/platform_info.dart';
 import 'background_service.dart';
 import 'wardrive_ignore_store.dart';
+import 'wardrive_foreground_service.dart';
 import 'wardrive_sample_store.dart';
 import 'wardrive_upload_service.dart';
 
@@ -38,9 +41,10 @@ class WardriveDiscoveryResult {
   }
 }
 
-class WardriveService extends ChangeNotifier {
+class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   WardriveService(this._connector, {BackgroundService? backgroundService})
     : _backgroundService = backgroundService {
+    WidgetsBinding.instance.addObserver(this);
     _loadSavedSettings();
     _loadSavedSamples();
   }
@@ -50,6 +54,8 @@ class WardriveService extends ChangeNotifier {
   final Random _random = Random();
   final WardriveSampleStore _sampleStore = WardriveSampleStore();
   final WardriveIgnoreStore _ignoreStore = WardriveIgnoreStore();
+  final WardriveForegroundService _foregroundService =
+      WardriveForegroundService();
   final Map<int, _WardriveDiscoveryRequest> _pendingDiscoveryRequests = {};
   final Map<int, int> _discoveryResponsesByTag = {};
   final Map<int, Timer> _discoveryFailureTimers = {};
@@ -67,6 +73,8 @@ class WardriveService extends ChangeNotifier {
       'wardrive_auto_discovery_interval_seconds_v1';
   static const String _screenWakelockEnabledKey =
       'wardrive_screen_wakelock_enabled_v1';
+  static const String _runInBackgroundEnabledKey =
+      'wardrive_run_in_background_enabled_v1';
   static const String _followMeEnabledKey = 'wardrive_follow_me_enabled_v1';
   static const String _coveragePrecisionKey = 'wardrive_coverage_precision_v1';
 
@@ -81,6 +89,8 @@ class WardriveService extends ChangeNotifier {
   bool _isSendingDiscovery = false;
   bool _isUpdatingLocation = false;
   bool _screenWakelockEnabled = false;
+  bool _runInBackgroundEnabled = false;
+  bool _resumeAfterForegroundPause = false;
   bool _followMeEnabled = false;
   bool _isAutoUploadInProgress = false;
   int _discoveryRequestsSent = 0;
@@ -111,6 +121,7 @@ class WardriveService extends ChangeNotifier {
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isUpdatingLocation => _isUpdatingLocation;
   bool get screenWakelockEnabled => _screenWakelockEnabled;
+  bool get runInBackgroundEnabled => _runInBackgroundEnabled;
   bool get followMeEnabled => _followMeEnabled;
   int get discoveryRequestsSent => _discoveryRequestsSent;
   int get discoveryResponsesReceived => _discoveryResponsesReceived;
@@ -171,7 +182,7 @@ class WardriveService extends ChangeNotifier {
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
     _showMapState = true;
-    unawaited(_backgroundService?.start(reason: 'wardrive'));
+    _syncBackgroundKeepAlive();
     _startSession();
     _lastAutoDiscoveryError = null;
     _loadSavedSamples();
@@ -201,6 +212,8 @@ class WardriveService extends ChangeNotifier {
     }
     _screenWakelockEnabled =
         PrefsManager.instance.getBool(_screenWakelockEnabledKey) ?? false;
+    _runInBackgroundEnabled =
+        PrefsManager.instance.getBool(_runInBackgroundEnabledKey) ?? false;
     _followMeEnabled =
         PrefsManager.instance.getBool(_followMeEnabledKey) ?? false;
     final savedCoveragePrecision = PrefsManager.instance.getInt(
@@ -229,6 +242,62 @@ class WardriveService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setRunInBackgroundEnabled(bool enabled) async {
+    if (_runInBackgroundEnabled == enabled) return;
+    if (enabled) {
+      await _foregroundService.ensureAndroidRequirements();
+    }
+    _runInBackgroundEnabled = enabled;
+    await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, enabled);
+    _syncBackgroundKeepAlive();
+    notifyListeners();
+  }
+
+  void _syncBackgroundKeepAlive() {
+    if (!PlatformInfo.isAndroid) return;
+    // This reason only controls wardrive's extra background keep-alive; the
+    // connector keeps its own "connection" reason for normal BLE companion use.
+    if (_isRunning && _runInBackgroundEnabled) {
+      unawaited(_startAndroidBackgroundServices());
+    } else {
+      unawaited(_backgroundService?.stop(reason: 'wardrive'));
+      unawaited(_foregroundService.stop().catchError((_) {}));
+    }
+  }
+
+  Future<void> _startAndroidBackgroundServices() async {
+    try {
+      await _foregroundService.ensureAndroidRequirements();
+      await _backgroundService?.start(reason: 'wardrive');
+      await _foregroundService.start();
+    } catch (error) {
+      _runInBackgroundEnabled = false;
+      await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, false);
+      await _backgroundService?.stop(reason: 'wardrive');
+      await _foregroundService.stop();
+      _lastAutoDiscoveryError = error.toString();
+      notifyListeners();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!PlatformInfo.isAndroid || _runInBackgroundEnabled) {
+      return;
+    }
+    if (state == AppLifecycleState.resumed && _resumeAfterForegroundPause) {
+      _resumeAfterForegroundPause = false;
+      start();
+      return;
+    }
+    if (!_isRunning) return;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _resumeAfterForegroundPause = true;
+      _stop(resetForegroundResume: false);
+    }
+  }
+
   Future<void> setFollowMeEnabled(bool enabled) async {
     if (_followMeEnabled == enabled) return;
     _followMeEnabled = enabled;
@@ -252,10 +321,17 @@ class WardriveService extends ChangeNotifier {
   }
 
   void stop() {
+    _stop(resetForegroundResume: true);
+  }
+
+  void _stop({required bool resetForegroundResume}) {
     if (!_isRunning) return;
+    if (resetForegroundResume) {
+      _resumeAfterForegroundPause = false;
+    }
     _finishSession();
     _isRunning = false;
-    unawaited(_backgroundService?.stop(reason: 'wardrive'));
+    _syncBackgroundKeepAlive();
     _autoDiscoveryTimer?.cancel();
     _autoDiscoveryTimer = null;
     _oneShotDiscoveryTimer?.cancel();
@@ -808,8 +884,10 @@ class WardriveService extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _finishSession();
     unawaited(_backgroundService?.stop(reason: 'wardrive'));
+    unawaited(_foregroundService.stop().catchError((_) {}));
     _autoDiscoveryTimer?.cancel();
     _oneShotDiscoveryTimer?.cancel();
     _autoUploadTimer?.cancel();
