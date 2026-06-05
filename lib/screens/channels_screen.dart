@@ -584,7 +584,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       style: TextStyle(
         color: color,
         fontSize: 11,
-        fontWeight: FontWeight.w700,
         letterSpacing: 0,
       ),
     );
