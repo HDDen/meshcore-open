@@ -1707,39 +1707,47 @@ class _ContactTile extends StatelessWidget {
               MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
             ),
           ),
-          child: SizedBox(
-            width: 120,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (unreadCount > 0) ...[
-                  UnreadBadge(count: unreadCount),
-                  const SizedBox(height: 4),
-                ],
-                Text(
-                  _formatLastSeen(context, lastSeen),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                Row(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.42,
+              ),
+              child: IntrinsicWidth(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (isFavorite)
-                      Icon(Icons.star, size: 14, color: Colors.amber[700]),
-                    if (isFavorite && contact.hasLocation)
-                      const SizedBox(width: 2),
-                    if (contact.hasLocation)
-                      Icon(
-                        Icons.location_on,
-                        size: 14,
-                        color: Colors.grey[400],
-                      ),
+                    if (unreadCount > 0) ...[
+                      UnreadBadge(count: unreadCount),
+                      const SizedBox(height: 4),
+                    ],
+                    Text(
+                      _formatLastSeen(context, lastSeen),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isFavorite)
+                          Icon(Icons.star, size: 14, color: Colors.amber[700]),
+                        if (isFavorite && contact.hasLocation)
+                          const SizedBox(width: 2),
+                        if (contact.hasLocation)
+                          Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: Colors.grey[400],
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

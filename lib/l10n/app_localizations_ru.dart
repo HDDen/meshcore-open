@@ -1148,27 +1148,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contacts_noMembers => 'Нет участников';
 
   @override
-  String get contacts_lastSeenNow => 'Видели только что';
+  String get contacts_lastSeenNow => 'Только что';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return 'Видели $minutes мин назад';
+    return '$minutes мин назад';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => 'Видели 1 час назад';
+  String get contacts_lastSeenHourAgo => '1 час назад';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return 'Видели $hours ч назад';
+    return '$hours ч назад';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => 'Видели 1 день назад';
+  String get contacts_lastSeenDayAgo => '1 день назад';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return 'Видели $days дн. назад';
+    return '$days дн. назад';
   }
 
   @override
