@@ -8509,7 +8509,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_copyMsgPathEditFinalDscr.
   ///
   /// In en, this message translates to:
-  /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\\n - line break'**
+  /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n\\n - line break'**
   String get settings_copyMsgPathEditFinalDscr;
 
   /// No description provided for @contact_typeChat.

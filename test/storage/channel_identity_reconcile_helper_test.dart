@@ -55,43 +55,47 @@ void main() {
     },
   );
 
-  test('moves order and group membership when channel keeps PSK', () async {
-    final prefs = PrefsManager.instance;
-    await prefs.setBool('channel_mcmp_${scopedKey}1', true);
-    await prefs.setString('channel_order_$scopedKey', jsonEncode([1, 5]));
-    await prefs.setString(
-      'channel_groups$scopedKey',
-      jsonEncode([
-        {
-          'name': 'Group',
-          'channels': [1, 5],
-        },
-      ]),
-    );
+  test(
+    'moves order and drops legacy group membership when channel keeps PSK',
+    () async {
+      final prefs = PrefsManager.instance;
+      await prefs.setBool('channel_mcmp_${scopedKey}1', true);
+      await prefs.setString('channel_order_$scopedKey', jsonEncode([1, 5]));
+      await prefs.setString(
+        'channel_groups$scopedKey',
+        jsonEncode([
+          {
+            'name': 'Group',
+            'channels': [1, 5],
+          },
+        ]),
+      );
 
-    final result = await ChannelIdentityReconcileHelper().reconcile(
-      publicKeyHex: publicKeyHex,
-      previousChannels: [
-        Channel.fromHex(1, 'Old name', '00000000000000000000000000000003'),
-      ],
-      currentChannels: [
-        Channel.fromHex(3, 'New name', '00000000000000000000000000000003'),
-      ],
-    );
+      final result = await ChannelIdentityReconcileHelper().reconcile(
+        publicKeyHex: publicKeyHex,
+        previousChannels: [
+          Channel.fromHex(1, 'Old name', '00000000000000000000000000000003'),
+        ],
+        currentChannels: [
+          Channel.fromHex(3, 'New name', '00000000000000000000000000000003'),
+        ],
+      );
 
-    expect(result.changed, isTrue);
-    expect(prefs.containsKey('channel_mcmp_${scopedKey}1'), isFalse);
-    expect(prefs.getBool('channel_mcmp_${scopedKey}3'), isTrue);
-    expect(
-      jsonDecode(prefs.getString('channel_order_$scopedKey')!),
-      equals([3]),
-    );
+      expect(result.changed, isTrue);
+      expect(prefs.containsKey('channel_mcmp_${scopedKey}1'), isFalse);
+      expect(prefs.getBool('channel_mcmp_${scopedKey}3'), isTrue);
+      expect(
+        jsonDecode(prefs.getString('channel_order_$scopedKey')!),
+        equals([3]),
+      );
 
-    final groups =
-        jsonDecode(prefs.getString('channel_groups$scopedKey')!)
-            as List<dynamic>;
-    expect(groups.single['channels'], equals([3]));
-  });
+      final groups =
+          jsonDecode(prefs.getString('channel_groups$scopedKey')!)
+              as List<dynamic>;
+      expect(groups.single['channel_names'], equals([]));
+      expect(groups.single.containsKey('channels'), isFalse);
+    },
+  );
 
   test('clears settings for channels that no longer exist', () async {
     final prefs = PrefsManager.instance;
@@ -236,7 +240,8 @@ void main() {
       final groups =
           jsonDecode(prefs.getString('channel_groups$scopedKey')!)
               as List<dynamic>;
-      expect(groups.single['channels'], equals([0]));
+      expect(groups.single['channel_names'], equals([]));
+      expect(groups.single.containsKey('channels'), isFalse);
     },
   );
 
@@ -288,7 +293,94 @@ void main() {
     final groups =
         jsonDecode(prefs.getString('channel_groups$scopedKey')!)
             as List<dynamic>;
-    expect(groups.single['channels'], equals([]));
+    expect(groups.single['channel_names'], equals([]));
+    expect(groups.single.containsKey('channels'), isFalse);
+  });
+
+  test(
+    'removes name-based group membership for channels missing after sync',
+    () async {
+      final prefs = PrefsManager.instance;
+      await prefs.setString(
+        'channel_groups$scopedKey',
+        jsonEncode([
+          {
+            'name': 'Old group',
+            'channel_names': ['Deleted'],
+          },
+        ]),
+      );
+
+      final store = ChannelStore()..setPublicKeyHex = publicKeyHex;
+      final orderStore = ChannelOrderStore()..setPublicKeyHex = publicKeyHex;
+      await store.saveChannels([
+        Channel.fromHex(0, 'Deleted', '00000000000000000000000000000011'),
+      ]);
+
+      final helper = ChannelIdentityReconcileHelper();
+      final received = Channel.fromHex(
+        0,
+        'New',
+        '00000000000000000000000000000012',
+      );
+      await helper.reconcileChannelDuringSync(
+        publicKeyHex: publicKeyHex,
+        previousChannelsCache: const [],
+        currentChannels: const [],
+        receivedChannel: received,
+        channelStore: store,
+      );
+
+      await helper.reconcileAfterSync(
+        publicKeyHex: publicKeyHex,
+        previousChannelsCache: const [],
+        currentChannels: [received],
+        channelStore: store,
+        channelOrderStore: orderStore,
+      );
+
+      final groups =
+          jsonDecode(prefs.getString('channel_groups$scopedKey')!)
+              as List<dynamic>;
+      expect(groups.single['channel_names'], equals([]));
+    },
+  );
+
+  test('keeps name-based group membership when channel slot changes', () async {
+    final prefs = PrefsManager.instance;
+    await prefs.setString(
+      'channel_groups$scopedKey',
+      jsonEncode([
+        {
+          'name': 'Group',
+          'channel_names': ['Alpha'],
+        },
+      ]),
+    );
+
+    final store = ChannelStore()..setPublicKeyHex = publicKeyHex;
+    final orderStore = ChannelOrderStore()..setPublicKeyHex = publicKeyHex;
+    await store.saveChannels([
+      Channel.fromHex(0, 'Alpha', '00000000000000000000000000000013'),
+    ]);
+
+    final received = Channel.fromHex(
+      2,
+      'Alpha',
+      '00000000000000000000000000000014',
+    );
+    await ChannelIdentityReconcileHelper().reconcileAfterSync(
+      publicKeyHex: publicKeyHex,
+      previousChannelsCache: const [],
+      currentChannels: [received],
+      channelStore: store,
+      channelOrderStore: orderStore,
+    );
+
+    final groups =
+        jsonDecode(prefs.getString('channel_groups$scopedKey')!)
+            as List<dynamic>;
+    expect(groups.single['channel_names'], equals(['Alpha']));
   });
 
   test('uses sync snapshot when channels swap indexes incrementally', () async {

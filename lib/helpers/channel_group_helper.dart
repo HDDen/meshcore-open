@@ -19,23 +19,18 @@ List<ChannelGroupListEntry> buildManualChannelEntries(
   List<Channel> orderedChannels,
   List<ChannelGroup> groups,
 ) {
-  final groupByChannel = channelGroupByChannel(groups);
-  final emittedGroups = <String>{};
+  final groupByChannel = channelGroupByChannelName(groups);
   final entries = <ChannelGroupListEntry>[];
   for (final channel in orderedChannels) {
-    final group = groupByChannel[channel.index];
+    final group = groupByChannel[_channelNameKey(channelNameForGroup(channel))];
     if (group == null) {
       entries.add(ChannelGroupListEntry.channel(channel));
-    } else if (emittedGroups.add(group.name)) {
-      entries.add(ChannelGroupListEntry.group(group));
     }
   }
 
-  for (final group in groups) {
-    if (emittedGroups.add(group.name)) {
-      final insertIndex = max(0, min(group.sortOrder, entries.length));
-      entries.insert(insertIndex, ChannelGroupListEntry.group(group));
-    }
+  for (final group in orderedChannelGroups(groups)) {
+    final insertIndex = max(0, min(group.sortOrder, entries.length));
+    entries.insert(insertIndex, ChannelGroupListEntry.group(group));
   }
   return entries;
 }
@@ -52,14 +47,26 @@ List<ChannelGroup> channelGroupsFromManualEntries(
   ];
 }
 
-List<int> manualChannelOrderFromEntries(List<ChannelGroupListEntry> entries) {
-  return [
-    for (final entry in entries)
-      if (entry.group != null)
-        ...entry.group!.channelIndexes
-      else if (entry.channel != null)
-        entry.channel!.index,
-  ];
+List<int> manualChannelOrderFromEntriesWithChannels(
+  List<ChannelGroupListEntry> entries,
+  List<Channel> channels,
+) {
+  final byName = _channelByGroupName(channels);
+  final indexes = <int>[];
+  for (final entry in entries) {
+    final group = entry.group;
+    if (group != null) {
+      for (final name in group.channelNames) {
+        final channel = byName[_channelNameKey(name)];
+        if (channel != null) indexes.add(channel.index);
+      }
+      continue;
+    }
+
+    final channel = entry.channel;
+    if (channel != null) indexes.add(channel.index);
+  }
+  return indexes;
 }
 
 List<ChannelGroup> orderedChannelGroups(List<ChannelGroup> groups) {
@@ -80,10 +87,10 @@ List<ChannelGroup> orderedChannelGroups(List<ChannelGroup> groups) {
   return [for (final entry in indexedGroups) entry.value];
 }
 
-Map<int, ChannelGroup> channelGroupByChannel(List<ChannelGroup> groups) {
+Map<String, ChannelGroup> channelGroupByChannelName(List<ChannelGroup> groups) {
   return {
     for (final group in groups)
-      for (final index in group.channelIndexes) index: group,
+      for (final name in group.channelNames) _channelNameKey(name): group,
   };
 }
 
@@ -91,76 +98,93 @@ List<Channel> channelsForGroup(
   ChannelGroup group,
   List<Channel> filteredChannels,
 ) {
-  final byIndex = {
-    for (final channel in filteredChannels) channel.index: channel,
-  };
+  final byName = _channelByGroupName(filteredChannels);
   return [
-    for (final index in group.channelIndexes)
-      if (byIndex[index] != null) byIndex[index]!,
+    for (final name in group.channelNames)
+      if (byName[_channelNameKey(name)] != null) byName[_channelNameKey(name)]!,
   ];
 }
 
-List<int> reorderedChannelIndexesInGroup(
+List<String> reorderedChannelNamesInGroup(
   ChannelGroup group,
   int oldIndex,
   int newIndex,
 ) {
-  final reorderedIndexes = List<int>.from(group.channelIndexes);
-  if (oldIndex < 0 || oldIndex >= reorderedIndexes.length) {
-    return reorderedIndexes;
+  final reorderedNames = List<String>.from(group.channelNames);
+  if (oldIndex < 0 || oldIndex >= reorderedNames.length) {
+    return reorderedNames;
   }
-  final channelIndex = reorderedIndexes.removeAt(oldIndex);
-  final insertIndex = max(0, min(newIndex, reorderedIndexes.length));
-  reorderedIndexes.insert(insertIndex, channelIndex);
-  return reorderedIndexes;
+  final channelName = reorderedNames.removeAt(oldIndex);
+  final insertIndex = max(0, min(newIndex, reorderedNames.length));
+  reorderedNames.insert(insertIndex, channelName);
+  return reorderedNames;
 }
 
 List<int> manualChannelOrderForGroups(
   List<Channel> orderedChannels,
   List<ChannelGroup> groups,
 ) {
-  final groupByChannel = channelGroupByChannel(groups);
+  final groupByChannel = channelGroupByChannelName(groups);
   final emittedGroups = <String>{};
   final orderedIndexes = <int>[];
   for (final channel in orderedChannels) {
-    final group = groupByChannel[channel.index];
+    final group = groupByChannel[_channelNameKey(channelNameForGroup(channel))];
     if (group == null) {
       orderedIndexes.add(channel.index);
     } else if (emittedGroups.add(group.name)) {
-      orderedIndexes.addAll(group.channelIndexes);
+      orderedIndexes.addAll(
+        channelsForGroup(
+          group,
+          orderedChannels,
+        ).map((channel) => channel.index),
+      );
     }
   }
   return orderedIndexes;
 }
 
-List<int> selectedChannelIndexesForGroupEdit(
+List<String> selectedChannelNamesForGroupEdit(
   ChannelGroup group,
   List<Channel> editableChannels,
-  Set<int> selectedIndexes,
+  Set<String> selectedNames,
 ) {
-  final orderedIndexes = <int>[
+  final orderedNames = <String>[
     // Preserve the current in-group order when editing membership/name.
-    for (final index in group.channelIndexes)
-      if (selectedIndexes.contains(index)) index,
+    for (final name in group.channelNames)
+      if (selectedNames.contains(_channelNameKey(name))) name,
   ];
-  final existingIndexes = orderedIndexes.toSet();
+  final existingNames = orderedNames.map(_channelNameKey).toSet();
   for (final channel in editableChannels) {
-    if (selectedIndexes.contains(channel.index) &&
-        !existingIndexes.contains(channel.index)) {
-      orderedIndexes.add(channel.index);
+    final name = channelNameForGroup(channel);
+    final key = _channelNameKey(name);
+    if (selectedNames.contains(key) && !existingNames.contains(key)) {
+      orderedNames.add(name);
     }
   }
-  return orderedIndexes;
+  return orderedNames;
 }
 
-List<int> selectedChannelIndexesForGroupEditSorted(
+List<String> selectedChannelNamesForGroupEditSorted(
   List<Channel> editableChannels,
-  Set<int> selectedIndexes,
+  Set<String> selectedNames,
   Comparator<Channel> compareChannels,
 ) {
   final selectedChannels = [
     for (final channel in editableChannels)
-      if (selectedIndexes.contains(channel.index)) channel,
+      if (selectedNames.contains(_channelNameKey(channelNameForGroup(channel))))
+        channel,
   ]..sort(compareChannels);
-  return [for (final channel in selectedChannels) channel.index];
+  return [for (final channel in selectedChannels) channelNameForGroup(channel)];
+}
+
+String channelNameForGroup(Channel channel) => channel.name.trim();
+
+String _channelNameKey(String name) => name.trim().toLowerCase();
+
+Map<String, Channel> _channelByGroupName(List<Channel> channels) {
+  return {
+    for (final channel in channels)
+      if (channelNameForGroup(channel).isNotEmpty)
+        _channelNameKey(channelNameForGroup(channel)): channel,
+  };
 }

@@ -5009,7 +5009,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\\n - перенос строки';
+      'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n\\n - перенос строки';
 
   @override
   String get contact_typeChat => 'Чат';

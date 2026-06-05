@@ -254,7 +254,7 @@ class ChannelIdentityReconcileHelper {
         ? await _remapChannelOrder(session, finalized)
         : false;
     final groupsChanged = finalized
-        ? await _remapChannelGroups(session, finalized)
+        ? await _remapChannelGroups(session, currentChannels, finalized)
         : false;
     final remappedIndexesChanged = session.oldToNewIndex.entries.any(
       (entry) => entry.key != entry.value,
@@ -526,6 +526,7 @@ class ChannelIdentityReconcileHelper {
 
   Future<bool> _remapChannelGroups(
     _ChannelIdentitySyncSession session,
+    List<Channel> currentChannels,
     bool finalized,
   ) async {
     final prefs = PrefsManager.instance;
@@ -543,16 +544,24 @@ class ChannelIdentityReconcileHelper {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return false;
       final remappedGroups = <dynamic>[];
+      final currentNames = {
+        for (final channel in currentChannels)
+          channel.name.trim().toLowerCase(),
+      }..remove('');
       for (final item in decoded) {
         if (item is! Map) continue;
         final group = Map<String, dynamic>.from(item);
-        final channels =
-            (group['channels'] as List?)
-                ?.map((value) => int.tryParse(value.toString()))
-                .whereType<int>()
+        final storedNames =
+            (group['channel_names'] as List?)
+                ?.map((value) => value.toString().trim())
+                .where((name) => name.isNotEmpty)
                 .toList() ??
-            const <int>[];
-        group['channels'] = _remapIndexList(channels, session, finalized);
+            <String>[];
+        group['channel_names'] = [
+          for (final name in storedNames)
+            if (currentNames.contains(name.toLowerCase())) name,
+        ];
+        group.remove('channels');
         remappedGroups.add(group);
       }
 

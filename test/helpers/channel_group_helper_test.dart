@@ -18,7 +18,7 @@ void main() {
     test('keeps empty groups at their manual top-level position', () {
       final entries = buildManualChannelEntries(
         [channel(1, 'Alpha'), channel(2, 'Beta')],
-        const [ChannelGroup(name: 'Empty', channelIndexes: [], sortOrder: 1)],
+        const [ChannelGroup(name: 'Empty', channelNames: [], sortOrder: 1)],
       );
 
       expect(entries[0].channel?.index, 1);
@@ -27,8 +27,8 @@ void main() {
     });
 
     test('updates group sort order from manually reordered entries', () {
-      final first = ChannelGroup(name: 'First', channelIndexes: [1]);
-      final second = ChannelGroup(name: 'Second', channelIndexes: [2]);
+      final first = ChannelGroup(name: 'First', channelNames: ['Alpha']);
+      final second = ChannelGroup(name: 'Second', channelNames: ['Beta']);
 
       final groups = channelGroupsFromManualEntries([
         ChannelGroupListEntry.group(second),
@@ -41,45 +41,85 @@ void main() {
       expect(groups[1].sortOrder, 1);
     });
 
+    test('places non-empty group by manual sort order', () {
+      final entries = buildManualChannelEntries(
+        [channel(1, 'Alpha'), channel(2, 'Public')],
+        const [
+          ChannelGroup(
+            name: 'Group',
+            channelNames: ['Alpha'],
+            sortOrder: 1,
+          ),
+        ],
+      );
+
+      expect(entries[0].channel?.name, 'Public');
+      expect(entries[1].group?.name, 'Group');
+    });
+
+    test('builds device channel order from groups and standalone channels', () {
+      final public = channel(2, 'Public');
+      final alpha = channel(1, 'Alpha');
+      final entries = [
+        ChannelGroupListEntry.channel(public),
+        const ChannelGroupListEntry.group(
+          ChannelGroup(name: 'Group', channelNames: ['Alpha']),
+        ),
+      ];
+
+      final order = manualChannelOrderFromEntriesWithChannels(entries, [
+        alpha,
+        public,
+      ]);
+
+      expect(order, [2, 1]);
+    });
+
     test(
       'preserves selected in-group order when manual ordering is enabled',
       () {
-        final group = ChannelGroup(name: 'Group', channelIndexes: [3, 1, 2]);
+        final group = ChannelGroup(
+          name: 'Group',
+          channelNames: ['Alpha', 'Beta', 'Gamma'],
+        );
         final editableChannels = [
           channel(1, 'Beta'),
           channel(2, 'Gamma'),
           channel(3, 'Alpha'),
         ];
 
-        final selected = selectedChannelIndexesForGroupEdit(
+        final selected = selectedChannelNamesForGroupEdit(
           group,
           editableChannels,
-          {1, 2, 3},
+          {'alpha', 'beta', 'gamma'},
         );
 
-        expect(selected, [3, 1, 2]);
+        expect(selected, ['Alpha', 'Beta', 'Gamma']);
       },
     );
 
     test(
       'sorts selected channels by name when manual ordering is disabled',
       () {
-        final selected = selectedChannelIndexesForGroupEditSorted(
+        final selected = selectedChannelNamesForGroupEditSorted(
           [channel(1, 'Beta'), channel(2, 'Gamma'), channel(3, 'Alpha')],
-          {1, 2, 3},
+          {'alpha', 'beta', 'gamma'},
           compareByName,
         );
 
-        expect(selected, [3, 1, 2]);
+        expect(selected, ['Alpha', 'Beta', 'Gamma']);
       },
     );
 
     test('reorders channels using the adjusted onReorderItem index', () {
-      final group = ChannelGroup(name: 'Group', channelIndexes: [1, 2, 3]);
+      final group = ChannelGroup(
+        name: 'Group',
+        channelNames: ['Alpha', 'Beta', 'Gamma'],
+      );
 
-      final reordered = reorderedChannelIndexesInGroup(group, 0, 2);
+      final reordered = reorderedChannelNamesInGroup(group, 0, 2);
 
-      expect(reordered, [2, 3, 1]);
+      expect(reordered, ['Beta', 'Gamma', 'Alpha']);
     });
   });
 }

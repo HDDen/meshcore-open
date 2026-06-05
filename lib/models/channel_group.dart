@@ -2,7 +2,7 @@ const Object _channelGroupUnset = Object();
 
 class ChannelGroup {
   final String name;
-  final List<int> channelIndexes;
+  final List<String> channelNames;
   final int sortOrder;
   final int? widgetColor;
   final int? widgetTextColor;
@@ -10,7 +10,7 @@ class ChannelGroup {
 
   const ChannelGroup({
     required this.name,
-    required this.channelIndexes,
+    required this.channelNames,
     this.sortOrder = 0,
     this.widgetColor,
     this.widgetTextColor,
@@ -19,7 +19,7 @@ class ChannelGroup {
 
   ChannelGroup copyWith({
     String? name,
-    List<int>? channelIndexes,
+    List<String>? channelNames,
     int? sortOrder,
     Object? widgetColor = _channelGroupUnset,
     Object? widgetTextColor = _channelGroupUnset,
@@ -27,7 +27,7 @@ class ChannelGroup {
   }) {
     return ChannelGroup(
       name: name ?? this.name,
-      channelIndexes: channelIndexes ?? List<int>.from(this.channelIndexes),
+      channelNames: channelNames ?? List<String>.from(this.channelNames),
       sortOrder: sortOrder ?? this.sortOrder,
       widgetColor: widgetColor == _channelGroupUnset
           ? this.widgetColor
@@ -42,7 +42,7 @@ class ChannelGroup {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'channels': channelIndexes,
+      'channel_names': channelNames,
       'sort_order': sortOrder,
       'widget_color': widgetColor,
       'widget_text_color': widgetTextColor,
@@ -51,15 +51,15 @@ class ChannelGroup {
   }
 
   factory ChannelGroup.fromJson(Map<String, dynamic> json) {
-    final channels =
-        (json['channels'] as List?)
-            ?.map((value) => int.tryParse(value.toString()))
-            .whereType<int>()
+    final channelNames =
+        (json['channel_names'] as List?)
+            ?.map((value) => value.toString().trim())
+            .where((name) => name.isNotEmpty)
             .toList() ??
-        <int>[];
+        <String>[];
     return ChannelGroup(
       name: json['name'] as String? ?? '',
-      channelIndexes: channels,
+      channelNames: channelNames,
       sortOrder: int.tryParse(json['sort_order']?.toString() ?? '') ?? -1,
       widgetColor: int.tryParse(json['widget_color']?.toString() ?? ''),
       widgetTextColor: int.tryParse(

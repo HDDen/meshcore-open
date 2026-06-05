@@ -380,6 +380,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final widgetTextColor = widgetTextColorValue == null
         ? null
         : Color(widgetTextColorValue);
+    final compressionLabels = _channelCompressionLabels(connector, channel);
 
     // Determine icon and colors based on channel type
     IconData icon;
@@ -508,6 +509,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ),
                 const SizedBox(width: 4),
               ],
+              for (final label in compressionLabels) ...[
+                _buildChannelCompressionIndicator(
+                  context,
+                  label,
+                  textColor: widgetTextColor,
+                ),
+                const SizedBox(width: 4),
+              ],
               if (unreadCount > 0) ...[
                 UnreadBadge(count: unreadCount),
                 const SizedBox(width: 4),
@@ -549,6 +558,34 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             channel,
           ),
         ),
+      ),
+    );
+  }
+
+  List<String> _channelCompressionLabels(
+    MeshCoreConnector connector,
+    Channel channel,
+  ) {
+    return [
+      if (connector.isChannelCyr2LatEnabled(channel.index)) 'C2L',
+      if (connector.isChannelMcmpEnabled(channel.index)) 'MC',
+      if (connector.isChannelSmazEnabled(channel.index)) 'SZ',
+    ];
+  }
+
+  Widget _buildChannelCompressionIndicator(
+    BuildContext context,
+    String label, {
+    Color? textColor,
+  }) {
+    final color = textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    return Text(
+      label,
+      style: TextStyle(
+        color: color,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
       ),
     );
   }
@@ -694,7 +731,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<Channel> filteredChannels,
     Set<String> mutedChannelNames,
   ) {
-    final groupIndexSet = _groupedChannelIndexes();
+    final groupedChannelNames = _groupedChannelNames();
     final visibleGroups = _channelGroups.where((group) {
       if (viewState.channelsSearchText.isEmpty) return true;
       final query = viewState.channelsSearchText.toLowerCase();
@@ -702,7 +739,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelsForGroup(group, filteredChannels).isNotEmpty;
     }).toList();
     final ungroupedChannels = filteredChannels
-        .where((channel) => !groupIndexSet.contains(channel.index))
+        .where(
+          (channel) => !groupedChannelNames.contains(
+            channelNameForGroup(channel).toLowerCase(),
+          ),
+        )
         .toList();
     final hasVisibleContent =
         visibleGroups.isNotEmpty || ungroupedChannels.isNotEmpty;
@@ -747,9 +788,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           final item = reordered.removeAt(oldIndex);
           reordered.insert(newIndex, item);
           final reorderedGroups = channelGroupsFromManualEntries(reordered);
-          final orderedChannelIndexes = manualChannelOrderFromEntries(
-            reordered,
-          );
+          final orderedChannelIndexes =
+              manualChannelOrderFromEntriesWithChannels(
+                reordered,
+                filteredChannels,
+              );
           setState(() {
             _channelGroups = reorderedGroups;
           });
@@ -818,8 +861,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
-  Set<int> _groupedChannelIndexes() {
-    return channelGroupByChannel(_channelGroups).keys.toSet();
+  Set<String> _groupedChannelNames() {
+    return channelGroupByChannelName(_channelGroups).keys.toSet();
   }
 
   Widget _buildChannelGroupTile(
@@ -845,9 +888,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final groupWidgetTextColor = group.widgetTextColor == null
         ? null
         : Color(group.widgetTextColor!);
-    final unreadCount = group.channelIndexes.fold<int>(
+    final unreadCount = channels.fold<int>(
       0,
-      (sum, index) => sum + connector.getUnreadCountForChannelIndex(index),
+      (sum, channel) =>
+          sum + connector.getUnreadCountForChannelIndex(channel.index),
     );
 
     return GestureDetector(
@@ -1004,7 +1048,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     int oldIndex,
     int newIndex,
   ) {
-    final reorderedIndexes = reorderedChannelIndexesInGroup(
+    final reorderedNames = reorderedChannelNamesInGroup(
       group,
       oldIndex,
       newIndex,
@@ -1012,7 +1056,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final updatedGroups = [
       for (final item in _channelGroups)
         if (item.name == group.name)
-          item.copyWith(channelIndexes: reorderedIndexes)
+          item.copyWith(channelNames: reorderedNames)
         else
           item,
     ];
@@ -1064,9 +1108,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   void _showEditChannelGroupDialog(BuildContext context, ChannelGroup group) {
     final connector = context.read<MeshCoreConnector>();
-    final groupedIndexes = _groupedChannelIndexes();
+    final groupedNames = _groupedChannelNames();
     final nameController = TextEditingController(text: group.name);
-    final selectedIndexes = <int>{...group.channelIndexes};
+    final selectedNames = {
+      for (final name in group.channelNames) name.trim().toLowerCase(),
+    };
     bool allowOrderingInGroup = group.allowOrderingInGroup;
     int? selectedWidgetColor = group.widgetColor;
     int? selectedWidgetTextColor = group.widgetTextColor;
@@ -1074,13 +1120,21 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         connector.channels
             .where(
               (channel) =>
-                  group.channelIndexes.contains(channel.index) ||
-                  !groupedIndexes.contains(channel.index),
+                  selectedNames.contains(
+                    channelNameForGroup(channel).toLowerCase(),
+                  ) ||
+                  !groupedNames.contains(
+                    channelNameForGroup(channel).toLowerCase(),
+                  ),
             )
             .toList()
           ..sort((a, b) {
-            final aSelected = selectedIndexes.contains(a.index);
-            final bSelected = selectedIndexes.contains(b.index);
+            final aSelected = selectedNames.contains(
+              channelNameForGroup(a).toLowerCase(),
+            );
+            final bSelected = selectedNames.contains(
+              channelNameForGroup(b).toLowerCase(),
+            );
             if (aSelected != bSelected) return aSelected ? -1 : 1;
             return _normalizeChannelName(a).compareTo(_normalizeChannelName(b));
           });
@@ -1147,8 +1201,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               itemCount: editableChannels.length,
                               itemBuilder: (context, index) {
                                 final channel = editableChannels[index];
-                                final isSelected = selectedIndexes.contains(
-                                  channel.index,
+                                final channelName = channelNameForGroup(
+                                  channel,
+                                );
+                                final channelNameKey = channelName
+                                    .toLowerCase();
+                                final isSelected = selectedNames.contains(
+                                  channelNameKey,
                                 );
                                 return CheckboxListTile(
                                   value: isSelected,
@@ -1158,9 +1217,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   onChanged: (value) {
                                     setDialogState(() {
                                       if (value == true) {
-                                        selectedIndexes.add(channel.index);
+                                        selectedNames.add(channelNameKey);
                                       } else {
-                                        selectedIndexes.remove(channel.index);
+                                        selectedNames.remove(channelNameKey);
                                       }
                                     });
                                   },
@@ -1216,15 +1275,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       if (item.name != group.name) return item;
                       return item.copyWith(
                         name: name,
-                        channelIndexes: allowOrderingInGroup
-                            ? selectedChannelIndexesForGroupEdit(
+                        channelNames: allowOrderingInGroup
+                            ? selectedChannelNamesForGroupEdit(
                                 group,
                                 editableChannels,
-                                selectedIndexes,
+                                selectedNames,
                               )
-                            : selectedChannelIndexesForGroupEditSorted(
+                            : selectedChannelNamesForGroupEditSorted(
                                 editableChannels,
-                                selectedIndexes,
+                                selectedNames,
                                 _compareChannelsByName,
                               ),
                         widgetColor: selectedWidgetColor,
@@ -1268,20 +1327,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     unawaited(_saveExpandedChannelGroups());
   }
 
-  Future<void> _removeChannelsFromGroups(Iterable<int> channelIndexes) async {
-    final removed = channelIndexes.toSet();
+  Future<void> _removeChannelNamesFromGroups(
+    Iterable<String> channelNames,
+  ) async {
+    final removed = {
+      for (final name in channelNames) name.trim().toLowerCase(),
+    };
     if (removed.isEmpty) return;
     if (!mounted) return;
     var changed = false;
     setState(() {
       _channelGroups = _channelGroups.map((group) {
-        final members = group.channelIndexes
-            .where((index) => !removed.contains(index))
+        final members = group.channelNames
+            .where((name) => !removed.contains(name.toLowerCase()))
             .toList();
-        if (members.length != group.channelIndexes.length) {
+        if (members.length != group.channelNames.length) {
           changed = true;
         }
-        return group.copyWith(channelIndexes: members);
+        return group.copyWith(channelNames: members);
       }).toList();
     });
     if (changed) {
@@ -1483,7 +1546,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   _channelGroups = orderedChannelGroups([
                                     ChannelGroup(
                                       name: name,
-                                      channelIndexes: const <int>[],
+                                      channelNames: const <String>[],
                                       sortOrder: 0,
                                     ),
                                     for (final group in _channelGroups)
@@ -2415,7 +2478,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 await connector.deleteChannel(channel.index);
 
                 await channelMessageStore.clearChannelMessages(channel.index);
-                await _removeChannelsFromGroups([channel.index]);
+                await _removeChannelNamesFromGroups([
+                  channelNameForGroup(channel),
+                ]);
 
                 if (!context.mounted) return;
 
@@ -2663,8 +2728,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               for (final channel in communityChannels) {
                 await connector.deleteChannel(channel.index);
               }
-              await _removeChannelsFromGroups(
-                communityChannels.map((channel) => channel.index),
+              await _removeChannelNamesFromGroups(
+                communityChannels.map(channelNameForGroup),
               );
 
               // Remove community from store

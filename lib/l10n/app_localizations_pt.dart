@@ -4981,7 +4981,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\\n - line break';
+      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n\\n - line break';
 
   @override
   String get contact_typeChat => 'Chat';
