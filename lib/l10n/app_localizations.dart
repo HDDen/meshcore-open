@@ -8497,7 +8497,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_copyMsgPathEditTemplateDscr.
   ///
   /// In en, this message translates to:
-  /// **'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n\\n - line break'**
+  /// **'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break'**
   String get settings_copyMsgPathEditTemplateDscr;
 
   /// No description provided for @settings_copyMsgPathEditFinalTitle.
@@ -8509,7 +8509,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_copyMsgPathEditFinalDscr.
   ///
   /// In en, this message translates to:
-  /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n\\n - line break'**
+  /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break'**
   String get settings_copyMsgPathEditFinalDscr;
 
   /// No description provided for @contact_typeChat.

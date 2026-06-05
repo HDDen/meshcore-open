@@ -2138,6 +2138,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         hopKey: prefix,
         hopName: name,
         hopIndex: hopIndex,
+        hopCount: hops.length,
         senderName: messageSenderName,
         collisionMarker: collisionMarker,
         divider: isLastHop ? '' : '\n',
@@ -2146,6 +2147,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return _applyMessagePathFinalTemplate(
       finalTemplate,
       path: pathText,
+      hopCount: hops.length,
       senderName: messageSenderName,
     );
   }
@@ -2155,6 +2157,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required String hopKey,
     required String hopName,
     required int hopIndex,
+    required int hopCount,
     required String senderName,
     required String collisionMarker,
     required String divider,
@@ -2163,6 +2166,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         .replaceAll('%hopKey%', hopKey)
         .replaceAll('%hopName%', hopName)
         .replaceAll('%hopInd%', hopIndex.toString())
+        .replaceAll('%hops%', hopCount.toString())
         .replaceAll('%senderName%', senderName)
         .replaceAll('%collisionMarker%', collisionMarker)
         .replaceAll('%div%', divider)
@@ -2172,10 +2176,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String _applyMessagePathFinalTemplate(
     String template, {
     required String path,
+    required int hopCount,
     required String senderName,
   }) {
     return template
         .replaceAll('%path%', path)
+        .replaceAll('%hops%', hopCount.toString())
         .replaceAll('%senderName%', senderName)
         .replaceAll(r'\n', '\n');
   }

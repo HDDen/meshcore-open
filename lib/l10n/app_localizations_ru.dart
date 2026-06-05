@@ -5002,14 +5002,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n\\n - перенос строки';
+      'Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n%hops% - количество хопов\n\\n - перенос строки';
 
   @override
   String get settings_copyMsgPathEditFinalTitle => 'Итоговое сообщение';
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n\\n - перенос строки';
+      'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки';
 
   @override
   String get contact_typeChat => 'Чат';
