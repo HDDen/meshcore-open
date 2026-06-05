@@ -340,6 +340,12 @@ abstract class AppLocalizations {
   /// **'Interval'**
   String get common_interval;
 
+  /// No description provided for @common_default.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get common_default;
+
   /// No description provided for @scanner_title.
   ///
   /// In en, this message translates to:
@@ -8469,6 +8475,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copying message path failed'**
   String get channels_copyPathFailed;
+
+  /// No description provided for @settings_copyMsgPathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure message path copying'**
+  String get settings_copyMsgPathTitle;
+
+  /// No description provided for @settings_copyMsgPathDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the template for generating message path information from the channel'**
+  String get settings_copyMsgPathDscr;
+
+  /// No description provided for @settings_copyMsgPathEditTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit template'**
+  String get settings_copyMsgPathEditTemplateTitle;
+
+  /// No description provided for @settings_copyMsgPathEditTemplateDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n\\n - line break'**
+  String get settings_copyMsgPathEditTemplateDscr;
+
+  /// No description provided for @settings_copyMsgPathEditFinalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Final message'**
+  String get settings_copyMsgPathEditFinalTitle;
+
+  /// No description provided for @settings_copyMsgPathEditFinalDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\\n - line break'**
+  String get settings_copyMsgPathEditFinalDscr;
 
   /// No description provided for @contact_typeChat.
   ///

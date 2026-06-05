@@ -194,12 +194,18 @@ class AppSettings {
   final int mcmpTextLimit;
   final int channelMaxbytesOutgoing;
   final List<QuickAnswer> quickAnswers;
+  final String copyMsgPathTemplate;
+  final String copyMsgPathFinalTemplate;
   final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
   static const int maxChannelMaxbytesOutgoing = 1000;
+  static const String defaultCopyMsgPathTemplate =
+      r'%collisionMarker%%hopKey%: %hopName%%div%';
+  static const String defaultCopyMsgPathFinalTemplate =
+      r'@%senderName%: %path%';
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
@@ -315,6 +321,20 @@ class AppSettings {
     return List.unmodifiable(ids);
   }
 
+  static String normalizeCopyMsgPathTemplate(dynamic value) {
+    if (value is! String || value.isEmpty) {
+      return defaultCopyMsgPathTemplate;
+    }
+    return value;
+  }
+
+  static String normalizeCopyMsgPathFinalTemplate(dynamic value) {
+    if (value is! String || value.isEmpty) {
+      return defaultCopyMsgPathFinalTemplate;
+    }
+    return value;
+  }
+
   static String _legacyQuickAnswerId(String text, int index) {
     var hash = 0x811c9dc5;
     for (final codeUnit in text.codeUnits) {
@@ -411,6 +431,8 @@ class AppSettings {
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
     List<QuickAnswer>? quickAnswers,
+    String? copyMsgPathTemplate,
+    String? copyMsgPathFinalTemplate,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -428,6 +450,10 @@ class AppSettings {
          channelMaxbytesOutgoing,
        ),
        quickAnswers = normalizeQuickAnswers(quickAnswers),
+       copyMsgPathTemplate = normalizeCopyMsgPathTemplate(copyMsgPathTemplate),
+       copyMsgPathFinalTemplate = normalizeCopyMsgPathFinalTemplate(
+         copyMsgPathFinalTemplate,
+       ),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -491,6 +517,8 @@ class AppSettings {
       'mcmp_text_limit': mcmpTextLimit,
       'channel_maxbytes_outgoing': channelMaxbytesOutgoing,
       'quick_answers': quickAnswers.map((answer) => answer.toJson()).toList(),
+      'copy_msg_path_template': copyMsgPathTemplate,
+      'copy_msg_path_final_template': copyMsgPathFinalTemplate,
       'sending_delay_for_cancellation_seconds':
           sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
@@ -608,6 +636,8 @@ class AppSettings {
       mcmpTextLimit: json['mcmp_text_limit'],
       channelMaxbytesOutgoing: json['channel_maxbytes_outgoing'],
       quickAnswers: normalizeQuickAnswers(json['quick_answers']),
+      copyMsgPathTemplate: json['copy_msg_path_template'] as String?,
+      copyMsgPathFinalTemplate: json['copy_msg_path_final_template'] as String?,
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
@@ -693,6 +723,8 @@ class AppSettings {
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
     List<QuickAnswer>? quickAnswers,
+    String? copyMsgPathTemplate,
+    String? copyMsgPathFinalTemplate,
     int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -775,6 +807,9 @@ class AppSettings {
       channelMaxbytesOutgoing:
           channelMaxbytesOutgoing ?? this.channelMaxbytesOutgoing,
       quickAnswers: quickAnswers ?? this.quickAnswers,
+      copyMsgPathTemplate: copyMsgPathTemplate ?? this.copyMsgPathTemplate,
+      copyMsgPathFinalTemplate:
+          copyMsgPathFinalTemplate ?? this.copyMsgPathFinalTemplate,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,

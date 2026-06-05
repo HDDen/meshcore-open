@@ -424,6 +424,30 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setCopyMsgPathTemplate(String value) async {
+    await updateSettings(
+      _settings.copyWith(
+        copyMsgPathTemplate: AppSettings.normalizeCopyMsgPathTemplate(value),
+      ),
+    );
+  }
+
+  Future<void> setCopyMsgPathTemplates({
+    required String hopTemplate,
+    required String finalTemplate,
+  }) async {
+    await updateSettings(
+      _settings.copyWith(
+        copyMsgPathTemplate: AppSettings.normalizeCopyMsgPathTemplate(
+          hopTemplate,
+        ),
+        copyMsgPathFinalTemplate: AppSettings.normalizeCopyMsgPathFinalTemplate(
+          finalTemplate,
+        ),
+      ),
+    );
+  }
+
   Future<void> setSendingDelayForCancellationSeconds(int value) async {
     await updateSettings(
       _settings.copyWith(

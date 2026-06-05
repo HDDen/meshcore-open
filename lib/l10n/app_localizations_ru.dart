@@ -118,6 +118,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get common_interval => 'Интервал';
 
   @override
+  String get common_default => 'По умолчанию';
+
+  @override
   String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
@@ -4985,6 +4988,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channels_copyPathFailed => 'Не удалось скопировать путь сообщения';
+
+  @override
+  String get settings_copyMsgPathTitle =>
+      'Настройка копирования пути сообщения';
+
+  @override
+  String get settings_copyMsgPathDscr =>
+      'Редактировать шаблон сборки информации о пути сообщения из канала';
+
+  @override
+  String get settings_copyMsgPathEditTemplateTitle => 'Редактирование шаблона';
+
+  @override
+  String get settings_copyMsgPathEditTemplateDscr =>
+      'Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n\\n - перенос строки';
+
+  @override
+  String get settings_copyMsgPathEditFinalTitle => 'Итоговое сообщение';
+
+  @override
+  String get settings_copyMsgPathEditFinalDscr =>
+      'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\\n - перенос строки';
 
   @override
   String get contact_typeChat => 'Чат';

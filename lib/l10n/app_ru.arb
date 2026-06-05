@@ -41,6 +41,7 @@
   "common_percentValue": "{percent}%",
   "common_autoRefresh": "Автообновление",
   "common_interval": "Интервал",
+  "common_default": "По умолчанию",
   "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Поиск устройств...",
   "scanner_connecting": "Подключение...",
@@ -2026,5 +2027,11 @@
   "channels_copyPath": "Скопировать путь сообщения",
   "channels_copyPathExtended": "Скопировать путь сообщения (расширенно)",
   "channels_copiedPath": "Путь сообщения скопирован",
-  "channels_copyPathFailed": "Не удалось скопировать путь сообщения"
+  "channels_copyPathFailed": "Не удалось скопировать путь сообщения",
+  "settings_copyMsgPathTitle": "Настройка копирования пути сообщения",
+  "settings_copyMsgPathDscr": "Редактировать шаблон сборки информации о пути сообщения из канала",
+  "settings_copyMsgPathEditTemplateTitle": "Редактирование шаблона",
+  "settings_copyMsgPathEditTemplateDscr": "Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n\\n - перенос строки",
+  "settings_copyMsgPathEditFinalTitle": "Итоговое сообщение",
+  "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\\n - перенос строки"
 }

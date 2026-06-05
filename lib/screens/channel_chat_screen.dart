@@ -2082,13 +2082,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (!extended) {
       return hops.map(PathHelper.formatHopHex).join(', ');
     }
-    return _extendedMessagePathText(hops, pathHashWidth);
+    return _extendedMessagePathText(hops, pathHashWidth, message.senderName);
   }
 
-  String _extendedMessagePathText(List<Uint8List> hops, int pathHashWidth) {
+  String _extendedMessagePathText(
+    List<Uint8List> hops,
+    int pathHashWidth,
+    String senderName,
+  ) {
     final connector = context.read<MeshCoreConnector>();
     final contactsByPrefix = <String, List<Contact>>{};
     final width = pathHashWidth.clamp(1, 4).toInt();
+    final messageSenderName = senderName.trim();
 
     for (final contact in connector.allContacts) {
       if (contact.publicKey.isEmpty) continue;
@@ -2110,25 +2115,69 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         .where((entry) => entry.value.length > 1)
         .map((entry) => entry.key)
         .toSet();
+    final settings = context.read<AppSettingsService>().settings;
+    final template = settings.copyMsgPathTemplate;
+    final finalTemplate = settings.copyMsgPathFinalTemplate;
 
-    return hops
-        .map((hop) {
-          final prefix = PathHelper.formatHopHex(hop);
-          final candidates = contactsByPrefix[prefix];
-          final contact = candidates == null || candidates.isEmpty
-              ? null
-              : candidates.removeAt(0);
-          final contactName = contact?.name.trim() ?? '';
-          final name =
-              contactName.isEmpty || contactName.toLowerCase() == 'unknown'
-              ? '-'
-              : contactName;
-          final prefixLabel = collidedPrefixes.contains(prefix)
-              ? '!$prefix'
-              : prefix;
-          return '$prefixLabel: $name';
-        })
-        .join('\n');
+    final pathText = hops.asMap().entries.map((entry) {
+      final hopIndex = entry.key + 1;
+      final hop = entry.value;
+      final isLastHop = entry.key == hops.length - 1;
+      final prefix = PathHelper.formatHopHex(hop);
+      final candidates = contactsByPrefix[prefix];
+      final contact = candidates == null || candidates.isEmpty
+          ? null
+          : candidates.removeAt(0);
+      final contactName = contact?.name.trim() ?? '';
+      final name = contactName.isEmpty || contactName.toLowerCase() == 'unknown'
+          ? '-'
+          : contactName;
+      final collisionMarker = collidedPrefixes.contains(prefix) ? '!' : '';
+      return _applyMessagePathTemplate(
+        template,
+        hopKey: prefix,
+        hopName: name,
+        hopIndex: hopIndex,
+        senderName: messageSenderName,
+        collisionMarker: collisionMarker,
+        divider: isLastHop ? '' : '\n',
+      );
+    }).join();
+    return _applyMessagePathFinalTemplate(
+      finalTemplate,
+      path: pathText,
+      senderName: messageSenderName,
+    );
+  }
+
+  String _applyMessagePathTemplate(
+    String template, {
+    required String hopKey,
+    required String hopName,
+    required int hopIndex,
+    required String senderName,
+    required String collisionMarker,
+    required String divider,
+  }) {
+    return template
+        .replaceAll('%hopKey%', hopKey)
+        .replaceAll('%hopName%', hopName)
+        .replaceAll('%hopInd%', hopIndex.toString())
+        .replaceAll('%senderName%', senderName)
+        .replaceAll('%collisionMarker%', collisionMarker)
+        .replaceAll('%div%', divider)
+        .replaceAll(r'\n', '\n');
+  }
+
+  String _applyMessagePathFinalTemplate(
+    String template, {
+    required String path,
+    required String senderName,
+  }) {
+    return template
+        .replaceAll('%path%', path)
+        .replaceAll('%senderName%', senderName)
+        .replaceAll(r'\n', '\n');
   }
 
   Future<void> openRegionSelectDialog(Channel channel) async {

@@ -487,6 +487,8 @@ class AppSettingsScreen extends StatelessWidget {
             _buildChannelMaxbytesOutgoingTile(context, settingsService),
             const Divider(height: 1),
             _buildQuickAnswersTile(context, settingsService),
+            const Divider(height: 1),
+            _buildCopyMsgPathTile(context, settingsService),
           ],
         ],
       ),
@@ -1530,6 +1532,19 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildCopyMsgPathTile(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return ListTile(
+      leading: const Icon(Icons.account_tree_outlined),
+      title: Text(context.l10n.settings_copyMsgPathTitle),
+      subtitle: Text(context.l10n.settings_copyMsgPathDscr),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showCopyMsgPathTemplateDialog(context, settingsService),
+    );
+  }
+
   void _showMcmpTextLimitDialog(
     BuildContext context,
     AppSettingsService settingsService,
@@ -1957,6 +1972,109 @@ class AppSettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCopyMsgPathTemplateDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.copyMsgPathTemplate,
+    );
+    final finalController = TextEditingController(
+      text: settingsService.settings.copyMsgPathFinalTemplate,
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.settings_copyMsgPathEditTemplateTitle),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.62,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dialogContext.l10n.settings_copyMsgPathEditTemplateDscr,
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    keyboardType: TextInputType.multiline,
+                    minLines: 2,
+                    maxLines: 2,
+                    scrollPhysics: const ClampingScrollPhysics(),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    dialogContext.l10n.settings_copyMsgPathEditFinalTitle,
+                    style: Theme.of(dialogContext).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    dialogContext.l10n.settings_copyMsgPathEditFinalDscr,
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: finalController,
+                    keyboardType: TextInputType.multiline,
+                    minLines: 3,
+                    maxLines: 3,
+                    scrollPhysics: const ClampingScrollPhysics(),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              controller.text = AppSettings.defaultCopyMsgPathTemplate;
+              finalController.text =
+                  AppSettings.defaultCopyMsgPathFinalTemplate;
+              controller.selection = TextSelection.collapsed(
+                offset: controller.text.length,
+              );
+              finalController.selection = TextSelection.collapsed(
+                offset: finalController.text.length,
+              );
+            },
+            child: Text(dialogContext.l10n.common_default),
+          ),
+          TextButton(
+            onPressed: () async {
+              await settingsService.setCopyMsgPathTemplates(
+                hopTemplate: controller.text,
+                finalTemplate: finalController.text,
+              );
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(dialogContext.l10n.common_save),
           ),
         ],
       ),

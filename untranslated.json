@@ -1,5 +1,6 @@
 {
   "bg": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -42,10 +43,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "de": [
+    "common_default",
     "settings_regionFetchRegions",
     "settings_regionFetchRegionsFail",
     "settings_regionFetchRegionsAlreadyExists",
@@ -75,10 +83,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "es": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -121,10 +136,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "fr": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -167,10 +189,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "hu": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -213,10 +242,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "it": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -339,10 +375,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "ja": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -385,10 +428,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "ko": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -431,10 +481,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "nl": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -557,10 +614,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "pl": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -603,10 +667,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "pt": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -729,10 +800,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "sk": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -775,10 +853,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "sl": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -821,10 +906,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "sv": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -947,10 +1039,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "uk": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -993,10 +1092,17 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ],
 
   "zh": [
+    "common_default",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1039,6 +1145,12 @@
     "channels_copyPath",
     "channels_copyPathExtended",
     "channels_copiedPath",
-    "channels_copyPathFailed"
+    "channels_copyPathFailed",
+    "settings_copyMsgPathTitle",
+    "settings_copyMsgPathDscr",
+    "settings_copyMsgPathEditTemplateTitle",
+    "settings_copyMsgPathEditTemplateDscr",
+    "settings_copyMsgPathEditFinalTitle",
+    "settings_copyMsgPathEditFinalDscr"
   ]
 }
