@@ -28,7 +28,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _defaultSize = 11;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
-  static const double _compressedCellBudgetMultiplier = 2.0;
+  static const double _compressedCellBudgetMultiplier = 2.7;
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -37,7 +37,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _width = _defaultSize;
   int _height = _defaultSize;
   PaletteProfile _paletteProfile = PaletteProfile.master64;
-  int _selectedColor = MCOImagePalette.blackIndex;
+  int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
   late List<int> _pixels;
@@ -45,7 +45,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   @override
   void initState() {
     super.initState();
-    _pixels = List.filled(_width * _height, MCOImagePalette.whiteIndex);
+    _pixels = List.filled(_width * _height, _whiteIndex);
   }
 
   @override
@@ -296,10 +296,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     // Keep the old drawing centered when dimensions change; shrinking crops
     // from the edges instead of always losing the right/bottom side.
-    final nextPixels = List.filled(
-      newWidth * newHeight,
-      MCOImagePalette.whiteIndex,
-    );
+    final nextPixels = List.filled(newWidth * newHeight, _whiteIndex);
     final copyWidth = math.min(_width, newWidth);
     final copyHeight = math.min(_height, newHeight);
     final oldStartX = math.max(0, (_width - newWidth) ~/ 2);
@@ -357,15 +354,31 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _changePaletteProfile(PaletteProfile profile) {
-    final maxColor = _paletteFor(profile).length - 1;
+    if (profile == _paletteProfile) return;
+    final oldPalette = _paletteFor(_paletteProfile);
+    final newPalette = _paletteFor(profile);
+
+    int mapColor(int colorIndex) {
+      if (colorIndex < 0 || colorIndex >= oldPalette.length) {
+        return MCOImagePalette.whiteIndexFor(profile);
+      }
+      final argb = oldPalette[colorIndex].toARGB32();
+      return _nearestPaletteColor(
+        (argb >> 16) & 0xff,
+        (argb >> 8) & 0xff,
+        argb & 0xff,
+        (argb >> 24) & 0xff,
+        newPalette,
+        whiteIndex: MCOImagePalette.whiteIndexFor(profile),
+      );
+    }
+
+    final nextSelectedColor = mapColor(_selectedColor);
+    final nextPixels = _pixels.map(mapColor).toList();
     setState(() {
       _paletteProfile = profile;
-      _selectedColor = math.min(_selectedColor, maxColor);
-      _pixels = _pixels
-          .map(
-            (color) => color <= maxColor ? color : MCOImagePalette.whiteIndex,
-          )
-          .toList();
+      _selectedColor = nextSelectedColor;
+      _pixels = nextPixels;
     });
   }
 
@@ -430,7 +443,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _clearCanvas() {
     setState(() {
-      _pixels = List.filled(_width * _height, MCOImagePalette.whiteIndex);
+      _pixels = List.filled(_width * _height, _whiteIndex);
     });
   }
 
@@ -486,10 +499,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final palette = _paletteFor(_paletteProfile);
-    final nextPixels = List.filled(
-      _width * _height,
-      MCOImagePalette.whiteIndex,
-    );
+    final nextPixels = List.filled(_width * _height, _whiteIndex);
     final startX = (_width - targetWidth) ~/ 2;
     final startY = (_height - targetHeight) ~/ 2;
     for (var y = 0; y < targetHeight; y++) {
@@ -501,6 +511,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           rgba.getUint8(offset + 2),
           rgba.getUint8(offset + 3),
           palette,
+          whiteIndex: _whiteIndex,
         );
         nextPixels[(startY + y) * _width + startX + x] = colorIndex;
       }
@@ -527,9 +538,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     int green,
     int blue,
     int alpha,
-    List<Color> palette,
-  ) {
-    if (alpha == 0) return MCOImagePalette.whiteIndex;
+    List<Color> palette, {
+    required int whiteIndex,
+  }) {
+    if (alpha == 0) return whiteIndex;
     final opacity = alpha / 255;
     final compositeRed = (red * opacity + 255 * (1 - opacity)).round();
     final compositeGreen = (green * opacity + 255 * (1 - opacity)).round();
@@ -663,7 +675,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           pixels: _pixels,
         ),
         maxChars: maxChars,
-        backgroundColor: MCOImagePalette.whiteIndex,
+        backgroundColor: _whiteIndex,
       );
       Navigator.pop(context, encoded.text);
     } on MCOImageTooLargeException {
@@ -685,6 +697,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return switch (profile) {
       PaletteProfile.mono => 'Mono',
       PaletteProfile.master4 => 'Master 4',
+      PaletteProfile.master8 => 'Master 8',
+      PaletteProfile.master16 => 'Master 16',
       PaletteProfile.master32 => 'Master 32',
       PaletteProfile.master64 => 'Master 64',
     };
@@ -694,10 +708,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return switch (profile) {
       PaletteProfile.mono => MCOImagePalette.mono,
       PaletteProfile.master4 => MCOImagePalette.master4,
+      PaletteProfile.master8 => MCOImagePalette.master8,
+      PaletteProfile.master16 => MCOImagePalette.master16,
       PaletteProfile.master32 => MCOImagePalette.master32,
       PaletteProfile.master64 => MCOImagePalette.master64,
     };
   }
+
+  int get _whiteIndex => MCOImagePalette.whiteIndexFor(_paletteProfile);
 
   String _canvasLoadLabel(BuildContext context) {
     try {

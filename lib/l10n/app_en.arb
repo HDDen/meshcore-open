@@ -52,6 +52,7 @@
   "common_default": "Default",
   "common_clear": "Clear",
   "common_send": "Send",
+  "common_apply": "Apply",
   "scanner_title": "MeshCore Open (Advanced mod)",
   "connectionChoiceUsbLabel": "USB",
   "connectionChoiceBluetoothLabel": "Bluetooth",

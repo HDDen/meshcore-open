@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-enum PaletteProfile { mono, master4, master32, master64 }
+enum PaletteProfile { mono, master4, master8, master16, master32, master64 }
 
 enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg }
 
@@ -584,6 +584,8 @@ class MCOImageCodec {
     return switch (profile) {
       PaletteProfile.mono => 1,
       PaletteProfile.master4 => 2,
+      PaletteProfile.master8 => 3,
+      PaletteProfile.master16 => 4,
       PaletteProfile.master32 => 5,
       PaletteProfile.master64 => 6,
     };
@@ -593,6 +595,8 @@ class MCOImageCodec {
     return switch (profile) {
       PaletteProfile.mono => 2,
       PaletteProfile.master4 => 4,
+      PaletteProfile.master8 => 8,
+      PaletteProfile.master16 => 16,
       PaletteProfile.master32 => 32,
       PaletteProfile.master64 => 64,
     };

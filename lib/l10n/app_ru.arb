@@ -44,6 +44,7 @@
   "common_default": "По умолчанию",
   "common_clear": "Очистить",
   "common_send": "Отправить",
+  "common_apply": "Применить",
   "scanner_title": "MeshCore Open (Advanced mod)",
   "scanner_scanning": "Поиск устройств...",
   "scanner_connecting": "Подключение...",

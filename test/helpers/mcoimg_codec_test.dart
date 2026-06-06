@@ -49,6 +49,14 @@ void main() {
       );
     });
 
+    test('random 11x11 master-8', () {
+      _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master8, 4));
+    });
+
+    test('random 11x11 master-16', () {
+      _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master16, 4));
+    });
+
     test('random 11x11 master-32', () {
       _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master32, 1));
     });
@@ -238,6 +246,8 @@ int _paletteSize(PaletteProfile profile) {
   return switch (profile) {
     PaletteProfile.mono => 2,
     PaletteProfile.master4 => 4,
+    PaletteProfile.master8 => 8,
+    PaletteProfile.master16 => 16,
     PaletteProfile.master32 => 32,
     PaletteProfile.master64 => 64,
   };
