@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCO Image Codec Demo</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --accent: #2f6da8;
+      --border: color-mix(in srgb, CanvasText 18%, transparent);
+      --muted: color-mix(in srgb, CanvasText 62%, transparent);
+      --surface: color-mix(in srgb, Canvas 88%, CanvasText 5%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font: 16px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: CanvasText;
+      background: Canvas;
+    }
+
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 32px auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 650;
+    }
+
+    p {
+      margin: 0 0 20px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: Canvas;
+      color: CanvasText;
+      padding: 8px 10px;
+    }
+
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: color-mix(in srgb, CanvasText 12%, transparent);
+      color: CanvasText;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .tool {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: color-mix(in srgb, CanvasText 12%, transparent);
+      color: CanvasText;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tool.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .tool svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+      stroke: currentColor;
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
+      gap: 6px;
+      margin: 12px 0;
+    }
+
+    .swatch {
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+
+    .swatch.active {
+      outline-color: var(--accent);
+    }
+
+    .canvas-wrap {
+      display: grid;
+      gap: 12px;
+      justify-items: start;
+      overflow: auto;
+      max-width: 100%;
+    }
+
+    canvas {
+      max-width: 100%;
+      image-rendering: pixelated;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+    }
+
+    .meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    pre {
+      overflow: auto;
+      margin: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 820px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>MCO Image Codec Demo</h1>
+    <p>Draw a small indexed image, encode it to the <code>im:</code> message format, then decode and render it back.</p>
+
+    <div class="layout">
+      <section class="panel">
+        <h2 class="section-title">Canvas</h2>
+        <div class="field-grid">
+          <label>
+            Width
+            <input id="width" type="number" min="1" max="85" value="11">
+          </label>
+          <label>
+            Height
+            <input id="height" type="number" min="1" max="85" value="11">
+          </label>
+        </div>
+
+        <label style="margin-top: 12px;">
+          Palette profile
+          <select id="palette"></select>
+        </label>
+
+        <div id="palettePreview" class="palette"></div>
+
+        <div class="tools" aria-label="Drawing tools">
+          <button id="toolPencil" type="button" class="tool active">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+            </svg>
+            <span>Pencil</span>
+          </button>
+          <button id="toolFill" type="button" class="tool">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m14 3 7 7"></path>
+              <path d="M5 12 15 2l7 7-10 10H5Z"></path>
+              <path d="M5 12v7"></path>
+              <path d="M19 16s2 2.1 2 3.5a2 2 0 0 1-4 0c0-1.4 2-3.5 2-3.5Z"></path>
+            </svg>
+            <span>Fill</span>
+          </button>
+          <button id="toolEyedropper" type="button" class="tool">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m2 22 1-1h3l9-9"></path>
+              <path d="M3 21v-3l9-9"></path>
+              <path d="m14 6 4 4"></path>
+              <path d="m17 3 1-1a2.1 2.1 0 0 1 3 3l-1 1L9 17H5v-4Z"></path>
+            </svg>
+            <span>Eyedropper</span>
+          </button>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="editor"></canvas>
+          <div class="meta">
+            <span id="selectedColor"></span>
+            <span id="encodedMeta"></span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="resize" type="button">Apply size</button>
+          <button id="loadImage" type="button" class="secondary">Load image</button>
+          <button id="clear" type="button" class="secondary">Clear</button>
+          <button id="sample" type="button" class="secondary">Sample</button>
+        </div>
+        <input id="imageFile" type="file" accept="image/*" hidden>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Encoded text</h2>
+        <textarea id="encoded" spellcheck="false"></textarea>
+        <div class="actions">
+          <button id="decode" type="button">Decode textarea</button>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 22px;">Decoded preview</h2>
+        <canvas id="decoded"></canvas>
+      </section>
+    </div>
+
+    <h2 class="section-title" style="margin-top: 24px;">Usage</h2>
+    <pre><code>&lt;script src="./mcoimg-codec.global.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+const {
+  MCOImageCodec,
+  PaletteProfile,
+  drawMCOImage,
+} = window.MCOImg;
+
+const codec = new MCOImageCodec();
+
+const encoded = codec.encode({
+  width: 11,
+  height: 11,
+  paletteProfile: PaletteProfile.master8,
+  pixels: new Array(11 * 11).fill(0), // palette indexes, not ARGB colors
+});
+
+console.log(encoded.text); // im:...
+
+const decoded = codec.decode(encoded.text);
+drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
+&lt;/script&gt;</code></pre>
+  </main>
+
+  <script src="./mcoimg-codec.global.js"></script>
+  <script>
+    const {
+      MCOImageCodec,
+      PaletteProfile,
+      PaletteDisplayOrder,
+      PaletteDisplayName,
+      getPalette,
+      whiteIndexFor,
+      blackIndexFor,
+      argbToCss,
+      drawMCOImage,
+      nearestPaletteIndex,
+    } = window.MCOImg;
+
+    const codec = new MCOImageCodec();
+    const editor = document.getElementById('editor');
+    const decodedCanvas = document.getElementById('decoded');
+    const paletteSelect = document.getElementById('palette');
+    const palettePreview = document.getElementById('palettePreview');
+    const encodedText = document.getElementById('encoded');
+    const selectedColorText = document.getElementById('selectedColor');
+    const encodedMeta = document.getElementById('encodedMeta');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const imageFileInput = document.getElementById('imageFile');
+
+    const state = {
+      width: 11,
+      height: 11,
+      paletteProfile: PaletteProfile.master8,
+      pixels: [],
+      selectedColor: 0,
+      drawing: false,
+      tool: 'pencil',
+      scale: 24,
+    };
+
+    function init() {
+      console.log('[mcoimg-demo] init start');
+      for (const profile of PaletteDisplayOrder) {
+        const option = document.createElement('option');
+        option.value = String(profile);
+        option.textContent = PaletteDisplayName[profile];
+        paletteSelect.appendChild(option);
+      }
+      paletteSelect.value = String(state.paletteProfile);
+      state.selectedColor = blackIndexFor(state.paletteProfile);
+      resetPixels();
+      bindEvents();
+      renderAll();
+      console.log('[mcoimg-demo] init done', {
+        width: state.width,
+        height: state.height,
+        paletteProfile: state.paletteProfile,
+      });
+    }
+
+    function bindEvents() {
+      paletteSelect.addEventListener('change', () => {
+        state.paletteProfile = Number(paletteSelect.value);
+        state.selectedColor = Math.min(
+          state.selectedColor,
+          getPalette(state.paletteProfile).length - 1,
+        );
+        state.pixels = state.pixels.map((pixel) =>
+          Math.min(pixel, getPalette(state.paletteProfile).length - 1),
+        );
+        renderAll();
+      });
+
+      document.getElementById('resize').addEventListener('click', applySize);
+      document.getElementById('loadImage').addEventListener('click', () => {
+        console.log('[mcoimg-demo] load image clicked');
+        syncCanvasStateFromInputs();
+        console.log('[mcoimg-demo] opening file picker', {
+          width: state.width,
+          height: state.height,
+          paletteProfile: state.paletteProfile,
+        });
+        imageFileInput.value = '';
+        if (typeof imageFileInput.showPicker === 'function') {
+          console.log('[mcoimg-demo] using showPicker');
+          imageFileInput.showPicker();
+        } else {
+          console.log('[mcoimg-demo] using click fallback');
+          imageFileInput.click();
+        }
+      });
+      imageFileInput.addEventListener('change', loadImageFile);
+      imageFileInput.addEventListener('cancel', () => {
+        console.log('[mcoimg-demo] file picker cancelled');
+      });
+      document.getElementById('clear').addEventListener('click', () => {
+        resetPixels();
+        renderAll();
+      });
+      document.getElementById('sample').addEventListener('click', drawSample);
+      document.getElementById('decode').addEventListener('click', decodeTextarea);
+      document.getElementById('toolPencil').addEventListener('click', () => selectTool('pencil'));
+      document.getElementById('toolFill').addEventListener('click', () => selectTool('fill'));
+      document.getElementById('toolEyedropper').addEventListener('click', () => selectTool('eyedropper'));
+
+      editor.addEventListener('pointerdown', (event) => {
+        state.drawing = true;
+        paintCell(event);
+      });
+      editor.addEventListener('pointermove', (event) => {
+        if (state.drawing) paintCell(event);
+      });
+      window.addEventListener('pointerup', () => {
+        state.drawing = false;
+      });
+    }
+
+    function selectTool(tool) {
+      state.tool = tool;
+      document.getElementById('toolPencil').classList.toggle('active', tool === 'pencil');
+      document.getElementById('toolFill').classList.toggle('active', tool === 'fill');
+      document.getElementById('toolEyedropper').classList.toggle('active', tool === 'eyedropper');
+      updateSelectedColorText();
+    }
+
+    function applySize() {
+      const nextWidth = clamp(Number(widthInput.value), 1, 85);
+      const nextHeight = clamp(Number(heightInput.value), 1, 85);
+      console.log('[mcoimg-demo] apply size', { nextWidth, nextHeight });
+      resizeCanvasState(nextWidth, nextHeight);
+      renderAll();
+    }
+
+    function syncCanvasStateFromInputs() {
+      const nextWidth = clamp(Number(widthInput.value), 1, 85);
+      const nextHeight = clamp(Number(heightInput.value), 1, 85);
+      state.paletteProfile = Number(paletteSelect.value);
+      console.log('[mcoimg-demo] sync state from inputs', {
+        nextWidth,
+        nextHeight,
+        paletteProfile: state.paletteProfile,
+        currentWidth: state.width,
+        currentHeight: state.height,
+        currentPixels: state.pixels.length,
+      });
+      if (
+        nextWidth !== state.width ||
+        nextHeight !== state.height ||
+        state.pixels.length !== state.width * state.height
+      ) {
+        console.log('[mcoimg-demo] resizing canvas state before load');
+        resizeCanvasState(nextWidth, nextHeight);
+      }
+    }
+
+    function resizeCanvasState(nextWidth, nextHeight) {
+      console.log('[mcoimg-demo] resize canvas state', { nextWidth, nextHeight });
+      widthInput.value = String(nextWidth);
+      heightInput.value = String(nextHeight);
+
+      const white = whiteIndexFor(state.paletteProfile);
+      const nextPixels = new Array(nextWidth * nextHeight).fill(white);
+      const copyWidth = Math.min(state.width, nextWidth);
+      const copyHeight = Math.min(state.height, nextHeight);
+      for (let y = 0; y < copyHeight; y++) {
+        for (let x = 0; x < copyWidth; x++) {
+          nextPixels[y * nextWidth + x] = state.pixels[y * state.width + x];
+        }
+      }
+
+      state.width = nextWidth;
+      state.height = nextHeight;
+      state.pixels = nextPixels;
+    }
+
+    function resetPixels() {
+      console.log('[mcoimg-demo] reset pixels');
+      const white = whiteIndexFor(state.paletteProfile);
+      state.pixels = new Array(state.width * state.height).fill(white);
+    }
+
+    function drawSample() {
+      resetPixels();
+      const paletteSize = getPalette(state.paletteProfile).length;
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const centerX = (state.width - 1) / 2;
+          const centerY = (state.height - 1) / 2;
+          const dist = Math.hypot(x - centerX, y - centerY);
+          const value = Math.floor(dist + x + y) % paletteSize;
+          state.pixels[y * state.width + x] = value;
+        }
+      }
+      renderAll();
+    }
+
+    function loadImageFile(event) {
+      const file = event.target.files && event.target.files[0];
+      console.log('[mcoimg-demo] file input change', {
+        hasFile: !!file,
+        fileName: file && file.name,
+        fileType: file && file.type,
+        fileSize: file && file.size,
+      });
+      event.target.value = '';
+      if (!file) return;
+
+      syncCanvasStateFromInputs();
+      const image = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      console.log('[mcoimg-demo] object url created', objectUrl);
+      image.onload = () => {
+        console.log('[mcoimg-demo] image onload', {
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+        });
+        URL.revokeObjectURL(objectUrl);
+        applyLoadedImage(image);
+      };
+      image.onerror = () => {
+        console.log('[mcoimg-demo] image onerror');
+        URL.revokeObjectURL(objectUrl);
+        encodedMeta.textContent = 'Image file could not be loaded';
+      };
+      image.src = objectUrl;
+    }
+
+    function applyLoadedImage(image) {
+      console.log('[mcoimg-demo] apply loaded image start');
+      try {
+        const sourceWidth = image.naturalWidth || image.width;
+        const sourceHeight = image.naturalHeight || image.height;
+        console.log('[mcoimg-demo] source image size', { sourceWidth, sourceHeight });
+        if (sourceWidth <= 0 || sourceHeight <= 0) {
+          throw new Error('image has no readable dimensions');
+        }
+
+        const white = whiteIndexFor(state.paletteProfile);
+        const nextPixels = new Array(state.width * state.height).fill(white);
+        const scale = Math.min(
+          state.width / sourceWidth,
+          state.height / sourceHeight,
+        );
+        const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+        const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+        const offsetX = Math.floor((state.width - targetWidth) / 2);
+        const offsetY = Math.floor((state.height - targetHeight) / 2);
+        console.log('[mcoimg-demo] target size and offsets', {
+          canvasWidth: state.width,
+          canvasHeight: state.height,
+          targetWidth,
+          targetHeight,
+          offsetX,
+          offsetY,
+        });
+
+        const scratch = document.createElement('canvas');
+        scratch.width = targetWidth;
+        scratch.height = targetHeight;
+        const ctx = scratch.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+        const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight).data;
+
+        for (let y = 0; y < targetHeight; y++) {
+          for (let x = 0; x < targetWidth; x++) {
+            const source = (y * targetWidth + x) * 4;
+            const alpha = imageData[source + 3] / 255;
+            const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
+            const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
+            const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
+            const target = (offsetY + y) * state.width + offsetX + x;
+            nextPixels[target] = nearestPaletteIndex(
+              state.paletteProfile,
+              red,
+              green,
+              blue,
+            );
+          }
+        }
+
+        state.pixels = nextPixels;
+        console.log('[mcoimg-demo] loaded image applied', {
+          pixels: state.pixels.length,
+        });
+        renderAll();
+      } catch (error) {
+        console.log('[mcoimg-demo] apply loaded image failed', error);
+        encodedMeta.textContent = `Image import failed: ${error.message}`;
+      }
+    }
+
+    function renderAll() {
+      console.log('[mcoimg-demo] renderAll', {
+        width: state.width,
+        height: state.height,
+        paletteProfile: state.paletteProfile,
+      });
+      renderPalette();
+      renderEditor();
+      encodeCurrent();
+    }
+
+    function renderPalette() {
+      palettePreview.replaceChildren();
+      const palette = getPalette(state.paletteProfile);
+      palette.forEach((color, index) => {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = `swatch${index === state.selectedColor ? ' active' : ''}`;
+        swatch.style.background = argbToCss(color);
+        swatch.title = `Color ${index}`;
+        swatch.addEventListener('click', () => {
+          state.selectedColor = index;
+          renderPalette();
+          updateSelectedColorText();
+        });
+        palettePreview.appendChild(swatch);
+      });
+      updateSelectedColorText();
+    }
+
+    function renderEditor() {
+      editor.width = state.width * state.scale;
+      editor.height = state.height * state.scale;
+      const ctx = editor.getContext('2d');
+      const palette = getPalette(state.paletteProfile);
+      ctx.imageSmoothingEnabled = false;
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const pixel = state.pixels[y * state.width + x];
+          ctx.fillStyle = argbToCss(palette[pixel]);
+          ctx.fillRect(x * state.scale, y * state.scale, state.scale, state.scale);
+        }
+      }
+      ctx.strokeStyle = '#00f06a';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= state.width; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x * state.scale + 0.5, 0);
+        ctx.lineTo(x * state.scale + 0.5, editor.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= state.height; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * state.scale + 0.5);
+        ctx.lineTo(editor.width, y * state.scale + 0.5);
+        ctx.stroke();
+      }
+    }
+
+    function encodeCurrent() {
+      try {
+        const encoded = codec.encode({
+          width: state.width,
+          height: state.height,
+          paletteProfile: state.paletteProfile,
+          pixels: state.pixels,
+        });
+        encodedText.value = encoded.text;
+        encodedMeta.textContent =
+          `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
+          `${encoded.modeName}/${encoded.scanName}`;
+        drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
+      } catch (error) {
+        encodedMeta.textContent = error.message;
+      }
+    }
+
+    function decodeTextarea() {
+      try {
+        const image = codec.decode(encodedText.value.trim());
+        state.width = image.width;
+        state.height = image.height;
+        state.paletteProfile = image.paletteProfile;
+        state.pixels = image.pixels.slice();
+        state.selectedColor = blackIndexFor(state.paletteProfile);
+        widthInput.value = String(state.width);
+        heightInput.value = String(state.height);
+        paletteSelect.value = String(state.paletteProfile);
+        drawMCOImage(decodedCanvas, image, { scale: 12 });
+        renderAll();
+      } catch (error) {
+        encodedMeta.textContent = error.message;
+      }
+    }
+
+    function paintCell(event) {
+      const cell = eventToCell(event);
+      if (!cell) return;
+      const { x, y } = cell;
+      if (x < 0 || y < 0 || x >= state.width || y >= state.height) return;
+
+      if (state.tool === 'eyedropper') {
+        state.selectedColor = state.pixels[y * state.width + x];
+        renderPalette();
+        return;
+      }
+
+      if (state.tool === 'fill') {
+        floodFill(x, y, state.selectedColor);
+        renderEditor();
+        encodeCurrent();
+        return;
+      }
+
+      state.pixels[y * state.width + x] = state.selectedColor;
+      renderEditor();
+      encodeCurrent();
+    }
+
+    function eventToCell(event) {
+      const rect = editor.getBoundingClientRect();
+      const x = Math.floor((event.clientX - rect.left) * state.width / rect.width);
+      const y = Math.floor((event.clientY - rect.top) * state.height / rect.height);
+      if (x < 0 || y < 0 || x >= state.width || y >= state.height) return null;
+      return { x, y };
+    }
+
+    function floodFill(startX, startY, nextColor) {
+      const startIndex = startY * state.width + startX;
+      const previousColor = state.pixels[startIndex];
+      if (previousColor === nextColor) return;
+
+      const stack = [{ x: startX, y: startY }];
+      while (stack.length > 0) {
+        const { x, y } = stack.pop();
+        if (x < 0 || y < 0 || x >= state.width || y >= state.height) continue;
+        const index = y * state.width + x;
+        if (state.pixels[index] !== previousColor) continue;
+
+        state.pixels[index] = nextColor;
+        stack.push(
+          { x: x + 1, y },
+          { x: x - 1, y },
+          { x, y: y + 1 },
+          { x, y: y - 1 },
+        );
+      }
+    }
+
+    function updateSelectedColorText() {
+      selectedColorText.textContent =
+        `Tool: ${state.tool}, selected color: ${state.selectedColor}`;
+    }
+
+    function clamp(value, min, max) {
+      if (!Number.isFinite(value)) return min;
+      return Math.max(min, Math.min(max, Math.trunc(value)));
+    }
+
+    init();
+  </script>
+</body>
+</html>
