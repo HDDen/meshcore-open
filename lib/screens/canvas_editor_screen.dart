@@ -38,6 +38,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsWidthKey = 'canvas_editor_width';
   static const String _prefsHeightKey = 'canvas_editor_height';
   static const String _prefsPaletteKey = 'canvas_editor_palette';
+  static const List<PaletteProfile> _paletteProfileOptions = [
+    PaletteProfile.mono,
+    PaletteProfile.grayscale8,
+    PaletteProfile.grayscale16,
+    PaletteProfile.grayscale32,
+    PaletteProfile.master4,
+    PaletteProfile.master8,
+    PaletteProfile.master16,
+    PaletteProfile.master32,
+    PaletteProfile.master64,
+  ];
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -138,7 +149,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   labelText: context.l10n.chat_canvasPaletteMode,
                   border: const OutlineInputBorder(),
                 ),
-                items: PaletteProfile.values
+                items: _paletteProfileOptions
                     .map(
                       (profile) => DropdownMenuItem(
                         value: profile,
@@ -161,18 +172,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               _buildPayloadInfo(context),
               const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: _loadCanvasFromFile,
-                    icon: const Icon(Icons.file_open_outlined),
-                    label: Text(_canvasLoadLabel(context)),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _loadCanvasFromFile,
+                      icon: const Icon(Icons.file_open_outlined),
+                      label: Text(
+                        _canvasLoadLabel(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: _saveCanvasToPng,
-                    icon: const Icon(Icons.save_alt_outlined),
-                    label: Text(context.l10n.chat_canvasSave),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _saveCanvasToPng,
+                      icon: const Icon(Icons.save_alt_outlined),
+                      label: Text(
+                        context.l10n.chat_canvasSave,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -354,8 +376,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     required int targetHeight,
     required int fillColor,
   }) {
-    // Keep the old drawing centered when dimensions change; shrinking crops
-    // from the edges instead of always losing the right/bottom side.
+    if (targetWidth < sourceWidth || targetHeight < sourceHeight) {
+      return _scalePixels(
+        sourcePixels: sourcePixels,
+        sourceWidth: sourceWidth,
+        sourceHeight: sourceHeight,
+        targetWidth: targetWidth,
+        targetHeight: targetHeight,
+      );
+    }
+
+    // Keep the old drawing centered when adding new empty space.
     final nextPixels = List.filled(targetWidth * targetHeight, fillColor);
     final copyWidth = math.min(sourceWidth, targetWidth);
     final copyHeight = math.min(sourceHeight, targetHeight);
@@ -367,6 +398,31 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       for (var x = 0; x < copyWidth; x++) {
         nextPixels[(newStartY + y) * targetWidth + newStartX + x] =
             sourcePixels[(oldStartY + y) * sourceWidth + oldStartX + x];
+      }
+    }
+    return nextPixels;
+  }
+
+  List<int> _scalePixels({
+    required List<int> sourcePixels,
+    required int sourceWidth,
+    required int sourceHeight,
+    required int targetWidth,
+    required int targetHeight,
+  }) {
+    final nextPixels = List<int>.filled(targetWidth * targetHeight, 0);
+    for (var y = 0; y < targetHeight; y++) {
+      final sourceY = ((y + 0.5) * sourceHeight / targetHeight)
+          .floor()
+          .clamp(0, sourceHeight - 1)
+          .toInt();
+      for (var x = 0; x < targetWidth; x++) {
+        final sourceX = ((x + 0.5) * sourceWidth / targetWidth)
+            .floor()
+            .clamp(0, sourceWidth - 1)
+            .toInt();
+        nextPixels[y * targetWidth + x] =
+            sourcePixels[sourceY * sourceWidth + sourceX];
       }
     }
     return nextPixels;
@@ -925,8 +981,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.mono => 'Mono',
       PaletteProfile.master4 => 'Master 4',
       PaletteProfile.master8 => 'Master 8',
+      PaletteProfile.grayscale8 => 'Grayscale 8',
       PaletteProfile.master16 => 'Master 16',
+      PaletteProfile.grayscale16 => 'Grayscale 16',
       PaletteProfile.master32 => 'Master 32',
+      PaletteProfile.grayscale32 => 'Grayscale 32',
       PaletteProfile.master64 => 'Master 64',
     };
   }
@@ -936,8 +995,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.mono => 1,
       PaletteProfile.master4 => 2,
       PaletteProfile.master8 => 3,
+      PaletteProfile.grayscale8 => 3,
       PaletteProfile.master16 => 4,
+      PaletteProfile.grayscale16 => 4,
       PaletteProfile.master32 => 5,
+      PaletteProfile.grayscale32 => 5,
       PaletteProfile.master64 => 6,
     };
   }
@@ -947,8 +1009,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.mono => MCOImagePalette.mono,
       PaletteProfile.master4 => MCOImagePalette.master4,
       PaletteProfile.master8 => MCOImagePalette.master8,
+      PaletteProfile.grayscale8 => MCOImagePalette.grayscale8,
       PaletteProfile.master16 => MCOImagePalette.master16,
+      PaletteProfile.grayscale16 => MCOImagePalette.grayscale16,
       PaletteProfile.master32 => MCOImagePalette.master32,
+      PaletteProfile.grayscale32 => MCOImagePalette.grayscale32,
       PaletteProfile.master64 => MCOImagePalette.master64,
     };
   }

@@ -57,8 +57,11 @@ is a double quote, which is required for standard basE91 encoding.
 - `mono`: global palette indexes `0..1`, 1 bit per color
 - `master4`: global palette indexes `0..3`, 2 bits per color
 - `master8`: global palette indexes `0..7`, 3 bits per color
+- `grayscale8`: global palette indexes `0..7`, 3 bits per color
 - `master16`: global palette indexes `0..15`, 4 bits per color
+- `grayscale16`: global palette indexes `0..15`, 4 bits per color
 - `master32`: global palette indexes `0..31`, 5 bits per color
+- `grayscale32`: global palette indexes `0..31`, 5 bits per color
 - `master64`: global palette indexes `0..63`, 6 bits per color
 
 The actual RGB palette is shared by both sides and is not transmitted.

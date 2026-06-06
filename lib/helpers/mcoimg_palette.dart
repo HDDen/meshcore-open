@@ -11,8 +11,11 @@ class MCOImagePalette {
       PaletteProfile.mono => 1,
       PaletteProfile.master4 => 3,
       PaletteProfile.master8 => 1,
+      PaletteProfile.grayscale8 => 7,
       PaletteProfile.master16 => 3,
+      PaletteProfile.grayscale16 => 15,
       PaletteProfile.master32 => 3,
+      PaletteProfile.grayscale32 => 31,
       PaletteProfile.master64 => 7,
     };
   }
@@ -22,8 +25,11 @@ class MCOImagePalette {
       PaletteProfile.mono => 0,
       PaletteProfile.master4 => 0,
       PaletteProfile.master8 => 0,
+      PaletteProfile.grayscale8 => 0,
       PaletteProfile.master16 => 0,
+      PaletteProfile.grayscale16 => 0,
       PaletteProfile.master32 => 0,
+      PaletteProfile.grayscale32 => 0,
       PaletteProfile.master64 => 0,
     };
   }
@@ -33,8 +39,11 @@ class MCOImagePalette {
       PaletteProfile.mono => mono,
       PaletteProfile.master4 => master4,
       PaletteProfile.master8 => master8,
+      PaletteProfile.grayscale8 => grayscale8,
       PaletteProfile.master16 => master16,
+      PaletteProfile.grayscale16 => grayscale16,
       PaletteProfile.master32 => master32,
+      PaletteProfile.grayscale32 => grayscale32,
       PaletteProfile.master64 => master64,
     };
   }
@@ -57,6 +66,17 @@ class MCOImagePalette {
     Color(0xFF47C000),
     Color(0xFF3D69FF),
     Color(0xFF7900FF),
+  ];
+
+  static const List<Color> grayscale8 = [
+    Color(0xffffffff),
+    Color(0xffdbdbdb),
+    Color(0xffb6b6b6),
+    Color(0xff919191),
+    Color(0xff6d6d6d),
+    Color(0xff484848),
+    Color(0xff242424),
+    Color(0xff000000),
   ];
 
   static const List<Color> master16 = [
@@ -125,6 +145,25 @@ class MCOImagePalette {
     Color.fromARGB(255, 0, 34, 150),
     Color.fromARGB(255, 106, 0, 227),
     Color.fromARGB(255, 47, 0, 100),
+  ];
+
+  static const List<Color> grayscale16 = [
+    Color(0xffffffff),
+    Color(0xffeeeeee),
+    Color(0xffdddddd),
+    Color(0xffcccccc),
+    Color(0xffbbbbbb),
+    Color(0xffaaaaaa),
+    Color(0xff999999),
+    Color(0xff888888),
+    Color(0xff777777),
+    Color(0xff666666),
+    Color(0xff555555),
+    Color(0xff444444),
+    Color(0xff333333),
+    Color(0xff222222),
+    Color(0xff111111),
+    Color(0xff000000),
   ];
 
   static const List<Color> master32 = [
@@ -232,6 +271,41 @@ class MCOImagePalette {
     Color.fromARGB(255, 178, 135, 255),
     Color.fromARGB(255, 133, 61, 255),
     Color.fromARGB(255, 47, 0, 100),
+  ];
+
+  static const List<Color> grayscale32 = [
+    Color(0xffffffff),
+    Color(0xfff7f7f7),
+    Color(0xffefefef),
+    Color(0xffe6e6e6),
+    Color(0xffdedede),
+    Color(0xffd6d6d6),
+    Color(0xffcecece),
+    Color(0xffc5c5c5),
+    Color(0xffbdbdbd),
+    Color(0xffb5b5b5),
+    Color(0xffadadad),
+    Color(0xffa5a5a5),
+    Color(0xff9c9c9c),
+    Color(0xff949494),
+    Color(0xff8c8c8c),
+    Color(0xff848484),
+    Color(0xff7b7b7b),
+    Color(0xff737373),
+    Color(0xff6b6b6b),
+    Color(0xff636363),
+    Color(0xff5a5a5a),
+    Color(0xff525252),
+    Color(0xff4a4a4a),
+    Color(0xff424242),
+    Color(0xff393939),
+    Color(0xff313131),
+    Color(0xff292929),
+    Color(0xff212121),
+    Color(0xff181818),
+    Color(0xff101010),
+    Color(0xff080808),
+    Color(0xff000000),
   ];
 
   static const List<Color> master64 = [

@@ -19,6 +19,8 @@ import '../helpers/newline_to_space_formatter.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
+import '../helpers/mco_image_file_saver.dart';
+import '../helpers/mcoimg_codec.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
@@ -1839,6 +1841,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _showMessageActions(Message message, Contact contact) {
     final translationService = context.read<TranslationService>();
+    final mcoImage = MCOImageMessage.tryDecode(message.text);
     final canTranslateMessage =
         translationService.canTranslateIncoming(
           text: message.text,
@@ -1880,6 +1883,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 _copyMessageText(message.text);
               },
             ),
+            if (mcoImage != null)
+              ListTile(
+                leading: const Icon(Icons.save_alt_outlined),
+                title: Text(context.l10n.chat_canvasSave),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  unawaited(_saveMcoImageMessage(mcoImage));
+                },
+              ),
             if (canTranslateMessage)
               ListTile(
                 leading: const Icon(Icons.translate),
@@ -1948,6 +1960,19 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       content: Text(context.l10n.chat_messageCopied),
     );
+  }
+
+  Future<void> _saveMcoImageMessage(MCOImage image) async {
+    try {
+      await MCOImageFileSaver.savePng(image);
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
   }
 
   Future<void> _deleteMessage(Message message) async {

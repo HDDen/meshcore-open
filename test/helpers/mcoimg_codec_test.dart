@@ -53,12 +53,33 @@ void main() {
       _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master8, 4));
     });
 
+    test('random 11x11 grayscale-8', () {
+      _expectRoundTrip(
+        codec,
+        _randomImage(11, 11, PaletteProfile.grayscale8, 4),
+      );
+    });
+
     test('random 11x11 master-16', () {
       _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master16, 4));
     });
 
+    test('random 11x11 grayscale-16', () {
+      _expectRoundTrip(
+        codec,
+        _randomImage(11, 11, PaletteProfile.grayscale16, 4),
+      );
+    });
+
     test('random 11x11 master-32', () {
       _expectRoundTrip(codec, _randomImage(11, 11, PaletteProfile.master32, 1));
+    });
+
+    test('random 11x11 grayscale-32', () {
+      _expectRoundTrip(
+        codec,
+        _randomImage(11, 11, PaletteProfile.grayscale32, 1),
+      );
     });
 
     test('random 15x8 master-32', () {
@@ -247,8 +268,11 @@ int _paletteSize(PaletteProfile profile) {
     PaletteProfile.mono => 2,
     PaletteProfile.master4 => 4,
     PaletteProfile.master8 => 8,
+    PaletteProfile.grayscale8 => 8,
     PaletteProfile.master16 => 16,
+    PaletteProfile.grayscale16 => 16,
     PaletteProfile.master32 => 32,
+    PaletteProfile.grayscale32 => 32,
     PaletteProfile.master64 => 64,
   };
 }
