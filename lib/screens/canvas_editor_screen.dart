@@ -279,26 +279,52 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Widget _buildTools() {
-    return SegmentedButton<_CanvasTool>(
-      showSelectedIcon: false,
-      segments: const [
-        ButtonSegment(
-          value: _CanvasTool.pencil,
-          icon: Icon(Icons.edit_outlined),
-        ),
-        ButtonSegment(
-          value: _CanvasTool.fill,
-          icon: Icon(Icons.format_color_fill_outlined),
-        ),
-        ButtonSegment(
-          value: _CanvasTool.eyedropper,
-          icon: Icon(Icons.colorize_outlined),
-        ),
-      ],
-      selected: {_selectedTool},
-      onSelectionChanged: (selection) {
-        setState(() => _selectedTool = selection.first);
-      },
+    Widget moveButton({
+      required IconData icon,
+      required int dx,
+      required int dy,
+    }) {
+      return IconButton.outlined(
+        onPressed: () => _shiftCanvas(dx: dx, dy: dy),
+        icon: Icon(icon),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          SegmentedButton<_CanvasTool>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: _CanvasTool.pencil,
+                icon: Icon(Icons.edit_outlined),
+              ),
+              ButtonSegment(
+                value: _CanvasTool.fill,
+                icon: Icon(Icons.format_color_fill_outlined),
+              ),
+              ButtonSegment(
+                value: _CanvasTool.eyedropper,
+                icon: Icon(Icons.colorize_outlined),
+              ),
+            ],
+            selected: {_selectedTool},
+            onSelectionChanged: (selection) {
+              setState(() => _selectedTool = selection.first);
+            },
+          ),
+          const SizedBox(width: 12),
+          moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
+        ],
+      ),
     );
   }
 
@@ -779,6 +805,24 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (x < _width - 1) addIfSame(index + 1);
       if (y > 0) addIfSame(index - _width);
       if (y < _height - 1) addIfSame(index + _width);
+    }
+
+    setState(() => _pixels = nextPixels);
+    _markPayloadDirty();
+  }
+
+  void _shiftCanvas({required int dx, required int dy}) {
+    _finishDrawing();
+    final nextPixels = List<int>.filled(_width * _height, _whiteIndex);
+    for (var y = 0; y < _height; y++) {
+      for (var x = 0; x < _width; x++) {
+        final nextX = x + dx;
+        final nextY = y + dy;
+        if (nextX < 0 || nextY < 0 || nextX >= _width || nextY >= _height) {
+          continue;
+        }
+        nextPixels[nextY * _width + nextX] = _pixels[y * _width + x];
+      }
     }
 
     setState(() => _pixels = nextPixels);
