@@ -346,6 +346,18 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get common_default;
 
+  /// No description provided for @common_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get common_clear;
+
+  /// No description provided for @common_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get common_send;
+
   /// No description provided for @scanner_title.
   ///
   /// In en, this message translates to:
@@ -4545,12 +4557,6 @@ abstract class AppLocalizations {
   /// **'Reload'**
   String get common_reload;
 
-  /// No description provided for @common_clear.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get common_clear;
-
   /// No description provided for @path_currentPath.
   ///
   /// In en, this message translates to:
@@ -8547,6 +8553,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get contact_typeUnknown;
+
+  /// No description provided for @chat_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas'**
+  String get chat_canvas;
+
+  /// No description provided for @chat_canvasPalette.
+  ///
+  /// In en, this message translates to:
+  /// **'Palette'**
+  String get chat_canvasPalette;
+
+  /// No description provided for @chat_canvasPaletteMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Palette preset'**
+  String get chat_canvasPaletteMode;
+
+  /// No description provided for @chat_canvasChangeSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Change canvas size'**
+  String get chat_canvasChangeSize;
+
+  /// No description provided for @chat_canvasWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Width'**
+  String get chat_canvasWidth;
+
+  /// No description provided for @chat_canvasHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get chat_canvasHeight;
+
+  /// No description provided for @chat_canvasGridShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show grid'**
+  String get chat_canvasGridShow;
+
+  /// No description provided for @chat_canvasGridColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid color'**
+  String get chat_canvasGridColor;
+
+  /// No description provided for @chat_canvasSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to file'**
+  String get chat_canvasSave;
+
+  /// No description provided for @chat_canvasLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Load from file'**
+  String get chat_canvasLoad;
+
+  /// No description provided for @chat_canvasSendPayloadExceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send – payload exceeded. Please reduce the number of parts or the canvas size.'**
+  String get chat_canvasSendPayloadExceed;
 }
 
 class _AppLocalizationsDelegate

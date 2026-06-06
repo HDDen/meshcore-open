@@ -40,6 +40,7 @@ import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
+import '../widgets/mco_image_message.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
@@ -48,6 +49,7 @@ import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
 import 'channel_message_path_screen.dart';
+import 'canvas_editor_screen.dart';
 import 'map_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 
@@ -708,6 +710,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final gifId = GifHelper.parseGif(message.text);
+    final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final isMediaMessage = gifId != null || mcoImage != null;
     final poi = parseMarkerText(message.text);
     final translatedDisplayText =
         message.translatedText != null &&
@@ -765,7 +769,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 1000),
                   curve: Curves.easeInOut,
-                  padding: gifId != null
+                  padding: isMediaMessage
                       ? const EdgeInsets.all(4)
                       : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   constraints: BoxConstraints(
@@ -785,7 +789,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     children: [
                       if (!isOutgoing) ...[
                         Padding(
-                          padding: gifId != null
+                          padding: isMediaMessage
                               ? const EdgeInsets.only(
                                   left: 8,
                                   top: 4,
@@ -801,7 +805,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ),
                           ),
                         ),
-                        if (gifId == null) const SizedBox(height: 4),
+                        if (!isMediaMessage) const SizedBox(height: 4),
                       ],
                       if (message.replyToSenderName != null ||
                           message.replyToText != null) ...[
@@ -880,6 +884,45 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ),
                           ],
                         )
+                      else if (mcoImage != null)
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: MCOImageMessage(image: mcoImage),
+                            ),
+                            if (!enableTracing && isOutgoing)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: isOutgoing
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
+                                    borderRadius: const BorderRadius.only(
+                                      bottomLeft: Radius.circular(10),
+                                      topRight: Radius.circular(8),
+                                    ),
+                                  ),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            ChannelMessageStatus.sent &&
+                                        displayPath.isNotEmpty,
+                                    isFailed:
+                                        message.status ==
+                                        ChannelMessageStatus.failed,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        )
                       else
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -921,7 +964,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         if (displayPath.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Padding(
-                            padding: gifId != null
+                            padding: isMediaMessage
                                 ? const EdgeInsets.symmetric(horizontal: 8)
                                 : EdgeInsets.zero,
                             child: Text(
@@ -940,7 +983,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ],
                         const SizedBox(height: 4),
                         Padding(
-                          padding: gifId != null
+                          padding: isMediaMessage
                               ? const EdgeInsets.only(
                                   left: 8,
                                   right: 8,
@@ -1314,6 +1357,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Future<void> _showCanvasEditor(int maxTextChars) async {
+    final encodedText = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CanvasEditorScreen(maxTextChars: maxTextChars),
+      ),
+    );
+    if (encodedText == null || encodedText.isEmpty) return;
+    if (!mounted) return;
+    _textController.text = encodedText;
+    _textController.selection = TextSelection.collapsed(
+      offset: encodedText.length,
+    );
+    await _sendMessage(skipTranslation: true, skipReplyContext: true);
+  }
+
   Widget _buildAvatar(String senderName) {
     final initial = _getFirstCharacterOrEmoji(senderName);
     final color = _getColorForName(senderName);
@@ -1477,6 +1536,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 onPressed: () => _showGifPicker(context),
                 tooltip: context.l10n.chat_sendGif,
               ),
+              IconButton(
+                icon: const Icon(Icons.brush_outlined),
+                onPressed: () => _showCanvasEditor(maxBytes),
+                tooltip: context.l10n.chat_canvas,
+              ),
               if (settings.translationEnabled)
                 MessageTranslationButton(
                   enabled: settings.composerTranslationEnabled,
@@ -1633,7 +1697,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Future<void> _sendMessage({String? quickAnswerText}) async {
+  Future<void> _sendMessage({
+    String? quickAnswerText,
+    bool skipTranslation = false,
+    bool skipReplyContext = false,
+  }) async {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
@@ -1657,7 +1725,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled) {
+    if (settings.translationEnabled && !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -1680,7 +1748,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-    messageText = _applyReplyMention(messageText);
+    if (!skipReplyContext) {
+      messageText = _applyReplyMention(messageText);
+    }
 
     final maxBytes = _maxChannelInputBytes(connector, settings);
     final outboundText = connector.prepareChannelOutboundText(
@@ -1707,7 +1777,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // store last sended msg to resend mechanism
     _lastChannelSentText = messageText;
 
-    final replyTarget = _replyingToMessage;
+    final replyTarget = skipReplyContext ? null : _replyingToMessage;
     if (quickAnswerText == null) {
       _textController.clear();
       _textFieldFocusNode.requestFocus();

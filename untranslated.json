@@ -1,6 +1,7 @@
 {
   "bg": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -50,11 +51,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "de": [
     "common_default",
+    "common_send",
     "settings_regionFetchRegions",
     "settings_regionFetchRegionsFail",
     "settings_regionFetchRegionsAlreadyExists",
@@ -91,11 +104,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "es": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -145,11 +170,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "fr": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -199,11 +236,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "hu": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -253,11 +302,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "it": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -387,11 +448,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "ja": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -441,11 +514,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "ko": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -495,11 +580,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "nl": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -629,11 +726,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "pl": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -683,11 +792,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "pt": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -817,11 +938,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "sk": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -871,11 +1004,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "sl": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -925,11 +1070,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "sv": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1059,11 +1216,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "uk": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1113,11 +1282,23 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ],
 
   "zh": [
     "common_default",
+    "common_send",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1167,6 +1348,17 @@
     "settings_copyMsgPathEditTemplateTitle",
     "settings_copyMsgPathEditTemplateDscr",
     "settings_copyMsgPathEditFinalTitle",
-    "settings_copyMsgPathEditFinalDscr"
+    "settings_copyMsgPathEditFinalDscr",
+    "chat_canvas",
+    "chat_canvasPalette",
+    "chat_canvasPaletteMode",
+    "chat_canvasChangeSize",
+    "chat_canvasWidth",
+    "chat_canvasHeight",
+    "chat_canvasGridShow",
+    "chat_canvasGridColor",
+    "chat_canvasSave",
+    "chat_canvasLoad",
+    "chat_canvasSendPayloadExceed"
   ]
 }

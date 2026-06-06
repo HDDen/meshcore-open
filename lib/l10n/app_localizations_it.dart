@@ -121,6 +121,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get common_default => 'Default';
 
   @override
+  String get common_clear => 'Cancella';
+
+  @override
+  String get common_send => 'Send';
+
+  @override
   String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
@@ -2554,9 +2560,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get common_reload => 'Ricaricare';
-
-  @override
-  String get common_clear => 'Cancella';
 
   @override
   String path_currentPath(String path) {
@@ -5012,4 +5015,38 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get chat_canvas => 'Canvas';
+
+  @override
+  String get chat_canvasPalette => 'Palette';
+
+  @override
+  String get chat_canvasPaletteMode => 'Palette preset';
+
+  @override
+  String get chat_canvasChangeSize => 'Change canvas size';
+
+  @override
+  String get chat_canvasWidth => 'Width';
+
+  @override
+  String get chat_canvasHeight => 'Height';
+
+  @override
+  String get chat_canvasGridShow => 'Show grid';
+
+  @override
+  String get chat_canvasGridColor => 'Grid color';
+
+  @override
+  String get chat_canvasSave => 'Save to file';
+
+  @override
+  String get chat_canvasLoad => 'Load from file';
+
+  @override
+  String get chat_canvasSendPayloadExceed =>
+      'Failed to send – payload exceeded. Please reduce the number of parts or the canvas size.';
 }

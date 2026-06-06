@@ -34,6 +34,7 @@ import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/elements_ui.dart';
 import '../widgets/byte_count_input.dart';
+import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
 import '../utils/emoji_utils.dart';
@@ -41,6 +42,7 @@ import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
+import '../widgets/mco_image_message.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/path_selection_dialog.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
@@ -608,6 +610,11 @@ class _ChatScreenState extends State<ChatScreen> {
               onPressed: () => _showGifPicker(context),
               tooltip: context.l10n.chat_sendGif,
             ),
+            IconButton(
+              icon: const Icon(Icons.brush_outlined),
+              onPressed: () => _showCanvasEditor(connector, maxBytes),
+              tooltip: context.l10n.chat_canvas,
+            ),
             if (settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
@@ -743,6 +750,25 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _showCanvasEditor(
+    MeshCoreConnector connector,
+    int maxTextChars,
+  ) async {
+    final encodedText = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CanvasEditorScreen(maxTextChars: maxTextChars),
+      ),
+    );
+    if (encodedText == null || encodedText.isEmpty) return;
+    if (!mounted) return;
+    _textController.text = encodedText;
+    _textController.selection = TextSelection.collapsed(
+      offset: encodedText.length,
+    );
+    await _sendMessage(connector, skipTranslation: true);
+  }
+
   Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) async {
     final selectedAnswerIds = await connector.loadContactQuickAnswerIds(
       widget.contact.publicKeyHex,
@@ -783,6 +809,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage(
     MeshCoreConnector connector, {
     String? quickAnswerText,
+    bool skipTranslation = false,
   }) async {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -805,7 +832,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled) {
+    if (settings.translationEnabled && !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -2009,6 +2036,8 @@ class _MessageBubble extends StatelessWidget {
     final isOutgoing = message.isOutgoing;
     final colorScheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
+    final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final isMediaMessage = gifId != null || mcoImage != null;
     final poi = parseMarkerText(message.text);
     final isFailed = message.status == MessageStatus.failed;
     final bubbleColor = isFailed
@@ -2058,7 +2087,7 @@ class _MessageBubble extends StatelessWidget {
                 ],
                 Flexible(
                   child: Container(
-                    padding: gifId != null
+                    padding: isMediaMessage
                         ? const EdgeInsets.all(4)
                         : const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -2076,7 +2105,7 @@ class _MessageBubble extends StatelessWidget {
                       children: [
                         if (!isOutgoing) ...[
                           Padding(
-                            padding: gifId != null
+                            padding: isMediaMessage
                                 ? const EdgeInsets.only(
                                     left: 8,
                                     top: 4,
@@ -2092,7 +2121,7 @@ class _MessageBubble extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (gifId == null) const SizedBox(height: 4),
+                          if (!isMediaMessage) const SizedBox(height: 4),
                         ],
                         if (poi != null)
                           _buildPoiMessage(
@@ -2130,6 +2159,39 @@ class _MessageBubble extends StatelessWidget {
                                     alpha: 0.7,
                                   ),
                                 ),
+                              ),
+                              if (!enableTracing && isOutgoing)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor,
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(10),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: MessageStatusIcon(
+                                      isAcked:
+                                          message.status ==
+                                              MessageStatus.delivered &&
+                                          message.pathBytes.isNotEmpty,
+                                      isFailed:
+                                          message.status ==
+                                          MessageStatus.failed,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          )
+                        else if (mcoImage != null)
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: MCOImageMessage(image: mcoImage),
                               ),
                               if (!enableTracing && isOutgoing)
                                 Positioned(
@@ -2196,7 +2258,7 @@ class _MessageBubble extends StatelessWidget {
                           if (isOutgoing && message.retryCount > 0) ...[
                             const SizedBox(height: 4),
                             Padding(
-                              padding: gifId != null
+                              padding: isMediaMessage
                                   ? const EdgeInsets.symmetric(horizontal: 8)
                                   : EdgeInsets.zero,
                               child: Text(
@@ -2217,7 +2279,7 @@ class _MessageBubble extends StatelessWidget {
                           ],
                           const SizedBox(height: 4),
                           Padding(
-                            padding: gifId != null
+                            padding: isMediaMessage
                                 ? const EdgeInsets.only(
                                     left: 8,
                                     right: 8,

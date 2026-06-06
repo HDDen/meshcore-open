@@ -121,6 +121,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get common_default => 'По умолчанию';
 
   @override
+  String get common_clear => 'Очистить';
+
+  @override
+  String get common_send => 'Отправить';
+
+  @override
   String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
@@ -2564,9 +2570,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get common_reload => 'Обновить';
-
-  @override
-  String get common_clear => 'Очистить';
 
   @override
   String path_currentPath(String path) {
@@ -5028,4 +5031,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Неизвестно';
+
+  @override
+  String get chat_canvas => 'Холст';
+
+  @override
+  String get chat_canvasPalette => 'Палитра';
+
+  @override
+  String get chat_canvasPaletteMode => 'Профиль палитры';
+
+  @override
+  String get chat_canvasChangeSize => 'Изменить размер холста';
+
+  @override
+  String get chat_canvasWidth => 'Ширина';
+
+  @override
+  String get chat_canvasHeight => 'Высота';
+
+  @override
+  String get chat_canvasGridShow => 'Отображать сетку';
+
+  @override
+  String get chat_canvasGridColor => 'Цвет сетки';
+
+  @override
+  String get chat_canvasSave => 'Сохранить в файл';
+
+  @override
+  String get chat_canvasLoad => 'Загрузить из файла';
+
+  @override
+  String get chat_canvasSendPayloadExceed =>
+      'Не удалось отправить - превышен payload. Уменьшите количество деталей или размер холста.';
 }

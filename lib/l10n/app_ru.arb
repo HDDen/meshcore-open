@@ -2039,10 +2039,13 @@
   "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки",
   "chat_canvas": "Холст",
   "chat_canvasPalette": "Палитра",
+  "chat_canvasPaletteMode": "Профиль палитры",
   "chat_canvasChangeSize": "Изменить размер холста",
   "chat_canvasWidth": "Ширина",
   "chat_canvasHeight": "Высота",
   "chat_canvasGridShow": "Отображать сетку",
   "chat_canvasGridColor": "Цвет сетки",
-  "chat_canvasSave": "Сохранить в файл"
+  "chat_canvasSave": "Сохранить в файл",
+  "chat_canvasLoad": "Загрузить из файла",
+  "chat_canvasSendPayloadExceed": "Не удалось отправить - превышен payload. Уменьшите количество деталей или размер холста."
 }
