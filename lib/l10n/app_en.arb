@@ -50,6 +50,8 @@
   "common_autoRefresh": "Autorefresh",
   "common_interval": "Interval",
   "common_default": "Default",
+  "common_clear": "Clear",
+  "common_send": "Send",
   "scanner_title": "MeshCore Open (Advanced mod)",
   "connectionChoiceUsbLabel": "USB",
   "connectionChoiceBluetoothLabel": "Bluetooth",
@@ -2843,5 +2845,13 @@
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",
   "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown"
+  "contact_typeUnknown": "Unknown",
+  "chat_canvas": "Canvas",
+  "chat_canvasPalette": "Palette",
+  "chat_canvasChangeSize": "Change canvas size",
+  "chat_canvasWidth": "Width",
+  "chat_canvasHeight": "Height",
+  "chat_canvasGridShow": "Show grid",
+  "chat_canvasGridColor": "Grid color",
+  "chat_canvasSave": "Save to file"
 }
