@@ -109,7 +109,6 @@ class MCOImagePalette {
     // Color.fromARGB(255, 121, 0, 255),
     // Color.fromARGB(255, 88, 2, 185),
     // Color.fromARGB(255, 47, 0, 100),
-
     Color.fromARGB(255, 255, 255, 255),
     Color.fromARGB(255, 164, 164, 164),
     Color.fromARGB(255, 0, 0, 0),
@@ -194,7 +193,6 @@ class MCOImagePalette {
     // Color(0xFF8044B8),
     // Color(0xFF581391),
     // Color(0xFF2E004C),
-
     Color.fromARGB(255, 255, 255, 255),
     Color.fromARGB(255, 179, 179, 179),
     Color.fromARGB(255, 102, 102, 102),
@@ -204,7 +202,7 @@ class MCOImagePalette {
     Color.fromARGB(255, 255, 85, 65),
     Color.fromARGB(255, 254, 36, 0),
     Color.fromARGB(255, 98, 14, 1),
-    
+
     Color.fromARGB(255, 255, 179, 99),
     Color.fromARGB(255, 255, 132, 0),
     Color.fromARGB(255, 197, 102, 1),
@@ -254,7 +252,7 @@ class MCOImagePalette {
     Color.fromARGB(255, 145, 21, 0),
     Color.fromARGB(255, 98, 14, 1),
     Color.fromARGB(255, 69, 10, 0),
-    
+
     Color.fromARGB(255, 255, 179, 99),
     Color.fromARGB(255, 255, 168, 85),
     Color.fromARGB(255, 255, 147, 51),

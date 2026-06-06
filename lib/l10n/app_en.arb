@@ -2857,5 +2857,20 @@
   "chat_canvasGridColor": "Grid color",
   "chat_canvasSave": "Save to file",
   "chat_canvasLoad": "Load from file",
-  "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded. Please reduce the number of parts or the canvas size."
+  "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.",
+  "@chat_canvasSendPayloadExceed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_canvasCurrentPayload": "Current payload: {payload}",
+  "@chat_canvasCurrentPayload": {
+    "placeholders": {
+      "payload": {
+        "type": "int"
+      }
+    }
+  }
 }

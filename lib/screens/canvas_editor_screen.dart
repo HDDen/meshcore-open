@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -10,8 +11,9 @@ import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
+import '../storage/prefs_manager.dart';
 
-enum _CanvasTool { pencil, fill }
+enum _CanvasTool { pencil, fill, eyedropper }
 
 class CanvasEditorScreen extends StatefulWidget {
   final int maxTextChars;
@@ -28,7 +30,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _defaultSize = 11;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
-  static const double _compressedCellBudgetMultiplier = 2.5;
+  // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
+  // allow a larger editor grid and still validate the exact encoded payload.
+  static const double _master64CellBudgetMultiplier = 2.1;
+  static const int _master64BitsPerCell = 6;
+  static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
+  static const String _prefsWidthKey = 'canvas_editor_width';
+  static const String _prefsHeightKey = 'canvas_editor_height';
+  static const String _prefsPaletteKey = 'canvas_editor_palette';
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -41,15 +50,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
   late List<int> _pixels;
+  Timer? _payloadRefreshTimer;
+  DateTime? _lastPayloadRefreshAt;
+  bool _payloadRefreshPending = false;
+  bool _payloadRefreshInProgress = false;
+  bool _isDrawing = false;
+  int _currentPayloadChars = 0;
 
   @override
   void initState() {
     super.initState();
     _pixels = List.filled(_width * _height, _whiteIndex);
+    _currentPayloadChars = _calculatePayloadChars();
+    _lastPayloadRefreshAt = DateTime.now();
+    _loadSavedCanvasSettings();
   }
 
   @override
   void dispose() {
+    _payloadRefreshTimer?.cancel();
     _widthController.dispose();
     _heightController.dispose();
     super.dispose();
@@ -77,13 +96,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     child: _buildSizeInput(
                       controller: _widthController,
                       label: context.l10n.chat_canvasWidth,
-                      onChanged: (value) =>
-                          _resize(width: _boundedWidth(value)),
-                      onEditingComplete: (value) {
-                        final bounded = _boundedWidth(value);
-                        _resize(width: bounded);
-                        _setControllerValue(_widthController, bounded);
-                      },
+                      fallbackValue: _width,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -91,16 +104,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     child: _buildSizeInput(
                       controller: _heightController,
                       label: context.l10n.chat_canvasHeight,
-                      onChanged: (value) =>
-                          _resize(height: _boundedHeight(value)),
-                      onEditingComplete: (value) {
-                        final bounded = _boundedHeight(value);
-                        _resize(height: bounded);
-                        _setControllerValue(_heightController, bounded);
-                      },
+                      fallbackValue: _height,
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: _applyCanvasSize,
+                  child: Text(context.l10n.common_apply),
+                ),
               ),
               const SizedBox(height: 8),
               CheckboxListTile(
@@ -142,6 +157,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               _buildTools(),
               const SizedBox(height: 20),
               _buildCanvas(palette),
+              const SizedBox(height: 8),
+              _buildPayloadInfo(context),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -189,12 +206,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Widget _buildSizeInput({
     required TextEditingController controller,
     required String label,
-    required ValueChanged<int> onChanged,
-    required ValueChanged<int> onEditingComplete,
+    required int fallbackValue,
   }) {
     void commitValue() {
-      final parsed = int.tryParse(controller.text) ?? _defaultSize;
-      onEditingComplete(parsed);
+      final parsed = int.tryParse(controller.text) ?? fallbackValue;
+      final bounded = parsed.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+      _setControllerValue(controller, bounded);
     }
 
     return Focus(
@@ -209,11 +226,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           labelText: label,
           border: const OutlineInputBorder(),
         ),
-        onChanged: (value) {
-          final parsed = int.tryParse(value);
-          if (parsed == null) return;
-          onChanged(parsed.clamp(_minCanvasSize, _maxCanvasSize).toInt());
-        },
         onEditingComplete: commitValue,
       ),
     );
@@ -246,6 +258,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           value: _CanvasTool.fill,
           icon: Icon(Icons.format_color_fill_outlined),
         ),
+        ButtonSegment(
+          value: _CanvasTool.eyedropper,
+          icon: Icon(Icons.colorize_outlined),
+        ),
       ],
       selected: {_selectedTool},
       onSelectionChanged: (selection) {
@@ -267,12 +283,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         return Center(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanDown: (details) => _applyToolAt(details.localPosition, size),
+            onPanDown: (details) {
+              _isDrawing = true;
+              _applyToolAt(details.localPosition, size);
+            },
             onPanUpdate: (details) {
               if (_selectedTool == _CanvasTool.pencil) {
                 _applyToolAt(details.localPosition, size);
               }
             },
+            onPanEnd: (_) => _finishDrawing(),
+            onPanCancel: _finishDrawing,
             child: CustomPaint(
               size: size,
               painter: _PixelCanvasPainter(
@@ -289,61 +310,234 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+  Widget _buildPayloadInfo(BuildContext context) {
+    final isOverLimit = _currentPayloadChars > _sendPayloadLimit;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        context.l10n.chat_canvasCurrentPayload(_currentPayloadChars),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: isOverLimit ? Theme.of(context).colorScheme.error : null,
+        ),
+      ),
+    );
+  }
+
   void _resize({int? width, int? height}) {
     final newWidth = width ?? _width;
     final newHeight = height ?? _height;
     if (newWidth == _width && newHeight == _height) return;
-
-    // Keep the old drawing centered when dimensions change; shrinking crops
-    // from the edges instead of always losing the right/bottom side.
-    final nextPixels = List.filled(newWidth * newHeight, _whiteIndex);
-    final copyWidth = math.min(_width, newWidth);
-    final copyHeight = math.min(_height, newHeight);
-    final oldStartX = math.max(0, (_width - newWidth) ~/ 2);
-    final oldStartY = math.max(0, (_height - newHeight) ~/ 2);
-    final newStartX = math.max(0, (newWidth - _width) ~/ 2);
-    final newStartY = math.max(0, (newHeight - _height) ~/ 2);
-    for (var y = 0; y < copyHeight; y++) {
-      for (var x = 0; x < copyWidth; x++) {
-        nextPixels[(newStartY + y) * newWidth + newStartX + x] =
-            _pixels[(oldStartY + y) * _width + oldStartX + x];
-      }
-    }
+    final oldWidth = _width;
+    final oldHeight = _height;
+    final nextPixels = _resizePixels(
+      sourcePixels: _pixels,
+      sourceWidth: oldWidth,
+      sourceHeight: oldHeight,
+      targetWidth: newWidth,
+      targetHeight: newHeight,
+      fillColor: _whiteIndex,
+    );
 
     setState(() {
       _width = newWidth;
       _height = newHeight;
       _pixels = nextPixels;
     });
+    _markPayloadDirty();
   }
 
-  int get _maxCanvasCells {
-    final usablePayload = math.max(
-      0,
-      widget.maxTextChars - _humanReadablePrefixReserveChars,
-    );
-    final byCompressedBudget = (usablePayload * _compressedCellBudgetMultiplier)
-        .floor();
+  List<int> _resizePixels({
+    required List<int> sourcePixels,
+    required int sourceWidth,
+    required int sourceHeight,
+    required int targetWidth,
+    required int targetHeight,
+    required int fillColor,
+  }) {
+    // Keep the old drawing centered when dimensions change; shrinking crops
+    // from the edges instead of always losing the right/bottom side.
+    final nextPixels = List.filled(targetWidth * targetHeight, fillColor);
+    final copyWidth = math.min(sourceWidth, targetWidth);
+    final copyHeight = math.min(sourceHeight, targetHeight);
+    final oldStartX = math.max(0, (sourceWidth - targetWidth) ~/ 2);
+    final oldStartY = math.max(0, (sourceHeight - targetHeight) ~/ 2);
+    final newStartX = math.max(0, (targetWidth - sourceWidth) ~/ 2);
+    final newStartY = math.max(0, (targetHeight - sourceHeight) ~/ 2);
+    for (var y = 0; y < copyHeight; y++) {
+      for (var x = 0; x < copyWidth; x++) {
+        nextPixels[(newStartY + y) * targetWidth + newStartX + x] =
+            sourcePixels[(oldStartY + y) * sourceWidth + oldStartX + x];
+      }
+    }
+    return nextPixels;
+  }
+
+  int _maxCanvasCellsForProfile(PaletteProfile profile) {
+    final multiplier =
+        _master64CellBudgetMultiplier *
+        _master64BitsPerCell /
+        _paletteBitsPerCell(profile);
+    final byCompressedBudget = (_sendPayloadLimit * multiplier).floor();
     return math.max(
       _minCanvasSize * _minCanvasSize,
       math.min(_maxCanvasSize * _maxCanvasSize, byCompressedBudget),
     );
   }
 
-  int _boundedWidth(int width) {
-    final maxWidth = math.max(
-      _minCanvasSize,
-      math.min(_maxCanvasSize, _maxCanvasCells ~/ _height),
+  int get _sendPayloadLimit =>
+      math.max(0, widget.maxTextChars - _humanReadablePrefixReserveChars);
+
+  void _loadSavedCanvasSettings() {
+    final prefs = PrefsManager.instance;
+    final profileName = prefs.getString(_prefsPaletteKey);
+    final profile = PaletteProfile.values.firstWhere(
+      (value) => value.name == profileName,
+      orElse: () => PaletteProfile.master64,
     );
-    return width.clamp(_minCanvasSize, maxWidth).toInt();
+    final requestedWidth = prefs.getInt(_prefsWidthKey) ?? _defaultSize;
+    final requestedHeight = prefs.getInt(_prefsHeightKey) ?? _defaultSize;
+    final bounded = _boundedCanvasSizeForProfile(
+      requestedWidth,
+      requestedHeight,
+      profile,
+    );
+    final width = bounded[0];
+    final height = bounded[1];
+
+    _paletteProfile = profile;
+    _selectedColor = MCOImagePalette.blackIndexFor(profile);
+    _width = width;
+    _height = height;
+    _setControllerValue(_widthController, width);
+    _setControllerValue(_heightController, height);
+    _pixels = List.filled(width * height, _whiteIndex);
+    _currentPayloadChars = _calculatePayloadChars();
+    _lastPayloadRefreshAt = DateTime.now();
   }
 
-  int _boundedHeight(int height) {
-    final maxHeight = math.max(
-      _minCanvasSize,
-      math.min(_maxCanvasSize, _maxCanvasCells ~/ _width),
+  Future<void> _saveCanvasPalette(PaletteProfile profile) async {
+    await PrefsManager.instance.setString(_prefsPaletteKey, profile.name);
+  }
+
+  Future<void> _saveCanvasSize(int width, int height) async {
+    final prefs = PrefsManager.instance;
+    await prefs.setInt(_prefsWidthKey, width);
+    await prefs.setInt(_prefsHeightKey, height);
+  }
+
+  void _applyCanvasSize() {
+    final requestedWidth = int.tryParse(_widthController.text) ?? _width;
+    final requestedHeight = int.tryParse(_heightController.text) ?? _height;
+    final bounded = _boundedCanvasSizeForProfile(
+      requestedWidth,
+      requestedHeight,
+      _paletteProfile,
     );
-    return height.clamp(_minCanvasSize, maxHeight).toInt();
+    final width = bounded[0];
+    final height = bounded[1];
+
+    _setControllerValue(_widthController, width);
+    _setControllerValue(_heightController, height);
+    _resize(width: width, height: height);
+    unawaited(_saveCanvasSize(width, height));
+  }
+
+  void _finishDrawing() {
+    if (!_isDrawing) return;
+    _isDrawing = false;
+    if (_payloadRefreshPending) {
+      _schedulePayloadRefresh();
+    }
+  }
+
+  void _markPayloadDirty() {
+    _payloadRefreshPending = true;
+    _schedulePayloadRefresh();
+  }
+
+  void _schedulePayloadRefresh() {
+    if (!mounted || (_payloadRefreshTimer?.isActive ?? false)) return;
+
+    final now = DateTime.now();
+    final lastRefresh = _lastPayloadRefreshAt;
+    final elapsed = lastRefresh == null
+        ? _payloadRefreshThrottle
+        : now.difference(lastRefresh);
+    final delay = elapsed >= _payloadRefreshThrottle
+        ? Duration.zero
+        : _payloadRefreshThrottle - elapsed;
+
+    _payloadRefreshTimer = Timer(delay, _refreshPayloadIfIdle);
+  }
+
+  void _refreshPayloadIfIdle() {
+    _payloadRefreshTimer = null;
+    if (!mounted || !_payloadRefreshPending) return;
+
+    // While the user is actively drawing, keep the canvas responsive and refresh
+    // payload size after the gesture settles.
+    if (_isDrawing || _payloadRefreshInProgress) {
+      _payloadRefreshTimer = Timer(
+        _payloadRefreshThrottle,
+        _refreshPayloadIfIdle,
+      );
+      return;
+    }
+
+    _payloadRefreshPending = false;
+    _payloadRefreshInProgress = true;
+    final payloadChars = _calculatePayloadChars();
+    _lastPayloadRefreshAt = DateTime.now();
+    _payloadRefreshInProgress = false;
+
+    if (!mounted) return;
+    setState(() => _currentPayloadChars = payloadChars);
+    if (_payloadRefreshPending) {
+      _schedulePayloadRefresh();
+    }
+  }
+
+  int _calculatePayloadChars() {
+    final encoded = _codec.encode(
+      MCOImage(
+        width: _width,
+        height: _height,
+        paletteProfile: _paletteProfile,
+        pixels: _pixels,
+      ),
+      backgroundColor: _whiteIndex,
+    );
+    return encoded.charLength;
+  }
+
+  List<int> _boundedCanvasSizeForProfile(
+    int requestedWidth,
+    int requestedHeight,
+    PaletteProfile profile,
+  ) {
+    var width = requestedWidth.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+    var height = requestedHeight.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+    final maxCanvasCells = _maxCanvasCellsForProfile(profile);
+    if (width * height <= maxCanvasCells) {
+      return [width, height];
+    }
+
+    final scale = math.sqrt(maxCanvasCells / (width * height));
+    width = math.max(_minCanvasSize, (width * scale).floor());
+    height = math.max(_minCanvasSize, (height * scale).floor());
+
+    // The proportional shrink above can still be one cell over because of
+    // rounding; trim the larger requested side first.
+    while (width * height > maxCanvasCells) {
+      if (width >= height && width > _minCanvasSize) {
+        width--;
+      } else if (height > _minCanvasSize) {
+        height--;
+      } else {
+        break;
+      }
+    }
+    return [width, height];
   }
 
   void _setControllerValue(TextEditingController controller, int value) {
@@ -374,12 +568,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final nextSelectedColor = mapColor(_selectedColor);
-    final nextPixels = _pixels.map(mapColor).toList();
+    final mappedPixels = _pixels.map(mapColor).toList();
+    final bounded = _boundedCanvasSizeForProfile(_width, _height, profile);
+    final nextWidth = bounded[0];
+    final nextHeight = bounded[1];
+    final nextPixels = _resizePixels(
+      sourcePixels: mappedPixels,
+      sourceWidth: _width,
+      sourceHeight: _height,
+      targetWidth: nextWidth,
+      targetHeight: nextHeight,
+      fillColor: MCOImagePalette.whiteIndexFor(profile),
+    );
     setState(() {
       _paletteProfile = profile;
       _selectedColor = nextSelectedColor;
+      _width = nextWidth;
+      _height = nextHeight;
+      _setControllerValue(_widthController, nextWidth);
+      _setControllerValue(_heightController, nextHeight);
       _pixels = nextPixels;
     });
+    _markPayloadDirty();
+    unawaited(_saveCanvasPalette(profile));
   }
 
   void _applyToolAt(Offset position, Size size) {
@@ -398,10 +609,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .clamp(0, _height - 1)
         .toInt();
     final index = y * _width + x;
-    if (_selectedTool == _CanvasTool.pencil) {
-      _paintPixel(index);
-    } else {
-      _fillArea(index);
+    switch (_selectedTool) {
+      case _CanvasTool.pencil:
+        _paintPixel(index);
+        break;
+      case _CanvasTool.fill:
+        _fillArea(index);
+        break;
+      case _CanvasTool.eyedropper:
+        _pickColor(index);
+        break;
     }
   }
 
@@ -411,6 +628,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _pixels = List.of(_pixels);
       _pixels[index] = _selectedColor;
     });
+    _markPayloadDirty();
+  }
+
+  void _pickColor(int index) {
+    final color = _pixels[index];
+    if (color == _selectedColor) return;
+    setState(() => _selectedColor = color);
   }
 
   void _fillArea(int startIndex) {
@@ -439,12 +663,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     setState(() => _pixels = nextPixels);
+    _markPayloadDirty();
   }
 
   void _clearCanvas() {
     setState(() {
       _pixels = List.filled(_width * _height, _whiteIndex);
     });
+    _markPayloadDirty();
   }
 
   Future<void> _loadCanvasFromFile() async {
@@ -464,6 +690,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final pixels = await _imageBytesToCanvasPixels(bytes);
       if (!mounted) return;
       setState(() => _pixels = pixels);
+      _markPayloadDirty();
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -662,10 +889,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _sendCanvas() {
-    final maxChars = math.max(
-      0,
-      widget.maxTextChars - _humanReadablePrefixReserveChars,
-    );
     try {
       final encoded = _codec.encode(
         MCOImage(
@@ -674,16 +897,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           paletteProfile: _paletteProfile,
           pixels: _pixels,
         ),
-        maxChars: maxChars,
         backgroundColor: _whiteIndex,
       );
+      _currentPayloadChars = encoded.charLength;
+      final overflow = encoded.charLength - _sendPayloadLimit;
+      if (overflow > 0) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(context.l10n.chat_canvasSendPayloadExceed(overflow)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        );
+        setState(() {});
+        return;
+      }
       Navigator.pop(context, encoded.text);
-    } on MCOImageTooLargeException {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_canvasSendPayloadExceed),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      );
     } on MCOImageCodecException catch (error) {
       showDismissibleSnackBar(
         context,
@@ -701,6 +928,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.master16 => 'Master 16',
       PaletteProfile.master32 => 'Master 32',
       PaletteProfile.master64 => 'Master 64',
+    };
+  }
+
+  int _paletteBitsPerCell(PaletteProfile profile) {
+    return switch (profile) {
+      PaletteProfile.mono => 1,
+      PaletteProfile.master4 => 2,
+      PaletteProfile.master8 => 3,
+      PaletteProfile.master16 => 4,
+      PaletteProfile.master32 => 5,
+      PaletteProfile.master64 => 6,
     };
   }
 

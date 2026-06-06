@@ -63,7 +63,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "de": [
@@ -117,7 +118,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "es": [
@@ -184,7 +186,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "fr": [
@@ -251,7 +254,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "hu": [
@@ -318,7 +322,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "it": [
@@ -465,7 +470,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "ja": [
@@ -532,7 +538,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "ko": [
@@ -599,7 +606,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "nl": [
@@ -746,7 +754,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "pl": [
@@ -813,7 +822,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "pt": [
@@ -960,7 +970,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "sk": [
@@ -1027,7 +1038,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "sl": [
@@ -1094,7 +1106,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "sv": [
@@ -1241,7 +1254,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "uk": [
@@ -1308,7 +1322,8 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ],
 
   "zh": [
@@ -1375,6 +1390,7 @@
     "chat_canvasGridColor",
     "chat_canvasSave",
     "chat_canvasLoad",
-    "chat_canvasSendPayloadExceed"
+    "chat_canvasSendPayloadExceed",
+    "chat_canvasCurrentPayload"
   ]
 }

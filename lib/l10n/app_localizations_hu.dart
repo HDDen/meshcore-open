@@ -5071,6 +5071,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_canvasLoad => 'Load from file';
 
   @override
-  String get chat_canvasSendPayloadExceed =>
-      'Failed to send – payload exceeded. Please reduce the number of parts or the canvas size.';
+  String chat_canvasSendPayloadExceed(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+  }
+
+  @override
+  String chat_canvasCurrentPayload(int payload) {
+    return 'Current payload: $payload';
+  }
 }

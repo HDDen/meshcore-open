@@ -5066,6 +5066,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasLoad => 'Загрузить из файла';
 
   @override
-  String get chat_canvasSendPayloadExceed =>
-      'Не удалось отправить - превышен payload. Уменьшите количество деталей или размер холста.';
+  String chat_canvasSendPayloadExceed(int count) {
+    return 'Не удалось отправить - превышен payload на $count байт. Уменьшите количество деталей или размер холста.';
+  }
+
+  @override
+  String chat_canvasCurrentPayload(int payload) {
+    return 'Текущий payload: $payload';
+  }
 }

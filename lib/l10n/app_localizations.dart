@@ -8623,8 +8623,14 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSendPayloadExceed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send – payload exceeded. Please reduce the number of parts or the canvas size.'**
-  String get chat_canvasSendPayloadExceed;
+  /// **'Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.'**
+  String chat_canvasSendPayloadExceed(int count);
+
+  /// No description provided for @chat_canvasCurrentPayload.
+  ///
+  /// In en, this message translates to:
+  /// **'Current payload: {payload}'**
+  String chat_canvasCurrentPayload(int payload);
 }
 
 class _AppLocalizationsDelegate
