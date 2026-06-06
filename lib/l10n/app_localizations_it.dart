@@ -5058,4 +5058,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String chat_canvasCurrentPayload(int payload) {
     return 'Current payload: $payload';
   }
+
+  @override
+  String get chat_canvasActive => 'Show canvas';
+
+  @override
+  String get chat_canvasShowLockBtn => 'Show canvas block button';
+
+  @override
+  String get chat_showHops => 'Show hops';
 }

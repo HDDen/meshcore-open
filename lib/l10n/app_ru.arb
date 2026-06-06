@@ -2049,5 +2049,8 @@
   "chat_canvasSave": "Сохранить в файл",
   "chat_canvasLoad": "Загрузить из файла",
   "chat_canvasSendPayloadExceed": "Не удалось отправить - превышен payload на {count} байт. Уменьшите количество деталей или размер холста.",
-  "chat_canvasCurrentPayload": "Текущий payload: {payload}"
+  "chat_canvasCurrentPayload": "Текущий payload: {payload}",
+  "chat_canvasActive": "Отображать холст",
+  "chat_canvasShowLockBtn": "Отображать кнопку блокировки",
+  "chat_showHops": "Отображать хопы"
 }

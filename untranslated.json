@@ -64,7 +64,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "de": [
@@ -119,7 +122,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "es": [
@@ -187,7 +193,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "fr": [
@@ -255,7 +264,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "hu": [
@@ -323,7 +335,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "it": [
@@ -471,7 +486,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "ja": [
@@ -539,7 +557,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "ko": [
@@ -607,7 +628,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "nl": [
@@ -755,7 +779,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "pl": [
@@ -823,7 +850,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "pt": [
@@ -971,7 +1001,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "sk": [
@@ -1039,7 +1072,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "sl": [
@@ -1107,7 +1143,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "sv": [
@@ -1255,7 +1294,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "uk": [
@@ -1323,7 +1365,10 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ],
 
   "zh": [
@@ -1391,6 +1436,9 @@
     "chat_canvasSave",
     "chat_canvasLoad",
     "chat_canvasSendPayloadExceed",
-    "chat_canvasCurrentPayload"
+    "chat_canvasCurrentPayload",
+    "chat_canvasActive",
+    "chat_canvasShowLockBtn",
+    "chat_showHops"
   ]
 }

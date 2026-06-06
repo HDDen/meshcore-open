@@ -8631,6 +8631,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current payload: {payload}'**
   String chat_canvasCurrentPayload(int payload);
+
+  /// No description provided for @chat_canvasActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Show canvas'**
+  String get chat_canvasActive;
+
+  /// No description provided for @chat_canvasShowLockBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show canvas block button'**
+  String get chat_canvasShowLockBtn;
+
+  /// No description provided for @chat_showHops.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hops'**
+  String get chat_showHops;
 }
 
 class _AppLocalizationsDelegate

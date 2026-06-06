@@ -5,12 +5,14 @@ import 'dart:ui' as ui;
 import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
+import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 
 enum _CanvasTool { pencil, fill, eyedropper }
@@ -32,7 +34,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
   // allow a larger editor grid and still validate the exact encoded payload.
-  static const double _master64CellBudgetMultiplier = 2.1;
+  static const double _master64CellBudgetMultiplier = 3.0;
   static const int _master64BitsPerCell = 6;
   static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
   static const String _prefsWidthKey = 'canvas_editor_width';
@@ -89,11 +91,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final palette = _paletteFor(_paletteProfile);
+    final showLockButton = context
+        .watch<AppSettingsService>()
+        .settings
+        .canvasShowLockButton;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.chat_canvas)),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: _canvasInputLocked
+          physics: showLockButton && _canvasInputLocked
               ? const NeverScrollableScrollPhysics()
               : null,
           padding: const EdgeInsets.all(16),
@@ -171,9 +177,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               const SizedBox(height: 16),
               _buildTools(),
               const SizedBox(height: 20),
-              _buildCanvas(palette),
+              _buildCanvas(palette, showLockButton: showLockButton),
               const SizedBox(height: 8),
-              _buildPayloadInfo(context),
+              _buildPayloadInfo(context, showLockButton: showLockButton),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -296,7 +302,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  Widget _buildCanvas(List<Color> palette) {
+  Widget _buildCanvas(List<Color> palette, {required bool showLockButton}) {
     final mediaHeight = MediaQuery.of(context).size.height;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -305,25 +311,26 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         final canvasWidth = math.min(maxWidth, maxHeight * _width / _height);
         final canvasHeight = canvasWidth * _height / _width;
         final size = Size(canvasWidth, canvasHeight);
+        final canDraw = !showLockButton || _canvasInputLocked;
 
         return Center(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanDown: _canvasInputLocked
+            onPanDown: canDraw
                 ? (details) {
                     _isDrawing = true;
                     _applyToolAt(details.localPosition, size);
                   }
                 : null,
-            onPanUpdate: _canvasInputLocked
+            onPanUpdate: canDraw
                 ? (details) {
                     if (_selectedTool == _CanvasTool.pencil) {
                       _applyToolAt(details.localPosition, size);
                     }
                   }
                 : null,
-            onPanEnd: _canvasInputLocked ? (_) => _finishDrawing() : null,
-            onPanCancel: _canvasInputLocked ? _finishDrawing : null,
+            onPanEnd: canDraw ? (_) => _finishDrawing() : null,
+            onPanCancel: canDraw ? _finishDrawing : null,
             child: CustomPaint(
               size: size,
               painter: _PixelCanvasPainter(
@@ -340,7 +347,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  Widget _buildPayloadInfo(BuildContext context) {
+  Widget _buildPayloadInfo(
+    BuildContext context, {
+    required bool showLockButton,
+  }) {
     final isOverLimit = _currentPayloadChars > _sendPayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
@@ -355,26 +365,28 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             width: contentWidth,
             child: Row(
               children: [
-                IconButton.filled(
-                  onPressed: () {
-                    _finishDrawing();
-                    setState(() => _canvasInputLocked = !_canvasInputLocked);
-                  },
-                  style: IconButton.styleFrom(
-                    backgroundColor: _canvasInputLocked
-                        ? const Color(0xffb8f5b8)
-                        : colorScheme.surfaceContainerHighest,
-                    foregroundColor: _canvasInputLocked
-                        ? Colors.green.shade900
-                        : colorScheme.onSurfaceVariant,
+                if (showLockButton) ...[
+                  IconButton.filled(
+                    onPressed: () {
+                      _finishDrawing();
+                      setState(() => _canvasInputLocked = !_canvasInputLocked);
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: _canvasInputLocked
+                          ? const Color(0xffb8f5b8)
+                          : colorScheme.surfaceContainerHighest,
+                      foregroundColor: _canvasInputLocked
+                          ? Colors.green.shade900
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    icon: Icon(
+                      _canvasInputLocked
+                          ? Icons.lock_outline
+                          : Icons.lock_open_outlined,
+                    ),
                   ),
-                  icon: Icon(
-                    _canvasInputLocked
-                        ? Icons.lock_outline
-                        : Icons.lock_open_outlined,
-                  ),
-                ),
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,

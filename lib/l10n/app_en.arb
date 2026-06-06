@@ -2872,5 +2872,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "chat_canvasActive": "Show canvas",
+  "chat_canvasShowLockBtn": "Show canvas block button",
+  "chat_showHops": "Show hops"
 }

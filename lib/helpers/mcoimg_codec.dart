@@ -13,7 +13,7 @@ enum PaletteProfile {
   grayscale8,
 }
 
-enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg }
+enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg }
 
 enum ScanMode { h, v, s, sv }
 
@@ -37,6 +37,14 @@ class EncodedMCOImage {
   final ScanMode scan;
   final int byteLength;
   final int charLength;
+  final bool boundsPresent;
+  final int? boundsX;
+  final int? boundsY;
+  final int? boundsWidth;
+  final int? boundsHeight;
+  final int? backgroundColor;
+  final int regionCount;
+  final int backgroundRank;
 
   const EncodedMCOImage({
     required this.text,
@@ -44,6 +52,24 @@ class EncodedMCOImage {
     required this.scan,
     required this.byteLength,
     required this.charLength,
+    this.boundsPresent = false,
+    this.boundsX,
+    this.boundsY,
+    this.boundsWidth,
+    this.boundsHeight,
+    this.backgroundColor,
+    this.regionCount = 0,
+    this.backgroundRank = 0,
+  });
+}
+
+class MCOImageEncodeDiagnostics {
+  final EncodedMCOImage result;
+  final List<EncodedMCOImage> candidates;
+
+  const MCOImageEncodeDiagnostics({
+    required this.result,
+    required this.candidates,
   });
 }
 
@@ -70,51 +96,152 @@ class MCOImageTooLargeException extends MCOImageCodecException {
 
 class MCOImageCodec {
   static const String prefix = 'im:';
-  static const int _version = 0;
+  static const int _encodeVersion = 1;
+  static const int _minSupportedVersion = 0;
+  static const int _maxSupportedVersion = 1;
+  static const int _containerBlock = 0;
+  static const int _containerRegions = 1;
   static const int _minSize = 1;
   static const int _maxSize = 85;
+  static const int _defaultMaxRegions = 8;
+
+  static const List<ImageMode> _blockModes = [
+    ImageMode.rawGlobal,
+    ImageMode.rawLocal,
+    ImageMode.rleLocal,
+    ImageMode.sparseBg,
+  ];
 
   static const List<ImageMode> _modeTieOrder = [
     ImageMode.sparseBg,
     ImageMode.rleLocal,
     ImageMode.rawLocal,
     ImageMode.rawGlobal,
+    ImageMode.regionsBg,
   ];
 
   EncodedMCOImage encode(
     MCOImage image, {
     int? maxChars,
     int? backgroundColor,
+    int maxRegions = _defaultMaxRegions,
+  }) {
+    final diagnostics = debugEncode(
+      image,
+      backgroundColor: backgroundColor,
+      maxRegions: maxRegions,
+    );
+    final result = diagnostics.result;
+    if (maxChars != null && result.charLength > maxChars) {
+      throw MCOImageTooLargeException(
+        'Encoded image is ${result.charLength} chars, max is $maxChars',
+      );
+    }
+    return result;
+  }
+
+  MCOImageEncodeDiagnostics debugEncode(
+    MCOImage image, {
+    int? backgroundColor,
+    int maxRegions = _defaultMaxRegions,
   }) {
     _validateImage(image);
+    if (maxRegions < 0) {
+      throw const MCOImageInvalidInputException('maxRegions must be >= 0');
+    }
     if (backgroundColor != null) {
       _validateColor(backgroundColor, image.paletteProfile, 'backgroundColor');
     }
 
+    final effectiveMaxRegions = maxRegions > _defaultMaxRegions
+        ? _defaultMaxRegions
+        : maxRegions;
+    final backgroundCandidates = _backgroundCandidates(image, backgroundColor);
+    final candidates = <EncodedMCOImage>[];
     EncodedMCOImage? best;
-    for (final scan in ScanMode.values) {
-      final linear = _toScanOrder(
-        image.pixels,
-        image.width,
-        image.height,
-        scan,
-      );
-      for (final mode in ImageMode.values) {
-        final payload = _buildPayload(
-          image,
-          linear,
-          mode,
+    for (final background in backgroundCandidates) {
+      final bg = background.color;
+      final bounds = _findBounds(image.pixels, image.width, image.height, bg);
+      for (final scan in ScanMode.values) {
+        final linear = _toScanOrder(
+          image.pixels,
+          image.width,
+          image.height,
           scan,
-          backgroundColor: backgroundColor,
         );
-        final text = '$prefix${_Base91.encode(payload)}';
-        final candidate = EncodedMCOImage(
-          text: text,
-          mode: mode,
-          scan: scan,
-          byteLength: payload.length,
-          charLength: text.length,
+        for (final mode in _blockModes) {
+          final payload = _buildPayload(
+            image,
+            linear,
+            mode,
+            scan,
+            dataWidth: image.width,
+            dataHeight: image.height,
+            backgroundColor: bg,
+          );
+          final candidate = _candidateFromPayload(
+            payload,
+            mode,
+            scan,
+            backgroundColor: bg,
+            backgroundRank: background.rank,
+          );
+          candidates.add(candidate);
+          if (_isBetterCandidate(candidate, best)) {
+            best = candidate;
+          }
+        }
+
+        if (bounds.area < image.width * image.height) {
+          final cropped = _cropPixels(image.pixels, image.width, bounds);
+          final boundedLinear = _toScanOrder(
+            cropped,
+            bounds.width,
+            bounds.height,
+            scan,
+          );
+          for (final mode in _blockModes) {
+            final payload = _buildPayload(
+              image,
+              boundedLinear,
+              mode,
+              scan,
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds: bounds,
+            );
+            final candidate = _candidateFromPayload(
+              payload,
+              mode,
+              scan,
+              bounds: bounds,
+              backgroundColor: bg,
+              backgroundRank: background.rank,
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best)) {
+              best = candidate;
+            }
+          }
+        }
+      }
+
+      final regionsPayload = _tryBuildRegionsPayload(
+        image,
+        bg,
+        effectiveMaxRegions,
+      );
+      if (regionsPayload != null) {
+        final candidate = _candidateFromPayload(
+          regionsPayload.payload,
+          ImageMode.regionsBg,
+          ScanMode.h,
+          backgroundColor: bg,
+          backgroundRank: background.rank,
+          regionCount: regionsPayload.regionCount,
         );
+        candidates.add(candidate);
         if (_isBetterCandidate(candidate, best)) {
           best = candidate;
         }
@@ -122,12 +249,95 @@ class MCOImageCodec {
     }
 
     final result = best!;
-    if (maxChars != null && result.charLength > maxChars) {
-      throw MCOImageTooLargeException(
-        'Encoded image is ${result.charLength} chars, max is $maxChars',
+    return MCOImageEncodeDiagnostics(
+      result: result,
+      candidates: List.unmodifiable(candidates),
+    );
+  }
+
+  _RegionPayload? _tryBuildRegionsPayload(
+    MCOImage image,
+    int backgroundColor,
+    int maxRegions,
+  ) {
+    if (maxRegions == 0) return null;
+    final regions = _findRegions(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+    );
+    if (regions.isEmpty || regions.length > maxRegions) return null;
+
+    final writer = _BitWriter();
+    writer.writeAlignedByte(
+      (_encodeVersion << 6) |
+          (_modeBits(ImageMode.rawGlobal) << 4) |
+          (_scanBits(ScanMode.h) << 2) |
+          0x02,
+    );
+    writer.writeAlignedByte(
+      (_profileBits(image.paletteProfile) << 4) | _containerRegions,
+    );
+    writer.writeAlignedByte(image.width - 1);
+    writer.writeAlignedByte(image.height - 1);
+    writer.writeBits(backgroundColor, _globalBits(image.paletteProfile));
+    writer.writeVarUint(regions.length);
+
+    for (final region in regions) {
+      final regionPixels = _cropPixels(image.pixels, image.width, region);
+      final block = _bestBlockPayload(
+        regionPixels,
+        region.width,
+        region.height,
+        image.paletteProfile,
+        backgroundColor,
       );
+      writer
+        ..writeVarUint(region.x)
+        ..writeVarUint(region.y)
+        ..writeVarUint(region.width)
+        ..writeVarUint(region.height)
+        ..writeAlignedByte(_modeBits(block.mode))
+        ..writeAlignedByte(_scanBits(block.scan))
+        ..writeVarUint(block.payload.length)
+        ..writeAlignedBytes(block.payload);
     }
-    return result;
+
+    return _RegionPayload(writer.toBytes(), regions.length);
+  }
+
+  _BlockPayload _bestBlockPayload(
+    List<int> pixels,
+    int width,
+    int height,
+    PaletteProfile profile,
+    int backgroundColor,
+  ) {
+    _BlockPayload? best;
+    for (final scan in ScanMode.values) {
+      final linear = _toScanOrder(pixels, width, height, scan);
+      for (final mode in _blockModes) {
+        final writer = _BitWriter();
+        _writeBlock(
+          writer,
+          linear,
+          mode,
+          profile,
+          backgroundColor: backgroundColor,
+          writeSparseBackground: false,
+        );
+        final candidate = _BlockPayload(writer.toBytes(), mode, scan);
+        if (best == null ||
+            candidate.payload.length < best.payload.length ||
+            (candidate.payload.length == best.payload.length &&
+                _modeTieOrder.indexOf(candidate.mode) <
+                    _modeTieOrder.indexOf(best.mode))) {
+          best = candidate;
+        }
+      }
+    }
+    return best!;
   }
 
   MCOImage decode(String text) {
@@ -142,24 +352,30 @@ class MCOImageCodec {
 
     final header = bytes[0];
     final version = (header >> 6) & 0x03;
-    if (version != _version) {
+    if (version < _minSupportedVersion || version > _maxSupportedVersion) {
       throw MCOImageInvalidPayloadException('Unsupported version $version');
     }
 
     final mode = _modeFromBits((header >> 4) & 0x03);
     final scan = _scanFromBits((header >> 2) & 0x03);
     final bgPresent = ((header >> 1) & 0x01) != 0;
-    if ((header & 0x01) != 0) {
+    final boundsPresent = version >= 1 && (header & 0x01) != 0;
+    if (version == 0 && (header & 0x01) != 0) {
       throw const MCOImageInvalidPayloadException('Reserved header bit is set');
     }
     final profileHeader = bytes[1];
     final profile = _profileFromBits((profileHeader >> 4) & 0x0f);
-    if ((profileHeader & 0x0f) != 0) {
+    final container = version >= 1 ? profileHeader & 0x0f : _containerBlock;
+    if (version == 0 && (profileHeader & 0x0f) != 0) {
       throw const MCOImageInvalidPayloadException(
         'Reserved palette bits are set',
       );
     }
-    if (bgPresent != (mode == ImageMode.sparseBg)) {
+    if (container != _containerBlock && container != _containerRegions) {
+      throw const MCOImageInvalidPayloadException('Unknown image container');
+    }
+    if (container == _containerBlock &&
+        bgPresent != (mode == ImageMode.sparseBg)) {
       throw const MCOImageInvalidPayloadException(
         'Background flag does not match mode',
       );
@@ -170,12 +386,58 @@ class MCOImageCodec {
     _validateDimensions(width, height, payload: true);
 
     final reader = _BitReader(bytes, byteIndex: 4);
-    final linear = switch (mode) {
-      ImageMode.rawGlobal => _decodeRawGlobal(reader, width, height, profile),
-      ImageMode.rawLocal => _decodeRawLocal(reader, width, height, profile),
-      ImageMode.rleLocal => _decodeRleLocal(reader, width, height, profile),
-      ImageMode.sparseBg => _decodeSparseBg(reader, width, height, profile),
-    };
+    if (container == _containerRegions) {
+      if (!bgPresent || boundsPresent) {
+        throw const MCOImageInvalidPayloadException('Invalid regions header');
+      }
+      final pixels = _decodeRegions(reader, width, height, profile);
+      reader.finish();
+      return MCOImage(
+        width: width,
+        height: height,
+        paletteProfile: profile,
+        pixels: pixels,
+      );
+    }
+
+    if (boundsPresent) {
+      final background = reader.readBits(_globalBits(profile));
+      _validateColor(background, profile, 'backgroundColor', payload: true);
+      final bounds = _readBounds(reader, width, height);
+      if (bounds.area == 0) {
+        reader.finish();
+        return MCOImage(
+          width: width,
+          height: height,
+          paletteProfile: profile,
+          pixels: List<int>.filled(width * height, background),
+        );
+      }
+
+      final croppedLinear = _decodeBody(
+        reader,
+        bounds.width,
+        bounds.height,
+        profile,
+        mode,
+        sparseBackgroundColor: background,
+      );
+      reader.finish();
+      final cropped = _fromScanOrder(
+        croppedLinear,
+        bounds.width,
+        bounds.height,
+        scan,
+      );
+      return MCOImage(
+        width: width,
+        height: height,
+        paletteProfile: profile,
+        pixels: _insertBounds(width, height, background, cropped, bounds),
+      );
+    }
+
+    final linear = _decodeBody(reader, width, height, profile, mode);
     reader.finish();
 
     return MCOImage(
@@ -186,45 +448,383 @@ class MCOImageCodec {
     );
   }
 
+  List<int> _decodeBody(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    ImageMode mode, {
+    int? sparseBackgroundColor,
+  }) {
+    return switch (mode) {
+      ImageMode.rawGlobal => _decodeRawGlobal(reader, width, height, profile),
+      ImageMode.rawLocal => _decodeRawLocal(reader, width, height, profile),
+      ImageMode.rleLocal => _decodeRleLocal(reader, width, height, profile),
+      ImageMode.sparseBg => _decodeSparseBg(
+        reader,
+        width,
+        height,
+        profile,
+        backgroundColor: sparseBackgroundColor,
+      ),
+      ImageMode.regionsBg => throw const MCOImageInvalidPayloadException(
+        'REGIONS_BG is not a block body mode',
+      ),
+    };
+  }
+
+  List<int> _decodeRegions(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+  ) {
+    final background = reader.readBits(_globalBits(profile));
+    _validateColor(background, profile, 'backgroundColor', payload: true);
+    final regionCount = reader.readVarUint();
+    if (regionCount <= 0 || regionCount > _defaultMaxRegions) {
+      throw const MCOImageInvalidPayloadException('Invalid region count');
+    }
+
+    final pixels = List<int>.filled(width * height, background);
+    final occupied = List<bool>.filled(width * height, false);
+    for (var i = 0; i < regionCount; i++) {
+      final region = _ImageBounds(
+        x: reader.readVarUint(),
+        y: reader.readVarUint(),
+        width: reader.readVarUint(),
+        height: reader.readVarUint(),
+      );
+      if (region.width <= 0 ||
+          region.height <= 0 ||
+          region.x + region.width > width ||
+          region.y + region.height > height) {
+        throw const MCOImageInvalidPayloadException('Invalid image region');
+      }
+
+      final regionMode = _modeFromBits(reader.readAlignedByte());
+      final regionScan = _scanFromBits(reader.readAlignedByte());
+      final payloadLength = reader.readVarUint();
+      final payload = reader.readAlignedBytes(payloadLength);
+      final regionReader = _BitReader(payload);
+      final linear = _decodeBody(
+        regionReader,
+        region.width,
+        region.height,
+        profile,
+        regionMode,
+        sparseBackgroundColor: background,
+      );
+      regionReader.finish();
+      final regionPixels = _fromScanOrder(
+        linear,
+        region.width,
+        region.height,
+        regionScan,
+      );
+      for (var y = 0; y < region.height; y++) {
+        for (var x = 0; x < region.width; x++) {
+          final target = (region.y + y) * width + region.x + x;
+          if (occupied[target]) {
+            throw const MCOImageInvalidPayloadException(
+              'Overlapping image regions',
+            );
+          }
+          occupied[target] = true;
+          pixels[target] = regionPixels[y * region.width + x];
+        }
+      }
+    }
+    return pixels;
+  }
+
   Uint8List _buildPayload(
     MCOImage image,
     List<int> linear,
     ImageMode mode,
     ScanMode scan, {
-    int? backgroundColor,
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
   }) {
+    final expectedDataLength = dataWidth * dataHeight;
+    if (linear.length != expectedDataLength) {
+      throw MCOImageInvalidInputException(
+        'linear.length must be $expectedDataLength, got ${linear.length}',
+      );
+    }
     final writer = _BitWriter();
     final bgPresent = mode == ImageMode.sparseBg;
+    final boundsPresent = bounds != null;
     writer.writeAlignedByte(
-      (_version << 6) |
+      (_encodeVersion << 6) |
           (_modeBits(mode) << 4) |
           (_scanBits(scan) << 2) |
-          (bgPresent ? 0x02 : 0),
+          (bgPresent ? 0x02 : 0) |
+          (boundsPresent ? 0x01 : 0),
     );
     writer.writeAlignedByte(_profileBits(image.paletteProfile) << 4);
     writer.writeAlignedByte(image.width - 1);
     writer.writeAlignedByte(image.height - 1);
 
+    if (boundsPresent) {
+      // Bounds keep the original canvas size in the header, but encode only the
+      // non-background rectangle and fill everything outside it while decoding.
+      writer.writeBits(backgroundColor, _globalBits(image.paletteProfile));
+      writer.writeVarUint(bounds.x);
+      writer.writeVarUint(bounds.y);
+      writer.writeVarUint(bounds.width);
+      writer.writeVarUint(bounds.height);
+      if (bounds.area == 0) {
+        return writer.toBytes();
+      }
+    }
+
+    _writeBlock(
+      writer,
+      linear,
+      mode,
+      image.paletteProfile,
+      backgroundColor: backgroundColor,
+      writeSparseBackground: !boundsPresent,
+    );
+    return writer.toBytes();
+  }
+
+  void _writeBlock(
+    _BitWriter writer,
+    List<int> linear,
+    ImageMode mode,
+    PaletteProfile profile, {
+    required int backgroundColor,
+    required bool writeSparseBackground,
+  }) {
     switch (mode) {
       case ImageMode.rawGlobal:
-        _encodeRawGlobal(writer, linear, image.paletteProfile);
+        _encodeRawGlobal(writer, linear, profile);
         break;
       case ImageMode.rawLocal:
-        _encodeRawLocal(writer, linear, image.paletteProfile);
+        _encodeRawLocal(writer, linear, profile);
         break;
       case ImageMode.rleLocal:
-        _encodeRleLocal(writer, linear, image.paletteProfile);
+        _encodeRleLocal(writer, linear, profile);
         break;
       case ImageMode.sparseBg:
         _encodeSparseBg(
           writer,
           linear,
-          image.paletteProfile,
+          profile,
           backgroundColor: backgroundColor,
+          writeBackground: writeSparseBackground,
         );
         break;
+      case ImageMode.regionsBg:
+        throw const MCOImageInvalidInputException(
+          'REGIONS_BG is not a block mode',
+        );
     }
-    return writer.toBytes();
+  }
+
+  EncodedMCOImage _candidateFromPayload(
+    Uint8List payload,
+    ImageMode mode,
+    ScanMode scan, {
+    _ImageBounds? bounds,
+    int? backgroundColor,
+    int backgroundRank = 0,
+    int regionCount = 0,
+  }) {
+    final text = '$prefix${_Base91.encode(payload)}';
+    return EncodedMCOImage(
+      text: text,
+      mode: mode,
+      scan: scan,
+      byteLength: payload.length,
+      charLength: text.length,
+      boundsPresent: bounds != null,
+      boundsX: bounds?.x,
+      boundsY: bounds?.y,
+      boundsWidth: bounds?.width,
+      boundsHeight: bounds?.height,
+      backgroundColor: backgroundColor,
+      backgroundRank: backgroundRank,
+      regionCount: regionCount,
+    );
+  }
+
+  _ImageBounds _readBounds(_BitReader reader, int fullWidth, int fullHeight) {
+    final bounds = _ImageBounds(
+      x: reader.readVarUint(),
+      y: reader.readVarUint(),
+      width: reader.readVarUint(),
+      height: reader.readVarUint(),
+    );
+    if (bounds.width < 0 ||
+        bounds.height < 0 ||
+        bounds.x + bounds.width > fullWidth ||
+        bounds.y + bounds.height > fullHeight ||
+        (bounds.width == 0 && bounds.height != 0) ||
+        (bounds.height == 0 && bounds.width != 0)) {
+      throw const MCOImageInvalidPayloadException('Invalid image bounds');
+    }
+    return bounds;
+  }
+
+  static _ImageBounds _findBounds(
+    List<int> pixels,
+    int width,
+    int height,
+    int backgroundColor,
+  ) {
+    var minX = width;
+    var minY = height;
+    var maxX = -1;
+    var maxY = -1;
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        if (pixels[y * width + x] == backgroundColor) continue;
+        minX = math.min(minX, x);
+        minY = math.min(minY, y);
+        maxX = math.max(maxX, x);
+        maxY = math.max(maxY, y);
+      }
+    }
+    if (maxX < 0) {
+      return const _ImageBounds(x: 0, y: 0, width: 0, height: 0);
+    }
+    return _ImageBounds(
+      x: minX,
+      y: minY,
+      width: maxX - minX + 1,
+      height: maxY - minY + 1,
+    );
+  }
+
+  static List<_BackgroundCandidate> _backgroundCandidates(
+    MCOImage image,
+    int? explicitBackground,
+  ) {
+    final result = <_BackgroundCandidate>[];
+    final seen = <int>{};
+
+    void add(int color, int rank) {
+      if (color < 0 || color >= _paletteSize(image.paletteProfile)) return;
+      if (!seen.add(color)) return;
+      result.add(_BackgroundCandidate(color, rank));
+    }
+
+    if (explicitBackground != null) add(explicitBackground, 0);
+    add(0, 1);
+
+    final counts = <int, int>{};
+    for (final pixel in image.pixels) {
+      counts[pixel] = (counts[pixel] ?? 0) + 1;
+    }
+    final colors = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    for (var i = 0; i < math.min(3, colors.length); i++) {
+      add(colors[i], 2 + i);
+    }
+    return result;
+  }
+
+  static List<_ImageBounds> _findRegions(
+    List<int> pixels,
+    int width,
+    int height,
+    int backgroundColor,
+  ) {
+    final visited = List<bool>.filled(width * height, false);
+    final regions = <_ImageBounds>[];
+    const neighbors = [
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [-1, 0],
+      [1, 0],
+      [-1, 1],
+      [0, 1],
+      [1, 1],
+    ];
+
+    for (var start = 0; start < pixels.length; start++) {
+      if (visited[start] || pixels[start] == backgroundColor) continue;
+      var minX = start % width;
+      var maxX = minX;
+      var minY = start ~/ width;
+      var maxY = minY;
+      final queue = <int>[start];
+      visited[start] = true;
+
+      while (queue.isNotEmpty) {
+        final index = queue.removeLast();
+        final x = index % width;
+        final y = index ~/ width;
+        minX = math.min(minX, x);
+        maxX = math.max(maxX, x);
+        minY = math.min(minY, y);
+        maxY = math.max(maxY, y);
+
+        for (final neighbor in neighbors) {
+          final nx = x + neighbor[0];
+          final ny = y + neighbor[1];
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          final next = ny * width + nx;
+          if (visited[next] || pixels[next] == backgroundColor) continue;
+          visited[next] = true;
+          queue.add(next);
+        }
+      }
+
+      regions.add(
+        _ImageBounds(
+          x: minX,
+          y: minY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1,
+        ),
+      );
+    }
+
+    regions.sort((a, b) {
+      final byY = a.y.compareTo(b.y);
+      return byY != 0 ? byY : a.x.compareTo(b.x);
+    });
+    return regions;
+  }
+
+  static List<int> _cropPixels(
+    List<int> pixels,
+    int fullWidth,
+    _ImageBounds bounds,
+  ) {
+    final cropped = <int>[];
+    for (var y = 0; y < bounds.height; y++) {
+      final start = (bounds.y + y) * fullWidth + bounds.x;
+      cropped.addAll(pixels.getRange(start, start + bounds.width));
+    }
+    return cropped;
+  }
+
+  static List<int> _insertBounds(
+    int fullWidth,
+    int fullHeight,
+    int backgroundColor,
+    List<int> cropped,
+    _ImageBounds bounds,
+  ) {
+    final pixels = List<int>.filled(fullWidth * fullHeight, backgroundColor);
+    for (var y = 0; y < bounds.height; y++) {
+      for (var x = 0; x < bounds.width; x++) {
+        pixels[(bounds.y + y) * fullWidth + bounds.x + x] =
+            cropped[y * bounds.width + x];
+      }
+    }
+    return pixels;
   }
 
   void _encodeRawGlobal(
@@ -338,11 +938,14 @@ class MCOImageCodec {
     _BitWriter writer,
     List<int> linear,
     PaletteProfile profile, {
-    int? backgroundColor,
+    required int backgroundColor,
+    bool writeBackground = true,
   }) {
-    final bg = backgroundColor ?? _mostFrequentColor(linear);
+    final bg = backgroundColor;
     final globalBits = _globalBits(profile);
-    writer.writeBits(bg, globalBits);
+    if (writeBackground) {
+      writer.writeBits(bg, globalBits);
+    }
 
     final nonBgColors = linear.where((p) => p != bg).toList();
     final local = _buildLocalPalette(nonBgColors);
@@ -366,10 +969,11 @@ class MCOImageCodec {
     _BitReader reader,
     int width,
     int height,
-    PaletteProfile profile,
-  ) {
+    PaletteProfile profile, {
+    int? backgroundColor,
+  }) {
     final count = width * height;
-    final bg = reader.readBits(_globalBits(profile));
+    final bg = backgroundColor ?? reader.readBits(_globalBits(profile));
     _validateColor(bg, profile, 'backgroundColor', payload: true);
     final palette = _readLocalPalette(
       reader,
@@ -446,10 +1050,27 @@ class MCOImageCodec {
     if (candidate.charLength != current.charLength) {
       return candidate.charLength < current.charLength;
     }
+    if (candidate.backgroundRank != current.backgroundRank) {
+      return candidate.backgroundRank < current.backgroundRank;
+    }
+    if (candidate.boundsPresent != current.boundsPresent) {
+      return candidate.boundsPresent;
+    }
+    final candidateContainerRank = _containerRank(candidate);
+    final currentContainerRank = _containerRank(current);
+    if (candidateContainerRank != currentContainerRank) {
+      return candidateContainerRank < currentContainerRank;
+    }
     final candidateRank = _modeTieOrder.indexOf(candidate.mode);
     final currentRank = _modeTieOrder.indexOf(current.mode);
     if (candidateRank != currentRank) return candidateRank < currentRank;
     return candidate.scan.index < current.scan.index;
+  }
+
+  static int _containerRank(EncodedMCOImage candidate) {
+    if (candidate.boundsPresent) return 0;
+    if (candidate.mode == ImageMode.regionsBg) return 1;
+    return 2;
   }
 
   static List<int> _toScanOrder(
@@ -574,17 +1195,6 @@ class MCOImageCodec {
     return segments;
   }
 
-  static int _mostFrequentColor(List<int> pixels) {
-    final counts = <int, int>{};
-    for (final pixel in pixels) {
-      counts[pixel] = (counts[pixel] ?? 0) + 1;
-    }
-    return counts.entries.reduce((a, b) {
-      if (a.value != b.value) return a.value > b.value ? a : b;
-      return a.key < b.key ? a : b;
-    }).key;
-  }
-
   static int _localBits(int colorCount) {
     if (colorCount <= 1) return 1;
     return (colorCount - 1).bitLength;
@@ -618,12 +1228,32 @@ class MCOImageCodec {
     };
   }
 
-  static int _modeBits(ImageMode mode) => mode.index;
+  static int _modeBits(ImageMode mode) {
+    if (!_blockModes.contains(mode)) {
+      throw const MCOImageInvalidInputException(
+        'REGIONS_BG has no block mode bits',
+      );
+    }
+    return mode.index;
+  }
+
   static int _scanBits(ScanMode scan) => scan.index;
   static int _profileBits(PaletteProfile profile) => profile.index;
 
-  static ImageMode _modeFromBits(int value) => ImageMode.values[value];
-  static ScanMode _scanFromBits(int value) => ScanMode.values[value];
+  static ImageMode _modeFromBits(int value) {
+    if (value < 0 || value >= _blockModes.length) {
+      throw MCOImageInvalidPayloadException('Unknown image mode $value');
+    }
+    return ImageMode.values[value];
+  }
+
+  static ScanMode _scanFromBits(int value) {
+    if (value < 0 || value >= ScanMode.values.length) {
+      throw MCOImageInvalidPayloadException('Unknown scan mode $value');
+    }
+    return ScanMode.values[value];
+  }
+
   static PaletteProfile _profileFromBits(int value) {
     if (value < 0 || value >= PaletteProfile.values.length || value > 0x0f) {
       throw MCOImageInvalidPayloadException('Unknown palette profile $value');
@@ -683,6 +1313,11 @@ class _BitWriter {
     _bytes.add(value & 0xff);
   }
 
+  void writeAlignedBytes(Uint8List values) {
+    alignToByte();
+    _bytes.addAll(values);
+  }
+
   void writeBits(int value, int bitCount) {
     if (bitCount < 0) {
       throw const MCOImageInvalidInputException('Negative bit count');
@@ -731,6 +1366,27 @@ class _BitReader {
   var _bitOffset = 0;
 
   _BitReader(Uint8List bytes, {this.byteIndex = 0}) : _bytes = bytes;
+
+  int readAlignedByte() {
+    alignToByte();
+    if (byteIndex >= _bytes.length) {
+      throw const MCOImageInvalidPayloadException('Unexpected end of byte');
+    }
+    return _bytes[byteIndex++];
+  }
+
+  Uint8List readAlignedBytes(int length) {
+    if (length < 0) {
+      throw const MCOImageInvalidPayloadException('Negative byte length');
+    }
+    alignToByte();
+    if (byteIndex + length > _bytes.length) {
+      throw const MCOImageInvalidPayloadException('Unexpected end of bytes');
+    }
+    final result = Uint8List.sublistView(_bytes, byteIndex, byteIndex + length);
+    byteIndex += length;
+    return result;
+  }
 
   int readBits(int bitCount) {
     if (bitCount < 0) {
@@ -896,4 +1552,42 @@ class _SparseSegment {
   final int length;
 
   const _SparseSegment(this.start, this.color, this.length);
+}
+
+class _ImageBounds {
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+
+  const _ImageBounds({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+
+  int get area => width * height;
+}
+
+class _BackgroundCandidate {
+  final int color;
+  final int rank;
+
+  const _BackgroundCandidate(this.color, this.rank);
+}
+
+class _BlockPayload {
+  final Uint8List payload;
+  final ImageMode mode;
+  final ScanMode scan;
+
+  const _BlockPayload(this.payload, this.mode, this.scan);
+}
+
+class _RegionPayload {
+  final Uint8List payload;
+  final int regionCount;
+
+  const _RegionPayload(this.payload, this.regionCount);
 }

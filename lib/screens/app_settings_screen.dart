@@ -147,6 +147,33 @@ class AppSettingsScreen extends StatelessWidget {
               settingsService.setShowKeyboardHidingButton(value);
             },
           ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.brush_outlined),
+            title: Text(context.l10n.chat_canvasActive),
+            value: settingsService.settings.canvasActive,
+            onChanged: (value) {
+              settingsService.setCanvasActive(value);
+            },
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.lock_outline),
+            title: Text(context.l10n.chat_canvasShowLockBtn),
+            value: settingsService.settings.canvasShowLockButton,
+            onChanged: (value) {
+              settingsService.setCanvasShowLockButton(value);
+            },
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.route_outlined),
+            title: Text(context.l10n.chat_showHops),
+            value: settingsService.settings.showHops,
+            onChanged: (value) {
+              settingsService.setShowHops(value);
+            },
+          ),
         ],
       ),
     );

@@ -5074,4 +5074,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String chat_canvasCurrentPayload(int payload) {
     return 'Текущий payload: $payload';
   }
+
+  @override
+  String get chat_canvasActive => 'Отображать холст';
+
+  @override
+  String get chat_canvasShowLockBtn => 'Отображать кнопку блокировки';
+
+  @override
+  String get chat_showHops => 'Отображать хопы';
 }

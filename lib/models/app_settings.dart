@@ -158,6 +158,9 @@ class AppSettings {
   final bool enableMessageTracing;
   final bool enableTimeSeconds;
   final bool showKeyboardHidingButton;
+  final bool canvasActive;
+  final bool canvasShowLockButton;
+  final bool showHops;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -395,6 +398,9 @@ class AppSettings {
     this.enableMessageTracing = false,
     this.enableTimeSeconds = false,
     this.showKeyboardHidingButton = true,
+    this.canvasActive = true,
+    this.canvasShowLockButton = true,
+    this.showHops = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -477,6 +483,9 @@ class AppSettings {
       'enable_message_tracing': enableMessageTracing,
       'enable_time_seconds': enableTimeSeconds,
       'show_keyboard_hiding_button': showKeyboardHidingButton,
+      'canvas_active': canvasActive,
+      'canvas_show_lock_button': canvasShowLockButton,
+      'show_hops': showHops,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -556,6 +565,9 @@ class AppSettings {
       enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
       showKeyboardHidingButton:
           json['show_keyboard_hiding_button'] as bool? ?? true,
+      canvasActive: json['canvas_active'] as bool? ?? true,
+      canvasShowLockButton: json['canvas_show_lock_button'] as bool? ?? true,
+      showHops: json['show_hops'] as bool? ?? true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -687,6 +699,9 @@ class AppSettings {
     bool? enableMessageTracing,
     bool? enableTimeSeconds,
     bool? showKeyboardHidingButton,
+    bool? canvasActive,
+    bool? canvasShowLockButton,
+    bool? showHops,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -748,6 +763,9 @@ class AppSettings {
       enableTimeSeconds: enableTimeSeconds ?? this.enableTimeSeconds,
       showKeyboardHidingButton:
           showKeyboardHidingButton ?? this.showKeyboardHidingButton,
+      canvasActive: canvasActive ?? this.canvasActive,
+      canvasShowLockButton: canvasShowLockButton ?? this.canvasShowLockButton,
+      showHops: showHops ?? this.showHops,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

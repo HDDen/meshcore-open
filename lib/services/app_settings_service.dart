@@ -114,6 +114,18 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(showKeyboardHidingButton: value));
   }
 
+  Future<void> setCanvasActive(bool value) async {
+    await updateSettings(_settings.copyWith(canvasActive: value));
+  }
+
+  Future<void> setCanvasShowLockButton(bool value) async {
+    await updateSettings(_settings.copyWith(canvasShowLockButton: value));
+  }
+
+  Future<void> setShowHops(bool value) async {
+    await updateSettings(_settings.copyWith(showHops: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

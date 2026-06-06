@@ -709,6 +709,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final gifId = GifHelper.parseGif(message.text);
@@ -963,7 +964,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           ],
                         ),
                       if (enableTracing) ...[
-                        if (displayPath.isNotEmpty) ...[
+                        if (showHops && displayPath.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Padding(
                             padding: isMediaMessage
@@ -1538,11 +1539,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 onPressed: () => _showGifPicker(context),
                 tooltip: context.l10n.chat_sendGif,
               ),
-              IconButton(
-                icon: const Icon(Icons.brush_outlined),
-                onPressed: () => _showCanvasEditor(maxBytes),
-                tooltip: context.l10n.chat_canvas,
-              ),
+              if (settings.canvasActive)
+                IconButton(
+                  icon: const Icon(Icons.brush_outlined),
+                  onPressed: () => _showCanvasEditor(maxBytes),
+                  tooltip: context.l10n.chat_canvas,
+                ),
               if (settings.translationEnabled)
                 MessageTranslationButton(
                   enabled: settings.composerTranslationEnabled,

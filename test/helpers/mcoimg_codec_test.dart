@@ -108,10 +108,10 @@ void main() {
   });
 
   group('MCOImageCodec mode selection', () {
-    test('solid canvas is short and sparse', () {
+    test('solid canvas stays short', () {
       final encoded = codec.encode(_solid(11, 11, 0));
-      expect(encoded.mode, ImageMode.sparseBg);
       expect(encoded.text.length, lessThan(16));
+      expect(codec.decode(encoded.text).pixels, List<int>.filled(121, 0));
     });
 
     test('checkerboard prefers a raw local-like representation', () {
@@ -124,6 +124,233 @@ void main() {
       final encoded = codec.encode(_image(11, 11, (x, _) => x % 4));
       expect(encoded.mode, ImageMode.rleLocal);
       expect(encoded.scan, anyOf(ScanMode.v, ScanMode.sv));
+    });
+
+    test('new payloads use format version 1', () {
+      final encoded = codec.encode(_solid(11, 11, 0), backgroundColor: 0);
+      final bytes = _base91Decode(
+        encoded.text.substring(MCOImageCodec.prefix.length),
+      );
+      expect((bytes[0] >> 6) & 0x03, 1);
+    });
+
+    test('bounds keep larger empty canvas close to small drawing size', () {
+      final small = _image(
+        11,
+        11,
+        (x, y) => x == 5 || y == 5 ? 1 : 0,
+        profile: PaletteProfile.mono,
+      );
+      final large = _image(
+        20,
+        20,
+        (x, y) => x >= 4 && x <= 14 && y >= 4 && y <= 14
+            ? (x == 9 || y == 9 ? 1 : 0)
+            : 0,
+        profile: PaletteProfile.mono,
+      );
+
+      final smallEncoded = codec.encode(small, backgroundColor: 0);
+      final largeEncoded = codec.encode(large, backgroundColor: 0);
+      final decoded = codec.decode(largeEncoded.text);
+
+      expect(largeEncoded.boundsPresent, isTrue);
+      expect(
+        largeEncoded.charLength,
+        lessThanOrEqualTo(smallEncoded.charLength + 20),
+      );
+      expect(decoded.width, 20);
+      expect(decoded.height, 20);
+      expect(decoded.pixels, large.pixels);
+    });
+
+    test('empty white canvases stay very short across sizes', () {
+      final small = codec.encode(
+        _solid(11, 11, 0, profile: PaletteProfile.mono),
+        backgroundColor: 0,
+      );
+      final large = codec.encode(
+        _solid(30, 30, 0, profile: PaletteProfile.mono),
+        backgroundColor: 0,
+      );
+
+      expect(small.charLength, lessThan(20));
+      expect(large.charLength, lessThan(20));
+      expect(large.charLength, lessThanOrEqualTo(small.charLength + 3));
+    });
+
+    test('most frequent non-zero background can win', () {
+      final image = _image(30, 30, (x, y) {
+        final compactPlus =
+            (x == 15 && y >= 13 && y <= 17) || (y == 15 && x >= 13 && x <= 17);
+        if (compactPlus) return 1;
+        return 2;
+      });
+
+      final encoded = codec.encode(image);
+
+      expect(encoded.backgroundColor, 2);
+      expect(encoded.boundsPresent, isTrue);
+      expect(codec.decode(encoded.text).pixels, image.pixels);
+    });
+
+    test('background candidates are measured by final text length', () {
+      final image = _image(18, 18, (x, y) {
+        if (x == 8 && y == 8) return 1;
+        if (x >= 7 && x <= 10 && y >= 7 && y <= 10) return 2;
+        return 0;
+      });
+
+      final diagnostics = codec.debugEncode(image);
+      final minLength = diagnostics.candidates
+          .map((candidate) => candidate.charLength)
+          .reduce(math.min);
+
+      expect(diagnostics.result.charLength, minLength);
+      expect(
+        diagnostics.candidates.map((candidate) => candidate.backgroundColor),
+        containsAll([0, 2]),
+      );
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
+    test('bounds are recomputed for each background candidate', () {
+      final image = _image(10, 10, (x, y) {
+        if (x == 4 && y == 4) return 1;
+        if (x >= 3 && x <= 5 && y >= 3 && y <= 5) return 2;
+        return 0;
+      });
+
+      final diagnostics = codec.debugEncode(image);
+      final bg0Bounds = diagnostics.candidates.firstWhere(
+        (candidate) =>
+            candidate.backgroundColor == 0 && candidate.boundsPresent,
+      );
+      final bg2Bounds = diagnostics.candidates.firstWhere(
+        (candidate) =>
+            candidate.backgroundColor == 2 && candidate.boundsPresent,
+        orElse: () => diagnostics.candidates.firstWhere(
+          (candidate) =>
+              candidate.backgroundColor == 2 && !candidate.boundsPresent,
+        ),
+      );
+
+      expect(bg0Bounds.boundsWidth! * bg0Bounds.boundsHeight!, lessThan(100));
+      expect(bg2Bounds.boundsPresent, isFalse);
+    });
+
+    test(
+      'fragmented drawing inside large background uses bounded local body',
+      () {
+        final image = _image(40, 40, (x, y) {
+          if (x < 15 || x > 20 || y < 12 || y > 17) return 0;
+          return (x + y).isEven ? 3 : 7;
+        });
+
+        final encoded = codec.encode(image, backgroundColor: 0);
+
+        expect(encoded.boundsPresent, isTrue);
+        expect(encoded.mode, anyOf(ImageMode.rawLocal, ImageMode.rleLocal));
+        expect(codec.decode(encoded.text).pixels, image.pixels);
+      },
+    );
+
+    test('separate compact regions can beat one large bounds rectangle', () {
+      final image = _image(40, 40, (x, y) {
+        final first = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+        final second = x >= 31 && x <= 33 && y >= 31 && y <= 33;
+        return first || second ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final regions = diagnostics.candidates.where(
+        (candidate) => candidate.mode == ImageMode.regionsBg,
+      );
+
+      expect(regions, isNotEmpty);
+      expect(regions.first.regionCount, 2);
+      expect(diagnostics.result.mode, ImageMode.regionsBg);
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
+    test('single compact drawing prefers bounds over regions', () {
+      final image = _image(40, 40, (x, y) {
+        return x >= 18 && x <= 21 && y >= 18 && y <= 21 ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+
+      final encoded = codec.encode(image, backgroundColor: 0);
+
+      expect(encoded.mode, isNot(ImageMode.regionsBg));
+      expect(encoded.boundsPresent, isTrue);
+      expect(codec.decode(encoded.text).pixels, image.pixels);
+    });
+
+    test('too many isolated components skip regions candidates', () {
+      final image = _image(40, 40, (x, y) {
+        for (var i = 0; i < 9; i++) {
+          if (x == 2 + i * 4 && y == 2) return 1;
+        }
+        return 0;
+      }, profile: PaletteProfile.mono);
+
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: 0,
+        maxRegions: 8,
+      );
+
+      expect(
+        diagnostics.candidates.any(
+          (candidate) =>
+              candidate.backgroundColor == 0 &&
+              candidate.mode == ImageMode.regionsBg,
+        ),
+        isFalse,
+      );
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
+    test('larger canvas around same separated regions stays compact', () {
+      final small = _image(20, 20, (x, y) {
+        final first = x >= 2 && x <= 3 && y >= 2 && y <= 3;
+        final second = x >= 16 && x <= 17 && y >= 16 && y <= 17;
+        return first || second ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+      final large = _image(50, 50, (x, y) {
+        final first = x >= 8 && x <= 9 && y >= 8 && y <= 9;
+        final second = x >= 42 && x <= 43 && y >= 42 && y <= 43;
+        return first || second ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+
+      final smallEncoded = codec.encode(small, backgroundColor: 0);
+      final largeEncoded = codec.encode(large, backgroundColor: 0);
+
+      expect(
+        largeEncoded.charLength,
+        lessThanOrEqualTo(smallEncoded.charLength + 10),
+      );
+      expect(codec.decode(largeEncoded.text).pixels, large.pixels);
+    });
+
+    test('debug diagnostics include decodable candidates for all palettes', () {
+      for (final profile in PaletteProfile.values) {
+        final image = _image(
+          13,
+          9,
+          (x, y) => (x * 3 + y * 5) % _paletteSize(profile),
+          profile: profile,
+        );
+        final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+        final scans = diagnostics.candidates.map((c) => c.scan).toSet();
+        expect(scans, containsAll(ScanMode.values));
+        for (final candidate in diagnostics.candidates) {
+          final decoded = codec.decode(candidate.text);
+          expect(decoded.width, image.width);
+          expect(decoded.height, image.height);
+          expect(decoded.paletteProfile, image.paletteProfile);
+          expect(decoded.pixels, image.pixels);
+        }
+      }
     });
   });
 
@@ -154,6 +381,74 @@ void main() {
       final payload = Uint8List.fromList([1, 0, 0, 0]);
       expect(
         () => codec.decode('im:${_base91(payload)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+    });
+
+    test('old version 0 payloads still decode', () {
+      final encoded = codec.decode(
+        'im:${_base91(Uint8List.fromList([0, 0, 0, 0, 0]))}',
+      );
+      expect(encoded.width, 1);
+      expect(encoded.height, 1);
+      expect(encoded.pixels, [0]);
+    });
+
+    test('invalid bounds fail', () {
+      final payload = Uint8List.fromList([0x41, 0, 1, 1, 0, 1, 1, 2, 2]);
+      expect(
+        () => codec.decode('im:${_base91(payload)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+    });
+
+    test('invalid regions fail', () {
+      final outside = _monoRegionsPayload(2, 2, [
+        1,
+        ..._monoRawRegion(1, 1, 2, 1, const [1]),
+      ]);
+      expect(
+        () => codec.decode('im:${_base91(outside)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+
+      final overlapping = _monoRegionsPayload(2, 2, [
+        2,
+        ..._monoRawRegion(0, 0, 1, 1, const [1]),
+        ..._monoRawRegion(0, 0, 1, 1, const [1]),
+      ]);
+      expect(
+        () => codec.decode('im:${_base91(overlapping)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+
+      final truncated = _monoRegionsPayload(2, 2, [
+        1,
+        ..._monoRawRegion(0, 0, 1, 1, const [1], payloadLength: 2),
+      ]);
+      expect(
+        () => codec.decode('im:${_base91(truncated)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+
+      final wrongPixelCount = _monoRegionsPayload(2, 2, [
+        1,
+        ..._monoRawRegion(0, 0, 1, 1, const []),
+      ]);
+      expect(
+        () => codec.decode('im:${_base91(wrongPixelCount)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+
+      final wrongRegionCount = _monoRegionsPayload(2, 2, const [0]);
+      expect(
+        () => codec.decode('im:${_base91(wrongRegionCount)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
+
+      final tooManyRegions = _monoRegionsPayload(2, 2, const [9]);
+      expect(
+        () => codec.decode('im:${_base91(tooManyRegions)}'),
         throwsA(isA<MCOImageInvalidPayloadException>()),
       );
     });
@@ -309,4 +604,71 @@ String _base91(Uint8List bytes) {
     }
   }
   return output.toString();
+}
+
+Uint8List _monoRegionsPayload(int width, int height, List<int> regionData) {
+  return Uint8List.fromList([
+    0x42,
+    0x01,
+    width - 1,
+    height - 1,
+    0,
+    ...regionData,
+  ]);
+}
+
+List<int> _monoRawRegion(
+  int x,
+  int y,
+  int width,
+  int height,
+  List<int> payload, {
+  int? payloadLength,
+}) {
+  return [
+    x,
+    y,
+    width,
+    height,
+    0,
+    0,
+    payloadLength ?? payload.length,
+    ...payload,
+  ];
+}
+
+Uint8List _base91Decode(String text) {
+  const alphabet =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+      '!#\$%&()*+,./:;<=>?@[]^_`{|}~"';
+  final decodeTable = {
+    for (var i = 0; i < alphabet.length; i++) alphabet.codeUnitAt(i): i,
+  };
+  final output = <int>[];
+  var value = -1;
+  var queue = 0;
+  var bitCount = 0;
+  for (final codeUnit in text.codeUnits) {
+    final decoded = decodeTable[codeUnit];
+    if (decoded == null) {
+      throw StateError('Invalid basE91 character');
+    }
+    if (value < 0) {
+      value = decoded;
+    } else {
+      value += decoded * 91;
+      queue |= value << bitCount;
+      bitCount += (value & 8191) > 88 ? 13 : 14;
+      while (bitCount > 7) {
+        output.add(queue & 0xff);
+        queue >>= 8;
+        bitCount -= 8;
+      }
+      value = -1;
+    }
+  }
+  if (value >= 0) {
+    output.add((queue | (value << bitCount)) & 0xff);
+  }
+  return Uint8List.fromList(output);
 }

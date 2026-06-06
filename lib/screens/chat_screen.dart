@@ -612,11 +612,12 @@ class _ChatScreenState extends State<ChatScreen> {
               onPressed: () => _showGifPicker(context),
               tooltip: context.l10n.chat_sendGif,
             ),
-            IconButton(
-              icon: const Icon(Icons.brush_outlined),
-              onPressed: () => _showCanvasEditor(connector, maxBytes),
-              tooltip: context.l10n.chat_canvas,
-            ),
+            if (settings.canvasActive)
+              IconButton(
+                icon: const Icon(Icons.brush_outlined),
+                onPressed: () => _showCanvasEditor(connector, maxBytes),
+                tooltip: context.l10n.chat_canvas,
+              ),
             if (settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
