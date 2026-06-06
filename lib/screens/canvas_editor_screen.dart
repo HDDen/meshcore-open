@@ -66,6 +66,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
   bool _isDrawing = false;
+  bool _canvasInputLocked = false;
   int _currentPayloadChars = 0;
 
   @override
@@ -92,6 +93,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       appBar: AppBar(title: Text(context.l10n.chat_canvas)),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: _canvasInputLocked
+              ? const NeverScrollableScrollPhysics()
+              : null,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,17 +309,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         return Center(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanDown: (details) {
-              _isDrawing = true;
-              _applyToolAt(details.localPosition, size);
-            },
-            onPanUpdate: (details) {
-              if (_selectedTool == _CanvasTool.pencil) {
-                _applyToolAt(details.localPosition, size);
-              }
-            },
-            onPanEnd: (_) => _finishDrawing(),
-            onPanCancel: _finishDrawing,
+            onPanDown: _canvasInputLocked
+                ? (details) {
+                    _isDrawing = true;
+                    _applyToolAt(details.localPosition, size);
+                  }
+                : null,
+            onPanUpdate: _canvasInputLocked
+                ? (details) {
+                    if (_selectedTool == _CanvasTool.pencil) {
+                      _applyToolAt(details.localPosition, size);
+                    }
+                  }
+                : null,
+            onPanEnd: _canvasInputLocked ? (_) => _finishDrawing() : null,
+            onPanCancel: _canvasInputLocked ? _finishDrawing : null,
             child: CustomPaint(
               size: size,
               painter: _PixelCanvasPainter(
@@ -334,14 +342,57 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Widget _buildPayloadInfo(BuildContext context) {
     final isOverLimit = _currentPayloadChars > _sendPayloadLimit;
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Text(
-        context.l10n.chat_canvasCurrentPayload(_currentPayloadChars),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: isOverLimit ? Theme.of(context).colorScheme.error : null,
-        ),
-      ),
+    final mediaHeight = MediaQuery.of(context).size.height;
+    final colorScheme = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final maxHeight = mediaHeight * 0.55;
+        final contentWidth = math.min(maxWidth, maxHeight * _width / _height);
+
+        return Center(
+          child: SizedBox(
+            width: contentWidth,
+            child: Row(
+              children: [
+                IconButton.filled(
+                  onPressed: () {
+                    _finishDrawing();
+                    setState(() => _canvasInputLocked = !_canvasInputLocked);
+                  },
+                  style: IconButton.styleFrom(
+                    backgroundColor: _canvasInputLocked
+                        ? const Color(0xffb8f5b8)
+                        : colorScheme.surfaceContainerHighest,
+                    foregroundColor: _canvasInputLocked
+                        ? Colors.green.shade900
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  icon: Icon(
+                    _canvasInputLocked
+                        ? Icons.lock_outline
+                        : Icons.lock_open_outlined,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      context.l10n.chat_canvasCurrentPayload(
+                        _currentPayloadChars,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isOverLimit ? colorScheme.error : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
