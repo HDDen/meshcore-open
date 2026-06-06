@@ -34,7 +34,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
   // allow a larger editor grid and still validate the exact encoded payload.
-  static const double _master64CellBudgetMultiplier = 3.0;
+  static const double _master64CellBudgetMultiplier = 4.0;
   static const int _master64BitsPerCell = 6;
   static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
   static const String _prefsWidthKey = 'canvas_editor_width';

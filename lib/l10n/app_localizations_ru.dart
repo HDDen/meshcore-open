@@ -5079,7 +5079,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasActive => 'Отображать холст';
 
   @override
-  String get chat_canvasShowLockBtn => 'Отображать кнопку блокировки';
+  String get chat_canvasShowLockBtn => 'Отображать кнопку блокировки холста';
 
   @override
   String get chat_showHops => 'Отображать хопы';
