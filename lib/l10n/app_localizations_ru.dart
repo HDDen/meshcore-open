@@ -127,6 +127,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get common_send => 'Отправить';
 
   @override
+  String get common_apply => 'Применить';
+
+  @override
   String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override

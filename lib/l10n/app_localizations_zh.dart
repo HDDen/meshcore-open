@@ -127,6 +127,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_send => 'Send';
 
   @override
+  String get common_apply => 'Apply';
+
+  @override
   String get scanner_title => '连接设备';
 
   @override

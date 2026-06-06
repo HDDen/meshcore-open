@@ -2,6 +2,7 @@
   "bg": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -68,6 +69,7 @@
   "de": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionFetchRegions",
     "settings_regionFetchRegionsFail",
     "settings_regionFetchRegionsAlreadyExists",
@@ -121,6 +123,7 @@
   "es": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -187,6 +190,7 @@
   "fr": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -253,6 +257,7 @@
   "hu": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -319,6 +324,7 @@
   "it": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -465,6 +471,7 @@
   "ja": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -531,6 +538,7 @@
   "ko": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -597,6 +605,7 @@
   "nl": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -743,6 +752,7 @@
   "pl": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -809,6 +819,7 @@
   "pt": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -955,6 +966,7 @@
   "sk": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1021,6 +1033,7 @@
   "sl": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1087,6 +1100,7 @@
   "sv": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1233,6 +1247,7 @@
   "uk": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",
@@ -1299,6 +1314,7 @@
   "zh": [
     "common_default",
     "common_send",
+    "common_apply",
     "settings_regionSettings",
     "settings_regionSettingsSubtitle",
     "settings_regionManagement_screenTitle",

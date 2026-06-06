@@ -358,6 +358,12 @@ abstract class AppLocalizations {
   /// **'Send'**
   String get common_send;
 
+  /// No description provided for @common_apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get common_apply;
+
   /// No description provided for @scanner_title.
   ///
   /// In en, this message translates to:

@@ -127,6 +127,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get common_send => 'Send';
 
   @override
+  String get common_apply => 'Apply';
+
+  @override
   String get scanner_title => 'MeshCore: Відкритий доступ (Advanced mod)';
 
   @override

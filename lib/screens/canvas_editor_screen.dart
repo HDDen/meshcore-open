@@ -28,7 +28,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _defaultSize = 11;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
-  static const double _compressedCellBudgetMultiplier = 2.7;
+  static const double _compressedCellBudgetMultiplier = 2.5;
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
