@@ -19,6 +19,13 @@ enum _CanvasTool { pencil, fill, eyedropper, line, oval }
 
 enum _PaletteSelectorValue { dynamic }
 
+class _CanvasHistoryEntry {
+  final List<int> before;
+  final List<int> after;
+
+  const _CanvasHistoryEntry({required this.before, required this.after});
+}
+
 class CanvasEditorScreen extends StatefulWidget {
   final int maxTextChars;
   final MCOImage? initialImage;
@@ -69,6 +76,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     PaletteProfile.dynamicGlobal512,
   ];
   static const int _inlineDynamicPaletteMaxColors = 64;
+  static const int _historyLimit = 10;
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -94,6 +102,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _ovalFirstIndex;
   int? _ovalSecondIndex;
   int _currentPayloadChars = 0;
+  final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
+  final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
   @override
   void initState() {
@@ -488,6 +498,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
+          IconButton.outlined(
+            onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
+            tooltip: 'Undo',
+            icon: const Icon(Icons.undo),
+          ),
+          const SizedBox(width: 4),
+          IconButton.outlined(
+            onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
+            tooltip: 'Redo',
+            icon: const Icon(Icons.redo),
+          ),
+          const SizedBox(width: 12),
           SegmentedButton<_CanvasTool>(
             showSelectedIcon: false,
             segments: const [
@@ -669,6 +691,66 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+  bool _pixelsEqual(List<int> a, List<int> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  void _rememberCanvasAction(List<int> before, List<int> after) {
+    if (_pixelsEqual(before, after)) return;
+    _undoStack.add(
+      _CanvasHistoryEntry(
+        before: List<int>.of(before),
+        after: List<int>.of(after),
+      ),
+    );
+    if (_undoStack.length > _historyLimit) {
+      _undoStack.removeAt(0);
+    }
+    _redoStack.clear();
+  }
+
+  void _undoCanvasAction() {
+    if (_undoStack.isEmpty) return;
+    final entry = _undoStack.removeLast();
+    _redoStack.add(entry);
+    if (_redoStack.length > _historyLimit) {
+      _redoStack.removeAt(0);
+    }
+    setState(() {
+      _pixels = List<int>.of(entry.before);
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+    });
+    _markPayloadDirty();
+  }
+
+  void _redoCanvasAction() {
+    if (_redoStack.isEmpty) return;
+    final entry = _redoStack.removeLast();
+    _undoStack.add(entry);
+    if (_undoStack.length > _historyLimit) {
+      _undoStack.removeAt(0);
+    }
+    setState(() {
+      _pixels = List<int>.of(entry.after);
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+    });
+    _markPayloadDirty();
+  }
+
+  void _clearCanvasHistory() {
+    _undoStack.clear();
+    _redoStack.clear();
+  }
+
   void _resize({int? width, int? height}) {
     final newWidth = width ?? _width;
     final newHeight = height ?? _height;
@@ -684,6 +766,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       fillColor: _whiteIndex,
     );
 
+    _clearCanvasHistory();
     setState(() {
       _width = newWidth;
       _height = newHeight;
@@ -706,6 +789,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       fillColor: _whiteIndex,
     );
 
+    _clearCanvasHistory();
     setState(() {
       _width = width;
       _height = height;
@@ -1124,6 +1208,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       targetHeight: nextHeight,
       fillColor: MCOImagePalette.whiteIndexFor(profile),
     );
+    _clearCanvasHistory();
     setState(() {
       _paletteProfile = profile;
       if (profile.isDynamic) {
@@ -1189,10 +1274,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _paintPixel(int index) {
     if (_pixels[index] == _selectedColor) return;
-    setState(() {
-      _pixels = List.of(_pixels);
-      _pixels[index] = _selectedColor;
-    });
+    final beforePixels = List<int>.of(_pixels);
+    final nextPixels = List<int>.of(_pixels);
+    nextPixels[index] = _selectedColor;
+    _rememberCanvasAction(beforePixels, nextPixels);
+    setState(() => _pixels = nextPixels);
     _markPayloadDirty();
   }
 
@@ -1228,6 +1314,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final startY = startIndex ~/ _width;
     final endX = endIndex % _width;
     final endY = endIndex ~/ _width;
+    final beforePixels = List<int>.of(_pixels);
     final nextPixels = List<int>.of(_pixels);
 
     var x0 = startX;
@@ -1259,6 +1346,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
 
+    if (changed) {
+      _rememberCanvasAction(beforePixels, nextPixels);
+    }
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
@@ -1327,6 +1417,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final relY = y3 - centerY;
     final semiMinor = (relX * vx + relY * vy).abs();
 
+    final beforePixels = List<int>.of(_pixels);
     final nextPixels = List<int>.of(_pixels);
     var changed = false;
 
@@ -1384,8 +1475,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
 
+    if (changed) {
+      _rememberCanvasAction(beforePixels, nextPixels);
+    }
     setState(() {
       _pixels = nextPixels;
+      _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
     });
@@ -1398,7 +1493,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final targetColor = _pixels[startIndex];
     if (targetColor == _selectedColor) return;
 
-    final nextPixels = List.of(_pixels);
+    final beforePixels = List<int>.of(_pixels);
+    final nextPixels = List<int>.of(_pixels);
     final queue = <int>[startIndex];
     nextPixels[startIndex] = _selectedColor;
 
@@ -1419,6 +1515,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (y < _height - 1) addIfSame(index + _width);
     }
 
+    _rememberCanvasAction(beforePixels, nextPixels);
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
@@ -1442,6 +1539,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
 
+    _clearCanvasHistory();
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
@@ -1452,6 +1550,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _clearCanvas() {
+    _clearCanvasHistory();
     setState(() {
       _pixels = List.filled(_width * _height, _whiteIndex);
       _lineStartIndex = null;
