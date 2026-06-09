@@ -539,7 +539,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         final canvasWidth = math.min(maxWidth, maxHeight * _width / _height);
         final canvasHeight = canvasWidth * _height / _width;
         final size = Size(canvasWidth, canvasHeight);
+        final touchSize = Size(maxWidth, maxHeight);
+        final canvasOffset = Offset(
+          (touchSize.width - canvasWidth) / 2,
+          (touchSize.height - canvasHeight) / 2,
+        );
         final canDraw = !showLockButton || _canvasInputLocked;
+
+        Offset toCanvasPosition(Offset touchPosition) {
+          return touchPosition - canvasOffset;
+        }
 
         return Center(
           child: GestureDetector(
@@ -547,30 +556,39 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             onPanDown: canDraw
                 ? (details) {
                     _isDrawing = true;
-                    _applyToolAt(details.localPosition, size);
+                    _applyToolAt(toCanvasPosition(details.localPosition), size);
                   }
                 : null,
             onPanUpdate: canDraw
                 ? (details) {
                     if (_selectedTool == _CanvasTool.pencil) {
-                      _applyToolAt(details.localPosition, size);
+                      _applyToolAt(
+                        toCanvasPosition(details.localPosition),
+                        size,
+                      );
                     }
                   }
                 : null,
             onPanEnd: canDraw ? (_) => _finishDrawing() : null,
             onPanCancel: canDraw ? _finishDrawing : null,
-            child: CustomPaint(
-              size: size,
-              painter: _PixelCanvasPainter(
-                width: _width,
-                height: _height,
-                pixels: _pixels,
-                profile: _paletteProfile,
-                palette: palette,
-                showGrid: _showGrid,
-                lineStartIndex: _selectedTool == _CanvasTool.line
-                    ? _lineStartIndex
-                    : null,
+            child: SizedBox(
+              width: touchSize.width,
+              height: touchSize.height,
+              child: Center(
+                child: CustomPaint(
+                  size: size,
+                  painter: _PixelCanvasPainter(
+                    width: _width,
+                    height: _height,
+                    pixels: _pixels,
+                    profile: _paletteProfile,
+                    palette: palette,
+                    showGrid: _showGrid,
+                    lineStartIndex: _selectedTool == _CanvasTool.line
+                        ? _lineStartIndex
+                        : null,
+                  ),
+                ),
               ),
             ),
           ),
@@ -1111,8 +1129,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _applyToolAt(Offset position, Size size) {
     if (position.dx < 0 ||
         position.dy < 0 ||
-        position.dx > size.width ||
-        position.dy > size.height) {
+        position.dx >= size.width ||
+        position.dy >= size.height) {
+      if (_selectedTool == _CanvasTool.line && _lineStartIndex != null) {
+        setState(() => _lineStartIndex = null);
+      }
       return;
     }
     final x = (position.dx / (size.width / _width))
@@ -1163,6 +1184,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final startIndex = _lineStartIndex;
     if (startIndex == null) {
       setState(() => _lineStartIndex = index);
+      return;
+    }
+
+    if (startIndex == index) {
+      setState(() => _lineStartIndex = null);
       return;
     }
 
