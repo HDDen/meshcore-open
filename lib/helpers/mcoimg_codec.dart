@@ -3372,6 +3372,11 @@ class MCOImageCodec {
     });
   }
 
+  static const int _rowDeltaOpBits = 2;
+  static const int _rowDeltaOpRaw = 0;
+  static const int _rowDeltaOpRepeat = 1;
+  static const int _rowDeltaOpDelta = 2;
+
   void _writeRowRepeatBody(
     _BitWriter writer,
     List<int> localPixels,
@@ -3456,6 +3461,7 @@ class MCOImageCodec {
     }
     if (localPixels.isEmpty) return;
 
+    final positionBits = _bitsForChoiceCount(rowLength);
     for (var x = 0; x < rowLength; x++) {
       writer.writeBits(localPixels[x], localBits);
     }
@@ -3472,25 +3478,33 @@ class MCOImageCodec {
         }
       }
 
-      final rawBits = 1 + rowLength * localBits;
-      var deltaBits = 1 + _bitVarUintBitLength(changes.length);
-      var pos = 0;
-      for (final change in changes) {
-        deltaBits += _bitVarUintBitLength(change.x - pos) + localBits;
-        pos = change.x + 1;
+      if (changes.isEmpty) {
+        writer.writeBits(_rowDeltaOpRepeat, _rowDeltaOpBits);
+        continue;
       }
 
+      final rawBits = _rowDeltaOpBits + rowLength * localBits;
+      final deltaBits =
+          _rowDeltaOpBits +
+          _bitVarUintBitLength(changes.length) +
+          changes.length * (positionBits + localBits);
+
       if (deltaBits < rawBits) {
-        writer.writeBits(1, 1);
+        writer.writeBits(_rowDeltaOpDelta, _rowDeltaOpBits);
         writer.writeBitVarUint(changes.length);
-        var pos = 0;
+        var previousX = -1;
         for (final change in changes) {
-          writer.writeBitVarUint(change.x - pos);
+          if (change.x <= previousX) {
+            throw const MCOImageInvalidInputException(
+              'Invalid row-delta change order',
+            );
+          }
+          writer.writeBits(change.x, positionBits);
           writer.writeBits(change.value, localBits);
-          pos = change.x + 1;
+          previousX = change.x;
         }
       } else {
-        writer.writeBits(0, 1);
+        writer.writeBits(_rowDeltaOpRaw, _rowDeltaOpBits);
         for (var x = 0; x < rowLength; x++) {
           writer.writeBits(localPixels[rowStart + x], localBits);
         }
@@ -3509,6 +3523,7 @@ class MCOImageCodec {
     }
     if (count == 0) return const <int>[];
 
+    final positionBits = _bitsForChoiceCount(rowLength);
     final result = List<int>.filled(count, 0);
     for (var x = 0; x < rowLength; x++) {
       result[x] = reader.readBits(localBits);
@@ -3518,30 +3533,41 @@ class MCOImageCodec {
     for (var row = 1; row < rowCount; row++) {
       final rowStart = row * rowLength;
       final previousStart = rowStart - rowLength;
-      final isDelta = reader.readBits(1) != 0;
-      if (!isDelta) {
-        for (var x = 0; x < rowLength; x++) {
-          result[rowStart + x] = reader.readBits(localBits);
-        }
-        continue;
-      }
+      final op = reader.readBits(_rowDeltaOpBits);
 
-      for (var x = 0; x < rowLength; x++) {
-        result[rowStart + x] = result[previousStart + x];
-      }
+      switch (op) {
+        case _rowDeltaOpRaw:
+          for (var x = 0; x < rowLength; x++) {
+            result[rowStart + x] = reader.readBits(localBits);
+          }
+          break;
+        case _rowDeltaOpRepeat:
+          for (var x = 0; x < rowLength; x++) {
+            result[rowStart + x] = result[previousStart + x];
+          }
+          break;
+        case _rowDeltaOpDelta:
+          for (var x = 0; x < rowLength; x++) {
+            result[rowStart + x] = result[previousStart + x];
+          }
 
-      final changeCount = reader.readBitVarUint();
-      var pos = 0;
-      for (var i = 0; i < changeCount; i++) {
-        final skip = reader.readBitVarUint();
-        pos += skip;
-        if (pos >= rowLength) {
+          final changeCount = reader.readBitVarUint();
+          var previousX = -1;
+          for (var i = 0; i < changeCount; i++) {
+            final x = reader.readBits(positionBits);
+            if (x >= rowLength || x <= previousX) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid row-delta change position',
+              );
+            }
+            result[rowStart + x] = reader.readBits(localBits);
+            previousX = x;
+          }
+          break;
+        default:
           throw const MCOImageInvalidPayloadException(
-            'Invalid row-delta change position',
+            'Unknown row-delta row op',
           );
-        }
-        result[rowStart + pos] = reader.readBits(localBits);
-        pos++;
       }
     }
 
