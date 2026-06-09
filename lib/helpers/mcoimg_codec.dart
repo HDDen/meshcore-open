@@ -22,7 +22,7 @@ enum PaletteProfile {
   dynamicGlobal512,
 }
 
-enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask, rowDelta }
+enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask, rowDelta, rowRepeat }
 
 enum ScanMode { h, v, s, sv }
 
@@ -172,6 +172,7 @@ class MCOImageCodec {
     ImageMode.rleLocal,
     ImageMode.sparseBg,
     ImageMode.biColorMask,
+    ImageMode.rowRepeat,
     ImageMode.rowDelta,
   ];
 
@@ -180,12 +181,14 @@ class MCOImageCodec {
     ImageMode.rleLocal,
     ImageMode.sparseBg,
     ImageMode.biColorMask,
+    ImageMode.rowRepeat,
     ImageMode.rowDelta,
   ];
 
   static const List<ImageMode> _modeTieOrder = [
     ImageMode.biColorMask,
     ImageMode.sparseBg,
+    ImageMode.rowRepeat,
     ImageMode.rowDelta,
     ImageMode.rleLocal,
     ImageMode.rawLocal,
@@ -847,6 +850,24 @@ class MCOImageCodec {
           localPaletteSize: local.colors.length,
           bitsPerLocalPixel: localBits,
         );
+      case ImageMode.rowRepeat:
+        final local = _buildLocalPalette(linear);
+        if (local.colors.isEmpty) return null;
+        final map = _localIndexMap(local.colors);
+        final localBits = _localBits(local.colors.length);
+        writer.writeBitVarUint(local.colors.length);
+        _writePalette(writer, local.colors, profile);
+        _writeRowRepeatBody(
+          writer,
+          linear.map((pixel) => map[pixel]!).toList(growable: false),
+          rowLength,
+          localBits,
+        );
+        return _V2BlockPayload(
+          writer.toBytes(),
+          localPaletteSize: local.colors.length,
+          bitsPerLocalPixel: localBits,
+        );
       case ImageMode.rowDelta:
         final local = _buildLocalPalette(linear);
         if (local.colors.isEmpty) return null;
@@ -1020,6 +1041,16 @@ class MCOImageCodec {
           writer.writeBitVarUint(segment.length);
           pos = segment.start + segment.length;
         }
+        break;
+      case ImageMode.rowRepeat:
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          )!;
+          return localIndexByProfileColorId[profileColorId]!;
+        }).toList(growable: false);
+        _writeRowRepeatBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rowDelta:
         final localPixels = linear.map((globalIndex) {
@@ -1577,6 +1608,9 @@ class MCOImageCodec {
       ImageMode.rowDelta => throw const MCOImageInvalidPayloadException(
         'ROW_DELTA is not supported by legacy block bodies',
       ),
+      ImageMode.rowRepeat => throw const MCOImageInvalidPayloadException(
+        'ROW_REPEAT is not supported by legacy block bodies',
+      ),
       ImageMode.regionsBg => throw const MCOImageInvalidPayloadException(
         'REGIONS_BG is not a block body mode',
       ),
@@ -1679,6 +1713,23 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowRepeat:
+        final palette = _readV2LocalPalette(reader, profile);
+        final localBits = _localBits(palette.length);
+        final localPixels = _readRowRepeatBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Row-repeat local color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
       case ImageMode.rowDelta:
         final palette = _readV2LocalPalette(reader, profile);
         final localBits = _localBits(palette.length);
@@ -1803,6 +1854,27 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowRepeat:
+        final palette = _readDynamicLocalPalette(
+          reader,
+          profile,
+          referenceEncoding,
+        );
+        final localBits = _localBits(palette.globalColors.length);
+        final localPixels = _readRowRepeatBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic row-repeat color index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        }).toList(growable: false);
       case ImageMode.rowDelta:
         final palette = _readDynamicLocalPalette(
           reader,
@@ -1908,6 +1980,21 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowRepeat:
+        final localPixels = _readRowRepeatBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic region row-repeat index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        }).toList(growable: false);
       case ImageMode.rowDelta:
         final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
         return localPixels.map((index) {
@@ -2204,6 +2291,10 @@ class MCOImageCodec {
         throw const MCOImageInvalidInputException(
           'ROW_DELTA is not supported by legacy block mode',
         );
+      case ImageMode.rowRepeat:
+        throw const MCOImageInvalidInputException(
+          'ROW_REPEAT is not supported by legacy block mode',
+        );
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -2275,6 +2366,23 @@ class MCOImageCodec {
           writer.writeBitVarUint(segment.length);
           pos = segment.start + segment.length;
         }
+        break;
+      case ImageMode.rowRepeat:
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          );
+          final localIndex = localIndexByProfileColorId[profileColorId];
+          if (localIndex == null) {
+            throw MCOImageInvalidInputException(
+              'Dynamic shared palette is missing globalIndex $globalIndex',
+            );
+          }
+          return localIndex;
+        }).toList(growable: false);
+        _writeRowRepeatBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rowDelta:
         final localBits = _localBits(localIndexByProfileColorId.length);
@@ -3264,6 +3372,79 @@ class MCOImageCodec {
     });
   }
 
+  void _writeRowRepeatBody(
+    _BitWriter writer,
+    List<int> localPixels,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || localPixels.length % rowLength != 0) {
+      throw const MCOImageInvalidInputException('Invalid row-repeat geometry');
+    }
+    if (localPixels.isEmpty) return;
+
+    for (var x = 0; x < rowLength; x++) {
+      writer.writeBits(localPixels[x], localBits);
+    }
+
+    final rowCount = localPixels.length ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      var sameAsPrevious = true;
+      for (var x = 0; x < rowLength; x++) {
+        if (localPixels[rowStart + x] != localPixels[previousStart + x]) {
+          sameAsPrevious = false;
+          break;
+        }
+      }
+
+      if (sameAsPrevious) {
+        writer.writeBits(1, 1);
+      } else {
+        writer.writeBits(0, 1);
+        for (var x = 0; x < rowLength; x++) {
+          writer.writeBits(localPixels[rowStart + x], localBits);
+        }
+      }
+    }
+  }
+
+  List<int> _readRowRepeatBody(
+    _BitReader reader,
+    int count,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException('Invalid row-repeat geometry');
+    }
+    if (count == 0) return const <int>[];
+
+    final result = List<int>.filled(count, 0);
+    for (var x = 0; x < rowLength; x++) {
+      result[x] = reader.readBits(localBits);
+    }
+
+    final rowCount = count ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      final repeatPrevious = reader.readBits(1) != 0;
+      if (repeatPrevious) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = result[previousStart + x];
+        }
+      } else {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = reader.readBits(localBits);
+        }
+      }
+    }
+
+    return result;
+  }
+
   void _writeRowDeltaBody(
     _BitWriter writer,
     List<int> localPixels,
@@ -3625,6 +3806,7 @@ class MCOImageCodec {
       ImageMode.sparseBg => 3,
       ImageMode.biColorMask => 4,
       ImageMode.rowDelta => 5,
+      ImageMode.rowRepeat => 6,
       ImageMode.regionsBg => throw const MCOImageInvalidInputException(
         'REGIONS_BG has no block mode bits',
       ),
@@ -3642,6 +3824,7 @@ class MCOImageCodec {
       3 => ImageMode.sparseBg,
       4 => ImageMode.biColorMask,
       5 => ImageMode.rowDelta,
+      6 => ImageMode.rowRepeat,
       _ => throw MCOImageInvalidPayloadException('Unknown image mode $value'),
     };
   }
