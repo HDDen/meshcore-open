@@ -80,6 +80,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
+  final _toolsScrollController = ScrollController();
   final _codec = MCOImageCodec();
 
   int _width = _defaultSize;
@@ -124,6 +125,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshTimer?.cancel();
     _widthController.dispose();
     _heightController.dispose();
+    _toolsScrollController.dispose();
     super.dispose();
   }
 
@@ -494,68 +496,88 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          IconButton.outlined(
-            onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
-            tooltip: 'Undo',
-            icon: const Icon(Icons.undo),
-          ),
-          const SizedBox(width: 4),
-          IconButton.outlined(
-            onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
-            tooltip: 'Redo',
-            icon: const Icon(Icons.redo),
-          ),
-          const SizedBox(width: 12),
-          SegmentedButton<_CanvasTool>(
-            showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(
-                value: _CanvasTool.pencil,
-                icon: Icon(Icons.edit_outlined),
-              ),
-              ButtonSegment(
-                value: _CanvasTool.fill,
-                icon: Icon(Icons.format_color_fill_outlined),
-              ),
-              ButtonSegment(
-                value: _CanvasTool.eyedropper,
-                icon: Icon(Icons.colorize_outlined),
-              ),
-              ButtonSegment(
-                value: _CanvasTool.line,
-                icon: Icon(Icons.show_chart_outlined),
-              ),
-              ButtonSegment(
-                value: _CanvasTool.oval,
-                icon: Icon(Icons.circle_outlined),
-              ),
-            ],
-            selected: {_selectedTool},
-            onSelectionChanged: (selection) {
-              final nextTool = selection.first;
-              setState(() {
-                if (nextTool != _selectedTool) {
-                  _lineStartIndex = null;
-                  _ovalFirstIndex = null;
-                  _ovalSecondIndex = null;
-                }
-                _selectedTool = nextTool;
-              });
-            },
-          ),
-          const SizedBox(width: 12),
-          moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
-        ],
+    final toolsRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton.outlined(
+          onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
+          tooltip: 'Undo',
+          icon: const Icon(Icons.undo),
+        ),
+        const SizedBox(width: 4),
+        IconButton.outlined(
+          onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
+          tooltip: 'Redo',
+          icon: const Icon(Icons.redo),
+        ),
+        const SizedBox(width: 12),
+        SegmentedButton<_CanvasTool>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+              value: _CanvasTool.pencil,
+              icon: Icon(Icons.edit_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.fill,
+              icon: Icon(Icons.format_color_fill_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.eyedropper,
+              icon: Icon(Icons.colorize_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.line,
+              icon: Icon(Icons.show_chart_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.oval,
+              icon: Icon(Icons.circle_outlined),
+            ),
+          ],
+          selected: {_selectedTool},
+          onSelectionChanged: (selection) {
+            final nextTool = selection.first;
+            setState(() {
+              if (nextTool != _selectedTool) {
+                _lineStartIndex = null;
+                _ovalFirstIndex = null;
+                _ovalSecondIndex = null;
+              }
+              _selectedTool = nextTool;
+            });
+          },
+        ),
+        const SizedBox(width: 12),
+        moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
+      ],
+    );
+
+    return ScrollConfiguration(
+      behavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          ui.PointerDeviceKind.touch,
+          ui.PointerDeviceKind.mouse,
+          ui.PointerDeviceKind.trackpad,
+          ui.PointerDeviceKind.stylus,
+        },
+      ),
+      child: Scrollbar(
+        controller: _toolsScrollController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _toolsScrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 8),
+          child: toolsRow,
+        ),
       ),
     );
   }
