@@ -5077,6 +5077,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasChangeSize => 'Изменить размер холста';
 
   @override
+  String get chat_canvasTrim => 'Обрезать пустое';
+
+  @override
   String get chat_canvasWidth => 'Ширина';
 
   @override
@@ -5084,6 +5087,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_canvasGridShow => 'Отображать сетку';
+
+  @override
+  String get chat_canvasRulerShow => 'Отображать линейку';
 
   @override
   String get chat_canvasGridColor => 'Цвет сетки';

@@ -15,15 +15,38 @@ import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 
-enum _CanvasTool { pencil, fill, eyedropper, line, oval }
+enum _CanvasTool { pencil, fill, eyedropper, line, oval, rectangle }
 
 enum _PaletteSelectorValue { dynamic }
 
-class _CanvasHistoryEntry {
-  final List<int> before;
-  final List<int> after;
+class _CanvasSnapshot {
+  final int width;
+  final int height;
+  final PaletteProfile paletteProfile;
+  final PaletteProfile dynamicPaletteProfile;
+  final MCOImageEncodingVersion encodingVersion;
+  final int selectedColor;
+  final List<int> pixels;
 
-  const _CanvasHistoryEntry({required this.before, required this.after});
+  _CanvasSnapshot({
+    required this.width,
+    required this.height,
+    required this.paletteProfile,
+    required this.dynamicPaletteProfile,
+    required this.encodingVersion,
+    required this.selectedColor,
+    required List<int> pixels,
+  }) : pixels = List<int>.unmodifiable(pixels);
+}
+
+class _CanvasHistoryEntry {
+  final _CanvasSnapshot before;
+  final _CanvasSnapshot after;
+
+  const _CanvasHistoryEntry({
+    required this.before,
+    required this.after,
+  });
 }
 
 class CanvasEditorScreen extends StatefulWidget {
@@ -77,10 +100,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   ];
   static const int _inlineDynamicPaletteMaxColors = 64;
   static const int _historyLimit = 10;
+  static const double _canvasRulerExtent = 12;
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
   final _toolsScrollController = ScrollController();
+  final _sizeActionsScrollController = ScrollController();
   final _codec = MCOImageCodec();
 
   int _width = _defaultSize;
@@ -90,6 +115,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
+  bool _showRuler = false;
   bool _unlockCanvasSize = false;
   MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v2;
   late List<int> _pixels;
@@ -102,6 +128,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _lineStartIndex;
   int? _ovalFirstIndex;
   int? _ovalSecondIndex;
+  int? _rectangleFirstIndex;
+  int? _rectangleSecondIndex;
   int _currentPayloadChars = 0;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
@@ -126,6 +154,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _widthController.dispose();
     _heightController.dispose();
     _toolsScrollController.dispose();
+    _sizeActionsScrollController.dispose();
     super.dispose();
   }
 
@@ -179,24 +208,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 onChanged: _setCanvasSizeUnlocked,
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Spacer(),
-                  OutlinedButton(
-                    onPressed: _cropCanvasSize,
-                    child: Text(
-                      context.l10n.chat_canvasCrop,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _applyCanvasSize,
-                    child: Text(context.l10n.common_apply),
-                  ),
-                ],
-              ),
+              _buildSizeActions(),
               const SizedBox(height: 8),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -206,6 +218,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   setState(() => _showGrid = value ?? true);
                 },
               ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.l10n.chat_canvasRulerShow),
+                value: _showRuler,
+                onChanged: (value) {
+                  setState(() => _showRuler = value ?? false);
+                },
+              ),
               const SizedBox(height: 16),
               Text(
                 context.l10n.chat_canvasFormatVer,
@@ -213,6 +233,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<MCOImageEncodingVersion>(
+                key: ValueKey(_encodingVersion),
                 initialValue: _encodingVersion,
                 decoration: InputDecoration(
                   labelText: context.l10n.chat_canvasFormatVer,
@@ -237,6 +258,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<Object>(
+                key: ValueKey(
+                  _paletteProfile.isDynamic
+                      ? _PaletteSelectorValue.dynamic
+                      : _paletteProfile,
+                ),
                 initialValue: _paletteProfile.isDynamic
                     ? _PaletteSelectorValue.dynamic
                     : _paletteProfile,
@@ -333,6 +359,69 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+  Widget _buildHorizontalScrollableButtonRow({
+    required ScrollController controller,
+    required Widget child,
+  }) {
+    return ScrollConfiguration(
+      behavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          ui.PointerDeviceKind.touch,
+          ui.PointerDeviceKind.mouse,
+          ui.PointerDeviceKind.trackpad,
+          ui.PointerDeviceKind.stylus,
+        },
+      ),
+      child: Scrollbar(
+        controller: controller,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: controller,
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSizeActions() {
+    return _buildHorizontalScrollableButtonRow(
+      controller: _sizeActionsScrollController,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton(
+            onPressed: _trimEmptyCanvas,
+            child: Text(
+              context.l10n.chat_canvasTrim,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: _cropCanvasSize,
+            child: Text(
+              context.l10n.chat_canvasCrop,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: _applyCanvasSize,
+            child: Text(context.l10n.chat_canvasResize),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSizeInput({
     required TextEditingController controller,
     required String label,
@@ -356,6 +445,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           labelText: label,
           border: const OutlineInputBorder(),
         ),
+        onTapOutside: (_) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
         onEditingComplete: commitValue,
       ),
     );
@@ -398,6 +490,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<PaletteProfile>(
+          key: ValueKey(_dynamicPaletteProfile),
           initialValue: _dynamicPaletteProfile,
           decoration: InputDecoration(
             labelText: context.l10n.chat_canvasPaletteDynamicProfile,
@@ -534,6 +627,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               value: _CanvasTool.oval,
               icon: Icon(Icons.circle_outlined),
             ),
+            ButtonSegment(
+              value: _CanvasTool.rectangle,
+              icon: Icon(Icons.crop_square),
+            ),
           ],
           selected: {_selectedTool},
           onSelectionChanged: (selection) {
@@ -543,6 +640,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 _lineStartIndex = null;
                 _ovalFirstIndex = null;
                 _ovalSecondIndex = null;
+                _rectangleFirstIndex = null;
+                _rectangleSecondIndex = null;
               }
               _selectedTool = nextTool;
             });
@@ -559,29 +658,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       ],
     );
 
-    return ScrollConfiguration(
-      behavior: const MaterialScrollBehavior().copyWith(
-        dragDevices: {
-          ui.PointerDeviceKind.touch,
-          ui.PointerDeviceKind.mouse,
-          ui.PointerDeviceKind.trackpad,
-          ui.PointerDeviceKind.stylus,
-        },
-      ),
-      child: Scrollbar(
-        controller: _toolsScrollController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          controller: _toolsScrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: toolsRow,
-          ),
-        ),
-      ),
+    return _buildHorizontalScrollableButtonRow(
+      controller: _toolsScrollController,
+      child: toolsRow,
     );
   }
 
@@ -591,47 +670,38 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = mediaHeight * 0.55;
-        final canvasWidth = math.min(maxWidth, maxHeight * _width / _height);
+        final availableCanvasWidth = math.max(
+          1.0,
+          maxWidth - _canvasRulerExtent,
+        );
+        final availableCanvasHeight = math.max(
+          1.0,
+          maxHeight - _canvasRulerExtent,
+        );
+        final canvasWidth = math.min(
+          availableCanvasWidth,
+          availableCanvasHeight * _width / _height,
+        );
         final canvasHeight = canvasWidth * _height / _width;
-        final size = Size(canvasWidth, canvasHeight);
-        final touchSize = Size(maxWidth, maxHeight);
-        final canvasOffset = Offset(
-          (touchSize.width - canvasWidth) / 2,
-          (touchSize.height - canvasHeight) / 2,
+        final canvasSize = Size(canvasWidth, canvasHeight);
+        final totalSize = Size(
+          canvasWidth + _canvasRulerExtent,
+          canvasHeight + _canvasRulerExtent,
+        );
+        final canvasOffset = const Offset(
+          _canvasRulerExtent,
+          _canvasRulerExtent,
         );
         final canDraw = !showLockButton || _canvasInputLocked;
 
-        Offset toCanvasPosition(Offset touchPosition) {
-          return touchPosition - canvasOffset;
-        }
-
         return Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanDown: canDraw
-                ? (details) {
-                    _isDrawing = true;
-                    _applyToolAt(toCanvasPosition(details.localPosition), size);
-                  }
-                : null,
-            onPanUpdate: canDraw
-                ? (details) {
-                    if (_selectedTool == _CanvasTool.pencil) {
-                      _applyToolAt(
-                        toCanvasPosition(details.localPosition),
-                        size,
-                      );
-                    }
-                  }
-                : null,
-            onPanEnd: canDraw ? (_) => _finishDrawing() : null,
-            onPanCancel: canDraw ? _finishDrawing : null,
-            child: SizedBox(
-              width: touchSize.width,
-              height: touchSize.height,
-              child: Center(
-                child: CustomPaint(
-                  size: size,
+          child: SizedBox(
+            width: totalSize.width,
+            height: totalSize.height,
+            child: Stack(
+              children: [
+                CustomPaint(
+                  size: totalSize,
                   painter: _PixelCanvasPainter(
                     width: _width,
                     height: _height,
@@ -639,15 +709,79 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     profile: _paletteProfile,
                     palette: palette,
                     showGrid: _showGrid,
+                    showRuler: _showRuler,
+                    canvasOffset: canvasOffset,
+                    canvasSize: canvasSize,
+                    rulerExtent: _canvasRulerExtent,
                     lineStartIndex: _selectedTool == _CanvasTool.line
                         ? _lineStartIndex
                         : null,
                     ovalPointIndices: _selectedTool == _CanvasTool.oval
-                        ? <int>[?_ovalFirstIndex, ?_ovalSecondIndex]
+                        ? <int>[
+                            ?_ovalFirstIndex,
+                            ?_ovalSecondIndex,
+                          ]
+                        : const <int>[],
+                    rectanglePointIndices: _selectedTool ==
+                            _CanvasTool.rectangle
+                        ? <int>[
+                            ?_rectangleFirstIndex,
+                            ?_rectangleSecondIndex,
+                          ]
                         : const <int>[],
                   ),
                 ),
-              ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: totalSize.width,
+                  height: _canvasRulerExtent,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _cancelPendingShape,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  top: _canvasRulerExtent,
+                  width: _canvasRulerExtent,
+                  height: canvasHeight,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _cancelPendingShape,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Positioned(
+                  left: _canvasRulerExtent,
+                  top: _canvasRulerExtent,
+                  width: canvasSize.width,
+                  height: canvasSize.height,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onPanDown: canDraw
+                        ? (details) {
+                            _isDrawing = true;
+                            _applyToolAt(details.localPosition, canvasSize);
+                          }
+                        : null,
+                    onPanUpdate: canDraw
+                        ? (details) {
+                            if (_selectedTool == _CanvasTool.pencil) {
+                              _applyToolAt(
+                                details.localPosition,
+                                canvasSize,
+                              );
+                            }
+                          }
+                        : null,
+                    onPanEnd: canDraw ? (_) => _finishDrawing() : null,
+                    onPanCancel: canDraw ? _finishDrawing : null,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -716,6 +850,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+
   bool _pixelsEqual(List<int> a, List<int> b) {
     if (identical(a, b)) return true;
     if (a.length != b.length) return false;
@@ -725,18 +860,69 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return true;
   }
 
-  void _rememberCanvasAction(List<int> before, List<int> after) {
-    if (_pixelsEqual(before, after)) return;
-    _undoStack.add(
-      _CanvasHistoryEntry(
-        before: List<int>.of(before),
-        after: List<int>.of(after),
-      ),
+  _CanvasSnapshot _captureCanvasSnapshot({
+    int? width,
+    int? height,
+    PaletteProfile? paletteProfile,
+    PaletteProfile? dynamicPaletteProfile,
+    MCOImageEncodingVersion? encodingVersion,
+    int? selectedColor,
+    List<int>? pixels,
+  }) {
+    return _CanvasSnapshot(
+      width: width ?? _width,
+      height: height ?? _height,
+      paletteProfile: paletteProfile ?? _paletteProfile,
+      dynamicPaletteProfile: dynamicPaletteProfile ?? _dynamicPaletteProfile,
+      encodingVersion: encodingVersion ?? _encodingVersion,
+      selectedColor: selectedColor ?? _selectedColor,
+      pixels: pixels ?? _pixels,
     );
+  }
+
+  bool _snapshotsEqual(_CanvasSnapshot a, _CanvasSnapshot b) {
+    return a.width == b.width &&
+        a.height == b.height &&
+        a.paletteProfile == b.paletteProfile &&
+        a.dynamicPaletteProfile == b.dynamicPaletteProfile &&
+        a.encodingVersion == b.encodingVersion &&
+        a.selectedColor == b.selectedColor &&
+        _pixelsEqual(a.pixels, b.pixels);
+  }
+
+  void _applyCanvasSnapshot(_CanvasSnapshot snapshot) {
+    setState(() {
+      _width = snapshot.width;
+      _height = snapshot.height;
+      _paletteProfile = snapshot.paletteProfile;
+      _dynamicPaletteProfile = snapshot.dynamicPaletteProfile;
+      _encodingVersion = snapshot.encodingVersion;
+      _selectedColor = snapshot.selectedColor;
+      _pixels = List<int>.of(snapshot.pixels);
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+    });
+  }
+
+  void _rememberCanvasAction(_CanvasSnapshot before, _CanvasSnapshot after) {
+    if (_snapshotsEqual(before, after)) return;
+    _undoStack.add(_CanvasHistoryEntry(before: before, after: after));
     if (_undoStack.length > _historyLimit) {
       _undoStack.removeAt(0);
     }
     _redoStack.clear();
+  }
+
+  void _rememberPixelCanvasAction(List<int> before, List<int> after) {
+    _rememberCanvasAction(
+      _captureCanvasSnapshot(pixels: before),
+      _captureCanvasSnapshot(pixels: after),
+    );
   }
 
   void _undoCanvasAction() {
@@ -746,12 +932,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (_redoStack.length > _historyLimit) {
       _redoStack.removeAt(0);
     }
-    setState(() {
-      _pixels = List<int>.of(entry.before);
-      _lineStartIndex = null;
-      _ovalFirstIndex = null;
-      _ovalSecondIndex = null;
-    });
+    _applyCanvasSnapshot(entry.before);
     _markPayloadDirty();
   }
 
@@ -762,12 +943,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (_undoStack.length > _historyLimit) {
       _undoStack.removeAt(0);
     }
-    setState(() {
-      _pixels = List<int>.of(entry.after);
-      _lineStartIndex = null;
-      _ovalFirstIndex = null;
-      _ovalSecondIndex = null;
-    });
+    _applyCanvasSnapshot(entry.after);
     _markPayloadDirty();
   }
 
@@ -791,7 +967,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       fillColor: _whiteIndex,
     );
 
-    _clearCanvasHistory();
+    final before = _captureCanvasSnapshot();
+    final after = _captureCanvasSnapshot(
+      width: newWidth,
+      height: newHeight,
+      pixels: nextPixels,
+    );
+    _rememberCanvasAction(before, after);
     setState(() {
       _width = newWidth;
       _height = newHeight;
@@ -799,6 +981,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -814,7 +998,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       fillColor: _whiteIndex,
     );
 
-    _clearCanvasHistory();
+    final before = _captureCanvasSnapshot();
+    final after = _captureCanvasSnapshot(
+      width: width,
+      height: height,
+      pixels: nextPixels,
+    );
+    _rememberCanvasAction(before, after);
     setState(() {
       _width = width;
       _height = height;
@@ -822,6 +1012,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -910,7 +1102,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return nextPixels;
   }
 
-  int _maxCanvasCellsForProfile(PaletteProfile profile) {
+  int _maxCanvasCellsForProfile(
+    PaletteProfile profile, {
+    MCOImageEncodingVersion? encodingVersion,
+  }) {
     final multiplier =
         _master64CellBudgetMultiplier *
         _master64BitsPerCell /
@@ -918,7 +1113,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final byCompressedBudget = (_sendPayloadLimit * multiplier).floor();
     return math.max(
       _minCanvasSize * _minCanvasSize,
-      math.min(_maxCanvasSize * _maxCanvasSize, byCompressedBudget),
+      math.min(
+        _maxCanvasSizeForEncoding(encodingVersion ?? _encodingVersion) *
+            _maxCanvasSizeForEncoding(encodingVersion ?? _encodingVersion),
+        byCompressedBudget,
+      ),
     );
   }
 
@@ -987,9 +1186,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool get _supportsDynamicPalettes =>
       _encodingVersion == MCOImageEncodingVersion.v2;
 
-  int get _maxCanvasSize => _encodingVersion == MCOImageEncodingVersion.v1Legacy
-      ? _maxCanvasSizeV1
-      : _maxCanvasSizeV2;
+  int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {
+    return version == MCOImageEncodingVersion.v1Legacy
+        ? _maxCanvasSizeV1
+        : _maxCanvasSizeV2;
+  }
+
+  int get _maxCanvasSize => _maxCanvasSizeForEncoding(_encodingVersion);
 
   String _encodingVersionLabel(MCOImageEncodingVersion version) {
     return switch (version) {
@@ -1001,36 +1204,84 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _changeEncodingVersion(MCOImageEncodingVersion version) {
     if (version == _encodingVersion) return;
 
-    setState(() => _encodingVersion = version);
+    final before = _captureCanvasSnapshot();
+    var nextProfile = _paletteProfile;
+    var nextDynamicProfile = _dynamicPaletteProfile;
+    var nextSelectedColor = _selectedColor;
+    var mappedPixels = List<int>.of(_pixels);
 
-    if (!_supportsDynamicPalettes && _paletteProfile.isDynamic) {
-      _changePaletteProfile(PaletteProfile.master64);
-      return;
+    if (version == MCOImageEncodingVersion.v1Legacy && nextProfile.isDynamic) {
+      final oldProfile = _paletteProfile;
+      nextProfile = PaletteProfile.master64;
+      final newPalette = _paletteFor(nextProfile);
+
+      int mapColor(int colorValue) {
+        final argb = _colorForPixelValue(oldProfile, colorValue).toARGB32();
+        return _nearestPaletteColorValue(
+          (argb >> 16) & 0xff,
+          (argb >> 8) & 0xff,
+          argb & 0xff,
+          (argb >> 24) & 0xff,
+          nextProfile,
+          newPalette,
+          whiteIndex: MCOImagePalette.whiteIndexFor(nextProfile),
+        );
+      }
+
+      nextSelectedColor = mapColor(_selectedColor);
+      mappedPixels = _pixels.map(mapColor).toList();
+    } else if (nextProfile.isDynamic) {
+      nextDynamicProfile = nextProfile;
     }
 
-    _applyCurrentCanvasBoundsAfterFormatChange();
-  }
-
-  void _applyCurrentCanvasBoundsAfterFormatChange() {
-    final size = _boundedCanvasSizeForProfile(
+    final bounded = _boundedCanvasSizeForProfile(
       _width,
       _height,
-      _paletteProfile,
+      nextProfile,
       unlockAdaptiveLimit: _unlockCanvasSize,
+      encodingVersion: version,
     );
-    final width = size[0];
-    final height = size[1];
+    final nextWidth = bounded[0];
+    final nextHeight = bounded[1];
+    final nextPixels = _resizePixels(
+      sourcePixels: mappedPixels,
+      sourceWidth: _width,
+      sourceHeight: _height,
+      targetWidth: nextWidth,
+      targetHeight: nextHeight,
+      fillColor: MCOImagePalette.whiteIndexFor(nextProfile),
+    );
 
-    _setControllerValue(_widthController, width);
-    _setControllerValue(_heightController, height);
+    final after = _captureCanvasSnapshot(
+      width: nextWidth,
+      height: nextHeight,
+      paletteProfile: nextProfile,
+      dynamicPaletteProfile: nextDynamicProfile,
+      encodingVersion: version,
+      selectedColor: nextSelectedColor,
+      pixels: nextPixels,
+    );
+    _rememberCanvasAction(before, after);
 
-    if (width != _width || height != _height) {
-      _resize(width: width, height: height);
-      unawaited(_saveCanvasSize(width, height));
-      return;
-    }
-
+    setState(() {
+      _encodingVersion = version;
+      _paletteProfile = nextProfile;
+      _dynamicPaletteProfile = nextDynamicProfile;
+      _selectedColor = nextSelectedColor;
+      _width = nextWidth;
+      _height = nextHeight;
+      _setControllerValue(_widthController, nextWidth);
+      _setControllerValue(_heightController, nextHeight);
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+    });
     _markPayloadDirty();
+    unawaited(_saveCanvasSize(nextWidth, nextHeight));
+    unawaited(_saveCanvasPalette(nextProfile));
   }
 
   void _setCanvasSizeUnlocked(bool? value) {
@@ -1048,6 +1299,75 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _resize(width: width, height: height);
       unawaited(_saveCanvasSize(width, height));
     }
+  }
+
+  void _trimEmptyCanvas() {
+    final emptyColor = _whiteIndex;
+
+    var minX = _width;
+    var minY = _height;
+    var maxX = -1;
+    var maxY = -1;
+
+    for (var y = 0; y < _height; y++) {
+      for (var x = 0; x < _width; x++) {
+        if (_pixels[y * _width + x] == emptyColor) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+
+    final targetWidth = maxX < minX
+        ? _minCanvasSize
+        : math.max(_minCanvasSize, maxX - minX + 1);
+    final targetHeight = maxY < minY
+        ? _minCanvasSize
+        : math.max(_minCanvasSize, maxY - minY + 1);
+
+    final nextPixels = List<int>.filled(
+      targetWidth * targetHeight,
+      emptyColor,
+    );
+
+    if (maxX >= minX && maxY >= minY) {
+      final copyWidth = maxX - minX + 1;
+      final copyHeight = maxY - minY + 1;
+      final targetStartX = math.max(0, (targetWidth - copyWidth) ~/ 2);
+      final targetStartY = math.max(0, (targetHeight - copyHeight) ~/ 2);
+
+      for (var y = 0; y < copyHeight; y++) {
+        for (var x = 0; x < copyWidth; x++) {
+          nextPixels[(targetStartY + y) * targetWidth + targetStartX + x] =
+              _pixels[(minY + y) * _width + minX + x];
+        }
+      }
+    }
+
+    final before = _captureCanvasSnapshot();
+    final after = _captureCanvasSnapshot(
+      width: targetWidth,
+      height: targetHeight,
+      pixels: nextPixels,
+    );
+    _rememberCanvasAction(before, after);
+    if (_snapshotsEqual(before, after)) return;
+
+    setState(() {
+      _width = targetWidth;
+      _height = targetHeight;
+      _setControllerValue(_widthController, targetWidth);
+      _setControllerValue(_heightController, targetHeight);
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+    });
+    _markPayloadDirty();
+    unawaited(_saveCanvasSize(targetWidth, targetHeight));
   }
 
   void _applyCanvasSize() {
@@ -1158,15 +1478,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     int requestedHeight,
     PaletteProfile profile, {
     bool unlockAdaptiveLimit = false,
+    MCOImageEncodingVersion? encodingVersion,
   }) {
-    var width = requestedWidth.clamp(_minCanvasSize, _maxCanvasSize).toInt();
-    var height = requestedHeight.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+    final maxCanvasSize = _maxCanvasSizeForEncoding(
+      encodingVersion ?? _encodingVersion,
+    );
+    var width = requestedWidth.clamp(_minCanvasSize, maxCanvasSize).toInt();
+    var height = requestedHeight.clamp(_minCanvasSize, maxCanvasSize).toInt();
 
     if (unlockAdaptiveLimit) {
       return [width, height];
     }
 
-    final maxCanvasCells = _maxCanvasCellsForProfile(profile);
+    final maxCanvasCells = _maxCanvasCellsForProfile(
+      profile,
+      encodingVersion: encodingVersion,
+    );
     if (width * height <= maxCanvasCells) {
       return [width, height];
     }
@@ -1233,7 +1560,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       targetHeight: nextHeight,
       fillColor: MCOImagePalette.whiteIndexFor(profile),
     );
-    _clearCanvasHistory();
+    final before = _captureCanvasSnapshot();
+    final nextDynamicProfile = profile.isDynamic
+        ? profile
+        : _dynamicPaletteProfile;
+    final after = _captureCanvasSnapshot(
+      width: nextWidth,
+      height: nextHeight,
+      paletteProfile: profile,
+      dynamicPaletteProfile: nextDynamicProfile,
+      selectedColor: nextSelectedColor,
+      pixels: nextPixels,
+    );
+    _rememberCanvasAction(before, after);
     setState(() {
       _paletteProfile = profile;
       if (profile.isDynamic) {
@@ -1248,9 +1587,28 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
     unawaited(_saveCanvasPalette(profile));
+  }
+
+  void _cancelPendingShape() {
+    if (_lineStartIndex == null &&
+        _ovalFirstIndex == null &&
+        _ovalSecondIndex == null &&
+        _rectangleFirstIndex == null &&
+        _rectangleSecondIndex == null) {
+      return;
+    }
+    setState(() {
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+    });
   }
 
   void _applyToolAt(Offset position, Size size) {
@@ -1258,15 +1616,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         position.dy < 0 ||
         position.dx >= size.width ||
         position.dy >= size.height) {
-      if (_selectedTool == _CanvasTool.line && _lineStartIndex != null) {
-        setState(() => _lineStartIndex = null);
-      } else if (_selectedTool == _CanvasTool.oval &&
-          (_ovalFirstIndex != null || _ovalSecondIndex != null)) {
-        setState(() {
-          _ovalFirstIndex = null;
-          _ovalSecondIndex = null;
-        });
-      }
       return;
     }
     final x = (position.dx / (size.width / _width))
@@ -1294,6 +1643,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       case _CanvasTool.oval:
         _handleOvalTool(index);
         break;
+      case _CanvasTool.rectangle:
+        _handleRectangleTool(index);
+        break;
     }
   }
 
@@ -1302,7 +1654,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final beforePixels = List<int>.of(_pixels);
     final nextPixels = List<int>.of(_pixels);
     nextPixels[index] = _selectedColor;
-    _rememberCanvasAction(beforePixels, nextPixels);
+    _rememberPixelCanvasAction(beforePixels, nextPixels);
     setState(() => _pixels = nextPixels);
     _markPayloadDirty();
   }
@@ -1316,6 +1668,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
   }
 
@@ -1372,13 +1726,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     if (changed) {
-      _rememberCanvasAction(beforePixels, nextPixels);
+      _rememberPixelCanvasAction(beforePixels, nextPixels);
     }
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     if (changed) {
       _markPayloadDirty();
@@ -1405,6 +1761,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _ovalFirstIndex = null;
         _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
       });
       return;
     }
@@ -1429,6 +1787,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _ovalFirstIndex = null;
         _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
       });
       return;
     }
@@ -1501,13 +1861,109 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     if (changed) {
-      _rememberCanvasAction(beforePixels, nextPixels);
+      _rememberPixelCanvasAction(beforePixels, nextPixels);
     }
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+    });
+    if (changed) {
+      _markPayloadDirty();
+    }
+  }
+
+  void _handleRectangleTool(int index) {
+    final firstIndex = _rectangleFirstIndex;
+    final secondIndex = _rectangleSecondIndex;
+    if (firstIndex == null) {
+      setState(() => _rectangleFirstIndex = index);
+      return;
+    }
+    if (secondIndex == null) {
+      if (firstIndex == index) {
+        setState(() => _rectangleFirstIndex = null);
+        return;
+      }
+      setState(() => _rectangleSecondIndex = index);
+      return;
+    }
+
+    if (index == firstIndex || index == secondIndex) {
+      setState(() {
+        _rectangleFirstIndex = null;
+        _rectangleSecondIndex = null;
+      });
+      return;
+    }
+
+    _drawRectangle(firstIndex, secondIndex, index);
+  }
+
+  void _drawRectangle(int firstIndex, int diagonalIndex, int thirdIndex) {
+    final ax = firstIndex % _width;
+    final ay = firstIndex ~/ _width;
+    final cx = diagonalIndex % _width;
+    final cy = diagonalIndex ~/ _width;
+    final bx = thirdIndex % _width;
+    final by = thirdIndex ~/ _width;
+    final dx = ax + cx - bx;
+    final dy = ay + cy - by;
+
+    final beforePixels = List<int>.of(_pixels);
+    final nextPixels = List<int>.of(_pixels);
+    var changed = false;
+
+    void plotLineBetweenPoints(int fromX, int fromY, int toX, int toY) {
+      var px = fromX;
+      var py = fromY;
+      final lineDx = (toX - fromX).abs();
+      final lineDy = (toY - fromY).abs();
+      final sx = fromX < toX ? 1 : -1;
+      final sy = fromY < toY ? 1 : -1;
+      var err = lineDx - lineDy;
+
+      while (true) {
+        if (px >= 0 && px < _width && py >= 0 && py < _height) {
+          final pixelIndex = py * _width + px;
+          if (nextPixels[pixelIndex] != _selectedColor) {
+            nextPixels[pixelIndex] = _selectedColor;
+            changed = true;
+          }
+        }
+
+        if (px == toX && py == toY) break;
+
+        final e2 = 2 * err;
+        if (e2 > -lineDy) {
+          err -= lineDy;
+          px += sx;
+        }
+        if (e2 < lineDx) {
+          err += lineDx;
+          py += sy;
+        }
+      }
+    }
+
+    plotLineBetweenPoints(ax, ay, bx, by);
+    plotLineBetweenPoints(bx, by, cx, cy);
+    plotLineBetweenPoints(cx, cy, dx, dy);
+    plotLineBetweenPoints(dx, dy, ax, ay);
+
+    if (changed) {
+      _rememberPixelCanvasAction(beforePixels, nextPixels);
+    }
+    setState(() {
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     if (changed) {
       _markPayloadDirty();
@@ -1540,12 +1996,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (y < _height - 1) addIfSame(index + _width);
     }
 
-    _rememberCanvasAction(beforePixels, nextPixels);
+    _rememberPixelCanvasAction(beforePixels, nextPixels);
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1570,6 +2028,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1581,6 +2041,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1604,8 +2066,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _pixels = pixels;
         _lineStartIndex = null;
-        _ovalFirstIndex = null;
-        _ovalSecondIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
       });
       _markPayloadDirty();
     } catch (error) {
@@ -1992,6 +2456,8 @@ class _PixelCanvasPainter extends CustomPainter {
   static const Color _gridColor = Color(0xff00ff00);
   static const Color _lineStartColor = Color(0xffff9800);
   static const Color _ovalPointColor = Color(0xff03a9f4);
+  static const Color _rectanglePointColor = Color(0xff9c27b0);
+  static const Color _rulerColor = Color(0xff808080);
 
   final int width;
   final int height;
@@ -1999,8 +2465,13 @@ class _PixelCanvasPainter extends CustomPainter {
   final PaletteProfile profile;
   final List<Color> palette;
   final bool showGrid;
+  final bool showRuler;
+  final Offset canvasOffset;
+  final Size canvasSize;
+  final double rulerExtent;
   final int? lineStartIndex;
   final List<int> ovalPointIndices;
+  final List<int> rectanglePointIndices;
 
   const _PixelCanvasPainter({
     required this.width,
@@ -2009,15 +2480,24 @@ class _PixelCanvasPainter extends CustomPainter {
     required this.profile,
     required this.palette,
     required this.showGrid,
+    required this.showRuler,
+    required this.canvasOffset,
+    required this.canvasSize,
+    required this.rulerExtent,
     this.lineStartIndex,
     this.ovalPointIndices = const <int>[],
+    this.rectanglePointIndices = const <int>[],
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cellWidth = size.width / width;
-    final cellHeight = size.height / height;
+    final cellWidth = canvasSize.width / width;
+    final cellHeight = canvasSize.height / height;
     final paint = Paint()..isAntiAlias = false;
+
+    if (showRuler) {
+      _paintRulerLabels(canvas, cellWidth, cellHeight);
+    }
 
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
@@ -2039,7 +2519,12 @@ class _PixelCanvasPainter extends CustomPainter {
           paint.color = palette[colorIndex];
         }
         canvas.drawRect(
-          Rect.fromLTWH(x * cellWidth, y * cellHeight, cellWidth, cellHeight),
+          Rect.fromLTWH(
+            canvasOffset.dx + x * cellWidth,
+            canvasOffset.dy + y * cellHeight,
+            cellWidth,
+            cellHeight,
+          ),
           paint,
         );
       }
@@ -2051,12 +2536,43 @@ class _PixelCanvasPainter extends CustomPainter {
         ..strokeWidth = 0.6
         ..isAntiAlias = false;
       for (var x = 0; x <= width; x++) {
-        final dx = x * cellWidth;
-        canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), gridPaint);
+        final dx = canvasOffset.dx + x * cellWidth;
+        canvas.drawLine(
+          Offset(dx, canvasOffset.dy),
+          Offset(dx, canvasOffset.dy + canvasSize.height),
+          gridPaint,
+        );
       }
       for (var y = 0; y <= height; y++) {
-        final dy = y * cellHeight;
-        canvas.drawLine(Offset(0, dy), Offset(size.width, dy), gridPaint);
+        final dy = canvasOffset.dy + y * cellHeight;
+        canvas.drawLine(
+          Offset(canvasOffset.dx, dy),
+          Offset(canvasOffset.dx + canvasSize.width, dy),
+          gridPaint,
+        );
+      }
+    }
+
+    void paintPointMarkers(List<int> pointIndices, Color color) {
+      if (pointIndices.isEmpty) return;
+      final markerPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..isAntiAlias = false;
+      for (final pointIndex in pointIndices) {
+        if (pointIndex < 0 || pointIndex >= width * height) continue;
+        final pointX = pointIndex % width;
+        final pointY = pointIndex ~/ width;
+        canvas.drawRect(
+          Rect.fromLTWH(
+            canvasOffset.dx + pointX * cellWidth,
+            canvasOffset.dy + pointY * cellHeight,
+            cellWidth,
+            cellHeight,
+          ),
+          markerPaint,
+        );
       }
     }
 
@@ -2071,8 +2587,8 @@ class _PixelCanvasPainter extends CustomPainter {
         ..isAntiAlias = false;
       canvas.drawRect(
         Rect.fromLTWH(
-          startX * cellWidth,
-          startY * cellHeight,
+          canvasOffset.dx + startX * cellWidth,
+          canvasOffset.dy + startY * cellHeight,
           cellWidth,
           cellHeight,
         ),
@@ -2080,26 +2596,53 @@ class _PixelCanvasPainter extends CustomPainter {
       );
     }
 
-    if (ovalPointIndices.isNotEmpty) {
-      final markerPaint = Paint()
-        ..color = _ovalPointColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..isAntiAlias = false;
-      for (final pointIndex in ovalPointIndices) {
-        if (pointIndex < 0 || pointIndex >= width * height) continue;
-        final pointX = pointIndex % width;
-        final pointY = pointIndex ~/ width;
-        canvas.drawRect(
-          Rect.fromLTWH(
-            pointX * cellWidth,
-            pointY * cellHeight,
-            cellWidth,
-            cellHeight,
-          ),
-          markerPaint,
-        );
-      }
+    paintPointMarkers(ovalPointIndices, _ovalPointColor);
+    paintPointMarkers(rectanglePointIndices, _rectanglePointColor);
+  }
+
+
+  List<int> _rulerCellNumbers(int cellCount) {
+    final values = <int>{
+      1,
+      (cellCount * 0.25).ceil().clamp(1, cellCount).toInt(),
+      (cellCount * 0.50).ceil().clamp(1, cellCount).toInt(),
+      (cellCount * 0.75).ceil().clamp(1, cellCount).toInt(),
+      cellCount,
+    }.toList()
+      ..sort();
+    return values;
+  }
+
+  void _paintRulerLabels(Canvas canvas, double cellWidth, double cellHeight) {
+    const style = TextStyle(
+      color: _rulerColor,
+      fontSize: 7,
+      height: 1,
+    );
+
+    for (final cellNumber in _rulerCellNumbers(width)) {
+      final textPainter = TextPainter(
+        text: TextSpan(text: '$cellNumber', style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final x =
+          canvasOffset.dx + (cellNumber - 0.5) * cellWidth - textPainter.width / 2;
+      final y = math.max(0.0, rulerExtent - textPainter.height);
+      textPainter.paint(canvas, Offset(x, y));
+    }
+
+    for (final cellNumber in _rulerCellNumbers(height)) {
+      final textPainter = TextPainter(
+        text: TextSpan(text: '$cellNumber', style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final x = math.max(0.0, rulerExtent - textPainter.width - 1);
+      final y = canvasOffset.dy +
+          (cellNumber - 0.5) * cellHeight -
+          textPainter.height / 2;
+      textPainter.paint(canvas, Offset(x, y));
     }
   }
 
@@ -2110,6 +2653,12 @@ class _PixelCanvasPainter extends CustomPainter {
         oldDelegate.pixels != pixels ||
         oldDelegate.palette != palette ||
         oldDelegate.showGrid != showGrid ||
-        oldDelegate.lineStartIndex != lineStartIndex;
+        oldDelegate.showRuler != showRuler ||
+        oldDelegate.canvasOffset != canvasOffset ||
+        oldDelegate.canvasSize != canvasSize ||
+        oldDelegate.rulerExtent != rulerExtent ||
+        oldDelegate.lineStartIndex != lineStartIndex ||
+        oldDelegate.ovalPointIndices != ovalPointIndices ||
+        oldDelegate.rectanglePointIndices != rectanglePointIndices;
   }
 }

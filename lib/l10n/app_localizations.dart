@@ -8638,6 +8638,12 @@ abstract class AppLocalizations {
   /// **'Change canvas size'**
   String get chat_canvasChangeSize;
 
+  /// No description provided for @chat_canvasTrim.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim empty'**
+  String get chat_canvasTrim;
+
   /// No description provided for @chat_canvasWidth.
   ///
   /// In en, this message translates to:
@@ -8655,6 +8661,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show grid'**
   String get chat_canvasGridShow;
+
+  /// No description provided for @chat_canvasRulerShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show ruler'**
+  String get chat_canvasRulerShow;
 
   /// No description provided for @chat_canvasGridColor.
   ///

@@ -5076,6 +5076,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_canvasChangeSize => 'Change canvas size';
 
   @override
+  String get chat_canvasTrim => 'Trim empty';
+
+  @override
   String get chat_canvasWidth => 'Width';
 
   @override
@@ -5083,6 +5086,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chat_canvasGridShow => 'Show grid';
+
+  @override
+  String get chat_canvasRulerShow => 'Show ruler';
 
   @override
   String get chat_canvasGridColor => 'Grid color';
