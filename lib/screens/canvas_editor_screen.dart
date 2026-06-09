@@ -15,7 +15,7 @@ import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 
-enum _CanvasTool { pencil, fill, eyedropper }
+enum _CanvasTool { pencil, fill, eyedropper, line }
 
 enum _PaletteSelectorValue { dynamic }
 
@@ -90,6 +90,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _payloadRefreshInProgress = false;
   bool _isDrawing = false;
   bool _canvasInputLocked = false;
+  int? _lineStartIndex;
   int _currentPayloadChars = 0;
 
   @override
@@ -500,10 +501,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 value: _CanvasTool.eyedropper,
                 icon: Icon(Icons.colorize_outlined),
               ),
+              ButtonSegment(
+                value: _CanvasTool.line,
+                icon: Icon(Icons.show_chart_outlined),
+              ),
             ],
             selected: {_selectedTool},
             onSelectionChanged: (selection) {
-              setState(() => _selectedTool = selection.first);
+              final nextTool = selection.first;
+              setState(() {
+                if (nextTool != _selectedTool) {
+                  _lineStartIndex = null;
+                }
+                _selectedTool = nextTool;
+              });
             },
           ),
           const SizedBox(width: 12),
@@ -557,6 +568,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 profile: _paletteProfile,
                 palette: palette,
                 showGrid: _showGrid,
+                lineStartIndex: _selectedTool == _CanvasTool.line
+                    ? _lineStartIndex
+                    : null,
               ),
             ),
           ),
@@ -645,6 +659,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _width = newWidth;
       _height = newHeight;
       _pixels = nextPixels;
+      _lineStartIndex = null;
     });
     _markPayloadDirty();
   }
@@ -664,6 +679,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _width = width;
       _height = height;
       _pixels = nextPixels;
+      _lineStartIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1086,6 +1102,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_widthController, nextWidth);
       _setControllerValue(_heightController, nextHeight);
       _pixels = nextPixels;
+      _lineStartIndex = null;
     });
     _markPayloadDirty();
     unawaited(_saveCanvasPalette(profile));
@@ -1117,6 +1134,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       case _CanvasTool.eyedropper:
         _pickColor(index);
         break;
+      case _CanvasTool.line:
+        _handleLineTool(index);
+        break;
     }
   }
 
@@ -1135,7 +1155,63 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _selectedColor = color;
       // Eyedropper is a one-shot tool: after picking, continue drawing.
       _selectedTool = _CanvasTool.pencil;
+      _lineStartIndex = null;
     });
+  }
+
+  void _handleLineTool(int index) {
+    final startIndex = _lineStartIndex;
+    if (startIndex == null) {
+      setState(() => _lineStartIndex = index);
+      return;
+    }
+
+    _drawLine(startIndex, index);
+  }
+
+  void _drawLine(int startIndex, int endIndex) {
+    final startX = startIndex % _width;
+    final startY = startIndex ~/ _width;
+    final endX = endIndex % _width;
+    final endY = endIndex ~/ _width;
+    final nextPixels = List<int>.of(_pixels);
+
+    var x0 = startX;
+    var y0 = startY;
+    final dx = (endX - startX).abs();
+    final dy = (endY - startY).abs();
+    final sx = startX < endX ? 1 : -1;
+    final sy = startY < endY ? 1 : -1;
+    var err = dx - dy;
+    var changed = false;
+
+    while (true) {
+      final pixelIndex = y0 * _width + x0;
+      if (nextPixels[pixelIndex] != _selectedColor) {
+        nextPixels[pixelIndex] = _selectedColor;
+        changed = true;
+      }
+
+      if (x0 == endX && y0 == endY) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+
+    setState(() {
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+    });
+    if (changed) {
+      _markPayloadDirty();
+    }
   }
 
   void _fillArea(int startIndex) {
@@ -1163,7 +1239,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (y < _height - 1) addIfSame(index + _width);
     }
 
-    setState(() => _pixels = nextPixels);
+    setState(() {
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+    });
     _markPayloadDirty();
   }
 
@@ -1181,13 +1260,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
 
-    setState(() => _pixels = nextPixels);
+    setState(() {
+      _pixels = nextPixels;
+      _lineStartIndex = null;
+    });
     _markPayloadDirty();
   }
 
   void _clearCanvas() {
     setState(() {
       _pixels = List.filled(_width * _height, _whiteIndex);
+      _lineStartIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1208,7 +1291,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final bytes = await file.readAsBytes();
       final pixels = await _imageBytesToCanvasPixels(bytes);
       if (!mounted) return;
-      setState(() => _pixels = pixels);
+      setState(() {
+        _pixels = pixels;
+        _lineStartIndex = null;
+      });
       _markPayloadDirty();
     } catch (error) {
       if (!mounted) return;
@@ -1592,6 +1678,7 @@ class _PaletteSwatch extends StatelessWidget {
 
 class _PixelCanvasPainter extends CustomPainter {
   static const Color _gridColor = Color(0xff00ff00);
+  static const Color _lineStartColor = Color(0xffff9800);
 
   final int width;
   final int height;
@@ -1599,6 +1686,7 @@ class _PixelCanvasPainter extends CustomPainter {
   final PaletteProfile profile;
   final List<Color> palette;
   final bool showGrid;
+  final int? lineStartIndex;
 
   const _PixelCanvasPainter({
     required this.width,
@@ -1607,6 +1695,7 @@ class _PixelCanvasPainter extends CustomPainter {
     required this.profile,
     required this.palette,
     required this.showGrid,
+    this.lineStartIndex,
   });
 
   @override
@@ -1641,18 +1730,39 @@ class _PixelCanvasPainter extends CustomPainter {
       }
     }
 
-    if (!showGrid) return;
-    final gridPaint = Paint()
-      ..color = _gridColor
-      ..strokeWidth = 0.6
-      ..isAntiAlias = false;
-    for (var x = 0; x <= width; x++) {
-      final dx = x * cellWidth;
-      canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), gridPaint);
+    if (showGrid) {
+      final gridPaint = Paint()
+        ..color = _gridColor
+        ..strokeWidth = 0.6
+        ..isAntiAlias = false;
+      for (var x = 0; x <= width; x++) {
+        final dx = x * cellWidth;
+        canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), gridPaint);
+      }
+      for (var y = 0; y <= height; y++) {
+        final dy = y * cellHeight;
+        canvas.drawLine(Offset(0, dy), Offset(size.width, dy), gridPaint);
+      }
     }
-    for (var y = 0; y <= height; y++) {
-      final dy = y * cellHeight;
-      canvas.drawLine(Offset(0, dy), Offset(size.width, dy), gridPaint);
+
+    final startIndex = lineStartIndex;
+    if (startIndex != null && startIndex >= 0 && startIndex < width * height) {
+      final startX = startIndex % width;
+      final startY = startIndex ~/ width;
+      final markerPaint = Paint()
+        ..color = _lineStartColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..isAntiAlias = false;
+      canvas.drawRect(
+        Rect.fromLTWH(
+          startX * cellWidth,
+          startY * cellHeight,
+          cellWidth,
+          cellHeight,
+        ),
+        markerPaint,
+      );
     }
   }
 
@@ -1662,6 +1772,7 @@ class _PixelCanvasPainter extends CustomPainter {
         oldDelegate.height != height ||
         oldDelegate.pixels != pixels ||
         oldDelegate.palette != palette ||
-        oldDelegate.showGrid != showGrid;
+        oldDelegate.showGrid != showGrid ||
+        oldDelegate.lineStartIndex != lineStartIndex;
   }
 }
