@@ -8578,6 +8578,12 @@ abstract class AppLocalizations {
   /// **'Scale'**
   String get chat_canvasResize;
 
+  /// No description provided for @chat_canvasUnlockSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock canvas size'**
+  String get chat_canvasUnlockSize;
+
   /// No description provided for @chat_canvasFormatVer.
   ///
   /// In en, this message translates to:

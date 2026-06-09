@@ -1868,115 +1868,117 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-            // Can't react to your own messages
-            if (!message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.add_reaction_outlined),
-                title: Text(context.l10n.chat_addReaction),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showEmojiPicker(message, contact);
-                },
-              ),
-            if (PlatformInfo.isDesktop)
-              ListTile(
-                leading: const Icon(Icons.route),
-                title: Text(context.l10n.chat_path),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openMessagePath(message, contact);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.copy),
-              title: Text(context.l10n.common_copy),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _copyMessageText(message.text);
-              },
-            ),
-            if (mcoImage != null)
-              ListTile(
-                leading: const Icon(Icons.save_alt_outlined),
-                title: Text(context.l10n.chat_canvasSave),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  unawaited(_saveMcoImageMessage(mcoImage));
-                },
-              ),
-            if (mcoImage != null && settings.canvasActive)
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: Text(context.l10n.chat_canvasSendToEdit),
-                onTap: () {
-                  final connector = context.read<MeshCoreConnector>();
-                  final maxBytes = _maxContactInputBytes(connector);
-                  Navigator.pop(sheetContext);
-                  unawaited(
-                    _showCanvasEditor(
-                      connector,
-                      maxBytes,
-                      initialImage: mcoImage,
-                    ),
-                  );
-                },
-              ),
-            if (canTranslateMessage)
-              ListTile(
-                leading: const Icon(Icons.translate),
-                title: Text(context.l10n.translation_translateMessage),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  unawaited(
-                    context.read<MeshCoreConnector>().translateContactMessage(
-                      widget.contact.publicKeyHex,
-                      message,
-                      manualTranslation: true,
-                    ),
-                  );
-                },
-              ),
-            if (!message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.mark_chat_unread_outlined),
-                title: Text(context.l10n.chat_markAsUnread),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _markAsUnread(message);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: Text(context.l10n.common_delete),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await _deleteMessage(message);
-              },
-            ),
-            if (message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.refresh),
-                title: Text(context.l10n.common_retry),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _retryMessage(message);
-                },
-              ),
-            if (_resolveContact(context.read<MeshCoreConnector>()).type ==
-                advTypeRoom)
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: Text(context.l10n.contacts_openChat),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openChat(context, contact);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: Text(context.l10n.common_cancel),
-              onTap: () => Navigator.pop(sheetContext),
-            ),
+                // Can't react to your own messages
+                if (!message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.add_reaction_outlined),
+                    title: Text(context.l10n.chat_addReaction),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showEmojiPicker(message, contact);
+                    },
+                  ),
+                if (PlatformInfo.isDesktop)
+                  ListTile(
+                    leading: const Icon(Icons.route),
+                    title: Text(context.l10n.chat_path),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openMessagePath(message, contact);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: Text(context.l10n.common_copy),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _copyMessageText(message.text);
+                  },
+                ),
+                if (mcoImage != null)
+                  ListTile(
+                    leading: const Icon(Icons.save_alt_outlined),
+                    title: Text(context.l10n.chat_canvasSave),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageMessage(mcoImage));
+                    },
+                  ),
+                if (mcoImage != null && settings.canvasActive)
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: Text(context.l10n.chat_canvasSendToEdit),
+                    onTap: () {
+                      final connector = context.read<MeshCoreConnector>();
+                      final maxBytes = _maxContactInputBytes(connector);
+                      Navigator.pop(sheetContext);
+                      unawaited(
+                        _showCanvasEditor(
+                          connector,
+                          maxBytes,
+                          initialImage: mcoImage,
+                        ),
+                      );
+                    },
+                  ),
+                if (canTranslateMessage)
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: Text(context.l10n.translation_translateMessage),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(
+                        context
+                            .read<MeshCoreConnector>()
+                            .translateContactMessage(
+                              widget.contact.publicKeyHex,
+                              message,
+                              manualTranslation: true,
+                            ),
+                      );
+                    },
+                  ),
+                if (!message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.mark_chat_unread_outlined),
+                    title: Text(context.l10n.chat_markAsUnread),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _markAsUnread(message);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: Text(context.l10n.common_delete),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await _deleteMessage(message);
+                  },
+                ),
+                if (message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.refresh),
+                    title: Text(context.l10n.common_retry),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _retryMessage(message);
+                    },
+                  ),
+                if (_resolveContact(context.read<MeshCoreConnector>()).type ==
+                    advTypeRoom)
+                  ListTile(
+                    leading: const Icon(Icons.chat),
+                    title: Text(context.l10n.contacts_openChat),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openChat(context, contact);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.close),
+                  title: Text(context.l10n.common_cancel),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
               ],
             ),
           ),

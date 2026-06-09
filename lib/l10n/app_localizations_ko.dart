@@ -4779,6 +4779,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_canvasResize => 'Scale';
 
   @override
+  String get chat_canvasUnlockSize => 'Unlock canvas size';
+
+  @override
   String get chat_canvasFormatVer => 'Codec version';
 
   @override

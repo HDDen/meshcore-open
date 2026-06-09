@@ -2041,6 +2041,7 @@
   "chat_canvas": "Холст",
   "chat_canvasCrop": "Обрезать холст",
   "chat_canvasResize": "Сжать/растянуть",
+  "chat_canvasUnlockSize": "Разблокировать размер холста",
   "chat_canvasFormatVer": "Версия кодека",
   "chat_canvasPalette": "Палитра",
   "chat_canvasPaletteShow": "Показать палитру",

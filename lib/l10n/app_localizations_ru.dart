@@ -5045,6 +5045,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasResize => 'Сжать/растянуть';
 
   @override
+  String get chat_canvasUnlockSize => 'Разблокировать размер холста';
+
+  @override
   String get chat_canvasFormatVer => 'Версия кодека';
 
   @override

@@ -41,7 +41,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
   // allow a larger editor grid and still validate the exact encoded payload.
-  static const double _master64CellBudgetMultiplier = 5.0;
+  static const double _master64CellBudgetMultiplier = 4.0;
   static const int _master64BitsPerCell = 6;
   static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
   static const String _prefsWidthKey = 'canvas_editor_width';
@@ -80,6 +80,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
+  bool _unlockCanvasSize = false;
   late List<int> _pixels;
   Timer? _payloadRefreshTimer;
   DateTime? _lastPayloadRefreshAt;
@@ -152,6 +153,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.l10n.chat_canvasUnlockSize),
+                value: _unlockCanvasSize,
+                onChanged: _setCanvasSizeUnlocked,
               ),
               const SizedBox(height: 8),
               Row(
@@ -790,6 +798,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     await prefs.setInt(_prefsHeightKey, height);
   }
 
+  void _setCanvasSizeUnlocked(bool? value) {
+    final unlocked = value ?? false;
+    if (unlocked == _unlockCanvasSize) return;
+
+    setState(() => _unlockCanvasSize = unlocked);
+
+    if (!unlocked) {
+      final size = _requestedBoundedCanvasSize();
+      final width = size[0];
+      final height = size[1];
+      _setControllerValue(_widthController, width);
+      _setControllerValue(_heightController, height);
+      _resize(width: width, height: height);
+      unawaited(_saveCanvasSize(width, height));
+    }
+  }
+
   void _applyCanvasSize() {
     final size = _requestedBoundedCanvasSize();
     final width = size[0];
@@ -819,6 +844,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       requestedWidth,
       requestedHeight,
       _paletteProfile,
+      unlockAdaptiveLimit: _unlockCanvasSize,
     );
   }
 
@@ -893,10 +919,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   List<int> _boundedCanvasSizeForProfile(
     int requestedWidth,
     int requestedHeight,
-    PaletteProfile profile,
-  ) {
+    PaletteProfile profile, {
+    bool unlockAdaptiveLimit = false,
+  }) {
     var width = requestedWidth.clamp(_minCanvasSize, _maxCanvasSize).toInt();
     var height = requestedHeight.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+
+    if (unlockAdaptiveLimit) {
+      return [width, height];
+    }
+
     final maxCanvasCells = _maxCanvasCellsForProfile(profile);
     if (width * height <= maxCanvasCells) {
       return [width, height];
@@ -947,7 +979,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     final nextSelectedColor = mapColor(_selectedColor);
     final mappedPixels = _pixels.map(mapColor).toList();
-    final bounded = _boundedCanvasSizeForProfile(_width, _height, profile);
+    final bounded = _boundedCanvasSizeForProfile(
+      _width,
+      _height,
+      profile,
+      unlockAdaptiveLimit: _unlockCanvasSize,
+    );
     final nextWidth = bounded[0];
     final nextHeight = bounded[1];
     final nextPixels = _resizePixels(
