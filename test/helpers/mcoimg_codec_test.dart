@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/mcoimg_codec.dart';
+import 'package:meshcore_open/helpers/mcoimg_palette.dart';
 
 void main() {
   final codec = MCOImageCodec();
@@ -104,6 +105,24 @@ void main() {
 
     test('20x1', () {
       _expectRoundTrip(codec, _image(20, 1, (x, _) => x % 8));
+    });
+  });
+
+  group('MCOImageCodec dynamic palette tables', () {
+    test('global512 and dynamic profile index tables are valid', () {
+      expect(MCOImageDynamicPalette.global512, hasLength(512));
+      for (final profile in _dynamicProfiles) {
+        final indices = MCOImageDynamicPalette.indicesFor(profile);
+        expect(indices, hasLength(_paletteSize(profile)));
+        expect(indices.toSet(), hasLength(indices.length));
+        for (final index in indices) {
+          expect(index, inInclusiveRange(0, 511));
+        }
+      }
+      expect(
+        MCOImageDynamicPalette.indicesFor(PaletteProfile.dynamicGlobal512),
+        List<int>.generate(512, (index) => index),
+      );
     });
   });
 
@@ -333,7 +352,7 @@ void main() {
     });
 
     test('debug diagnostics include decodable candidates for all palettes', () {
-      for (final profile in PaletteProfile.values) {
+      for (final profile in _fixedProfiles) {
         final image = _image(
           13,
           9,
@@ -351,6 +370,103 @@ void main() {
           expect(decoded.pixels, image.pixels);
         }
       }
+    });
+
+    test('dynamicGlobal8 encodes as version 2 and decodes global indices', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal8,
+      );
+      final image = _image(
+        11,
+        11,
+        (x, y) => colors[(x + y) % colors.length],
+        profile: PaletteProfile.dynamicGlobal8,
+      );
+
+      final encoded = codec.encode(image, backgroundColor: colors.first);
+      final bytes = _base91Decode(
+        encoded.text.substring(MCOImageCodec.prefix.length),
+      );
+
+      expect(bytes.first >> 6, 2);
+      expect(encoded.codecVersion, 2);
+      expect(codec.decode(encoded.text).pixels, image.pixels);
+    });
+
+    test('dynamicGlobal512 supports banked candidates and roundtrips', () {
+      final image = _image(8, 8, (x, y) {
+        final bank = (x + y) % 4;
+        final offset = (x * 7 + y * 5) & 0x3f;
+        return (bank << 6) | offset;
+      }, profile: PaletteProfile.dynamicGlobal512);
+
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+
+      expect(
+        diagnostics.candidates.map((c) => c.dynamicReferenceEncoding),
+        contains(DynamicPaletteReferenceEncoding.banked8x64),
+      );
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
+    test('dynamic profiles support regions candidates', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal8,
+      );
+      final image = _image(20, 20, (x, y) {
+        final first = x >= 2 && x <= 3 && y >= 2 && y <= 3;
+        final second = x >= 15 && x <= 16 && y >= 15 && y <= 16;
+        return first || second ? colors[3] : colors[0];
+      }, profile: PaletteProfile.dynamicGlobal8);
+
+      final diagnostics = codec.debugEncode(image, backgroundColor: colors[0]);
+
+      expect(
+        diagnostics.candidates.map((c) => c.mode),
+        contains(ImageMode.regionsBg),
+      );
+      for (final candidate in diagnostics.candidates.where(
+        (candidate) => candidate.mode == ImageMode.regionsBg,
+      )) {
+        final decoded = codec.decode(candidate.text);
+        expect(decoded.paletteProfile, image.paletteProfile);
+        expect(decoded.pixels, image.pixels);
+      }
+    });
+
+    test('dynamic encoder preserves the selected dynamic profile', () {
+      final image = _image(
+        11,
+        11,
+        (x, y) => ((x + y) & 1) == 0 ? 0 : 63,
+        profile: PaletteProfile.dynamicGlobal32,
+      );
+
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decode(encoded.text);
+
+      expect(encoded.codecVersion, 2);
+      expect(decoded.paletteProfile, PaletteProfile.dynamicGlobal32);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('compact dynamic profiles mirror existing master palettes', () {
+      expect(
+        MCOImageDynamicPalette.colorsFor(PaletteProfile.dynamicGlobal8),
+        MCOImagePalette.master8,
+      );
+      expect(
+        MCOImageDynamicPalette.colorsFor(PaletteProfile.dynamicGlobal16),
+        MCOImagePalette.master16,
+      );
+      expect(
+        MCOImageDynamicPalette.colorsFor(PaletteProfile.dynamicGlobal32),
+        MCOImagePalette.master32,
+      );
+      expect(
+        MCOImageDynamicPalette.colorsFor(PaletteProfile.dynamicGlobal64),
+        MCOImagePalette.master64,
+      );
     });
   });
 
@@ -392,6 +508,14 @@ void main() {
       expect(encoded.width, 1);
       expect(encoded.height, 1);
       expect(encoded.pixels, [0]);
+    });
+
+    test('unknown newer version fails', () {
+      final payload = Uint8List.fromList([0xc0, 0, 0, 0]);
+      expect(
+        () => codec.decode('im:${_base91(payload)}'),
+        throwsA(isA<MCOImageInvalidPayloadException>()),
+      );
     });
 
     test('invalid bounds fail', () {
@@ -490,6 +614,15 @@ void main() {
       );
     });
 
+    test('dynamic color outside selected profile fails', () {
+      expect(
+        () => codec.encode(
+          _image(2, 2, (_, _) => 511, profile: PaletteProfile.dynamicGlobal8),
+        ),
+        throwsA(isA<MCOImageInvalidInputException>()),
+      );
+    });
+
     test('maxChars fails when output is too long', () {
       expect(
         () => codec.encode(_solid(11, 11, 0), maxChars: 1),
@@ -569,8 +702,37 @@ int _paletteSize(PaletteProfile profile) {
     PaletteProfile.master32 => 32,
     PaletteProfile.grayscale32 => 32,
     PaletteProfile.master64 => 64,
+    PaletteProfile.dynamicGlobal8 => 8,
+    PaletteProfile.dynamicGlobal16 => 16,
+    PaletteProfile.dynamicGlobal32 => 32,
+    PaletteProfile.dynamicGlobal64 => 64,
+    PaletteProfile.dynamicGlobal128 => 128,
+    PaletteProfile.dynamicGlobal256 => 256,
+    PaletteProfile.dynamicGlobal512 => 512,
   };
 }
+
+const List<PaletteProfile> _fixedProfiles = [
+  PaletteProfile.mono,
+  PaletteProfile.master4,
+  PaletteProfile.master8,
+  PaletteProfile.grayscale8,
+  PaletteProfile.master16,
+  PaletteProfile.grayscale16,
+  PaletteProfile.master32,
+  PaletteProfile.grayscale32,
+  PaletteProfile.master64,
+];
+
+const List<PaletteProfile> _dynamicProfiles = [
+  PaletteProfile.dynamicGlobal8,
+  PaletteProfile.dynamicGlobal16,
+  PaletteProfile.dynamicGlobal32,
+  PaletteProfile.dynamicGlobal64,
+  PaletteProfile.dynamicGlobal128,
+  PaletteProfile.dynamicGlobal256,
+  PaletteProfile.dynamicGlobal512,
+];
 
 String _base91(Uint8List bytes) {
   const alphabet =

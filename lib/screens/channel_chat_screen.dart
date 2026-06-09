@@ -1360,11 +1360,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Future<void> _showCanvasEditor(int maxTextChars) async {
+  Future<void> _showCanvasEditor(
+    int maxTextChars, {
+    MCOImage? initialImage,
+  }) async {
     final encodedText = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-        builder: (context) => CanvasEditorScreen(maxTextChars: maxTextChars),
+        builder: (context) => CanvasEditorScreen(
+          maxTextChars: maxTextChars,
+          initialImage: initialImage,
+        ),
       ),
     );
     if (encodedText == null || encodedText.isEmpty) return;
@@ -1892,6 +1898,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   void _showMessageActions(ChannelMessage message) {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
           text: message.text,
@@ -1997,6 +2004,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 onTap: () {
                   Navigator.pop(sheetContext);
                   unawaited(_saveMcoImageMessage(mcoImage));
+                },
+              ),
+            if (mcoImage != null && settings.canvasActive)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(context.l10n.chat_canvasSendToEdit),
+                onTap: () {
+                  final connector = context.read<MeshCoreConnector>();
+                  final maxBytes = _maxChannelInputBytes(connector, settings);
+                  Navigator.pop(sheetContext);
+                  unawaited(
+                    _showCanvasEditor(maxBytes, initialImage: mcoImage),
+                  );
                 },
               ),
             ListTile(

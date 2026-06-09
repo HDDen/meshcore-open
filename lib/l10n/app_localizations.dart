@@ -8566,17 +8566,53 @@ abstract class AppLocalizations {
   /// **'Canvas'**
   String get chat_canvas;
 
+  /// No description provided for @chat_canvasCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop canvas'**
+  String get chat_canvasCrop;
+
   /// No description provided for @chat_canvasPalette.
   ///
   /// In en, this message translates to:
   /// **'Palette'**
   String get chat_canvasPalette;
 
+  /// No description provided for @chat_canvasPaletteShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show palette'**
+  String get chat_canvasPaletteShow;
+
   /// No description provided for @chat_canvasPaletteMode.
   ///
   /// In en, this message translates to:
   /// **'Palette preset'**
   String get chat_canvasPaletteMode;
+
+  /// No description provided for @chat_canvasPaletteDynamic.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic'**
+  String get chat_canvasPaletteDynamic;
+
+  /// No description provided for @chat_canvasPaletteDynamicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Base set for dynamic palette'**
+  String get chat_canvasPaletteDynamicProfile;
+
+  /// No description provided for @chat_canvasPaletteDynamicUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Colours actually used'**
+  String get chat_canvasPaletteDynamicUsed;
+
+  /// No description provided for @chat_canvasPaletteDynamicDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning! Use the dynamic palette wisely! A smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each canvas pixel!'**
+  String get chat_canvasPaletteDynamicDscr;
 
   /// No description provided for @chat_canvasChangeSize.
   ///
@@ -8643,6 +8679,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show canvas block button'**
   String get chat_canvasShowLockBtn;
+
+  /// No description provided for @chat_canvasSendToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to canvas'**
+  String get chat_canvasSendToEdit;
 
   /// No description provided for @chat_showHops.
   ///

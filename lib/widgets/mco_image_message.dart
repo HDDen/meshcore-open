@@ -32,10 +32,11 @@ class MCOImageMessage extends StatelessWidget {
 
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
-        final colorIndex = image.pixels[y * image.width + x]
-            .clamp(0, palette.length - 1)
-            .toInt();
-        paint.color = palette[colorIndex];
+        paint.color = _colorForPixelValue(
+          image.paletteProfile,
+          image.pixels[y * image.width + x],
+          palette,
+        );
         canvas.drawRect(
           ui.Rect.fromLTWH(
             (x * cellSize).toDouble(),
@@ -60,6 +61,29 @@ class MCOImageMessage extends StatelessWidget {
       throw const MCOImageInvalidInputException('Cannot render PNG');
     }
     return png.buffer.asUint8List();
+  }
+
+  static Color _colorForPixelValue(
+    PaletteProfile profile,
+    int colorValue,
+    List<Color> palette,
+  ) {
+    if (profile.isDynamic) {
+      if (colorValue < 0 ||
+          colorValue >= MCOImageDynamicPalette.global512.length ||
+          MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                profile,
+                colorValue,
+              ) ==
+              null) {
+        final whiteIndex = MCOImagePalette.whiteIndexFor(profile);
+        return MCOImageDynamicPalette.global512[whiteIndex];
+      }
+      return MCOImageDynamicPalette.global512[colorValue];
+    }
+
+    final colorIndex = colorValue.clamp(0, palette.length - 1).toInt();
+    return palette[colorIndex];
   }
 
   @override
@@ -90,10 +114,11 @@ class _MCOImagePainter extends CustomPainter {
 
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
-        final colorIndex = image.pixels[y * image.width + x]
-            .clamp(0, palette.length - 1)
-            .toInt();
-        paint.color = palette[colorIndex];
+        paint.color = MCOImageMessage._colorForPixelValue(
+          image.paletteProfile,
+          image.pixels[y * image.width + x],
+          palette,
+        );
         canvas.drawRect(
           Rect.fromLTWH(x * cellWidth, y * cellHeight, cellWidth, cellHeight),
           paint,

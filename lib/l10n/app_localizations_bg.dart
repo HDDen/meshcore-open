@@ -5023,10 +5023,29 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_canvas => 'Canvas';
 
   @override
+  String get chat_canvasCrop => 'Crop canvas';
+
+  @override
   String get chat_canvasPalette => 'Palette';
 
   @override
+  String get chat_canvasPaletteShow => 'Show palette';
+
+  @override
   String get chat_canvasPaletteMode => 'Palette preset';
+
+  @override
+  String get chat_canvasPaletteDynamic => 'Dynamic';
+
+  @override
+  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+
+  @override
+  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+
+  @override
+  String get chat_canvasPaletteDynamicDscr =>
+      'Warning! Use the dynamic palette wisely! A smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each canvas pixel!';
 
   @override
   String get chat_canvasChangeSize => 'Change canvas size';
@@ -5064,6 +5083,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_canvasShowLockBtn => 'Show canvas block button';
+
+  @override
+  String get chat_canvasSendToEdit => 'Send to canvas';
 
   @override
   String get chat_showHops => 'Show hops';

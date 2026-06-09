@@ -5039,10 +5039,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvas => 'Холст';
 
   @override
+  String get chat_canvasCrop => 'Обрезать холст';
+
+  @override
   String get chat_canvasPalette => 'Палитра';
 
   @override
+  String get chat_canvasPaletteShow => 'Показать палитру';
+
+  @override
   String get chat_canvasPaletteMode => 'Профиль палитры';
+
+  @override
+  String get chat_canvasPaletteDynamic => 'Динамическая';
+
+  @override
+  String get chat_canvasPaletteDynamicProfile =>
+      'Базовый набор для динамической палитры';
+
+  @override
+  String get chat_canvasPaletteDynamicUsed => 'Реально используемые цвета';
+
+  @override
+  String get chat_canvasPaletteDynamicDscr =>
+      'Внимание! Используйте динамическую палитру с умом! Меньшая базовая палитра даёт меньшую стоимость кодирования информации об использованных оттенках, а меньшее итоговое количество цветов снижает стоимость каждого пикселя холста!';
 
   @override
   String get chat_canvasChangeSize => 'Изменить размер холста';
@@ -5080,6 +5100,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_canvasShowLockBtn => 'Отображать кнопку блокировки холста';
+
+  @override
+  String get chat_canvasSendToEdit => 'Отправить в холст';
 
   @override
   String get chat_showHops => 'Отображать хопы';

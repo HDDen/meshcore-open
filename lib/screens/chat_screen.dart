@@ -755,12 +755,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _showCanvasEditor(
     MeshCoreConnector connector,
-    int maxTextChars,
-  ) async {
+    int maxTextChars, {
+    MCOImage? initialImage,
+  }) async {
     final encodedText = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-        builder: (context) => CanvasEditorScreen(maxTextChars: maxTextChars),
+        builder: (context) => CanvasEditorScreen(
+          maxTextChars: maxTextChars,
+          initialImage: initialImage,
+        ),
       ),
     );
     if (encodedText == null || encodedText.isEmpty) return;
@@ -1843,6 +1847,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _showMessageActions(Message message, Contact contact) {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
           text: message.text,
@@ -1891,6 +1896,23 @@ class _ChatScreenState extends State<ChatScreen> {
                 onTap: () {
                   Navigator.pop(sheetContext);
                   unawaited(_saveMcoImageMessage(mcoImage));
+                },
+              ),
+            if (mcoImage != null && settings.canvasActive)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(context.l10n.chat_canvasSendToEdit),
+                onTap: () {
+                  final connector = context.read<MeshCoreConnector>();
+                  final maxBytes = _maxContactInputBytes(connector);
+                  Navigator.pop(sheetContext);
+                  unawaited(
+                    _showCanvasEditor(
+                      connector,
+                      maxBytes,
+                      initialImage: mcoImage,
+                    ),
+                  );
                 },
               ),
             if (canTranslateMessage)

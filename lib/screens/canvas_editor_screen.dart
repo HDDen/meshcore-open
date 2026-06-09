@@ -17,10 +17,17 @@ import '../storage/prefs_manager.dart';
 
 enum _CanvasTool { pencil, fill, eyedropper }
 
+enum _PaletteSelectorValue { dynamic }
+
 class CanvasEditorScreen extends StatefulWidget {
   final int maxTextChars;
+  final MCOImage? initialImage;
 
-  const CanvasEditorScreen({super.key, required this.maxTextChars});
+  const CanvasEditorScreen({
+    super.key,
+    required this.maxTextChars,
+    this.initialImage,
+  });
 
   @override
   State<CanvasEditorScreen> createState() => _CanvasEditorScreenState();
@@ -34,7 +41,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
   // allow a larger editor grid and still validate the exact encoded payload.
-  static const double _master64CellBudgetMultiplier = 4.0;
+  static const double _master64CellBudgetMultiplier = 5.0;
   static const int _master64BitsPerCell = 6;
   static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
   static const String _prefsWidthKey = 'canvas_editor_width';
@@ -51,6 +58,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     PaletteProfile.master32,
     PaletteProfile.master64,
   ];
+  static const List<PaletteProfile> _dynamicPaletteProfileOptions = [
+    PaletteProfile.dynamicGlobal8,
+    PaletteProfile.dynamicGlobal16,
+    PaletteProfile.dynamicGlobal32,
+    PaletteProfile.dynamicGlobal64,
+    PaletteProfile.dynamicGlobal128,
+    PaletteProfile.dynamicGlobal256,
+    PaletteProfile.dynamicGlobal512,
+  ];
+  static const int _inlineDynamicPaletteMaxColors = 64;
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -59,6 +76,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _width = _defaultSize;
   int _height = _defaultSize;
   PaletteProfile _paletteProfile = PaletteProfile.master64;
+  PaletteProfile _dynamicPaletteProfile = PaletteProfile.dynamicGlobal512;
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
@@ -75,9 +93,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void initState() {
     super.initState();
     _pixels = List.filled(_width * _height, _whiteIndex);
-    _currentPayloadChars = _calculatePayloadChars();
-    _lastPayloadRefreshAt = DateTime.now();
-    _loadSavedCanvasSettings();
+    final initialImage = widget.initialImage;
+    if (initialImage != null) {
+      _loadInitialImage(initialImage);
+    } else {
+      _currentPayloadChars = _calculatePayloadChars();
+      _lastPayloadRefreshAt = DateTime.now();
+      _loadSavedCanvasSettings();
+    }
   }
 
   @override
@@ -131,12 +154,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed: _applyCanvasSize,
-                  child: Text(context.l10n.common_apply),
-                ),
+              Row(
+                children: [
+                  const Spacer(),
+                  OutlinedButton(
+                    onPressed: _cropCanvasSize,
+                    child: Text(
+                      context.l10n.chat_canvasCrop,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _applyCanvasSize,
+                    child: Text(context.l10n.common_apply),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               CheckboxListTile(
@@ -153,27 +187,41 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<PaletteProfile>(
-                initialValue: _paletteProfile,
+              DropdownButtonFormField<Object>(
+                initialValue: _paletteProfile.isDynamic
+                    ? _PaletteSelectorValue.dynamic
+                    : _paletteProfile,
                 decoration: InputDecoration(
                   labelText: context.l10n.chat_canvasPaletteMode,
                   border: const OutlineInputBorder(),
                 ),
-                items: _paletteProfileOptions
-                    .map(
-                      (profile) => DropdownMenuItem(
-                        value: profile,
-                        child: Text(_paletteLabel(profile)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (profile) {
-                  if (profile == null) return;
-                  _changePaletteProfile(profile);
+                items: [
+                  DropdownMenuItem<Object>(
+                    value: _PaletteSelectorValue.dynamic,
+                    child: Text(context.l10n.chat_canvasPaletteDynamic),
+                  ),
+                  for (final profile in _paletteProfileOptions)
+                    DropdownMenuItem<Object>(
+                      value: profile,
+                      child: Text(_paletteLabel(profile)),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  if (value == _PaletteSelectorValue.dynamic) {
+                    _changePaletteProfile(PaletteProfile.dynamicGlobal512);
+                    return;
+                  }
+                  if (value is PaletteProfile) {
+                    _changePaletteProfile(value);
+                  }
                 },
               ),
               const SizedBox(height: 12),
-              _buildPalette(palette),
+              if (_paletteProfile.isDynamic)
+                _buildDynamicPaletteControls()
+              else
+                _buildPalette(palette),
               const SizedBox(height: 16),
               _buildTools(),
               const SizedBox(height: 20),
@@ -263,18 +311,126 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  Widget _buildPalette(List<Color> palette) {
+  Widget _buildPalette(
+    List<Color> palette, {
+    PaletteProfile? profile,
+    void Function(int colorValue)? onColorSelected,
+  }) {
+    final paletteProfile = profile ?? _paletteProfile;
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: [
         for (var index = 0; index < palette.length; index++)
+          () {
+            final colorValue = _paletteColorValueAtIndex(paletteProfile, index);
+            return _PaletteSwatch(
+              color: palette[index],
+              selected: colorValue == _selectedColor,
+              onTap: () {
+                if (onColorSelected != null) {
+                  onColorSelected(colorValue);
+                  return;
+                }
+                setState(() => _selectedColor = colorValue);
+              },
+            );
+          }(),
+      ],
+    );
+  }
+
+  Widget _buildDynamicPaletteControls() {
+    final palette = _paletteFor(_paletteProfile);
+    final shouldInlinePalette =
+        palette.length <= _inlineDynamicPaletteMaxColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<PaletteProfile>(
+          initialValue: _dynamicPaletteProfile,
+          decoration: InputDecoration(
+            labelText: context.l10n.chat_canvasPaletteDynamicProfile,
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            for (final profile in _dynamicPaletteProfileOptions)
+              DropdownMenuItem(
+                value: profile,
+                child: Text(_paletteLabel(profile)),
+              ),
+          ],
+          onChanged: (profile) {
+            if (profile == null) return;
+            _changePaletteProfile(profile);
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.chat_canvasPaletteDynamicDscr,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        if (shouldInlinePalette)
+          _buildPalette(palette)
+        else
+          OutlinedButton(
+            onPressed: _showDynamicPaletteDialog,
+            child: Text(context.l10n.chat_canvasPaletteShow),
+          ),
+        const SizedBox(height: 16),
+        Text(
+          context.l10n.chat_canvasPaletteDynamicUsed,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        _buildUsedDynamicPalette(),
+      ],
+    );
+  }
+
+  Widget _buildUsedDynamicPalette() {
+    final colorValues = _usedColorValuesForProfile(_paletteProfile);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final colorValue in colorValues)
           _PaletteSwatch(
-            color: palette[index],
-            selected: index == _selectedColor,
-            onTap: () => setState(() => _selectedColor = index),
+            color: _colorForPixelValue(_paletteProfile, colorValue),
+            selected: colorValue == _selectedColor,
+            onTap: () => setState(() => _selectedColor = colorValue),
           ),
       ],
+    );
+  }
+
+  void _showDynamicPaletteDialog() {
+    final profile = _paletteProfile;
+    final palette = _paletteFor(profile);
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(context.l10n.chat_canvasPaletteDynamicProfile),
+          content: SingleChildScrollView(
+            child: _buildPalette(
+              palette,
+              profile: profile,
+              onColorSelected: (colorValue) {
+                setState(() => _selectedColor = colorValue);
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(context.l10n.common_close),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -363,6 +519,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 width: _width,
                 height: _height,
                 pixels: _pixels,
+                profile: _paletteProfile,
                 palette: palette,
                 showGrid: _showGrid,
               ),
@@ -457,6 +614,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _markPayloadDirty();
   }
 
+  void _resizeByCropping({required int width, required int height}) {
+    if (width == _width && height == _height) return;
+    final nextPixels = _cropOrPadPixels(
+      sourcePixels: _pixels,
+      sourceWidth: _width,
+      sourceHeight: _height,
+      targetWidth: width,
+      targetHeight: height,
+      fillColor: _whiteIndex,
+    );
+
+    setState(() {
+      _width = width;
+      _height = height;
+      _pixels = nextPixels;
+    });
+    _markPayloadDirty();
+  }
+
   List<int> _resizePixels({
     required List<int> sourcePixels,
     required int sourceWidth,
@@ -487,6 +663,30 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       for (var x = 0; x < copyWidth; x++) {
         nextPixels[(newStartY + y) * targetWidth + newStartX + x] =
             sourcePixels[(oldStartY + y) * sourceWidth + oldStartX + x];
+      }
+    }
+    return nextPixels;
+  }
+
+  List<int> _cropOrPadPixels({
+    required List<int> sourcePixels,
+    required int sourceWidth,
+    required int sourceHeight,
+    required int targetWidth,
+    required int targetHeight,
+    required int fillColor,
+  }) {
+    final nextPixels = List.filled(targetWidth * targetHeight, fillColor);
+    final copyWidth = math.min(sourceWidth, targetWidth);
+    final copyHeight = math.min(sourceHeight, targetHeight);
+    final sourceStartX = math.max(0, (sourceWidth - targetWidth) ~/ 2);
+    final sourceStartY = math.max(0, (sourceHeight - targetHeight) ~/ 2);
+    final targetStartX = math.max(0, (targetWidth - sourceWidth) ~/ 2);
+    final targetStartY = math.max(0, (targetHeight - sourceHeight) ~/ 2);
+    for (var y = 0; y < copyHeight; y++) {
+      for (var x = 0; x < copyWidth; x++) {
+        nextPixels[(targetStartY + y) * targetWidth + targetStartX + x] =
+            sourcePixels[(sourceStartY + y) * sourceWidth + sourceStartX + x];
       }
     }
     return nextPixels;
@@ -550,12 +750,32 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final height = bounded[1];
 
     _paletteProfile = profile;
+    if (profile.isDynamic) {
+      _dynamicPaletteProfile = profile;
+    }
     _selectedColor = MCOImagePalette.blackIndexFor(profile);
     _width = width;
     _height = height;
     _setControllerValue(_widthController, width);
     _setControllerValue(_heightController, height);
     _pixels = List.filled(width * height, _whiteIndex);
+    _currentPayloadChars = _calculatePayloadChars();
+    _lastPayloadRefreshAt = DateTime.now();
+  }
+
+  void _loadInitialImage(MCOImage image) {
+    // Reusing an existing message image should preserve its codec palette and
+    // exact canvas dimensions instead of applying the user's last editor preset.
+    _paletteProfile = image.paletteProfile;
+    if (image.paletteProfile.isDynamic) {
+      _dynamicPaletteProfile = image.paletteProfile;
+    }
+    _selectedColor = MCOImagePalette.blackIndexFor(image.paletteProfile);
+    _width = image.width;
+    _height = image.height;
+    _setControllerValue(_widthController, _width);
+    _setControllerValue(_heightController, _height);
+    _pixels = List<int>.of(image.pixels);
     _currentPayloadChars = _calculatePayloadChars();
     _lastPayloadRefreshAt = DateTime.now();
   }
@@ -571,20 +791,35 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _applyCanvasSize() {
-    final requestedWidth = int.tryParse(_widthController.text) ?? _width;
-    final requestedHeight = int.tryParse(_heightController.text) ?? _height;
-    final bounded = _boundedCanvasSizeForProfile(
-      requestedWidth,
-      requestedHeight,
-      _paletteProfile,
-    );
-    final width = bounded[0];
-    final height = bounded[1];
+    final size = _requestedBoundedCanvasSize();
+    final width = size[0];
+    final height = size[1];
 
     _setControllerValue(_widthController, width);
     _setControllerValue(_heightController, height);
     _resize(width: width, height: height);
     unawaited(_saveCanvasSize(width, height));
+  }
+
+  void _cropCanvasSize() {
+    final size = _requestedBoundedCanvasSize();
+    final width = size[0];
+    final height = size[1];
+
+    _setControllerValue(_widthController, width);
+    _setControllerValue(_heightController, height);
+    _resizeByCropping(width: width, height: height);
+    unawaited(_saveCanvasSize(width, height));
+  }
+
+  List<int> _requestedBoundedCanvasSize() {
+    final requestedWidth = int.tryParse(_widthController.text) ?? _width;
+    final requestedHeight = int.tryParse(_heightController.text) ?? _height;
+    return _boundedCanvasSizeForProfile(
+      requestedWidth,
+      requestedHeight,
+      _paletteProfile,
+    );
   }
 
   void _finishDrawing() {
@@ -694,19 +929,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _changePaletteProfile(PaletteProfile profile) {
     if (profile == _paletteProfile) return;
-    final oldPalette = _paletteFor(_paletteProfile);
+    final oldProfile = _paletteProfile;
     final newPalette = _paletteFor(profile);
 
-    int mapColor(int colorIndex) {
-      if (colorIndex < 0 || colorIndex >= oldPalette.length) {
-        return MCOImagePalette.whiteIndexFor(profile);
-      }
-      final argb = oldPalette[colorIndex].toARGB32();
-      return _nearestPaletteColor(
+    int mapColor(int colorValue) {
+      final argb = _colorForPixelValue(oldProfile, colorValue).toARGB32();
+      return _nearestPaletteColorValue(
         (argb >> 16) & 0xff,
         (argb >> 8) & 0xff,
         argb & 0xff,
         (argb >> 24) & 0xff,
+        profile,
         newPalette,
         whiteIndex: MCOImagePalette.whiteIndexFor(profile),
       );
@@ -727,6 +960,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
     setState(() {
       _paletteProfile = profile;
+      if (profile.isDynamic) {
+        _dynamicPaletteProfile = profile;
+      }
       _selectedColor = nextSelectedColor;
       _width = nextWidth;
       _height = nextHeight;
@@ -895,15 +1131,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     for (var y = 0; y < targetHeight; y++) {
       for (var x = 0; x < targetWidth; x++) {
         final offset = (y * targetWidth + x) * 4;
-        final colorIndex = _nearestPaletteColor(
+        final colorValue = _nearestPaletteColorValue(
           rgba.getUint8(offset),
           rgba.getUint8(offset + 1),
           rgba.getUint8(offset + 2),
           rgba.getUint8(offset + 3),
+          _paletteProfile,
           palette,
           whiteIndex: _whiteIndex,
         );
-        nextPixels[(startY + y) * _width + startX + x] = colorIndex;
+        nextPixels[(startY + y) * _width + startX + x] = colorValue;
       }
     }
     return nextPixels;
@@ -923,11 +1160,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return frame.image;
   }
 
-  int _nearestPaletteColor(
+  int _nearestPaletteColorValue(
     int red,
     int green,
     int blue,
     int alpha,
+    PaletteProfile profile,
     List<Color> palette, {
     required int whiteIndex,
   }) {
@@ -956,7 +1194,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         bestIndex = index;
       }
     }
-    return bestIndex;
+    return _paletteColorValueAtIndex(profile, bestIndex);
   }
 
   Future<void> _saveCanvasToPng() async {
@@ -1017,17 +1255,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<Uint8List> _renderCanvasPngBytes() async {
     const cellSize = 16;
-    final palette = _paletteFor(_paletteProfile);
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
     final paint = Paint()..isAntiAlias = false;
 
     for (var y = 0; y < _height; y++) {
       for (var x = 0; x < _width; x++) {
-        final colorIndex = _pixels[y * _width + x]
-            .clamp(0, palette.length - 1)
-            .toInt();
-        paint.color = palette[colorIndex];
+        paint.color = _colorForPixelValue(
+          _paletteProfile,
+          _pixels[y * _width + x],
+        );
         canvas.drawRect(
           ui.Rect.fromLTWH(
             (x * cellSize).toDouble(),
@@ -1094,6 +1331,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.master32 => 'Master 32',
       PaletteProfile.grayscale32 => 'Grayscale 32',
       PaletteProfile.master64 => 'Master 64',
+      PaletteProfile.dynamicGlobal8 => 'Dynamic Global 8',
+      PaletteProfile.dynamicGlobal16 => 'Dynamic Global 16',
+      PaletteProfile.dynamicGlobal32 => 'Dynamic Global 32',
+      PaletteProfile.dynamicGlobal64 => 'Dynamic Global 64',
+      PaletteProfile.dynamicGlobal128 => 'Dynamic Global 128',
+      PaletteProfile.dynamicGlobal256 => 'Dynamic Global 256',
+      PaletteProfile.dynamicGlobal512 => 'Dynamic Global 512',
     };
   }
 
@@ -1108,24 +1352,78 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       PaletteProfile.master32 => 5,
       PaletteProfile.grayscale32 => 5,
       PaletteProfile.master64 => 6,
+      PaletteProfile.dynamicGlobal8 => 3,
+      PaletteProfile.dynamicGlobal16 => 4,
+      PaletteProfile.dynamicGlobal32 => 5,
+      PaletteProfile.dynamicGlobal64 => 6,
+      PaletteProfile.dynamicGlobal128 => 7,
+      PaletteProfile.dynamicGlobal256 => 8,
+      PaletteProfile.dynamicGlobal512 => 9,
     };
   }
 
   List<Color> _paletteFor(PaletteProfile profile) {
-    return switch (profile) {
-      PaletteProfile.mono => MCOImagePalette.mono,
-      PaletteProfile.master4 => MCOImagePalette.master4,
-      PaletteProfile.master8 => MCOImagePalette.master8,
-      PaletteProfile.grayscale8 => MCOImagePalette.grayscale8,
-      PaletteProfile.master16 => MCOImagePalette.master16,
-      PaletteProfile.grayscale16 => MCOImagePalette.grayscale16,
-      PaletteProfile.master32 => MCOImagePalette.master32,
-      PaletteProfile.grayscale32 => MCOImagePalette.grayscale32,
-      PaletteProfile.master64 => MCOImagePalette.master64,
-    };
+    return MCOImagePalette.colorsFor(profile);
   }
 
   int get _whiteIndex => MCOImagePalette.whiteIndexFor(_paletteProfile);
+
+  int _paletteColorValueAtIndex(PaletteProfile profile, int paletteIndex) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.globalIndexForProfileColorId(
+        profile,
+        paletteIndex,
+      );
+    }
+    return paletteIndex;
+  }
+
+  int? _paletteIndexForColorValue(PaletteProfile profile, int colorValue) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+        profile,
+        colorValue,
+      );
+    }
+    final paletteLength = _paletteFor(profile).length;
+    if (colorValue < 0 || colorValue >= paletteLength) return null;
+    return colorValue;
+  }
+
+  Color _colorForPixelValue(PaletteProfile profile, int colorValue) {
+    if (profile.isDynamic) {
+      if (colorValue < 0 ||
+          colorValue >= MCOImageDynamicPalette.global512.length ||
+          _paletteIndexForColorValue(profile, colorValue) == null) {
+        return _colorForPixelValue(
+          profile,
+          MCOImagePalette.whiteIndexFor(profile),
+        );
+      }
+      return MCOImageDynamicPalette.global512[colorValue];
+    }
+    final palette = _paletteFor(profile);
+    if (colorValue < 0 || colorValue >= palette.length) {
+      return palette[MCOImagePalette.whiteIndexFor(profile)];
+    }
+    return palette[colorValue];
+  }
+
+  List<int> _usedColorValuesForProfile(PaletteProfile profile) {
+    final values = <int>{};
+    for (final colorValue in _pixels) {
+      if (_paletteIndexForColorValue(profile, colorValue) != null) {
+        values.add(colorValue);
+      }
+    }
+    final sorted = values.toList()
+      ..sort((a, b) {
+        final aIndex = _paletteIndexForColorValue(profile, a) ?? 0;
+        final bIndex = _paletteIndexForColorValue(profile, b) ?? 0;
+        return aIndex.compareTo(bIndex);
+      });
+    return sorted;
+  }
 
   String _canvasLoadLabel(BuildContext context) {
     try {
@@ -1176,6 +1474,7 @@ class _PixelCanvasPainter extends CustomPainter {
   final int width;
   final int height;
   final List<int> pixels;
+  final PaletteProfile profile;
   final List<Color> palette;
   final bool showGrid;
 
@@ -1183,6 +1482,7 @@ class _PixelCanvasPainter extends CustomPainter {
     required this.width,
     required this.height,
     required this.pixels,
+    required this.profile,
     required this.palette,
     required this.showGrid,
   });
@@ -1195,10 +1495,23 @@ class _PixelCanvasPainter extends CustomPainter {
 
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
-        final colorIndex = pixels[y * width + x]
-            .clamp(0, palette.length - 1)
-            .toInt();
-        paint.color = palette[colorIndex];
+        final colorValue = pixels[y * width + x];
+        if (profile.isDynamic) {
+          final safeColorValue =
+              colorValue >= 0 &&
+                  colorValue < MCOImageDynamicPalette.global512.length &&
+                  MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                        profile,
+                        colorValue,
+                      ) !=
+                      null
+              ? colorValue
+              : MCOImagePalette.whiteIndexFor(profile);
+          paint.color = MCOImageDynamicPalette.global512[safeColorValue];
+        } else {
+          final colorIndex = colorValue.clamp(0, palette.length - 1).toInt();
+          paint.color = palette[colorIndex];
+        }
         canvas.drawRect(
           Rect.fromLTWH(x * cellWidth, y * cellHeight, cellWidth, cellHeight),
           paint,

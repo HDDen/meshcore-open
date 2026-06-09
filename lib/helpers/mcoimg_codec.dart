@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'mcoimg_palette.dart';
+
 enum PaletteProfile {
   mono,
   master4,
@@ -11,11 +13,37 @@ enum PaletteProfile {
   grayscale16,
   grayscale32,
   grayscale8,
+  dynamicGlobal8,
+  dynamicGlobal16,
+  dynamicGlobal32,
+  dynamicGlobal64,
+  dynamicGlobal128,
+  dynamicGlobal256,
+  dynamicGlobal512,
 }
 
 enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg }
 
 enum ScanMode { h, v, s, sv }
+
+enum DynamicPaletteReferenceEncoding { flat, banked8x64 }
+
+extension PaletteProfileKind on PaletteProfile {
+  bool get isDynamic {
+    return switch (this) {
+      PaletteProfile.dynamicGlobal8 ||
+      PaletteProfile.dynamicGlobal16 ||
+      PaletteProfile.dynamicGlobal32 ||
+      PaletteProfile.dynamicGlobal64 ||
+      PaletteProfile.dynamicGlobal128 ||
+      PaletteProfile.dynamicGlobal256 ||
+      PaletteProfile.dynamicGlobal512 => true,
+      _ => false,
+    };
+  }
+
+  bool get isFixed => !isDynamic;
+}
 
 class MCOImage {
   final int width;
@@ -45,6 +73,11 @@ class EncodedMCOImage {
   final int? backgroundColor;
   final int regionCount;
   final int backgroundRank;
+  final int codecVersion;
+  final DynamicPaletteReferenceEncoding? dynamicReferenceEncoding;
+  final int? localPaletteSize;
+  final int? usedBankCount;
+  final int? bitsPerLocalPixel;
 
   const EncodedMCOImage({
     required this.text,
@@ -60,6 +93,11 @@ class EncodedMCOImage {
     this.backgroundColor,
     this.regionCount = 0,
     this.backgroundRank = 0,
+    this.codecVersion = MCOImageCodec._encodeVersion,
+    this.dynamicReferenceEncoding,
+    this.localPaletteSize,
+    this.usedBankCount,
+    this.bitsPerLocalPixel,
   });
 }
 
@@ -97,16 +135,25 @@ class MCOImageTooLargeException extends MCOImageCodecException {
 class MCOImageCodec {
   static const String prefix = 'im:';
   static const int _encodeVersion = 1;
+  static const int _dynamicEncodeVersion = 2;
   static const int _minSupportedVersion = 0;
-  static const int _maxSupportedVersion = 1;
+  static const int _maxSupportedVersion = 2;
   static const int _containerBlock = 0;
   static const int _containerRegions = 1;
+  static const int _paletteKindDynamic = 1;
   static const int _minSize = 1;
   static const int _maxSize = 85;
   static const int _defaultMaxRegions = 8;
+  static const int _maxDynamicLocalPalette = 64;
 
   static const List<ImageMode> _blockModes = [
     ImageMode.rawGlobal,
+    ImageMode.rawLocal,
+    ImageMode.rleLocal,
+    ImageMode.sparseBg,
+  ];
+
+  static const List<ImageMode> _dynamicBlockModes = [
     ImageMode.rawLocal,
     ImageMode.rleLocal,
     ImageMode.sparseBg,
@@ -151,6 +198,17 @@ class MCOImageCodec {
     }
     if (backgroundColor != null) {
       _validateColor(backgroundColor, image.paletteProfile, 'backgroundColor');
+    }
+
+    if (image.paletteProfile.isDynamic) {
+      final effectiveMaxRegions = maxRegions > _defaultMaxRegions
+          ? _defaultMaxRegions
+          : maxRegions;
+      return _debugEncodeDynamic(
+        image,
+        backgroundColor: backgroundColor,
+        maxRegions: effectiveMaxRegions,
+      );
     }
 
     final effectiveMaxRegions = maxRegions > _defaultMaxRegions
@@ -255,6 +313,478 @@ class MCOImageCodec {
     );
   }
 
+  MCOImageEncodeDiagnostics _debugEncodeDynamic(
+    MCOImage image, {
+    int? backgroundColor,
+    int maxRegions = _defaultMaxRegions,
+  }) {
+    final backgroundCandidates = _dynamicBackgroundCandidates(
+      image,
+      backgroundColor,
+    );
+    final referenceEncodings = _dynamicReferenceEncodings(image.paletteProfile);
+    final candidates = <EncodedMCOImage>[];
+    EncodedMCOImage? best;
+
+    for (final background in backgroundCandidates) {
+      final bg = background.color;
+      final bounds = _findBounds(image.pixels, image.width, image.height, bg);
+      for (final referenceEncoding in referenceEncodings) {
+        final regionsPayload = _tryBuildDynamicRegionsPayload(
+          image,
+          bg,
+          referenceEncoding,
+          maxRegions,
+        );
+        if (regionsPayload != null) {
+          final candidate = _candidateFromPayload(
+            regionsPayload.bytes,
+            ImageMode.regionsBg,
+            ScanMode.h,
+            backgroundColor: bg,
+            backgroundRank: background.rank,
+            regionCount: regionsPayload.regionCount,
+            codecVersion: _dynamicEncodeVersion,
+            dynamicReferenceEncoding: referenceEncoding,
+            localPaletteSize: regionsPayload.localPaletteSize,
+            usedBankCount: regionsPayload.usedBankCount,
+            bitsPerLocalPixel: regionsPayload.bitsPerLocalPixel,
+          );
+          candidates.add(candidate);
+          if (_isBetterCandidate(candidate, best)) best = candidate;
+        }
+      }
+      for (final scan in ScanMode.values) {
+        final linear = _toScanOrder(
+          image.pixels,
+          image.width,
+          image.height,
+          scan,
+        );
+        for (final mode in _dynamicBlockModes) {
+          for (final referenceEncoding in referenceEncodings) {
+            final payload = _tryBuildDynamicPayload(
+              image,
+              linear,
+              mode,
+              scan,
+              referenceEncoding,
+              dataWidth: image.width,
+              dataHeight: image.height,
+              backgroundColor: bg,
+            );
+            if (payload == null) continue;
+            final candidate = _candidateFromPayload(
+              payload.bytes,
+              mode,
+              scan,
+              backgroundColor: bg,
+              backgroundRank: background.rank,
+              codecVersion: _dynamicEncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: payload.localPaletteSize,
+              usedBankCount: payload.usedBankCount,
+              bitsPerLocalPixel: payload.bitsPerLocalPixel,
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best)) best = candidate;
+          }
+        }
+
+        if (bounds.area < image.width * image.height) {
+          final cropped = _cropPixels(image.pixels, image.width, bounds);
+          final boundedLinear = _toScanOrder(
+            cropped,
+            bounds.width,
+            bounds.height,
+            scan,
+          );
+          for (final mode in _dynamicBlockModes) {
+            for (final referenceEncoding in referenceEncodings) {
+              final payload = _tryBuildDynamicPayload(
+                image,
+                boundedLinear,
+                mode,
+                scan,
+                referenceEncoding,
+                dataWidth: bounds.width,
+                dataHeight: bounds.height,
+                backgroundColor: bg,
+                bounds: bounds,
+              );
+              if (payload == null) continue;
+              final candidate = _candidateFromPayload(
+                payload.bytes,
+                mode,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                backgroundRank: background.rank,
+                codecVersion: _dynamicEncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: payload.localPaletteSize,
+                usedBankCount: payload.usedBankCount,
+                bitsPerLocalPixel: payload.bitsPerLocalPixel,
+              );
+              candidates.add(candidate);
+              if (_isBetterCandidate(candidate, best)) best = candidate;
+            }
+          }
+        }
+      }
+    }
+
+    if (best == null) {
+      throw const MCOImageTooLargeException(
+        'Dynamic image uses too many colors for local palette',
+      );
+    }
+    return MCOImageEncodeDiagnostics(
+      result: best,
+      candidates: List.unmodifiable(candidates),
+    );
+  }
+
+  _DynamicPayload? _tryBuildDynamicPayload(
+    MCOImage image,
+    List<int> linear,
+    ImageMode mode,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
+  }) {
+    final expectedDataLength = dataWidth * dataHeight;
+    if (linear.length != expectedDataLength) {
+      throw MCOImageInvalidInputException(
+        'linear.length must be $expectedDataLength, got ${linear.length}',
+      );
+    }
+
+    final block = _tryBuildDynamicBlock(
+      linear,
+      image.paletteProfile,
+      mode,
+      referenceEncoding,
+      backgroundColor: backgroundColor,
+      writeSparseBackground: bounds == null,
+    );
+    if (block == null && !(bounds != null && bounds.area == 0)) return null;
+
+    final writer = _BitWriter();
+    final bgPresent = mode == ImageMode.sparseBg;
+    final boundsPresent = bounds != null;
+    writer.writeAlignedByte(
+      (_dynamicEncodeVersion << 6) |
+          (_modeBits(mode) << 4) |
+          (_scanBits(scan) << 2) |
+          (bgPresent ? 0x02 : 0) |
+          (boundsPresent ? 0x01 : 0),
+    );
+    writer.writeAlignedByte(
+      _containerBlock |
+          (_paletteKindDynamic << 7) |
+          (referenceEncoding.index << 6),
+    );
+    writer.writeAlignedByte(_dynamicProfileId(image.paletteProfile));
+    writer.writeAlignedByte(image.width - 1);
+    writer.writeAlignedByte(image.height - 1);
+
+    if (boundsPresent) {
+      writer.writeBits(backgroundColor, _global512Bits);
+      writer.writeVarUint(bounds.x);
+      writer.writeVarUint(bounds.y);
+      writer.writeVarUint(bounds.width);
+      writer.writeVarUint(bounds.height);
+      if (bounds.area == 0) {
+        return _DynamicPayload(
+          writer.toBytes(),
+          localPaletteSize: 0,
+          bitsPerLocalPixel: 0,
+        );
+      }
+    }
+
+    writer.writeAlignedBytes(block!.bytes);
+    return _DynamicPayload(
+      writer.toBytes(),
+      localPaletteSize: block.localPaletteSize,
+      usedBankCount: block.usedBankCount,
+      bitsPerLocalPixel: block.bitsPerLocalPixel,
+    );
+  }
+
+  _DynamicBlockPayload? _tryBuildDynamicBlock(
+    List<int> linear,
+    PaletteProfile profile,
+    ImageMode mode,
+    DynamicPaletteReferenceEncoding referenceEncoding, {
+    required int backgroundColor,
+    required bool writeSparseBackground,
+  }) {
+    if (referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64 &&
+        profile != PaletteProfile.dynamicGlobal512) {
+      return null;
+    }
+
+    final profileColorIds = <int>[];
+    for (final globalIndex in linear) {
+      if (mode == ImageMode.sparseBg && globalIndex == backgroundColor) {
+        continue;
+      }
+      final profileColorId = _profileColorIdForGlobalIndex(
+        profile,
+        globalIndex,
+      );
+      if (profileColorId == null) {
+        throw MCOImageInvalidInputException(
+          'Pixel globalIndex $globalIndex is not available in ${profile.name}',
+        );
+      }
+      profileColorIds.add(profileColorId);
+    }
+    final backgroundProfileColorId = _profileColorIdForGlobalIndex(
+      profile,
+      backgroundColor,
+    );
+    if (backgroundProfileColorId == null) {
+      throw MCOImageInvalidInputException(
+        'backgroundColor $backgroundColor is not available in ${profile.name}',
+      );
+    }
+    if (profileColorIds.isEmpty) return null;
+
+    final localPalette = _buildDynamicLocalPalette(
+      profile,
+      profileColorIds,
+      backgroundProfileColorId,
+    );
+    if (localPalette.length > _maxDynamicLocalPalette) return null;
+    final localIndexByProfileColorId = {
+      for (var i = 0; i < localPalette.length; i++) localPalette[i]: i,
+    };
+    final localBits = _localBits(localPalette.length);
+    final writer = _BitWriter();
+    if (mode == ImageMode.sparseBg && writeSparseBackground) {
+      writer.writeBits(backgroundColor, _global512Bits);
+    }
+    _writeDynamicLocalPalette(writer, profile, localPalette, referenceEncoding);
+
+    switch (mode) {
+      case ImageMode.rawLocal:
+        for (final globalIndex in linear) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          )!;
+          writer.writeBits(
+            localIndexByProfileColorId[profileColorId]!,
+            localBits,
+          );
+        }
+        break;
+      case ImageMode.rleLocal:
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          )!;
+          return localIndexByProfileColorId[profileColorId]!;
+        }).toList();
+        final runs = _buildRuns(localPixels);
+        writer.writeVarUint(runs.length);
+        for (final run in runs) {
+          writer.writeBits(run.color, localBits);
+          writer.writeVarUint(run.length);
+        }
+        break;
+      case ImageMode.sparseBg:
+        final segments = _buildDynamicSparseSegments(
+          linear,
+          profile,
+          backgroundColor,
+          localIndexByProfileColorId,
+        );
+        writer.writeVarUint(segments.length);
+        var pos = 0;
+        for (final segment in segments) {
+          writer.writeVarUint(segment.start - pos);
+          writer.writeBits(segment.color, localBits);
+          writer.writeVarUint(segment.length);
+          pos = segment.start + segment.length;
+        }
+        break;
+      case ImageMode.rawGlobal:
+      case ImageMode.regionsBg:
+        throw const MCOImageInvalidInputException(
+          'Unsupported dynamic block mode',
+        );
+    }
+
+    final usedBankCount =
+        referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+        ? localPalette.map((globalIndex) => globalIndex >> 6).toSet().length
+        : null;
+    return _DynamicBlockPayload(
+      writer.toBytes(),
+      localPaletteSize: localPalette.length,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _DynamicRegionPayload? _tryBuildDynamicRegionsPayload(
+    MCOImage image,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+    int maxRegions,
+  ) {
+    if (maxRegions == 0) return null;
+    final regions = _findRegions(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+    );
+    if (regions.isEmpty || regions.length > maxRegions) return null;
+    if (referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64 &&
+        image.paletteProfile != PaletteProfile.dynamicGlobal512) {
+      return null;
+    }
+
+    final allRegionPixels = <int>[];
+    for (final region in regions) {
+      allRegionPixels.addAll(_cropPixels(image.pixels, image.width, region));
+    }
+    final profileColorIds = <int>[];
+    for (final globalIndex in allRegionPixels) {
+      final profileColorId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        globalIndex,
+      );
+      if (profileColorId == null) {
+        throw MCOImageInvalidInputException(
+          'Pixel globalIndex $globalIndex is not available in '
+          '${image.paletteProfile.name}',
+        );
+      }
+      profileColorIds.add(profileColorId);
+    }
+    final backgroundProfileColorId = _profileColorIdForGlobalIndex(
+      image.paletteProfile,
+      backgroundColor,
+    );
+    if (backgroundProfileColorId == null) {
+      throw MCOImageInvalidInputException(
+        'backgroundColor $backgroundColor is not available in '
+        '${image.paletteProfile.name}',
+      );
+    }
+    final localPalette = _buildDynamicLocalPalette(
+      image.paletteProfile,
+      profileColorIds,
+      backgroundProfileColorId,
+    );
+    if (localPalette.length > _maxDynamicLocalPalette) return null;
+    final localIndexByProfileColorId = {
+      for (var i = 0; i < localPalette.length; i++) localPalette[i]: i,
+    };
+    final localBits = _localBits(localPalette.length);
+
+    final writer = _BitWriter();
+    writer.writeAlignedByte(
+      (_dynamicEncodeVersion << 6) |
+          (_modeBits(ImageMode.rawGlobal) << 4) |
+          (_scanBits(ScanMode.h) << 2) |
+          0x02,
+    );
+    writer.writeAlignedByte(
+      _containerRegions |
+          (_paletteKindDynamic << 7) |
+          (referenceEncoding.index << 6),
+    );
+    writer.writeAlignedByte(_dynamicProfileId(image.paletteProfile));
+    writer.writeAlignedByte(image.width - 1);
+    writer.writeAlignedByte(image.height - 1);
+    writer.writeBits(backgroundColor, _global512Bits);
+    _writeDynamicLocalPalette(
+      writer,
+      image.paletteProfile,
+      localPalette,
+      referenceEncoding,
+    );
+    writer.writeVarUint(regions.length);
+
+    for (final region in regions) {
+      final regionPixels = _cropPixels(image.pixels, image.width, region);
+      final block = _bestDynamicSharedBlockPayload(
+        regionPixels,
+        region.width,
+        region.height,
+        image.paletteProfile,
+        backgroundColor,
+        localIndexByProfileColorId,
+      );
+      writer
+        ..writeVarUint(region.x)
+        ..writeVarUint(region.y)
+        ..writeVarUint(region.width)
+        ..writeVarUint(region.height)
+        ..writeAlignedByte(_modeBits(block.mode))
+        ..writeAlignedByte(_scanBits(block.scan))
+        ..writeVarUint(block.payload.length)
+        ..writeAlignedBytes(block.payload);
+    }
+
+    final usedBankCount =
+        referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+        ? localPalette.map((globalIndex) => globalIndex >> 6).toSet().length
+        : null;
+    return _DynamicRegionPayload(
+      writer.toBytes(),
+      regionCount: regions.length,
+      localPaletteSize: localPalette.length,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _BlockPayload _bestDynamicSharedBlockPayload(
+    List<int> pixels,
+    int width,
+    int height,
+    PaletteProfile profile,
+    int backgroundColor,
+    Map<int, int> localIndexByProfileColorId,
+  ) {
+    _BlockPayload? best;
+    for (final scan in ScanMode.values) {
+      final linear = _toScanOrder(pixels, width, height, scan);
+      for (final mode in _dynamicBlockModes) {
+        final writer = _BitWriter();
+        _writeDynamicBlockWithLocalPalette(
+          writer,
+          linear,
+          mode,
+          profile,
+          backgroundColor: backgroundColor,
+          localIndexByProfileColorId: localIndexByProfileColorId,
+        );
+        final candidate = _BlockPayload(writer.toBytes(), mode, scan);
+        if (best == null ||
+            candidate.payload.length < best.payload.length ||
+            (candidate.payload.length == best.payload.length &&
+                _modeTieOrder.indexOf(candidate.mode) <
+                    _modeTieOrder.indexOf(best.mode))) {
+          best = candidate;
+        }
+      }
+    }
+    return best!;
+  }
+
   _RegionPayload? _tryBuildRegionsPayload(
     MCOImage image,
     int backgroundColor,
@@ -355,6 +885,9 @@ class MCOImageCodec {
     if (version < _minSupportedVersion || version > _maxSupportedVersion) {
       throw MCOImageInvalidPayloadException('Unsupported version $version');
     }
+    if (version == _dynamicEncodeVersion) {
+      return _decodeVersion2(bytes, header);
+    }
 
     final mode = _modeFromBits((header >> 4) & 0x03);
     final scan = _scanFromBits((header >> 2) & 0x03);
@@ -448,6 +981,132 @@ class MCOImageCodec {
     );
   }
 
+  MCOImage _decodeVersion2(Uint8List bytes, int header) {
+    if (bytes.length < 5) {
+      throw const MCOImageInvalidPayloadException('Payload too short');
+    }
+
+    final mode = _modeFromBits((header >> 4) & 0x03);
+    final scan = _scanFromBits((header >> 2) & 0x03);
+    final bgPresent = ((header >> 1) & 0x01) != 0;
+    final boundsPresent = (header & 0x01) != 0;
+    final paletteHeader = bytes[1];
+    final paletteKind = (paletteHeader >> 7) & 0x01;
+    final referenceEncodingValue = (paletteHeader >> 6) & 0x01;
+    if ((paletteHeader & 0x30) != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Reserved palette bits are set',
+      );
+    }
+    final container = paletteHeader & 0x0f;
+    if (container != _containerBlock && container != _containerRegions) {
+      throw const MCOImageInvalidPayloadException('Unknown image container');
+    }
+    if (paletteKind != _paletteKindDynamic) {
+      throw const MCOImageInvalidPayloadException(
+        'Unsupported v2 palette kind',
+      );
+    }
+    final referenceEncoding = _dynamicReferenceEncodingFromBits(
+      referenceEncodingValue,
+    );
+    final profile = _dynamicProfileFromId(bytes[2]);
+    if (referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64 &&
+        profile != PaletteProfile.dynamicGlobal512) {
+      throw const MCOImageInvalidPayloadException(
+        'Banked palette references require dynamicGlobal512',
+      );
+    }
+    if (container == _containerRegions) {
+      if (!bgPresent || boundsPresent) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid dynamic regions header',
+        );
+      }
+      final width = bytes[3] + 1;
+      final height = bytes[4] + 1;
+      _validateDimensions(width, height, payload: true);
+      final reader = _BitReader(bytes, byteIndex: 5);
+      final pixels = _decodeDynamicRegions(
+        reader,
+        width,
+        height,
+        profile,
+        referenceEncoding,
+      );
+      reader.finish();
+      return MCOImage(
+        width: width,
+        height: height,
+        paletteProfile: profile,
+        pixels: pixels,
+      );
+    }
+    if (bgPresent != (mode == ImageMode.sparseBg)) {
+      throw const MCOImageInvalidPayloadException(
+        'Background flag does not match mode',
+      );
+    }
+
+    final width = bytes[3] + 1;
+    final height = bytes[4] + 1;
+    _validateDimensions(width, height, payload: true);
+    final reader = _BitReader(bytes, byteIndex: 5);
+
+    if (boundsPresent) {
+      final background = reader.readBits(_global512Bits);
+      _validateColor(background, profile, 'backgroundColor', payload: true);
+      final bounds = _readBounds(reader, width, height);
+      if (bounds.area == 0) {
+        reader.finish();
+        return MCOImage(
+          width: width,
+          height: height,
+          paletteProfile: profile,
+          pixels: List<int>.filled(width * height, background),
+        );
+      }
+      final croppedLinear = _decodeDynamicBody(
+        reader,
+        bounds.width,
+        bounds.height,
+        profile,
+        mode,
+        referenceEncoding,
+        sparseBackgroundColor: background,
+      );
+      reader.finish();
+      final cropped = _fromScanOrder(
+        croppedLinear,
+        bounds.width,
+        bounds.height,
+        scan,
+      );
+      return MCOImage(
+        width: width,
+        height: height,
+        paletteProfile: profile,
+        pixels: _insertBounds(width, height, background, cropped, bounds),
+      );
+    }
+
+    final linear = _decodeDynamicBody(
+      reader,
+      width,
+      height,
+      profile,
+      mode,
+      referenceEncoding,
+    );
+    reader.finish();
+    return MCOImage(
+      width: width,
+      height: height,
+      paletteProfile: profile,
+      pixels: _fromScanOrder(linear, width, height, scan),
+    );
+  }
+
   List<int> _decodeBody(
     _BitReader reader,
     int width,
@@ -471,6 +1130,183 @@ class MCOImageCodec {
         'REGIONS_BG is not a block body mode',
       ),
     };
+  }
+
+  List<int> _decodeDynamicBody(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    ImageMode mode,
+    DynamicPaletteReferenceEncoding referenceEncoding, {
+    int? sparseBackgroundColor,
+  }) {
+    final count = width * height;
+    switch (mode) {
+      case ImageMode.rawLocal:
+        final palette = _readDynamicLocalPalette(
+          reader,
+          profile,
+          referenceEncoding,
+        );
+        final localBits = _localBits(palette.globalColors.length);
+        return List<int>.generate(count, (_) {
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic local color index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        });
+      case ImageMode.rleLocal:
+        final palette = _readDynamicLocalPalette(
+          reader,
+          profile,
+          referenceEncoding,
+        );
+        final localBits = _localBits(palette.globalColors.length);
+        final runCount = reader.readVarUint();
+        final result = <int>[];
+        for (var i = 0; i < runCount; i++) {
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic RLE color index out of range',
+            );
+          }
+          final length = reader.readVarUint();
+          if (length <= 0 || result.length + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid dynamic RLE length',
+            );
+          }
+          result.addAll(List<int>.filled(length, palette.globalColors[index]));
+        }
+        if (result.length != count) {
+          throw const MCOImageInvalidPayloadException(
+            'Dynamic RLE data does not fill canvas',
+          );
+        }
+        return result;
+      case ImageMode.sparseBg:
+        final background =
+            sparseBackgroundColor ?? reader.readBits(_global512Bits);
+        _validateColor(background, profile, 'backgroundColor', payload: true);
+        final palette = _readDynamicLocalPalette(
+          reader,
+          profile,
+          referenceEncoding,
+        );
+        final localBits = _localBits(palette.globalColors.length);
+        final segmentCount = reader.readVarUint();
+        final result = List<int>.filled(count, background);
+        var pos = 0;
+        for (var i = 0; i < segmentCount; i++) {
+          final skip = reader.readVarUint();
+          pos += skip;
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic sparse color index out of range',
+            );
+          }
+          final length = reader.readVarUint();
+          if (length <= 0 || pos + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid dynamic sparse segment',
+            );
+          }
+          for (var j = 0; j < length; j++) {
+            result[pos + j] = palette.globalColors[index];
+          }
+          pos += length;
+        }
+        return result;
+      case ImageMode.rawGlobal:
+      case ImageMode.regionsBg:
+        throw const MCOImageInvalidPayloadException(
+          'Unsupported dynamic block mode',
+        );
+    }
+  }
+
+  List<int> _decodeDynamicBodyWithPalette(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+    ImageMode mode,
+    int background,
+  ) {
+    final count = width * height;
+    final localBits = _localBits(palette.globalColors.length);
+    switch (mode) {
+      case ImageMode.rawLocal:
+        return List<int>.generate(count, (_) {
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic region local color index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        });
+      case ImageMode.rleLocal:
+        final runCount = reader.readVarUint();
+        final result = <int>[];
+        for (var i = 0; i < runCount; i++) {
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic region RLE color index out of range',
+            );
+          }
+          final length = reader.readVarUint();
+          if (length <= 0 || result.length + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid dynamic region RLE length',
+            );
+          }
+          result.addAll(List<int>.filled(length, palette.globalColors[index]));
+        }
+        if (result.length != count) {
+          throw const MCOImageInvalidPayloadException(
+            'Dynamic region RLE data does not fill region',
+          );
+        }
+        return result;
+      case ImageMode.sparseBg:
+        final segmentCount = reader.readVarUint();
+        final result = List<int>.filled(count, background);
+        var pos = 0;
+        for (var i = 0; i < segmentCount; i++) {
+          final skip = reader.readVarUint();
+          pos += skip;
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic region sparse color index out of range',
+            );
+          }
+          final length = reader.readVarUint();
+          if (length <= 0 || pos + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid dynamic region sparse segment',
+            );
+          }
+          for (var j = 0; j < length; j++) {
+            result[pos + j] = palette.globalColors[index];
+          }
+          pos += length;
+        }
+        return result;
+      case ImageMode.rawGlobal:
+      case ImageMode.regionsBg:
+        throw const MCOImageInvalidPayloadException(
+          'Unsupported dynamic region block mode',
+        );
+    }
   }
 
   List<int> _decodeRegions(
@@ -528,6 +1364,81 @@ class MCOImageCodec {
           if (occupied[target]) {
             throw const MCOImageInvalidPayloadException(
               'Overlapping image regions',
+            );
+          }
+          occupied[target] = true;
+          pixels[target] = regionPixels[y * region.width + x];
+        }
+      }
+    }
+    return pixels;
+  }
+
+  List<int> _decodeDynamicRegions(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+  ) {
+    final background = reader.readBits(_global512Bits);
+    _validateColor(background, profile, 'backgroundColor', payload: true);
+    final palette = _readDynamicLocalPalette(
+      reader,
+      profile,
+      referenceEncoding,
+    );
+    final regionCount = reader.readVarUint();
+    if (regionCount <= 0 || regionCount > _defaultMaxRegions) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic region count',
+      );
+    }
+
+    final pixels = List<int>.filled(width * height, background);
+    final occupied = List<bool>.filled(width * height, false);
+    for (var i = 0; i < regionCount; i++) {
+      final region = _ImageBounds(
+        x: reader.readVarUint(),
+        y: reader.readVarUint(),
+        width: reader.readVarUint(),
+        height: reader.readVarUint(),
+      );
+      if (region.width <= 0 ||
+          region.height <= 0 ||
+          region.x + region.width > width ||
+          region.y + region.height > height) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid dynamic image region',
+        );
+      }
+
+      final regionMode = _modeFromBits(reader.readAlignedByte());
+      final regionScan = _scanFromBits(reader.readAlignedByte());
+      final payloadLength = reader.readVarUint();
+      final payload = reader.readAlignedBytes(payloadLength);
+      final regionReader = _BitReader(payload);
+      final linear = _decodeDynamicBodyWithPalette(
+        regionReader,
+        region.width,
+        region.height,
+        palette,
+        regionMode,
+        background,
+      );
+      regionReader.finish();
+      final regionPixels = _fromScanOrder(
+        linear,
+        region.width,
+        region.height,
+        regionScan,
+      );
+      for (var y = 0; y < region.height; y++) {
+        for (var x = 0; x < region.width; x++) {
+          final target = (region.y + y) * width + region.x + x;
+          if (occupied[target]) {
+            throw const MCOImageInvalidPayloadException(
+              'Overlapping dynamic image regions',
             );
           }
           occupied[target] = true;
@@ -626,6 +1537,78 @@ class MCOImageCodec {
     }
   }
 
+  void _writeDynamicBlockWithLocalPalette(
+    _BitWriter writer,
+    List<int> linear,
+    ImageMode mode,
+    PaletteProfile profile, {
+    required int backgroundColor,
+    required Map<int, int> localIndexByProfileColorId,
+  }) {
+    switch (mode) {
+      case ImageMode.rawLocal:
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        for (final globalIndex in linear) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          );
+          final localIndex = localIndexByProfileColorId[profileColorId];
+          if (localIndex == null) {
+            throw MCOImageInvalidInputException(
+              'Dynamic shared palette is missing globalIndex $globalIndex',
+            );
+          }
+          writer.writeBits(localIndex, localBits);
+        }
+        break;
+      case ImageMode.rleLocal:
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          );
+          final localIndex = localIndexByProfileColorId[profileColorId];
+          if (localIndex == null) {
+            throw MCOImageInvalidInputException(
+              'Dynamic shared palette is missing globalIndex $globalIndex',
+            );
+          }
+          return localIndex;
+        }).toList();
+        final runs = _buildRuns(localPixels);
+        writer.writeVarUint(runs.length);
+        for (final run in runs) {
+          writer.writeBits(run.color, localBits);
+          writer.writeVarUint(run.length);
+        }
+        break;
+      case ImageMode.sparseBg:
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        final segments = _buildDynamicSparseSegments(
+          linear,
+          profile,
+          backgroundColor,
+          localIndexByProfileColorId,
+        );
+        writer.writeVarUint(segments.length);
+        var pos = 0;
+        for (final segment in segments) {
+          writer.writeVarUint(segment.start - pos);
+          writer.writeBits(segment.color, localBits);
+          writer.writeVarUint(segment.length);
+          pos = segment.start + segment.length;
+        }
+        break;
+      case ImageMode.rawGlobal:
+      case ImageMode.regionsBg:
+        throw const MCOImageInvalidInputException(
+          'Unsupported dynamic shared block mode',
+        );
+    }
+  }
+
   EncodedMCOImage _candidateFromPayload(
     Uint8List payload,
     ImageMode mode,
@@ -634,6 +1617,11 @@ class MCOImageCodec {
     int? backgroundColor,
     int backgroundRank = 0,
     int regionCount = 0,
+    int codecVersion = _encodeVersion,
+    DynamicPaletteReferenceEncoding? dynamicReferenceEncoding,
+    int? localPaletteSize,
+    int? usedBankCount,
+    int? bitsPerLocalPixel,
   }) {
     final text = '$prefix${_Base91.encode(payload)}';
     return EncodedMCOImage(
@@ -650,6 +1638,11 @@ class MCOImageCodec {
       backgroundColor: backgroundColor,
       backgroundRank: backgroundRank,
       regionCount: regionCount,
+      codecVersion: codecVersion,
+      dynamicReferenceEncoding: dynamicReferenceEncoding,
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: bitsPerLocalPixel,
     );
   }
 
@@ -1042,6 +2035,219 @@ class MCOImageCodec {
     return colors;
   }
 
+  List<int> _buildDynamicLocalPalette(
+    PaletteProfile profile,
+    List<int> profileColorIds,
+    int backgroundProfileColorId,
+  ) {
+    final counts = <int, int>{};
+    for (final profileColorId in profileColorIds) {
+      counts[profileColorId] = (counts[profileColorId] ?? 0) + 1;
+    }
+    final colors = counts.keys.toList()
+      ..sort((a, b) {
+        if (a == backgroundProfileColorId && b != backgroundProfileColorId) {
+          return -1;
+        }
+        if (b == backgroundProfileColorId && a != backgroundProfileColorId) {
+          return 1;
+        }
+        final byFrequency = counts[b]!.compareTo(counts[a]!);
+        if (byFrequency != 0) return byFrequency;
+        final aGlobal = _globalIndexForProfileColorId(profile, a);
+        final bGlobal = _globalIndexForProfileColorId(profile, b);
+        return aGlobal.compareTo(bGlobal);
+      });
+    return colors;
+  }
+
+  void _writeDynamicLocalPalette(
+    _BitWriter writer,
+    PaletteProfile profile,
+    List<int> profileColorIds,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+  ) {
+    if (profileColorIds.isEmpty ||
+        profileColorIds.length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidInputException(
+        'Invalid dynamic local palette size',
+      );
+    }
+    switch (referenceEncoding) {
+      case DynamicPaletteReferenceEncoding.flat:
+        writer.writeVarUint(profileColorIds.length);
+        final bits = _dynamicProfileColorBits(profile);
+        for (final profileColorId in profileColorIds) {
+          writer.writeBits(profileColorId, bits);
+        }
+        break;
+      case DynamicPaletteReferenceEncoding.banked8x64:
+        if (profile != PaletteProfile.dynamicGlobal512) {
+          throw const MCOImageInvalidInputException(
+            'Banked palette references require dynamicGlobal512',
+          );
+        }
+        writer.writeVarUint(profileColorIds.length);
+        final banks =
+            profileColorIds
+                .map((globalIndex) => globalIndex >> 6)
+                .toSet()
+                .toList()
+              ..sort();
+        writer.writeVarUint(banks.length);
+        for (final bank in banks) {
+          writer.writeBits(bank, 3);
+        }
+        final bankBits = _bitsForChoiceCount(banks.length);
+        for (final globalIndex in profileColorIds) {
+          final bank = globalIndex >> 6;
+          final offset = globalIndex & 0x3f;
+          writer.writeBits(banks.indexOf(bank), bankBits);
+          writer.writeBits(offset, 6);
+        }
+        break;
+    }
+  }
+
+  _DynamicLocalPalette _readDynamicLocalPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+  ) {
+    final profileColorIds = switch (referenceEncoding) {
+      DynamicPaletteReferenceEncoding.flat => _readDynamicFlatPalette(
+        reader,
+        profile,
+      ),
+      DynamicPaletteReferenceEncoding.banked8x64 => _readDynamicBankedPalette(
+        reader,
+        profile,
+      ),
+    };
+    final globalColors = profileColorIds
+        .map((profileColorId) {
+          final globalIndex = _globalIndexForProfileColorId(
+            profile,
+            profileColorId,
+          );
+          _validateColor(
+            globalIndex,
+            profile,
+            'dynamicLocalPalette',
+            payload: true,
+          );
+          return globalIndex;
+        })
+        .toList(growable: false);
+    return _DynamicLocalPalette(globalColors);
+  }
+
+  List<int> _readDynamicFlatPalette(_BitReader reader, PaletteProfile profile) {
+    final length = reader.readVarUint();
+    if (length <= 0 || length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic local palette size',
+      );
+    }
+    final bits = _dynamicProfileColorBits(profile);
+    final maxProfileColorId = _dynamicProfileSize(profile) - 1;
+    final seen = <int>{};
+    final colors = <int>[];
+    for (var i = 0; i < length; i++) {
+      final profileColorId = reader.readBits(bits);
+      if (profileColorId > maxProfileColorId || !seen.add(profileColorId)) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid dynamic local palette',
+        );
+      }
+      colors.add(profileColorId);
+    }
+    return colors;
+  }
+
+  List<int> _readDynamicBankedPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    if (profile != PaletteProfile.dynamicGlobal512) {
+      throw const MCOImageInvalidPayloadException(
+        'Banked palette references require dynamicGlobal512',
+      );
+    }
+    final length = reader.readVarUint();
+    if (length <= 0 || length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic local palette size',
+      );
+    }
+    final bankCount = reader.readVarUint();
+    if (bankCount <= 0 || bankCount > 8) {
+      throw const MCOImageInvalidPayloadException('Invalid bank count');
+    }
+    final banks = <int>[];
+    final seenBanks = <int>{};
+    for (var i = 0; i < bankCount; i++) {
+      final bank = reader.readBits(3);
+      if (!seenBanks.add(bank)) {
+        throw const MCOImageInvalidPayloadException('Duplicate bank index');
+      }
+      banks.add(bank);
+    }
+    final bankBits = _bitsForChoiceCount(bankCount);
+    final seenColors = <int>{};
+    final colors = <int>[];
+    for (var i = 0; i < length; i++) {
+      final bankLocalIndex = reader.readBits(bankBits);
+      if (bankLocalIndex >= banks.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Bank local index out of range',
+        );
+      }
+      final offset = reader.readBits(6);
+      final globalIndex = (banks[bankLocalIndex] << 6) | offset;
+      if (globalIndex >= 512 || !seenColors.add(globalIndex)) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid banked dynamic color',
+        );
+      }
+      colors.add(globalIndex);
+    }
+    return colors;
+  }
+
+  static List<_BackgroundCandidate> _dynamicBackgroundCandidates(
+    MCOImage image,
+    int? explicitBackground,
+  ) {
+    final result = <_BackgroundCandidate>[];
+    final seen = <int>{};
+
+    void add(int color, int rank) {
+      if (_profileColorIdForGlobalIndex(image.paletteProfile, color) == null) {
+        return;
+      }
+      if (!seen.add(color)) return;
+      result.add(_BackgroundCandidate(color, rank));
+    }
+
+    if (explicitBackground != null) add(explicitBackground, 0);
+    add(MCOImageDynamicPalette.whiteGlobalIndexFor(image.paletteProfile), 1);
+
+    final counts = <int, int>{};
+    for (final pixel in image.pixels) {
+      counts[pixel] = (counts[pixel] ?? 0) + 1;
+    }
+    final colors = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    for (var i = 0; i < math.min(3, colors.length); i++) {
+      add(colors[i], 2 + i);
+    }
+    return result;
+  }
+
   static bool _isBetterCandidate(
     EncodedMCOImage candidate,
     EncodedMCOImage? current,
@@ -1195,9 +2401,53 @@ class MCOImageCodec {
     return segments;
   }
 
+  static List<_SparseSegment> _buildDynamicSparseSegments(
+    List<int> pixels,
+    PaletteProfile profile,
+    int background,
+    Map<int, int> localIndexByProfileColorId,
+  ) {
+    final segments = <_SparseSegment>[];
+    var i = 0;
+    while (i < pixels.length) {
+      if (pixels[i] == background) {
+        i++;
+        continue;
+      }
+      final start = i;
+      final profileColorId = _profileColorIdForGlobalIndex(profile, pixels[i]);
+      if (profileColorId == null) {
+        throw MCOImageInvalidInputException(
+          'Pixel globalIndex ${pixels[i]} is not available in ${profile.name}',
+        );
+      }
+      final localIndex = localIndexByProfileColorId[profileColorId]!;
+      var length = 0;
+      while (i < pixels.length && pixels[i] != background) {
+        final nextProfileColorId = _profileColorIdForGlobalIndex(
+          profile,
+          pixels[i],
+        );
+        if (nextProfileColorId == null ||
+            localIndexByProfileColorId[nextProfileColorId] != localIndex) {
+          break;
+        }
+        length++;
+        i++;
+      }
+      segments.add(_SparseSegment(start, localIndex, length));
+    }
+    return segments;
+  }
+
   static int _localBits(int colorCount) {
     if (colorCount <= 1) return 1;
     return (colorCount - 1).bitLength;
+  }
+
+  static int _bitsForChoiceCount(int count) {
+    if (count <= 1) return 0;
+    return (count - 1).bitLength;
   }
 
   static int _globalBits(PaletteProfile profile) {
@@ -1211,6 +2461,13 @@ class MCOImageCodec {
       PaletteProfile.master32 => 5,
       PaletteProfile.grayscale32 => 5,
       PaletteProfile.master64 => 6,
+      PaletteProfile.dynamicGlobal8 => 3,
+      PaletteProfile.dynamicGlobal16 => 4,
+      PaletteProfile.dynamicGlobal32 => 5,
+      PaletteProfile.dynamicGlobal64 => 6,
+      PaletteProfile.dynamicGlobal128 => 7,
+      PaletteProfile.dynamicGlobal256 => 8,
+      PaletteProfile.dynamicGlobal512 => _global512Bits,
     };
   }
 
@@ -1225,7 +2482,96 @@ class MCOImageCodec {
       PaletteProfile.master32 => 32,
       PaletteProfile.grayscale32 => 32,
       PaletteProfile.master64 => 64,
+      PaletteProfile.dynamicGlobal8 => 8,
+      PaletteProfile.dynamicGlobal16 => 16,
+      PaletteProfile.dynamicGlobal32 => 32,
+      PaletteProfile.dynamicGlobal64 => 64,
+      PaletteProfile.dynamicGlobal128 => 128,
+      PaletteProfile.dynamicGlobal256 => 256,
+      PaletteProfile.dynamicGlobal512 => 512,
     };
+  }
+
+  static const int _global512Bits = 9;
+
+  static int _dynamicProfileColorBits(PaletteProfile profile) =>
+      _globalBits(profile);
+
+  static int _dynamicProfileSize(PaletteProfile profile) =>
+      _paletteSize(profile);
+
+  static int _dynamicProfileId(PaletteProfile profile) {
+    return switch (profile) {
+      PaletteProfile.dynamicGlobal8 => 0,
+      PaletteProfile.dynamicGlobal16 => 1,
+      PaletteProfile.dynamicGlobal32 => 2,
+      PaletteProfile.dynamicGlobal64 => 3,
+      PaletteProfile.dynamicGlobal128 => 4,
+      PaletteProfile.dynamicGlobal256 => 5,
+      PaletteProfile.dynamicGlobal512 => 6,
+      _ => throw const MCOImageInvalidInputException(
+        'Not a dynamic palette profile',
+      ),
+    };
+  }
+
+  static PaletteProfile _dynamicProfileFromId(int value) {
+    return switch (value) {
+      0 => PaletteProfile.dynamicGlobal8,
+      1 => PaletteProfile.dynamicGlobal16,
+      2 => PaletteProfile.dynamicGlobal32,
+      3 => PaletteProfile.dynamicGlobal64,
+      4 => PaletteProfile.dynamicGlobal128,
+      5 => PaletteProfile.dynamicGlobal256,
+      6 => PaletteProfile.dynamicGlobal512,
+      _ => throw MCOImageInvalidPayloadException(
+        'Unknown dynamic palette profile $value',
+      ),
+    };
+  }
+
+  static List<DynamicPaletteReferenceEncoding> _dynamicReferenceEncodings(
+    PaletteProfile profile,
+  ) {
+    if (profile == PaletteProfile.dynamicGlobal512) {
+      return const [
+        DynamicPaletteReferenceEncoding.flat,
+        DynamicPaletteReferenceEncoding.banked8x64,
+      ];
+    }
+    return const [DynamicPaletteReferenceEncoding.flat];
+  }
+
+  static DynamicPaletteReferenceEncoding _dynamicReferenceEncodingFromBits(
+    int value,
+  ) {
+    return switch (value) {
+      0 => DynamicPaletteReferenceEncoding.flat,
+      1 => DynamicPaletteReferenceEncoding.banked8x64,
+      _ => throw MCOImageInvalidPayloadException(
+        'Unknown dynamic palette reference encoding $value',
+      ),
+    };
+  }
+
+  static int? _profileColorIdForGlobalIndex(
+    PaletteProfile profile,
+    int globalIndex,
+  ) {
+    return MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+      profile,
+      globalIndex,
+    );
+  }
+
+  static int _globalIndexForProfileColorId(
+    PaletteProfile profile,
+    int profileColorId,
+  ) {
+    return MCOImageDynamicPalette.globalIndexForProfileColorId(
+      profile,
+      profileColorId,
+    );
   }
 
   static int _modeBits(ImageMode mode) {
@@ -1258,7 +2604,13 @@ class MCOImageCodec {
     if (value < 0 || value >= PaletteProfile.values.length || value > 0x0f) {
       throw MCOImageInvalidPayloadException('Unknown palette profile $value');
     }
-    return PaletteProfile.values[value];
+    final profile = PaletteProfile.values[value];
+    if (profile.isDynamic) {
+      throw MCOImageInvalidPayloadException(
+        'Dynamic palette profile $value requires codec version 2',
+      );
+    }
+    return profile;
   }
 
   static void _validateImage(MCOImage image) {
@@ -1295,6 +2647,12 @@ class MCOImageCodec {
     String label, {
     bool payload = false,
   }) {
+    if (profile.isDynamic) {
+      if (_profileColorIdForGlobalIndex(profile, color) != null) return;
+      final message = '$label color must be in $profile, got $color';
+      if (payload) throw MCOImageInvalidPayloadException(message);
+      throw MCOImageInvalidInputException(message);
+    }
     final max = _paletteSize(profile) - 1;
     if (color < 0 || color > max) {
       final message = '$label color must be 0..$max, got $color';
@@ -1590,4 +2948,54 @@ class _RegionPayload {
   final int regionCount;
 
   const _RegionPayload(this.payload, this.regionCount);
+}
+
+class _DynamicPayload {
+  final Uint8List bytes;
+  final int localPaletteSize;
+  final int? usedBankCount;
+  final int bitsPerLocalPixel;
+
+  const _DynamicPayload(
+    this.bytes, {
+    required this.localPaletteSize,
+    this.usedBankCount,
+    required this.bitsPerLocalPixel,
+  });
+}
+
+class _DynamicBlockPayload {
+  final Uint8List bytes;
+  final int localPaletteSize;
+  final int? usedBankCount;
+  final int bitsPerLocalPixel;
+
+  const _DynamicBlockPayload(
+    this.bytes, {
+    required this.localPaletteSize,
+    this.usedBankCount,
+    required this.bitsPerLocalPixel,
+  });
+}
+
+class _DynamicRegionPayload {
+  final Uint8List bytes;
+  final int regionCount;
+  final int localPaletteSize;
+  final int? usedBankCount;
+  final int bitsPerLocalPixel;
+
+  const _DynamicRegionPayload(
+    this.bytes, {
+    required this.regionCount,
+    required this.localPaletteSize,
+    this.usedBankCount,
+    required this.bitsPerLocalPixel,
+  });
+}
+
+class _DynamicLocalPalette {
+  final List<int> globalColors;
+
+  const _DynamicLocalPalette(this.globalColors);
 }

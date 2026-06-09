@@ -2039,8 +2039,14 @@
   "settings_copyMsgPathEditFinalTitle": "Итоговое сообщение",
   "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки",
   "chat_canvas": "Холст",
+  "chat_canvasCrop": "Обрезать холст",
   "chat_canvasPalette": "Палитра",
+  "chat_canvasPaletteShow": "Показать палитру",
   "chat_canvasPaletteMode": "Профиль палитры",
+  "chat_canvasPaletteDynamic": "Динамическая",
+  "chat_canvasPaletteDynamicProfile": "Базовый набор для динамической палитры",
+  "chat_canvasPaletteDynamicUsed": "Реально используемые цвета",
+  "chat_canvasPaletteDynamicDscr": "Внимание! Используйте динамическую палитру с умом! Меньшая базовая палитра даёт меньшую стоимость кодирования информации об использованных оттенках, а меньшее итоговое количество цветов снижает стоимость каждого пикселя холста!",
   "chat_canvasChangeSize": "Изменить размер холста",
   "chat_canvasWidth": "Ширина",
   "chat_canvasHeight": "Высота",
@@ -2052,5 +2058,6 @@
   "chat_canvasCurrentPayload": "Текущий payload: {payload}",
   "chat_canvasActive": "Отображать холст",
   "chat_canvasShowLockBtn": "Отображать кнопку блокировки холста",
+  "chat_canvasSendToEdit": "Отправить в холст",
   "chat_showHops": "Отображать хопы"
 }

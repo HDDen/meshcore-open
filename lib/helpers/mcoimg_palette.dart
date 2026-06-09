@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'mcoimg_codec.dart';
+import 'mcoimg_dynamic_palettes.dart';
 
 class MCOImagePalette {
   static const int blackIndex = 0;
   static const int whiteIndex = 1;
 
   static int blackIndexFor(PaletteProfile profile) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.blackGlobalIndexFor(profile);
+    }
     return switch (profile) {
       PaletteProfile.mono => 1,
       PaletteProfile.master4 => 3,
@@ -17,10 +21,16 @@ class MCOImagePalette {
       PaletteProfile.master32 => 3,
       PaletteProfile.grayscale32 => 31,
       PaletteProfile.master64 => 7,
+      _ => throw MCOImageInvalidInputException(
+        'Palette profile $profile is not fixed',
+      ),
     };
   }
 
   static int whiteIndexFor(PaletteProfile profile) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.whiteGlobalIndexFor(profile);
+    }
     return switch (profile) {
       PaletteProfile.mono => 0,
       PaletteProfile.master4 => 0,
@@ -31,10 +41,16 @@ class MCOImagePalette {
       PaletteProfile.master32 => 0,
       PaletteProfile.grayscale32 => 0,
       PaletteProfile.master64 => 0,
+      _ => throw MCOImageInvalidInputException(
+        'Palette profile $profile is not fixed',
+      ),
     };
   }
 
   static List<Color> colorsFor(PaletteProfile profile) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.colorsFor(profile);
+    }
     return switch (profile) {
       PaletteProfile.mono => mono,
       PaletteProfile.master4 => master4,
@@ -45,6 +61,9 @@ class MCOImagePalette {
       PaletteProfile.master32 => master32,
       PaletteProfile.grayscale32 => grayscale32,
       PaletteProfile.master64 => master64,
+      _ => throw MCOImageInvalidInputException(
+        'Palette profile $profile is not fixed',
+      ),
     };
   }
 
@@ -80,55 +99,6 @@ class MCOImagePalette {
   ];
 
   static const List<Color> master16 = [
-    // Color(0xffffffff),
-    // Color(0xffb8b8b8),
-    // Color(0xff5c5c5c),
-    // Color(0xff000000),
-    // Color(0xFFFB7F7F),
-    // Color(0xFFF70929),
-    // Color(0xFFFA8108),
-    // Color(0xFFFFD000),
-    // Color(0xFF68E46C),
-    // Color(0xFF005F1E),
-    // Color(0xFF27AAD9),
-    // Color(0xFF028C9B),
-    // Color(0xFF0055FF),
-    // Color(0xFF000E7A),
-    // Color(0xFFA334ED),
-    // Color(0xFF530084),
-
-    // Color.fromARGB(255, 255, 255, 255),
-    // Color.fromARGB(255, 196, 196, 196),
-    // Color.fromARGB(255, 98, 98, 98),
-    // Color(0xff000000),
-    // Color.fromARGB(255, 255, 176, 163),
-    // Color.fromARGB(255, 254, 36, 0),
-    // Color.fromARGB(255, 160, 23, 0),
-    // Color.fromARGB(255, 69, 10, 0),
-    // Color.fromARGB(255, 255, 179, 99),
-    // Color.fromARGB(255, 255, 132, 0),
-    // Color.fromARGB(255, 191, 99, 0),
-    // Color.fromARGB(255, 123, 64, 0),
-    // Color.fromARGB(255, 247, 229, 114),
-    // Color.fromARGB(255, 241, 209, 0),
-    // Color.fromARGB(255, 167, 146, 2),
-    // Color.fromARGB(255, 120, 105, 2),
-    // Color.fromARGB(255, 183, 230, 155),
-    // Color.fromARGB(255, 71, 192, 0),
-    // Color.fromARGB(255, 40, 107, 2),
-    // Color.fromARGB(255, 29, 79, 0),
-    // Color.fromARGB(255, 196, 241, 255),
-    // Color.fromARGB(255, 1, 195, 255),
-    // Color.fromARGB(255, 3, 166, 217),
-    // Color.fromARGB(255, 1, 109, 143),
-    // Color.fromARGB(255, 145, 170, 255),
-    // Color.fromARGB(255, 0, 58, 255),
-    // Color.fromARGB(255, 0, 42, 183),
-    // Color.fromARGB(255, 0, 26, 115),
-    // Color.fromARGB(255, 215, 178, 255),
-    // Color.fromARGB(255, 121, 0, 255),
-    // Color.fromARGB(255, 88, 2, 185),
-    // Color.fromARGB(255, 47, 0, 100),
     Color.fromARGB(255, 255, 255, 255),
     Color.fromARGB(255, 164, 164, 164),
     Color.fromARGB(255, 0, 0, 0),
@@ -167,71 +137,6 @@ class MCOImagePalette {
   ];
 
   static const List<Color> master32 = [
-    // Color(0xffffffff),
-    // Color(0xff989898),
-    // Color(0xff3d3d3d),
-    // Color(0xff000000),
-    // Color(0xffffaba3),
-    // Color(0xfff66d67),
-    // Color(0xffcb4644),
-    // Color(0xff940015),
-    // Color(0xfffeb07a),
-    // Color(0xffec7c0e),
-    // Color(0xffb75f0b),
-    // Color(0xff753b07),
-    // Color(0xffe6c216),
-    // Color(0xffba9c13),
-    // Color(0xff90790f),
-    // Color(0xff5c4c02),
-    // Color(0xff75e07c),
-    // Color(0xff4db956),
-    // Color(0xff1d9330),
-    // Color(0xff045e17),
-    // Color(0xff22dee6),
-    // Color(0xff1bb3ba),
-    // Color(0xff138b90),
-    // Color(0xff04585c),
-    // Color(0xffa2c5ff),
-    // Color(0xff639dfe),
-    // Color(0xff3876dd),
-    // Color(0xff0145a7),
-    // Color(0xffd5b2fe),
-    // Color(0xffb77ff2),
-    // Color(0xff925ac9),
-    // Color(0xff632895),
-
-    // Color(0xffffffff),
-    // Color(0xff989898),
-    // Color(0xff3d3d3d),
-    // Color(0xff000000),
-    // Color(0xfffdc9c4),
-    // Color(0xffea6a64),
-    // Color(0xFFDE0419),
-    // Color(0xff530309),
-    // Color(0xFFFABC65),
-    // Color(0xFFF98E13),
-    // Color(0xFFC76814),
-    // Color(0xFF854306),
-    // Color(0xFFFFDE5B),
-    // Color(0xFFFFD000),
-    // Color(0xFF9E8207),
-    // Color(0xFF4B3F06),
-    // Color(0xFF71F777),
-    // Color(0xFF00FF3C),
-    // Color(0xFF04951F),
-    // Color(0xFF02440C),
-    // Color(0xff26f4fd),
-    // Color(0xFF0EBFC5),
-    // Color(0xFF068292),
-    // Color(0xFF025356),
-    // Color(0xFF5392FF),
-    // Color(0xFF1168F4),
-    // Color(0xFF0033DC),
-    // Color(0xFF002A69),
-    // Color(0xFFB87BF5),
-    // Color(0xFF8044B8),
-    // Color(0xFF581391),
-    // Color(0xFF2E004C),
     Color.fromARGB(255, 255, 255, 255),
     Color.fromARGB(255, 179, 179, 179),
     Color.fromARGB(255, 102, 102, 102),
@@ -369,7 +274,7 @@ class MCOImagePalette {
     Color.fromARGB(255, 0, 58, 255),
     Color.fromARGB(255, 2, 51, 225),
     Color.fromARGB(255, 2, 46, 202),
-    Color.fromARGB(255, 2, 46, 202),
+    Color.fromARGB(255, 1, 40, 176),
     Color.fromARGB(255, 0, 34, 150),
 
     Color.fromARGB(255, 215, 178, 255),
@@ -381,4 +286,91 @@ class MCOImagePalette {
     Color.fromARGB(255, 83, 1, 175),
     Color.fromARGB(255, 47, 0, 100),
   ];
+}
+
+class MCOImageDynamicPalette {
+  static const List<Color> global512 = DynamicPalettes.global512;
+
+  static final Map<PaletteProfile, Map<int, int>> _reverseMaps = {};
+  static final Map<PaletteProfile, List<Color>> _colorsByProfile = {};
+
+  static List<int> indicesFor(PaletteProfile profile) {
+    return switch (profile) {
+      PaletteProfile.dynamicGlobal8 => DynamicPalettes.dynamicGlobal8Indices,
+      PaletteProfile.dynamicGlobal16 => DynamicPalettes.dynamicGlobal16Indices,
+      PaletteProfile.dynamicGlobal32 => DynamicPalettes.dynamicGlobal32Indices,
+      PaletteProfile.dynamicGlobal64 => DynamicPalettes.dynamicGlobal64Indices,
+      PaletteProfile.dynamicGlobal128 =>
+        DynamicPalettes.dynamicGlobal128Indices,
+      PaletteProfile.dynamicGlobal256 =>
+        DynamicPalettes.dynamicGlobal256Indices,
+      PaletteProfile.dynamicGlobal512 =>
+        DynamicPalettes.dynamicGlobal512Indices,
+      _ => throw MCOImageInvalidInputException(
+        'Palette profile $profile is not dynamic',
+      ),
+    };
+  }
+
+  static List<Color> colorsFor(PaletteProfile profile) {
+    return _colorsByProfile.putIfAbsent(profile, () {
+      final indices = indicesFor(profile);
+      return List<Color>.unmodifiable(indices.map((index) => global512[index]));
+    });
+  }
+
+  static int? profileColorIdForGlobalIndex(
+    PaletteProfile profile,
+    int globalIndex,
+  ) {
+    if (!profile.isDynamic) return null;
+    if (globalIndex < 0 || globalIndex >= global512.length) return null;
+    return _reverseMapFor(profile)[globalIndex];
+  }
+
+  static int globalIndexForProfileColorId(
+    PaletteProfile profile,
+    int profileColorId,
+  ) {
+    final indices = indicesFor(profile);
+    if (profileColorId < 0 || profileColorId >= indices.length) {
+      throw MCOImageInvalidPayloadException(
+        'Dynamic palette color id out of range: $profileColorId',
+      );
+    }
+    return indices[profileColorId];
+  }
+
+  static int whiteGlobalIndexFor(PaletteProfile profile) {
+    return _globalIndexForColor(profile, const Color(0xffffffff), 'white');
+  }
+
+  static int blackGlobalIndexFor(PaletteProfile profile) {
+    return _globalIndexForColor(profile, const Color(0xff000000), 'black');
+  }
+
+  static Map<int, int> _reverseMapFor(PaletteProfile profile) {
+    return _reverseMaps.putIfAbsent(profile, () {
+      final indices = indicesFor(profile);
+      return {for (var i = 0; i < indices.length; i++) indices[i]: i};
+    });
+  }
+
+  static int _globalIndexForColor(
+    PaletteProfile profile,
+    Color color,
+    String label,
+  ) {
+    final wanted = color.toARGB32();
+    final indices = indicesFor(profile);
+    for (var i = 0; i < indices.length; i++) {
+      final globalIndex = indices[i];
+      if (global512[globalIndex].toARGB32() == wanted) {
+        return globalIndex;
+      }
+    }
+    throw MCOImageInvalidInputException(
+      'Dynamic palette $profile has no $label color',
+    );
+  }
 }

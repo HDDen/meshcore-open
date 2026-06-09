@@ -2848,8 +2848,14 @@
   "contact_typeSensor": "Sensor",
   "contact_typeUnknown": "Unknown",
   "chat_canvas": "Canvas",
+  "chat_canvasCrop": "Crop canvas",
   "chat_canvasPalette": "Palette",
+  "chat_canvasPaletteShow": "Show palette",
   "chat_canvasPaletteMode": "Palette preset",
+  "chat_canvasPaletteDynamic": "Dynamic",
+  "chat_canvasPaletteDynamicProfile": "Base set for dynamic palette",
+  "chat_canvasPaletteDynamicUsed": "Colours actually used",
+  "chat_canvasPaletteDynamicDscr": "Warning! Use the dynamic palette wisely! A smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each canvas pixel!",
   "chat_canvasChangeSize": "Change canvas size",
   "chat_canvasWidth": "Width",
   "chat_canvasHeight": "Height",
@@ -2875,5 +2881,6 @@
   },
   "chat_canvasActive": "Show canvas",
   "chat_canvasShowLockBtn": "Show canvas block button",
+  "chat_canvasSendToEdit": "Send to canvas",
   "chat_showHops": "Show hops"
 }
