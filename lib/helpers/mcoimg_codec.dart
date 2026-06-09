@@ -52,12 +52,14 @@ class MCOImage {
   final int height;
   final PaletteProfile paletteProfile;
   final List<int> pixels;
+  final MCOImageEncodingVersion encodingVersion;
 
   MCOImage({
     required this.width,
     required this.height,
     required this.paletteProfile,
     required List<int> pixels,
+    this.encodingVersion = MCOImageEncodingVersion.v2,
   }) : pixels = List.unmodifiable(pixels);
 }
 
@@ -1219,6 +1221,7 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: pixels,
+        encodingVersion: MCOImageEncodingVersion.v1Legacy,
       );
     }
 
@@ -1233,6 +1236,7 @@ class MCOImageCodec {
           height: height,
           paletteProfile: profile,
           pixels: List<int>.filled(width * height, background),
+          encodingVersion: MCOImageEncodingVersion.v1Legacy,
         );
       }
 
@@ -1256,6 +1260,7 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: _insertBounds(width, height, background, cropped, bounds),
+        encodingVersion: MCOImageEncodingVersion.v1Legacy,
       );
     }
 
@@ -1267,6 +1272,7 @@ class MCOImageCodec {
       height: height,
       paletteProfile: profile,
       pixels: _fromScanOrder(linear, width, height, scan),
+      encodingVersion: MCOImageEncodingVersion.v1Legacy,
     );
   }
 
@@ -1339,6 +1345,7 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: pixels,
+        encodingVersion: MCOImageEncodingVersion.v2,
       );
     }
 
@@ -1357,6 +1364,7 @@ class MCOImageCodec {
           height: height,
           paletteProfile: profile,
           pixels: List<int>.filled(width * height, background),
+          encodingVersion: MCOImageEncodingVersion.v2,
         );
       }
       reader.alignToByte();
@@ -1381,6 +1389,7 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: _insertBounds(width, height, background, cropped, bounds),
+        encodingVersion: MCOImageEncodingVersion.v2,
       );
     }
 
@@ -1398,6 +1407,7 @@ class MCOImageCodec {
       height: height,
       paletteProfile: profile,
       pixels: _fromScanOrder(linear, width, height, scan),
+      encodingVersion: MCOImageEncodingVersion.v2,
     );
   }
 

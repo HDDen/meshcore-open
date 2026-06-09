@@ -35,7 +35,8 @@ class CanvasEditorScreen extends StatefulWidget {
 
 class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _minCanvasSize = 2;
-  static const int _maxCanvasSize = 85;
+  static const int _maxCanvasSizeV1 = 85;
+  static const int _maxCanvasSizeV2 = 256;
   static const int _defaultSize = 11;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
@@ -81,6 +82,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
   bool _unlockCanvasSize = false;
+  MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v2;
   late List<int> _pixels;
   Timer? _payloadRefreshTimer;
   DateTime? _lastPayloadRefreshAt;
@@ -191,6 +193,30 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               ),
               const SizedBox(height: 16),
               Text(
+                context.l10n.chat_canvasFormatVer,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<MCOImageEncodingVersion>(
+                initialValue: _encodingVersion,
+                decoration: InputDecoration(
+                  labelText: context.l10n.chat_canvasFormatVer,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  for (final version in MCOImageEncodingVersion.values)
+                    DropdownMenuItem(
+                      value: version,
+                      child: Text(_encodingVersionLabel(version)),
+                    ),
+                ],
+                onChanged: (version) {
+                  if (version == null) return;
+                  _changeEncodingVersion(version);
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(
                 context.l10n.chat_canvasPalette,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
@@ -204,10 +230,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   border: const OutlineInputBorder(),
                 ),
                 items: [
-                  DropdownMenuItem<Object>(
-                    value: _PaletteSelectorValue.dynamic,
-                    child: Text(context.l10n.chat_canvasPaletteDynamic),
-                  ),
+                  if (_supportsDynamicPalettes)
+                    DropdownMenuItem<Object>(
+                      value: _PaletteSelectorValue.dynamic,
+                      child: Text(context.l10n.chat_canvasPaletteDynamic),
+                    ),
                   for (final profile in _paletteProfileOptions)
                     DropdownMenuItem<Object>(
                       value: profile,
@@ -217,7 +244,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 onChanged: (value) {
                   if (value == null) return;
                   if (value == _PaletteSelectorValue.dynamic) {
-                    _changePaletteProfile(PaletteProfile.dynamicGlobal512);
+                    _changePaletteProfile(_dynamicPaletteProfile);
                     return;
                   }
                   if (value is PaletteProfile) {
@@ -774,6 +801,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _loadInitialImage(MCOImage image) {
     // Reusing an existing message image should preserve its codec palette and
     // exact canvas dimensions instead of applying the user's last editor preset.
+    _encodingVersion = image.encodingVersion;
     _paletteProfile = image.paletteProfile;
     if (image.paletteProfile.isDynamic) {
       _dynamicPaletteProfile = image.paletteProfile;
@@ -796,6 +824,55 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final prefs = PrefsManager.instance;
     await prefs.setInt(_prefsWidthKey, width);
     await prefs.setInt(_prefsHeightKey, height);
+  }
+
+  bool get _supportsDynamicPalettes =>
+      _encodingVersion == MCOImageEncodingVersion.v2;
+
+  int get _maxCanvasSize => _encodingVersion == MCOImageEncodingVersion.v1Legacy
+      ? _maxCanvasSizeV1
+      : _maxCanvasSizeV2;
+
+  String _encodingVersionLabel(MCOImageEncodingVersion version) {
+    return switch (version) {
+      MCOImageEncodingVersion.v1Legacy => 'v1',
+      MCOImageEncodingVersion.v2 => 'v2',
+    };
+  }
+
+  void _changeEncodingVersion(MCOImageEncodingVersion version) {
+    if (version == _encodingVersion) return;
+
+    setState(() => _encodingVersion = version);
+
+    if (!_supportsDynamicPalettes && _paletteProfile.isDynamic) {
+      _changePaletteProfile(PaletteProfile.master64);
+      return;
+    }
+
+    _applyCurrentCanvasBoundsAfterFormatChange();
+  }
+
+  void _applyCurrentCanvasBoundsAfterFormatChange() {
+    final size = _boundedCanvasSizeForProfile(
+      _width,
+      _height,
+      _paletteProfile,
+      unlockAdaptiveLimit: _unlockCanvasSize,
+    );
+    final width = size[0];
+    final height = size[1];
+
+    _setControllerValue(_widthController, width);
+    _setControllerValue(_heightController, height);
+
+    if (width != _width || height != _height) {
+      _resize(width: width, height: height);
+      unawaited(_saveCanvasSize(width, height));
+      return;
+    }
+
+    _markPayloadDirty();
   }
 
   void _setCanvasSizeUnlocked(bool? value) {
@@ -910,8 +987,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         height: _height,
         paletteProfile: _paletteProfile,
         pixels: _pixels,
+        encodingVersion: _encodingVersion,
       ),
       backgroundColor: _whiteIndex,
+      encodingVersion: _encodingVersion,
     );
     return encoded.charLength;
   }
@@ -960,6 +1039,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _changePaletteProfile(PaletteProfile profile) {
+    if (!_supportsDynamicPalettes && profile.isDynamic) return;
     if (profile == _paletteProfile) return;
     final oldProfile = _paletteProfile;
     final newPalette = _paletteFor(profile);
@@ -1336,8 +1416,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           height: _height,
           paletteProfile: _paletteProfile,
           pixels: _pixels,
+          encodingVersion: _encodingVersion,
         ),
         backgroundColor: _whiteIndex,
+        encodingVersion: _encodingVersion,
       );
       _currentPayloadChars = encoded.charLength;
       final overflow = encoded.charLength - _sendPayloadLimit;
