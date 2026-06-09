@@ -440,7 +440,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     required int fallbackValue,
   }) {
     void commitValue() {
-      final parsed = int.tryParse(controller.text) ?? fallbackValue;
+      final text = controller.text.trim();
+      if (text.isEmpty) return;
+
+      final parsed = int.tryParse(text) ?? fallbackValue;
       final bounded = parsed.clamp(_minCanvasSize, _maxCanvasSize).toInt();
       _setControllerValue(controller, bounded);
     }
@@ -1365,7 +1368,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _applyCanvasSize() {
-    final size = _requestedBoundedCanvasSize();
+    final size = _requestedBoundedCanvasResizeSize();
     final width = size[0];
     final height = size[1];
 
@@ -1384,6 +1387,33 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, height);
     _resizeByCropping(width: width, height: height);
     unawaited(_saveCanvasSize(width, height));
+  }
+
+  List<int> _requestedBoundedCanvasResizeSize() {
+    final widthText = _widthController.text.trim();
+    final heightText = _heightController.text.trim();
+    final parsedWidth = int.tryParse(widthText);
+    final parsedHeight = int.tryParse(heightText);
+
+    final requestedWidth = parsedWidth ?? (parsedHeight == null
+        ? _width
+        : math.max(
+            _minCanvasSize,
+            (parsedHeight * _width / _height).round(),
+          ));
+    final requestedHeight = parsedHeight ?? (parsedWidth == null
+        ? _height
+        : math.max(
+            _minCanvasSize,
+            (parsedWidth * _height / _width).round(),
+          ));
+
+    return _boundedCanvasSizeForProfile(
+      requestedWidth,
+      requestedHeight,
+      _paletteProfile,
+      unlockAdaptiveLimit: _unlockCanvasSize,
+    );
   }
 
   List<int> _requestedBoundedCanvasSize() {
