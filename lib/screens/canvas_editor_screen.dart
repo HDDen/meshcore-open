@@ -15,7 +15,7 @@ import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 
-enum _CanvasTool { pencil, fill, eyedropper, line }
+enum _CanvasTool { pencil, fill, eyedropper, line, oval }
 
 enum _PaletteSelectorValue { dynamic }
 
@@ -91,6 +91,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _isDrawing = false;
   bool _canvasInputLocked = false;
   int? _lineStartIndex;
+  int? _ovalFirstIndex;
+  int? _ovalSecondIndex;
   int _currentPayloadChars = 0;
 
   @override
@@ -505,6 +507,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 value: _CanvasTool.line,
                 icon: Icon(Icons.show_chart_outlined),
               ),
+              ButtonSegment(
+                value: _CanvasTool.oval,
+                icon: Icon(Icons.circle_outlined),
+              ),
             ],
             selected: {_selectedTool},
             onSelectionChanged: (selection) {
@@ -512,6 +518,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               setState(() {
                 if (nextTool != _selectedTool) {
                   _lineStartIndex = null;
+                  _ovalFirstIndex = null;
+                  _ovalSecondIndex = null;
                 }
                 _selectedTool = nextTool;
               });
@@ -587,6 +595,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     lineStartIndex: _selectedTool == _CanvasTool.line
                         ? _lineStartIndex
                         : null,
+                    ovalPointIndices: _selectedTool == _CanvasTool.oval
+                        ? <int>[?_ovalFirstIndex, ?_ovalSecondIndex]
+                        : const <int>[],
                   ),
                 ),
               ),
@@ -678,6 +689,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _height = newHeight;
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -698,6 +711,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _height = height;
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1121,6 +1136,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_heightController, nextHeight);
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
     unawaited(_saveCanvasPalette(profile));
@@ -1133,6 +1150,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         position.dy >= size.height) {
       if (_selectedTool == _CanvasTool.line && _lineStartIndex != null) {
         setState(() => _lineStartIndex = null);
+      } else if (_selectedTool == _CanvasTool.oval &&
+          (_ovalFirstIndex != null || _ovalSecondIndex != null)) {
+        setState(() {
+          _ovalFirstIndex = null;
+          _ovalSecondIndex = null;
+        });
       }
       return;
     }
@@ -1158,6 +1181,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       case _CanvasTool.line:
         _handleLineTool(index);
         break;
+      case _CanvasTool.oval:
+        _handleOvalTool(index);
+        break;
     }
   }
 
@@ -1177,6 +1203,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // Eyedropper is a one-shot tool: after picking, continue drawing.
       _selectedTool = _CanvasTool.pencil;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
   }
 
@@ -1234,6 +1262,132 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+    });
+    if (changed) {
+      _markPayloadDirty();
+    }
+  }
+
+  void _handleOvalTool(int index) {
+    final firstIndex = _ovalFirstIndex;
+    final secondIndex = _ovalSecondIndex;
+    if (firstIndex == null) {
+      setState(() => _ovalFirstIndex = index);
+      return;
+    }
+    if (secondIndex == null) {
+      if (firstIndex == index) {
+        setState(() => _ovalFirstIndex = null);
+        return;
+      }
+      setState(() => _ovalSecondIndex = index);
+      return;
+    }
+
+    if (index == firstIndex || index == secondIndex) {
+      setState(() {
+        _ovalFirstIndex = null;
+        _ovalSecondIndex = null;
+      });
+      return;
+    }
+
+    _drawOval(firstIndex, secondIndex, index);
+  }
+
+  void _drawOval(int firstIndex, int secondIndex, int widthIndex) {
+    final x1 = (firstIndex % _width).toDouble();
+    final y1 = (firstIndex ~/ _width).toDouble();
+    final x2 = (secondIndex % _width).toDouble();
+    final y2 = (secondIndex ~/ _width).toDouble();
+    final x3 = (widthIndex % _width).toDouble();
+    final y3 = (widthIndex ~/ _width).toDouble();
+
+    final centerX = (x1 + x2) / 2.0;
+    final centerY = (y1 + y2) / 2.0;
+    final axisDx = x2 - x1;
+    final axisDy = y2 - y1;
+    final axisLength = math.sqrt(axisDx * axisDx + axisDy * axisDy);
+    if (axisLength == 0) {
+      setState(() {
+        _ovalFirstIndex = null;
+        _ovalSecondIndex = null;
+      });
+      return;
+    }
+
+    final ux = axisDx / axisLength;
+    final uy = axisDy / axisLength;
+    final vx = -uy;
+    final vy = ux;
+    final semiMajor = axisLength / 2.0;
+    final relX = x3 - centerX;
+    final relY = y3 - centerY;
+    final semiMinor = (relX * vx + relY * vy).abs();
+
+    final nextPixels = List<int>.of(_pixels);
+    var changed = false;
+
+    void plotLineBetweenPoints(int fromX, int fromY, int toX, int toY) {
+      var px = fromX;
+      var py = fromY;
+      final dx = (toX - fromX).abs();
+      final dy = (toY - fromY).abs();
+      final sx = fromX < toX ? 1 : -1;
+      final sy = fromY < toY ? 1 : -1;
+      var err = dx - dy;
+      while (true) {
+        if (px >= 0 && px < _width && py >= 0 && py < _height) {
+          final pixelIndex = py * _width + px;
+          if (nextPixels[pixelIndex] != _selectedColor) {
+            nextPixels[pixelIndex] = _selectedColor;
+            changed = true;
+          }
+        }
+        if (px == toX && py == toY) break;
+        final e2 = 2 * err;
+        if (e2 > -dy) {
+          err -= dy;
+          px += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          py += sy;
+        }
+      }
+    }
+
+    if (semiMinor < 0.5) {
+      plotLineBetweenPoints(x1.round(), y1.round(), x2.round(), y2.round());
+    } else {
+      final steps = math.max(
+        24,
+        (2 * math.pi * math.max(semiMajor, semiMinor) * 4).ceil(),
+      );
+      int? prevX;
+      int? prevY;
+      for (var i = 0; i <= steps; i++) {
+        final t = 2 * math.pi * i / steps;
+        final cosT = math.cos(t);
+        final sinT = math.sin(t);
+        final sampleX = centerX + ux * semiMajor * cosT + vx * semiMinor * sinT;
+        final sampleY = centerY + uy * semiMajor * cosT + vy * semiMinor * sinT;
+        final roundedX = sampleX.round();
+        final roundedY = sampleY.round();
+        if (prevX != null && prevY != null) {
+          plotLineBetweenPoints(prevX, prevY, roundedX, roundedY);
+        }
+        prevX = roundedX;
+        prevY = roundedY;
+      }
+    }
+
+    setState(() {
+      _pixels = nextPixels;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     if (changed) {
       _markPayloadDirty();
@@ -1268,6 +1422,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1289,6 +1445,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _pixels = nextPixels;
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1297,6 +1455,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _pixels = List.filled(_width * _height, _whiteIndex);
       _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
     });
     _markPayloadDirty();
   }
@@ -1320,6 +1480,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _pixels = pixels;
         _lineStartIndex = null;
+        _ovalFirstIndex = null;
+        _ovalSecondIndex = null;
       });
       _markPayloadDirty();
     } catch (error) {
@@ -1705,6 +1867,7 @@ class _PaletteSwatch extends StatelessWidget {
 class _PixelCanvasPainter extends CustomPainter {
   static const Color _gridColor = Color(0xff00ff00);
   static const Color _lineStartColor = Color(0xffff9800);
+  static const Color _ovalPointColor = Color(0xff03a9f4);
 
   final int width;
   final int height;
@@ -1713,6 +1876,7 @@ class _PixelCanvasPainter extends CustomPainter {
   final List<Color> palette;
   final bool showGrid;
   final int? lineStartIndex;
+  final List<int> ovalPointIndices;
 
   const _PixelCanvasPainter({
     required this.width,
@@ -1722,6 +1886,7 @@ class _PixelCanvasPainter extends CustomPainter {
     required this.palette,
     required this.showGrid,
     this.lineStartIndex,
+    this.ovalPointIndices = const <int>[],
   });
 
   @override
@@ -1789,6 +1954,28 @@ class _PixelCanvasPainter extends CustomPainter {
         ),
         markerPaint,
       );
+    }
+
+    if (ovalPointIndices.isNotEmpty) {
+      final markerPaint = Paint()
+        ..color = _ovalPointColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..isAntiAlias = false;
+      for (final pointIndex in ovalPointIndices) {
+        if (pointIndex < 0 || pointIndex >= width * height) continue;
+        final pointX = pointIndex % width;
+        final pointY = pointIndex ~/ width;
+        canvas.drawRect(
+          Rect.fromLTWH(
+            pointX * cellWidth,
+            pointY * cellHeight,
+            cellWidth,
+            cellHeight,
+          ),
+          markerPaint,
+        );
+      }
     }
   }
 
