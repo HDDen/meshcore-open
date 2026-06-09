@@ -575,8 +575,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           controller: _toolsScrollController,
           scrollDirection: Axis.horizontal,
           physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 8),
-          child: toolsRow,
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: toolsRow,
+          ),
         ),
       ),
     );
