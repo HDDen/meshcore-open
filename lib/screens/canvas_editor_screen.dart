@@ -1014,8 +1014,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _pickColor(int index) {
     final color = _pixels[index];
-    if (color == _selectedColor) return;
-    setState(() => _selectedColor = color);
+    setState(() {
+      _selectedColor = color;
+      // Eyedropper is a one-shot tool: after picking, continue drawing.
+      _selectedTool = _CanvasTool.pencil;
+    });
   }
 
   void _fillArea(int startIndex) {
