@@ -576,20 +576,59 @@ class MCOImageCodec {
     int maxRegions,
   ) {
     if (maxRegions == 0) return null;
+    final connectedRegions = _findRegions(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+    );
+    final greedyRegions = _findGreedyRectRegions(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+      maxRegions,
+    );
+
+    final variants = <List<_ImageBounds>>[
+      connectedRegions,
+      if (greedyRegions.isNotEmpty) greedyRegions,
+    ];
+
+    _V2Payload? best;
+    for (final regions in variants) {
+      final payload = _tryBuildV2RegionsPayloadFromRegions(
+        image,
+        backgroundColor,
+        referenceEncoding,
+        regions,
+        maxRegions,
+      );
+      if (payload == null) continue;
+      if (best == null ||
+          payload.payload.length < best.payload.length ||
+          (payload.payload.length == best.payload.length &&
+              payload.regionCount < best.regionCount)) {
+        best = payload;
+      }
+    }
+    return best;
+  }
+
+  _V2Payload? _tryBuildV2RegionsPayloadFromRegions(
+    MCOImage image,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+    List<_ImageBounds> regions,
+    int maxRegions,
+  ) {
+    if (regions.isEmpty || regions.length > maxRegions) return null;
     if (image.paletteProfile.isDynamic && referenceEncoding == null) {
       throw const MCOImageInvalidInputException(
         'Dynamic v2 regions require reference encoding',
       );
     }
     if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
-
-    final regions = _findRegions(
-      image.pixels,
-      image.width,
-      image.height,
-      backgroundColor,
-    );
-    if (regions.isEmpty || regions.length > maxRegions) return null;
 
     final writer = _BitWriter();
     _writeV2Header(
@@ -2310,6 +2349,86 @@ class MCOImageCodec {
       add(colors[i], 2 + i);
     }
     return result;
+  }
+
+  List<_ImageBounds> _findGreedyRectRegions(
+    List<int> pixels,
+    int width,
+    int height,
+    int background,
+    int maxRegions,
+  ) {
+    if (maxRegions == 0) return const <_ImageBounds>[];
+
+    final covered = List<bool>.filled(pixels.length, false);
+    final regions = <_ImageBounds>[];
+
+    while (true) {
+      var startIndex = -1;
+      for (var i = 0; i < pixels.length; i++) {
+        if (pixels[i] != background && !covered[i]) {
+          startIndex = i;
+          break;
+        }
+      }
+      if (startIndex < 0) break;
+
+      final startX = startIndex % width;
+      final startY = startIndex ~/ width;
+      var firstRowWidth = 0;
+      while (startX + firstRowWidth < width) {
+        final index = startY * width + startX + firstRowWidth;
+        if (pixels[index] == background || covered[index]) break;
+        firstRowWidth++;
+      }
+
+      var bestWidth = 1;
+      var bestHeight = 1;
+      var bestArea = 1;
+      var maxCandidateWidth = firstRowWidth;
+
+      for (var candidateHeight = 1;
+          startY + candidateHeight - 1 < height;
+          candidateHeight++) {
+        final y = startY + candidateHeight - 1;
+        var rowWidth = 0;
+        while (rowWidth < maxCandidateWidth) {
+          final index = y * width + startX + rowWidth;
+          if (pixels[index] == background || covered[index]) break;
+          rowWidth++;
+        }
+        if (rowWidth == 0) break;
+
+        maxCandidateWidth = math.min(maxCandidateWidth, rowWidth);
+        final area = maxCandidateWidth * candidateHeight;
+        if (area > bestArea ||
+            (area == bestArea && candidateHeight > bestHeight)) {
+          bestArea = area;
+          bestWidth = maxCandidateWidth;
+          bestHeight = candidateHeight;
+        }
+      }
+
+      regions.add(
+        _ImageBounds(
+          x: startX,
+          y: startY,
+          width: bestWidth,
+          height: bestHeight,
+        ),
+      );
+      if (regions.length > maxRegions) {
+        return const <_ImageBounds>[];
+      }
+
+      for (var y = startY; y < startY + bestHeight; y++) {
+        for (var x = startX; x < startX + bestWidth; x++) {
+          covered[y * width + x] = true;
+        }
+      }
+    }
+
+    return regions;
   }
 
   static List<_ImageBounds> _findRegions(
