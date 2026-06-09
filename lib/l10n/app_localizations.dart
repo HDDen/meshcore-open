@@ -8572,6 +8572,18 @@ abstract class AppLocalizations {
   /// **'Crop canvas'**
   String get chat_canvasCrop;
 
+  /// No description provided for @chat_canvasResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get chat_canvasResize;
+
+  /// No description provided for @chat_canvasFormatVer.
+  ///
+  /// In en, this message translates to:
+  /// **'Codec version'**
+  String get chat_canvasFormatVer;
+
   /// No description provided for @chat_canvasPalette.
   ///
   /// In en, this message translates to:

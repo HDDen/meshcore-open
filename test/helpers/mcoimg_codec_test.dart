@@ -145,12 +145,49 @@ void main() {
       expect(encoded.scan, anyOf(ScanMode.v, ScanMode.sv));
     });
 
-    test('new payloads use format version 1', () {
+    test('new payloads use format version 2 by default', () {
       final encoded = codec.encode(_solid(11, 11, 0), backgroundColor: 0);
       final bytes = _base91Decode(
         encoded.text.substring(MCOImageCodec.prefix.length),
       );
-      expect((bytes[0] >> 6) & 0x03, 1);
+      expect((bytes[0] >> 6) & 0x03, 2);
+      expect(encoded.codecVersion, 2);
+    });
+
+    test(
+      'explicit legacy v1 encoding remains available for fixed palettes',
+      () {
+        final image = _solid(11, 11, 0, profile: PaletteProfile.master8);
+        final encoded = codec.encode(
+          image,
+          backgroundColor: 0,
+          encodingVersion: MCOImageEncodingVersion.v1Legacy,
+        );
+        final bytes = _base91Decode(
+          encoded.text.substring(MCOImageCodec.prefix.length),
+        );
+        expect((bytes[0] >> 6) & 0x03, 1);
+        expect(encoded.codecVersion, 1);
+        expect(codec.decode(encoded.text).pixels, image.pixels);
+      },
+    );
+
+    test('legacy v1 encoding rejects dynamic palettes', () {
+      final image = _solid(
+        2,
+        2,
+        MCOImageDynamicPalette.whiteGlobalIndexFor(
+          PaletteProfile.dynamicGlobal8,
+        ),
+        profile: PaletteProfile.dynamicGlobal8,
+      );
+      expect(
+        () => codec.encode(
+          image,
+          encodingVersion: MCOImageEncodingVersion.v1Legacy,
+        ),
+        throwsA(isA<MCOImageInvalidInputException>()),
+      );
     });
 
     test('bounds keep larger empty canvas close to small drawing size', () {
@@ -485,12 +522,32 @@ void main() {
       );
     });
 
-    test('invalid width or height fails', () {
-      final payload = Uint8List.fromList([0, 0, 85, 0]);
+    test('width or height above 256 fails on encode', () {
       expect(
-        () => codec.decode('im:${_base91(payload)}'),
-        throwsA(isA<MCOImageInvalidPayloadException>()),
+        () => codec.encode(
+          MCOImage(
+            width: 257,
+            height: 1,
+            paletteProfile: PaletteProfile.mono,
+            pixels: List<int>.filled(257, 0),
+          ),
+        ),
+        throwsA(isA<MCOImageInvalidInputException>()),
       );
+    });
+
+    test('256x256 dimensions are valid', () {
+      final image = MCOImage(
+        width: 256,
+        height: 256,
+        paletteProfile: PaletteProfile.mono,
+        pixels: List<int>.filled(256 * 256, 0),
+      );
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decode(encoded.text);
+      expect(decoded.width, 256);
+      expect(decoded.height, 256);
+      expect(decoded.pixels.first, 0);
     });
 
     test('reserved header bits fail', () {

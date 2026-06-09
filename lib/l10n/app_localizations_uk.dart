@@ -5038,6 +5038,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_canvasCrop => 'Crop canvas';
 
   @override
+  String get chat_canvasResize => 'Scale';
+
+  @override
+  String get chat_canvasFormatVer => 'Codec version';
+
+  @override
   String get chat_canvasPalette => 'Palette';
 
   @override

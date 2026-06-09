@@ -2849,6 +2849,8 @@
   "contact_typeUnknown": "Unknown",
   "chat_canvas": "Canvas",
   "chat_canvasCrop": "Crop canvas",
+  "chat_canvasResize": "Scale",
+  "chat_canvasFormatVer": "Codec version",
   "chat_canvasPalette": "Palette",
   "chat_canvasPaletteShow": "Show palette",
   "chat_canvasPaletteMode": "Palette preset",
