@@ -22,7 +22,7 @@ enum PaletteProfile {
   dynamicGlobal512,
 }
 
-enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg }
+enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask }
 
 enum ScanMode { h, v, s, sv }
 
@@ -166,13 +166,23 @@ class MCOImageCodec {
     ImageMode.sparseBg,
   ];
 
+  static const List<ImageMode> _v2BlockModes = [
+    ImageMode.rawGlobal,
+    ImageMode.rawLocal,
+    ImageMode.rleLocal,
+    ImageMode.sparseBg,
+    ImageMode.biColorMask,
+  ];
+
   static const List<ImageMode> _dynamicBlockModes = [
     ImageMode.rawLocal,
     ImageMode.rleLocal,
     ImageMode.sparseBg,
+    ImageMode.biColorMask,
   ];
 
   static const List<ImageMode> _modeTieOrder = [
+    ImageMode.biColorMask,
     ImageMode.sparseBg,
     ImageMode.rleLocal,
     ImageMode.rawLocal,
@@ -360,7 +370,7 @@ class MCOImageCodec {
         : const <DynamicPaletteReferenceEncoding?>[null];
     final blockModes = image.paletteProfile.isDynamic
         ? _dynamicBlockModes
-        : _blockModes;
+        : _v2BlockModes;
     final candidates = <EncodedMCOImage>[];
     EncodedMCOImage? best;
 
@@ -792,6 +802,19 @@ class MCOImageCodec {
           localPaletteSize: local.colors.length,
           bitsPerLocalPixel: localBits,
         );
+      case ImageMode.biColorMask:
+        final foregroundColor = _biColorForeground(linear, backgroundColor);
+        if (foregroundColor == null) return null;
+        if (writeSparseBackground) {
+          _writeV2ColorRef(writer, profile, backgroundColor);
+        }
+        _writeV2ColorRef(writer, profile, foregroundColor);
+        _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
+        return _V2BlockPayload(
+          writer.toBytes(),
+          localPaletteSize: 2,
+          bitsPerLocalPixel: 1,
+        );
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -810,6 +833,41 @@ class MCOImageCodec {
     if (referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64 &&
         profile != PaletteProfile.dynamicGlobal512) {
       return null;
+    }
+
+    if (mode == ImageMode.biColorMask) {
+      final foregroundColor = _biColorForeground(linear, backgroundColor);
+      if (foregroundColor == null) return null;
+      final foregroundProfileColorId = _profileColorIdForGlobalIndex(
+        profile,
+        foregroundColor,
+      );
+      final backgroundProfileColorId = _profileColorIdForGlobalIndex(
+        profile,
+        backgroundColor,
+      );
+      if (foregroundProfileColorId == null || backgroundProfileColorId == null) {
+        throw MCOImageInvalidInputException(
+          'Bi-color mask color is not available in ${profile.name}',
+        );
+      }
+      final writer = _BitWriter();
+      if (writeSparseBackground) {
+        _writeV2ColorRef(writer, profile, backgroundColor);
+      }
+      _writeV2ColorRef(writer, profile, foregroundColor);
+      _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
+      final usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? {backgroundProfileColorId >> 6, foregroundProfileColorId >> 6}
+                .length
+          : null;
+      return _V2BlockPayload(
+        writer.toBytes(),
+        localPaletteSize: 2,
+        usedBankCount: usedBankCount,
+        bitsPerLocalPixel: 1,
+      );
     }
 
     final profileColorIds = <int>[];
@@ -901,6 +959,7 @@ class MCOImageCodec {
         break;
       case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
+      case ImageMode.biColorMask:
         return null;
     }
 
@@ -929,7 +988,7 @@ class MCOImageCodec {
     _BlockPayload? best;
     for (final scan in ScanMode.values) {
       final linear = _toScanOrder(pixels, width, height, scan);
-      for (final mode in _blockModes) {
+      for (final mode in _v2BlockModes) {
         final block = _tryBuildV2BlockBody(
           linear,
           profile,
@@ -964,6 +1023,10 @@ class MCOImageCodec {
     for (final scan in ScanMode.values) {
       final linear = _toScanOrder(pixels, width, height, scan);
       for (final mode in _dynamicBlockModes) {
+        if (mode == ImageMode.biColorMask &&
+            _biColorForeground(linear, backgroundColor) == null) {
+          continue;
+        }
         final writer = _BitWriter();
         _writeV2DynamicBlockWithLocalPalette(
           writer,
@@ -1430,6 +1493,9 @@ class MCOImageCodec {
         profile,
         backgroundColor: sparseBackgroundColor,
       ),
+      ImageMode.biColorMask => throw const MCOImageInvalidPayloadException(
+        'BI_COLOR_MASK is not supported by legacy block bodies',
+      ),
       ImageMode.regionsBg => throw const MCOImageInvalidPayloadException(
         'REGIONS_BG is not a block body mode',
       ),
@@ -1530,6 +1596,15 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.biColorMask:
+        final background = sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
+        final foreground = _readV2ColorRef(reader, profile);
+        if (foreground == background) {
+          throw const MCOImageInvalidPayloadException(
+            'Bi-color foreground equals background',
+          );
+        }
+        return _readBiColorMask(reader, count, background, foreground);
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
           'REGIONS_BG is not a block body mode',
@@ -1632,6 +1707,16 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.biColorMask:
+        final background =
+            sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
+        final foreground = _readV2ColorRef(reader, profile);
+        if (foreground == background) {
+          throw const MCOImageInvalidPayloadException(
+            'Dynamic bi-color foreground equals background',
+          );
+        }
+        return _readBiColorMask(reader, count, background, foreground);
       case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
@@ -1710,6 +1795,20 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.biColorMask:
+        final index = reader.readBits(localBits);
+        if (index >= palette.globalColors.length) {
+          throw const MCOImageInvalidPayloadException(
+            'Dynamic region bi-color index out of range',
+          );
+        }
+        final foreground = palette.globalColors[index];
+        if (foreground == background) {
+          throw const MCOImageInvalidPayloadException(
+            'Dynamic region bi-color foreground equals background',
+          );
+        }
+        return _readBiColorMask(reader, count, background, foreground);
       case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
@@ -1964,6 +2063,10 @@ class MCOImageCodec {
           writeBackground: writeSparseBackground,
         );
         break;
+      case ImageMode.biColorMask:
+        throw const MCOImageInvalidInputException(
+          'BI_COLOR_MASK is not supported by legacy block mode',
+        );
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -2034,6 +2137,28 @@ class MCOImageCodec {
           writer.writeBitVarUint(segment.length);
           pos = segment.start + segment.length;
         }
+        break;
+      case ImageMode.biColorMask:
+        final foregroundColor = _biColorForeground(linear, backgroundColor);
+        if (foregroundColor == null) {
+          throw const MCOImageInvalidInputException(
+            'BI_COLOR_MASK requires exactly one foreground color',
+          );
+        }
+        final foregroundProfileColorId = _profileColorIdForGlobalIndex(
+          profile,
+          foregroundColor,
+        );
+        final foregroundIndex =
+            localIndexByProfileColorId[foregroundProfileColorId];
+        if (foregroundIndex == null) {
+          throw const MCOImageInvalidInputException(
+            'Dynamic shared palette is missing bi-color foreground',
+          );
+        }
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        writer.writeBits(foregroundIndex, localBits);
+        _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
         break;
       case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
@@ -2864,6 +2989,46 @@ class MCOImageCodec {
     return runs;
   }
 
+  int? _biColorForeground(List<int> pixels, int background) {
+    int? foreground;
+    for (final pixel in pixels) {
+      if (pixel == background) continue;
+      foreground ??= pixel;
+      if (pixel != foreground) return null;
+    }
+    return foreground;
+  }
+
+  void _writeBiColorMask(
+    _BitWriter writer,
+    List<int> pixels,
+    int background,
+    int foreground,
+  ) {
+    for (final pixel in pixels) {
+      if (pixel == background) {
+        writer.writeBits(0, 1);
+      } else if (pixel == foreground) {
+        writer.writeBits(1, 1);
+      } else {
+        throw const MCOImageInvalidInputException(
+          'BI_COLOR_MASK cannot encode more than two colors',
+        );
+      }
+    }
+  }
+
+  List<int> _readBiColorMask(
+    _BitReader reader,
+    int count,
+    int background,
+    int foreground,
+  ) {
+    return List<int>.generate(count, (_) {
+      return reader.readBits(1) == 0 ? background : foreground;
+    });
+  }
+
   static List<_SparseSegment> _buildSparseSegments(
     List<int> pixels,
     int background,
@@ -3095,22 +3260,30 @@ class MCOImageCodec {
   }
 
   static int _modeBits(ImageMode mode) {
-    if (!_blockModes.contains(mode)) {
-      throw const MCOImageInvalidInputException(
+    return switch (mode) {
+      ImageMode.rawGlobal => 0,
+      ImageMode.rawLocal => 1,
+      ImageMode.rleLocal => 2,
+      ImageMode.sparseBg => 3,
+      ImageMode.biColorMask => 4,
+      ImageMode.regionsBg => throw const MCOImageInvalidInputException(
         'REGIONS_BG has no block mode bits',
-      );
-    }
-    return mode.index;
+      ),
+    };
   }
 
   static int _scanBits(ScanMode scan) => scan.index;
   static int _profileBits(PaletteProfile profile) => profile.index;
 
   static ImageMode _modeFromBits(int value) {
-    if (value < 0 || value >= _blockModes.length) {
-      throw MCOImageInvalidPayloadException('Unknown image mode $value');
-    }
-    return ImageMode.values[value];
+    return switch (value) {
+      0 => ImageMode.rawGlobal,
+      1 => ImageMode.rawLocal,
+      2 => ImageMode.rleLocal,
+      3 => ImageMode.sparseBg,
+      4 => ImageMode.biColorMask,
+      _ => throw MCOImageInvalidPayloadException('Unknown image mode $value'),
+    };
   }
 
   static ScanMode _scanFromBits(int value) {
