@@ -1858,10 +1858,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             // Can't react to your own messages
             if (!message.isOutgoing)
               ListTile(
@@ -1971,7 +1977,9 @@ class _ChatScreenState extends State<ChatScreen> {
               title: Text(context.l10n.common_cancel),
               onTap: () => Navigator.pop(sheetContext),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

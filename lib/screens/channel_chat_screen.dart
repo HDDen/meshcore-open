@@ -1909,10 +1909,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             ListTile(
               leading: const Icon(Icons.reply),
               title: Text(context.l10n.chat_reply),
@@ -2032,7 +2038,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               title: Text(context.l10n.common_cancel),
               onTap: () => Navigator.pop(sheetContext),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
