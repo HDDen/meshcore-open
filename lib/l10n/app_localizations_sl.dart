@@ -4998,7 +4998,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_canvas => 'Canvas';
 
   @override
-  String get chat_canvasCrop => 'Crop canvas';
+  String get chat_canvasCrop => 'Crop/expand';
 
   @override
   String get chat_canvasResize => 'Scale';

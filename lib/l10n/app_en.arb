@@ -2848,7 +2848,7 @@
   "contact_typeSensor": "Sensor",
   "contact_typeUnknown": "Unknown",
   "chat_canvas": "Canvas",
-  "chat_canvasCrop": "Crop canvas",
+  "chat_canvasCrop": "Crop/expand",
   "chat_canvasResize": "Scale",
   "chat_canvasUnlockSize": "Unlock canvas size",
   "chat_canvasFormatVer": "Codec version",

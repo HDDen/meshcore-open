@@ -2039,7 +2039,7 @@
   "settings_copyMsgPathEditFinalTitle": "Итоговое сообщение",
   "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки",
   "chat_canvas": "Холст",
-  "chat_canvasCrop": "Обрезать холст",
+  "chat_canvasCrop": "Обрезать/расширить",
   "chat_canvasResize": "Сжать/растянуть",
   "chat_canvasUnlockSize": "Разблокировать размер холста",
   "chat_canvasFormatVer": "Версия кодека",

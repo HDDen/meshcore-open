@@ -5039,7 +5039,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvas => 'Холст';
 
   @override
-  String get chat_canvasCrop => 'Обрезать холст';
+  String get chat_canvasCrop => 'Обрезать/расширить';
 
   @override
   String get chat_canvasResize => 'Сжать/растянуть';

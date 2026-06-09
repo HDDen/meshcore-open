@@ -8569,7 +8569,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasCrop.
   ///
   /// In en, this message translates to:
-  /// **'Crop canvas'**
+  /// **'Crop/expand'**
   String get chat_canvasCrop;
 
   /// No description provided for @chat_canvasResize.

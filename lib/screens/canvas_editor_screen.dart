@@ -1026,31 +1026,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     required int targetHeight,
     required int fillColor,
   }) {
-    if (targetWidth < sourceWidth || targetHeight < sourceHeight) {
-      return _scalePixels(
-        sourcePixels: sourcePixels,
-        sourceWidth: sourceWidth,
-        sourceHeight: sourceHeight,
-        targetWidth: targetWidth,
-        targetHeight: targetHeight,
-      );
-    }
-
-    // Keep the old drawing centered when adding new empty space.
-    final nextPixels = List.filled(targetWidth * targetHeight, fillColor);
-    final copyWidth = math.min(sourceWidth, targetWidth);
-    final copyHeight = math.min(sourceHeight, targetHeight);
-    final oldStartX = math.max(0, (sourceWidth - targetWidth) ~/ 2);
-    final oldStartY = math.max(0, (sourceHeight - targetHeight) ~/ 2);
-    final newStartX = math.max(0, (targetWidth - sourceWidth) ~/ 2);
-    final newStartY = math.max(0, (targetHeight - sourceHeight) ~/ 2);
-    for (var y = 0; y < copyHeight; y++) {
-      for (var x = 0; x < copyWidth; x++) {
-        nextPixels[(newStartY + y) * targetWidth + newStartX + x] =
-            sourcePixels[(oldStartY + y) * sourceWidth + oldStartX + x];
-      }
-    }
-    return nextPixels;
+    return _scalePixels(
+      sourcePixels: sourcePixels,
+      sourceWidth: sourceWidth,
+      sourceHeight: sourceHeight,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+    );
   }
 
   List<int> _cropOrPadPixels({
