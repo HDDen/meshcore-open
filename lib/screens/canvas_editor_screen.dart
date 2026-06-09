@@ -49,6 +49,18 @@ class _CanvasHistoryEntry {
   });
 }
 
+class _ImportedCanvasImage {
+  final int width;
+  final int height;
+  final List<int> pixels;
+
+  const _ImportedCanvasImage({
+    required this.width,
+    required this.height,
+    required this.pixels,
+  });
+}
+
 class CanvasEditorScreen extends StatefulWidget {
   final int maxTextChars;
   final MCOImage? initialImage;
@@ -2043,17 +2055,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (file == null) return;
 
       final bytes = await file.readAsBytes();
-      final pixels = await _imageBytesToCanvasPixels(bytes);
+      final importedImage = await _imageBytesToCanvasPixels(bytes);
       if (!mounted) return;
+      _setControllerValue(_widthController, importedImage.width);
+      _setControllerValue(_heightController, importedImage.height);
       setState(() {
-        _pixels = pixels;
+        _width = importedImage.width;
+        _height = importedImage.height;
+        _pixels = importedImage.pixels;
         _lineStartIndex = null;
-      _ovalFirstIndex = null;
-      _ovalSecondIndex = null;
-      _rectangleFirstIndex = null;
-      _rectangleSecondIndex = null;
+        _ovalFirstIndex = null;
+        _ovalSecondIndex = null;
+        _rectangleFirstIndex = null;
+        _rectangleSecondIndex = null;
       });
       _markPayloadDirty();
+      unawaited(_saveCanvasSize(importedImage.width, importedImage.height));
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -2064,18 +2081,36 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  Future<List<int>> _imageBytesToCanvasPixels(Uint8List bytes) async {
+  Future<_ImportedCanvasImage> _imageBytesToCanvasPixels(Uint8List bytes) async {
     final source = await _decodeImage(bytes);
-    final scale = math.min(_width / source.width, _height / source.height);
+    final sourceWidth = source.width;
+    final sourceHeight = source.height;
+    source.dispose();
+
+    final canvasWidth = _unlockCanvasSize
+        ? math.max(
+            _minCanvasSize,
+            math.min(_maxCanvasSize, sourceWidth),
+          )
+        : _width;
+    final canvasHeight = _unlockCanvasSize
+        ? math.max(
+            _minCanvasSize,
+            math.min(_maxCanvasSize, sourceHeight),
+          )
+        : _height;
+    final scale = math.min(
+      canvasWidth / sourceWidth,
+      canvasHeight / sourceHeight,
+    );
     final targetWidth = math.max(
       1,
-      math.min(_width, (source.width * scale).floor()),
+      math.min(canvasWidth, (sourceWidth * scale).floor()),
     );
     final targetHeight = math.max(
       1,
-      math.min(_height, (source.height * scale).floor()),
+      math.min(canvasHeight, (sourceHeight * scale).floor()),
     );
-    source.dispose();
 
     final scaled = await _decodeImage(
       bytes,
@@ -2089,9 +2124,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final palette = _paletteFor(_paletteProfile);
-    final nextPixels = List.filled(_width * _height, _whiteIndex);
-    final startX = (_width - targetWidth) ~/ 2;
-    final startY = (_height - targetHeight) ~/ 2;
+    final nextPixels = List.filled(canvasWidth * canvasHeight, _whiteIndex);
+    final startX = (canvasWidth - targetWidth) ~/ 2;
+    final startY = (canvasHeight - targetHeight) ~/ 2;
     for (var y = 0; y < targetHeight; y++) {
       for (var x = 0; x < targetWidth; x++) {
         final offset = (y * targetWidth + x) * 4;
@@ -2104,10 +2139,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           palette,
           whiteIndex: _whiteIndex,
         );
-        nextPixels[(startY + y) * _width + startX + x] = colorValue;
+        nextPixels[(startY + y) * canvasWidth + startX + x] = colorValue;
       }
     }
-    return nextPixels;
+    return _ImportedCanvasImage(
+      width: canvasWidth,
+      height: canvasHeight,
+      pixels: nextPixels,
+    );
   }
 
   Future<ui.Image> _decodeImage(
