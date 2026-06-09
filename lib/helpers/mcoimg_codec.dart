@@ -22,7 +22,7 @@ enum PaletteProfile {
   dynamicGlobal512,
 }
 
-enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask }
+enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask, rowDelta }
 
 enum ScanMode { h, v, s, sv }
 
@@ -172,6 +172,7 @@ class MCOImageCodec {
     ImageMode.rleLocal,
     ImageMode.sparseBg,
     ImageMode.biColorMask,
+    ImageMode.rowDelta,
   ];
 
   static const List<ImageMode> _dynamicBlockModes = [
@@ -179,11 +180,13 @@ class MCOImageCodec {
     ImageMode.rleLocal,
     ImageMode.sparseBg,
     ImageMode.biColorMask,
+    ImageMode.rowDelta,
   ];
 
   static const List<ImageMode> _modeTieOrder = [
     ImageMode.biColorMask,
     ImageMode.sparseBg,
+    ImageMode.rowDelta,
     ImageMode.rleLocal,
     ImageMode.rawLocal,
     ImageMode.rawGlobal,
@@ -530,6 +533,7 @@ class MCOImageCodec {
       image.paletteProfile,
       mode,
       referenceEncoding,
+      rowLength: _rowLengthForScan(scan, dataWidth, dataHeight),
       backgroundColor: backgroundColor,
       writeSparseBackground: bounds == null,
     );
@@ -753,6 +757,7 @@ class MCOImageCodec {
     PaletteProfile profile,
     ImageMode mode,
     DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int rowLength,
     required int backgroundColor,
     required bool writeSparseBackground,
   }) {
@@ -768,6 +773,7 @@ class MCOImageCodec {
         profile,
         mode,
         referenceEncoding,
+        rowLength: rowLength,
         backgroundColor: backgroundColor,
         writeSparseBackground: writeSparseBackground,
       );
@@ -841,6 +847,24 @@ class MCOImageCodec {
           localPaletteSize: local.colors.length,
           bitsPerLocalPixel: localBits,
         );
+      case ImageMode.rowDelta:
+        final local = _buildLocalPalette(linear);
+        if (local.colors.isEmpty) return null;
+        final map = _localIndexMap(local.colors);
+        final localBits = _localBits(local.colors.length);
+        writer.writeBitVarUint(local.colors.length);
+        _writePalette(writer, local.colors, profile);
+        _writeRowDeltaBody(
+          writer,
+          linear.map((pixel) => map[pixel]!).toList(growable: false),
+          rowLength,
+          localBits,
+        );
+        return _V2BlockPayload(
+          writer.toBytes(),
+          localPaletteSize: local.colors.length,
+          bitsPerLocalPixel: localBits,
+        );
       case ImageMode.biColorMask:
         final foregroundColor = _biColorForeground(linear, backgroundColor);
         if (foregroundColor == null) return null;
@@ -866,6 +890,7 @@ class MCOImageCodec {
     PaletteProfile profile,
     ImageMode mode,
     DynamicPaletteReferenceEncoding referenceEncoding, {
+    required int rowLength,
     required int backgroundColor,
     required bool writeSparseBackground,
   }) {
@@ -996,6 +1021,16 @@ class MCOImageCodec {
           pos = segment.start + segment.length;
         }
         break;
+      case ImageMode.rowDelta:
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          )!;
+          return localIndexByProfileColorId[profileColorId]!;
+        }).toList(growable: false);
+        _writeRowDeltaBody(writer, localPixels, rowLength, localBits);
+        break;
       case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
       case ImageMode.biColorMask:
@@ -1033,6 +1068,7 @@ class MCOImageCodec {
           profile,
           mode,
           null,
+          rowLength: _rowLengthForScan(scan, width, height),
           backgroundColor: backgroundColor,
           writeSparseBackground: false,
         );
@@ -1072,6 +1108,7 @@ class MCOImageCodec {
           linear,
           mode,
           profile,
+          rowLength: _rowLengthForScan(scan, width, height),
           backgroundColor: backgroundColor,
           localIndexByProfileColorId: localIndexByProfileColorId,
         );
@@ -1477,6 +1514,7 @@ class MCOImageCodec {
         profile,
         mode,
         referenceEncoding,
+        rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
         sparseBackgroundColor: background,
       );
       reader.finish();
@@ -1502,6 +1540,7 @@ class MCOImageCodec {
       profile,
       mode,
       referenceEncoding,
+      rowLength: _rowLengthForScan(scan, width, height),
     );
     reader.finish();
     return MCOImage(
@@ -1535,6 +1574,9 @@ class MCOImageCodec {
       ImageMode.biColorMask => throw const MCOImageInvalidPayloadException(
         'BI_COLOR_MASK is not supported by legacy block bodies',
       ),
+      ImageMode.rowDelta => throw const MCOImageInvalidPayloadException(
+        'ROW_DELTA is not supported by legacy block bodies',
+      ),
       ImageMode.regionsBg => throw const MCOImageInvalidPayloadException(
         'REGIONS_BG is not a block body mode',
       ),
@@ -1548,6 +1590,7 @@ class MCOImageCodec {
     PaletteProfile profile,
     ImageMode mode,
     DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int rowLength,
     int? sparseBackgroundColor,
   }) {
     if (profile.isDynamic) {
@@ -1563,6 +1606,7 @@ class MCOImageCodec {
         profile,
         mode,
         referenceEncoding,
+        rowLength: rowLength,
         sparseBackgroundColor: sparseBackgroundColor,
       );
     }
@@ -1635,6 +1679,18 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowDelta:
+        final palette = _readV2LocalPalette(reader, profile);
+        final localBits = _localBits(palette.length);
+        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Row-delta local color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
       case ImageMode.biColorMask:
         final background = sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
         final foreground = _readV2ColorRef(reader, profile);
@@ -1658,6 +1714,7 @@ class MCOImageCodec {
     PaletteProfile profile,
     ImageMode mode,
     DynamicPaletteReferenceEncoding referenceEncoding, {
+    required int rowLength,
     int? sparseBackgroundColor,
   }) {
     final count = width * height;
@@ -1746,6 +1803,22 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowDelta:
+        final palette = _readDynamicLocalPalette(
+          reader,
+          profile,
+          referenceEncoding,
+        );
+        final localBits = _localBits(palette.globalColors.length);
+        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
+        return localPixels.map((index) {
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic row-delta color index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        }).toList(growable: false);
       case ImageMode.biColorMask:
         final background =
             sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
@@ -1770,8 +1843,9 @@ class MCOImageCodec {
     int height,
     _DynamicLocalPalette palette,
     ImageMode mode,
-    int background,
-  ) {
+    int background, {
+    required int rowLength,
+  }) {
     final count = width * height;
     final localBits = _localBits(palette.globalColors.length);
     switch (mode) {
@@ -1834,6 +1908,16 @@ class MCOImageCodec {
           pos += length;
         }
         return result;
+      case ImageMode.rowDelta:
+        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
+        return localPixels.map((index) {
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Dynamic region row-delta index out of range',
+            );
+          }
+          return palette.globalColors[index];
+        }).toList(growable: false);
       case ImageMode.biColorMask:
         final index = reader.readBits(localBits);
         if (index >= palette.globalColors.length) {
@@ -1988,6 +2072,11 @@ class MCOImageCodec {
               sharedDynamicPalette!,
               regionMode,
               background,
+              rowLength: _rowLengthForScan(
+                regionScan,
+                region.width,
+                region.height,
+              ),
             )
           : _decodeV2Body(
               regionReader,
@@ -1996,6 +2085,11 @@ class MCOImageCodec {
               profile,
               regionMode,
               null,
+              rowLength: _rowLengthForScan(
+                regionScan,
+                region.width,
+                region.height,
+              ),
               sparseBackgroundColor: background,
             );
       regionReader.finish();
@@ -2106,6 +2200,10 @@ class MCOImageCodec {
         throw const MCOImageInvalidInputException(
           'BI_COLOR_MASK is not supported by legacy block mode',
         );
+      case ImageMode.rowDelta:
+        throw const MCOImageInvalidInputException(
+          'ROW_DELTA is not supported by legacy block mode',
+        );
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -2118,6 +2216,7 @@ class MCOImageCodec {
     List<int> linear,
     ImageMode mode,
     PaletteProfile profile, {
+    required int rowLength,
     required int backgroundColor,
     required Map<int, int> localIndexByProfileColorId,
   }) {
@@ -2176,6 +2275,23 @@ class MCOImageCodec {
           writer.writeBitVarUint(segment.length);
           pos = segment.start + segment.length;
         }
+        break;
+      case ImageMode.rowDelta:
+        final localBits = _localBits(localIndexByProfileColorId.length);
+        final localPixels = linear.map((globalIndex) {
+          final profileColorId = _profileColorIdForGlobalIndex(
+            profile,
+            globalIndex,
+          );
+          final localIndex = localIndexByProfileColorId[profileColorId];
+          if (localIndex == null) {
+            throw MCOImageInvalidInputException(
+              'Dynamic shared palette is missing globalIndex $globalIndex',
+            );
+          }
+          return localIndex;
+        }).toList(growable: false);
+        _writeRowDeltaBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.biColorMask:
         final foregroundColor = _biColorForeground(linear, backgroundColor);
@@ -3148,6 +3264,129 @@ class MCOImageCodec {
     });
   }
 
+  void _writeRowDeltaBody(
+    _BitWriter writer,
+    List<int> localPixels,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || localPixels.length % rowLength != 0) {
+      throw const MCOImageInvalidInputException('Invalid row-delta geometry');
+    }
+    if (localPixels.isEmpty) return;
+
+    for (var x = 0; x < rowLength; x++) {
+      writer.writeBits(localPixels[x], localBits);
+    }
+
+    final rowCount = localPixels.length ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      final changes = <_RowDeltaChange>[];
+      for (var x = 0; x < rowLength; x++) {
+        final value = localPixels[rowStart + x];
+        if (value != localPixels[previousStart + x]) {
+          changes.add(_RowDeltaChange(x, value));
+        }
+      }
+
+      final rawBits = 1 + rowLength * localBits;
+      var deltaBits = 1 + _bitVarUintBitLength(changes.length);
+      var pos = 0;
+      for (final change in changes) {
+        deltaBits += _bitVarUintBitLength(change.x - pos) + localBits;
+        pos = change.x + 1;
+      }
+
+      if (deltaBits < rawBits) {
+        writer.writeBits(1, 1);
+        writer.writeBitVarUint(changes.length);
+        var pos = 0;
+        for (final change in changes) {
+          writer.writeBitVarUint(change.x - pos);
+          writer.writeBits(change.value, localBits);
+          pos = change.x + 1;
+        }
+      } else {
+        writer.writeBits(0, 1);
+        for (var x = 0; x < rowLength; x++) {
+          writer.writeBits(localPixels[rowStart + x], localBits);
+        }
+      }
+    }
+  }
+
+  List<int> _readRowDeltaBody(
+    _BitReader reader,
+    int count,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException('Invalid row-delta geometry');
+    }
+    if (count == 0) return const <int>[];
+
+    final result = List<int>.filled(count, 0);
+    for (var x = 0; x < rowLength; x++) {
+      result[x] = reader.readBits(localBits);
+    }
+
+    final rowCount = count ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      final isDelta = reader.readBits(1) != 0;
+      if (!isDelta) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = reader.readBits(localBits);
+        }
+        continue;
+      }
+
+      for (var x = 0; x < rowLength; x++) {
+        result[rowStart + x] = result[previousStart + x];
+      }
+
+      final changeCount = reader.readBitVarUint();
+      var pos = 0;
+      for (var i = 0; i < changeCount; i++) {
+        final skip = reader.readBitVarUint();
+        pos += skip;
+        if (pos >= rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid row-delta change position',
+          );
+        }
+        result[rowStart + pos] = reader.readBits(localBits);
+        pos++;
+      }
+    }
+
+    return result;
+  }
+
+  static int _bitVarUintBitLength(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative varuint');
+    }
+    var current = value;
+    var bits = 0;
+    do {
+      current >>= 7;
+      bits += 8;
+    } while (current != 0);
+    return bits;
+  }
+
+  static int _rowLengthForScan(ScanMode scan, int width, int height) {
+    return switch (scan) {
+      ScanMode.h || ScanMode.s => width,
+      ScanMode.v || ScanMode.sv => height,
+    };
+  }
+
   static List<_SparseSegment> _buildSparseSegments(
     List<int> pixels,
     int background,
@@ -3385,6 +3624,7 @@ class MCOImageCodec {
       ImageMode.rleLocal => 2,
       ImageMode.sparseBg => 3,
       ImageMode.biColorMask => 4,
+      ImageMode.rowDelta => 5,
       ImageMode.regionsBg => throw const MCOImageInvalidInputException(
         'REGIONS_BG has no block mode bits',
       ),
@@ -3401,6 +3641,7 @@ class MCOImageCodec {
       2 => ImageMode.rleLocal,
       3 => ImageMode.sparseBg,
       4 => ImageMode.biColorMask,
+      5 => ImageMode.rowDelta,
       _ => throw MCOImageInvalidPayloadException('Unknown image mode $value'),
     };
   }
@@ -3739,6 +3980,13 @@ class _Run {
   final int length;
 
   const _Run(this.color, this.length);
+}
+
+class _RowDeltaChange {
+  final int x;
+  final int value;
+
+  const _RowDeltaChange(this.x, this.value);
 }
 
 class _SparseSegment {
