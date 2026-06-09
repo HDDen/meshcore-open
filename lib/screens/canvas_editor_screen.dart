@@ -2124,9 +2124,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final palette = _paletteFor(_paletteProfile);
-    final nextPixels = List.filled(canvasWidth * canvasHeight, _whiteIndex);
-    final startX = (canvasWidth - targetWidth) ~/ 2;
-    final startY = (canvasHeight - targetHeight) ~/ 2;
+    final importedPixels = <int>[];
+    final importedColorCounts = <int, int>{};
     for (var y = 0; y < targetHeight; y++) {
       for (var x = 0; x < targetWidth; x++) {
         final offset = (y * targetWidth + x) * 4;
@@ -2139,7 +2138,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           palette,
           whiteIndex: _whiteIndex,
         );
-        nextPixels[(startY + y) * canvasWidth + startX + x] = colorValue;
+        importedPixels.add(colorValue);
+        importedColorCounts[colorValue] =
+            (importedColorCounts[colorValue] ?? 0) + 1;
+      }
+    }
+
+    final optimizedPixels = _paletteProfile.isDynamic
+        ? _limitDynamicImportedColors(
+            importedPixels,
+            importedColorCounts,
+            _paletteProfile,
+          )
+        : importedPixels;
+
+    final nextPixels = List.filled(canvasWidth * canvasHeight, _whiteIndex);
+    final startX = (canvasWidth - targetWidth) ~/ 2;
+    final startY = (canvasHeight - targetHeight) ~/ 2;
+    for (var y = 0; y < targetHeight; y++) {
+      for (var x = 0; x < targetWidth; x++) {
+        nextPixels[(startY + y) * canvasWidth + startX + x] =
+            optimizedPixels[y * targetWidth + x];
       }
     }
     return _ImportedCanvasImage(
@@ -2147,6 +2166,67 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       height: canvasHeight,
       pixels: nextPixels,
     );
+  }
+
+  List<int> _limitDynamicImportedColors(
+    List<int> pixels,
+    Map<int, int> colorCounts,
+    PaletteProfile profile,
+  ) {
+    if (colorCounts.length <= _inlineDynamicPaletteMaxColors) {
+      return pixels;
+    }
+
+    final selectedColors = colorCounts.entries.toList()
+      ..sort((a, b) {
+        final countCompare = b.value.compareTo(a.value);
+        if (countCompare != 0) return countCompare;
+        final aIndex = _paletteIndexForColorValue(profile, a.key) ?? 0;
+        final bIndex = _paletteIndexForColorValue(profile, b.key) ?? 0;
+        return aIndex.compareTo(bIndex);
+      });
+
+    final limitedColors = selectedColors
+        .take(_inlineDynamicPaletteMaxColors)
+        .map((entry) => entry.key)
+        .toList(growable: false);
+    final limitedColorSet = limitedColors.toSet();
+
+    return pixels.map((colorValue) {
+      if (limitedColorSet.contains(colorValue)) return colorValue;
+      return _nearestColorValueFromCandidates(colorValue, limitedColors);
+    }).toList(growable: false);
+  }
+
+  int _nearestColorValueFromCandidates(
+    int colorValue,
+    List<int> candidateColorValues,
+  ) {
+    final sourceColor = MCOImageDynamicPalette.global512[colorValue];
+    final sourceArgb = sourceColor.toARGB32();
+    final sourceRed = (sourceArgb >> 16) & 0xff;
+    final sourceGreen = (sourceArgb >> 8) & 0xff;
+    final sourceBlue = sourceArgb & 0xff;
+
+    var bestColorValue = candidateColorValues.first;
+    var bestDistance = 1 << 62;
+    for (final candidateColorValue in candidateColorValues) {
+      final candidateColor =
+          MCOImageDynamicPalette.global512[candidateColorValue];
+      final candidateArgb = candidateColor.toARGB32();
+      final redDistance = sourceRed - ((candidateArgb >> 16) & 0xff);
+      final greenDistance = sourceGreen - ((candidateArgb >> 8) & 0xff);
+      final blueDistance = sourceBlue - (candidateArgb & 0xff);
+      final distance =
+          redDistance * redDistance +
+          greenDistance * greenDistance +
+          blueDistance * blueDistance;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestColorValue = candidateColorValue;
+      }
+    }
+    return bestColorValue;
   }
 
   Future<ui.Image> _decodeImage(
