@@ -29,10 +29,10 @@ double quote, which is required for standard basE91 encoding.
 
 Two format families are supported:
 
-| Version | Role | Max size | Palettes | Transparency | Notes |
-| --- | --- | ---: | --- | --- | --- |
-| v1 legacy | compatibility | `85×85` | fixed only | no | Older binary format with 2-bit mode ids. |
-| v2 current | default | `256×256` | fixed + dynamic | optional explicit color | Adds 3-bit mode ids, dynamic palettes, row-delta, regions, and transparent color flag. |
+| Version    | Role          | Max size  | Palettes        | Transparency            | Notes                                    |
+| ---        | ---           | ---       | ---             | ---                     | ---                                      |
+| v1 legacy  | compatibility | `85×85`   | fixed only      | no                      | Older binary format with 2-bit mode ids. |
+| v2 current | default       | `256×256` | fixed + dynamic | optional explicit color | Adds 3-bit mode ids, dynamic palettes, row-delta, regions, and transparent color flag. |
 
 Decoders should keep v1 support so older messages remain readable. Encoders
 should prefer v2 unless compatibility with older clients is required.
@@ -147,13 +147,13 @@ background color.
 Fixed profiles:
 
 - `mono`
+- `grayscale8`
+- `grayscale16`
+- `grayscale32`
 - `master4`
 - `master8`
-- `grayscale8`
 - `master16`
-- `grayscale16`
 - `master32`
-- `grayscale32`
 - `master64`
 
 Dynamic profiles:
