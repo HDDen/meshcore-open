@@ -5748,6 +5748,15 @@ class MeshCoreConnector extends ChangeNotifier {
     return 'Channel $channelIndex';
   }
 
+  bool _channelMessageMentionsSelf(String text) {
+    final name = _selfName?.trim();
+    if (name == null || name.isEmpty) return false;
+    return RegExp(
+      '@\\[\\s*${RegExp.escape(name)}\\s*\\]',
+      caseSensitive: false,
+    ).hasMatch(text);
+  }
+
   void _maybeNotifyChannelMessage(
     ChannelMessage message, {
     String? channelName,
@@ -5763,7 +5772,8 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final label = channelName ?? _channelDisplayName(channelIndex);
-    if (_appSettingsService!.isChannelMuted(label)) return;
+    final isMuted = _appSettingsService!.isChannelMuted(label);
+    if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
 
     // Reuse translation result only if completed and non-empty; else use original text
     final resolvedText =
