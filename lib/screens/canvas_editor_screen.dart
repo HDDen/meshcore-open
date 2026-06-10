@@ -2353,34 +2353,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<Uint8List> _renderCanvasPngBytes() async {
-    const cellSize = 16;
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder);
-    final paint = Paint()..isAntiAlias = false;
-
-    for (var y = 0; y < _height; y++) {
-      for (var x = 0; x < _width; x++) {
-        paint.color = _colorForPixelValue(
-          _paletteProfile,
-          _pixels[y * _width + x],
-        );
-        canvas.drawRect(
-          ui.Rect.fromLTWH(
-            (x * cellSize).toDouble(),
-            (y * cellSize).toDouble(),
-            cellSize.toDouble(),
-            cellSize.toDouble(),
-          ),
-          paint,
-        );
-      }
+    final rgba = Uint8List(_width * _height * 4);
+    for (var i = 0; i < _pixels.length; i++) {
+      final color = _colorForPixelValue(_paletteProfile, _pixels[i]);
+      final argb = color.toARGB32();
+      final offset = i * 4;
+      rgba[offset] = (argb >> 16) & 0xff;
+      rgba[offset + 1] = (argb >> 8) & 0xff;
+      rgba[offset + 2] = argb & 0xff;
+      rgba[offset + 3] = (argb >> 24) & 0xff;
     }
 
-    final picture = recorder.endRecording();
-    final image = await picture.toImage(_width * cellSize, _height * cellSize);
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      rgba,
+      _width,
+      _height,
+      ui.PixelFormat.rgba8888,
+      completer.complete,
+    );
+
+    final image = await completer.future;
     final png = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
-    picture.dispose();
     if (png == null) {
       throw const MCOImageInvalidInputException('Cannot render PNG');
     }
