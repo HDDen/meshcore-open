@@ -4702,7 +4702,9 @@ class MCOImageCodec {
     if (!allowShiftPredictors) return _rowDeltaPredictorSame;
 
     final predictor = reader.readBits(_rowDeltaPredictorBits);
-    if ((row == 0 && useVirtualBaseRow) ||
+    if ((row == 0 &&
+            useVirtualBaseRow &&
+            predictor != _rowDeltaPredictorSame) ||
         (predictor != _rowDeltaPredictorSame &&
             predictor != _rowDeltaPredictorLeft &&
             predictor != _rowDeltaPredictorRight)) {
