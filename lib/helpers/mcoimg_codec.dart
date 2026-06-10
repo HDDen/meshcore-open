@@ -156,7 +156,9 @@ class MCOImageCodec {
   static const int _paletteKindDynamic = 1;
   static const int _minSize = 1;
   static const int _maxSize = 256;
-  static const int _defaultMaxRegions = 8;
+  static const int _legacyMaxRegions = 8;
+  static const int _defaultMaxRegions = 16;
+  static const int _maxV2Regions = 32;
   static const int _maxDynamicLocalPalette = 64;
 
   static const List<ImageMode> _blockModes = [
@@ -228,6 +230,7 @@ class MCOImageCodec {
     if (maxRegions < 0) {
       throw const MCOImageInvalidInputException('maxRegions must be >= 0');
     }
+    maxRegions = math.min(maxRegions, _maxV2Regions);
     if (backgroundColor != null) {
       _validateColor(backgroundColor, image.paletteProfile, 'backgroundColor');
     }
@@ -2044,7 +2047,7 @@ class MCOImageCodec {
     final background = reader.readBits(_globalBits(profile));
     _validateColor(background, profile, 'backgroundColor', payload: true);
     final regionCount = reader.readVarUint();
-    if (regionCount <= 0 || regionCount > _defaultMaxRegions) {
+    if (regionCount <= 0 || regionCount > _legacyMaxRegions) {
       throw const MCOImageInvalidPayloadException('Invalid region count');
     }
 
@@ -2123,7 +2126,7 @@ class MCOImageCodec {
     }
 
     final regionCount = reader.readBitVarUint();
-    if (regionCount <= 0 || regionCount > _defaultMaxRegions) {
+    if (regionCount <= 0 || regionCount > _maxV2Regions) {
       throw const MCOImageInvalidPayloadException('Invalid v2 region count');
     }
 
