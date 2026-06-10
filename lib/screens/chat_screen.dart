@@ -704,6 +704,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
+                      hintMaxLines: 1,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

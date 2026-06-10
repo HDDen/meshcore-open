@@ -1715,6 +1715,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           : null,
                       decoration: InputDecoration(
                         hintText: context.l10n.chat_typeMessage,
+                        hintMaxLines: 1,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
