@@ -4222,7 +4222,7 @@ class MCOImageCodec {
       );
       final changes = decision.changes;
 
-      if (changes.isEmpty) {
+      if (changes.isEmpty && decision.op == _rowDeltaOpRepeat) {
         writer.writeBits(_rowDeltaOpRepeat, _rowDeltaOpBits);
         continue;
       }
@@ -4491,17 +4491,26 @@ class MCOImageCodec {
     int predictor, {
     required bool allowShiftPredictors,
   }) {
+    final predictorBits = allowShiftPredictors ? _rowDeltaPredictorBits : 0;
     if (changes.isEmpty) {
+      if (!allowShiftPredictors || predictor == _rowDeltaPredictorSame) {
+        return _RowDeltaDecision(
+          op: _rowDeltaOpRepeat,
+          extendedOp: -1,
+          predictor: _rowDeltaPredictorSame,
+          changes: changes,
+          bitCost: _rowDeltaOpBits,
+        );
+      }
       return _RowDeltaDecision(
-        op: _rowDeltaOpRepeat,
+        op: _rowDeltaOpDelta,
         extendedOp: -1,
-        predictor: _rowDeltaPredictorSame,
+        predictor: predictor,
         changes: changes,
-        bitCost: _rowDeltaOpBits,
+        bitCost: _rowDeltaOpBits + predictorBits + _bitVarUintBitLength(0),
       );
     }
 
-    final predictorBits = allowShiftPredictors ? _rowDeltaPredictorBits : 0;
     final rawCost = _rowDeltaOpBits + rowLength * localBits;
     final indexedCost =
         _rowDeltaOpBits +
