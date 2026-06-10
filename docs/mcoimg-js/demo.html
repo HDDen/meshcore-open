@@ -126,6 +126,32 @@
       margin: 12px 0;
     }
 
+    .history-move-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .inline-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .inline-option input {
+      width: auto;
+      margin: 0;
+    }
+
     .tool {
       display: inline-flex;
       align-items: center;
@@ -157,6 +183,17 @@
       margin: 12px 0;
     }
 
+    .palette.collapsed {
+      max-height: 134px;
+      overflow: hidden;
+    }
+
+    .palette-toggle {
+      margin: -4px 0 10px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
     .swatch {
       aspect-ratio: 1;
       border: 1px solid var(--border);
@@ -170,12 +207,107 @@
       outline-color: var(--accent);
     }
 
+    .swatch.picking-alpha {
+      outline-color: #f59e0b;
+    }
+
+    .alpha-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .alpha-swatch {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      background:
+        linear-gradient(45deg, #c8c8c8 25%, transparent 25%),
+        linear-gradient(-45deg, #c8c8c8 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #c8c8c8 75%),
+        linear-gradient(-45deg, transparent 75%, #c8c8c8 75%);
+      background-color: #fff;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-size: 16px 16px;
+    }
+
+    .alpha-swatch.active {
+      outline-color: var(--accent);
+    }
+
+
+    .alpha-swatch.picking {
+      outline-color: #f59e0b;
+      box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 35%, transparent);
+      transform: scale(1.06);
+    }
+
+    .checkerboard {
+      background:
+        linear-gradient(45deg, #d0d0d0 25%, transparent 25%),
+        linear-gradient(-45deg, #d0d0d0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #d0d0d0 75%),
+        linear-gradient(-45deg, transparent 75%, #d0d0d0 75%);
+      background-color: #fff;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-size: 16px 16px;
+    }
+
     .canvas-wrap {
+      position: relative;
       display: grid;
       gap: 12px;
       justify-items: start;
       overflow: auto;
       max-width: 100%;
+    }
+
+    .canvas-loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, Canvas 55%, transparent);
+      backdrop-filter: blur(1px);
+      z-index: 2;
+    }
+
+    .canvas-wrap canvas.importing {
+      opacity: 0.45;
+      transition: opacity 140ms linear;
+    }
+
+    .canvas-wrap canvas {
+      transition: opacity 140ms linear;
+    }
+
+    .canvas-loading-overlay[hidden] {
+      display: none;
+    }
+
+    .canvas-spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid color-mix(in srgb, CanvasText 18%, transparent);
+      border-top-color: var(--accent);
+      border-radius: 999px;
+      animation: mcoimg-spin-clockwise 0.85s linear infinite;
+    }
+
+    @keyframes mcoimg-spin-clockwise {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     canvas {
@@ -243,6 +375,19 @@
         </label>
 
         <div id="palettePreview" class="palette"></div>
+        <button id="paletteToggle" type="button" class="secondary palette-toggle" hidden>Show more</button>
+
+        <div id="alphaControl" class="alpha-row">
+          <span>Transparent color</span>
+          <button id="alphaSwatch" type="button" class="alpha-swatch" title="Pick transparent color" aria-pressed="false"></button>
+          <button id="alphaClear" type="button" class="secondary">Clear</button>
+          <span id="alphaStatus">none</span>
+        </div>
+
+        <label class="inline-option">
+          <input id="showGrid" type="checkbox" checked>
+          <span>Show grid</span>
+        </label>
 
         <div class="tools" aria-label="Drawing tools">
           <button id="toolPencil" type="button" class="tool active">
@@ -270,10 +415,31 @@
             </svg>
             <span>Eyedropper</span>
           </button>
+          <button id="toolLine" type="button" class="tool">
+            <span>Line</span>
+          </button>
+          <button id="toolOval" type="button" class="tool">
+            <span>Oval</span>
+          </button>
+          <button id="toolRectangle" type="button" class="tool">
+            <span>Rectangle</span>
+          </button>
+        </div>
+
+        <div class="history-move-tools" aria-label="History and canvas movement">
+          <button id="undoCanvas" type="button" class="secondary" disabled>Undo</button>
+          <button id="redoCanvas" type="button" class="secondary" disabled>Redo</button>
+          <button id="moveLeft" type="button" class="secondary">←</button>
+          <button id="moveRight" type="button" class="secondary">→</button>
+          <button id="moveUp" type="button" class="secondary">↑</button>
+          <button id="moveDown" type="button" class="secondary">↓</button>
         </div>
 
         <div class="canvas-wrap">
-          <canvas id="editor"></canvas>
+          <canvas id="editor" class="checkerboard"></canvas>
+          <div id="canvasLoadingOverlay" class="canvas-loading-overlay" hidden aria-live="polite" aria-label="Importing image">
+            <div class="canvas-spinner" aria-hidden="true"></div>
+          </div>
           <div class="meta">
             <span id="selectedColor"></span>
             <span id="encodedMeta"></span>
@@ -281,8 +447,11 @@
         </div>
 
         <div class="actions">
-          <button id="resize" type="button">Apply size</button>
+          <button id="trimEmpty" type="button" class="secondary">Trim empty</button>
+          <button id="cropCanvas" type="button" class="secondary">Crop/Expand</button>
+          <button id="resize" type="button">Resize scale</button>
           <button id="loadImage" type="button" class="secondary">Load image</button>
+          <button id="savePng" type="button" class="secondary">Save PNG</button>
           <button id="clear" type="button" class="secondary">Clear</button>
           <button id="sample" type="button" class="secondary">Sample</button>
         </div>
@@ -297,7 +466,7 @@
         </div>
 
         <h2 class="section-title" style="margin-top: 22px;">Decoded preview</h2>
-        <canvas id="decoded"></canvas>
+        <canvas id="decoded" class="checkerboard"></canvas>
       </section>
     </div>
 
@@ -334,6 +503,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       PaletteDisplayOrder,
       PaletteDisplayName,
       MCOImageEncodingVersion,
+      DynamicGlobalIndices,
       getPalette,
       whiteIndexFor,
       blackIndexFor,
@@ -348,12 +518,21 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     const formatVersionSelect = document.getElementById('formatVersion');
     const paletteSelect = document.getElementById('palette');
     const palettePreview = document.getElementById('palettePreview');
+    const paletteToggle = document.getElementById('paletteToggle');
     const encodedText = document.getElementById('encoded');
     const selectedColorText = document.getElementById('selectedColor');
     const encodedMeta = document.getElementById('encodedMeta');
     const widthInput = document.getElementById('width');
     const heightInput = document.getElementById('height');
     const imageFileInput = document.getElementById('imageFile');
+    const alphaControl = document.getElementById('alphaControl');
+    const alphaSwatch = document.getElementById('alphaSwatch');
+    const alphaClear = document.getElementById('alphaClear');
+    const alphaStatus = document.getElementById('alphaStatus');
+    const showGridInput = document.getElementById('showGrid');
+    const canvasLoadingOverlay = document.getElementById('canvasLoadingOverlay');
+    const undoButton = document.getElementById('undoCanvas');
+    const redoButton = document.getElementById('redoCanvas');
 
     const state = {
       width: 11,
@@ -362,8 +541,22 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       encodingVersion: MCOImageEncodingVersion.v2,
       pixels: [],
       selectedColor: 0,
+      transparentColor: null,
+      pickingTransparentColor: false,
+      paletteExpanded: false,
+      showGrid: true,
+      importingImage: false,
       drawing: false,
       tool: 'pencil',
+      lineStartIndex: null,
+      ovalFirstIndex: null,
+      ovalSecondIndex: null,
+      rectangleFirstIndex: null,
+      rectangleSecondIndex: null,
+      strokeBeforePixels: null,
+      undoStack: [],
+      redoStack: [],
+      historyLimit: 10,
       scale: 24,
     };
 
@@ -388,11 +581,15 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         state.encodingVersion = Number(formatVersionSelect.value);
         widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
         heightInput.max = widthInput.max;
-        if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy && isDynamicProfile(state.paletteProfile)) {
-          state.paletteProfile = PaletteProfile.master8;
-          state.pixels = state.pixels.map((pixel) =>
-            Math.min(pixel, getPalette(state.paletteProfile).length - 1),
-          );
+        if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) {
+          state.transparentColor = null;
+          state.pickingTransparentColor = false;
+          if (isDynamicProfile(state.paletteProfile)) {
+            state.paletteProfile = PaletteProfile.master8;
+            state.pixels = state.pixels.map((pixel) =>
+              Math.min(pixel, getPalette(state.paletteProfile).length - 1),
+            );
+          }
         }
         state.width = clamp(state.width, 1, Number(widthInput.max));
         state.height = clamp(state.height, 1, Number(heightInput.max));
@@ -407,20 +604,20 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
 
       paletteSelect.addEventListener('change', () => {
         state.paletteProfile = Number(paletteSelect.value);
-        state.selectedColor = Math.min(
-          state.selectedColor,
-          getPalette(state.paletteProfile).length - 1,
-        );
-        state.pixels = state.pixels.map((pixel) =>
-          Math.min(pixel, getPalette(state.paletteProfile).length - 1),
-        );
+        const firstColor = paletteValueForProfileColorId(state.paletteProfile, 0);
+        state.selectedColor = firstColor;
+        state.transparentColor = null;
+        state.pickingTransparentColor = false;
+        state.paletteExpanded = false;
+        state.pixels = state.pixels.map(() => firstColor);
         renderAll();
       });
 
+      document.getElementById('trimEmpty').addEventListener('click', trimEmptyCanvas);
+      document.getElementById('cropCanvas').addEventListener('click', cropCanvasSize);
       document.getElementById('resize').addEventListener('click', applySize);
       document.getElementById('loadImage').addEventListener('click', () => {
         console.log('[mcoimg-demo] load image clicked');
-        syncCanvasStateFromInputs();
         console.log('[mcoimg-demo] opening file picker', {
           width: state.width,
           height: state.height,
@@ -436,33 +633,62 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         }
       });
       imageFileInput.addEventListener('change', loadImageFile);
+      document.getElementById('savePng').addEventListener('click', savePng);
       imageFileInput.addEventListener('cancel', () => {
         console.log('[mcoimg-demo] file picker cancelled');
       });
-      document.getElementById('clear').addEventListener('click', () => {
-        resetPixels();
-        renderAll();
-      });
+      document.getElementById('clear').addEventListener('click', clearCanvas);
       document.getElementById('sample').addEventListener('click', drawSample);
       document.getElementById('decode').addEventListener('click', decodeTextarea);
+      paletteToggle.addEventListener('click', () => {
+        state.paletteExpanded = !state.paletteExpanded;
+        renderPalette();
+      });
+      showGridInput.addEventListener('change', () => {
+        state.showGrid = showGridInput.checked;
+        renderEditor();
+      });
+      alphaSwatch.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (state.encodingVersion !== MCOImageEncodingVersion.v2) return;
+        state.pickingTransparentColor = !state.pickingTransparentColor;
+        renderAll();
+      });
+      alphaClear.addEventListener('click', (event) => {
+        event.preventDefault();
+        state.transparentColor = null;
+        state.pickingTransparentColor = false;
+        renderAll();
+      });
       document.getElementById('toolPencil').addEventListener('click', () => selectTool('pencil'));
       document.getElementById('toolFill').addEventListener('click', () => selectTool('fill'));
       document.getElementById('toolEyedropper').addEventListener('click', () => selectTool('eyedropper'));
+      document.getElementById('toolLine').addEventListener('click', () => selectTool('line'));
+      document.getElementById('toolOval').addEventListener('click', () => selectTool('oval'));
+      document.getElementById('toolRectangle').addEventListener('click', () => selectTool('rectangle'));
+      undoButton.addEventListener('click', undoCanvasAction);
+      redoButton.addEventListener('click', redoCanvasAction);
+      document.getElementById('moveLeft').addEventListener('click', () => shiftCanvas(-1, 0));
+      document.getElementById('moveRight').addEventListener('click', () => shiftCanvas(1, 0));
+      document.getElementById('moveUp').addEventListener('click', () => shiftCanvas(0, -1));
+      document.getElementById('moveDown').addEventListener('click', () => shiftCanvas(0, 1));
 
       editor.addEventListener('pointerdown', (event) => {
         state.drawing = true;
+        state.strokeBeforePixels = state.tool === 'pencil' ? state.pixels.slice() : null;
         paintCell(event);
       });
       editor.addEventListener('pointermove', (event) => {
-        if (state.drawing) paintCell(event);
+        if (state.drawing && state.tool === 'pencil') paintCell(event);
       });
       window.addEventListener('pointerup', () => {
         state.drawing = false;
+        if (state.strokeBeforePixels) {
+          rememberPixelCanvasAction(state.strokeBeforePixels, state.pixels);
+          state.strokeBeforePixels = null;
+          updateHistoryButtons();
+        }
       });
-    }
-
-    function isDynamicProfile(profile) {
-      return Number(profile) >= PaletteProfile.dynamicGlobal8;
     }
 
     function renderPaletteOptions() {
@@ -478,33 +704,281 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       }
     }
 
+    function isDynamicProfile(profile) {
+      return Number(profile) >= PaletteProfile.dynamicGlobal8;
+    }
+
+    function paletteValueForProfileColorId(profile, index) {
+      return isDynamicProfile(profile) ? DynamicGlobalIndices[profile][index] : index;
+    }
+
+    function profileColorIdForPaletteValue(profile, value) {
+      if (!isDynamicProfile(profile)) return value;
+      return DynamicGlobalIndices[profile].indexOf(value);
+    }
+
     function selectedEncodingVersion() {
       return state.encodingVersion === MCOImageEncodingVersion.v1Legacy
         ? MCOImageEncodingVersion.v1Legacy
         : MCOImageEncodingVersion.v2;
     }
 
+    function clearPendingToolPoints() {
+      state.lineStartIndex = null;
+      state.ovalFirstIndex = null;
+      state.ovalSecondIndex = null;
+      state.rectangleFirstIndex = null;
+      state.rectangleSecondIndex = null;
+    }
+
     function selectTool(tool) {
+      if (tool !== state.tool) {
+        clearPendingToolPoints();
+      }
       state.tool = tool;
       document.getElementById('toolPencil').classList.toggle('active', tool === 'pencil');
       document.getElementById('toolFill').classList.toggle('active', tool === 'fill');
       document.getElementById('toolEyedropper').classList.toggle('active', tool === 'eyedropper');
+      document.getElementById('toolLine').classList.toggle('active', tool === 'line');
+      document.getElementById('toolOval').classList.toggle('active', tool === 'oval');
+      document.getElementById('toolRectangle').classList.toggle('active', tool === 'rectangle');
       updateSelectedColorText();
+      renderEditor();
+    }
+
+    function captureCanvasSnapshot(overrides = {}) {
+      return {
+        width: overrides.width ?? state.width,
+        height: overrides.height ?? state.height,
+        paletteProfile: overrides.paletteProfile ?? state.paletteProfile,
+        encodingVersion: overrides.encodingVersion ?? state.encodingVersion,
+        selectedColor: overrides.selectedColor ?? state.selectedColor,
+        transparentColor: overrides.transparentColor ?? state.transparentColor,
+        pixels: (overrides.pixels ?? state.pixels).slice(),
+      };
+    }
+
+    function snapshotsEqual(a, b) {
+      if (
+        a.width !== b.width ||
+        a.height !== b.height ||
+        a.paletteProfile !== b.paletteProfile ||
+        a.encodingVersion !== b.encodingVersion ||
+        a.selectedColor !== b.selectedColor ||
+        a.transparentColor !== b.transparentColor ||
+        a.pixels.length !== b.pixels.length
+      ) {
+        return false;
+      }
+      for (let i = 0; i < a.pixels.length; i++) {
+        if (a.pixels[i] !== b.pixels[i]) return false;
+      }
+      return true;
+    }
+
+    function rememberCanvasAction(before, after) {
+      if (snapshotsEqual(before, after)) return;
+      state.undoStack.push({ before, after });
+      if (state.undoStack.length > state.historyLimit) {
+        state.undoStack.shift();
+      }
+      state.redoStack = [];
+      updateHistoryButtons();
+    }
+
+    function rememberPixelCanvasAction(beforePixels, afterPixels) {
+      rememberCanvasAction(
+        captureCanvasSnapshot({ pixels: beforePixels }),
+        captureCanvasSnapshot({ pixels: afterPixels }),
+      );
+    }
+
+    function applyCanvasSnapshot(snapshot) {
+      state.width = snapshot.width;
+      state.height = snapshot.height;
+      state.paletteProfile = snapshot.paletteProfile;
+      state.encodingVersion = snapshot.encodingVersion;
+      state.selectedColor = snapshot.selectedColor;
+      state.transparentColor = snapshot.transparentColor;
+      state.pixels = snapshot.pixels.slice();
+      state.pickingTransparentColor = false;
+      clearPendingToolPoints();
+
+      widthInput.value = String(state.width);
+      heightInput.value = String(state.height);
+      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+      heightInput.max = widthInput.max;
+      formatVersionSelect.value = String(state.encodingVersion);
+      renderPaletteOptions();
+      paletteSelect.value = String(state.paletteProfile);
+      renderAll();
+    }
+
+    function undoCanvasAction() {
+      if (state.undoStack.length === 0) return;
+      const entry = state.undoStack.pop();
+      state.redoStack.push(entry);
+      if (state.redoStack.length > state.historyLimit) {
+        state.redoStack.shift();
+      }
+      applyCanvasSnapshot(entry.before);
+      updateHistoryButtons();
+    }
+
+    function redoCanvasAction() {
+      if (state.redoStack.length === 0) return;
+      const entry = state.redoStack.pop();
+      state.undoStack.push(entry);
+      if (state.undoStack.length > state.historyLimit) {
+        state.undoStack.shift();
+      }
+      applyCanvasSnapshot(entry.after);
+      updateHistoryButtons();
+    }
+
+    function clearCanvasHistory() {
+      state.undoStack = [];
+      state.redoStack = [];
+      updateHistoryButtons();
+    }
+
+    function updateHistoryButtons() {
+      undoButton.disabled = state.undoStack.length === 0;
+      redoButton.disabled = state.redoStack.length === 0;
+    }
+
+    function maxCanvasSizeForCurrentVersion() {
+      return selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
+    }
+
+    function requestedCanvasSize() {
+      const maxSize = maxCanvasSizeForCurrentVersion();
+      return {
+        width: clamp(Number(widthInput.value), 1, maxSize),
+        height: clamp(Number(heightInput.value), 1, maxSize),
+      };
+    }
+
+    function requestedCanvasResizeSize() {
+      const maxSize = maxCanvasSizeForCurrentVersion();
+      const widthText = widthInput.value.trim();
+      const heightText = heightInput.value.trim();
+      const hasWidth = widthText !== '';
+      const hasHeight = heightText !== '';
+
+      if (!hasWidth && !hasHeight) {
+        return {
+          width: clamp(state.width, 1, maxSize),
+          height: clamp(state.height, 1, maxSize),
+        };
+      }
+
+      if (hasWidth && !hasHeight) {
+        const width = clamp(Number(widthText), 1, maxSize);
+        const height = clamp(
+          Math.round(width * state.height / state.width),
+          1,
+          maxSize,
+        );
+        heightInput.value = String(height);
+        return { width, height };
+      }
+
+      if (!hasWidth && hasHeight) {
+        const height = clamp(Number(heightText), 1, maxSize);
+        const width = clamp(
+          Math.round(height * state.width / state.height),
+          1,
+          maxSize,
+        );
+        widthInput.value = String(width);
+        return { width, height };
+      }
+
+      return {
+        width: clamp(Number(widthText), 1, maxSize),
+        height: clamp(Number(heightText), 1, maxSize),
+      };
+    }
+
+    function importedCanvasSizeFor(sourceWidth, sourceHeight) {
+      const maxSize = maxCanvasSizeForCurrentVersion();
+      const width = clamp(sourceWidth, 1, maxSize);
+      const height = clamp(sourceHeight, 1, maxSize);
+      return { width, height };
     }
 
     function applySize() {
-      const maxSize = selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
-      const nextWidth = clamp(Number(widthInput.value), 1, maxSize);
-      const nextHeight = clamp(Number(heightInput.value), 1, maxSize);
-      console.log('[mcoimg-demo] apply size', { nextWidth, nextHeight });
-      resizeCanvasState(nextWidth, nextHeight);
+      const { width: nextWidth, height: nextHeight } = requestedCanvasResizeSize();
+      console.log('[mcoimg-demo] resize scale', { nextWidth, nextHeight });
+      const before = captureCanvasSnapshot();
+      resizeCanvasScaled(nextWidth, nextHeight);
+      rememberCanvasAction(before, captureCanvasSnapshot());
+      clearPendingToolPoints();
+      renderAll();
+    }
+
+    function cropCanvasSize() {
+      const { width: nextWidth, height: nextHeight } = requestedCanvasSize();
+      console.log('[mcoimg-demo] crop/expand canvas', { nextWidth, nextHeight });
+      const before = captureCanvasSnapshot();
+      cropOrExpandCanvasState(nextWidth, nextHeight);
+      rememberCanvasAction(before, captureCanvasSnapshot());
+      clearPendingToolPoints();
+      renderAll();
+    }
+
+    function trimEmptyCanvas() {
+      const before = captureCanvasSnapshot();
+      const emptyColor = whiteIndexFor(state.paletteProfile);
+      let minX = state.width;
+      let minY = state.height;
+      let maxX = -1;
+      let maxY = -1;
+
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const value = state.pixels[y * state.width + x];
+          if (value === emptyColor) continue;
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      const minSize = 2;
+      const hasContent = maxX >= minX && maxY >= minY;
+      const targetWidth = hasContent ? Math.max(minSize, maxX - minX + 1) : minSize;
+      const targetHeight = hasContent ? Math.max(minSize, maxY - minY + 1) : minSize;
+      const nextPixels = new Array(targetWidth * targetHeight).fill(emptyColor);
+
+      if (hasContent) {
+        const copyWidth = maxX - minX + 1;
+        const copyHeight = maxY - minY + 1;
+        const targetStartX = Math.max(0, Math.floor((targetWidth - copyWidth) / 2));
+        const targetStartY = Math.max(0, Math.floor((targetHeight - copyHeight) / 2));
+
+        for (let y = 0; y < copyHeight; y++) {
+          for (let x = 0; x < copyWidth; x++) {
+            nextPixels[(targetStartY + y) * targetWidth + targetStartX + x] =
+              state.pixels[(minY + y) * state.width + minX + x];
+          }
+        }
+      }
+
+      state.width = targetWidth;
+      state.height = targetHeight;
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      widthInput.value = String(targetWidth);
+      heightInput.value = String(targetHeight);
+      rememberCanvasAction(before, captureCanvasSnapshot());
       renderAll();
     }
 
     function syncCanvasStateFromInputs() {
-      const maxSize = selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
-      const nextWidth = clamp(Number(widthInput.value), 1, maxSize);
-      const nextHeight = clamp(Number(heightInput.value), 1, maxSize);
+      const { width: nextWidth, height: nextHeight } = requestedCanvasSize();
       state.paletteProfile = Number(paletteSelect.value);
       console.log('[mcoimg-demo] sync state from inputs', {
         nextWidth,
@@ -519,29 +993,93 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         nextHeight !== state.height ||
         state.pixels.length !== state.width * state.height
       ) {
-        console.log('[mcoimg-demo] resizing canvas state before load');
-        resizeCanvasState(nextWidth, nextHeight);
+        console.log('[mcoimg-demo] crop/expand canvas state before load');
+        cropOrExpandCanvasState(nextWidth, nextHeight);
       }
     }
 
-    function resizeCanvasState(nextWidth, nextHeight) {
-      console.log('[mcoimg-demo] resize canvas state', { nextWidth, nextHeight });
+    function cropOrExpandCanvasState(nextWidth, nextHeight) {
       widthInput.value = String(nextWidth);
       heightInput.value = String(nextHeight);
 
       const white = whiteIndexFor(state.paletteProfile);
-      const nextPixels = new Array(nextWidth * nextHeight).fill(white);
-      const copyWidth = Math.min(state.width, nextWidth);
-      const copyHeight = Math.min(state.height, nextHeight);
-      for (let y = 0; y < copyHeight; y++) {
-        for (let x = 0; x < copyWidth; x++) {
-          nextPixels[y * nextWidth + x] = state.pixels[y * state.width + x];
-        }
-      }
-
+      state.pixels = cropOrPadPixels({
+        sourcePixels: state.pixels,
+        sourceWidth: state.width,
+        sourceHeight: state.height,
+        targetWidth: nextWidth,
+        targetHeight: nextHeight,
+        fillColor: white,
+      });
       state.width = nextWidth;
       state.height = nextHeight;
-      state.pixels = nextPixels;
+    }
+
+    function resizeCanvasScaled(nextWidth, nextHeight) {
+      widthInput.value = String(nextWidth);
+      heightInput.value = String(nextHeight);
+
+      state.pixels = scalePixels({
+        sourcePixels: state.pixels,
+        sourceWidth: state.width,
+        sourceHeight: state.height,
+        targetWidth: nextWidth,
+        targetHeight: nextHeight,
+      });
+      state.width = nextWidth;
+      state.height = nextHeight;
+    }
+
+    function cropOrPadPixels({
+      sourcePixels,
+      sourceWidth,
+      sourceHeight,
+      targetWidth,
+      targetHeight,
+      fillColor,
+    }) {
+      const nextPixels = new Array(targetWidth * targetHeight).fill(fillColor);
+      const copyWidth = Math.min(sourceWidth, targetWidth);
+      const copyHeight = Math.min(sourceHeight, targetHeight);
+      const sourceStartX = Math.max(0, Math.floor((sourceWidth - targetWidth) / 2));
+      const sourceStartY = Math.max(0, Math.floor((sourceHeight - targetHeight) / 2));
+      const targetStartX = Math.max(0, Math.floor((targetWidth - sourceWidth) / 2));
+      const targetStartY = Math.max(0, Math.floor((targetHeight - sourceHeight) / 2));
+
+      for (let y = 0; y < copyHeight; y++) {
+        for (let x = 0; x < copyWidth; x++) {
+          nextPixels[(targetStartY + y) * targetWidth + targetStartX + x] =
+            sourcePixels[(sourceStartY + y) * sourceWidth + sourceStartX + x];
+        }
+      }
+      return nextPixels;
+    }
+
+    function scalePixels({
+      sourcePixels,
+      sourceWidth,
+      sourceHeight,
+      targetWidth,
+      targetHeight,
+    }) {
+      const nextPixels = new Array(targetWidth * targetHeight);
+      for (let y = 0; y < targetHeight; y++) {
+        const sourceY = clamp(
+          Math.floor((y + 0.5) * sourceHeight / targetHeight),
+          0,
+          sourceHeight - 1,
+        );
+        for (let x = 0; x < targetWidth; x++) {
+          const sourceX = clamp(
+            Math.floor((x + 0.5) * sourceWidth / targetWidth),
+            0,
+            sourceWidth - 1,
+          );
+          nextPixels[y * targetWidth + x] =
+            sourcePixels[sourceY * sourceWidth + sourceX];
+        }
+      }
+      return nextPixels;
     }
 
     function resetPixels() {
@@ -559,10 +1097,89 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           const centerY = (state.height - 1) / 2;
           const dist = Math.hypot(x - centerX, y - centerY);
           const value = Math.floor(dist + x + y) % paletteSize;
-          state.pixels[y * state.width + x] = value;
+          state.pixels[y * state.width + x] =
+            paletteValueForProfileColorId(state.paletteProfile, value);
         }
       }
       renderAll();
+    }
+
+    function argbToRgbaComponents(argb) {
+      return {
+        r: (argb >>> 16) & 0xff,
+        g: (argb >>> 8) & 0xff,
+        b: argb & 0xff,
+        a: (argb >>> 24) & 0xff,
+      };
+    }
+
+    function savePng() {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = state.width;
+      exportCanvas.height = state.height;
+      const ctx = exportCanvas.getContext('2d');
+      const imageData = ctx.createImageData(state.width, state.height);
+      const palette = getPalette(state.paletteProfile);
+
+      for (let i = 0; i < state.pixels.length; i++) {
+        const pixel = state.pixels[i];
+        const outIndex = i * 4;
+
+        if (
+          state.encodingVersion === MCOImageEncodingVersion.v2 &&
+          state.transparentColor !== null &&
+          pixel === state.transparentColor
+        ) {
+          imageData.data[outIndex] = 0;
+          imageData.data[outIndex + 1] = 0;
+          imageData.data[outIndex + 2] = 0;
+          imageData.data[outIndex + 3] = 0;
+          continue;
+        }
+
+        const paletteIndex = profileColorIdForPaletteValue(state.paletteProfile, pixel);
+        const color = palette[paletteIndex < 0 ? 0 : paletteIndex];
+        const rgba = argbToRgbaComponents(color);
+        imageData.data[outIndex] = rgba.r;
+        imageData.data[outIndex + 1] = rgba.g;
+        imageData.data[outIndex + 2] = rgba.b;
+        imageData.data[outIndex + 3] = rgba.a;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      exportCanvas.toBlob((blob) => {
+        if (!blob) {
+          encodedMeta.textContent = 'PNG export failed';
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        link.href = url;
+        link.download = `mcoimg-canvas-${timestamp}.png`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        encodedMeta.textContent = `Saved PNG ${state.width}×${state.height}`;
+      }, 'image/png');
+    }
+
+    function setCanvasImporting(isImporting) {
+      state.importingImage = isImporting;
+      canvasLoadingOverlay.hidden = !isImporting;
+      editor.style.pointerEvents = isImporting ? 'none' : '';
+      editor.classList.toggle('importing', isImporting);
+      if (isImporting) {
+        encodedMeta.textContent = 'Importing image…';
+      }
+    }
+
+    function nextPaintFrame() {
+      return new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
     }
 
     function loadImageFile(event) {
@@ -576,24 +1193,110 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       event.target.value = '';
       if (!file) return;
 
-      syncCanvasStateFromInputs();
       const image = new Image();
       const objectUrl = URL.createObjectURL(file);
       console.log('[mcoimg-demo] object url created', objectUrl);
-      image.onload = () => {
+      image.onload = async () => {
         console.log('[mcoimg-demo] image onload', {
           naturalWidth: image.naturalWidth,
           naturalHeight: image.naturalHeight,
         });
         URL.revokeObjectURL(objectUrl);
-        applyLoadedImage(image);
+        setCanvasImporting(true);
+        try {
+          await nextPaintFrame();
+          applyLoadedImage(image);
+        } finally {
+          setCanvasImporting(false);
+        }
       };
       image.onerror = () => {
         console.log('[mcoimg-demo] image onerror');
         URL.revokeObjectURL(objectUrl);
+        setCanvasImporting(false);
         encodedMeta.textContent = 'Image file could not be loaded';
       };
       image.src = objectUrl;
+    }
+
+    function limitDynamicImportedColors(pixels, profile) {
+      const maxColors = Math.min(
+        MCOImageCodec.maxDynamicLocalPalette,
+        getPalette(profile).length,
+      );
+      if (!isDynamicProfile(profile) || pixels.length === 0) {
+        return pixels;
+      }
+
+      const colorCounts = new Map();
+      for (const pixel of pixels) {
+        colorCounts.set(pixel, (colorCounts.get(pixel) || 0) + 1);
+      }
+      if (colorCounts.size <= maxColors) {
+        return pixels;
+      }
+
+      const selectedColors = Array.from(colorCounts.entries());
+      selectedColors.sort((a, b) => {
+        const countCompare = b[1] - a[1];
+        if (countCompare !== 0) return countCompare;
+        const aIndex = profileColorIdForPaletteValue(profile, a[0]);
+        const bIndex = profileColorIdForPaletteValue(profile, b[0]);
+        return aIndex - bIndex;
+      });
+
+      const limitedColors = selectedColors
+        .slice(0, maxColors)
+        .map((entry) => entry[0]);
+      const limitedColorSet = new Set(limitedColors);
+
+      console.log('[mcoimg-demo] dynamic import palette reduced', {
+        profile,
+        originalColors: colorCounts.size,
+        limitedColors: limitedColors.length,
+      });
+
+      return pixels.map((colorValue) => {
+        if (limitedColorSet.has(colorValue)) return colorValue;
+        return nearestDynamicImportedColorFromCandidates(
+          profile,
+          colorValue,
+          limitedColors,
+        );
+      });
+    }
+
+    function nearestDynamicImportedColorFromCandidates(
+      profile,
+      colorValue,
+      candidateColorValues,
+    ) {
+      const palette = getPalette(profile);
+      const sourceIndex = profileColorIdForPaletteValue(profile, colorValue);
+      const sourceColor = palette[sourceIndex < 0 ? 0 : sourceIndex];
+      const sourceRed = (sourceColor >>> 16) & 0xff;
+      const sourceGreen = (sourceColor >>> 8) & 0xff;
+      const sourceBlue = sourceColor & 0xff;
+
+      let bestColorValue = candidateColorValues[0];
+      let bestDistance = Number.MAX_SAFE_INTEGER;
+
+      for (const candidateColorValue of candidateColorValues) {
+        const candidateIndex = profileColorIdForPaletteValue(profile, candidateColorValue);
+        const candidateColor = palette[candidateIndex < 0 ? 0 : candidateIndex];
+        const redDistance = sourceRed - ((candidateColor >>> 16) & 0xff);
+        const greenDistance = sourceGreen - ((candidateColor >>> 8) & 0xff);
+        const blueDistance = sourceBlue - (candidateColor & 0xff);
+        const distance =
+          redDistance * redDistance +
+          greenDistance * greenDistance +
+          blueDistance * blueDistance;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestColorValue = candidateColorValue;
+        }
+      }
+      return bestColorValue;
     }
 
     function applyLoadedImage(image) {
@@ -606,8 +1309,21 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           throw new Error('image has no readable dimensions');
         }
 
+        const { width: targetCanvasWidth, height: targetCanvasHeight } =
+          importedCanvasSizeFor(sourceWidth, sourceHeight);
+        const wasClamped =
+          targetCanvasWidth !== sourceWidth || targetCanvasHeight !== sourceHeight;
+
+        state.width = targetCanvasWidth;
+        state.height = targetCanvasHeight;
+        widthInput.value = String(targetCanvasWidth);
+        heightInput.value = String(targetCanvasHeight);
+        widthInput.max = String(maxCanvasSizeForCurrentVersion());
+        heightInput.max = widthInput.max;
+
         const white = whiteIndexFor(state.paletteProfile);
         const nextPixels = new Array(state.width * state.height).fill(white);
+        const importedPixels = [];
         const scale = Math.min(
           state.width / sourceWidth,
           state.height / sourceHeight,
@@ -616,13 +1332,18 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
         const offsetX = Math.floor((state.width - targetWidth) / 2);
         const offsetY = Math.floor((state.height - targetHeight) / 2);
-        console.log('[mcoimg-demo] target size and offsets', {
+        console.log('[mcoimg-demo] import canvas and target size', {
+          formatVersion: state.encodingVersion,
+          maxSize: maxCanvasSizeForCurrentVersion(),
+          sourceWidth,
+          sourceHeight,
           canvasWidth: state.width,
           canvasHeight: state.height,
           targetWidth,
           targetHeight,
           offsetX,
           offsetY,
+          wasClamped,
         });
 
         const scratch = document.createElement('canvas');
@@ -641,19 +1362,38 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
             const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
             const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
             const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
-            const target = (offsetY + y) * state.width + offsetX + x;
-            nextPixels[target] = nearestPaletteIndex(
-              state.paletteProfile,
-              red,
-              green,
-              blue,
+            importedPixels.push(
+              nearestPaletteIndex(
+                state.paletteProfile,
+                red,
+                green,
+                blue,
+              ),
             );
           }
         }
 
+        const optimizedImportedPixels = isDynamicProfile(state.paletteProfile)
+          ? limitDynamicImportedColors(importedPixels, state.paletteProfile)
+          : importedPixels;
+
+        for (let y = 0; y < targetHeight; y++) {
+          for (let x = 0; x < targetWidth; x++) {
+            const target = (offsetY + y) * state.width + offsetX + x;
+            nextPixels[target] = optimizedImportedPixels[y * targetWidth + x];
+          }
+        }
+
         state.pixels = nextPixels;
+        clearPendingToolPoints();
+        clearCanvasHistory();
+        encodedMeta.textContent = wasClamped
+          ? `Imported ${sourceWidth}×${sourceHeight}, fitted to ${state.width}×${state.height}`
+          : `Imported ${state.width}×${state.height}`;
         console.log('[mcoimg-demo] loaded image applied', {
           pixels: state.pixels.length,
+          width: state.width,
+          height: state.height,
         });
         renderAll();
       } catch (error) {
@@ -669,27 +1409,89 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         paletteProfile: state.paletteProfile,
       });
       renderPalette();
+      renderAlphaControl();
+      showGridInput.checked = state.showGrid;
+      updateHistoryButtons();
       renderEditor();
       encodeCurrent();
+    }
+
+    function renderAlphaControl() {
+      const supportsAlpha = state.encodingVersion === MCOImageEncodingVersion.v2;
+      alphaControl.hidden = !supportsAlpha;
+      if (!supportsAlpha) return;
+
+      alphaSwatch.classList.toggle('active', state.transparentColor !== null);
+      alphaSwatch.classList.toggle('picking', state.pickingTransparentColor);
+      alphaSwatch.setAttribute('aria-pressed', state.pickingTransparentColor ? 'true' : 'false');
+
+      if (state.transparentColor === null) {
+        alphaSwatch.style.background = '';
+        alphaSwatch.title = state.pickingTransparentColor
+          ? 'Now pick a transparent color from the palette'
+          : 'Pick transparent color';
+      } else {
+        const palette = getPalette(state.paletteProfile);
+        const paletteIndex = profileColorIdForPaletteValue(
+          state.paletteProfile,
+          state.transparentColor,
+        );
+        alphaSwatch.style.background = argbToCss(palette[paletteIndex < 0 ? 0 : paletteIndex]);
+        alphaSwatch.title = state.pickingTransparentColor
+          ? `Now pick a transparent color from the palette; current: ${state.transparentColor}`
+          : `Transparent color: ${state.transparentColor}`;
+      }
+
+      alphaStatus.textContent = state.pickingTransparentColor
+        ? 'pick from palette'
+        : (state.transparentColor === null ? 'none' : `color ${state.transparentColor}`);
+    }
+
+    function updatePaletteCollapse() {
+      requestAnimationFrame(() => {
+        const rowTops = new Set(
+          Array.from(palettePreview.children).map((child) => child.offsetTop),
+        );
+        const hasMoreThanFourRows = rowTops.size > 4;
+        paletteToggle.hidden = !hasMoreThanFourRows;
+        palettePreview.classList.toggle(
+          'collapsed',
+          hasMoreThanFourRows && !state.paletteExpanded,
+        );
+        paletteToggle.textContent = state.paletteExpanded ? 'Show less' : 'Show more';
+      });
     }
 
     function renderPalette() {
       palettePreview.replaceChildren();
       const palette = getPalette(state.paletteProfile);
       palette.forEach((color, index) => {
+        const paletteValue = paletteValueForProfileColorId(state.paletteProfile, index);
         const swatch = document.createElement('button');
         swatch.type = 'button';
-        swatch.className = `swatch${index === state.selectedColor ? ' active' : ''}`;
+        swatch.className = `swatch${paletteValue === state.selectedColor ? ' active' : ''}`;
+        swatch.classList.toggle('picking-alpha', state.pickingTransparentColor);
         swatch.style.background = argbToCss(color);
         swatch.title = `Color ${index}`;
         swatch.addEventListener('click', () => {
-          state.selectedColor = index;
+          if (
+            selectedEncodingVersion() === MCOImageEncodingVersion.v2 &&
+            state.pickingTransparentColor
+          ) {
+            state.transparentColor = paletteValue;
+            state.pickingTransparentColor = false;
+            renderAll();
+            return;
+          }
+          state.selectedColor = paletteValue;
           renderPalette();
+          renderAlphaControl();
           updateSelectedColorText();
         });
         palettePreview.appendChild(swatch);
       });
       updateSelectedColorText();
+      updatePaletteCollapse();
     }
 
     function renderEditor() {
@@ -698,27 +1500,66 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       const ctx = editor.getContext('2d');
       const palette = getPalette(state.paletteProfile);
       ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, editor.width, editor.height);
       for (let y = 0; y < state.height; y++) {
         for (let x = 0; x < state.width; x++) {
           const pixel = state.pixels[y * state.width + x];
-          ctx.fillStyle = argbToCss(palette[pixel]);
+          if (
+            selectedEncodingVersion() === MCOImageEncodingVersion.v2 &&
+            state.transparentColor !== null &&
+            pixel === state.transparentColor
+          ) {
+            continue;
+          }
+          const paletteIndex = profileColorIdForPaletteValue(state.paletteProfile, pixel);
+          ctx.fillStyle = argbToCss(palette[paletteIndex < 0 ? 0 : paletteIndex]);
           ctx.fillRect(x * state.scale, y * state.scale, state.scale, state.scale);
         }
       }
-      ctx.strokeStyle = '#00f06a';
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= state.width; x++) {
-        ctx.beginPath();
-        ctx.moveTo(x * state.scale + 0.5, 0);
-        ctx.lineTo(x * state.scale + 0.5, editor.height);
-        ctx.stroke();
+      if (state.showGrid) {
+        ctx.strokeStyle = '#00f06a';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= state.width; x++) {
+          ctx.beginPath();
+          ctx.moveTo(x * state.scale + 0.5, 0);
+          ctx.lineTo(x * state.scale + 0.5, editor.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= state.height; y++) {
+          ctx.beginPath();
+          ctx.moveTo(0, y * state.scale + 0.5);
+          ctx.lineTo(editor.width, y * state.scale + 0.5);
+          ctx.stroke();
+        }
       }
-      for (let y = 0; y <= state.height; y++) {
-        ctx.beginPath();
-        ctx.moveTo(0, y * state.scale + 0.5);
-        ctx.lineTo(editor.width, y * state.scale + 0.5);
-        ctx.stroke();
+      drawPendingToolMarkers(ctx);
+    }
+
+    function drawPendingToolMarkers(ctx) {
+      const pending = [
+        state.lineStartIndex,
+        state.ovalFirstIndex,
+        state.ovalSecondIndex,
+        state.rectangleFirstIndex,
+        state.rectangleSecondIndex,
+      ].filter((index) => index !== null);
+
+      if (pending.length === 0) return;
+
+      ctx.save();
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3;
+      for (const index of pending) {
+        const x = index % state.width;
+        const y = Math.floor(index / state.width);
+        ctx.strokeRect(
+          x * state.scale + 2,
+          y * state.scale + 2,
+          state.scale - 4,
+          state.scale - 4,
+        );
       }
+      ctx.restore();
     }
 
     function encodeCurrent() {
@@ -728,6 +1569,10 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           height: state.height,
           paletteProfile: state.paletteProfile,
           pixels: state.pixels,
+          transparentColor:
+            selectedEncodingVersion() === MCOImageEncodingVersion.v2
+              ? state.transparentColor
+              : null,
           encodingVersion: selectedEncodingVersion(),
         }, {
           encodingVersion: selectedEncodingVersion(),
@@ -737,7 +1582,8 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
           `v${encoded.codecVersion || selectedEncodingVersion()} ` +
           `${encoded.modeName}/${encoded.scanName}` +
-          (encoded.paletteKind ? `, ${encoded.paletteKind}` : '');
+          (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
+          (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
         drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
       } catch (error) {
         encodedMeta.textContent = error.message;
@@ -751,10 +1597,22 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         state.height = image.height;
         state.paletteProfile = image.paletteProfile;
         state.encodingVersion = image.encodingVersion || MCOImageEncodingVersion.v1Legacy;
+        state.transparentColor =
+          state.encodingVersion === MCOImageEncodingVersion.v2
+            ? image.transparentColor
+            : null;
+        state.pickingTransparentColor = false;
+        state.paletteExpanded = false;
         state.pixels = image.pixels.slice();
+        clearPendingToolPoints();
+        clearCanvasHistory();
         state.selectedColor = blackIndexFor(state.paletteProfile);
+        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+        heightInput.max = widthInput.max;
         widthInput.value = String(state.width);
         heightInput.value = String(state.height);
+        formatVersionSelect.value = String(state.encodingVersion);
+        renderPaletteOptions();
         paletteSelect.value = String(state.paletteProfile);
         drawMCOImage(decodedCanvas, image, { scale: 12 });
         renderAll();
@@ -763,28 +1621,281 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       }
     }
 
+    function plotLineInto(pixels, fromX, fromY, toX, toY) {
+      let px = fromX;
+      let py = fromY;
+      const dx = Math.abs(toX - fromX);
+      const dy = Math.abs(toY - fromY);
+      const sx = fromX < toX ? 1 : -1;
+      const sy = fromY < toY ? 1 : -1;
+      let err = dx - dy;
+      let changed = false;
+
+      while (true) {
+        if (px >= 0 && px < state.width && py >= 0 && py < state.height) {
+          const index = py * state.width + px;
+          if (pixels[index] !== state.selectedColor) {
+            pixels[index] = state.selectedColor;
+            changed = true;
+          }
+        }
+
+        if (px === toX && py === toY) break;
+
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+          err -= dy;
+          px += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          py += sy;
+        }
+      }
+      return changed;
+    }
+
+    function drawLine(startIndex, endIndex) {
+      const beforePixels = state.pixels.slice();
+      const nextPixels = state.pixels.slice();
+      const changed = plotLineInto(
+        nextPixels,
+        startIndex % state.width,
+        Math.floor(startIndex / state.width),
+        endIndex % state.width,
+        Math.floor(endIndex / state.width),
+      );
+      if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      renderAll();
+    }
+
+    function handleLineTool(index) {
+      if (state.lineStartIndex === null) {
+        state.lineStartIndex = index;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      if (state.lineStartIndex === index) {
+        state.lineStartIndex = null;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      drawLine(state.lineStartIndex, index);
+    }
+
+    function handleOvalTool(index) {
+      if (state.ovalFirstIndex === null) {
+        state.ovalFirstIndex = index;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      if (state.ovalSecondIndex === null) {
+        if (state.ovalFirstIndex === index) {
+          state.ovalFirstIndex = null;
+          renderEditor();
+          updateSelectedColorText();
+          return;
+        }
+        state.ovalSecondIndex = index;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      if (index === state.ovalFirstIndex || index === state.ovalSecondIndex) {
+        clearPendingToolPoints();
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      drawOval(state.ovalFirstIndex, state.ovalSecondIndex, index);
+    }
+
+    function drawOval(firstIndex, secondIndex, widthIndex) {
+      const x1 = firstIndex % state.width;
+      const y1 = Math.floor(firstIndex / state.width);
+      const x2 = secondIndex % state.width;
+      const y2 = Math.floor(secondIndex / state.width);
+      const x3 = widthIndex % state.width;
+      const y3 = Math.floor(widthIndex / state.width);
+      const centerX = (x1 + x2) / 2;
+      const centerY = (y1 + y2) / 2;
+      const axisDx = x2 - x1;
+      const axisDy = y2 - y1;
+      const axisLength = Math.sqrt(axisDx * axisDx + axisDy * axisDy);
+
+      if (axisLength === 0) {
+        clearPendingToolPoints();
+        renderEditor();
+        return;
+      }
+
+      const ux = axisDx / axisLength;
+      const uy = axisDy / axisLength;
+      const vx = -uy;
+      const vy = ux;
+      const semiMajor = axisLength / 2;
+      const relX = x3 - centerX;
+      const relY = y3 - centerY;
+      const semiMinor = Math.abs(relX * vx + relY * vy);
+      const beforePixels = state.pixels.slice();
+      const nextPixels = state.pixels.slice();
+      let changed = false;
+
+      if (semiMinor < 0.5) {
+        changed = plotLineInto(nextPixels, Math.round(x1), Math.round(y1), Math.round(x2), Math.round(y2));
+      } else {
+        const steps = Math.max(24, Math.ceil(2 * Math.PI * Math.max(semiMajor, semiMinor) * 4));
+        let prevX = null;
+        let prevY = null;
+        for (let i = 0; i <= steps; i++) {
+          const t = 2 * Math.PI * i / steps;
+          const sampleX =
+            centerX + ux * semiMajor * Math.cos(t) + vx * semiMinor * Math.sin(t);
+          const sampleY =
+            centerY + uy * semiMajor * Math.cos(t) + vy * semiMinor * Math.sin(t);
+          const roundedX = Math.round(sampleX);
+          const roundedY = Math.round(sampleY);
+          if (prevX !== null && prevY !== null) {
+            changed = plotLineInto(nextPixels, prevX, prevY, roundedX, roundedY) || changed;
+          }
+          prevX = roundedX;
+          prevY = roundedY;
+        }
+      }
+
+      if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      renderAll();
+    }
+
+    function handleRectangleTool(index) {
+      if (state.rectangleFirstIndex === null) {
+        state.rectangleFirstIndex = index;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      if (state.rectangleSecondIndex === null) {
+        if (state.rectangleFirstIndex === index) {
+          state.rectangleFirstIndex = null;
+          renderEditor();
+          updateSelectedColorText();
+          return;
+        }
+        state.rectangleSecondIndex = index;
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      if (index === state.rectangleFirstIndex || index === state.rectangleSecondIndex) {
+        clearPendingToolPoints();
+        renderEditor();
+        updateSelectedColorText();
+        return;
+      }
+      drawRectangle(state.rectangleFirstIndex, state.rectangleSecondIndex, index);
+    }
+
+    function drawRectangle(firstIndex, diagonalIndex, thirdIndex) {
+      const ax = firstIndex % state.width;
+      const ay = Math.floor(firstIndex / state.width);
+      const cx = diagonalIndex % state.width;
+      const cy = Math.floor(diagonalIndex / state.width);
+      const bx = thirdIndex % state.width;
+      const by = Math.floor(thirdIndex / state.width);
+      const dx = ax + cx - bx;
+      const dy = ay + cy - by;
+      const beforePixels = state.pixels.slice();
+      const nextPixels = state.pixels.slice();
+      let changed = false;
+
+      changed = plotLineInto(nextPixels, ax, ay, bx, by) || changed;
+      changed = plotLineInto(nextPixels, bx, by, cx, cy) || changed;
+      changed = plotLineInto(nextPixels, cx, cy, dx, dy) || changed;
+      changed = plotLineInto(nextPixels, dx, dy, ax, ay) || changed;
+
+      if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      renderAll();
+    }
+
+    function shiftCanvas(dx, dy) {
+      const white = whiteIndexFor(state.paletteProfile);
+      const nextPixels = new Array(state.width * state.height).fill(white);
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const nextX = x + dx;
+          const nextY = y + dy;
+          if (nextX < 0 || nextY < 0 || nextX >= state.width || nextY >= state.height) {
+            continue;
+          }
+          nextPixels[nextY * state.width + nextX] = state.pixels[y * state.width + x];
+        }
+      }
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      clearCanvasHistory();
+      renderAll();
+    }
+
+    function clearCanvas() {
+      resetPixels();
+      clearPendingToolPoints();
+      clearCanvasHistory();
+      renderAll();
+    }
+
     function paintCell(event) {
       const cell = eventToCell(event);
       if (!cell) return;
       const { x, y } = cell;
       if (x < 0 || y < 0 || x >= state.width || y >= state.height) return;
 
+      const index = y * state.width + x;
+
       if (state.tool === 'eyedropper') {
-        state.selectedColor = state.pixels[y * state.width + x];
+        state.selectedColor = state.pixels[index];
+        selectTool('pencil');
         renderPalette();
         return;
       }
 
       if (state.tool === 'fill') {
+        const beforePixels = state.pixels.slice();
         floodFill(x, y, state.selectedColor);
-        renderEditor();
-        encodeCurrent();
+        rememberPixelCanvasAction(beforePixels, state.pixels);
+        clearPendingToolPoints();
+        renderAll();
         return;
       }
 
-      state.pixels[y * state.width + x] = state.selectedColor;
-      renderEditor();
-      encodeCurrent();
+      if (state.tool === 'line') {
+        handleLineTool(index);
+        return;
+      }
+
+      if (state.tool === 'oval') {
+        handleOvalTool(index);
+        return;
+      }
+
+      if (state.tool === 'rectangle') {
+        handleRectangleTool(index);
+        return;
+      }
+
+      if (state.pixels[index] !== state.selectedColor) {
+        state.pixels[index] = state.selectedColor;
+        renderEditor();
+        encodeCurrent();
+      }
     }
 
     function eventToCell(event) {
@@ -818,8 +1929,22 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     }
 
     function updateSelectedColorText() {
+      const pendingCount = [
+        state.lineStartIndex,
+        state.ovalFirstIndex,
+        state.ovalSecondIndex,
+        state.rectangleFirstIndex,
+        state.rectangleSecondIndex,
+      ].filter((index) => index !== null).length;
       selectedColorText.textContent =
-        `Tool: ${state.tool}, selected color: ${state.selectedColor}`;
+        `Tool: ${state.tool}, selected color: ${state.selectedColor}` +
+        (pendingCount > 0 ? `, points: ${pendingCount}` : '') +
+        (
+          selectedEncodingVersion() === MCOImageEncodingVersion.v2
+            ? `, transparent: ${state.transparentColor === null ? 'none' : state.transparentColor}` +
+              (state.pickingTransparentColor ? ' (pick from palette)' : '')
+            : ''
+        );
     }
 
     function clamp(value, min, max) {

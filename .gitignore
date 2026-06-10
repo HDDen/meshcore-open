@@ -93,3 +93,7 @@ keystore.properties
 .wrangler
 __build-apk
 __build-ios
+
+# except
+!docs/mcoimg-js
+!docs/mcoimg-js/mcoimg-codec.global.js

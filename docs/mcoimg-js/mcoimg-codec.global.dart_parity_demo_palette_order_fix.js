@@ -1082,10 +1082,14 @@
     return positions;
   }
 
-  function buildLocalPalette(pixels) {
+  function buildLocalPalette(pixels, preferredFirstColor = null) {
     const counts = new Map();
     for (const pixel of pixels) counts.set(pixel, (counts.get(pixel) ?? 0) + 1);
     return Array.from(counts.keys()).sort((a, b) => {
+      if (preferredFirstColor !== null) {
+        if (a === preferredFirstColor && b !== preferredFirstColor) return -1;
+        if (b === preferredFirstColor && a !== preferredFirstColor) return 1;
+      }
       const byFrequency = counts.get(b) - counts.get(a);
       return byFrequency !== 0 ? byFrequency : a - b;
     });
@@ -2208,7 +2212,7 @@
 
     const sourcePixels = mode === ImageMode.sparseBg ? linear.filter((p) => p !== backgroundColor) : linear;
     if (sourcePixels.length === 0) return null;
-    localPalette = buildLocalPalette(sourcePixels);
+    localPalette = buildLocalPalette(sourcePixels, backgroundColor);
     if (mode === ImageMode.sparseBg) localPalette = localPalette.filter((p) => p !== backgroundColor);
     if (localPalette.length === 0) return null;
     const localBits = bitsForLocalPalette(localPalette.length);
