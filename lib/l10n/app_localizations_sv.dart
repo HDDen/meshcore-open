@@ -5002,6 +5002,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
 
   @override
+  String get chat_canvasPaletteAlpha => 'Transparency color';
+
+  @override
   String get chat_canvasChangeSize => 'Change canvas size';
 
   @override

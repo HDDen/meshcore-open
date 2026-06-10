@@ -26,6 +26,7 @@ class _CanvasSnapshot {
   final PaletteProfile dynamicPaletteProfile;
   final MCOImageEncodingVersion encodingVersion;
   final int selectedColor;
+  final int? transparentColor;
   final List<int> pixels;
 
   _CanvasSnapshot({
@@ -35,6 +36,7 @@ class _CanvasSnapshot {
     required this.dynamicPaletteProfile,
     required this.encodingVersion,
     required this.selectedColor,
+    required this.transparentColor,
     required List<int> pixels,
   }) : pixels = List<int>.unmodifiable(pixels);
 }
@@ -110,6 +112,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _inlineDynamicPaletteMaxColors = 64;
   static const int _historyLimit = 10;
   static const double _canvasRulerExtent = 12;
+  static const Object _transparentColorUnchanged = Object();
 
   final _widthController = TextEditingController(text: '$_defaultSize');
   final _heightController = TextEditingController(text: '$_defaultSize');
@@ -122,6 +125,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   PaletteProfile _paletteProfile = PaletteProfile.master64;
   PaletteProfile _dynamicPaletteProfile = PaletteProfile.dynamicGlobal512;
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
+  int? _transparentColor;
+  bool _isPickingTransparentColor = false;
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
   bool _showRuler = false;
@@ -307,6 +312,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 _buildDynamicPaletteControls()
               else
                 _buildPalette(palette),
+              if (_supportsAlphaTransparency) ...[
+                const SizedBox(height: 12),
+                _buildPaletteAlphaControl(),
+              ],
               const SizedBox(height: 16),
               _buildTools(),
               const SizedBox(height: 20),
@@ -486,12 +495,62 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   onColorSelected(colorValue);
                   return;
                 }
-                setState(() => _selectedColor = colorValue);
+                _handlePaletteColorTap(colorValue);
               },
             );
           }(),
       ],
     );
+  }
+
+  Widget _buildPaletteAlphaControl() {
+    if (!_supportsAlphaTransparency) return const SizedBox.shrink();
+    final transparentColor = _transparentColor;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          context.l10n.chat_canvasPaletteAlpha,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(width: 8),
+        _AlphaSwatch(
+          color: transparentColor == null
+              ? null
+              : _colorForPixelValue(_paletteProfile, transparentColor),
+          selected: _isPickingTransparentColor,
+          onTap: () {
+            setState(() {
+              if (_isPickingTransparentColor) {
+                if (_transparentColor != null) {
+                  _transparentColor = null;
+                  _markPayloadDirty();
+                }
+                _isPickingTransparentColor = false;
+              } else {
+                _isPickingTransparentColor = true;
+              }
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  void _handlePaletteColorTap(int colorValue) {
+    if (_isPickingTransparentColor) {
+      if (_transparentColor == colorValue) {
+        setState(() => _isPickingTransparentColor = false);
+        return;
+      }
+      setState(() {
+        _transparentColor = colorValue;
+        _isPickingTransparentColor = false;
+      });
+      _markPayloadDirty();
+      return;
+    }
+    setState(() => _selectedColor = colorValue);
   }
 
   Widget _buildDynamicPaletteControls() {
@@ -554,7 +613,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           _PaletteSwatch(
             color: _colorForPixelValue(_paletteProfile, colorValue),
             selected: colorValue == _selectedColor,
-            onTap: () => setState(() => _selectedColor = colorValue),
+            onTap: () => _handlePaletteColorTap(colorValue),
           ),
       ],
     );
@@ -573,7 +632,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               palette,
               profile: profile,
               onColorSelected: (colorValue) {
-                setState(() => _selectedColor = colorValue);
+                _handlePaletteColorTap(colorValue);
                 Navigator.of(dialogContext).pop();
               },
             ),
@@ -720,6 +779,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     pixels: _pixels,
                     profile: _paletteProfile,
                     palette: palette,
+                    transparentColor: _supportsAlphaTransparency
+                        ? _transparentColor
+                        : null,
                     showGrid: _showGrid,
                     showRuler: _showRuler,
                     canvasOffset: canvasOffset,
@@ -869,6 +931,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     PaletteProfile? dynamicPaletteProfile,
     MCOImageEncodingVersion? encodingVersion,
     int? selectedColor,
+    Object? transparentColor = _transparentColorUnchanged,
     List<int>? pixels,
   }) {
     return _CanvasSnapshot(
@@ -878,6 +941,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       dynamicPaletteProfile: dynamicPaletteProfile ?? _dynamicPaletteProfile,
       encodingVersion: encodingVersion ?? _encodingVersion,
       selectedColor: selectedColor ?? _selectedColor,
+      transparentColor: identical(transparentColor, _transparentColorUnchanged)
+          ? _transparentColor
+          : transparentColor as int?,
       pixels: pixels ?? _pixels,
     );
   }
@@ -889,6 +955,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         a.dynamicPaletteProfile == b.dynamicPaletteProfile &&
         a.encodingVersion == b.encodingVersion &&
         a.selectedColor == b.selectedColor &&
+        a.transparentColor == b.transparentColor &&
         _pixelsEqual(a.pixels, b.pixels);
   }
 
@@ -900,6 +967,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _dynamicPaletteProfile = snapshot.dynamicPaletteProfile;
       _encodingVersion = snapshot.encodingVersion;
       _selectedColor = snapshot.selectedColor;
+      _transparentColor = snapshot.transparentColor;
+      _isPickingTransparentColor = false;
       _pixels = List<int>.of(snapshot.pixels);
       _setControllerValue(_widthController, _width);
       _setControllerValue(_heightController, _height);
@@ -1148,6 +1217,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _dynamicPaletteProfile = image.paletteProfile;
     }
     _selectedColor = MCOImagePalette.blackIndexFor(image.paletteProfile);
+    _transparentColor = image.transparentColor;
     _width = image.width;
     _height = image.height;
     _setControllerValue(_widthController, _width);
@@ -1168,6 +1238,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   bool get _supportsDynamicPalettes =>
+      _encodingVersion == MCOImageEncodingVersion.v2;
+
+  bool get _supportsAlphaTransparency =>
       _encodingVersion == MCOImageEncodingVersion.v2;
 
   int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {
@@ -1192,7 +1265,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     var nextProfile = _paletteProfile;
     var nextDynamicProfile = _dynamicPaletteProfile;
     var nextSelectedColor = _selectedColor;
+    int? nextTransparentColor = _transparentColor;
     var mappedPixels = List<int>.of(_pixels);
+
+    if (version == MCOImageEncodingVersion.v1Legacy) {
+      nextTransparentColor = null;
+    }
 
     if (version == MCOImageEncodingVersion.v1Legacy && nextProfile.isDynamic) {
       final oldProfile = _paletteProfile;
@@ -1213,6 +1291,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
 
       nextSelectedColor = mapColor(_selectedColor);
+      nextTransparentColor = nextTransparentColor == null
+          ? null
+          : mapColor(nextTransparentColor);
       mappedPixels = _pixels.map(mapColor).toList();
     } else if (nextProfile.isDynamic) {
       nextDynamicProfile = nextProfile;
@@ -1243,6 +1324,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       dynamicPaletteProfile: nextDynamicProfile,
       encodingVersion: version,
       selectedColor: nextSelectedColor,
+      transparentColor: nextTransparentColor,
       pixels: nextPixels,
     );
     _rememberCanvasAction(before, after);
@@ -1252,6 +1334,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _paletteProfile = nextProfile;
       _dynamicPaletteProfile = nextDynamicProfile;
       _selectedColor = nextSelectedColor;
+      _transparentColor = nextTransparentColor;
+      _isPickingTransparentColor = false;
       _width = nextWidth;
       _height = nextHeight;
       _setControllerValue(_widthController, nextWidth);
@@ -1477,9 +1561,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         height: _height,
         paletteProfile: _paletteProfile,
         pixels: _pixels,
+        transparentColor: _supportsAlphaTransparency ? _transparentColor : null,
         encodingVersion: _encodingVersion,
       ),
-      backgroundColor: _whiteIndex,
+      backgroundColor: _supportsAlphaTransparency
+          ? (_transparentColor ?? _whiteIndex)
+          : _whiteIndex,
       encodingVersion: _encodingVersion,
     );
     return encoded.charLength;
@@ -1555,6 +1642,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final nextSelectedColor = mapColor(_selectedColor);
+    final nextTransparentColor = _transparentColor == null
+        ? null
+        : mapColor(_transparentColor!);
     final mappedPixels = _pixels.map(mapColor).toList();
     final bounded = _boundedCanvasSizeForProfile(
       _width,
@@ -1582,6 +1672,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       paletteProfile: profile,
       dynamicPaletteProfile: nextDynamicProfile,
       selectedColor: nextSelectedColor,
+      transparentColor: nextTransparentColor,
       pixels: nextPixels,
     );
     _rememberCanvasAction(before, after);
@@ -1591,6 +1682,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _dynamicPaletteProfile = profile;
       }
       _selectedColor = nextSelectedColor;
+      _transparentColor = nextTransparentColor;
+      _isPickingTransparentColor = false;
       _width = nextWidth;
       _height = nextHeight;
       _setControllerValue(_widthController, nextWidth);
@@ -2361,7 +2454,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       rgba[offset] = (argb >> 16) & 0xff;
       rgba[offset + 1] = (argb >> 8) & 0xff;
       rgba[offset + 2] = argb & 0xff;
-      rgba[offset + 3] = (argb >> 24) & 0xff;
+      rgba[offset +
+          3] = _supportsAlphaTransparency && _pixels[i] == _transparentColor
+          ? 0
+          : (argb >> 24) & 0xff;
     }
 
     final completer = Completer<ui.Image>();
@@ -2390,9 +2486,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           height: _height,
           paletteProfile: _paletteProfile,
           pixels: _pixels,
+          transparentColor: _supportsAlphaTransparency
+              ? _transparentColor
+              : null,
           encodingVersion: _encodingVersion,
         ),
-        backgroundColor: _whiteIndex,
+        backgroundColor: _supportsAlphaTransparency
+            ? (_transparentColor ?? _whiteIndex)
+            : _whiteIndex,
         encodingVersion: _encodingVersion,
       );
       _currentPayloadChars = encoded.charLength;
@@ -2564,6 +2665,92 @@ class _PaletteSwatch extends StatelessWidget {
   }
 }
 
+class _AlphaSwatch extends StatelessWidget {
+  final Color? color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AlphaSwatch({
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = selected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).dividerColor;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: CustomPaint(
+        size: const Size(28, 28),
+        painter: _AlphaSwatchPainter(
+          color: color,
+          borderColor: borderColor,
+          selected: selected,
+        ),
+      ),
+    );
+  }
+}
+
+class _AlphaSwatchPainter extends CustomPainter {
+  final Color? color;
+  final Color borderColor;
+  final bool selected;
+
+  const _AlphaSwatchPainter({
+    required this.color,
+    required this.borderColor,
+    required this.selected,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final radius = BorderRadius.circular(4).toRRect(rect);
+    canvas.save();
+    canvas.clipRRect(radius);
+
+    if (color == null) {
+      final paints = [
+        Paint()..color = const Color(0xffffffff),
+        Paint()..color = const Color(0xffd6d6d6),
+      ];
+      final halfWidth = size.width / 2;
+      final halfHeight = size.height / 2;
+      for (var y = 0; y < 2; y++) {
+        for (var x = 0; x < 2; x++) {
+          canvas.drawRect(
+            Rect.fromLTWH(x * halfWidth, y * halfHeight, halfWidth, halfHeight),
+            paints[(x + y) & 1],
+          );
+        }
+      }
+    } else {
+      canvas.drawRect(rect, Paint()..color = color!);
+    }
+
+    canvas.restore();
+
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 3 : 1
+      ..isAntiAlias = false;
+    canvas.drawRRect(radius, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AlphaSwatchPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.selected != selected;
+  }
+}
+
 class _PixelCanvasPainter extends CustomPainter {
   static const Color _gridColor = Color(0xff00ff00);
   static const Color _lineStartColor = Color(0xffff9800);
@@ -2576,6 +2763,7 @@ class _PixelCanvasPainter extends CustomPainter {
   final List<int> pixels;
   final PaletteProfile profile;
   final List<Color> palette;
+  final int? transparentColor;
   final bool showGrid;
   final bool showRuler;
   final Offset canvasOffset;
@@ -2591,6 +2779,7 @@ class _PixelCanvasPainter extends CustomPainter {
     required this.pixels,
     required this.profile,
     required this.palette,
+    required this.transparentColor,
     required this.showGrid,
     required this.showRuler,
     required this.canvasOffset,
@@ -2601,11 +2790,47 @@ class _PixelCanvasPainter extends CustomPainter {
     this.rectanglePointIndices = const <int>[],
   });
 
+  void _paintCheckerboard(Canvas canvas, Rect rect, {double cellSize = 8}) {
+    final lightPaint = Paint()
+      ..color = const Color(0xffffffff)
+      ..isAntiAlias = false;
+    final darkPaint = Paint()
+      ..color = const Color(0xffd6d6d6)
+      ..isAntiAlias = false;
+
+    canvas.drawRect(rect, lightPaint);
+    for (var y = rect.top; y < rect.bottom; y += cellSize) {
+      for (var x = rect.left; x < rect.right; x += cellSize) {
+        final column = ((x - rect.left) / cellSize).floor();
+        final row = ((y - rect.top) / cellSize).floor();
+        if ((column + row).isEven) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(
+            x,
+            y,
+            math.min(cellSize, rect.right - x),
+            math.min(cellSize, rect.bottom - y),
+          ),
+          darkPaint,
+        );
+      }
+    }
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final cellWidth = canvasSize.width / width;
     final cellHeight = canvasSize.height / height;
     final paint = Paint()..isAntiAlias = false;
+    final canvasRect = Rect.fromLTWH(
+      canvasOffset.dx,
+      canvasOffset.dy,
+      canvasSize.width,
+      canvasSize.height,
+    );
+    if (transparentColor != null) {
+      _paintCheckerboard(canvas, canvasRect);
+    }
 
     if (showRuler) {
       _paintRulerLabels(canvas, cellWidth, cellHeight);
@@ -2614,6 +2839,9 @@ class _PixelCanvasPainter extends CustomPainter {
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
         final colorValue = pixels[y * width + x];
+        if (transparentColor != null && colorValue == transparentColor) {
+          continue;
+        }
         if (profile.isDynamic) {
           final safeColorValue =
               colorValue >= 0 &&
@@ -2761,6 +2989,7 @@ class _PixelCanvasPainter extends CustomPainter {
         oldDelegate.height != height ||
         oldDelegate.pixels != pixels ||
         oldDelegate.palette != palette ||
+        oldDelegate.transparentColor != transparentColor ||
         oldDelegate.showGrid != showGrid ||
         oldDelegate.showRuler != showRuler ||
         oldDelegate.canvasOffset != canvasOffset ||

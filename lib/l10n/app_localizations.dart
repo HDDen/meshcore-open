@@ -8632,6 +8632,12 @@ abstract class AppLocalizations {
   /// **'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.'**
   String get chat_canvasPaletteDynamicDscr;
 
+  /// No description provided for @chat_canvasPaletteAlpha.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparency color'**
+  String get chat_canvasPaletteAlpha;
+
   /// No description provided for @chat_canvasChangeSize.
   ///
   /// In en, this message translates to:

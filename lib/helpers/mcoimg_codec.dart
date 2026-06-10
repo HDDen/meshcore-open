@@ -61,6 +61,7 @@ class MCOImage {
   final int height;
   final PaletteProfile paletteProfile;
   final List<int> pixels;
+  final int? transparentColor;
   final MCOImageEncodingVersion encodingVersion;
 
   MCOImage({
@@ -68,6 +69,7 @@ class MCOImage {
     required this.height,
     required this.paletteProfile,
     required List<int> pixels,
+    this.transparentColor,
     this.encodingVersion = MCOImageEncodingVersion.v2,
   }) : pixels = List.unmodifiable(pixels);
 }
@@ -84,6 +86,7 @@ class EncodedMCOImage {
   final int? boundsWidth;
   final int? boundsHeight;
   final int? backgroundColor;
+  final int? transparentColor;
   final int regionCount;
   final int backgroundRank;
   final int codecVersion;
@@ -108,6 +111,7 @@ class EncodedMCOImage {
     this.boundsWidth,
     this.boundsHeight,
     this.backgroundColor,
+    this.transparentColor,
     this.regionCount = 0,
     this.backgroundRank = 0,
     this.codecVersion = MCOImageCodec._v2EncodeVersion,
@@ -163,6 +167,8 @@ class MCOImageCodec {
   static const int _containerRegions = 1;
   static const int _paletteKindFixed = 0;
   static const int _paletteKindDynamic = 1;
+  static const int _v2TransparentProfileFlag = 0x10;
+  static const int _v2ProfileIdMask = 0x0f;
   static const int _minSize = 1;
   static const int _maxSize = 256;
   static const int _legacyMaxRegions = 8;
@@ -246,8 +252,20 @@ class MCOImageCodec {
     if (backgroundColor != null) {
       _validateColor(backgroundColor, image.paletteProfile, 'backgroundColor');
     }
+    if (image.transparentColor != null) {
+      _validateColor(
+        image.transparentColor!,
+        image.paletteProfile,
+        'transparentColor',
+      );
+    }
 
     if (encodingVersion == MCOImageEncodingVersion.v1Legacy) {
+      if (image.transparentColor != null) {
+        throw const MCOImageInvalidInputException(
+          'Legacy v1 encoding does not support transparency',
+        );
+      }
       if (image.paletteProfile.isDynamic) {
         throw const MCOImageInvalidInputException(
           'Legacy v1 encoding supports fixed palettes only',
@@ -382,9 +400,10 @@ class MCOImageCodec {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
   }) {
+    final preferredBackgroundColor = backgroundColor ?? image.transparentColor;
     final backgroundCandidates = image.paletteProfile.isDynamic
-        ? _dynamicBackgroundCandidates(image, backgroundColor)
-        : _backgroundCandidates(image, backgroundColor);
+        ? _dynamicBackgroundCandidates(image, preferredBackgroundColor)
+        : _backgroundCandidates(image, preferredBackgroundColor);
     final List<DynamicPaletteReferenceEncoding?> referenceEncodings =
         image.paletteProfile.isDynamic
         ? _dynamicReferenceEncodings(image.paletteProfile)
@@ -411,6 +430,7 @@ class MCOImageCodec {
             ImageMode.regionsBg,
             ScanMode.h,
             backgroundColor: bg,
+            transparentColor: image.transparentColor,
             backgroundRank: background.rank,
             regionCount: regionsPayload.regionCount,
             codecVersion: _v2EncodeVersion,
@@ -450,6 +470,7 @@ class MCOImageCodec {
               mode,
               scan,
               backgroundColor: bg,
+              transparentColor: image.transparentColor,
               backgroundRank: background.rank,
               codecVersion: _v2EncodeVersion,
               dynamicReferenceEncoding: referenceEncoding,
@@ -568,7 +589,11 @@ class MCOImageCodec {
       referenceEncoding: referenceEncoding,
       width: image.width,
       height: image.height,
+      hasTransparentColor: image.transparentColor != null,
     );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
 
     if (bounds != null) {
       _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
@@ -680,7 +705,11 @@ class MCOImageCodec {
       referenceEncoding: referenceEncoding,
       width: image.width,
       height: image.height,
+      hasTransparentColor: image.transparentColor != null,
     );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
     _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
 
     _DynamicLocalPalette? sharedDynamicPalette;
@@ -1208,6 +1237,7 @@ class MCOImageCodec {
     required DynamicPaletteReferenceEncoding? referenceEncoding,
     required int width,
     required int height,
+    required bool hasTransparentColor,
   }) {
     if (container == _containerRegions) {
       if (boundsPresent || mode != ImageMode.rawGlobal || scan != ScanMode.h) {
@@ -1242,6 +1272,7 @@ class MCOImageCodec {
                     ? 1
                     : 0) <<
                 5) |
+            (hasTransparentColor ? _v2TransparentProfileFlag : 0) |
             (profile.isDynamic
                 ? _dynamicProfileId(profile)
                 : _fixedProfileId(profile)),
@@ -1503,7 +1534,9 @@ class MCOImageCodec {
         ? _containerBlock
         : _containerRegions;
     final referenceEncodingValue = (paletteHeader >> 5) & 0x01;
-    final profileId = paletteHeader & 0x1f;
+    final hasTransparentColor =
+        (paletteHeader & _v2TransparentProfileFlag) != 0;
+    final profileId = paletteHeader & _v2ProfileIdMask;
     if (paletteKind != _paletteKindFixed &&
         paletteKind != _paletteKindDynamic) {
       throw const MCOImageInvalidPayloadException(
@@ -1544,6 +1577,9 @@ class MCOImageCodec {
       final height = bytes[3] + 1;
       _validateDimensions(width, height, payload: true);
       final reader = _BitReader(bytes, byteIndex: 4);
+      final transparentColor = hasTransparentColor
+          ? _readV2ColorRef(reader, profile)
+          : null;
       final pixels = _decodeV2Regions(
         reader,
         width,
@@ -1557,6 +1593,7 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: pixels,
+        transparentColor: transparentColor,
         encodingVersion: MCOImageEncodingVersion.v2,
       );
     }
@@ -1565,6 +1602,9 @@ class MCOImageCodec {
     final height = bytes[3] + 1;
     _validateDimensions(width, height, payload: true);
     final reader = _BitReader(bytes, byteIndex: 4);
+    final transparentColor = hasTransparentColor
+        ? _readV2ColorRef(reader, profile)
+        : null;
 
     if (boundsPresent) {
       final background = _readV2ColorRef(reader, profile);
@@ -1576,6 +1616,7 @@ class MCOImageCodec {
           height: height,
           paletteProfile: profile,
           pixels: List<int>.filled(width * height, background),
+          transparentColor: transparentColor,
           encodingVersion: MCOImageEncodingVersion.v2,
         );
       }
@@ -1602,10 +1643,12 @@ class MCOImageCodec {
         height: height,
         paletteProfile: profile,
         pixels: _insertBounds(width, height, background, cropped, bounds),
+        transparentColor: transparentColor,
         encodingVersion: MCOImageEncodingVersion.v2,
       );
     }
 
+    reader.alignToByte();
     final linear = _decodeV2Body(
       reader,
       width,
@@ -1621,6 +1664,7 @@ class MCOImageCodec {
       height: height,
       paletteProfile: profile,
       pixels: _fromScanOrder(linear, width, height, scan),
+      transparentColor: transparentColor,
       encodingVersion: MCOImageEncodingVersion.v2,
     );
   }
@@ -2511,6 +2555,7 @@ class MCOImageCodec {
     ScanMode scan, {
     _ImageBounds? bounds,
     int? backgroundColor,
+    int? transparentColor,
     int backgroundRank = 0,
     int regionCount = 0,
     int codecVersion = _encodeVersion,
@@ -2534,6 +2579,7 @@ class MCOImageCodec {
       boundsWidth: bounds?.width,
       boundsHeight: bounds?.height,
       backgroundColor: backgroundColor,
+      transparentColor: transparentColor,
       backgroundRank: backgroundRank,
       regionCount: regionCount,
       codecVersion: codecVersion,
@@ -5200,6 +5246,13 @@ class MCOImageCodec {
     }
     for (final pixel in image.pixels) {
       _validateColor(pixel, image.paletteProfile, 'pixel');
+    }
+    if (image.transparentColor != null) {
+      _validateColor(
+        image.transparentColor!,
+        image.paletteProfile,
+        'transparentColor',
+      );
     }
   }
 

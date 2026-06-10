@@ -32,11 +32,11 @@ class MCOImageMessage extends StatelessWidget {
 
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
-        paint.color = _colorForPixelValue(
-          image.paletteProfile,
-          image.pixels[y * image.width + x],
-          palette,
-        );
+        final pixel = image.pixels[y * image.width + x];
+        if (image.transparentColor != null && pixel == image.transparentColor) {
+          continue;
+        }
+        paint.color = _colorForPixelValue(image.paletteProfile, pixel, palette);
         canvas.drawRect(
           ui.Rect.fromLTWH(
             (x * cellSize).toDouble(),
@@ -111,12 +111,17 @@ class _MCOImagePainter extends CustomPainter {
     final cellWidth = size.width / image.width;
     final cellHeight = size.height / image.height;
     final paint = Paint()..isAntiAlias = false;
+    final transparentColor = image.transparentColor;
 
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
+        final pixel = image.pixels[y * image.width + x];
+        if (transparentColor != null && pixel == transparentColor) {
+          continue;
+        }
         paint.color = MCOImageMessage._colorForPixelValue(
           image.paletteProfile,
-          image.pixels[y * image.width + x],
+          pixel,
           palette,
         );
         canvas.drawRect(

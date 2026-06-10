@@ -58,7 +58,11 @@ class MCOImageFileSaver {
       rgba[offset] = _colorChannelToByte(color.r);
       rgba[offset + 1] = _colorChannelToByte(color.g);
       rgba[offset + 2] = _colorChannelToByte(color.b);
-      rgba[offset + 3] = _colorChannelToByte(color.a);
+      rgba[offset + 3] =
+          image.transparentColor != null &&
+              image.pixels[i] == image.transparentColor
+          ? 0
+          : _colorChannelToByte(color.a);
     }
 
     final completer = Completer<ui.Image>();
