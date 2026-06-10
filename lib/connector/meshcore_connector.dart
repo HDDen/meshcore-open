@@ -3340,8 +3340,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (pathLen != null &&
         pathLen >= 0 &&
-        (pathBytes == null ||
-            !_isPathLenValidForCurrentMode(pathLen, pathBytes))) {
+        !_isPathLenValidForCurrentMode(
+          pathLen,
+          pathBytes ?? Uint8List(0),
+        )) {
       appLogger.warn(
         'setPathOverride: invalid path for ${contact.name}: '
         'pathLen=$pathLen, bytesLen=${pathBytes?.length ?? 0}, '

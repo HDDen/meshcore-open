@@ -1278,7 +1278,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final connector = context.read<MeshCoreConnector>();
     final allContacts = connector.allContacts;
 
-    final formattedPath = PathHelper.formatPathHex(pathBytes);
+    final formattedPath = PathHelper.splitPathBytes(
+      pathBytes,
+      connector.pathHashByteWidth,
+    ).map(PathHelper.formatHopHex).join(',');
     final resolvedNames = PathHelper.resolvePathNames(
       pathBytes,
       allContacts,
