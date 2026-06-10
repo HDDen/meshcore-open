@@ -1161,6 +1161,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     final gifId = GifHelper.parseGif(replyText);
     final poi = parseMarkerText(replyText);
+    final mcoImage = MCOImageMessage.tryDecode(replyText);
 
     Widget contentPreview;
     if (gifId != null) {
@@ -1183,6 +1184,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             style: TextStyle(fontSize: 12 * textScale, color: previewTextColor),
           ),
         ],
+      );
+    } else if (mcoImage != null) {
+      contentPreview = ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: MCOImageMessage(image: mcoImage, maxSize: 80),
       );
     } else {
       contentPreview = Text(
@@ -1432,6 +1438,49 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildReplyBanner(double textScale) {
     final message = _replyingToMessage!;
+    final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final previewTextColor = Theme.of(
+      context,
+    ).colorScheme.onSecondaryContainer.withValues(alpha: 0.7);
+
+    Widget preview;
+    if (mcoImage != null) {
+      preview = LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          const maxHeight = 70.0;
+          final aspectRatio = mcoImage.width / mcoImage.height;
+          var width = maxWidth;
+          var height = width / aspectRatio;
+          if (height > maxHeight) {
+            height = maxHeight;
+            width = height * aspectRatio;
+          }
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: MCOImageMessage(
+                  image: mcoImage,
+                  maxSize: width > height ? width : height,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      preview = Text(
+        message.text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 11 * textScale, color: previewTextColor),
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1461,17 +1510,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     color: Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
                 ),
-                Text(
-                  message.text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11 * textScale,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
-                  ),
-                ),
+                const SizedBox(height: 4),
+                preview,
               ],
             ),
           ),
@@ -1492,7 +1532,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final settings = context.watch<AppSettingsService>().settings;
     final maxBytes = _maxChannelInputBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
-    final replyBannerHeight = _replyingToMessage != null ? 64.0 : 0.0;
+    final replyBannerHeight = _replyingToMessage != null
+        ? (MCOImageMessage.tryDecode(_replyingToMessage!.text) != null
+              ? 106.0
+              : 64.0)
+        : 0.0;
     final maxInputHeight =
         (mediaQuery.size.height -
                 mediaQuery.padding.top -
