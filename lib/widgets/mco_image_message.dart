@@ -6,19 +6,63 @@ import 'package:flutter/material.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 
+class MCOImageDecodeMetadata {
+  final MCOImage? image;
+  final int? unsupportedVersion;
+  final int currentMaxSupportedVersion;
+
+  const MCOImageDecodeMetadata({
+    required this.image,
+    required this.unsupportedVersion,
+    required this.currentMaxSupportedVersion,
+  });
+
+  bool get isImage => image != null;
+  bool get isUnsupportedVersion => unsupportedVersion != null;
+}
+
 class MCOImageMessage extends StatelessWidget {
   final MCOImage image;
   final double maxSize;
 
   const MCOImageMessage({super.key, required this.image, this.maxSize = 200});
 
-  static MCOImage? tryDecode(String text) {
-    if (!text.startsWith(MCOImageCodec.prefix)) return null;
-    try {
-      return MCOImageCodec().decode(text);
-    } on MCOImageCodecException {
-      return null;
+  static MCOImageDecodeMetadata decodeMetadata(String text) {
+    final current = MCOImageCodec.maxSupportedVersion;
+    if (!text.startsWith(MCOImageCodec.prefix)) {
+      return MCOImageDecodeMetadata(
+        image: null,
+        unsupportedVersion: null,
+        currentMaxSupportedVersion: current,
+      );
     }
+
+    final received = MCOImageCodec.decodeHeaderVersion(text);
+    if (received != null && received > current) {
+      return MCOImageDecodeMetadata(
+        image: null,
+        unsupportedVersion: received,
+        currentMaxSupportedVersion: current,
+      );
+    }
+
+    try {
+      return MCOImageDecodeMetadata(
+        image: MCOImageCodec().decode(text),
+        unsupportedVersion: null,
+        currentMaxSupportedVersion: current,
+      );
+    } on MCOImageCodecException {
+      return MCOImageDecodeMetadata(
+        image: null,
+        unsupportedVersion: null,
+        currentMaxSupportedVersion: current,
+      );
+    }
+  }
+
+  static MCOImage? tryDecode(String text) {
+    return decodeMetadata(text).image;
   }
 
   static Future<Uint8List> renderPngBytes(

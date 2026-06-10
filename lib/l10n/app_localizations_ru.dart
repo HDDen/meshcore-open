@@ -5123,5 +5123,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasSendToEdit => 'Отправить в холст';
 
   @override
+  String chat_canvasFormatNotSupported(int received, int current) {
+    return 'Версия MCOimg: $received, текущий кодек поддерживает до $current';
+  }
+
+  @override
   String get chat_showHops => 'Отображать хопы';
 }

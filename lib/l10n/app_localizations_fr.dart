@@ -5142,5 +5142,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_canvasSendToEdit => 'Send to canvas';
 
   @override
+  String chat_canvasFormatNotSupported(int received, int current) {
+    return 'MCOimg format version: $received, current codec supports up to $current';
+  }
+
+  @override
   String get chat_showHops => 'Show hops';
 }

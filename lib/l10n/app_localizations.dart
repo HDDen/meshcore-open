@@ -8722,6 +8722,12 @@ abstract class AppLocalizations {
   /// **'Send to canvas'**
   String get chat_canvasSendToEdit;
 
+  /// No description provided for @chat_canvasFormatNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg format version: {received}, current codec supports up to {current}'**
+  String chat_canvasFormatNotSupported(int received, int current);
+
   /// No description provided for @chat_showHops.
   ///
   /// In en, this message translates to:

@@ -163,6 +163,7 @@ class MCOImageCodec {
   static const int _v2EncodeVersion = 2;
   static const int _minSupportedVersion = 0;
   static const int _maxSupportedVersion = 2;
+  static const int maxSupportedVersion = _maxSupportedVersion;
   static const int _containerBlock = 0;
   static const int _containerRegions = 1;
   static const int _paletteKindFixed = 0;
@@ -1402,6 +1403,17 @@ class MCOImageCodec {
       }
     }
     return best!;
+  }
+
+  static int? decodeHeaderVersion(String text) {
+    if (!text.startsWith(prefix)) return null;
+    try {
+      final bytes = _Base91.decode(text.substring(prefix.length));
+      if (bytes.isEmpty) return null;
+      return (bytes[0] >> 6) & 0x03;
+    } catch (_) {
+      return null;
+    }
   }
 
   MCOImage decode(String text) {

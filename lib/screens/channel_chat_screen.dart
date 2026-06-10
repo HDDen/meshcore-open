@@ -713,8 +713,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final gifId = GifHelper.parseGif(message.text);
-    final mcoImage = MCOImageMessage.tryDecode(message.text);
-    final isMediaMessage = gifId != null || mcoImage != null;
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final mcoImage = mcoImageMetadata.image;
+    final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final isMediaMessage =
+        gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
     final translatedDisplayText =
         message.translatedText != null &&
@@ -836,6 +839,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   ),
                                 )
                               : null,
+                        )
+                      else if (unsupportedMcoImageVersion != null)
+                        _buildUnsupportedMcoImageMessage(
+                          context,
+                          unsupportedMcoImageVersion,
+                          mcoImageMetadata.currentMaxSupportedVersion,
+                          textScale,
                         )
                       else if (gifId != null)
                         Stack(
@@ -1152,6 +1162,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Widget _buildUnsupportedMcoImageMessage(
+    BuildContext context,
+    int received,
+    int current,
+    double textScale,
+  ) {
+    return Text(
+      context.l10n.chat_canvasFormatNotSupported(received, current),
+      style: TextStyle(
+        fontSize: 12 * textScale,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
   Widget _buildReplyPreview(ChannelMessage message, double textScale) {
     final connector = context.read<MeshCoreConnector>();
     final isOwnNode = message.replyToSenderName == connector.selfName;
@@ -1161,7 +1187,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     final gifId = GifHelper.parseGif(replyText);
     final poi = parseMarkerText(replyText);
-    final mcoImage = MCOImageMessage.tryDecode(replyText);
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(replyText);
+    final mcoImage = mcoImageMetadata.image;
+    final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
 
     Widget contentPreview;
     if (gifId != null) {
@@ -1189,6 +1217,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       contentPreview = ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: MCOImageMessage(image: mcoImage, maxSize: 80),
+      );
+    } else if (unsupportedMcoImageVersion != null) {
+      contentPreview = _buildUnsupportedMcoImageMessage(
+        context,
+        unsupportedMcoImageVersion,
+        mcoImageMetadata.currentMaxSupportedVersion,
+        textScale,
       );
     } else {
       contentPreview = Text(
@@ -1438,7 +1473,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildReplyBanner(double textScale) {
     final message = _replyingToMessage!;
-    final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final mcoImage = mcoImageMetadata.image;
+    final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
     final previewTextColor = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer.withValues(alpha: 0.7);
@@ -1471,6 +1508,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             ),
           );
         },
+      );
+    } else if (unsupportedMcoImageVersion != null) {
+      preview = _buildUnsupportedMcoImageMessage(
+        context,
+        unsupportedMcoImageVersion,
+        mcoImageMetadata.currentMaxSupportedVersion,
+        textScale,
       );
     } else {
       preview = Text(
@@ -1533,7 +1577,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final maxBytes = _maxChannelInputBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
     final replyBannerHeight = _replyingToMessage != null
-        ? (MCOImageMessage.tryDecode(_replyingToMessage!.text) != null
+        ? (MCOImageMessage.decodeMetadata(_replyingToMessage!.text).image !=
+                  null
               ? 106.0
               : 64.0)
         : 0.0;

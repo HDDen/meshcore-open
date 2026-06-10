@@ -1278,10 +1278,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final connector = context.read<MeshCoreConnector>();
     final allContacts = connector.allContacts;
 
-    final formattedPath = PathHelper.splitPathBytes(
-      pathBytes,
-      connector.pathHashByteWidth,
-    ).map(PathHelper.formatHopHex).join(',');
+    final formattedPath = PathHelper.formatPathHex(pathBytes);
     final resolvedNames = PathHelper.resolvePathNames(
       pathBytes,
       allContacts,
@@ -2097,8 +2094,11 @@ class _MessageBubble extends StatelessWidget {
     final isOutgoing = message.isOutgoing;
     final colorScheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
-    final mcoImage = MCOImageMessage.tryDecode(message.text);
-    final isMediaMessage = gifId != null || mcoImage != null;
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final mcoImage = mcoImageMetadata.image;
+    final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final isMediaMessage =
+        gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
     final isFailed = message.status == MessageStatus.failed;
     final bubbleColor = isFailed
@@ -2206,6 +2206,14 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   )
                                 : null,
+                          )
+                        else if (unsupportedMcoImageVersion != null)
+                          _buildUnsupportedMcoImageMessage(
+                            context,
+                            unsupportedMcoImageVersion,
+                            mcoImageMetadata.currentMaxSupportedVersion,
+                            textColor,
+                            textScale,
                           )
                         else if (gifId != null)
                           Stack(
@@ -2433,6 +2441,23 @@ class _MessageBubble extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildUnsupportedMcoImageMessage(
+    BuildContext context,
+    int received,
+    int current,
+    Color textColor,
+    double textScale,
+  ) {
+    return Text(
+      context.l10n.chat_canvasFormatNotSupported(received, current),
+      style: TextStyle(
+        color: textColor.withValues(alpha: 0.78),
+        fontSize: 12 * textScale,
+        fontStyle: FontStyle.italic,
       ),
     );
   }
