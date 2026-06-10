@@ -160,6 +160,9 @@ class MCOImageCodec {
   static const int _defaultMaxRegions = 16;
   static const int _maxV2Regions = 32;
   static const int _maxDynamicLocalPalette = 64;
+  static const int _greedyTieLargestArea = 0;
+  static const int _greedyTieWidest = 1;
+  static const int _greedyTieTallest = 2;
 
   static const List<ImageMode> _blockModes = [
     ImageMode.rawGlobal,
@@ -599,7 +602,15 @@ class MCOImageCodec {
       connectedRegions,
       maxRegions,
     );
-    final greedyRegions = _findGreedyRectRegions(
+    final sparseSplitRegions = _splitRegionsBySparseLines(
+      image.pixels,
+      image.width,
+      backgroundColor,
+      connectedRegions,
+      maxRegions,
+      maxLineNonBackground: 2,
+    );
+    final greedyRegionVariants = _findGreedyRectRegionVariants(
       image.pixels,
       image.width,
       image.height,
@@ -610,7 +621,8 @@ class MCOImageCodec {
     final variants = <List<_ImageBounds>>[
       connectedRegions,
       if (splitRegions.isNotEmpty) splitRegions,
-      if (greedyRegions.isNotEmpty) greedyRegions,
+      if (sparseSplitRegions.isNotEmpty) sparseSplitRegions,
+      ...greedyRegionVariants,
     ];
 
     _V2Payload? best;
@@ -2596,17 +2608,36 @@ class MCOImageCodec {
     List<_ImageBounds> regions,
     int maxRegions,
   ) {
+    return _splitRegionsBySparseLines(
+      pixels,
+      fullWidth,
+      background,
+      regions,
+      maxRegions,
+      maxLineNonBackground: 0,
+    );
+  }
+
+  List<_ImageBounds> _splitRegionsBySparseLines(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    List<_ImageBounds> regions,
+    int maxRegions, {
+    required int maxLineNonBackground,
+  }) {
     if (maxRegions == 0 || regions.isEmpty) return const <_ImageBounds>[];
 
     final result = <_ImageBounds>[];
     for (final region in regions) {
-      _splitRegionByBestEmptyLine(
+      _splitRegionByBestSparseLine(
         pixels,
         fullWidth,
         background,
         region,
         result,
         maxRegions,
+        maxLineNonBackground: maxLineNonBackground,
       );
       if (result.length > maxRegions) {
         return const <_ImageBounds>[];
@@ -2618,208 +2649,271 @@ class MCOImageCodec {
       return byY != 0 ? byY : a.x.compareTo(b.x);
     });
 
-    if (result.length == regions.length &&
-        _sameRegionList(result, regions)) {
+    if (result.length == regions.length && _sameRegionList(result, regions)) {
       return const <_ImageBounds>[];
     }
     return result;
   }
 
-  void _splitRegionByBestEmptyLine(
+  void _splitRegionByBestSparseLine(
     List<int> pixels,
     int fullWidth,
     int background,
     _ImageBounds region,
     List<_ImageBounds> output,
-    int maxRegions,
-  ) {
+    int maxRegions, {
+    required int maxLineNonBackground,
+  }) {
     if (output.length > maxRegions) return;
 
-    final horizontalSplit = _bestEmptyRowSplit(
+    final horizontalSplit = _bestSparseRowSplit(
       pixels,
       fullWidth,
       background,
       region,
+      maxLineNonBackground,
     );
-    final verticalSplit = _bestEmptyColumnSplit(
+    final verticalSplit = _bestSparseColumnSplit(
       pixels,
       fullWidth,
       background,
       region,
+      maxLineNonBackground,
     );
 
-    final split = _betterRegionSplit(horizontalSplit, verticalSplit);
+    final split = _betterRegionPartition(horizontalSplit, verticalSplit);
     if (split == null) {
       output.add(region);
       return;
     }
 
-    _splitRegionByBestEmptyLine(
-      pixels,
-      fullWidth,
-      background,
-      split.first,
-      output,
-      maxRegions,
-    );
-    _splitRegionByBestEmptyLine(
-      pixels,
-      fullWidth,
-      background,
-      split.second,
-      output,
-      maxRegions,
-    );
+    for (final part in split.parts) {
+      _splitRegionByBestSparseLine(
+        pixels,
+        fullWidth,
+        background,
+        part,
+        output,
+        maxRegions,
+        maxLineNonBackground: maxLineNonBackground,
+      );
+      if (output.length > maxRegions) return;
+    }
   }
 
-  _RegionSplit? _bestEmptyRowSplit(
+  _RegionPartition? _bestSparseRowSplit(
     List<int> pixels,
     int fullWidth,
     int background,
     _ImageBounds region,
+    int maxLineNonBackground,
   ) {
-    _RegionSplit? best;
+    _RegionPartition? best;
     var y = region.y;
     while (y < region.y + region.height) {
-      final isEmpty = _isRegionRowEmpty(
+      final count = _regionRowNonBackgroundCount(
         pixels,
         fullWidth,
         background,
         region,
         y,
       );
-      if (!isEmpty) {
+      if (count > maxLineNonBackground) {
         y++;
         continue;
       }
 
       final startY = y;
       while (y < region.y + region.height &&
-          _isRegionRowEmpty(pixels, fullWidth, background, region, y)) {
+          _regionRowNonBackgroundCount(
+                pixels,
+                fullWidth,
+                background,
+                region,
+                y,
+              ) <=
+              maxLineNonBackground) {
         y++;
       }
       final endY = y - 1;
 
-      final top = _tightBoundsInRect(
-        pixels,
-        fullWidth,
-        background,
-        _ImageBounds(
-          x: region.x,
-          y: region.y,
-          width: region.width,
-          height: startY - region.y,
+      final candidates = <_ImageBounds?>[
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: region.x,
+            y: region.y,
+            width: region.width,
+            height: startY - region.y,
+          ),
         ),
-      );
-      final bottom = _tightBoundsInRect(
-        pixels,
-        fullWidth,
-        background,
-        _ImageBounds(
-          x: region.x,
-          y: endY + 1,
-          width: region.width,
-          height: region.y + region.height - endY - 1,
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: region.x,
+            y: startY,
+            width: region.width,
+            height: endY - startY + 1,
+          ),
         ),
-      );
-      if (top == null || bottom == null) continue;
-      final split = _RegionSplit(top, bottom, region.area - top.area - bottom.area);
-      if (split.savedArea > 0 && (best == null || split.savedArea > best.savedArea)) {
-        best = split;
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: region.x,
+            y: endY + 1,
+            width: region.width,
+            height: region.y + region.height - endY - 1,
+          ),
+        ),
+      ];
+
+      final parts = candidates.whereType<_ImageBounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
       }
     }
     return best;
   }
 
-  _RegionSplit? _bestEmptyColumnSplit(
+  _RegionPartition? _bestSparseColumnSplit(
     List<int> pixels,
     int fullWidth,
     int background,
     _ImageBounds region,
+    int maxLineNonBackground,
   ) {
-    _RegionSplit? best;
+    _RegionPartition? best;
     var x = region.x;
     while (x < region.x + region.width) {
-      final isEmpty = _isRegionColumnEmpty(
+      final count = _regionColumnNonBackgroundCount(
         pixels,
         fullWidth,
         background,
         region,
         x,
       );
-      if (!isEmpty) {
+      if (count > maxLineNonBackground) {
         x++;
         continue;
       }
 
       final startX = x;
       while (x < region.x + region.width &&
-          _isRegionColumnEmpty(pixels, fullWidth, background, region, x)) {
+          _regionColumnNonBackgroundCount(
+                pixels,
+                fullWidth,
+                background,
+                region,
+                x,
+              ) <=
+              maxLineNonBackground) {
         x++;
       }
       final endX = x - 1;
 
-      final left = _tightBoundsInRect(
-        pixels,
-        fullWidth,
-        background,
-        _ImageBounds(
-          x: region.x,
-          y: region.y,
-          width: startX - region.x,
-          height: region.height,
+      final candidates = <_ImageBounds?>[
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: region.x,
+            y: region.y,
+            width: startX - region.x,
+            height: region.height,
+          ),
         ),
-      );
-      final right = _tightBoundsInRect(
-        pixels,
-        fullWidth,
-        background,
-        _ImageBounds(
-          x: endX + 1,
-          y: region.y,
-          width: region.x + region.width - endX - 1,
-          height: region.height,
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: startX,
+            y: region.y,
+            width: endX - startX + 1,
+            height: region.height,
+          ),
         ),
-      );
-      if (left == null || right == null) continue;
-      final split = _RegionSplit(left, right, region.area - left.area - right.area);
-      if (split.savedArea > 0 && (best == null || split.savedArea > best.savedArea)) {
-        best = split;
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _ImageBounds(
+            x: endX + 1,
+            y: region.y,
+            width: region.x + region.width - endX - 1,
+            height: region.height,
+          ),
+        ),
+      ];
+
+      final parts = candidates.whereType<_ImageBounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
       }
     }
     return best;
   }
 
-  _RegionSplit? _betterRegionSplit(_RegionSplit? a, _RegionSplit? b) {
+  _RegionPartition? _partitionIfUseful(
+    _ImageBounds original,
+    List<_ImageBounds> parts,
+  ) {
+    if (parts.length < 2) return null;
+    var area = 0;
+    for (final part in parts) {
+      area += part.area;
+    }
+    final savedArea = original.area - area;
+    if (savedArea <= 0) return null;
+    return _RegionPartition(List.unmodifiable(parts), savedArea);
+  }
+
+  _RegionPartition? _betterRegionPartition(
+    _RegionPartition? a,
+    _RegionPartition? b,
+  ) {
     if (a == null) return b;
     if (b == null) return a;
     return a.savedArea >= b.savedArea ? a : b;
   }
 
-  bool _isRegionRowEmpty(
+  int _regionRowNonBackgroundCount(
     List<int> pixels,
     int fullWidth,
     int background,
     _ImageBounds region,
     int y,
   ) {
+    var count = 0;
     for (var x = region.x; x < region.x + region.width; x++) {
-      if (pixels[y * fullWidth + x] != background) return false;
+      if (pixels[y * fullWidth + x] != background) count++;
     }
-    return true;
+    return count;
   }
 
-  bool _isRegionColumnEmpty(
+  int _regionColumnNonBackgroundCount(
     List<int> pixels,
     int fullWidth,
     int background,
     _ImageBounds region,
     int x,
   ) {
+    var count = 0;
     for (var y = region.y; y < region.y + region.height; y++) {
-      if (pixels[y * fullWidth + x] != background) return false;
+      if (pixels[y * fullWidth + x] != background) count++;
     }
-    return true;
+    return count;
   }
 
   _ImageBounds? _tightBoundsInRect(
@@ -2867,84 +2961,218 @@ class MCOImageCodec {
     return true;
   }
 
-  List<_ImageBounds> _findGreedyRectRegions(
+  List<List<_ImageBounds>> _findGreedyRectRegionVariants(
     List<int> pixels,
     int width,
     int height,
     int background,
     int maxRegions,
   ) {
-    if (maxRegions == 0) return const <_ImageBounds>[];
+    if (maxRegions == 0) return const <List<_ImageBounds>>[];
 
+    const strategies = <_GreedyRectStrategy>[
+      _GreedyRectStrategy(1, 1, _greedyTieLargestArea),
+      _GreedyRectStrategy(1, 1, _greedyTieWidest),
+      _GreedyRectStrategy(1, 1, _greedyTieTallest),
+      _GreedyRectStrategy(-1, 1, _greedyTieLargestArea),
+      _GreedyRectStrategy(1, -1, _greedyTieLargestArea),
+      _GreedyRectStrategy(-1, -1, _greedyTieLargestArea),
+    ];
+
+    final variants = <List<_ImageBounds>>[];
+    final seen = <String>{};
+    for (final strategy in strategies) {
+      final regions = _findGreedyRectRegionsWithStrategy(
+        pixels,
+        width,
+        height,
+        background,
+        maxRegions,
+        strategy,
+      );
+      if (regions.isEmpty) continue;
+      final key = _regionListKey(regions);
+      if (seen.add(key)) variants.add(regions);
+    }
+    return variants;
+  }
+
+  List<_ImageBounds> _findGreedyRectRegionsWithStrategy(
+    List<int> pixels,
+    int width,
+    int height,
+    int background,
+    int maxRegions,
+    _GreedyRectStrategy strategy,
+  ) {
     final covered = List<bool>.filled(pixels.length, false);
     final regions = <_ImageBounds>[];
 
     while (true) {
-      var startIndex = -1;
-      for (var i = 0; i < pixels.length; i++) {
-        if (pixels[i] != background && !covered[i]) {
-          startIndex = i;
-          break;
-        }
-      }
+      final startIndex = _findGreedyStartIndex(
+        pixels,
+        covered,
+        width,
+        height,
+        background,
+        strategy,
+      );
       if (startIndex < 0) break;
 
       final startX = startIndex % width;
       final startY = startIndex ~/ width;
-      var firstRowWidth = 0;
-      while (startX + firstRowWidth < width) {
-        final index = startY * width + startX + firstRowWidth;
-        if (pixels[index] == background || covered[index]) break;
-        firstRowWidth++;
-      }
-
-      var bestWidth = 1;
-      var bestHeight = 1;
-      var bestArea = 1;
-      var maxCandidateWidth = firstRowWidth;
-
-      for (var candidateHeight = 1;
-          startY + candidateHeight - 1 < height;
-          candidateHeight++) {
-        final y = startY + candidateHeight - 1;
-        var rowWidth = 0;
-        while (rowWidth < maxCandidateWidth) {
-          final index = y * width + startX + rowWidth;
-          if (pixels[index] == background || covered[index]) break;
-          rowWidth++;
-        }
-        if (rowWidth == 0) break;
-
-        maxCandidateWidth = math.min(maxCandidateWidth, rowWidth);
-        final area = maxCandidateWidth * candidateHeight;
-        if (area > bestArea ||
-            (area == bestArea && candidateHeight > bestHeight)) {
-          bestArea = area;
-          bestWidth = maxCandidateWidth;
-          bestHeight = candidateHeight;
-        }
-      }
-
-      regions.add(
-        _ImageBounds(
-          x: startX,
-          y: startY,
-          width: bestWidth,
-          height: bestHeight,
-        ),
+      final rect = _bestGreedyRectAt(
+        pixels,
+        covered,
+        width,
+        height,
+        background,
+        startX,
+        startY,
+        strategy,
       );
+
+      regions.add(rect);
       if (regions.length > maxRegions) {
         return const <_ImageBounds>[];
       }
 
-      for (var y = startY; y < startY + bestHeight; y++) {
-        for (var x = startX; x < startX + bestWidth; x++) {
+      for (var y = rect.y; y < rect.y + rect.height; y++) {
+        for (var x = rect.x; x < rect.x + rect.width; x++) {
           covered[y * width + x] = true;
         }
       }
     }
 
+    regions.sort((a, b) {
+      final byY = a.y.compareTo(b.y);
+      return byY != 0 ? byY : a.x.compareTo(b.x);
+    });
     return regions;
+  }
+
+  int _findGreedyStartIndex(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int height,
+    int background,
+    _GreedyRectStrategy strategy,
+  ) {
+    final yStart = strategy.verticalDirection > 0 ? 0 : height - 1;
+    final yEnd = strategy.verticalDirection > 0 ? height : -1;
+    final xStart = strategy.horizontalDirection > 0 ? 0 : width - 1;
+    final xEnd = strategy.horizontalDirection > 0 ? width : -1;
+
+    for (var y = yStart; y != yEnd; y += strategy.verticalDirection) {
+      for (var x = xStart; x != xEnd; x += strategy.horizontalDirection) {
+        final index = y * width + x;
+        if (pixels[index] != background && !covered[index]) return index;
+      }
+    }
+    return -1;
+  }
+
+  _ImageBounds _bestGreedyRectAt(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int height,
+    int background,
+    int startX,
+    int startY,
+    _GreedyRectStrategy strategy,
+  ) {
+    var bestWidth = 1;
+    var bestHeight = 1;
+    var maxCandidateWidth = _greedyRunLength(
+      pixels,
+      covered,
+      width,
+      background,
+      startX,
+      startY,
+      strategy.horizontalDirection,
+    );
+
+    for (var candidateHeight = 1;; candidateHeight++) {
+      final y = startY + (candidateHeight - 1) * strategy.verticalDirection;
+      if (y < 0 || y >= height) break;
+
+      final rowWidth = _greedyRunLength(
+        pixels,
+        covered,
+        width,
+        background,
+        startX,
+        y,
+        strategy.horizontalDirection,
+      );
+      if (rowWidth == 0) break;
+
+      maxCandidateWidth = math.min(maxCandidateWidth, rowWidth);
+      if (_isBetterGreedyRect(
+        maxCandidateWidth,
+        candidateHeight,
+        bestWidth,
+        bestHeight,
+        strategy.tieMode,
+      )) {
+        bestWidth = maxCandidateWidth;
+        bestHeight = candidateHeight;
+      }
+    }
+
+    final x = strategy.horizontalDirection > 0
+        ? startX
+        : startX - bestWidth + 1;
+    final y = strategy.verticalDirection > 0
+        ? startY
+        : startY - bestHeight + 1;
+    return _ImageBounds(x: x, y: y, width: bestWidth, height: bestHeight);
+  }
+
+  int _greedyRunLength(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int background,
+    int startX,
+    int y,
+    int horizontalDirection,
+  ) {
+    var run = 0;
+    for (var x = startX; x >= 0 && x < width; x += horizontalDirection) {
+      final index = y * width + x;
+      if (pixels[index] == background || covered[index]) break;
+      run++;
+    }
+    return run;
+  }
+
+  bool _isBetterGreedyRect(
+    int width,
+    int height,
+    int bestWidth,
+    int bestHeight,
+    int tieMode,
+  ) {
+    final area = width * height;
+    final bestArea = bestWidth * bestHeight;
+    if (area != bestArea) return area > bestArea;
+    return switch (tieMode) {
+      _greedyTieWidest => width > bestWidth,
+      _greedyTieTallest => height > bestHeight,
+      _ => height > bestHeight,
+    };
+  }
+
+  String _regionListKey(List<_ImageBounds> regions) {
+    final parts = <String>[];
+    for (final region in regions) {
+      parts.add('${region.x},${region.y},${region.width},${region.height}');
+    }
+    return parts.join(';');
   }
 
   static List<_ImageBounds> _findRegions(
@@ -5295,12 +5523,23 @@ class _SparseSegment {
   const _SparseSegment(this.start, this.color, this.length);
 }
 
-class _RegionSplit {
-  final _ImageBounds first;
-  final _ImageBounds second;
+class _RegionPartition {
+  final List<_ImageBounds> parts;
   final int savedArea;
 
-  const _RegionSplit(this.first, this.second, this.savedArea);
+  const _RegionPartition(this.parts, this.savedArea);
+}
+
+class _GreedyRectStrategy {
+  final int horizontalDirection;
+  final int verticalDirection;
+  final int tieMode;
+
+  const _GreedyRectStrategy(
+    this.horizontalDirection,
+    this.verticalDirection,
+    this.tieMode,
+  );
 }
 
 class _ImageBounds {
