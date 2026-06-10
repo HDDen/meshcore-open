@@ -230,6 +230,14 @@
         </div>
 
         <label style="margin-top: 12px;">
+          Format version
+          <select id="formatVersion">
+            <option value="2">v2</option>
+            <option value="1">v1 legacy</option>
+          </select>
+        </label>
+
+        <label style="margin-top: 12px;">
           Palette profile
           <select id="palette"></select>
         </label>
@@ -325,6 +333,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       PaletteProfile,
       PaletteDisplayOrder,
       PaletteDisplayName,
+      MCOImageEncodingVersion,
       getPalette,
       whiteIndexFor,
       blackIndexFor,
@@ -336,6 +345,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     const codec = new MCOImageCodec();
     const editor = document.getElementById('editor');
     const decodedCanvas = document.getElementById('decoded');
+    const formatVersionSelect = document.getElementById('formatVersion');
     const paletteSelect = document.getElementById('palette');
     const palettePreview = document.getElementById('palettePreview');
     const encodedText = document.getElementById('encoded');
@@ -349,6 +359,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       width: 11,
       height: 11,
       paletteProfile: PaletteProfile.master8,
+      encodingVersion: MCOImageEncodingVersion.v2,
       pixels: [],
       selectedColor: 0,
       drawing: false,
@@ -358,13 +369,9 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
 
     function init() {
       console.log('[mcoimg-demo] init start');
-      for (const profile of PaletteDisplayOrder) {
-        const option = document.createElement('option');
-        option.value = String(profile);
-        option.textContent = PaletteDisplayName[profile];
-        paletteSelect.appendChild(option);
-      }
+      renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
+      formatVersionSelect.value = String(state.encodingVersion);
       state.selectedColor = blackIndexFor(state.paletteProfile);
       resetPixels();
       bindEvents();
@@ -377,6 +384,27 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     }
 
     function bindEvents() {
+      formatVersionSelect.addEventListener('change', () => {
+        state.encodingVersion = Number(formatVersionSelect.value);
+        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+        heightInput.max = widthInput.max;
+        if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy && isDynamicProfile(state.paletteProfile)) {
+          state.paletteProfile = PaletteProfile.master8;
+          state.pixels = state.pixels.map((pixel) =>
+            Math.min(pixel, getPalette(state.paletteProfile).length - 1),
+          );
+        }
+        state.width = clamp(state.width, 1, Number(widthInput.max));
+        state.height = clamp(state.height, 1, Number(heightInput.max));
+        widthInput.value = String(state.width);
+        heightInput.value = String(state.height);
+        renderPaletteOptions();
+        formatVersionSelect.value = String(state.encodingVersion);
+        renderPaletteOptions();
+        paletteSelect.value = String(state.paletteProfile);
+        renderAll();
+      });
+
       paletteSelect.addEventListener('change', () => {
         state.paletteProfile = Number(paletteSelect.value);
         state.selectedColor = Math.min(
@@ -433,6 +461,29 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       });
     }
 
+    function isDynamicProfile(profile) {
+      return Number(profile) >= PaletteProfile.dynamicGlobal8;
+    }
+
+    function renderPaletteOptions() {
+      paletteSelect.textContent = '';
+      for (const profile of PaletteDisplayOrder) {
+        if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy && isDynamicProfile(profile)) {
+          continue;
+        }
+        const option = document.createElement('option');
+        option.value = String(profile);
+        option.textContent = PaletteDisplayName[profile];
+        paletteSelect.appendChild(option);
+      }
+    }
+
+    function selectedEncodingVersion() {
+      return state.encodingVersion === MCOImageEncodingVersion.v1Legacy
+        ? MCOImageEncodingVersion.v1Legacy
+        : MCOImageEncodingVersion.v2;
+    }
+
     function selectTool(tool) {
       state.tool = tool;
       document.getElementById('toolPencil').classList.toggle('active', tool === 'pencil');
@@ -442,16 +493,18 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     }
 
     function applySize() {
-      const nextWidth = clamp(Number(widthInput.value), 1, 85);
-      const nextHeight = clamp(Number(heightInput.value), 1, 85);
+      const maxSize = selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
+      const nextWidth = clamp(Number(widthInput.value), 1, maxSize);
+      const nextHeight = clamp(Number(heightInput.value), 1, maxSize);
       console.log('[mcoimg-demo] apply size', { nextWidth, nextHeight });
       resizeCanvasState(nextWidth, nextHeight);
       renderAll();
     }
 
     function syncCanvasStateFromInputs() {
-      const nextWidth = clamp(Number(widthInput.value), 1, 85);
-      const nextHeight = clamp(Number(heightInput.value), 1, 85);
+      const maxSize = selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
+      const nextWidth = clamp(Number(widthInput.value), 1, maxSize);
+      const nextHeight = clamp(Number(heightInput.value), 1, maxSize);
       state.paletteProfile = Number(paletteSelect.value);
       console.log('[mcoimg-demo] sync state from inputs', {
         nextWidth,
@@ -675,11 +728,16 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           height: state.height,
           paletteProfile: state.paletteProfile,
           pixels: state.pixels,
+          encodingVersion: selectedEncodingVersion(),
+        }, {
+          encodingVersion: selectedEncodingVersion(),
         });
         encodedText.value = encoded.text;
         encodedMeta.textContent =
           `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
-          `${encoded.modeName}/${encoded.scanName}`;
+          `v${encoded.codecVersion || selectedEncodingVersion()} ` +
+          `${encoded.modeName}/${encoded.scanName}` +
+          (encoded.paletteKind ? `, ${encoded.paletteKind}` : '');
         drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
       } catch (error) {
         encodedMeta.textContent = error.message;
@@ -692,6 +750,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         state.width = image.width;
         state.height = image.height;
         state.paletteProfile = image.paletteProfile;
+        state.encodingVersion = image.encodingVersion || MCOImageEncodingVersion.v1Legacy;
         state.pixels = image.pixels.slice();
         state.selectedColor = blackIndexFor(state.paletteProfile);
         widthInput.value = String(state.width);
