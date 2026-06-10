@@ -48,7 +48,10 @@ class MCOImageFileSaver {
 
     for (var i = 0; i < image.pixels.length; i++) {
       final colorIndex = image.paletteProfile.isDynamic
-          ? image.pixels[i].clamp(0, MCOImageDynamicPalette.global512.length - 1)
+          ? image.pixels[i].clamp(
+              0,
+              MCOImageDynamicPalette.global512.length - 1,
+            )
           : image.pixels[i].clamp(0, palette.length - 1);
       final color = palette[colorIndex.toInt()];
       final offset = i * 4;

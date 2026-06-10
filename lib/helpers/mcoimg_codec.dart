@@ -22,7 +22,16 @@ enum PaletteProfile {
   dynamicGlobal512,
 }
 
-enum ImageMode { rawGlobal, rawLocal, rleLocal, sparseBg, regionsBg, biColorMask, rowDelta, rowRepeat }
+enum ImageMode {
+  rawGlobal,
+  rawLocal,
+  rleLocal,
+  sparseBg,
+  regionsBg,
+  biColorMask,
+  rowDelta,
+  rowRepeat,
+}
 
 enum ScanMode { h, v, s, sv }
 
@@ -957,7 +966,8 @@ class MCOImageCodec {
         profile,
         backgroundColor,
       );
-      if (foregroundProfileColorId == null || backgroundProfileColorId == null) {
+      if (foregroundProfileColorId == null ||
+          backgroundProfileColorId == null) {
         throw MCOImageInvalidInputException(
           'Bi-color mask color is not available in ${profile.name}',
         );
@@ -970,8 +980,10 @@ class MCOImageCodec {
       _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
       final usedBankCount =
           referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
-          ? {backgroundProfileColorId >> 6, foregroundProfileColorId >> 6}
-                .length
+          ? {
+              backgroundProfileColorId >> 6,
+              foregroundProfileColorId >> 6,
+            }.length
           : null;
       return _V2BlockPayload(
         writer.toBytes(),
@@ -1069,23 +1081,27 @@ class MCOImageCodec {
         }
         break;
       case ImageMode.rowRepeat:
-        final localPixels = linear.map((globalIndex) {
-          final profileColorId = _profileColorIdForGlobalIndex(
-            profile,
-            globalIndex,
-          )!;
-          return localIndexByProfileColorId[profileColorId]!;
-        }).toList(growable: false);
+        final localPixels = linear
+            .map((globalIndex) {
+              final profileColorId = _profileColorIdForGlobalIndex(
+                profile,
+                globalIndex,
+              )!;
+              return localIndexByProfileColorId[profileColorId]!;
+            })
+            .toList(growable: false);
         _writeRowRepeatBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rowDelta:
-        final localPixels = linear.map((globalIndex) {
-          final profileColorId = _profileColorIdForGlobalIndex(
-            profile,
-            globalIndex,
-          )!;
-          return localIndexByProfileColorId[profileColorId]!;
-        }).toList(growable: false);
+        final localPixels = linear
+            .map((globalIndex) {
+              final profileColorId = _profileColorIdForGlobalIndex(
+                profile,
+                globalIndex,
+              )!;
+              return localIndexByProfileColorId[profileColorId]!;
+            })
+            .toList(growable: false);
         _writeRowDeltaBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rawGlobal:
@@ -1748,28 +1764,38 @@ class MCOImageCodec {
           rowLength,
           localBits,
         );
-        return localPixels.map((index) {
-          if (index >= palette.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Row-repeat local color index out of range',
-            );
-          }
-          return palette[index];
-        }).toList(growable: false);
+        return localPixels
+            .map((index) {
+              if (index >= palette.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Row-repeat local color index out of range',
+                );
+              }
+              return palette[index];
+            })
+            .toList(growable: false);
       case ImageMode.rowDelta:
         final palette = _readV2LocalPalette(reader, profile);
         final localBits = _localBits(palette.length);
-        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
-        return localPixels.map((index) {
-          if (index >= palette.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Row-delta local color index out of range',
-            );
-          }
-          return palette[index];
-        }).toList(growable: false);
+        final localPixels = _readRowDeltaBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels
+            .map((index) {
+              if (index >= palette.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Row-delta local color index out of range',
+                );
+              }
+              return palette[index];
+            })
+            .toList(growable: false);
       case ImageMode.biColorMask:
-        final background = sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
+        final background =
+            sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
         final foreground = _readV2ColorRef(reader, profile);
         if (foreground == background) {
           throw const MCOImageInvalidPayloadException(
@@ -1893,14 +1919,16 @@ class MCOImageCodec {
           rowLength,
           localBits,
         );
-        return localPixels.map((index) {
-          if (index >= palette.globalColors.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Dynamic row-repeat color index out of range',
-            );
-          }
-          return palette.globalColors[index];
-        }).toList(growable: false);
+        return localPixels
+            .map((index) {
+              if (index >= palette.globalColors.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Dynamic row-repeat color index out of range',
+                );
+              }
+              return palette.globalColors[index];
+            })
+            .toList(growable: false);
       case ImageMode.rowDelta:
         final palette = _readDynamicLocalPalette(
           reader,
@@ -1908,15 +1936,22 @@ class MCOImageCodec {
           referenceEncoding,
         );
         final localBits = _localBits(palette.globalColors.length);
-        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
-        return localPixels.map((index) {
-          if (index >= palette.globalColors.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Dynamic row-delta color index out of range',
-            );
-          }
-          return palette.globalColors[index];
-        }).toList(growable: false);
+        final localPixels = _readRowDeltaBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels
+            .map((index) {
+              if (index >= palette.globalColors.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Dynamic row-delta color index out of range',
+                );
+              }
+              return palette.globalColors[index];
+            })
+            .toList(growable: false);
       case ImageMode.biColorMask:
         final background =
             sparseBackgroundColor ?? _readV2ColorRef(reader, profile);
@@ -2013,24 +2048,33 @@ class MCOImageCodec {
           rowLength,
           localBits,
         );
-        return localPixels.map((index) {
-          if (index >= palette.globalColors.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Dynamic region row-repeat index out of range',
-            );
-          }
-          return palette.globalColors[index];
-        }).toList(growable: false);
+        return localPixels
+            .map((index) {
+              if (index >= palette.globalColors.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Dynamic region row-repeat index out of range',
+                );
+              }
+              return palette.globalColors[index];
+            })
+            .toList(growable: false);
       case ImageMode.rowDelta:
-        final localPixels = _readRowDeltaBody(reader, count, rowLength, localBits);
-        return localPixels.map((index) {
-          if (index >= palette.globalColors.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Dynamic region row-delta index out of range',
-            );
-          }
-          return palette.globalColors[index];
-        }).toList(growable: false);
+        final localPixels = _readRowDeltaBody(
+          reader,
+          count,
+          rowLength,
+          localBits,
+        );
+        return localPixels
+            .map((index) {
+              if (index >= palette.globalColors.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'Dynamic region row-delta index out of range',
+                );
+              }
+              return palette.globalColors[index];
+            })
+            .toList(growable: false);
       case ImageMode.biColorMask:
         final index = reader.readBits(localBits);
         if (index >= palette.globalColors.length) {
@@ -2395,36 +2439,40 @@ class MCOImageCodec {
         break;
       case ImageMode.rowRepeat:
         final localBits = _localBits(localIndexByProfileColorId.length);
-        final localPixels = linear.map((globalIndex) {
-          final profileColorId = _profileColorIdForGlobalIndex(
-            profile,
-            globalIndex,
-          );
-          final localIndex = localIndexByProfileColorId[profileColorId];
-          if (localIndex == null) {
-            throw MCOImageInvalidInputException(
-              'Dynamic shared palette is missing globalIndex $globalIndex',
-            );
-          }
-          return localIndex;
-        }).toList(growable: false);
+        final localPixels = linear
+            .map((globalIndex) {
+              final profileColorId = _profileColorIdForGlobalIndex(
+                profile,
+                globalIndex,
+              );
+              final localIndex = localIndexByProfileColorId[profileColorId];
+              if (localIndex == null) {
+                throw MCOImageInvalidInputException(
+                  'Dynamic shared palette is missing globalIndex $globalIndex',
+                );
+              }
+              return localIndex;
+            })
+            .toList(growable: false);
         _writeRowRepeatBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rowDelta:
         final localBits = _localBits(localIndexByProfileColorId.length);
-        final localPixels = linear.map((globalIndex) {
-          final profileColorId = _profileColorIdForGlobalIndex(
-            profile,
-            globalIndex,
-          );
-          final localIndex = localIndexByProfileColorId[profileColorId];
-          if (localIndex == null) {
-            throw MCOImageInvalidInputException(
-              'Dynamic shared palette is missing globalIndex $globalIndex',
-            );
-          }
-          return localIndex;
-        }).toList(growable: false);
+        final localPixels = linear
+            .map((globalIndex) {
+              final profileColorId = _profileColorIdForGlobalIndex(
+                profile,
+                globalIndex,
+              );
+              final localIndex = localIndexByProfileColorId[profileColorId];
+              if (localIndex == null) {
+                throw MCOImageInvalidInputException(
+                  'Dynamic shared palette is missing globalIndex $globalIndex',
+                );
+              }
+              return localIndex;
+            })
+            .toList(growable: false);
         _writeRowDeltaBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.biColorMask:
@@ -3095,7 +3143,7 @@ class MCOImageCodec {
       strategy.horizontalDirection,
     );
 
-    for (var candidateHeight = 1;; candidateHeight++) {
+    for (var candidateHeight = 1; ; candidateHeight++) {
       final y = startY + (candidateHeight - 1) * strategy.verticalDirection;
       if (y < 0 || y >= height) break;
 
@@ -3126,9 +3174,7 @@ class MCOImageCodec {
     final x = strategy.horizontalDirection > 0
         ? startX
         : startX - bestWidth + 1;
-    final y = strategy.verticalDirection > 0
-        ? startY
-        : startY - bestHeight + 1;
+    final y = strategy.verticalDirection > 0 ? startY : startY - bestHeight + 1;
     return _ImageBounds(x: x, y: y, width: bestWidth, height: bestHeight);
   }
 
@@ -3960,7 +4006,9 @@ class MCOImageCodec {
     int localBits,
   ) {
     if (rowLength <= 0 || count % rowLength != 0) {
-      throw const MCOImageInvalidPayloadException('Invalid row-repeat geometry');
+      throw const MCOImageInvalidPayloadException(
+        'Invalid row-repeat geometry',
+      );
     }
     if (count == 0) return const <int>[];
 
@@ -4317,24 +4365,14 @@ class MCOImageCodec {
       if (change.x == previousX + 1) {
         values.add(change.value);
       } else {
-        segments.add(
-          _RowDeltaSegment(
-            startX,
-            List<int>.unmodifiable(values),
-          ),
-        );
+        segments.add(_RowDeltaSegment(startX, List<int>.unmodifiable(values)));
         startX = change.x;
         values = <int>[change.value];
       }
       previousX = change.x;
     }
 
-    segments.add(
-      _RowDeltaSegment(
-        startX,
-        List<int>.unmodifiable(values),
-      ),
-    );
+    segments.add(_RowDeltaSegment(startX, List<int>.unmodifiable(values)));
     return segments;
   }
 
@@ -4412,11 +4450,7 @@ class MCOImageCodec {
         predictorBits +
         _bitVarUintBitLength(changes.length) +
         changes.length * (_bitsForChoiceCount(rowLength) + localBits);
-    final extendedOp = _bestRowDeltaExtendedOp(
-      changes,
-      rowLength,
-      localBits,
-    );
+    final extendedOp = _bestRowDeltaExtendedOp(changes, rowLength, localBits);
     final extendedCost =
         _rowDeltaOpBits +
         predictorBits +
@@ -4466,7 +4500,8 @@ class MCOImageCodec {
       _rowDeltaExtendedSegment =>
         _bitVarUintBitLength(_rowDeltaSegments(changes).length) +
             _rowDeltaSegments(changes).length *
-                (_bitsForChoiceCount(rowLength) + _bitsForChoiceCount(rowLength)) +
+                (_bitsForChoiceCount(rowLength) +
+                    _bitsForChoiceCount(rowLength)) +
             changes.length * localBits,
       _rowDeltaExtendedSameColorMask =>
         rowLength +
@@ -5504,7 +5539,6 @@ class _RowDeltaChange {
   const _RowDeltaChange(this.x, this.value);
 }
 
-
 class _RowDeltaSegment {
   final int x;
   final List<int> values;
@@ -5513,7 +5547,6 @@ class _RowDeltaSegment {
 
   int get length => values.length;
 }
-
 
 class _SparseSegment {
   final int start;

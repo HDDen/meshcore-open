@@ -43,10 +43,7 @@ class _CanvasHistoryEntry {
   final _CanvasSnapshot before;
   final _CanvasSnapshot after;
 
-  const _CanvasHistoryEntry({
-    required this.before,
-    required this.after,
-  });
+  const _CanvasHistoryEntry({required this.before, required this.after});
 }
 
 class _ImportedCanvasImage {
@@ -732,17 +729,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                         ? _lineStartIndex
                         : null,
                     ovalPointIndices: _selectedTool == _CanvasTool.oval
-                        ? <int>[
-                            ?_ovalFirstIndex,
-                            ?_ovalSecondIndex,
-                          ]
+                        ? <int>[?_ovalFirstIndex, ?_ovalSecondIndex]
                         : const <int>[],
-                    rectanglePointIndices: _selectedTool ==
-                            _CanvasTool.rectangle
-                        ? <int>[
-                            ?_rectangleFirstIndex,
-                            ?_rectangleSecondIndex,
-                          ]
+                    rectanglePointIndices:
+                        _selectedTool == _CanvasTool.rectangle
+                        ? <int>[?_rectangleFirstIndex, ?_rectangleSecondIndex]
                         : const <int>[],
                   ),
                 ),
@@ -784,10 +775,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     onPanUpdate: canDraw
                         ? (details) {
                             if (_selectedTool == _CanvasTool.pencil) {
-                              _applyToolAt(
-                                details.localPosition,
-                                canvasSize,
-                              );
+                              _applyToolAt(details.localPosition, canvasSize);
                             }
                           }
                         : null,
@@ -864,7 +852,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       },
     );
   }
-
 
   bool _pixelsEqual(List<int> a, List<int> b) {
     if (identical(a, b)) return true;
@@ -1323,10 +1310,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         ? _minCanvasSize
         : math.max(_minCanvasSize, maxY - minY + 1);
 
-    final nextPixels = List<int>.filled(
-      targetWidth * targetHeight,
-      emptyColor,
-    );
+    final nextPixels = List<int>.filled(targetWidth * targetHeight, emptyColor);
 
     if (maxX >= minX && maxY >= minY) {
       final copyWidth = maxX - minX + 1;
@@ -1395,18 +1379,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final parsedWidth = int.tryParse(widthText);
     final parsedHeight = int.tryParse(heightText);
 
-    final requestedWidth = parsedWidth ?? (parsedHeight == null
-        ? _width
-        : math.max(
-            _minCanvasSize,
-            (parsedHeight * _width / _height).round(),
-          ));
-    final requestedHeight = parsedHeight ?? (parsedWidth == null
-        ? _height
-        : math.max(
-            _minCanvasSize,
-            (parsedWidth * _height / _width).round(),
-          ));
+    final requestedWidth =
+        parsedWidth ??
+        (parsedHeight == null
+            ? _width
+            : math.max(
+                _minCanvasSize,
+                (parsedHeight * _width / _height).round(),
+              ));
+    final requestedHeight =
+        parsedHeight ??
+        (parsedWidth == null
+            ? _height
+            : math.max(
+                _minCanvasSize,
+                (parsedWidth * _height / _width).round(),
+              ));
 
     return _boundedCanvasSizeForProfile(
       requestedWidth,
@@ -1785,8 +1773,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _ovalFirstIndex = null;
         _ovalSecondIndex = null;
-      _rectangleFirstIndex = null;
-      _rectangleSecondIndex = null;
+        _rectangleFirstIndex = null;
+        _rectangleSecondIndex = null;
       });
       return;
     }
@@ -1811,8 +1799,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _ovalFirstIndex = null;
         _ovalSecondIndex = null;
-      _rectangleFirstIndex = null;
-      _rectangleSecondIndex = null;
+        _rectangleFirstIndex = null;
+        _rectangleSecondIndex = null;
       });
       return;
     }
@@ -2111,23 +2099,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  Future<_ImportedCanvasImage> _imageBytesToCanvasPixels(Uint8List bytes) async {
+  Future<_ImportedCanvasImage> _imageBytesToCanvasPixels(
+    Uint8List bytes,
+  ) async {
     final source = await _decodeImage(bytes);
     final sourceWidth = source.width;
     final sourceHeight = source.height;
     source.dispose();
 
     final canvasWidth = _unlockCanvasSize
-        ? math.max(
-            _minCanvasSize,
-            math.min(_maxCanvasSize, sourceWidth),
-          )
+        ? math.max(_minCanvasSize, math.min(_maxCanvasSize, sourceWidth))
         : _width;
     final canvasHeight = _unlockCanvasSize
-        ? math.max(
-            _minCanvasSize,
-            math.min(_maxCanvasSize, sourceHeight),
-          )
+        ? math.max(_minCanvasSize, math.min(_maxCanvasSize, sourceHeight))
         : _height;
     final scale = math.min(
       canvasWidth / sourceWidth,
@@ -2222,10 +2206,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .toList(growable: false);
     final limitedColorSet = limitedColors.toSet();
 
-    return pixels.map((colorValue) {
-      if (limitedColorSet.contains(colorValue)) return colorValue;
-      return _nearestColorValueFromCandidates(colorValue, limitedColors);
-    }).toList(growable: false);
+    return pixels
+        .map((colorValue) {
+          if (limitedColorSet.contains(colorValue)) return colorValue;
+          return _nearestColorValueFromCandidates(colorValue, limitedColors);
+        })
+        .toList(growable: false);
   }
 
   int _nearestColorValueFromCandidates(
@@ -2731,7 +2717,6 @@ class _PixelCanvasPainter extends CustomPainter {
     paintPointMarkers(rectanglePointIndices, _rectanglePointColor);
   }
 
-
   List<int> _rulerCellNumbers(int cellCount) {
     final values = <int>{
       1,
@@ -2739,17 +2724,12 @@ class _PixelCanvasPainter extends CustomPainter {
       (cellCount * 0.50).ceil().clamp(1, cellCount).toInt(),
       (cellCount * 0.75).ceil().clamp(1, cellCount).toInt(),
       cellCount,
-    }.toList()
-      ..sort();
+    }.toList()..sort();
     return values;
   }
 
   void _paintRulerLabels(Canvas canvas, double cellWidth, double cellHeight) {
-    const style = TextStyle(
-      color: _rulerColor,
-      fontSize: 7,
-      height: 1,
-    );
+    const style = TextStyle(color: _rulerColor, fontSize: 7, height: 1);
 
     for (final cellNumber in _rulerCellNumbers(width)) {
       final textPainter = TextPainter(
@@ -2758,7 +2738,9 @@ class _PixelCanvasPainter extends CustomPainter {
       )..layout();
 
       final x =
-          canvasOffset.dx + (cellNumber - 0.5) * cellWidth - textPainter.width / 2;
+          canvasOffset.dx +
+          (cellNumber - 0.5) * cellWidth -
+          textPainter.width / 2;
       final y = math.max(0.0, rulerExtent - textPainter.height);
       textPainter.paint(canvas, Offset(x, y));
     }
@@ -2770,7 +2752,8 @@ class _PixelCanvasPainter extends CustomPainter {
       )..layout();
 
       final x = math.max(0.0, rulerExtent - textPainter.width - 1);
-      final y = canvasOffset.dy +
+      final y =
+          canvasOffset.dy +
           (cellNumber - 0.5) * cellHeight -
           textPainter.height / 2;
       textPainter.paint(canvas, Offset(x, y));
