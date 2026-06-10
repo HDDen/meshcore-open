@@ -3665,6 +3665,7 @@ class MCOImageCodec {
   static const int _rowDeltaOpRaw = 0;
   static const int _rowDeltaOpRepeat = 1;
   static const int _rowDeltaOpDelta = 2;
+  static const int _rowDeltaOpMask = 3;
 
   void _writeRowRepeatBody(
     _BitWriter writer,
@@ -3773,12 +3774,14 @@ class MCOImageCodec {
       }
 
       final rawBits = _rowDeltaOpBits + rowLength * localBits;
-      final deltaBits =
+      final indexedDeltaBits =
           _rowDeltaOpBits +
           _bitVarUintBitLength(changes.length) +
           changes.length * (positionBits + localBits);
+      final maskDeltaBits =
+          _rowDeltaOpBits + rowLength + changes.length * localBits;
 
-      if (deltaBits < rawBits) {
+      if (indexedDeltaBits <= maskDeltaBits && indexedDeltaBits < rawBits) {
         writer.writeBits(_rowDeltaOpDelta, _rowDeltaOpBits);
         writer.writeBitVarUint(changes.length);
         var previousX = -1;
@@ -3791,6 +3794,18 @@ class MCOImageCodec {
           writer.writeBits(change.x, positionBits);
           writer.writeBits(change.value, localBits);
           previousX = change.x;
+        }
+      } else if (maskDeltaBits < rawBits) {
+        writer.writeBits(_rowDeltaOpMask, _rowDeltaOpBits);
+        var changeIndex = 0;
+        for (var x = 0; x < rowLength; x++) {
+          final isChanged =
+              changeIndex < changes.length && changes[changeIndex].x == x;
+          writer.writeBits(isChanged ? 1 : 0, 1);
+          if (isChanged) changeIndex++;
+        }
+        for (final change in changes) {
+          writer.writeBits(change.value, localBits);
         }
       } else {
         writer.writeBits(_rowDeltaOpRaw, _rowDeltaOpBits);
@@ -3851,6 +3866,26 @@ class MCOImageCodec {
             }
             result[rowStart + x] = reader.readBits(localBits);
             previousX = x;
+          }
+          break;
+        case _rowDeltaOpMask:
+          final changed = List<bool>.filled(rowLength, false);
+          var changeCount = 0;
+          for (var x = 0; x < rowLength; x++) {
+            final isChanged = reader.readBits(1) != 0;
+            changed[x] = isChanged;
+            if (isChanged) changeCount++;
+            result[rowStart + x] = result[previousStart + x];
+          }
+          if (changeCount == 0) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid empty row-delta mask',
+            );
+          }
+          for (var x = 0; x < rowLength; x++) {
+            if (changed[x]) {
+              result[rowStart + x] = reader.readBits(localBits);
+            }
           }
           break;
         default:
