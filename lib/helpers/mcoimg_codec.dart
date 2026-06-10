@@ -880,7 +880,10 @@ class MCOImageCodec {
           bitsPerLocalPixel: localBits,
         );
       case ImageMode.rowDelta:
-        final local = _buildLocalPalette(linear);
+        final local = _buildLocalPalette(
+          linear,
+          preferredFirstColor: backgroundColor,
+        );
         if (local.colors.isEmpty) return null;
         final map = _localIndexMap(local.colors);
         final localBits = _localBits(local.colors.length);
@@ -3586,13 +3589,22 @@ class MCOImageCodec {
     return positions;
   }
 
-  static _LocalPalette _buildLocalPalette(List<int> pixels) {
+  static _LocalPalette _buildLocalPalette(
+    List<int> pixels, {
+    int? preferredFirstColor,
+  }) {
     final counts = <int, int>{};
     for (final pixel in pixels) {
       counts[pixel] = (counts[pixel] ?? 0) + 1;
     }
     final colors = counts.keys.toList()
       ..sort((a, b) {
+        if (preferredFirstColor != null) {
+          final aPreferred = a == preferredFirstColor;
+          final bPreferred = b == preferredFirstColor;
+          if (aPreferred && !bPreferred) return -1;
+          if (bPreferred && !aPreferred) return 1;
+        }
         final byFrequency = counts[b]!.compareTo(counts[a]!);
         return byFrequency != 0 ? byFrequency : a.compareTo(b);
       });
@@ -3665,7 +3677,15 @@ class MCOImageCodec {
   static const int _rowDeltaOpRaw = 0;
   static const int _rowDeltaOpRepeat = 1;
   static const int _rowDeltaOpDelta = 2;
-  static const int _rowDeltaOpMask = 3;
+  static const int _rowDeltaOpExtended = 3;
+  static const int _rowDeltaExtendedBits = 2;
+  static const int _rowDeltaExtendedMask = 0;
+  static const int _rowDeltaExtendedSegment = 1;
+  static const int _rowDeltaExtendedSameColorMask = 2;
+  static const int _rowDeltaPredictorBits = 2;
+  static const int _rowDeltaPredictorSame = 0;
+  static const int _rowDeltaPredictorLeft = 1;
+  static const int _rowDeltaPredictorRight = 2;
 
   void _writeRowRepeatBody(
     _BitWriter writer,
@@ -3751,35 +3771,72 @@ class MCOImageCodec {
     }
     if (localPixels.isEmpty) return;
 
-    final rawFirstCost = _rowDeltaBodyBitCost(
+    final noShiftCost = _rowDeltaBodyBitCost(
       localPixels,
       rowLength,
       localBits,
-      useVirtualBaseRow: false,
+      allowShiftPredictors: false,
     );
-    final virtualBaseCost = _rowDeltaBodyBitCost(
+    final shiftCost = _rowDeltaBodyBitCost(
       localPixels,
       rowLength,
       localBits,
-      useVirtualBaseRow: true,
+      allowShiftPredictors: true,
     );
+    final allowShiftPredictors = shiftCost.bestCost < noShiftCost.bestCost;
+    final rawFirstCost = allowShiftPredictors
+        ? shiftCost.rawFirstCost
+        : noShiftCost.rawFirstCost;
+    final virtualBaseCost = allowShiftPredictors
+        ? shiftCost.virtualBaseCost
+        : noShiftCost.virtualBaseCost;
     final useVirtualBaseRow = virtualBaseCost < rawFirstCost;
 
-    writer.writeBits(useVirtualBaseRow ? 1 : 0, 1);
+    writer
+      ..writeBits(useVirtualBaseRow ? 1 : 0, 1)
+      ..writeBits(allowShiftPredictors ? 1 : 0, 1);
     _writeRowDeltaBodyVariant(
       writer,
       localPixels,
       rowLength,
       localBits,
       useVirtualBaseRow: useVirtualBaseRow,
+      allowShiftPredictors: allowShiftPredictors,
     );
   }
 
-  int _rowDeltaBodyBitCost(
+  _RowDeltaBodyCost _rowDeltaBodyBitCost(
+    List<int> localPixels,
+    int rowLength,
+    int localBits, {
+    required bool allowShiftPredictors,
+  }) {
+    final rawFirstCost = _rowDeltaBodyVariantBitCost(
+      localPixels,
+      rowLength,
+      localBits,
+      useVirtualBaseRow: false,
+      allowShiftPredictors: allowShiftPredictors,
+    );
+    final virtualBaseCost = _rowDeltaBodyVariantBitCost(
+      localPixels,
+      rowLength,
+      localBits,
+      useVirtualBaseRow: true,
+      allowShiftPredictors: allowShiftPredictors,
+    );
+    return _RowDeltaBodyCost(
+      rawFirstCost: rawFirstCost,
+      virtualBaseCost: virtualBaseCost,
+    );
+  }
+
+  int _rowDeltaBodyVariantBitCost(
     List<int> localPixels,
     int rowLength,
     int localBits, {
     required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
   }) {
     var bits = 0;
     final rowCount = localPixels.length ~/ rowLength;
@@ -3789,13 +3846,15 @@ class MCOImageCodec {
     }
 
     for (var row = firstDeltaRow; row < rowCount; row++) {
-      final changes = _rowDeltaChanges(
+      final decision = _bestRowDeltaDecision(
         localPixels,
         rowLength,
+        localBits,
         row,
         useVirtualBaseRow: useVirtualBaseRow,
+        allowShiftPredictors: allowShiftPredictors,
       );
-      bits += _rowDeltaRowBitCost(changes, rowLength, localBits);
+      bits += decision.bitCost;
     }
     return bits;
   }
@@ -3806,6 +3865,7 @@ class MCOImageCodec {
     int rowLength,
     int localBits, {
     required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
   }) {
     final rowCount = localPixels.length ~/ rowLength;
     final firstDeltaRow = useVirtualBaseRow ? 0 : 1;
@@ -3818,28 +3878,35 @@ class MCOImageCodec {
 
     for (var row = firstDeltaRow; row < rowCount; row++) {
       final rowStart = row * rowLength;
-      final changes = _rowDeltaChanges(
+      final decision = _bestRowDeltaDecision(
         localPixels,
         rowLength,
+        localBits,
         row,
         useVirtualBaseRow: useVirtualBaseRow,
+        allowShiftPredictors: allowShiftPredictors,
       );
+      final changes = decision.changes;
 
       if (changes.isEmpty) {
         writer.writeBits(_rowDeltaOpRepeat, _rowDeltaOpBits);
         continue;
       }
 
-      final rowOp = _bestRowDeltaOp(changes, rowLength, localBits);
-      writer.writeBits(rowOp, _rowDeltaOpBits);
-
-      switch (rowOp) {
+      switch (decision.op) {
         case _rowDeltaOpRaw:
+          writer.writeBits(_rowDeltaOpRaw, _rowDeltaOpBits);
           for (var x = 0; x < rowLength; x++) {
             writer.writeBits(localPixels[rowStart + x], localBits);
           }
           break;
         case _rowDeltaOpDelta:
+          writer.writeBits(_rowDeltaOpDelta, _rowDeltaOpBits);
+          _writeRowDeltaPredictorIfNeeded(
+            writer,
+            decision.predictor,
+            allowShiftPredictors,
+          );
           final positionBits = _bitsForChoiceCount(rowLength);
           writer.writeBitVarUint(changes.length);
           var previousX = -1;
@@ -3854,20 +3921,105 @@ class MCOImageCodec {
             previousX = change.x;
           }
           break;
-        case _rowDeltaOpMask:
-          var changeIndex = 0;
-          for (var x = 0; x < rowLength; x++) {
-            final isChanged =
-                changeIndex < changes.length && changes[changeIndex].x == x;
-            writer.writeBits(isChanged ? 1 : 0, 1);
-            if (isChanged) changeIndex++;
-          }
-          for (final change in changes) {
-            writer.writeBits(change.value, localBits);
+        case _rowDeltaOpExtended:
+          writer.writeBits(_rowDeltaOpExtended, _rowDeltaOpBits);
+          _writeRowDeltaPredictorIfNeeded(
+            writer,
+            decision.predictor,
+            allowShiftPredictors,
+          );
+          writer.writeBits(decision.extendedOp, _rowDeltaExtendedBits);
+          switch (decision.extendedOp) {
+            case _rowDeltaExtendedMask:
+              _writeRowDeltaMaskRow(writer, changes, rowLength, localBits);
+              break;
+            case _rowDeltaExtendedSegment:
+              _writeRowDeltaSegmentRow(writer, changes, rowLength, localBits);
+              break;
+            case _rowDeltaExtendedSameColorMask:
+              _writeRowDeltaSameColorMaskRow(
+                writer,
+                changes,
+                rowLength,
+                localBits,
+              );
+              break;
+            default:
+              throw const MCOImageInvalidInputException(
+                'Invalid row-delta extended op',
+              );
           }
           break;
         default:
           throw const MCOImageInvalidInputException('Invalid row-delta op');
+      }
+    }
+  }
+
+  void _writeRowDeltaPredictorIfNeeded(
+    _BitWriter writer,
+    int predictor,
+    bool allowShiftPredictors,
+  ) {
+    if (!allowShiftPredictors) return;
+    writer.writeBits(predictor, _rowDeltaPredictorBits);
+  }
+
+  void _writeRowDeltaMaskRow(
+    _BitWriter writer,
+    List<_RowDeltaChange> changes,
+    int rowLength,
+    int localBits,
+  ) {
+    var changeIndex = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final isChanged =
+          changeIndex < changes.length && changes[changeIndex].x == x;
+      writer.writeBits(isChanged ? 1 : 0, 1);
+      if (isChanged) changeIndex++;
+    }
+    for (final change in changes) {
+      writer.writeBits(change.value, localBits);
+    }
+  }
+
+  void _writeRowDeltaSameColorMaskRow(
+    _BitWriter writer,
+    List<_RowDeltaChange> changes,
+    int rowLength,
+    int localBits,
+  ) {
+    final value = _sameRowDeltaChangeValue(changes);
+    if (value == null) {
+      throw const MCOImageInvalidInputException(
+        'Row-delta changes are not same-color',
+      );
+    }
+    var changeIndex = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final isChanged =
+          changeIndex < changes.length && changes[changeIndex].x == x;
+      writer.writeBits(isChanged ? 1 : 0, 1);
+      if (isChanged) changeIndex++;
+    }
+    writer.writeBits(value, localBits);
+  }
+
+  void _writeRowDeltaSegmentRow(
+    _BitWriter writer,
+    List<_RowDeltaChange> changes,
+    int rowLength,
+    int localBits,
+  ) {
+    final segments = _rowDeltaSegments(changes);
+    final positionBits = _bitsForChoiceCount(rowLength);
+    final lengthBits = _bitsForChoiceCount(rowLength);
+    writer.writeBitVarUint(segments.length);
+    for (final segment in segments) {
+      writer.writeBits(segment.x, positionBits);
+      writer.writeBits(segment.length - 1, lengthBits);
+      for (final value in segment.values) {
+        writer.writeBits(value, localBits);
       }
     }
   }
@@ -3877,14 +4029,21 @@ class MCOImageCodec {
     int rowLength,
     int row, {
     required bool useVirtualBaseRow,
+    required int predictor,
   }) {
     final rowStart = row * rowLength;
     final previousStart = rowStart - rowLength;
     final changes = <_RowDeltaChange>[];
     for (var x = 0; x < rowLength; x++) {
-      final previousValue = row == 0 && useVirtualBaseRow
-          ? 0
-          : localPixels[previousStart + x];
+      final previousValue = _rowDeltaPredictedValue(
+        localPixels,
+        rowLength,
+        row,
+        x,
+        previousStart,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
       final value = localPixels[rowStart + x];
       if (value != previousValue) {
         changes.add(_RowDeltaChange(x, value));
@@ -3893,42 +4052,242 @@ class MCOImageCodec {
     return changes;
   }
 
-  int _rowDeltaRowBitCost(
+  int _rowDeltaPredictedValue(
+    List<int> localPixels,
+    int rowLength,
+    int row,
+    int x,
+    int previousStart, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    if (row == 0 && useVirtualBaseRow) return 0;
+
+    final sourceX = switch (predictor) {
+      _rowDeltaPredictorSame => x,
+      _rowDeltaPredictorLeft => x + 1,
+      _rowDeltaPredictorRight => x - 1,
+      _ => throw const MCOImageInvalidInputException(
+        'Invalid row-delta predictor',
+      ),
+    };
+
+    if (sourceX < 0 || sourceX >= rowLength) return 0;
+    return localPixels[previousStart + sourceX];
+  }
+
+  List<_RowDeltaSegment> _rowDeltaSegments(List<_RowDeltaChange> changes) {
+    if (changes.isEmpty) return const <_RowDeltaSegment>[];
+
+    final segments = <_RowDeltaSegment>[];
+    var startX = changes.first.x;
+    var values = <int>[changes.first.value];
+    var previousX = startX;
+
+    for (var i = 1; i < changes.length; i++) {
+      final change = changes[i];
+      if (change.x == previousX + 1) {
+        values.add(change.value);
+      } else {
+        segments.add(
+          _RowDeltaSegment(
+            startX,
+            List<int>.unmodifiable(values),
+          ),
+        );
+        startX = change.x;
+        values = <int>[change.value];
+      }
+      previousX = change.x;
+    }
+
+    segments.add(
+      _RowDeltaSegment(
+        startX,
+        List<int>.unmodifiable(values),
+      ),
+    );
+    return segments;
+  }
+
+  _RowDeltaDecision _bestRowDeltaDecision(
+    List<int> localPixels,
+    int rowLength,
+    int localBits,
+    int row, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    _RowDeltaDecision? best;
+    for (final predictor in _rowDeltaPredictorsForRow(
+      row,
+      useVirtualBaseRow: useVirtualBaseRow,
+      allowShiftPredictors: allowShiftPredictors,
+    )) {
+      final changes = _rowDeltaChanges(
+        localPixels,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
+      final decision = _rowDeltaDecisionForChanges(
+        changes,
+        rowLength,
+        localBits,
+        predictor,
+        allowShiftPredictors: allowShiftPredictors,
+      );
+      if (best == null || decision.bitCost < best.bitCost) {
+        best = decision;
+      }
+    }
+    return best!;
+  }
+
+  List<int> _rowDeltaPredictorsForRow(
+    int row, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    if (!allowShiftPredictors || (row == 0 && useVirtualBaseRow)) {
+      return const <int>[_rowDeltaPredictorSame];
+    }
+    return const <int>[
+      _rowDeltaPredictorSame,
+      _rowDeltaPredictorLeft,
+      _rowDeltaPredictorRight,
+    ];
+  }
+
+  _RowDeltaDecision _rowDeltaDecisionForChanges(
     List<_RowDeltaChange> changes,
     int rowLength,
     int localBits,
-  ) {
-    if (changes.isEmpty) return _rowDeltaOpBits;
-    final rowOp = _bestRowDeltaOp(changes, rowLength, localBits);
-    return switch (rowOp) {
-      _rowDeltaOpRaw => _rowDeltaOpBits + rowLength * localBits,
-      _rowDeltaOpDelta =>
+    int predictor, {
+    required bool allowShiftPredictors,
+  }) {
+    if (changes.isEmpty) {
+      return _RowDeltaDecision(
+        op: _rowDeltaOpRepeat,
+        extendedOp: -1,
+        predictor: _rowDeltaPredictorSame,
+        changes: changes,
+        bitCost: _rowDeltaOpBits,
+      );
+    }
+
+    final predictorBits = allowShiftPredictors ? _rowDeltaPredictorBits : 0;
+    final rawCost = _rowDeltaOpBits + rowLength * localBits;
+    final indexedCost =
         _rowDeltaOpBits +
-            _bitVarUintBitLength(changes.length) +
-            changes.length * (_bitsForChoiceCount(rowLength) + localBits),
-      _rowDeltaOpMask => _rowDeltaOpBits + rowLength + changes.length * localBits,
-      _ => throw const MCOImageInvalidInputException('Invalid row-delta op'),
+        predictorBits +
+        _bitVarUintBitLength(changes.length) +
+        changes.length * (_bitsForChoiceCount(rowLength) + localBits);
+    final extendedOp = _bestRowDeltaExtendedOp(
+      changes,
+      rowLength,
+      localBits,
+    );
+    final extendedCost =
+        _rowDeltaOpBits +
+        predictorBits +
+        _rowDeltaExtendedBits +
+        _rowDeltaExtendedRowBitCostForOp(
+          changes,
+          rowLength,
+          localBits,
+          extendedOp,
+        );
+
+    if (indexedCost < rawCost && indexedCost <= extendedCost) {
+      return _RowDeltaDecision(
+        op: _rowDeltaOpDelta,
+        extendedOp: -1,
+        predictor: predictor,
+        changes: changes,
+        bitCost: indexedCost,
+      );
+    }
+    if (extendedCost < rawCost) {
+      return _RowDeltaDecision(
+        op: _rowDeltaOpExtended,
+        extendedOp: extendedOp,
+        predictor: predictor,
+        changes: changes,
+        bitCost: extendedCost,
+      );
+    }
+    return _RowDeltaDecision(
+      op: _rowDeltaOpRaw,
+      extendedOp: -1,
+      predictor: _rowDeltaPredictorSame,
+      changes: changes,
+      bitCost: rawCost,
+    );
+  }
+
+  int _rowDeltaExtendedRowBitCostForOp(
+    List<_RowDeltaChange> changes,
+    int rowLength,
+    int localBits,
+    int extendedOp,
+  ) {
+    return switch (extendedOp) {
+      _rowDeltaExtendedMask => rowLength + changes.length * localBits,
+      _rowDeltaExtendedSegment =>
+        _bitVarUintBitLength(_rowDeltaSegments(changes).length) +
+            _rowDeltaSegments(changes).length *
+                (_bitsForChoiceCount(rowLength) + _bitsForChoiceCount(rowLength)) +
+            changes.length * localBits,
+      _rowDeltaExtendedSameColorMask =>
+        rowLength +
+            (_sameRowDeltaChangeValue(changes) == null ? 1 << 30 : localBits),
+      _ => throw const MCOImageInvalidInputException(
+        'Invalid row-delta extended op',
+      ),
     };
   }
 
-  int _bestRowDeltaOp(
+  int _bestRowDeltaExtendedOp(
     List<_RowDeltaChange> changes,
     int rowLength,
     int localBits,
   ) {
-    final rawBits = _rowDeltaOpBits + rowLength * localBits;
-    final indexedDeltaBits =
-        _rowDeltaOpBits +
-        _bitVarUintBitLength(changes.length) +
-        changes.length * (_bitsForChoiceCount(rowLength) + localBits);
-    final maskDeltaBits =
-        _rowDeltaOpBits + rowLength + changes.length * localBits;
+    final maskBits = _rowDeltaExtendedRowBitCostForOp(
+      changes,
+      rowLength,
+      localBits,
+      _rowDeltaExtendedMask,
+    );
+    final segmentBits = _rowDeltaExtendedRowBitCostForOp(
+      changes,
+      rowLength,
+      localBits,
+      _rowDeltaExtendedSegment,
+    );
+    final sameColorMaskBits = _rowDeltaExtendedRowBitCostForOp(
+      changes,
+      rowLength,
+      localBits,
+      _rowDeltaExtendedSameColorMask,
+    );
 
-    if (indexedDeltaBits <= maskDeltaBits && indexedDeltaBits < rawBits) {
-      return _rowDeltaOpDelta;
+    if (sameColorMaskBits <= segmentBits && sameColorMaskBits <= maskBits) {
+      return _rowDeltaExtendedSameColorMask;
     }
-    if (maskDeltaBits < rawBits) return _rowDeltaOpMask;
-    return _rowDeltaOpRaw;
+    return segmentBits < maskBits
+        ? _rowDeltaExtendedSegment
+        : _rowDeltaExtendedMask;
+  }
+
+  int? _sameRowDeltaChangeValue(List<_RowDeltaChange> changes) {
+    if (changes.isEmpty) return null;
+    final value = changes.first.value;
+    for (var i = 1; i < changes.length; i++) {
+      if (changes[i].value != value) return null;
+    }
+    return value;
   }
 
   List<int> _readRowDeltaBody(
@@ -3943,6 +4302,7 @@ class MCOImageCodec {
     if (count == 0) return const <int>[];
 
     final useVirtualBaseRow = reader.readBits(1) != 0;
+    final allowShiftPredictors = reader.readBits(1) != 0;
     final positionBits = _bitsForChoiceCount(rowLength);
     final result = List<int>.filled(count, 0);
     final rowCount = count ~/ rowLength;
@@ -3966,18 +4326,32 @@ class MCOImageCodec {
           }
           break;
         case _rowDeltaOpRepeat:
-          for (var x = 0; x < rowLength; x++) {
-            result[rowStart + x] = row == 0 && useVirtualBaseRow
-                ? 0
-                : result[previousStart + x];
-          }
+          _copyRowDeltaPredictedRow(
+            result,
+            rowStart,
+            previousStart,
+            row,
+            rowLength,
+            useVirtualBaseRow: useVirtualBaseRow,
+            predictor: _rowDeltaPredictorSame,
+          );
           break;
         case _rowDeltaOpDelta:
-          for (var x = 0; x < rowLength; x++) {
-            result[rowStart + x] = row == 0 && useVirtualBaseRow
-                ? 0
-                : result[previousStart + x];
-          }
+          final predictor = _readRowDeltaPredictor(
+            reader,
+            row,
+            useVirtualBaseRow,
+            allowShiftPredictors,
+          );
+          _copyRowDeltaPredictedRow(
+            result,
+            rowStart,
+            previousStart,
+            row,
+            rowLength,
+            useVirtualBaseRow: useVirtualBaseRow,
+            predictor: predictor,
+          );
 
           final changeCount = reader.readBitVarUint();
           var previousX = -1;
@@ -3992,26 +4366,58 @@ class MCOImageCodec {
             previousX = x;
           }
           break;
-        case _rowDeltaOpMask:
-          final changed = List<bool>.filled(rowLength, false);
-          var changeCount = 0;
-          for (var x = 0; x < rowLength; x++) {
-            final isChanged = reader.readBits(1) != 0;
-            changed[x] = isChanged;
-            if (isChanged) changeCount++;
-            result[rowStart + x] = row == 0 && useVirtualBaseRow
-                ? 0
-                : result[previousStart + x];
-          }
-          if (changeCount == 0) {
-            throw const MCOImageInvalidPayloadException(
-              'Invalid empty row-delta mask',
-            );
-          }
-          for (var x = 0; x < rowLength; x++) {
-            if (changed[x]) {
-              result[rowStart + x] = reader.readBits(localBits);
-            }
+        case _rowDeltaOpExtended:
+          final predictor = _readRowDeltaPredictor(
+            reader,
+            row,
+            useVirtualBaseRow,
+            allowShiftPredictors,
+          );
+          final extendedOp = reader.readBits(_rowDeltaExtendedBits);
+          switch (extendedOp) {
+            case _rowDeltaExtendedMask:
+              _readRowDeltaMaskRow(
+                reader,
+                result,
+                rowStart,
+                previousStart,
+                row,
+                rowLength,
+                localBits,
+                useVirtualBaseRow: useVirtualBaseRow,
+                predictor: predictor,
+              );
+              break;
+            case _rowDeltaExtendedSegment:
+              _readRowDeltaSegmentRow(
+                reader,
+                result,
+                rowStart,
+                previousStart,
+                row,
+                rowLength,
+                localBits,
+                useVirtualBaseRow: useVirtualBaseRow,
+                predictor: predictor,
+              );
+              break;
+            case _rowDeltaExtendedSameColorMask:
+              _readRowDeltaSameColorMaskRow(
+                reader,
+                result,
+                rowStart,
+                previousStart,
+                row,
+                rowLength,
+                localBits,
+                useVirtualBaseRow: useVirtualBaseRow,
+                predictor: predictor,
+              );
+              break;
+            default:
+              throw const MCOImageInvalidPayloadException(
+                'Unknown row-delta extended op',
+              );
           }
           break;
         default:
@@ -4022,6 +4428,200 @@ class MCOImageCodec {
     }
 
     return result;
+  }
+
+  int _readRowDeltaPredictor(
+    _BitReader reader,
+    int row,
+    bool useVirtualBaseRow,
+    bool allowShiftPredictors,
+  ) {
+    if (!allowShiftPredictors) return _rowDeltaPredictorSame;
+
+    final predictor = reader.readBits(_rowDeltaPredictorBits);
+    if ((row == 0 && useVirtualBaseRow) ||
+        (predictor != _rowDeltaPredictorSame &&
+            predictor != _rowDeltaPredictorLeft &&
+            predictor != _rowDeltaPredictorRight)) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid row-delta predictor',
+      );
+    }
+    return predictor;
+  }
+
+  int _decodedRowDeltaPredictedValue(
+    List<int> result,
+    int rowLength,
+    int row,
+    int x,
+    int previousStart, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    if (row == 0 && useVirtualBaseRow) return 0;
+
+    final sourceX = switch (predictor) {
+      _rowDeltaPredictorSame => x,
+      _rowDeltaPredictorLeft => x + 1,
+      _rowDeltaPredictorRight => x - 1,
+      _ => throw const MCOImageInvalidPayloadException(
+        'Invalid row-delta predictor',
+      ),
+    };
+
+    if (sourceX < 0 || sourceX >= rowLength) return 0;
+    return result[previousStart + sourceX];
+  }
+
+  void _copyRowDeltaPredictedRow(
+    List<int> result,
+    int rowStart,
+    int previousStart,
+    int row,
+    int rowLength, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    for (var x = 0; x < rowLength; x++) {
+      result[rowStart + x] = _decodedRowDeltaPredictedValue(
+        result,
+        rowLength,
+        row,
+        x,
+        previousStart,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
+    }
+  }
+
+  void _readRowDeltaMaskRow(
+    _BitReader reader,
+    List<int> result,
+    int rowStart,
+    int previousStart,
+    int row,
+    int rowLength,
+    int localBits, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    _copyRowDeltaPredictedRow(
+      result,
+      rowStart,
+      previousStart,
+      row,
+      rowLength,
+      useVirtualBaseRow: useVirtualBaseRow,
+      predictor: predictor,
+    );
+
+    final changed = List<bool>.filled(rowLength, false);
+    var changeCount = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final isChanged = reader.readBits(1) != 0;
+      changed[x] = isChanged;
+      if (isChanged) changeCount++;
+    }
+    if (changeCount == 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid empty row-delta mask',
+      );
+    }
+    for (var x = 0; x < rowLength; x++) {
+      if (changed[x]) {
+        result[rowStart + x] = reader.readBits(localBits);
+      }
+    }
+  }
+
+  void _readRowDeltaSameColorMaskRow(
+    _BitReader reader,
+    List<int> result,
+    int rowStart,
+    int previousStart,
+    int row,
+    int rowLength,
+    int localBits, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    _copyRowDeltaPredictedRow(
+      result,
+      rowStart,
+      previousStart,
+      row,
+      rowLength,
+      useVirtualBaseRow: useVirtualBaseRow,
+      predictor: predictor,
+    );
+
+    final changed = List<bool>.filled(rowLength, false);
+    var changeCount = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final isChanged = reader.readBits(1) != 0;
+      changed[x] = isChanged;
+      if (isChanged) changeCount++;
+    }
+    if (changeCount == 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid empty row-delta same-color mask',
+      );
+    }
+
+    final value = reader.readBits(localBits);
+    for (var x = 0; x < rowLength; x++) {
+      if (changed[x]) {
+        result[rowStart + x] = value;
+      }
+    }
+  }
+
+  void _readRowDeltaSegmentRow(
+    _BitReader reader,
+    List<int> result,
+    int rowStart,
+    int previousStart,
+    int row,
+    int rowLength,
+    int localBits, {
+    required bool useVirtualBaseRow,
+    required int predictor,
+  }) {
+    _copyRowDeltaPredictedRow(
+      result,
+      rowStart,
+      previousStart,
+      row,
+      rowLength,
+      useVirtualBaseRow: useVirtualBaseRow,
+      predictor: predictor,
+    );
+
+    final positionBits = _bitsForChoiceCount(rowLength);
+    final lengthBits = _bitsForChoiceCount(rowLength);
+    final segmentCount = reader.readBitVarUint();
+    if (segmentCount <= 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid empty row-delta segment list',
+      );
+    }
+
+    var previousEnd = -1;
+    for (var i = 0; i < segmentCount; i++) {
+      final x = reader.readBits(positionBits);
+      final length = reader.readBits(lengthBits) + 1;
+      if (x <= previousEnd || x + length > rowLength) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid row-delta segment',
+        );
+      }
+      for (var dx = 0; dx < length; dx++) {
+        result[rowStart + x + dx] = reader.readBits(localBits);
+      }
+      previousEnd = x + length - 1;
+    }
   }
 
   static int _bitVarUintBitLength(int value) {
@@ -4641,12 +5241,51 @@ class _Run {
   const _Run(this.color, this.length);
 }
 
+class _RowDeltaBodyCost {
+  final int rawFirstCost;
+  final int virtualBaseCost;
+
+  const _RowDeltaBodyCost({
+    required this.rawFirstCost,
+    required this.virtualBaseCost,
+  });
+
+  int get bestCost => math.min(rawFirstCost, virtualBaseCost);
+}
+
+class _RowDeltaDecision {
+  final int op;
+  final int extendedOp;
+  final int predictor;
+  final List<_RowDeltaChange> changes;
+  final int bitCost;
+
+  const _RowDeltaDecision({
+    required this.op,
+    required this.extendedOp,
+    required this.predictor,
+    required this.changes,
+    required this.bitCost,
+  });
+}
+
 class _RowDeltaChange {
   final int x;
   final int value;
 
   const _RowDeltaChange(this.x, this.value);
 }
+
+
+class _RowDeltaSegment {
+  final int x;
+  final List<int> values;
+
+  const _RowDeltaSegment(this.x, this.values);
+
+  int get length => values.length;
+}
+
 
 class _SparseSegment {
   final int start;
