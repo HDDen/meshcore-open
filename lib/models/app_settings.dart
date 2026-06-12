@@ -833,8 +833,7 @@ class AppSettings {
       copyMsgPathTemplate: copyMsgPathTemplate ?? this.copyMsgPathTemplate,
       copyMsgPathFinalTemplate:
           copyMsgPathFinalTemplate ?? this.copyMsgPathFinalTemplate,
-      channelsSendAsBinary:
-          channelsSendAsBinary ?? this.channelsSendAsBinary,
+      channelsSendAsBinary: channelsSendAsBinary ?? this.channelsSendAsBinary,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,
