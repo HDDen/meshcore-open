@@ -93,6 +93,24 @@ class AppLocalizationsBg extends AppLocalizations {
   String get common_disable => 'Деактивирай';
 
   @override
+  String get common_undo => 'Отмяни';
+
+  @override
+  String get messageStatus_sent => 'Изпратено';
+
+  @override
+  String get messageStatus_delivered => 'Доставен';
+
+  @override
+  String get messageStatus_pending => 'Изпращане';
+
+  @override
+  String get messageStatus_failed => 'Не успях да изпратя';
+
+  @override
+  String get messageStatus_repeated => 'Слушах го многократно';
+
+  @override
   String get common_reboot => 'Рестартирай';
 
   @override
@@ -928,11 +946,6 @@ class AppLocalizationsBg extends AppLocalizations {
       'Брой опити за повторно изпращане, преди съобщението да бъде маркирано като неуспешно.';
 
   @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
-
-  @override
   String get appSettings_battery => 'Батерия';
 
   @override
@@ -1132,6 +1145,15 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get contacts_newGroup => 'Нова група';
+
+  @override
+  String get contacts_moreOptions => 'Повече възможности';
+
+  @override
+  String get contacts_searchOpen => 'Търсене на контакти';
+
+  @override
+  String get contacts_searchClose => 'Затвори търсене';
 
   @override
   String get contacts_groupName => 'Група';
@@ -1670,35 +1692,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get debugFrame_hexDump => 'Хексадесетичен Dump:';
 
   @override
-  String get chat_pathManagement => 'Управление на пътища';
-
-  @override
-  String get chat_ShowAllPaths => 'Покажи всички пътища';
-
-  @override
-  String get chat_routingMode => 'Режим на маршрутизиране';
-
-  @override
-  String get chat_autoUseSavedPath => 'Автоматично (използвай запазения път)';
-
-  @override
-  String get chat_forceFloodMode => 'Принуди режим на наводняване';
-
-  @override
-  String get chat_recentAckPaths =>
-      'Неотдавни ACK пътища (докоснете, за да използвате):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      'Историята на пътя е пълна. Премахнете записи, за да добавите нови.';
-
-  @override
-  String get chat_hopSingular => 'скочи';
-
-  @override
-  String get chat_hopPlural => 'скоци';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1710,12 +1703,6 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => 'Успехи';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => 'Премахни пътя';
 
   @override
@@ -1723,50 +1710,144 @@ class AppLocalizationsBg extends AppLocalizations {
       'Няма история на пътищата още.\nИзпратете съобщение, за да откриете пътища.';
 
   @override
-  String get chat_pathActions => 'Действия по пътя:';
-
-  @override
-  String get chat_setCustomPath => 'Задайте персонализиран път';
-
-  @override
-  String get chat_setCustomPathSubtitle => 'Ръчно укажете маршрутен път';
-
-  @override
-  String get chat_clearPath => 'Почисти Път';
-
-  @override
-  String get chat_clearPathSubtitle =>
-      'Принуди преоткриване при следващо изпращане';
-
-  @override
   String get chat_pathCleared =>
       'Пътят е почистен. Следващото съобщение ще открие маршрута отново.';
-
-  @override
-  String get chat_floodModeSubtitle =>
-      'Използвайте превключвателя за маршрутизиране в лентата на приложението.';
-
-  @override
-  String get chat_floodModeEnabled =>
-      'Режим на наводнение е активиран. Включете го отново чрез иконката за маршрутизиране в лентата на приложението.';
 
   @override
   String get chat_fullPath => 'Пълен път';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      'Детайлите за пътя все още не са налични. Опитайте да изпратите съобщение, за да освежите.';
+  String get routing_title => 'Маршрутизиране';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Пътят е зададен: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => 'Автомобил';
+
+  @override
+  String get routing_modeFlood => 'Наводнение';
+
+  @override
+  String get routing_modeManual => 'Ръководство';
+
+  @override
+  String get routing_modeAutoHint =>
+      'Автоматично избира най-известния път, като при липса на информация, използва стратегия за \"запълване\" на празните пространства.';
+
+  @override
+  String get routing_modeFloodHint =>
+      'Излъчване през всички ретранслатори. Най-надежният начин, но изисква повече време на въздуха.';
+
+  @override
+  String get routing_modeManualHint =>
+      'Винаги следва точно пътя, който сте определили.';
+
+  @override
+  String get routing_currentRoute => 'Текущ маршрут';
+
+  @override
+  String get routing_directNoHops => 'Директ – без превключватели';
+
+  @override
+  String get routing_noPathYet =>
+      'Все още няма път. Съобщението продължава да се изпраща, докато не бъде открит маршрут.';
+
+  @override
+  String get routing_floodBroadcast => 'Предаване през всички ретранслатори';
+
+  @override
+  String get routing_editPath => 'Редактиране на пътя';
+
+  @override
+  String get routing_forgetPath => 'Забравете за пътя';
+
+  @override
+  String get routing_knownPaths => 'Известни маршрути';
+
+  @override
+  String get routing_knownPathsHint =>
+      'Натиснете бутона, за да превключите към него.';
+
+  @override
+  String get routing_inUse => 'В експлоатация';
+
+  @override
+  String get routing_qualityStrong => 'Силен първи скок';
+
+  @override
+  String get routing_qualityGood => 'Добър първи опит';
+
+  @override
+  String get routing_qualityFair => 'Първият добър скок';
+
+  @override
+  String get routing_qualityWorked => 'Беше изпълнено/Доведено до край';
+
+  @override
+  String get routing_qualityFlood =>
+      'Получено чрез информация, разпространена в резултат на навод.';
+
+  @override
+  String get routing_qualityUntested => 'Не тестван';
+
+  @override
+  String routing_lastWorked(String when) {
+    return 'worked $when';
   }
+
+  @override
+  String get routing_neverWorked => 'никога не е потвърдено';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => 'Доставка при навод';
+
+  @override
+  String get pathEditor_title => 'Създаване на път';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count от 64 различни вида малц';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      'Все още няма добавени хмел. Можете да използвате бутоните по-долу, за да ги добавите по ред, или да запазите рецептата без хмел, за да я изпратите директно.';
+
+  @override
+  String get pathEditor_addHops => 'Добавете хмела в реда, в който е посочено.';
+
+  @override
+  String get pathEditor_searchRepeaters => 'Търсене на повтори';
+
+  @override
+  String get pathEditor_advancedHex => 'Разширено: необработен шестничен път';
+
+  @override
+  String get pathEditor_hexLabel => 'Префикси на шестнадесетична система';
+
+  @override
+  String get pathEditor_hexHelper =>
+      'Два шест-символни идентификатора на скок, разделени със запетаи';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return 'Невалидно: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => 'Максимум 64 крачета';
+
+  @override
+  String get pathEditor_usePath => 'Използвайте този маршрут.';
+
+  @override
+  String get pathEditor_removeHop => 'Премахнете хмела';
+
+  @override
+  String get pathEditor_unknownHop => 'Неизвестен репитер';
 
   @override
   String get chat_pathSavedLocally =>
@@ -2581,64 +2662,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String get common_reload => 'Презареди';
 
   @override
-  String path_currentPath(String path) {
-    return 'Текущ път: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Използване на $count $_temp0 път';
-  }
-
-  @override
-  String get path_enterCustomPath => 'Въведете персонализиран път';
-
-  @override
   String get path_currentPathLabel => 'Текущ път';
-
-  @override
-  String get path_hexPrefixInstructions =>
-      'Въведете 2-символни шестнадесетични префикси за всеки хоп, разделени с кама.';
-
-  @override
-  String get path_hexPrefixExample =>
-      'A1,F2,3C (всяка нода използва първия байт от публичния си ключ)';
-
-  @override
-  String get path_labelHexPrefixes => 'Пътеки (шестнадесетични префикси)';
-
-  @override
-  String get path_helperMaxHops =>
-      'Максимум 64 скока. Всеки префикс е 2 шестнадесетични знака (1 байт).';
-
-  @override
-  String get path_selectFromContacts => 'Изберете от контакти:';
 
   @override
   String get path_noRepeatersFound =>
       'Няма намерени репетитори или сървъри на стаи.';
-
-  @override
-  String get path_customPathsRequire =>
-      'Персонализираните пътища изискват междинни скокове, които могат да препращат съобщения.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return 'Невалидни шестнадесетични префикси: $prefixes';
-  }
-
-  @override
-  String get path_tooLong =>
-      'Пътят е твърде дълъг. Максимум 64 скока са разрешени.';
-
-  @override
-  String get path_setPath => 'Задайте път';
 
   @override
   String get repeater_management => 'Управление на повторители';
@@ -2705,16 +2733,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_routingMode => 'Режим на маршрутизиране';
-
-  @override
-  String get repeater_autoUseSavedPath =>
-      'Автоматично (използвай запазения път)';
-
-  @override
-  String get repeater_forceFloodMode => 'Принуди режим на наводняване';
-
-  @override
-  String get repeater_pathManagement => 'Управление на пътища';
 
   @override
   String get repeater_refresh => 'Презареди';
@@ -5029,6 +5047,30 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => 'Увеличи';
+
+  @override
+  String get map_zoomOut => 'Приближете се по-малко';
+
+  @override
+  String get map_centerMap => 'Карта на центъра';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth изисква браузър, базиран на Chromium.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'Идентификационен номер: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'GPS потвърдено';
+
+  @override
+  String get pathTrace_legendInferred => 'Извлечена позиция';
 
   @override
   String get chat_canvas => 'Canvas';

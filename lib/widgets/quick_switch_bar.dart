@@ -67,10 +67,12 @@ class QuickSwitchBar extends StatelessWidget {
                 destinations: [
                   NavigationDestination(
                     icon: _buildIconWithBadge(
+                      context,
                       const Icon(Icons.people_outline),
                       contactsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
+                      context,
                       const Icon(Icons.people),
                       contactsUnreadCount,
                     ),
@@ -78,10 +80,12 @@ class QuickSwitchBar extends StatelessWidget {
                   ),
                   NavigationDestination(
                     icon: _buildIconWithBadge(
+                      context,
                       const Icon(Icons.tag),
                       channelsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
+                      context,
                       const Icon(Icons.tag),
                       channelsUnreadCount,
                     ),
@@ -101,26 +105,9 @@ class QuickSwitchBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconWithBadge(Icon icon, int count) {
+  Widget _buildIconWithBadge(BuildContext context, Icon icon, int count) {
     if (count <= 0) return icon;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        icon,
-        Positioned(
-          right: -2,
-          top: -2,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.redAccent,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ],
-    );
+    final label = count > 99 ? '99+' : '$count';
+    return Badge(label: Text(label), child: icon);
   }
 }

@@ -12,6 +12,7 @@ import '../utils/contact_search.dart';
 import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
+import '../helpers/contact_ui.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum DiscoverySortOption { lastSeen, name, type }
@@ -71,7 +72,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               PopupMenuItem(
                 child: Row(
                   children: [
-                    const Icon(Icons.delete, color: Colors.red),
+                    Icon(
+                      Icons.delete,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                     const SizedBox(width: 8),
                     Text(context.l10n.discoveredContacts_deleteContactAll),
                   ],
@@ -99,9 +103,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       final contact = filteredAndSorted[index];
                       final tile = ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: _getTypeColor(contact.type),
+                          backgroundColor: contactTypeColor(contact.type),
                           child: Icon(
-                            _getTypeIcon(contact.type),
+                            contactTypeIcon(contact.type),
                             color: Colors.white,
                             size: 20,
                           ),
@@ -142,7 +146,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                                 Row(
@@ -152,7 +158,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                                       Icon(
                                         Icons.location_on,
                                         size: 14,
-                                        color: Colors.grey[400],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant
+                                            .withValues(alpha: 0.6),
                                       ),
                                     if (contact.rawPacket != null)
                                       const SizedBox(width: 2),
@@ -160,7 +169,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                                       Icon(
                                         Icons.cell_tower,
                                         size: 14,
-                                        color: Colors.grey[400],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant
+                                            .withValues(alpha: 0.6),
                                       ),
                                   ],
                                 ),
@@ -170,6 +182,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                         ),
                         onTap: () {
                           connector.importDiscoveredContact(contact);
+                          showDismissibleSnackBar(
+                            context,
+                            content: Text(
+                              context.l10n.discoveredContacts_contactAdded,
+                            ),
+                            action: SnackBarAction(
+                              label: context.l10n.common_undo,
+                              onPressed: () => connector.removeContact(contact),
+                            ),
+                          );
                         },
                         onLongPress: () =>
                             _showContactContextMenu(contact, connector),
@@ -204,11 +226,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.add_reaction_sharp),
-                title: Text(l10n.discoveredContacts_addContact),
-                onTap: () => Navigator.of(sheetContext).pop('import_contact'),
-              ),
-              ListTile(
                 leading: const Icon(Icons.copy),
                 title: Text(l10n.discoveredContacts_copyContact),
                 onTap: () => Navigator.of(sheetContext).pop('copy_contact'),
@@ -227,9 +244,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     if (!mounted || action == null) return;
 
     switch (action) {
-      case 'import_contact':
-        connector.importDiscoveredContact(contact);
-        break;
       case 'copy_contact':
         if (contact.rawPacket == null) return;
         final hexString = pubKeyToHex(contact.rawPacket!);
@@ -426,36 +440,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         return contact.type == advTypeRoom;
       default:
         return false;
-    }
-  }
-
-  IconData _getTypeIcon(int type) {
-    switch (type) {
-      case advTypeChat:
-        return Icons.chat;
-      case advTypeRepeater:
-        return Icons.cell_tower;
-      case advTypeRoom:
-        return Icons.group;
-      case advTypeSensor:
-        return Icons.sensors;
-      default:
-        return Icons.device_unknown;
-    }
-  }
-
-  Color _getTypeColor(int type) {
-    switch (type) {
-      case advTypeChat:
-        return Colors.blue;
-      case advTypeRepeater:
-        return Colors.orange;
-      case advTypeRoom:
-        return Colors.purple;
-      case advTypeSensor:
-        return Colors.green;
-      default:
-        return Colors.grey;
     }
   }
 

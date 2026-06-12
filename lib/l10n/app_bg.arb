@@ -2418,6 +2418,99 @@
   "chat_newMessages": "Нови съобщения",
   "settings_companionDebugLog": "Лог за отстраняване на грешки (за съпътстваща програма)",
   "repeater_chanUtil": "Използване на канала",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_pending": "Изпращане",
+  "common_undo": "Отмяни",
+  "messageStatus_delivered": "Доставен",
+  "messageStatus_sent": "Изпратено",
+  "messageStatus_failed": "Не успях да изпратя",
+  "messageStatus_repeated": "Слушах го многократно",
+  "contacts_moreOptions": "Повече възможности",
+  "contacts_searchOpen": "Търсене на контакти",
+  "contacts_searchClose": "Затвори търсене",
+  "routing_title": "Маршрутизиране",
+  "routing_modeAuto": "Автомобил",
+  "routing_modeFlood": "Наводнение",
+  "routing_modeManual": "Ръководство",
+  "routing_modeAutoHint": "Автоматично избира най-известния път, като при липса на информация, използва стратегия за \"запълване\" на празните пространства.",
+  "routing_modeFloodHint": "Излъчване през всички ретранслатори. Най-надежният начин, но изисква повече време на въздуха.",
+  "routing_modeManualHint": "Винаги следва точно пътя, който сте определили.",
+  "routing_currentRoute": "Текущ маршрут",
+  "routing_directNoHops": "Директ – без превключватели",
+  "routing_noPathYet": "Все още няма път. Съобщението продължава да се изпраща, докато не бъде открит маршрут.",
+  "routing_floodBroadcast": "Предаване през всички ретранслатори",
+  "routing_editPath": "Редактиране на пътя",
+  "routing_forgetPath": "Забравете за пътя",
+  "routing_knownPaths": "Известни маршрути",
+  "routing_knownPathsHint": "Натиснете бутона, за да превключите към него.",
+  "routing_inUse": "В експлоатация",
+  "routing_qualityStrong": "Силен първи скок",
+  "routing_qualityGood": "Добър първи опит",
+  "routing_qualityFair": "Първият добър скок",
+  "routing_qualityWorked": "Беше изпълнено/Доведено до край",
+  "routing_qualityFlood": "Получено чрез информация, разпространена в резултат на навод.",
+  "routing_qualityUntested": "Не тестван",
+  "routing_neverWorked": "никога не е потвърдено",
+  "routing_floodDelivery": "Доставка при навод",
+  "pathEditor_title": "Създаване на път",
+  "pathEditor_hopCounter": "{count} от 64 различни вида малц",
+  "pathEditor_noHops": "Все още няма добавени хмел. Можете да използвате бутоните по-долу, за да ги добавите по ред, или да запазите рецептата без хмел, за да я изпратите директно.",
+  "pathEditor_addHops": "Добавете хмела в реда, в който е посочено.",
+  "pathEditor_searchRepeaters": "Търсене на повтори",
+  "pathEditor_advancedHex": "Разширено: необработен шестничен път",
+  "pathEditor_hexLabel": "Префикси на шестнадесетична система",
+  "pathEditor_hexHelper": "Два шест-символни идентификатора на скок, разделени със запетаи",
+  "pathEditor_invalidTokens": "Невалидно: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_tooManyHops": "Максимум 64 крачета",
+  "pathEditor_usePath": "Използвайте този маршрут.",
+  "pathEditor_removeHop": "Премахнете хмела",
+  "pathEditor_unknownHop": "Неизвестен репитер",
+  "map_zoomIn": "Увеличи",
+  "map_zoomOut": "Приближете се по-малко",
+  "map_centerMap": "Карта на центъра",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth изисква браузър, базиран на Chromium.",
+  "channels_communityShortId": "Идентификационен номер: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS потвърдено",
+  "pathTrace_legendInferred": "Извлечена позиция",
   "settings_quickAnswersSendAtSelect": "Изпращане при избор",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

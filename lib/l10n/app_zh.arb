@@ -2423,6 +2423,99 @@
   "chat_newMessages": "新的消息",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 协议、响应和原始数据",
   "repeater_chanUtil": "频道利用率",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "发送",
+  "common_undo": "撤销",
+  "messageStatus_delivered": "已送达",
+  "messageStatus_pending": "发送",
+  "messageStatus_failed": "发送失败",
+  "messageStatus_repeated": "多次听到",
+  "contacts_moreOptions": "更多选择",
+  "contacts_searchOpen": "搜索联系人",
+  "contacts_searchClose": "高级搜索",
+  "routing_title": "路由",
+  "routing_modeAuto": "汽车",
+  "routing_modeFlood": "洪水",
+  "routing_modeManual": "手册",
+  "routing_modeAutoHint": "自动选择已知最佳路径，当没有已知路径时，则进行“洪水”搜索。",
+  "routing_modeFloodHint": "通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。",
+  "routing_modeManualHint": "总是按照您设置的路径进行导航。",
+  "routing_currentRoute": "当前路线",
+  "routing_directNoHops": "直接连接— 无中继跳",
+  "routing_noPathYet": "目前还没有找到路径。直到找到路径，才会收到后续消息。",
+  "routing_floodBroadcast": "通过所有中继器进行广播",
+  "routing_editPath": "编辑路径",
+  "routing_forgetPath": "忘记原路",
+  "routing_knownPaths": "已知的路径",
+  "routing_knownPathsHint": "点击该路径以切换到它。",
+  "routing_inUse": "使用中",
+  "routing_qualityStrong": "强劲的初始阶段",
+  "routing_qualityGood": "不错的开端",
+  "routing_qualityFair": "第一次尝试，结果良好",
+  "routing_qualityWorked": "已完成",
+  "routing_qualityFlood": "通过新闻报道",
+  "routing_qualityUntested": "未经测试",
+  "routing_lastWorked": "工作于 {when}",
+  "routing_neverWorked": "从未得到证实",
+  "routing_floodDelivery": "洪水配送",
+  "pathEditor_title": "构建路径",
+  "pathEditor_noHops": "目前还没有添加任何啤酒花。点击下面的“添加”按钮，按顺序添加，或者直接保存，不添加任何啤酒花。",
+  "pathEditor_addHops": "按照顺序添加啤酒花",
+  "pathEditor_searchRepeaters": "重复搜索",
+  "pathEditor_advancedHex": "高级：原始十六进制路径",
+  "pathEditor_hexLabel": "十六进制前缀",
+  "pathEditor_hexHelper": "每次跳跃，使用两个十六进制字符，用逗号分隔。",
+  "pathEditor_invalidTokens": "无效：{tokens}",
+  "pathEditor_tooManyHops": "最多 64 个跳跃",
+  "pathEditor_usePath": "请使用此路径",
+  "pathEditor_removeHop": "去除啤酒花",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_hopCounter": "{count} of 64 hops",
+  "pathEditor_unknownHop": "未知的重复器",
+  "map_zoomIn": "放大",
+  "map_zoomOut": "放大",
+  "map_centerMap": "中心地图",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth 需要 Chromium 浏览器",
+  "channels_communityShortId": "ID：{id}...",
+  "pathTrace_legendGpsConfirmed": "通过GPS确认",
+  "pathTrace_legendInferred": "推测的位置",
   "settings_quickAnswersSendAtSelect": "选择时发送",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

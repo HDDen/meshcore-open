@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../utils/platform_info.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +10,7 @@ import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../utils/app_logger.dart';
-import 'path_management_dialog.dart';
+import 'routing_sheet.dart';
 
 class RepeaterLoginDialog extends StatefulWidget {
   final Contact repeater;
@@ -276,7 +275,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.cell_tower, color: Colors.orange),
+          Icon(Icons.cell_tower, color: Theme.of(context).colorScheme.tertiary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -288,7 +287,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.normal,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -365,9 +364,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                       }
                     },
                     onSubmitted: (_) => _handleLogin(),
-                    autofocus:
-                        !PlatformInfo.isMobile &&
-                        _passwordController.text.isEmpty,
+                    autofocus: _passwordController.text.isEmpty,
                   ),
                   const SizedBox(height: 12),
                   CheckboxListTile(
@@ -469,14 +466,17 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                   const SizedBox(height: 4),
                   Text(
                     repeater.pathLabel(context.l10n),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed: () =>
-                          PathManagementDialog.show(context, contact: repeater),
+                          ContactRoutingSheet.show(context, contact: repeater),
                       icon: const Icon(Icons.timeline, size: 18),
                       label: Text(l10n.login_managePaths),
                     ),
@@ -497,12 +497,12 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 12),

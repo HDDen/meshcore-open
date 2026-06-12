@@ -47,6 +47,7 @@ class TranslationService extends ChangeNotifier {
     _langDetectInit = initLangDetect();
   }
 
+  bool _disposed = false;
   bool _isBusy = false;
   bool _isDownloading = false;
   bool _cancelDownloadRequested = false;
@@ -215,7 +216,7 @@ class TranslationService extends ChangeNotifier {
         }
 
         _downloadTotalBytes = totalSize;
-        notifyListeners();
+        _notify();
 
         DownloadedModelFile downloaded;
         if (supportsRange &&
@@ -268,7 +269,7 @@ class TranslationService extends ChangeNotifier {
         throw StateError('Model download failed: HTTP ${response.statusCode}');
       }
       _downloadTotalBytes ??= response.contentLength;
-      notifyListeners();
+      _notify();
       final trackedStream = _trackDownloadProgress(response.stream);
       return await _fileStore.writeModelBytes(
         fileName: fileName,
@@ -313,7 +314,7 @@ class TranslationService extends ChangeNotifier {
         throw const TranslationDownloadCancelled();
       }
       _downloadFileName = 'Merging chunks...';
-      notifyListeners();
+      _notify();
       combineReached = true;
       return await _fileStore.combineChunks(
         fileName: fileName,
@@ -361,7 +362,7 @@ class TranslationService extends ChangeNotifier {
     }
     _cancelDownloadRequested = true;
     _lastError = 'Download stopped.';
-    notifyListeners();
+    _notify();
   }
 
   Future<void> removeModel(TranslationModelRecord model) async {
@@ -469,7 +470,7 @@ class TranslationService extends ChangeNotifier {
     } catch (error) {
       _lastError = error.toString();
       appLogger.warn('Language detection failed: $error');
-      notifyListeners();
+      _notify();
       return null;
     }
   }
@@ -538,7 +539,7 @@ class TranslationService extends ChangeNotifier {
     } catch (error) {
       _lastError = error.toString();
       appLogger.warn('Translation request failed: $error');
-      notifyListeners();
+      _notify();
       return null;
     }
   }
@@ -631,6 +632,10 @@ class TranslationService extends ChangeNotifier {
     final completer = Completer<T>();
     _setBusy(true);
     _queue = _queue.then((_) async {
+      if (_disposed) {
+        completer.completeError(StateError('TranslationService disposed.'));
+        return;
+      }
       try {
         completer.complete(await action());
       } catch (error, stackTrace) {
@@ -648,9 +653,16 @@ class TranslationService extends ChangeNotifier {
         throw const TranslationDownloadCancelled();
       }
       _downloadedBytes += chunk.length;
-      notifyListeners();
+      _notify();
       yield chunk;
     }
+  }
+
+  void _notify() {
+    if (_disposed) {
+      return;
+    }
+    notifyListeners();
   }
 
   void _setBusy(bool value) {
@@ -658,7 +670,7 @@ class TranslationService extends ChangeNotifier {
       return;
     }
     _isBusy = value;
-    notifyListeners();
+    _notify();
   }
 
   void _setDownloading(bool value) {
@@ -669,11 +681,12 @@ class TranslationService extends ChangeNotifier {
       _downloadTotalBytes = null;
       _downloadFileName = null;
     }
-    notifyListeners();
+    _notify();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     final engine = _engine;
     _engine = null;
     _loadedModelPath = null;

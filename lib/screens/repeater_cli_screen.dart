@@ -8,7 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../widgets/debug_frame_viewer.dart';
 import '../services/repeater_command_service.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class RepeaterCliScreen extends StatefulWidget {
@@ -254,82 +254,29 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(l10n.repeater_cliTitle),
+            Text(
+              l10n.repeater_cliTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             Text(
               repeater.name,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
         centerTitle: false,
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(repeater, pathLen: -1);
-              } else {
-                await connector.setPathOverride(repeater, pathLen: null);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
             onPressed: () =>
-                PathManagementDialog.show(context, contact: repeater),
+                ContactRoutingSheet.show(context, contact: repeater),
           ),
           IconButton(
             icon: const Icon(Icons.bug_report),
@@ -355,6 +302,33 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
             icon: const Icon(Icons.clear_all),
             tooltip: l10n.repeater_clearHistory,
             onPressed: _commandHistory.isEmpty ? null : _clearHistory,
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'debug') {
+                if (_commandController.text.trim().isNotEmpty) {
+                  _sendCommand(showDebug: true);
+                } else {
+                  showDismissibleSnackBar(
+                    context,
+                    content: Text(l10n.repeater_enterCommandFirst),
+                  );
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'debug',
+                child: Row(
+                  children: [
+                    const Icon(Icons.bug_report),
+                    const SizedBox(width: 8),
+                    Text(l10n.repeater_debugNextCommand),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -428,16 +402,26 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.terminal, size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.terminal,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(height: 16),
           Text(
             l10n.repeater_noCommandsSent,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.repeater_typeCommandOrUseQuick,
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

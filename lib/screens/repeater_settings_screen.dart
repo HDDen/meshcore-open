@@ -8,7 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class RepeaterSettingsScreen extends StatefulWidget {
@@ -126,6 +126,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   // Location settings
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _lonController = TextEditingController();
+  bool _latInvalid = false;
+  bool _lonInvalid = false;
 
   // Feature toggles
   bool _repeatEnabled = true;
@@ -457,7 +459,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ? l10n.repeater_refreshed(label)
               : l10n.repeater_errorRefreshing(label),
         ),
-        backgroundColor: successCount > 0 ? Colors.green : Colors.red,
+        backgroundColor: successCount > 0
+            ? null
+            : Theme.of(context).colorScheme.error,
       );
       setState(() => setRefreshing(false));
     }
@@ -667,15 +671,15 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               : l10n.repeater_actionSucceeded(label),
         ),
         backgroundColor: outcome == _SaveOutcome.error
-            ? Colors.red
-            : Colors.green,
+            ? Theme.of(context).colorScheme.error
+            : null,
       );
     } catch (e) {
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
         content: Text(l10n.repeater_actionFailed(label, e.toString())),
-        backgroundColor: Colors.red,
+        backgroundColor: Theme.of(context).colorScheme.error,
       );
     } finally {
       if (mounted) setState(() => _runningAction = false);
@@ -768,14 +772,16 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
 
       if (_dirtyFields.contains(_SettingField.lat) &&
-          _latController.text.isNotEmpty) {
+          _latController.text.isNotEmpty &&
+          _isValidCoordinate(_latController.text, 90)) {
         pending.add((
           field: _SettingField.lat,
           command: 'set lat ${_latController.text}',
         ));
       }
       if (_dirtyFields.contains(_SettingField.lon) &&
-          _lonController.text.isNotEmpty) {
+          _lonController.text.isNotEmpty &&
+          _isValidCoordinate(_lonController.text, 180)) {
         pending.add((
           field: _SettingField.lon,
           command: 'set lon ${_lonController.text}',
@@ -944,13 +950,12 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
           showDismissibleSnackBar(
             context,
             content: Text(l10n.repeater_settingsSavedRebootNeeded),
-            backgroundColor: Colors.orange,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
           );
         } else if (failures.isEmpty) {
           showDismissibleSnackBar(
             context,
             content: Text(l10n.repeater_settingsSaved),
-            backgroundColor: Colors.green,
           );
         } else {
           showDismissibleSnackBar(
@@ -958,7 +963,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
             content: Text(
               l10n.repeater_settingsPartialFailure(failures.join('; ')),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           );
         }
       }
@@ -973,7 +978,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
           content: Text(
             context.l10n.repeater_errorSavingSettings(e.toString()),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
     }
@@ -982,6 +987,12 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   void _markChanged(_SettingField field) {
     _dirtyFields.add(field);
     _flagHasChanges();
+  }
+
+  static bool _isValidCoordinate(String text, double max) {
+    if (text.trim().isEmpty) return true;
+    final value = double.tryParse(text.trim());
+    return value != null && value >= -max && value <= max;
   }
 
   void _flagHasChanges() {
@@ -1072,73 +1083,11 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         ),
         centerTitle: false,
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(repeater, pathLen: -1);
-              } else {
-                await connector.setPathOverride(repeater, pathLen: null);
-              }
-              if (mounted) {
-                setState(() {});
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
             onPressed: () =>
-                PathManagementDialog.show(context, contact: repeater),
+                ContactRoutingSheet.show(context, contact: repeater),
           ),
           if (_hasChanges)
             TextButton.icon(
@@ -1173,6 +1122,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   const SizedBox(height: 16),
                   _buildAdvancedCard(),
                   const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 16),
                   _buildDangerZoneCard(),
                 ],
               ),
@@ -1388,13 +1339,22 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.repeater_latitude,
                       helperText: l10n.repeater_latitudeHelper,
+                      errorText: _latInvalid
+                          ? l10n.settings_locationInvalid
+                          : null,
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                       signed: true,
                     ),
-                    onChanged: (_) => _markChanged(_SettingField.lat),
+                    onChanged: (value) {
+                      _markChanged(_SettingField.lat);
+                      final invalid = !_isValidCoordinate(value, 90);
+                      if (invalid != _latInvalid) {
+                        setState(() => _latInvalid = invalid);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1415,13 +1375,22 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.repeater_longitude,
                       helperText: l10n.repeater_longitudeHelper,
+                      errorText: _lonInvalid
+                          ? l10n.settings_locationInvalid
+                          : null,
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                       signed: true,
                     ),
-                    onChanged: (_) => _markChanged(_SettingField.lon),
+                    onChanged: (value) {
+                      _markChanged(_SettingField.lon);
+                      final invalid = !_isValidCoordinate(value, 180);
+                      if (invalid != _lonInvalid) {
+                        setState(() => _lonInvalid = invalid);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -2233,7 +2202,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(l10n.repeater_errorSendingCommand(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
     }
@@ -2262,7 +2231,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               onConfirm();
             },
             style: isDestructive
-                ? FilledButton.styleFrom(backgroundColor: Colors.red)
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  )
                 : null,
             child: Text(l10n.repeater_confirm),
           ),

@@ -2446,6 +2446,99 @@
   "settings_companionDebugLog": "Debug-Protokoll für die Begleitsoftware",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB-Befehle, Antworten und Rohdaten",
   "repeater_chanUtil": "Nutzung des Kanals",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Gesendet",
+  "messageStatus_delivered": "Geliefert",
+  "common_undo": "Rückgängig machen",
+  "messageStatus_pending": "Versenden",
+  "messageStatus_failed": "Nicht gesendet",
+  "messageStatus_repeated": "Wiederholt gehört",
+  "contacts_moreOptions": "Weitere Optionen",
+  "contacts_searchOpen": "Kontakte suchen",
+  "contacts_searchClose": "Erweiterte Suche",
+  "routing_title": "Routenplanung",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Überschwemmung",
+  "routing_modeManual": "Handbuch",
+  "routing_modeFloodHint": "Übertragung über alle Repeater. Die zuverlässigste Methode, jedoch mit höherem Datenverbrauch.",
+  "routing_modeAutoHint": "Wählt automatisch den bekanntesten Pfad aus und verwendet eine Flutungsmethode, wenn kein Pfad bekannt ist.",
+  "routing_modeManualHint": "Sendet immer genau den von Ihnen festgelegten Weg.",
+  "routing_currentRoute": "Aktuelle Route",
+  "routing_directNoHops": "Direkt – ohne Zwischenverstärkung",
+  "routing_noPathYet": "Noch kein Pfad gefunden. Die Nachricht wird gesendet, bis ein Weg entdeckt wurde.",
+  "routing_floodBroadcast": "Übertragung über jeden Repeater",
+  "routing_editPath": "Pfad bearbeiten",
+  "routing_forgetPath": "Vergiss den Weg",
+  "routing_knownPaths": "Bekannte Routen",
+  "routing_knownPathsHint": "Wählen Sie den Pfad, um zu diesem zu wechseln.",
+  "routing_inUse": "Im Gebrauch",
+  "routing_qualityStrong": "Ein starker erster Sprung",
+  "routing_qualityGood": "Ein guter erster Schritt",
+  "routing_qualityFair": "Erster erfolgreicher Schritt",
+  "routing_qualityWorked": "Hat erfolgreich geliefert",
+  "routing_qualityFlood": "Information erhalten durch Nachrichten über die Überschwemmung",
+  "routing_qualityUntested": "Nicht getestet",
+  "routing_lastWorked": "war beschäftigt {when}",
+  "routing_neverWorked": "nie bestätigt",
+  "routing_floodDelivery": "Lieferung bei Überschwemmung",
+  "pathEditor_title": "Pfad erstellen",
+  "pathEditor_hopCounter": "{count} von 64 Hopfengewächsen",
+  "pathEditor_noHops": "Noch keine Hopfen hinzugefügt. Klicken Sie auf die Schaltflächen unten, um sie nacheinander hinzuzufügen, oder speichern Sie die Rezepter ohne Hopfen, um sie direkt zu versenden.",
+  "pathEditor_addHops": "Fügen Sie die Hopfen in der richtigen Reihenfolge hinzu.",
+  "pathEditor_searchRepeaters": "Suche nach wiederholten Nachrichten",
+  "pathEditor_advancedHex": "Fortgeschritten: Roh-Hex-Pfad",
+  "pathEditor_hexLabel": "Hex-Präfixe",
+  "pathEditor_hexHelper": "Zwei Hexadezimalzeichen pro Sprung, getrennt durch Kommas",
+  "pathEditor_invalidTokens": "Ungültig: {tokens}",
+  "pathEditor_tooManyHops": "Maximal 64 Hopfengreifer",
+  "pathEditor_usePath": "Verwenden Sie diesen Pfad.",
+  "pathEditor_removeHop": "Hop entfernen",
+  "pathEditor_unknownHop": "Unbekannter Repeater",
+  "map_zoomIn": "Zoomen",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "Auszoomen",
+  "map_centerMap": "Zentralkarte",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth benötigt einen Chromium-Browser.",
+  "channels_communityShortId": "ID: {id}…",
+  "pathTrace_legendGpsConfirmed": "GPS-Bestätigung",
+  "pathTrace_legendInferred": "Abgeleitete Position",
   "settings_quickAnswersSendAtSelect": "Bei Auswahl senden",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

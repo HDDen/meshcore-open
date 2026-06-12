@@ -72,11 +72,15 @@ class RepeaterHubScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: Colors.orange,
-                      child: const Icon(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.tertiaryContainer,
+                      child: Icon(
                         Icons.cell_tower,
                         size: 40,
-                        color: Colors.white,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onTertiaryContainer,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -90,12 +94,18 @@ class RepeaterHubScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       repeater.shortPubKeyHex,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       repeater.pathLabel(context.l10n),
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     if (repeater.hasLocation) ...[
                       const SizedBox(height: 4),
@@ -105,14 +115,18 @@ class RepeaterHubScreen extends StatelessWidget {
                           Icon(
                             Icons.location_on,
                             size: 14,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${repeater.latitude?.toStringAsFixed(4)}, ${repeater.longitude?.toStringAsFixed(4)}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -193,7 +207,7 @@ class RepeaterHubScreen extends StatelessWidget {
               icon: Icons.analytics,
               title: l10n.repeater_status,
               subtitle: l10n.repeater_statusSubtitle,
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primary,
               onTap: () {
                 Navigator.push(
                   context,
@@ -213,7 +227,7 @@ class RepeaterHubScreen extends StatelessWidget {
               icon: Icons.bar_chart_sharp,
               title: l10n.repeater_telemetry,
               subtitle: l10n.repeater_telemetrySubtitle,
-              color: Colors.teal,
+              color: Theme.of(context).colorScheme.secondary,
               onTap: () {
                 Navigator.push(
                   context,
@@ -231,7 +245,7 @@ class RepeaterHubScreen extends StatelessWidget {
                 icon: Icons.terminal,
                 title: l10n.repeater_cli,
                 subtitle: l10n.repeater_cliSubtitle,
-                color: Colors.green,
+                color: Theme.of(context).colorScheme.tertiary,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -251,7 +265,7 @@ class RepeaterHubScreen extends StatelessWidget {
               icon: Icons.group,
               title: l10n.repeater_neighbors,
               subtitle: l10n.repeater_neighborsSubtitle,
-              color: Colors.orange,
+              color: Theme.of(context).colorScheme.tertiary,
               onTap: () {
                 Navigator.push(
                   context,
@@ -270,7 +284,7 @@ class RepeaterHubScreen extends StatelessWidget {
                 icon: Icons.settings,
                 title: l10n.repeater_settings,
                 subtitle: l10n.repeater_settingsSubtitle,
-                color: Colors.deepOrange,
+                color: Theme.of(context).colorScheme.error,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -329,12 +343,18 @@ class RepeaterHubScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

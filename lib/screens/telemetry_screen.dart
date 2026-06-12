@@ -13,7 +13,7 @@ import '../connector/meshcore_protocol.dart';
 import '../services/app_settings_service.dart';
 import '../services/repeater_command_service.dart';
 import '../utils/app_logger.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/routing_sheet.dart';
 import '../helpers/cayenne_lpp.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -118,7 +118,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
               showDismissibleSnackBar(
                 context,
                 content: Text(context.l10n.telemetry_requestTimeout),
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               );
             }
             if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
@@ -178,7 +178,6 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.telemetry_receivedData),
-        backgroundColor: Colors.green,
       );
     }
     _statusTimeout?.cancel();
@@ -235,7 +234,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           showDismissibleSnackBar(
             context,
             content: Text(context.l10n.telemetry_errorLoading(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           );
         }
       }
@@ -323,7 +322,11 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final settings = context.watch<AppSettingsService>().settings;
     final isImperialUnits = settings.unitSystem == UnitSystem.imperial;
-    final isFloodMode = widget.contact.pathOverride == -1;
+    final contact = connector.contacts.firstWhere(
+      (c) => c.publicKeyHex == widget.contact.publicKeyHex,
+      orElse: () => widget.contact,
+    );
+    final isFloodMode = contact.pathOverride == -1;
 
     return Scaffold(
       appBar: AppBar(
@@ -347,70 +350,11 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         centerTitle: false,
         bottom: const SyncProgressAppBarBottom(),
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(widget.contact, pathLen: -1);
-              } else {
-                await connector.setPathOverride(widget.contact, pathLen: null);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
             onPressed: () =>
-                PathManagementDialog.show(context, contact: widget.contact),
+                ContactRoutingSheet.show(context, contact: widget.contact),
           ),
           IconButton(
             icon: _isLoading
@@ -441,7 +385,10 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                 Center(
                   child: Text(
                     l10n.telemetry_noData,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               if ((_isLoaded || _hasData) &&
@@ -718,14 +665,14 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                         alignment: Alignment.center,
                         children: [
                           Center(child: Text(l10n.common_disable)),
-                          const Positioned(
+                          Positioned(
                             right: 0,
                             child: SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
                           ),
@@ -971,21 +918,20 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 130,
+          Expanded(
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w400),
-            ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w400),
+            textAlign: TextAlign.end,
           ),
         ],
       ),

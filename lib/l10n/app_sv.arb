@@ -2382,5 +2382,98 @@
   "settings_companionDebugLog": "Följande felsökningslogg",
   "chat_newMessages": "Nya meddelanden",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB-kommandon, svar och rådata",
-  "repeater_chanUtil": "Användning av kanal"
+  "repeater_chanUtil": "Användning av kanal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Sen",
+  "messageStatus_delivered": "Levererad",
+  "common_undo": "Ångra",
+  "messageStatus_pending": "Skicka",
+  "messageStatus_failed": "Misslyckades med att skicka",
+  "messageStatus_repeated": "Hördes upprepade gånger",
+  "contacts_moreOptions": "Fler alternativ",
+  "contacts_searchOpen": "Sök efter kontakter",
+  "contacts_searchClose": "Avancerad sökning",
+  "routing_title": "Ruttplanering",
+  "routing_modeAuto": "Bil",
+  "routing_modeFlood": "Översvämning",
+  "routing_modeManual": "Instruktioner",
+  "routing_modeAutoHint": "Väljer automatiskt den bästa kända vägen, och använder en \"flooding\"-strategi om ingen väg är känd.",
+  "routing_modeFloodHint": "Sändningar via alla repetrar. Det mest pålitliga alternativet, men kräver mer sändtid.",
+  "routing_modeManualHint": "Skickar alltid den exakta väg du har angivit.",
+  "routing_currentRoute": "Nuvarande rutt",
+  "routing_directNoHops": "Direkt – utan mellanliggande routrar",
+  "routing_noPathYet": "Ingen väg hittad ännu. Nästa meddelande skickas tills en rutt har upptäckts.",
+  "routing_floodBroadcast": "Sändas via alla repetrar",
+  "routing_editPath": "Redigera sökväg",
+  "routing_forgetPath": "Glöm vägen",
+  "routing_knownPaths": "Kända vägar",
+  "routing_knownPathsHint": "Välj en väg för att byta till den.",
+  "routing_inUse": "I användning",
+  "routing_qualityStrong": "En stark start",
+  "routing_qualityGood": "Bra första steg",
+  "routing_qualityFair": "Bra första hopp",
+  "routing_qualityWorked": "Har levererat",
+  "routing_qualityFlood": "Fått information via nyhetsflöde",
+  "routing_qualityUntested": "Ej testat",
+  "routing_lastWorked": "arbetade {when}",
+  "routing_neverWorked": "aldrig bekräftat",
+  "routing_floodDelivery": "Leverans vid översvämningsområde",
+  "pathEditor_title": "Skapa väg",
+  "pathEditor_hopCounter": "{count} av 64 humlor",
+  "pathEditor_noHops": "Inga humle än. Använd knapparna nedan för att lägga till dem i rätt ordning, eller spara utan humle för att skicka direkt.",
+  "pathEditor_addHops": "Tillsätt humlen i rätt ordning.",
+  "pathEditor_searchRepeaters": "Sök efter återupptagna samtal",
+  "pathEditor_advancedHex": "Avancerat: rå hex-sökväg",
+  "pathEditor_hexLabel": "Hex-prefikser",
+  "pathEditor_hexHelper": "Två hex-tecken per steg, separerade med kommatecken.",
+  "pathEditor_invalidTokens": "Ogiltigt: {tokens}",
+  "pathEditor_tooManyHops": "Maximalt 64 humlörter",
+  "pathEditor_usePath": "Använd denna väg",
+  "pathEditor_removeHop": "Ta bort humlen",
+  "pathEditor_unknownHop": "Okänd förstärkare",
+  "map_zoomIn": "Zooma in",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "Zooma ut",
+  "map_centerMap": "Kartöversikt",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth kräver en Chromium-baserad webbläsare.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS-verifierat",
+  "pathTrace_legendInferred": "Antagen position"
 }

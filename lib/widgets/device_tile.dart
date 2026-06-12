@@ -6,9 +6,15 @@ import 'signal_ui.dart';
 /// A reusable tile widget for displaying a MeshCore device in a list
 class DeviceTile extends StatelessWidget {
   final ScanResult scanResult;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isConnecting;
 
-  const DeviceTile({super.key, required this.scanResult, required this.onTap});
+  const DeviceTile({
+    super.key,
+    required this.scanResult,
+    required this.onTap,
+    this.isConnecting = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,16 +25,20 @@ class DeviceTile extends StatelessWidget {
         : scanResult.advertisementData.advName;
 
     return ListTile(
+      enabled: onTap != null || isConnecting,
       leading: _buildSignalIcon(rssi),
       title: Text(
         name.isNotEmpty ? name : context.l10n.common_unknownDevice,
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
       subtitle: Text(device.remoteId.toString()),
-      trailing: ElevatedButton(
-        onPressed: onTap,
-        child: Text(context.l10n.common_connect),
-      ),
+      trailing: isConnecting
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : null,
       onTap: onTap,
     );
   }

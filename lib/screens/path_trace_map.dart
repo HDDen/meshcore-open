@@ -121,6 +121,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
   Contact? _targetContact;
   Uint8List? _sentTagBytes;
   Duration? _traceTimeoutFloor;
+  // Live path resolved at trace time; used by the response handler for
+  // endpoint inference so it matches the path that was actually traced.
+  Uint8List _tracedPath = Uint8List(0);
 
   String _formatPathPrefixes(Uint8List pathBytes, [int? hashByteWidth]) {
     return PathHelper.splitPathBytes(
@@ -251,17 +254,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Zoom in',
+              tooltip: context.l10n.map_zoomIn,
               onPressed: () => _zoomMapBy(1),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              tooltip: 'Zoom out',
+              tooltip: context.l10n.map_zoomOut,
               onPressed: () => _zoomMapBy(-1),
             ),
             IconButton(
               icon: const Icon(Icons.my_location),
-              tooltip: 'Center map',
+              tooltip: context.l10n.map_centerMap,
               onPressed: _resetMapView,
             ),
           ],
@@ -328,6 +331,23 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     return Uint8List.fromList(traceBytes);
   }
 
+  /// Resolves the path bytes to trace. When tracing a specific contact's
+  /// route (flipPathAround), re-read that contact's live forced/auto path from
+  /// the connector so a path the user just changed (force flood / set path /
+  /// reset to auto) is honored immediately, instead of the value captured when
+  /// this screen was first pushed.
+  Uint8List _resolveLivePath(MeshCoreConnector connector) {
+    final target = widget.targetContact;
+    if (!widget.flipPathAround || target == null) {
+      return widget.path;
+    }
+    final live = connector.allContactsUnfiltered.firstWhere(
+      (c) => c.publicKeyHex == target.publicKeyHex,
+      orElse: () => target,
+    );
+    return live.pathBytesForDisplay;
+  }
+
   Future<void> _doPathTrace() async {
     if (mounted) {
       setState(() {
@@ -338,9 +358,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final traceHashByteWidth = _traceHashByteWidth(widget.pathHashByteWidth);
+    final livePath = _resolveLivePath(connector);
+    _tracedPath = livePath;
+
     final pathTmp = widget.reversePathAround
-        ? _reversePathByHop(widget.path, widget.pathHashByteWidth)
-        : widget.path;
+        ? _reversePathByHop(livePath, widget.pathHashByteWidth)
+        : livePath;
 
     final path = widget.flipPathAround
         ? buildPath(pathTmp, traceHashByteWidth, connector)
@@ -477,8 +500,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       }
       final pathBytes = buffer.readBytes(pathLength);
       final pathData = PathHelper.splitPathBytes(pathBytes, width);
+      // Firmware emits (path_len >> path_sz) hop SNRs plus 1 final SNR (to this node).
+      final snrCount = (pathLength ~/ width) + 1;
       List<double> snrData = buffer
-          .readRemainingBytes()
+          .readBytes(snrCount)
           .map((snr) => snr.toSigned(8).toDouble() / 4)
           .toList();
 
@@ -575,13 +600,20 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
           final tc = _targetContact!;
           if (tc.hasLocation) {
             targetPos = LatLng(tc.latitude!, tc.longitude!);
-          } else if (pathData.length > 1) {
+          } else if (pathData.length > 1 || _tracedPath.isNotEmpty) {
             // Infer from the last hop: average GPS contacts sharing that hop.
             // For a round-trip path (flipPathAround/reversePathAround), the target-side hop
             // sits in the middle of the symmetric sequence; .last is the local side.
+            final tracedHops = PathHelper.splitPathBytes(
+              _tracedPath,
+              widget.pathHashByteWidth,
+            );
+            final hopsForEndpoint = tracedHops.isNotEmpty
+                ? tracedHops
+                : pathData;
             final lastHop = widget.reversePathAround
-                ? pathData.first
-                : pathData.last;
+                ? hopsForEndpoint.first
+                : hopsForEndpoint.last;
             final lastHopKey = _hopKey(lastHop);
 
             final peers = connector.allContacts
@@ -759,7 +791,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
                     !_failed2Loaded)
                   Center(
                     child: Card(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.9),
                       child: Padding(
                         padding: EdgeInsets.all(12),
                         child: Text(
@@ -811,31 +845,35 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       markers.add(
         Marker(
           point: point,
-          width: 35,
-          height: 35,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: hasGps
-                  ? Colors.green
-                  : Colors.orange.withValues(alpha: 0.75),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 35,
+              height: 35,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: hasGps
+                    ? Colors.green
+                    : Colors.orange.withValues(alpha: 0.75),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                hasGps ? shortLabel : '~$shortLabel',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              hasGps ? shortLabel : '~$shortLabel',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
               ),
             ),
           ),
@@ -855,29 +893,33 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       markers.add(
         Marker(
           point: selfPoint,
-          width: 35,
-          height: 35,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 35,
+              height: 35,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                context.l10n.pathTrace_you,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              context.l10n.pathTrace_you,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
               ),
             ),
           ),
@@ -901,26 +943,30 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
       markers.add(
         Marker(
           point: targetPos,
-          width: 35,
-          height: 35,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: isGuessed
-                  ? Colors.purple.withValues(alpha: 0.55)
-                  : Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 35,
+              height: 35,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: isGuessed
+                    ? Colors.purple.withValues(alpha: 0.55)
+                    : Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.person, color: Colors.white, size: 18),
             ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.person, color: Colors.white, size: 18),
           ),
         ),
       );
@@ -1093,6 +1139,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
     );
   }
 
+  Widget _colorDot(Color color) => Container(
+    width: 10,
+    height: 10,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
+
   Widget _buildLegendCard(
     BuildContext context,
     PathTraceData pathTraceData,
@@ -1115,9 +1167,32 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text(
-                  '${l10n.channelPath_repeaterHops} ${formatDistance(_pathDistanceMeters, isImperial: isImperial)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${l10n.channelPath_repeaterHops} ${formatDistance(_pathDistanceMeters, isImperial: isImperial)}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _colorDot(Colors.green),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.pathTrace_legendGpsConfirmed,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        const SizedBox(width: 12),
+                        _colorDot(Colors.orange),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.pathTrace_legendInferred,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const Divider(height: 1),

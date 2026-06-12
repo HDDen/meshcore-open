@@ -59,11 +59,15 @@ class _RadioStatsIconButtonState extends State<RadioStatsIconButton> {
               active: connector.radioStatsAirActivityPulse,
             );
             if (widget.compact) {
-              return GestureDetector(
-                onTap: () => pushCompanionRadioStatsScreen(context),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: dot,
+              return Semantics(
+                label: context.l10n.radioStats_tooltip,
+                button: true,
+                child: GestureDetector(
+                  onTap: () => pushCompanionRadioStatsScreen(context),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: dot,
+                  ),
                 ),
               );
             }

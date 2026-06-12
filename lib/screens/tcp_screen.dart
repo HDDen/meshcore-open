@@ -97,9 +97,10 @@ class _TcpScreenState extends State<TcpScreen> {
             final isConnecting =
                 connector.state == MeshCoreConnectionState.connecting &&
                 connector.activeTransport == MeshCoreTransportType.tcp;
-            final isButtonDisabled =
-                isConnecting ||
-                connector.state == MeshCoreConnectionState.scanning;
+            // A running BLE scan must not block TCP connect: connectTcp() stops
+            // any active scan before connecting, so the only reason to disable
+            // the button is a TCP connect already in flight.
+            final isButtonDisabled = isConnecting;
             return Column(
               children: [
                 _buildStatusBar(context, connector),
@@ -107,6 +108,8 @@ class _TcpScreenState extends State<TcpScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      _buildTransportLinks(context),
+                      const SizedBox(height: 16),
                       TextField(
                         controller: _hostController,
                         decoration: InputDecoration(
@@ -167,40 +170,32 @@ class _TcpScreenState extends State<TcpScreen> {
           },
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerRight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (PlatformInfo.supportsUsbSerial)
-                FloatingActionButton.extended(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const UsbScreen()),
-                    );
-                  },
-                  heroTag: 'tcp_usb_action',
-                  extendedPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  icon: const Icon(Icons.usb),
-                  label: Text(context.l10n.connectionChoiceUsbLabel),
-                ),
-              if (PlatformInfo.supportsUsbSerial) const SizedBox(width: 12),
-              FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.of(context).maybePop();
-                },
-                heroTag: 'tcp_ble_action',
-                extendedPadding: const EdgeInsets.symmetric(horizontal: 12),
-                icon: const Icon(Icons.bluetooth),
-                label: Text(context.l10n.connectionChoiceBluetoothLabel),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildTransportLinks(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          if (PlatformInfo.supportsUsbSerial)
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const UsbScreen()),
+                );
+              },
+              icon: const Icon(Icons.usb),
+              label: Text(context.l10n.connectionChoiceUsbLabel),
+            ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.bluetooth),
+            label: Text(context.l10n.connectionChoiceBluetoothLabel),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -335,7 +330,7 @@ class _TcpScreenState extends State<TcpScreen> {
       statusColor = Colors.orange;
     } else {
       statusText = l10n.tcpStatus_notConnected;
-      statusColor = Colors.grey;
+      statusColor = Theme.of(context).colorScheme.onSurfaceVariant;
     }
 
     return Container(
@@ -347,16 +342,11 @@ class _TcpScreenState extends State<TcpScreen> {
           Icon(Icons.circle, size: 12, color: statusColor),
           const SizedBox(width: 8),
           Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                statusText,
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            child: Text(
+              statusText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: statusColor, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -575,7 +565,7 @@ class _TcpScreenState extends State<TcpScreen> {
     showDismissibleSnackBar(
       context,
       content: Text(message),
-      backgroundColor: Colors.red,
+      backgroundColor: Theme.of(context).colorScheme.error,
     );
   }
 

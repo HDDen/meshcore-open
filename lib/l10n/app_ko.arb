@@ -2456,6 +2456,99 @@
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 명령어, 응답 및 원시 데이터",
   "chat_markAsUnread": "미리 읽지 않음으로 표시",
   "repeater_chanUtil": "채널 활용도",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_pending": "발송",
+  "messageStatus_sent": "발송",
+  "messageStatus_delivered": "배송 완료",
+  "common_undo": "취소",
+  "messageStatus_failed": "발송 실패",
+  "messageStatus_repeated": "반복적으로 들었습니다",
+  "contacts_searchOpen": "연락처 검색",
+  "contacts_moreOptions": "더 많은 옵션",
+  "contacts_searchClose": "검색 닫기",
+  "routing_title": "라우팅",
+  "routing_modeAuto": "자동",
+  "routing_modeFlood": "홍수",
+  "routing_modeManual": "사용 설명서",
+  "routing_modeAutoHint": "가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없을 경우에는 무작위로 경로를 선택합니다.",
+  "routing_modeFloodHint": "모든 증폭기를 통해 방송됩니다. 가장 안정적이지만, 더 많은 송출 시간을 사용합니다.",
+  "routing_modeManualHint": "항상 설정하신 정확한 경로를 따라 이동합니다.",
+  "routing_currentRoute": "현재 경로",
+  "routing_directNoHops": "직접 연결 – 중계 장치 사용 없이",
+  "routing_noPathYet": "아직 경로가 없습니다. 다음 메시지가 도착할 때까지 계속 탐색합니다.",
+  "routing_floodBroadcast": "모든 증폭기를 통해 방송",
+  "routing_editPath": "경로 편집",
+  "routing_forgetPath": "길을 잊어라",
+  "routing_knownPaths": "알려진 경로",
+  "routing_knownPathsHint": "해당 항목으로 전환하기 위한 경로를 선택합니다.",
+  "routing_inUse": "사용 중",
+  "routing_qualityStrong": "강력한 첫 번째 단계",
+  "routing_qualityGood": "좋은 첫 시작",
+  "routing_qualityFair": "처음 시도",
+  "routing_qualityWorked": "완료됨",
+  "routing_qualityFlood": "홍수 피해 상황을 통해 들었습니다.",
+  "routing_qualityUntested": "검증되지 않음",
+  "routing_lastWorked": "{when}에 일했습니다",
+  "routing_neverWorked": "확인되지 않음",
+  "routing_floodDelivery": "홍수 피해 지역 배송",
+  "pathEditor_title": "경로 만들기",
+  "pathEditor_hopCounter": "64개의 홉 중 {count}",
+  "pathEditor_noHops": "현재 홉은 추가되지 않았습니다. 아래의 탭을 사용하여 순서대로 추가하거나, 홉 없이 바로 전송하려면 \"홉 없음\"으로 저장하십시오.",
+  "pathEditor_addHops": "홉을 순서대로 첨가해주세요.",
+  "pathEditor_searchRepeaters": "반복 검색",
+  "pathEditor_advancedHex": "고급: 원시 헥스 경로",
+  "pathEditor_hexLabel": "헥스 접두사",
+  "pathEditor_hexHelper": "각 홉마다 2개의 6자리 숫자, 쉼표로 구분",
+  "pathEditor_invalidTokens": "유효하지 않음: {tokens}",
+  "pathEditor_tooManyHops": "최대 64개의 홉",
+  "pathEditor_usePath": "이 경로를 사용하세요",
+  "pathEditor_removeHop": "홉 제거",
+  "pathEditor_unknownHop": "알 수 없는 중계기",
+  "map_zoomIn": "줌 인",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "줌 아웃",
+  "map_centerMap": "중심 지도",
+  "chrome_bluetoothRequiresChromium": "웹 블루투스는 크롬 브라우저가 필요합니다.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS 확인 완료",
+  "pathTrace_legendInferred": "추론된 위치",
   "settings_quickAnswersSendAtSelect": "선택 시 전송",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

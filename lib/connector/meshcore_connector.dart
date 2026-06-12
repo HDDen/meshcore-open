@@ -202,6 +202,7 @@ class MeshCoreConnector extends ChangeNotifier {
       {}; // contactPubKeyHex -> Set of "targetHash_emoji"
 
   StreamSubscription<List<ScanResult>>? _scanSubscription;
+  StreamSubscription<bool>? _isScanningSubscription;
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
   StreamSubscription<List<int>>? _notifySubscription;
   Timer? _notifyListenersTimer;
@@ -569,8 +570,20 @@ class MeshCoreConnector extends ChangeNotifier {
     if (messages == null) return;
     final removed = messages.remove(message);
     if (!removed) return;
+    _retryService?.untrack(message.messageId);
     await _messageStore.saveMessages(contactKeyHex, messages);
     notifyListeners();
+  }
+
+  Future<void> resendMessage(Contact contact, Message message) async {
+    await deleteMessage(message);
+    await sendMessage(
+      contact,
+      message.text,
+      originalText: message.originalText,
+      translatedLanguageCode: message.translatedLanguageCode,
+      translationModelId: message.translationModelId,
+    );
   }
 
   Future<void> _loadMessagesForContact(String contactKeyHex) async {
@@ -1621,6 +1634,21 @@ class MeshCoreConnector extends ChangeNotifier {
   }) async {
     if (_state == MeshCoreConnectionState.scanning) return;
 
+    // A BLE scan must never disturb an active (or in-progress) non-BLE
+    // connection. The connection state enum is shared across transports, so
+    // entering the `scanning` state while connected over TCP/USB would clobber
+    // the live `connected` state and later reset it to `disconnected`.
+    if (_state != MeshCoreConnectionState.disconnected ||
+        _tcpConnector.isConnected ||
+        _usbManager.isConnected) {
+      _appDebugLogService?.warn(
+        'startScan ignored: not idle (state=$_state, '
+        'tcp=${_tcpConnector.isConnected}, usb=${_usbManager.isConnected})',
+        tag: 'BLE Scan',
+      );
+      return;
+    }
+
     _scanResults.clear();
     _linuxSystemScanResults.clear();
     _setState(MeshCoreConnectionState.scanning);
@@ -1674,20 +1702,40 @@ class MeshCoreConnector extends ChangeNotifier {
     });
 
     try {
+      // Filter by the Nordic UART Service UUID rather than by advertised
+      // name. All MeshCore-compatible firmware (ESP32 + nRF52) advertises this
+      // service UUID, so this matches every device regardless of the name it
+      // chooses to advertise (e.g. community forks like the M5 Cardputer that
+      // do not use a "MeshCore-" name prefix). This mirrors how the official
+      // app discovers devices. Note: on Android `withKeywords` cannot be
+      // combined with any other filter, which is why name keywords are not
+      // used here.
       await FlutterBluePlus.startScan(
-        withKeywords: MeshCoreUuids.deviceNamePrefixes,
+        withServices: [Guid(MeshCoreUuids.service)],
         webOptionalServices: [Guid(MeshCoreUuids.service)],
         timeout: timeout,
         androidScanMode: AndroidScanMode.lowLatency,
       );
     } catch (error) {
       _appDebugLogService?.warn('Scan/picker failure: $error', tag: 'BLE Scan');
-      _setState(MeshCoreConnectionState.disconnected);
+      await stopScan();
       rethrow;
     }
 
-    await Future.delayed(timeout);
-    await stopScan();
+    // Reset our shared state when the native scan ends — whether it was stopped
+    // by the user (stopScan), by the platform timeout, or by Bluetooth turning
+    // off. This replaces a blocking `Future.delayed(timeout)` tail that kept
+    // startScan() pending for the whole timeout and made Stop appear ineffective.
+    // `isScanning` is a re-emit stream that replays its latest value on listen,
+    // so skip(1) to ignore that and only react to a genuine transition to false.
+    await _isScanningSubscription?.cancel();
+    _isScanningSubscription = FlutterBluePlus.isScanning.skip(1).listen((
+      scanning,
+    ) {
+      if (!scanning && _state == MeshCoreConnectionState.scanning) {
+        unawaited(stopScan());
+      }
+    });
   }
 
   Future<void> _loadLinuxSystemDevicesForScan() async {
@@ -1695,31 +1743,28 @@ class MeshCoreConnector extends ChangeNotifier {
       final systemDevices = await FlutterBluePlus.systemDevices([
         Guid(MeshCoreUuids.service),
       ]);
+      // systemDevices is already filtered by the NUS service UUID above, so no
+      // additional name-prefix filtering is applied here. This keeps Linux
+      // discovery name-agnostic and consistent with the main scan path.
       _linuxSystemScanResults
         ..clear()
         ..addAll(
-          systemDevices
-              .where(
-                (device) => MeshCoreUuids.deviceNamePrefixes.any(
-                  device.platformName.startsWith,
-                ),
-              )
-              .map(
-                (device) => ScanResult(
-                  device: device,
-                  advertisementData: AdvertisementData(
-                    advName: device.platformName,
-                    txPowerLevel: null,
-                    appearance: null,
-                    connectable: true,
-                    manufacturerData: const <int, List<int>>{},
-                    serviceData: const <Guid, List<int>>{},
-                    serviceUuids: <Guid>[Guid(MeshCoreUuids.service)],
-                  ),
-                  rssi: 0,
-                  timeStamp: DateTime.now(),
-                ),
+          systemDevices.map(
+            (device) => ScanResult(
+              device: device,
+              advertisementData: AdvertisementData(
+                advName: device.platformName,
+                txPowerLevel: null,
+                appearance: null,
+                connectable: true,
+                manufacturerData: const <int, List<int>>{},
+                serviceData: const <Guid, List<int>>{},
+                serviceUuids: <Guid>[Guid(MeshCoreUuids.service)],
               ),
+              rssi: 0,
+              timeStamp: DateTime.now(),
+            ),
+          ),
         );
       _mergeLinuxSystemScanResults();
       notifyListeners();
@@ -1764,9 +1809,17 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     await _scanSubscription?.cancel();
     _scanSubscription = null;
+    await _isScanningSubscription?.cancel();
+    _isScanningSubscription = null;
 
     if (_state == MeshCoreConnectionState.scanning) {
-      _setState(MeshCoreConnectionState.disconnected);
+      // Restore to `connected` if a non-BLE transport is still live, so a stray
+      // scan can never tear down the reported connection state. Normally there
+      // is no live transport here and we fall through to `disconnected`.
+      final restored = (_tcpConnector.isConnected || _usbManager.isConnected)
+          ? MeshCoreConnectionState.connected
+          : MeshCoreConnectionState.disconnected;
+      _setState(restored);
     }
   }
 
@@ -2008,6 +2061,17 @@ class MeshCoreConnector extends ChangeNotifier {
         activeTransport == MeshCoreTransportType.tcp;
   }
 
+  /// Fast (non-timeout) connect failures are usually a stale link left over
+  /// from a previous session and recover on an immediate retry. Timeouts mean
+  /// the device is likely off or out of range, so retrying would only delay
+  /// genuine failure feedback.
+  @visibleForTesting
+  static bool shouldRetryBleConnectAfterError(String errorText) {
+    final lowerErrorText = errorText.toLowerCase();
+    return !lowerErrorText.contains('timed out') &&
+        !lowerErrorText.contains('timeout');
+  }
+
   Future<void> connect(
     BluetoothDevice device, {
     String? displayName,
@@ -2084,7 +2148,7 @@ class MeshCoreConnector extends ChangeNotifier {
               .connect(
                 timeout: connectTimeout,
                 mtu: null,
-                license: License.free,
+                license: License.nonprofit,
               )
               .timeout(
                 connectTimeout + const Duration(seconds: 2),
@@ -2176,18 +2240,71 @@ class MeshCoreConnector extends ChangeNotifier {
           }
         }
       } else {
-        try {
-          await device.connect(
+        Future<void> attemptConnect() {
+          return device.connect(
             timeout: connectTimeout,
             mtu: null,
-            license: License.free,
+            license: License.nonprofit,
           );
+        }
+
+        // A previous app session (e.g. killed from the iOS app switcher) can
+        // leave the OS holding a stale link to the peripheral. Clear it before
+        // connecting so the fresh attempt doesn't race the stale handle.
+        if (!PlatformInfo.isWeb && device.isConnected) {
+          _appDebugLogService?.warn(
+            'Device reports an existing connection before connect; clearing stale link',
+            tag: 'BLE Connect',
+          );
+          try {
+            await device.disconnect(queue: false);
+          } catch (cleanupError) {
+            _appDebugLogService?.warn(
+              'Stale-link cleanup disconnect failed (continuing): $cleanupError',
+              tag: 'BLE Connect',
+            );
+          }
+        }
+
+        try {
+          await attemptConnect();
         } catch (error) {
           _appDebugLogService?.error(
             'device.connect() failure: $error',
             tag: 'BLE Connect',
           );
-          rethrow;
+          if (PlatformInfo.isWeb ||
+              !shouldRetryBleConnectAfterError(error.toString())) {
+            rethrow;
+          }
+          // Fast (non-timeout) failures are usually a stale connection left by
+          // a previous session; clean up and retry once before surfacing.
+          _appDebugLogService?.warn(
+            'Retrying connect once after clearing possible stale connection',
+            tag: 'BLE Connect',
+          );
+          try {
+            await device.disconnect(queue: false);
+          } catch (cleanupError) {
+            _appDebugLogService?.warn(
+              'Pre-retry cleanup disconnect failed (continuing): $cleanupError',
+              tag: 'BLE Connect',
+            );
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+          try {
+            await attemptConnect();
+            _appDebugLogService?.info(
+              'Retry connect succeeded after stale-connection cleanup',
+              tag: 'BLE Connect',
+            );
+          } catch (retryError) {
+            _appDebugLogService?.error(
+              'device.connect() retry failure: $retryError',
+              tag: 'BLE Connect',
+            );
+            rethrow;
+          }
         }
       }
 
@@ -2236,7 +2353,7 @@ class MeshCoreConnector extends ChangeNotifier {
           await device.connect(
             timeout: const Duration(seconds: 15),
             mtu: null,
-            license: License.free,
+            license: License.nonprofit,
           );
           services = await device.discoverServices();
         } else {
@@ -3863,6 +3980,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await sendFrame(buildRemoveContactFrame(contact.publicKey));
     _contacts.removeWhere((c) => c.publicKeyHex == contact.publicKeyHex);
     _knownContactKeys.remove(contact.publicKeyHex);
+    unawaited(updateKnownDiscovered());
     unawaited(_persistContacts());
     _conversations.remove(contact.publicKeyHex);
     _loadedConversationKeys.remove(contact.publicKeyHex);
@@ -4081,12 +4199,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> sendCliCommand(String command) async {
     if (!isConnected) return;
-
-    // CLI commands are sent as UTF-8 text with a special prefix
-    final commandBytes = utf8.encode(command);
-    final bytes = Uint8List.fromList([0x01, ...commandBytes, 0x00]);
+    final selfKey = _selfPublicKey;
+    if (selfKey == null) return;
     _lastSentWasCliCommand = true;
-    await sendFrame(bytes);
+    await sendFrame(buildSendCliCommandFrame(selfKey, command));
   }
 
   Future<void> setNodeName(String name) async {
@@ -4642,8 +4758,8 @@ class MeshCoreConnector extends ChangeNotifier {
       _advertLocPolicy = reader.readByte();
       final telemetryFlag = reader.readByte();
       _telemetryModeBase = telemetryFlag & 0x03;
-      _telemetryModeEnv = telemetryFlag >> 2 & 0x03;
-      _telemetryModeLoc = telemetryFlag >> 4 & 0x03;
+      _telemetryModeLoc = telemetryFlag >> 2 & 0x03;
+      _telemetryModeEnv = telemetryFlag >> 4 & 0x03;
 
       _manualAddContacts = reader.readByte() & 0x01 == 0x00;
 
@@ -4993,7 +5109,14 @@ class MeshCoreConnector extends ChangeNotifier {
           tag: 'Connector',
         );
         notifyListeners();
-        removeContact(contactTmp);
+        unawaited(
+          removeContact(contactTmp).catchError(
+            (e) => appLogger.warn(
+              'Failed to remove self contact: $e',
+              tag: 'Connector',
+            ),
+          ),
+        );
         return;
       }
       final contact = getFromDiscovered(contactTmp);
@@ -6575,6 +6698,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     messages.add(message);
+    if (messages.length > _messageWindowSize) {
+      messages.removeRange(0, messages.length - _messageWindowSize);
+    }
     _messageStore.saveMessages(pubKeyHex, messages);
     notifyListeners();
   }
@@ -6992,28 +7118,28 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isChannelRepeat(ChannelMessage existing, ChannelMessage incoming) {
     if (existing.text != incoming.text) return false;
 
-    final repeatWindowMs =
-        (_appSettingsService?.settings.channelResendTimeoutSeconds ??
-            AppSettings.defaultChannelResendTimeoutSeconds) *
-        1000;
+    // Self-echo: an outgoing message coming back via a repeater. The send is
+    // delayed by _waitForRadioQuiet (often 10s+) and propagation can add more,
+    // so the timestamp gap can easily exceed the cross-peer window.
+    final selfName = _selfName ?? 'Me';
+    final isSelfEcho =
+        existing.isOutgoing &&
+        !incoming.isOutgoing &&
+        (incoming.senderName == selfName || existing.senderName == selfName);
+
+    // This repeat detector intentionally does not use
+    // AppSettings.defaultChannelResendTimeoutSeconds: manual resend delay and
+    // radio self-echo deduplication are separate timing concerns.
+    final windowMs = isSelfEcho ? 10 * 60 * 1000 : 30000;
     final existingRepeatAnchor = existing.sentByRadioAt ?? existing.timestamp;
     final diffMs =
         (existingRepeatAnchor.millisecondsSinceEpoch -
                 incoming.timestamp.millisecondsSinceEpoch)
             .abs();
-    if (diffMs > repeatWindowMs) return false;
+    if (diffMs > windowMs) return false;
 
     if (existing.senderName == incoming.senderName) return true;
-
-    if (existing.isOutgoing && !incoming.isOutgoing) {
-      final selfName = _selfName ?? 'Me';
-      // Only our own radio echo should promote an outgoing message to a repeat.
-      // Bot replies may quote our text after @[...] is parsed away.
-      if (incoming.senderName == selfName) {
-        //if (incoming.senderName == selfName || existing.senderName == selfName) {
-        return true;
-      }
-    }
+    if (isSelfEcho) return true;
 
     return false;
   }
@@ -7267,6 +7393,7 @@ class MeshCoreConnector extends ChangeNotifier {
   @override
   void dispose() {
     _scanSubscription?.cancel();
+    _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();
     _usbFrameSubscription?.cancel();
     _notifySubscription?.cancel();

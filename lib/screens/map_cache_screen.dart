@@ -83,17 +83,17 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Zoom in',
+              tooltip: context.l10n.map_zoomIn,
               onPressed: () => _zoomMapBy(1),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              tooltip: 'Zoom out',
+              tooltip: context.l10n.map_zoomOut,
               onPressed: () => _zoomMapBy(-1),
             ),
             IconButton(
               icon: const Icon(Icons.my_location),
-              tooltip: 'Center map',
+              tooltip: context.l10n.map_centerMap,
               onPressed: _resetMapView,
             ),
           ],
@@ -458,7 +458,9 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         l10n.mapCache_failedDownloads(_failedTiles),
-                        style: TextStyle(color: Colors.orange[700]),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
                 ],

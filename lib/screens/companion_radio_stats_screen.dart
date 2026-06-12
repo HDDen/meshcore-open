@@ -210,10 +210,10 @@ class _NoiseChartPainter extends CustomPainter {
     }
     final span = maxV - minV;
 
-    for (var i = 0; i <= 2; i++) {
-      final v = maxV - span * i / 2;
+    for (var i = 0; i <= 4; i++) {
+      final v = maxV - span * i / 4;
       final tp = _yAxisLabel(v);
-      final y = chart.top + (chart.height * i / 2) - tp.height / 2;
+      final y = chart.top + (chart.height * i / 4) - tp.height / 2;
       tp.paint(canvas, Offset(4, y));
     }
 

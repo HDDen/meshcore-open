@@ -9,7 +9,8 @@ import '../models/path_selection.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/repeater_command_service.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/routing_sheet.dart';
 import '../widgets/snr_indicator.dart';
 import '../helpers/snack_bar_builder.dart';
 
@@ -167,7 +168,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.neighbors_receivedData),
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
       );
       _statusTimeout?.cancel();
       if (!mounted) return;
@@ -227,7 +228,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.neighbors_requestTimedOut),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
         _recordStatusResult(false);
       });
@@ -241,7 +242,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.neighbors_errorLoading(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
     }
@@ -279,7 +280,9 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
           children: [
             Text(
               l10n.neighbors_repeatersNeighbors,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               repeater.name,
@@ -287,75 +290,18 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
         centerTitle: false,
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(repeater, pathLen: -1);
-              } else {
-                await connector.setPathOverride(repeater, pathLen: null);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
             onPressed: () =>
-                PathManagementDialog.show(context, contact: repeater),
+                ContactRoutingSheet.show(context, contact: repeater),
           ),
           IconButton(
             icon: _isLoading
@@ -380,12 +326,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
               if (!_isLoaded &&
                   !_hasData &&
                   (_parsedNeighbors == null || _parsedNeighbors!.isEmpty))
-                Center(
-                  child: Text(
-                    l10n.neighbors_noData,
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
+                EmptyState(icon: Icons.wifi_find, title: l10n.neighbors_noData),
               if (_isLoaded ||
                   _hasData &&
                       !(_parsedNeighbors == null || _parsedNeighbors!.isEmpty))
@@ -435,7 +376,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
                   fmtDuration(entry.value['lastHeard'] + 0.0),
                 ),
                 entry.value['snr'],
-                connector.currentSf!,
+                connector.currentSf,
               ),
           ],
         ),
@@ -447,7 +388,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     String label,
     String value,
     double snr,
-    int spreadingFactor,
+    int? spreadingFactor,
   ) {
     final snrUi = snrUiFromSNR(snr, spreadingFactor);
     return Padding(

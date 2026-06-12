@@ -63,7 +63,7 @@ class AppDebugLogScreen extends StatelessWidget {
                       final entry = entries[index];
                       return ListTile(
                         dense: true,
-                        leading: _buildLevelIcon(entry.level),
+                        leading: _buildLevelIcon(context, entry.level),
                         title: Text(
                           '[${entry.tag}] ${entry.message}',
                           style: const TextStyle(
@@ -75,7 +75,9 @@ class AppDebugLogScreen extends StatelessWidget {
                           entry.formattedTime,
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       );
@@ -88,14 +90,16 @@ class AppDebugLogScreen extends StatelessWidget {
                         Icon(
                           Icons.bug_report_outlined,
                           size: 64,
-                          color: Colors.grey[400],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           context.l10n.debugLog_noEntries,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -103,7 +107,9 @@ class AppDebugLogScreen extends StatelessWidget {
                           context.l10n.debugLog_enableInSettings,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -115,18 +121,19 @@ class AppDebugLogScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLevelIcon(AppDebugLogLevel level) {
+  Widget _buildLevelIcon(BuildContext context, AppDebugLogLevel level) {
+    final colorScheme = Theme.of(context).colorScheme;
     switch (level) {
       case AppDebugLogLevel.info:
-        return const Icon(Icons.info_outline, size: 18, color: Colors.blue);
+        return Icon(Icons.info_outline, size: 18, color: colorScheme.primary);
       case AppDebugLogLevel.warning:
-        return const Icon(
+        return Icon(
           Icons.warning_amber_outlined,
           size: 18,
-          color: Colors.orange,
+          color: colorScheme.tertiary,
         );
       case AppDebugLogLevel.error:
-        return const Icon(Icons.error_outline, size: 18, color: Colors.red);
+        return Icon(Icons.error_outline, size: 18, color: colorScheme.error);
     }
   }
 }

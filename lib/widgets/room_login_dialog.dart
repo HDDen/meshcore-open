@@ -12,7 +12,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'path_management_dialog.dart';
+import 'routing_sheet.dart';
 
 class RoomLoginDialog extends StatefulWidget {
   final Contact room;
@@ -181,7 +181,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.login_failed(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
     }
@@ -232,7 +232,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.group, color: Colors.purple),
+          Icon(Icons.group, color: Theme.of(context).colorScheme.secondary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -244,7 +244,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.normal,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -395,14 +395,17 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                   const SizedBox(height: 4),
                   Text(
                     repeater.pathLabel(context.l10n),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed: () =>
-                          PathManagementDialog.show(context, contact: repeater),
+                          ContactRoutingSheet.show(context, contact: repeater),
                       icon: const Icon(Icons.timeline, size: 18),
                       label: Text(l10n.login_managePaths),
                     ),
@@ -423,12 +426,12 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 12),

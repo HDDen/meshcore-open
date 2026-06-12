@@ -2382,5 +2382,98 @@
   "settings_companionDebugLogSubtitle": "Comandos, respostas e dados brutos para protocolos BLE/TCP/USB",
   "chat_markAsUnread": "Marcar como não lido",
   "chat_newMessages": "Novas mensagens",
-  "repeater_chanUtil": "Utilização do canal"
+  "repeater_chanUtil": "Utilização do canal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "common_undo": "Desfazer",
+  "messageStatus_sent": "Enviado",
+  "messageStatus_pending": "Enviar",
+  "messageStatus_delivered": "Entregue",
+  "messageStatus_failed": "Falhou ao enviar",
+  "messageStatus_repeated": "Ouvi repetidamente",
+  "contacts_moreOptions": "Mais opções",
+  "contacts_searchOpen": "Pesquisar contatos",
+  "contacts_searchClose": "Pesquisa avançada",
+  "routing_title": "Rotas",
+  "routing_modeAuto": "Carro",
+  "routing_modeFlood": "Inundação",
+  "routing_modeManual": "Manual",
+  "routing_modeAutoHint": "Seleciona automaticamente o caminho mais conhecido, e, se nenhum caminho conhecido for encontrado, utiliza a estratégia de \"inundação\".",
+  "routing_modeFloodHint": "Transmissão através de todos os repetidores. É a opção mais confiável, mas utiliza mais tempo de transmissão.",
+  "routing_modeManualHint": "Sempre segue exatamente o caminho que você define.",
+  "routing_currentRoute": "Rota atual",
+  "routing_directNoHops": "Direto – sem saltos de repetidor",
+  "routing_noPathYet": "Ainda não há um caminho definido. A mensagem continua a ser enviada até que uma rota seja encontrada.",
+  "routing_floodBroadcast": "Transmissão através de todos os repetidores",
+  "routing_editPath": "Editar caminho",
+  "routing_forgetPath": "Esqueça o caminho",
+  "routing_knownPaths": "Rotas conhecidas",
+  "routing_knownPathsHint": "Toque em um caminho para alternar para ele.",
+  "routing_inUse": "Em uso",
+  "routing_qualityStrong": "Primeiro salto notável",
+  "routing_qualityGood": "Primeiro salto bem-sucedido",
+  "routing_qualityFair": "Primeira etapa bem-sucedida",
+  "routing_qualityWorked": "Foi entregue",
+  "routing_qualityFlood": "Informação obtida através de relatos generalizados.",
+  "routing_qualityUntested": "Não testado",
+  "routing_neverWorked": "nunca confirmado",
+  "routing_floodDelivery": "Entrega em áreas afetadas por inundações",
+  "pathEditor_title": "Criar Caminho",
+  "pathEditor_hopCounter": "{count} de 64 gramas de lúpulo",
+  "pathEditor_noHops": "Ainda não há lúpulos adicionados. Clique nos repetidores abaixo para adicioná-los na ordem desejada, ou salve sem adicionar lúpulos para enviar diretamente.",
+  "pathEditor_addHops": "Adicione os lúpulos na seguinte ordem.",
+  "pathEditor_searchRepeaters": "Encontrar repetidores",
+  "pathEditor_advancedHex": "Avançado: caminho hexadecimal bruto",
+  "pathEditor_hexLabel": "Prefixos hexadecimais",
+  "pathEditor_hexHelper": "Dois caracteres hexadecimais por salto, separados por vírgulas.",
+  "pathEditor_invalidTokens": "Inválido: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "pathEditor_tooManyHops": "Máximo de 64 saltos",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_usePath": "Utilize este caminho.",
+  "pathEditor_removeHop": "Remova o lúpulo",
+  "pathEditor_unknownHop": "Repetidor desconhecido",
+  "map_zoomIn": "Ampliar",
+  "map_zoomOut": "Ampliar",
+  "map_centerMap": "Mapa do centro",
+  "chrome_bluetoothRequiresChromium": "O Web Bluetooth requer um navegador Chromium.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS confirmado",
+  "pathTrace_legendInferred": "Posição inferida"
 }

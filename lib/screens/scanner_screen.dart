@@ -10,6 +10,7 @@ import '../services/linux_ble_error_classifier.dart';
 import '../utils/app_logger.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/device_tile.dart';
+import '../widgets/empty_state.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'tcp_screen.dart';
@@ -25,6 +26,7 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> {
   bool _changedNavigation = false;
+  String? _connectingDeviceId;
   late final MeshCoreConnector _connector;
   late final VoidCallback _connectionListener;
   BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
@@ -101,6 +103,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
         title: AdaptiveAppBarTitle(context.l10n.scanner_title),
         centerTitle: true,
         automaticallyImplyLeading: false,
+        actions: [
+          if (PlatformInfo.supportsUsbSerial)
+            IconButton(
+              icon: const Icon(Icons.usb),
+              tooltip: context.l10n.connectionChoiceUsbLabel,
+              onPressed: () {
+                appLogger.info(
+                  'USB selected, opening UsbScreen',
+                  tag: 'ScannerScreen',
+                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const UsbScreen()));
+              },
+            ),
+          if (!PlatformInfo.isWeb)
+            IconButton(
+              icon: const Icon(Icons.lan),
+              tooltip: context.l10n.connectionChoiceTcpLabel,
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const TcpScreen()));
+              },
+            ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -122,89 +150,43 @@ class _ScannerScreenState extends State<ScannerScreen> {
           },
         ),
       ),
-      bottomNavigationBar: Consumer<MeshCoreConnector>(
+      floatingActionButton: Consumer<MeshCoreConnector>(
         builder: (context, connector, child) {
           final isScanning =
               connector.state == MeshCoreConnectionState.scanning;
           final isBluetoothOff = _bluetoothState == BluetoothAdapterState.off;
-          final usbSupported = PlatformInfo.supportsUsbSerial;
-          final tcpSupported = !PlatformInfo.isWeb;
 
-          return SafeArea(
-            top: false,
-            minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (usbSupported)
-                    FloatingActionButton.extended(
-                      onPressed: () {
-                        appLogger.info(
-                          'USB selected, opening UsbScreen',
-                          tag: 'ScannerScreen',
-                        );
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const UsbScreen()),
-                        );
-                      },
-                      heroTag: 'scanner_usb_action',
-                      icon: const Icon(Icons.usb),
-                      label: Text(context.l10n.connectionChoiceUsbLabel),
-                    ),
-                  if (usbSupported) const SizedBox(width: 12),
-                  if (tcpSupported)
-                    FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const TcpScreen()),
-                        );
-                      },
-                      heroTag: 'scanner_tcp_action',
-                      icon: const Icon(Icons.lan),
-                      label: Text(context.l10n.connectionChoiceTcpLabel),
-                    ),
-                  if (tcpSupported) const SizedBox(width: 12),
-                  FloatingActionButton.extended(
-                    heroTag: 'scanner_ble_action',
-                    onPressed: isBluetoothOff
-                        ? null
-                        : () {
-                            if (isScanning) {
-                              connector.stopScan();
-                            } else {
-                              unawaited(
-                                connector.startScan().catchError((e) {
-                                  appLogger.warn(
-                                    'startScan error: $e',
-                                    tag: 'ScannerScreen',
-                                  );
-                                }),
-                              );
-                            }
-                          },
-                    icon: isScanning
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.bluetooth_searching),
-                    label: Text(
-                      isScanning
-                          ? context.l10n.scanner_stop
-                          : context.l10n.scanner_scan,
-                    ),
-                  ),
-                ],
-              ),
+          return FloatingActionButton.extended(
+            heroTag: 'scanner_ble_action',
+            onPressed: isBluetoothOff ? null : () => _toggleScan(connector),
+            icon: isScanning
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.bluetooth_searching),
+            label: Text(
+              isScanning
+                  ? context.l10n.scanner_stop
+                  : context.l10n.scanner_scan,
             ),
           );
         },
       ),
     );
+  }
+
+  void _toggleScan(MeshCoreConnector connector) {
+    if (connector.state == MeshCoreConnectionState.scanning) {
+      connector.stopScan();
+    } else {
+      unawaited(
+        connector.startScan().catchError((e) {
+          appLogger.warn('startScan error: $e', tag: 'ScannerScreen');
+        }),
+      );
+    }
   }
 
   Widget _buildStatusBar(BuildContext context, MeshCoreConnector connector) {
@@ -254,32 +236,42 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   Widget _buildDeviceList(BuildContext context, MeshCoreConnector connector) {
     if (connector.scanResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bluetooth, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              connector.state == MeshCoreConnectionState.scanning
-                  ? context.l10n.scanner_searchingDevices
-                  : context.l10n.scanner_tapToScan,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
+      final isBluetoothOff = _bluetoothState == BluetoothAdapterState.off;
+      final isScanning = connector.state == MeshCoreConnectionState.scanning;
+      return EmptyState(
+        icon: isBluetoothOff ? Icons.bluetooth_disabled : Icons.bluetooth,
+        title: isBluetoothOff
+            ? context.l10n.scanner_bluetoothOff
+            : isScanning
+            ? context.l10n.scanner_searchingDevices
+            : context.l10n.scanner_tapToScan,
+        subtitle: isBluetoothOff
+            ? context.l10n.scanner_bluetoothOffMessage
+            : null,
+        action: (isBluetoothOff || isScanning)
+            ? null
+            : FilledButton.icon(
+                onPressed: () => _toggleScan(connector),
+                icon: const Icon(Icons.bluetooth_searching),
+                label: Text(context.l10n.scanner_scan),
+              ),
       );
     }
 
+    final isConnecting = connector.state == MeshCoreConnectionState.connecting;
     return ListView.separated(
       padding: const EdgeInsets.all(8),
       itemCount: connector.scanResults.length,
       separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         final result = connector.scanResults[index];
+        final deviceId = result.device.remoteId.toString();
         return DeviceTile(
           scanResult: result,
-          onTap: () => _connectToDevice(context, connector, result),
+          isConnecting: isConnecting && _connectingDeviceId == deviceId,
+          onTap: isConnecting
+              ? null
+              : () => _connectToDevice(context, connector, result),
         );
       },
     );
@@ -293,6 +285,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
     final name = result.device.platformName.isNotEmpty
         ? result.device.platformName
         : result.advertisementData.advName;
+    setState(() {
+      _connectingDeviceId = result.device.remoteId.toString();
+    });
     try {
       await connector.connect(
         result.device,
@@ -321,8 +316,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.scanner_connectionFailed(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _connectingDeviceId = null;
+        });
       }
     }
   }

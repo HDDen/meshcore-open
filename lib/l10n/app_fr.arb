@@ -2425,6 +2425,99 @@
   "chat_newMessages": "Nouveaux messages",
   "settings_companionDebugLogSubtitle": "Commandes, réponses et données brutes pour les protocoles BLE/TCP/USB",
   "repeater_chanUtil": "Utilisation du canal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "common_undo": "Annuler",
+  "messageStatus_sent": "Envoyer",
+  "messageStatus_delivered": "Livré",
+  "messageStatus_pending": "Envoyer",
+  "messageStatus_failed": "Échec de l'envoi",
+  "messageStatus_repeated": "Répété plusieurs fois",
+  "contacts_searchOpen": "Rechercher des contacts",
+  "contacts_moreOptions": "Plus d'options",
+  "contacts_searchClose": "Recherche avancée",
+  "routing_title": "Planification des itinéraires",
+  "routing_modeAuto": "Voiture",
+  "routing_modeFlood": "Inondation",
+  "routing_modeManual": "Manuel",
+  "routing_modeFloodHint": "Diffusion via tous les répéteurs. La méthode la plus fiable, mais qui utilise plus de temps d'antenne.",
+  "routing_modeAutoHint": "Sélectionne automatiquement le chemin le plus connu, et utilise la méthode de \"inondation\" si aucun chemin n'est connu.",
+  "routing_modeManualHint": "Il suit toujours le chemin précis que vous avez défini.",
+  "routing_currentRoute": "Itinéraire actuel",
+  "routing_directNoHops": "Direct — sans relais",
+  "routing_noPathYet": "Aucune voie encore trouvée. Le message suivant est envoyé jusqu'à ce qu'une route soit découverte.",
+  "routing_floodBroadcast": "Diffusion via tous les répéteurs",
+  "routing_editPath": "Modifier le chemin",
+  "routing_forgetPath": "Oubliez le chemin",
+  "routing_knownPaths": "Chemins connus",
+  "routing_knownPathsHint": "Créez un raccourci pour y accéder.",
+  "routing_inUse": "En cours d'utilisation",
+  "routing_qualityStrong": "Première étape réussie",
+  "routing_qualityGood": "Première étape réussie",
+  "routing_qualityFair": "Première étape réussie",
+  "routing_qualityWorked": "A livré",
+  "routing_qualityFlood": "Rapporté par des informations provenant de plusieurs sources.",
+  "routing_qualityUntested": "Non testé",
+  "routing_lastWorked": "a travaillé {when}",
+  "routing_neverWorked": "jamais confirmé",
+  "routing_floodDelivery": "Livraison en cas de inondation",
+  "pathEditor_hopCounter": "{count} parmi 64 houblons",
+  "pathEditor_title": "Créer un chemin",
+  "pathEditor_noHops": "Aucun houblon ajouté pour le moment. Cliquez sur les répétiteurs ci-dessous pour les ajouter dans l'ordre souhaité, ou enregistrez sans houblon pour envoyer directement.",
+  "pathEditor_addHops": "Ajoutez les houblons dans l'ordre souhaité.",
+  "pathEditor_searchRepeaters": "Rechercher des répétiteurs",
+  "pathEditor_advancedHex": "Avancé : chemin hexadécimal brut",
+  "pathEditor_hexLabel": "Préfixes hexadécimaux",
+  "pathEditor_hexHelper": "Deux caractères hexadécimaux par saut, séparés par des virgules.",
+  "pathEditor_invalidTokens": "Incorrect : {tokens}",
+  "pathEditor_tooManyHops": "Maximum 64 sauts",
+  "pathEditor_usePath": "Utilisez ce chemin.",
+  "pathEditor_removeHop": "Éliminer le haricot",
+  "pathEditor_unknownHop": "Répéteur non identifié",
+  "map_zoomIn": "Zoomez",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "Zoomez",
+  "map_centerMap": "Carte du centre",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth nécessite un navigateur Chromium.",
+  "channels_communityShortId": "ID : {id}…",
+  "pathTrace_legendGpsConfirmed": "Le GPS a confirmé.",
+  "pathTrace_legendInferred": "Position déduite",
   "settings_quickAnswersSendAtSelect": "Envoyer à la sélection",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

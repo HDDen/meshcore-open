@@ -2398,6 +2398,99 @@
   "chat_newMessages": "Нові повідомлення",
   "chat_markAsUnread": "Позначити як непрочитане",
   "repeater_chanUtil": "Використання каналу",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_delivered": "Доставлено",
+  "messageStatus_sent": "Надіслано",
+  "common_undo": "Скасувати",
+  "messageStatus_pending": "Надсилання",
+  "messageStatus_failed": "Не вдалося надіслати",
+  "messageStatus_repeated": "Почув неодноразово",
+  "contacts_moreOptions": "Більше можливостей",
+  "contacts_searchOpen": "Пошук контактів",
+  "contacts_searchClose": "Закрити пошук",
+  "routing_title": "Маршрутизація",
+  "routing_modeAuto": "Автомобіль",
+  "routing_modeFlood": "Повені",
+  "routing_modeManual": "Інструкція",
+  "routing_modeAutoHint": "Автоматично обирає найкращий відомий шлях, та у разі відсутності відомого шляху, використовує алгоритм \"занурення\".",
+  "routing_modeFloodHint": "Передавання через усі ретранслятори. Найбільш надійний спосіб, але потребує більше часу.",
+  "routing_modeManualHint": "Завжди доставляє точно за вказаним вами маршрутом.",
+  "routing_currentRoute": "Поточний маршрут",
+  "routing_directNoHops": "Пряме з'єднання – без проміжних ретрансляторів",
+  "routing_noPathYet": "Поки що немає жодного шляху. Повідомлення продовжуються надходити, поки не буде знайдено маршрут.",
+  "routing_floodBroadcast": "Поширення через усі ретранслятори",
+  "routing_editPath": "Редагувати шлях",
+  "routing_forgetPath": "Забудь про шлях",
+  "routing_knownPaths": "Відомі маршрути",
+  "routing_knownPathsHint": "Виберіть опцію, щоб переключитися на неї.",
+  "routing_inUse": "У робочому стані",
+  "routing_qualityStrong": "Сильний перший стрибок",
+  "routing_qualityGood": "Чудова перша спроба",
+  "routing_qualityFair": "Перший, але вдалий, крок",
+  "routing_qualityWorked": "Доставлено",
+  "routing_qualityFlood": "Дізнався через новини",
+  "routing_qualityUntested": "Не протестовано",
+  "routing_neverWorked": "ніколи не підтверджено",
+  "routing_floodDelivery": "Доставка під час повені",
+  "pathEditor_title": "Створити маршрут",
+  "pathEditor_hopCounter": "{count} з 64 штук хмелю",
+  "pathEditor_noHops": "Ще не додано хміль. Натисніть на відповідні кнопки, щоб додати його в потрібному порядку, або збережіть рецепт без хмілю, щоб відправити його безпосередньо.",
+  "pathEditor_addHops": "Додавайте хміль у наступній послідовності.",
+  "pathEditor_searchRepeaters": "Пошук повторювачів",
+  "pathEditor_advancedHex": "Просунутий рівень: пряма шлях у форматі шестнадцяткової системи.",
+  "pathEditor_hexLabel": "Префікси для шестнадцяткової системи числення",
+  "pathEditor_hexHelper": "Два шестизначні символи на кожний крок, розділені комами",
+  "pathEditor_invalidTokens": "Неправильно: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_tooManyHops": "Максимум 64 хмелеві колоди",
+  "pathEditor_usePath": "Використовуйте цей шлях",
+  "pathEditor_removeHop": "Видалити хміль",
+  "pathEditor_unknownHop": "Невідомий ретранслятор",
+  "map_zoomIn": "Увійти в режим збільшення",
+  "map_zoomOut": "Видалити зум",
+  "map_centerMap": "Карта центру",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth вимагає браузера на основі Chromium",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS підтверджено",
+  "pathTrace_legendInferred": "Висновок щодо положення",
   "settings_quickAnswersSendAtSelect": "Надсилати при виборі",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

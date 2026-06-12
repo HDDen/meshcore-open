@@ -98,11 +98,29 @@ class AppSettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
             title: Text(context.l10n.appSettings_theme),
-            subtitle: Text(
-              _themeModeLabel(context, settingsService.settings.themeMode),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
+                    value: 'system',
+                    label: Text(context.l10n.appSettings_themeSystem),
+                  ),
+                  ButtonSegment(
+                    value: 'light',
+                    label: Text(context.l10n.appSettings_themeLight),
+                  ),
+                  ButtonSegment(
+                    value: 'dark',
+                    label: Text(context.l10n.appSettings_themeDark),
+                  ),
+                ],
+                selected: {settingsService.settings.themeMode},
+                onSelectionChanged: (selection) {
+                  settingsService.setThemeMode(selection.first);
+                },
+              ),
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showThemeModeDialog(context, settingsService),
           ),
           const Divider(height: 1),
           ListTile(
@@ -240,14 +258,14 @@ class AppSettingsScreen extends StatelessWidget {
               Icons.message_outlined,
               color: settingsService.settings.notificationsEnabled
                   ? null
-                  : Colors.grey,
+                  : Theme.of(context).disabledColor,
             ),
             title: Text(
               context.l10n.appSettings_messageNotifications,
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             subtitle: Text(
@@ -255,7 +273,7 @@ class AppSettingsScreen extends StatelessWidget {
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             value: settingsService.settings.notifyOnNewMessage,
@@ -271,14 +289,14 @@ class AppSettingsScreen extends StatelessWidget {
               Icons.forum_outlined,
               color: settingsService.settings.notificationsEnabled
                   ? null
-                  : Colors.grey,
+                  : Theme.of(context).disabledColor,
             ),
             title: Text(
               context.l10n.appSettings_channelMessageNotifications,
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             subtitle: Text(
@@ -286,7 +304,7 @@ class AppSettingsScreen extends StatelessWidget {
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             value: settingsService.settings.notifyOnNewChannelMessage,
@@ -302,14 +320,14 @@ class AppSettingsScreen extends StatelessWidget {
               Icons.cell_tower,
               color: settingsService.settings.notificationsEnabled
                   ? null
-                  : Colors.grey,
+                  : Theme.of(context).disabledColor,
             ),
             title: Text(
               context.l10n.appSettings_advertisementNotifications,
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             subtitle: Text(
@@ -317,7 +335,7 @@ class AppSettingsScreen extends StatelessWidget {
               style: TextStyle(
                 color: settingsService.settings.notificationsEnabled
                     ? null
-                    : Colors.grey,
+                    : Theme.of(context).disabledColor,
               ),
             ),
             value: settingsService.settings.notifyOnNewAdvert,
@@ -394,118 +412,154 @@ class AppSettingsScreen extends StatelessWidget {
               );
             },
           ),
-          if (settingsService.settings.autoRouteRotationEnabled) ...[
-            const Divider(height: 1),
-            ListTile(
-              title: Text(context.l10n.appSettings_maxRouteWeight),
-              subtitle: Column(
+          if (settingsService.settings.autoRouteRotationEnabled)
+            Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              padding: const EdgeInsets.only(left: 16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.appSettings_maxRouteWeightSubtitle),
-                  Slider(
-                    value: settingsService.settings.maxRouteWeight,
-                    min: 1,
-                    max: 10,
-                    divisions: 9,
-                    label: settingsService.settings.maxRouteWeight
-                        .round()
-                        .toString(),
-                    onChanged: (value) =>
-                        settingsService.setMaxRouteWeight(value),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(context.l10n.appSettings_maxRouteWeight),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(context.l10n.appSettings_maxRouteWeightSubtitle),
+                        Slider(
+                          value: settingsService.settings.maxRouteWeight,
+                          min: 1,
+                          max: 10,
+                          divisions: 9,
+                          label: settingsService.settings.maxRouteWeight
+                              .round()
+                              .toString(),
+                          onChanged: (value) =>
+                              settingsService.setMaxRouteWeight(value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(context.l10n.appSettings_initialRouteWeight),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.appSettings_initialRouteWeightSubtitle,
+                        ),
+                        Slider(
+                          value: settingsService.settings.initialRouteWeight,
+                          min: 0.5,
+                          max: 5.0,
+                          divisions: 9,
+                          label: settingsService.settings.initialRouteWeight
+                              .toStringAsFixed(1),
+                          onChanged: (value) =>
+                              settingsService.setInitialRouteWeight(value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(
+                      context.l10n.appSettings_routeWeightSuccessIncrement,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context
+                              .l10n
+                              .appSettings_routeWeightSuccessIncrementSubtitle,
+                        ),
+                        Slider(
+                          value: settingsService
+                              .settings
+                              .routeWeightSuccessIncrement,
+                          min: 0.1,
+                          max: 2.0,
+                          divisions: 19,
+                          label: settingsService
+                              .settings
+                              .routeWeightSuccessIncrement
+                              .toStringAsFixed(1),
+                          onChanged: (value) => settingsService
+                              .setRouteWeightSuccessIncrement(value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(
+                      context.l10n.appSettings_routeWeightFailureDecrement,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context
+                              .l10n
+                              .appSettings_routeWeightFailureDecrementSubtitle,
+                        ),
+                        Slider(
+                          value: settingsService
+                              .settings
+                              .routeWeightFailureDecrement,
+                          min: 0.1,
+                          max: 2.0,
+                          divisions: 19,
+                          label: settingsService
+                              .settings
+                              .routeWeightFailureDecrement
+                              .toStringAsFixed(1),
+                          onChanged: (value) => settingsService
+                              .setRouteWeightFailureDecrement(value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(context.l10n.appSettings_maxMessageRetries),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.appSettings_maxMessageRetriesSubtitle,
+                        ),
+                        Slider(
+                          value: settingsService.settings.maxMessageRetries
+                              .toDouble(),
+                          min: 2,
+                          max: 10,
+                          divisions: 8,
+                          label: settingsService.settings.maxMessageRetries
+                              .toString(),
+                          onChanged: (value) => settingsService
+                              .setMaxMessageRetries(value.toInt()),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-            ListTile(
-              title: Text(context.l10n.appSettings_initialRouteWeight),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.appSettings_initialRouteWeightSubtitle),
-                  Slider(
-                    value: settingsService.settings.initialRouteWeight,
-                    min: 0.5,
-                    max: 5.0,
-                    divisions: 9,
-                    label: settingsService.settings.initialRouteWeight
-                        .toStringAsFixed(1),
-                    onChanged: (value) =>
-                        settingsService.setInitialRouteWeight(value),
-                  ),
-                ],
-              ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.location_searching),
+            title: Text(context.l10n.appSettings_enableMessageTracing),
+            subtitle: Text(
+              context.l10n.appSettings_enableMessageTracingSubtitle,
             ),
-            const Divider(height: 1),
-            ListTile(
-              title: Text(context.l10n.appSettings_routeWeightSuccessIncrement),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context
-                        .l10n
-                        .appSettings_routeWeightSuccessIncrementSubtitle,
-                  ),
-                  Slider(
-                    value: settingsService.settings.routeWeightSuccessIncrement,
-                    min: 0.1,
-                    max: 2.0,
-                    divisions: 19,
-                    label: settingsService.settings.routeWeightSuccessIncrement
-                        .toStringAsFixed(1),
-                    onChanged: (value) =>
-                        settingsService.setRouteWeightSuccessIncrement(value),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              title: Text(context.l10n.appSettings_routeWeightFailureDecrement),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context
-                        .l10n
-                        .appSettings_routeWeightFailureDecrementSubtitle,
-                  ),
-                  Slider(
-                    value: settingsService.settings.routeWeightFailureDecrement,
-                    min: 0.1,
-                    max: 2.0,
-                    divisions: 19,
-                    label: settingsService.settings.routeWeightFailureDecrement
-                        .toStringAsFixed(1),
-                    onChanged: (value) =>
-                        settingsService.setRouteWeightFailureDecrement(value),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              title: Text(context.l10n.appSettings_maxMessageRetries),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.appSettings_maxMessageRetriesSubtitle),
-                  Slider(
-                    value: settingsService.settings.maxMessageRetries
-                        .toDouble(),
-                    min: 2,
-                    max: 10,
-                    divisions: 8,
-                    label: settingsService.settings.maxMessageRetries
-                        .toString(),
-                    onChanged: (value) =>
-                        settingsService.setMaxMessageRetries(value.toInt()),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            value: settingsService.settings.enableMessageTracing,
+            onChanged: (value) {
+              settingsService.setEnableMessageTracing(value);
+            },
+          ),
           // Timing controls belong with message sending behavior and must stay
           // visible independently from auto route rotation.
           const Divider(height: 1),
@@ -658,15 +712,25 @@ class AppSettingsScreen extends StatelessWidget {
           SwitchListTile(
             secondary: Icon(
               Icons.auto_awesome_outlined,
-              color: translationEnabled ? null : Colors.grey,
+              color: translationEnabled
+                  ? null
+                  : Theme.of(context).disabledColor,
             ),
             title: Text(
               context.l10n.translation_autoIncomingTitle,
-              style: TextStyle(color: translationEnabled ? null : Colors.grey),
+              style: TextStyle(
+                color: translationEnabled
+                    ? null
+                    : Theme.of(context).disabledColor,
+              ),
             ),
             subtitle: Text(
               context.l10n.translation_autoIncomingSubtitle,
-              style: TextStyle(color: translationEnabled ? null : Colors.grey),
+              style: TextStyle(
+                color: translationEnabled
+                    ? null
+                    : Theme.of(context).disabledColor,
+              ),
             ),
             value: settings.autoTranslateIncomingMessages,
             onChanged: translationEnabled
@@ -677,15 +741,25 @@ class AppSettingsScreen extends StatelessWidget {
           SwitchListTile(
             secondary: Icon(
               Icons.outgoing_mail,
-              color: translationEnabled ? null : Colors.grey,
+              color: translationEnabled
+                  ? null
+                  : Theme.of(context).disabledColor,
             ),
             title: Text(
               context.l10n.translation_composerTitle,
-              style: TextStyle(color: translationEnabled ? null : Colors.grey),
+              style: TextStyle(
+                color: translationEnabled
+                    ? null
+                    : Theme.of(context).disabledColor,
+              ),
             ),
             subtitle: Text(
               context.l10n.translation_composerSubtitle,
-              style: TextStyle(color: translationEnabled ? null : Colors.grey),
+              style: TextStyle(
+                color: translationEnabled
+                    ? null
+                    : Theme.of(context).disabledColor,
+              ),
             ),
             value: settings.composerTranslationEnabled,
             onChanged: translationEnabled
@@ -943,61 +1017,6 @@ class AppSettingsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _showThemeModeDialog(
-    BuildContext context,
-    AppSettingsService settingsService,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.appSettings_theme),
-        content: RadioGroup<String>(
-          groupValue: settingsService.settings.themeMode,
-          onChanged: (value) {
-            if (value != null) {
-              settingsService.setThemeMode(value);
-              Navigator.pop(context);
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: Text(context.l10n.appSettings_themeSystem),
-                value: 'system',
-              ),
-              RadioListTile<String>(
-                title: Text(context.l10n.appSettings_themeLight),
-                value: 'light',
-              ),
-              RadioListTile<String>(
-                title: Text(context.l10n.appSettings_themeDark),
-                value: 'dark',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _themeModeLabel(BuildContext context, String value) {
-    switch (value) {
-      case 'light':
-        return context.l10n.appSettings_themeLight;
-      case 'dark':
-        return context.l10n.appSettings_themeDark;
-      default:
-        return context.l10n.appSettings_themeSystem;
-    }
   }
 
   String _languageLabel(BuildContext context, String? languageCode) {

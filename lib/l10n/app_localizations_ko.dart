@@ -93,6 +93,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_disable => '비활성화';
 
   @override
+  String get common_undo => '취소';
+
+  @override
+  String get messageStatus_sent => '발송';
+
+  @override
+  String get messageStatus_delivered => '배송 완료';
+
+  @override
+  String get messageStatus_pending => '발송';
+
+  @override
+  String get messageStatus_failed => '발송 실패';
+
+  @override
+  String get messageStatus_repeated => '반복적으로 들었습니다';
+
+  @override
   String get common_reboot => '재부팅';
 
   @override
@@ -875,11 +893,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_maxMessageRetriesSubtitle => '메시지를 실패로 처리하기 전 시도 횟수';
 
   @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
-
-  @override
   String get appSettings_battery => '배터리';
 
   @override
@@ -1069,6 +1082,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contacts_newGroup => '새로운 그룹';
+
+  @override
+  String get contacts_moreOptions => '더 많은 옵션';
+
+  @override
+  String get contacts_searchOpen => '연락처 검색';
+
+  @override
+  String get contacts_searchClose => '검색 닫기';
 
   @override
   String get contacts_groupName => '그룹 이름';
@@ -1590,34 +1612,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get debugFrame_hexDump => '헥스 덤프:';
 
   @override
-  String get chat_pathManagement => '경로 관리';
-
-  @override
-  String get chat_ShowAllPaths => '모든 경로 표시';
-
-  @override
-  String get chat_routingMode => '라우팅 방식';
-
-  @override
-  String get chat_autoUseSavedPath => '자동 (저장된 경로 사용)';
-
-  @override
-  String get chat_forceFloodMode => '강수 모드 활성화';
-
-  @override
-  String get chat_recentAckPaths => '최근 사용한 ACK 경로 (사용하려면 탭):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      '이력 기록은 이미 가득 차 있습니다. 항목을 삭제하여 새로운 항목을 추가할 수 있습니다.';
-
-  @override
-  String get chat_hopSingular => '점프';
-
-  @override
-  String get chat_hopPlural => '홉';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1629,59 +1623,144 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => '성공 사례';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => '경로 제거';
 
   @override
   String get chat_noPathHistoryYet => '아직 경로 기록이 없습니다.\n경로를 찾기 위해 메시지를 보내세요.';
 
   @override
-  String get chat_pathActions => '경로 작업:';
-
-  @override
-  String get chat_setCustomPath => '사용자 지정 경로 설정';
-
-  @override
-  String get chat_setCustomPathSubtitle => '수동으로 경로를 지정';
-
-  @override
-  String get chat_clearPath => '명확한 길';
-
-  @override
-  String get chat_clearPathSubtitle => '다음 전송 시, 강제 재전송 설정';
-
-  @override
   String get chat_pathCleared => '경로가 확보되었습니다. 다음 메시지는 경로를 다시 찾을 것입니다.';
-
-  @override
-  String get chat_floodModeSubtitle => '앱 바에서 라우팅 스위치를 사용';
-
-  @override
-  String get chat_floodModeEnabled =>
-      '홍수 모드 활성화됨. 앱 바의 경로 아이콘을 사용하여 다시 전환할 수 있습니다.';
 
   @override
   String get chat_fullPath => '전체 경로';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      '경로 정보는 아직 제공되지 않습니다. 메시지를 보내어 다시 시도해 보세요.';
+  String get routing_title => '라우팅';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Path set: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => '자동';
+
+  @override
+  String get routing_modeFlood => '홍수';
+
+  @override
+  String get routing_modeManual => '사용 설명서';
+
+  @override
+  String get routing_modeAutoHint =>
+      '가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없을 경우에는 무작위로 경로를 선택합니다.';
+
+  @override
+  String get routing_modeFloodHint =>
+      '모든 증폭기를 통해 방송됩니다. 가장 안정적이지만, 더 많은 송출 시간을 사용합니다.';
+
+  @override
+  String get routing_modeManualHint => '항상 설정하신 정확한 경로를 따라 이동합니다.';
+
+  @override
+  String get routing_currentRoute => '현재 경로';
+
+  @override
+  String get routing_directNoHops => '직접 연결 – 중계 장치 사용 없이';
+
+  @override
+  String get routing_noPathYet => '아직 경로가 없습니다. 다음 메시지가 도착할 때까지 계속 탐색합니다.';
+
+  @override
+  String get routing_floodBroadcast => '모든 증폭기를 통해 방송';
+
+  @override
+  String get routing_editPath => '경로 편집';
+
+  @override
+  String get routing_forgetPath => '길을 잊어라';
+
+  @override
+  String get routing_knownPaths => '알려진 경로';
+
+  @override
+  String get routing_knownPathsHint => '해당 항목으로 전환하기 위한 경로를 선택합니다.';
+
+  @override
+  String get routing_inUse => '사용 중';
+
+  @override
+  String get routing_qualityStrong => '강력한 첫 번째 단계';
+
+  @override
+  String get routing_qualityGood => '좋은 첫 시작';
+
+  @override
+  String get routing_qualityFair => '처음 시도';
+
+  @override
+  String get routing_qualityWorked => '완료됨';
+
+  @override
+  String get routing_qualityFlood => '홍수 피해 상황을 통해 들었습니다.';
+
+  @override
+  String get routing_qualityUntested => '검증되지 않음';
+
+  @override
+  String routing_lastWorked(String when) {
+    return '$when에 일했습니다';
   }
+
+  @override
+  String get routing_neverWorked => '확인되지 않음';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => '홍수 피해 지역 배송';
+
+  @override
+  String get pathEditor_title => '경로 만들기';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '64개의 홉 중 $count';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      '현재 홉은 추가되지 않았습니다. 아래의 탭을 사용하여 순서대로 추가하거나, 홉 없이 바로 전송하려면 \"홉 없음\"으로 저장하십시오.';
+
+  @override
+  String get pathEditor_addHops => '홉을 순서대로 첨가해주세요.';
+
+  @override
+  String get pathEditor_searchRepeaters => '반복 검색';
+
+  @override
+  String get pathEditor_advancedHex => '고급: 원시 헥스 경로';
+
+  @override
+  String get pathEditor_hexLabel => '헥스 접두사';
+
+  @override
+  String get pathEditor_hexHelper => '각 홉마다 2개의 6자리 숫자, 쉼표로 구분';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return '유효하지 않음: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => '최대 64개의 홉';
+
+  @override
+  String get pathEditor_usePath => '이 경로를 사용하세요';
+
+  @override
+  String get pathEditor_removeHop => '홉 제거';
+
+  @override
+  String get pathEditor_unknownHop => '알 수 없는 중계기';
 
   @override
   String get chat_pathSavedLocally => '로컬에 저장. 동기화 연결';
@@ -2465,62 +2544,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_reload => '다시 로드';
 
   @override
-  String path_currentPath(String path) {
-    return '현재 경로: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Using $count $_temp0 path';
-  }
-
-  @override
-  String get path_enterCustomPath => '사용자 지정 경로 입력';
-
-  @override
   String get path_currentPathLabel => '현재 경로';
 
   @override
-  String get path_hexPrefixInstructions =>
-      '각 단계에 대한 2자리 헥사데진 접두사를 쉼표로 구분하여 입력하세요.';
-
-  @override
-  String get path_hexPrefixExample =>
-      '예시: A1, F2, 3C (각 노드는 자신의 공개 키의 첫 번째 바이트를 사용)';
-
-  @override
-  String get path_labelHexPrefixes => '경로 (헥스 접두사)';
-
-  @override
-  String get path_helperMaxHops =>
-      '최대 64개의 홉. 각 접두사는 2개의 16진수 문자(1바이트)로 구성됩니다.';
-
-  @override
-  String get path_selectFromContacts => '또 연락처 목록에서 선택:';
-
-  @override
   String get path_noRepeatersFound => '반복 장치 또는 서버는 찾을 수 없습니다.';
-
-  @override
-  String get path_customPathsRequire =>
-      '사용자 정의 경로에는 메시지를 전달할 수 있는 중간 경로가 필요합니다.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return '유효하지 않은 16진수 접두사: $prefixes';
-  }
-
-  @override
-  String get path_tooLong => '경로가 너무 길어. 최대 64개의 연결만 허용됩니다.';
-
-  @override
-  String get path_setPath => '경로 설정';
 
   @override
   String get repeater_management => '리피터 관리';
@@ -2582,15 +2609,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_routingMode => '라우팅 방식';
-
-  @override
-  String get repeater_autoUseSavedPath => '자동 (저장된 경로 사용)';
-
-  @override
-  String get repeater_forceFloodMode => '강수 모드 활성화';
-
-  @override
-  String get repeater_pathManagement => '경로 관리';
 
   @override
   String get repeater_refresh => '새롭게';
@@ -4779,6 +4797,29 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => '줌 인';
+
+  @override
+  String get map_zoomOut => '줌 아웃';
+
+  @override
+  String get map_centerMap => '중심 지도';
+
+  @override
+  String get chrome_bluetoothRequiresChromium => '웹 블루투스는 크롬 브라우저가 필요합니다.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'GPS 확인 완료';
+
+  @override
+  String get pathTrace_legendInferred => '추론된 위치';
 
   @override
   String get chat_canvas => 'Canvas';

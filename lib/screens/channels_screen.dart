@@ -193,24 +193,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 PopupMenuItem(
                   child: Row(
                     children: [
-                      const Icon(Icons.logout, color: Colors.red),
+                      Icon(
+                        Icons.logout,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                       const SizedBox(width: 8),
                       Text(context.l10n.common_disconnect),
                     ],
                   ),
                   onTap: () => _disconnect(context),
                 ),
-                if (_communities.isNotEmpty)
-                  PopupMenuItem(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.groups),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.community_manageCommunities),
-                      ],
-                    ),
-                    onTap: () => _showManageCommunitiesDialog(context),
+                PopupMenuItem(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.groups),
+                      const SizedBox(width: 8),
+                      Text(context.l10n.community_manageCommunities),
+                    ],
                   ),
+                  onTap: () => _showManageCommunitiesDialog(context),
+                ),
                 PopupMenuItem(
                   child: Row(
                     children: [
@@ -522,34 +524,34 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 const SizedBox(width: 4),
               ],
               if (showDragHandle && dragIndex != null)
-                ReorderableDelayedDragStartListener(
+                ReorderableDragStartListener(
                   index: dragIndex,
-                  child: Icon(
-                    Icons.drag_handle,
-                    color:
-                        widgetTextColor ??
-                        Theme.of(context).colorScheme.onSurfaceVariant,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.drag_handle,
+                      color:
+                          widgetTextColor ??
+                          Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
             ],
           ),
-          onTap: () async {
+          onTap: () {
             final unread = connector.getUnreadCountForChannelIndex(
               channel.index,
             );
             connector.markChannelRead(channel.index);
-            await Future.delayed(const Duration(milliseconds: 50));
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChannelChatScreen(
-                    channel: channel,
-                    initialUnreadCount: unread,
-                  ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChannelChatScreen(
+                  channel: channel,
+                  initialUnreadCount: unread,
                 ),
-              );
-            }
+              ),
+            );
           },
           onLongPress: () => _showChannelActions(
             context,
@@ -633,10 +635,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(sheetContext).colorScheme.error,
+              ),
               title: Text(
                 context.l10n.channels_deleteChannel,
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(
+                  color: Theme.of(sheetContext).colorScheme.error,
+                ),
               ),
               onTap: () async {
                 Navigator.pop(sheetContext);
@@ -1447,19 +1454,29 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ? (isSelected
                           ? Theme.of(dialogContext).colorScheme.primaryContainer
                           : null)
-                    : Colors.grey.withValues(alpha: 0.2),
+                    : Theme.of(
+                        dialogContext,
+                      ).colorScheme.onSurface.withValues(alpha: 0.12),
                 child: Icon(
                   icon,
                   color: enabled
                       ? (isSelected
                             ? Theme.of(dialogContext).colorScheme.primary
                             : null)
-                      : Colors.grey,
+                      : Theme.of(
+                          dialogContext,
+                        ).colorScheme.onSurface.withValues(alpha: 0.38),
                 ),
               ),
               title: Text(
                 title,
-                style: TextStyle(color: enabled ? null : Colors.grey),
+                style: TextStyle(
+                  color: enabled
+                      ? null
+                      : Theme.of(
+                          dialogContext,
+                        ).colorScheme.onSurface.withValues(alpha: 0.38),
+                ),
               ),
               subtitle: subtitle == null
                   ? null
@@ -1731,7 +1748,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               Channel.publicChannelPsk,
                             );
                             Navigator.pop(dialogContext);
-                            connector.setChannel(nextIndex, 'Public', psk);
+                            connector.setChannel(
+                              nextIndex,
+                              context.l10n.channels_public,
+                              psk,
+                            );
                             if (context.mounted) {
                               showDismissibleSnackBar(
                                 context,
@@ -1845,7 +1866,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           dialogContext.l10n.community_hashtagPrivacyHint,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              dialogContext,
+                            ).colorScheme.onSurfaceVariant,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -2016,6 +2039,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             child: FilledButton(
                               onPressed: () async {
                                 final name = nameController.text.trim();
+                                final publicLabel =
+                                    context.l10n.channels_public;
                                 if (name.isEmpty) {
                                   showDismissibleSnackBar(
                                     context,
@@ -2040,7 +2065,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   final psk = community
                                       .deriveCommunityPublicPsk();
                                   final channelName =
-                                      '${community.name} Public';
+                                      '${community.name} $publicLabel';
                                   connector.setChannel(
                                     nextIndex,
                                     channelName,
@@ -2501,7 +2526,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             },
             child: Text(
               dialogContext.l10n.common_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],
@@ -2511,7 +2536,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   void _addPublicChannel(BuildContext context, MeshCoreConnector connector) {
     final psk = Channel.parsePskHex(Channel.publicChannelPsk);
-    connector.setChannel(0, 'Public', psk);
+    connector.setChannel(0, context.l10n.channels_public, psk);
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.channels_publicChannelAdded),
@@ -2560,14 +2585,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           Icon(
                             Icons.groups_outlined,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.6),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             context.l10n.community_noCommunities,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -2575,7 +2605,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             context.l10n.community_scanOrCreate,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[500],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.8),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -2599,10 +2632,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           ),
                           title: Text(community.name),
                           subtitle: Text(
-                            'ID: ${community.shortCommunityId}...',
+                            context.l10n.channels_communityShortId(
+                              community.shortCommunityId,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           trailing: PopupMenuButton<String>(
@@ -2629,14 +2666,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 value: 'leave',
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.exit_to_app,
-                                      color: Colors.red,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       context.l10n.community_delete,
-                                      style: const TextStyle(color: Colors.red),
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -2740,7 +2783,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             },
             child: Text(
               dialogContext.l10n.community_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],

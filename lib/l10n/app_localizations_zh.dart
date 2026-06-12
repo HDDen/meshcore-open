@@ -93,6 +93,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_disable => '禁用';
 
   @override
+  String get common_undo => '撤销';
+
+  @override
+  String get messageStatus_sent => '发送';
+
+  @override
+  String get messageStatus_delivered => '已送达';
+
+  @override
+  String get messageStatus_pending => '发送';
+
+  @override
+  String get messageStatus_failed => '发送失败';
+
+  @override
+  String get messageStatus_repeated => '多次听到';
+
+  @override
   String get common_reboot => '重启';
 
   @override
@@ -859,11 +877,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_maxMessageRetriesSubtitle => '在将消息标记为失败之前，允许尝试的次数';
 
   @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
-
-  @override
   String get appSettings_battery => '电池';
 
   @override
@@ -1053,6 +1066,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contacts_newGroup => '新建群聊';
+
+  @override
+  String get contacts_moreOptions => '更多选择';
+
+  @override
+  String get contacts_searchOpen => '搜索联系人';
+
+  @override
+  String get contacts_searchClose => '高级搜索';
 
   @override
   String get contacts_groupName => '群聊名称';
@@ -1574,42 +1596,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get debugFrame_hexDump => '十六进制数据：';
 
   @override
-  String get chat_pathManagement => '路径管理';
-
-  @override
-  String get chat_ShowAllPaths => '显示所有路径';
-
-  @override
-  String get chat_routingMode => '路由模式';
-
-  @override
-  String get chat_autoUseSavedPath => '自动（使用保存的路径）';
-
-  @override
-  String get chat_forceFloodMode => '强制泛洪模式';
-
-  @override
-  String get chat_recentAckPaths => '最近使用的 ACK 路径（点击使用）：';
-
-  @override
-  String get chat_pathHistoryFull => '路径历史已满，请删除后再添加。';
-
-  @override
-  String get chat_hopSingular => '跳';
-
-  @override
-  String get chat_hopPlural => '跳';
-
-  @override
   String chat_hopsCount(int count) {
     return '$count 跳';
   }
-
-  @override
-  String get chat_successes => '成功';
-
-  @override
-  String get chat_score => 'Score';
 
   @override
   String get chat_removePath => '移除路径';
@@ -1618,39 +1607,136 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_noPathHistoryYet => '暂无路径历史。\n发送消息以探索路径。';
 
   @override
-  String get chat_pathActions => '路径操作：';
-
-  @override
-  String get chat_setCustomPath => '设置自定义路径';
-
-  @override
-  String get chat_setCustomPathSubtitle => '手动指定路由路径';
-
-  @override
-  String get chat_clearPath => '清除路径';
-
-  @override
-  String get chat_clearPathSubtitle => '清除当前路径，下次发送将重新尝试。';
-
-  @override
   String get chat_pathCleared => '路径已清除。下一条消息将重新路由。';
-
-  @override
-  String get chat_floodModeSubtitle => '在应用栏中切换路由模式。';
-
-  @override
-  String get chat_floodModeEnabled => '泛洪模式已启用。可通过应用栏的路由图标切换。';
 
   @override
   String get chat_fullPath => '完整路径';
 
   @override
-  String get chat_pathDetailsNotAvailable => '路径信息暂不可用，请尝试发送消息刷新。';
+  String get routing_title => '路由';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    return '路径设置：$hopCount 跳 - $status';
+  String get routing_modeAuto => '汽车';
+
+  @override
+  String get routing_modeFlood => '洪水';
+
+  @override
+  String get routing_modeManual => '手册';
+
+  @override
+  String get routing_modeAutoHint => '自动选择已知最佳路径，当没有已知路径时，则进行“洪水”搜索。';
+
+  @override
+  String get routing_modeFloodHint => '通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。';
+
+  @override
+  String get routing_modeManualHint => '总是按照您设置的路径进行导航。';
+
+  @override
+  String get routing_currentRoute => '当前路线';
+
+  @override
+  String get routing_directNoHops => '直接连接— 无中继跳';
+
+  @override
+  String get routing_noPathYet => '目前还没有找到路径。直到找到路径，才会收到后续消息。';
+
+  @override
+  String get routing_floodBroadcast => '通过所有中继器进行广播';
+
+  @override
+  String get routing_editPath => '编辑路径';
+
+  @override
+  String get routing_forgetPath => '忘记原路';
+
+  @override
+  String get routing_knownPaths => '已知的路径';
+
+  @override
+  String get routing_knownPathsHint => '点击该路径以切换到它。';
+
+  @override
+  String get routing_inUse => '使用中';
+
+  @override
+  String get routing_qualityStrong => '强劲的初始阶段';
+
+  @override
+  String get routing_qualityGood => '不错的开端';
+
+  @override
+  String get routing_qualityFair => '第一次尝试，结果良好';
+
+  @override
+  String get routing_qualityWorked => '已完成';
+
+  @override
+  String get routing_qualityFlood => '通过新闻报道';
+
+  @override
+  String get routing_qualityUntested => '未经测试';
+
+  @override
+  String routing_lastWorked(String when) {
+    return '工作于 $when';
   }
+
+  @override
+  String get routing_neverWorked => '从未得到证实';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => '洪水配送';
+
+  @override
+  String get pathEditor_title => '构建路径';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count of 64 hops';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      '目前还没有添加任何啤酒花。点击下面的“添加”按钮，按顺序添加，或者直接保存，不添加任何啤酒花。';
+
+  @override
+  String get pathEditor_addHops => '按照顺序添加啤酒花';
+
+  @override
+  String get pathEditor_searchRepeaters => '重复搜索';
+
+  @override
+  String get pathEditor_advancedHex => '高级：原始十六进制路径';
+
+  @override
+  String get pathEditor_hexLabel => '十六进制前缀';
+
+  @override
+  String get pathEditor_hexHelper => '每次跳跃，使用两个十六进制字符，用逗号分隔。';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return '无效：$tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => '最多 64 个跳跃';
+
+  @override
+  String get pathEditor_usePath => '请使用此路径';
+
+  @override
+  String get pathEditor_removeHop => '去除啤酒花';
+
+  @override
+  String get pathEditor_unknownHop => '未知的重复器';
 
   @override
   String get chat_pathSavedLocally => '已本地保存，连接设备后可同步。';
@@ -2432,52 +2518,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_reload => '重新加载';
 
   @override
-  String path_currentPath(String path) {
-    return '当前路径：$path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    return '使用 $count 跳路径';
-  }
-
-  @override
-  String get path_enterCustomPath => '输入自定义路径';
-
-  @override
   String get path_currentPathLabel => '当前路径';
 
   @override
-  String get path_hexPrefixInstructions => '请输入每个中继节点的2字符十六进制前缀，用逗号分隔。';
-
-  @override
-  String get path_hexPrefixExample => '例如：A1, F2, 3C（每个节点使用其公钥的第一字节）';
-
-  @override
-  String get path_labelHexPrefixes => '路径（十六进制前缀）';
-
-  @override
-  String get path_helperMaxHops => '最多 64 跳。每个前缀由 2 个十六进制字符（1 字节）组成。';
-
-  @override
-  String get path_selectFromContacts => '或从联系人列表中选择：';
-
-  @override
   String get path_noRepeatersFound => '未找到任何转发节点或房间服务器。';
-
-  @override
-  String get path_customPathsRequire => '自定义路径需要中间节点转发消息。';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return '无效的十六进制前缀：$prefixes';
-  }
-
-  @override
-  String get path_tooLong => '路径过长，最多允许 64 跳。';
-
-  @override
-  String get path_setPath => '设置路径';
 
   @override
   String get repeater_management => '转发节点管理';
@@ -2538,15 +2582,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_routingMode => '路由模式';
-
-  @override
-  String get repeater_autoUseSavedPath => '自动（使用保存的路径）';
-
-  @override
-  String get repeater_forceFloodMode => '强制泛洪模式';
-
-  @override
-  String get repeater_pathManagement => '路径管理';
 
   @override
   String get repeater_refresh => '刷新';
@@ -4651,6 +4686,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => '放大';
+
+  @override
+  String get map_zoomOut => '放大';
+
+  @override
+  String get map_centerMap => '中心地图';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth 需要 Chromium 浏览器';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID：$id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => '通过GPS确认';
+
+  @override
+  String get pathTrace_legendInferred => '推测的位置';
 
   @override
   String get chat_canvas => 'Canvas';

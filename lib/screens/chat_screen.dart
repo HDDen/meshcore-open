@@ -48,13 +48,12 @@ import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/message_translation_button.dart';
-import '../widgets/path_selection_dialog.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../widgets/routing_sheet.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
-import '../utils/app_logger.dart';
 import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
@@ -377,9 +376,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                   }
                   if (value == 'clearChat') {
-                    final confirmed = await _confirmClearChat();
-                    if (!confirmed || !mounted) return;
-                    connector.clearMessagesForContact(widget.contact);
+                    _confirmClearChat(context, connector);
                   }
                 },
                 itemBuilder: (context) => [
@@ -1392,17 +1389,35 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _currentPathLabel(Contact contact) {
+    final connector = context.read<MeshCoreConnector>();
+
     // Check if user has set a path override
     if (contact.pathOverride != null) {
       if (contact.pathOverride! < 0) return context.l10n.chat_floodForced;
       if (contact.pathOverride == 0) return context.l10n.chat_directForced;
-      return context.l10n.chat_hopsForced(contact.pathOverride!);
+      final bytes = contact.pathOverrideBytes ?? Uint8List(0);
+      final hopCount = _displayHopCount(
+        bytes,
+        contact.pathOverride!,
+        connector.pathHashByteWidth,
+      );
+      return context.l10n.chat_hopsForced(hopCount);
     }
 
     // Use device's path
     if (contact.pathLength < 0) return context.l10n.chat_floodAuto;
     if (contact.pathLength == 0) return context.l10n.chat_direct;
-    return context.l10n.chat_hopsCount(contact.pathLength);
+    final hopCount = _displayHopCount(
+      contact.path,
+      contact.pathLength,
+      connector.pathHashByteWidth,
+    );
+    return context.l10n.chat_hopsCount(hopCount);
+  }
+
+  int _displayHopCount(List<int> pathBytes, int storedHopCount, int hashWidth) {
+    if (pathBytes.isEmpty) return storedHopCount;
+    return PathHelper.splitPathBytes(pathBytes, hashWidth).length;
   }
 
   Future<void> _notifyPathSet(
@@ -1446,7 +1461,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               _buildInfoRow(
                 context.l10n.chat_path,
-                contact.pathLabel(context.l10n),
+                contact.pathLabel(
+                  context.l10n,
+                  pathHashByteWidth: connector.pathHashByteWidth,
+                ),
               ),
               _buildInfoRow(
                 context.l10n.contact_lastSeen,
@@ -1776,70 +1794,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _showCustomPathDialog(BuildContext context) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-
     final currentContact = _resolveContact(connector);
     if (currentContact.pathLength > 0 &&
         currentContact.path.isEmpty &&
         connector.isConnected) {
       connector.getContacts();
     }
-
-    final pathForInput = currentContact.pathFormattedIdList(
-      connector.pathHashByteWidth,
-    );
-    final currentPathLabel = _currentPathLabel(currentContact);
-
-    // Filter out the current contact from available contacts
-    final availableContacts = connector.allContacts
-        .where((c) => c != widget.contact)
-        .toList();
-
-    final result = await PathSelectionDialog.show(
-      context,
-      availableContacts: availableContacts,
-      initialPath: pathForInput.isEmpty ? null : pathForInput,
-      title: context.l10n.chat_setCustomPath,
-      currentPathLabel: currentPathLabel,
-      onRefresh: connector.isConnected ? connector.getContacts : null,
-      pathHashByteWidth: connector.pathHashByteWidth,
-    );
-
-    appLogger.info(
-      'PathSelectionDialog returned: ${result?.length ?? 0} bytes, mounted: $mounted',
-      tag: 'ChatScreen',
-    );
-
-    if (result == null) {
-      return; // Cancelled — keep existing path
-    }
-
-    if (!mounted) {
-      appLogger.warn(
-        'Widget not mounted after dialog, cannot set path',
-        tag: 'ChatScreen',
-      );
-      return;
-    }
-
-    appLogger.info(
-      'Calling setPathOverride for ${widget.contact.name}',
-      tag: 'ChatScreen',
-    );
-    final hopsCount = result.length ~/ connector.pathHashByteWidth;
-    await connector.setPathOverride(
-      _resolveContact(connector),
-      pathLen: hopsCount,
-      pathBytes: result,
-    );
-    appLogger.info('setPathOverride completed', tag: 'ChatScreen');
-
-    if (!mounted) return;
-    await _notifyPathSet(
-      connector,
-      _resolveContact(connector),
-      result,
-      hopsCount,
-    );
+    if (!context.mounted) return;
+    await ContactRoutingSheet.show(context, contact: currentContact);
   }
 
   void _openMessagePath(Message message, Contact contact) {
@@ -1878,24 +1840,32 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<bool> _confirmClearChat() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            content: Text(context.l10n.contact_clearChatConfirm),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.common_cancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.common_continue),
-              ),
-            ],
+  Future<void> _confirmClearChat(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.contact_clearChat),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
           ),
-        ) ??
-        false;
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(context.l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      connector.clearMessagesForContact(widget.contact);
+    }
   }
 
   void _showMessageActions(Message message, Contact contact) {

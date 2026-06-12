@@ -93,6 +93,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_disable => 'Desactivar';
 
   @override
+  String get common_undo => 'Deshacer';
+
+  @override
+  String get messageStatus_sent => 'Sentido';
+
+  @override
+  String get messageStatus_delivered => 'Entregado';
+
+  @override
+  String get messageStatus_pending => 'Enviar';
+
+  @override
+  String get messageStatus_failed => 'No se pudo enviar';
+
+  @override
+  String get messageStatus_repeated => 'Escuché repetidamente';
+
+  @override
   String get common_reboot => 'Reiniciar';
 
   @override
@@ -922,11 +940,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Número de intentos de reintento antes de marcar un mensaje como fallido.';
 
   @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
-
-  @override
   String get appSettings_battery => 'Batería';
 
   @override
@@ -1126,6 +1139,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contacts_newGroup => 'Nuevo Grupo';
+
+  @override
+  String get contacts_moreOptions => 'Más opciones';
+
+  @override
+  String get contacts_searchOpen => 'Buscar contactos';
+
+  @override
+  String get contacts_searchClose => 'Búsqueda avanzada';
 
   @override
   String get contacts_groupName => 'Nombre del grupo';
@@ -1666,34 +1688,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get debugFrame_hexDump => 'Mapeo Hexadecimal:';
 
   @override
-  String get chat_pathManagement => 'Gestión de Rutas';
-
-  @override
-  String get chat_ShowAllPaths => 'Mostrar todos los caminos';
-
-  @override
-  String get chat_routingMode => 'Modo de enrutamiento';
-
-  @override
-  String get chat_autoUseSavedPath => 'Auto (usar la ruta guardada)';
-
-  @override
-  String get chat_forceFloodMode => 'Modo Inundación Forzado';
-
-  @override
-  String get chat_recentAckPaths => 'Rutas de ACK Recientes (tocar para usar):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      'El historial de rutas está completo. Eliminar entradas para añadir nuevas.';
-
-  @override
-  String get chat_hopSingular => 'salta';
-
-  @override
-  String get chat_hopPlural => 'salta';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1705,12 +1699,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => 'Éxitos';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => 'Eliminar ruta';
 
   @override
@@ -1718,51 +1706,145 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aún no hay historial de rutas.\nEnvía un mensaje para descubrir rutas.';
 
   @override
-  String get chat_pathActions => 'Acciones de Ruta:';
-
-  @override
-  String get chat_setCustomPath => 'Establecer Ruta Personalizada';
-
-  @override
-  String get chat_setCustomPathSubtitle =>
-      'Especificar manualmente la ruta de enrutamiento';
-
-  @override
-  String get chat_clearPath => 'Limpiar Ruta';
-
-  @override
-  String get chat_clearPathSubtitle =>
-      'Forzar redescubrimiento en el próximo envío';
-
-  @override
   String get chat_pathCleared =>
       'Ruta eliminada. El siguiente mensaje redescubrirá la ruta.';
-
-  @override
-  String get chat_floodModeSubtitle =>
-      'Utilizar el interruptor de enrutamiento en la barra de herramientas';
-
-  @override
-  String get chat_floodModeEnabled =>
-      'El modo de inundación está habilitado. Desactívalo mediante el icono de enrutamiento en la barra de herramientas de la aplicación.';
 
   @override
   String get chat_fullPath => 'Ruta completa';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      'Los detalles de la ruta aún no están disponibles. Intenta enviar un mensaje para refrescar.';
+  String get routing_title => 'Ruteo';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Ruta establecida: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => 'Coche';
+
+  @override
+  String get routing_modeFlood => 'Inundación';
+
+  @override
+  String get routing_modeManual => 'Manual';
+
+  @override
+  String get routing_modeAutoHint =>
+      'Selecciona automáticamente la ruta más conocida, y si no hay ninguna ruta conocida, utiliza la ruta más directa.';
+
+  @override
+  String get routing_modeFloodHint =>
+      'Transmisiones a través de todos los repetidores. Es la opción más fiable, pero utiliza más tiempo de transmisión.';
+
+  @override
+  String get routing_modeManualHint =>
+      'Siempre sigue exactamente la ruta que usted ha definido.';
+
+  @override
+  String get routing_currentRoute => 'Ruta actual';
+
+  @override
+  String get routing_directNoHops => 'Directo — sin saltos de repetidor';
+
+  @override
+  String get routing_noPathYet =>
+      'Aún no hay un camino definido. El mensaje se envía continuamente hasta que se encuentre una ruta.';
+
+  @override
+  String get routing_floodBroadcast =>
+      'Transmisión a través de todos los repetidores.';
+
+  @override
+  String get routing_editPath => 'Editar ruta';
+
+  @override
+  String get routing_forgetPath => 'Olvídate del camino';
+
+  @override
+  String get routing_knownPaths => 'Rutas conocidas';
+
+  @override
+  String get routing_knownPathsHint =>
+      'Seleccione una opción para cambiar a esa.';
+
+  @override
+  String get routing_inUse => 'En uso';
+
+  @override
+  String get routing_qualityStrong => 'Primer salto exitoso';
+
+  @override
+  String get routing_qualityGood => 'Primer paso exitoso';
+
+  @override
+  String get routing_qualityFair => 'Primer salto de calidad';
+
+  @override
+  String get routing_qualityWorked => 'Ha cumplido';
+
+  @override
+  String get routing_qualityFlood => 'Se ha escuchado a través de rumores.';
+
+  @override
+  String get routing_qualityUntested => 'Sin probar';
+
+  @override
+  String routing_lastWorked(String when) {
+    return 'trabajó $when';
   }
+
+  @override
+  String get routing_neverWorked => 'nunca confirmado';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => 'Entrega por inundación';
+
+  @override
+  String get pathEditor_title => 'Crear ruta';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count de 64 granos de lúpulo';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      'Aún no se han añadido lúpulos. Haga clic en los repetidores para añadirlos en el orden deseado, o guarde la receta sin lúpulos para enviarla directamente.';
+
+  @override
+  String get pathEditor_addHops => 'Añadir los lúpulos en el orden adecuado.';
+
+  @override
+  String get pathEditor_searchRepeaters => 'Buscar repetidores';
+
+  @override
+  String get pathEditor_advancedHex =>
+      'Avanzado: ruta hexadecimal sin procesar';
+
+  @override
+  String get pathEditor_hexLabel => 'Prefijos hexadecimales';
+
+  @override
+  String get pathEditor_hexHelper =>
+      'Dos caracteres hexadecimales por salto, separados por comas.';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return 'Inválido: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => 'Máximo 64 saltos';
+
+  @override
+  String get pathEditor_usePath => 'Utilice esta ruta.';
+
+  @override
+  String get pathEditor_removeHop => 'Eliminar el lúpulo';
+
+  @override
+  String get pathEditor_unknownHop => 'Repetidor desconocido';
 
   @override
   String get chat_pathSavedLocally =>
@@ -2571,64 +2653,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_reload => 'Recargar';
 
   @override
-  String path_currentPath(String path) {
-    return 'Ruta actual: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Usando $count $_temp0 ruta';
-  }
-
-  @override
-  String get path_enterCustomPath => 'Introducir Ruta Personalizada';
-
-  @override
   String get path_currentPathLabel => 'Ruta actual';
-
-  @override
-  String get path_hexPrefixInstructions =>
-      'Introduzca los prefijos hexadecimales de 2 caracteres para cada salto, separados por comas.';
-
-  @override
-  String get path_hexPrefixExample =>
-      'Ejemplo: A1,F2,3C (cada nodo utiliza el primer byte de su clave pública).';
-
-  @override
-  String get path_labelHexPrefixes => 'Prefijos hexadecimales';
-
-  @override
-  String get path_helperMaxHops =>
-      'Máximo 64 saltos. Cada prefijo tiene 2 caracteres hexadecimales (1 byte).';
-
-  @override
-  String get path_selectFromContacts => 'O seleccionar de contactos:';
 
   @override
   String get path_noRepeatersFound =>
       'No se encontraron repetidores ni servidores de sala.';
-
-  @override
-  String get path_customPathsRequire =>
-      'Las rutas personalizadas requieren saltos intermedios que pueden transmitir mensajes.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return 'Prefijos hexadecimales inválidos: $prefixes';
-  }
-
-  @override
-  String get path_tooLong =>
-      'La ruta es demasiado larga. Se permiten un máximo de 64 saltos.';
-
-  @override
-  String get path_setPath => 'Establecer Ruta';
 
   @override
   String get repeater_management => 'Gestión de Repetidores';
@@ -2693,15 +2722,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get repeater_routingMode => 'Modo de enrutamiento';
-
-  @override
-  String get repeater_autoUseSavedPath => 'Auto (usar la ruta guardada)';
-
-  @override
-  String get repeater_forceFloodMode => 'Modo Inundación Forzado';
-
-  @override
-  String get repeater_pathManagement => 'Gestión de rutas';
 
   @override
   String get repeater_refresh => 'Actualizar';
@@ -5029,6 +5049,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => 'Acercar';
+
+  @override
+  String get map_zoomOut => 'Acercar';
+
+  @override
+  String get map_centerMap => 'Mapa del centro';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth requiere un navegador Chromium.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'Confirmado mediante GPS';
+
+  @override
+  String get pathTrace_legendInferred => 'Posición inferida';
 
   @override
   String get chat_canvas => 'Canvas';

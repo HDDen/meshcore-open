@@ -28,6 +28,12 @@
   "common_remove": "Remove",
   "common_enable": "Enable",
   "common_disable": "Disable",
+  "common_undo": "Undo",
+  "messageStatus_sent": "Sent",
+  "messageStatus_delivered": "Delivered",
+  "messageStatus_pending": "Sending",
+  "messageStatus_failed": "Failed to send",
+  "messageStatus_repeated": "Heard repeated",
   "common_reboot": "Reboot",
   "common_loading": "Loading...",
   "common_notAvailable": "—",
@@ -343,17 +349,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Weight removed from a path after failed delivery",
   "appSettings_maxMessageRetries": "Max Message Retries",
   "appSettings_maxMessageRetriesSubtitle": "Number of retry attempts before marking a message as failed",
-  "path_routeWeight": "{weight}/{max}",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_battery": "Battery",
   "appSettings_batteryChemistry": "Battery Chemistry",
   "appSettings_batteryChemistryPerDevice": "Set per device ({deviceName})",
@@ -499,6 +494,9 @@
     }
   },
   "contacts_newGroup": "New Group",
+  "contacts_moreOptions": "More options",
+  "contacts_searchOpen": "Search contacts",
+  "contacts_searchClose": "Close search",
   "contacts_groupName": "Group name",
   "contacts_groupNameRequired": "Group name is required",
   "contacts_groupNameReserved": "This group name is reserved",
@@ -847,15 +845,6 @@
     }
   },
   "debugFrame_hexDump": "Hex Dump:",
-  "chat_pathManagement": "Path Management",
-  "chat_ShowAllPaths": "Show all paths",
-  "chat_routingMode": "Routing mode",
-  "chat_autoUseSavedPath": "Auto (use saved path)",
-  "chat_forceFloodMode": "Force Flood Mode",
-  "chat_recentAckPaths": "Recent ACK Paths (tap to use):",
-  "chat_pathHistoryFull": "Path history is full. Remove entries to add new ones.",
-  "chat_hopSingular": "hop",
-  "chat_hopPlural": "hops",
   "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -864,31 +853,80 @@
       }
     }
   },
-  "chat_successes": "successes",
-  "chat_score": "Score",
   "chat_removePath": "Remove path",
   "chat_noPathHistoryYet": "No path history yet.\nSend a message to discover paths.",
-  "chat_pathActions": "Path Actions:",
-  "chat_setCustomPath": "Set Custom Path",
-  "chat_setCustomPathSubtitle": "Manually specify routing path",
-  "chat_clearPath": "Clear Path",
-  "chat_clearPathSubtitle": "Force rediscovery on next send",
   "chat_pathCleared": "Path cleared. Next message will rediscover route.",
-  "chat_floodModeSubtitle": "Use routing toggle in app bar",
-  "chat_floodModeEnabled": "Flood mode enabled. Toggle back via routing icon in app bar.",
   "chat_fullPath": "Full Path",
-  "chat_pathDetailsNotAvailable": "Path details not available yet. Try sending a message to refresh.",
-  "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
-  "@chat_pathSetHops": {
+  "routing_title": "Routing",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Flood",
+  "routing_modeManual": "Manual",
+  "routing_modeAutoHint": "Picks the best known path automatically, flooding when none is known.",
+  "routing_modeFloodHint": "Broadcasts through every repeater. Most reliable, but uses more airtime.",
+  "routing_modeManualHint": "Always sends along the exact path you set.",
+  "routing_currentRoute": "Current route",
+  "routing_directNoHops": "Direct — no repeater hops",
+  "routing_noPathYet": "No path yet. The next message floods until a route is discovered.",
+  "routing_floodBroadcast": "Broadcast through every repeater",
+  "routing_editPath": "Edit path",
+  "routing_forgetPath": "Forget path",
+  "routing_knownPaths": "Known paths",
+  "routing_knownPathsHint": "Tap a path to switch to it.",
+  "routing_inUse": "In use",
+  "routing_qualityStrong": "Strong first hop",
+  "routing_qualityGood": "Good first hop",
+  "routing_qualityFair": "Fair first hop",
+  "routing_qualityWorked": "Has delivered",
+  "routing_qualityFlood": "Heard via flood",
+  "routing_qualityUntested": "Untested",
+  "routing_lastWorked": "worked {when}",
+  "@routing_lastWorked": {
     "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
+      "when": {
         "type": "String"
       }
     }
   },
+  "routing_neverWorked": "never confirmed",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "routing_floodDelivery": "Flood delivery",
+  "pathEditor_title": "Build Path",
+  "pathEditor_hopCounter": "{count} of 64 hops",
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathEditor_noHops": "No hops yet. Tap repeaters below to add them in order, or save with no hops to send direct.",
+  "pathEditor_addHops": "Add hops in order",
+  "pathEditor_searchRepeaters": "Search repeaters",
+  "pathEditor_advancedHex": "Advanced: raw hex path",
+  "pathEditor_hexLabel": "Hex prefixes",
+  "pathEditor_hexHelper": "Two hex characters per hop, separated by commas",
+  "pathEditor_invalidTokens": "Invalid: {tokens}",
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "pathEditor_tooManyHops": "Maximum 64 hops",
+  "pathEditor_usePath": "Use this path",
+  "pathEditor_removeHop": "Remove hop",
+  "pathEditor_unknownHop": "Unknown repeater",
   "chat_pathSavedLocally": "Saved locally. Connect to sync.",
   "chat_pathDeviceConfirmed": "Device confirmed.",
   "chat_pathDeviceNotConfirmed": "Device not confirmed yet.",
@@ -1446,41 +1484,8 @@
   "login_failedMessage": "Login failed. Either the password is incorrect or the repeater is unreachable.",
   "common_reload": "Reload",
   "common_clear": "Clear",
-  "path_currentPath": "Current path: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Using {count} {count, plural, =1{hop} other{hops}} path",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Enter Custom Path",
   "path_currentPathLabel": "Current path",
-  "path_hexPrefixInstructions": "Enter 2-character hex prefixes for each hop, separated by commas.",
-  "path_hexPrefixExample": "Example: A1,F2,3C (each node uses first byte of its public key)",
-  "path_labelHexPrefixes": "Path (hex prefixes)",
-  "path_helperMaxHops": "Max 64 hops. Each prefix is 2 hex characters (1 byte)",
-  "path_selectFromContacts": "Or select from contacts:",
   "path_noRepeatersFound": "No repeaters or room servers found.",
-  "path_customPathsRequire": "Custom paths require intermediate hops that can relay messages.",
-  "path_invalidHexPrefixes": "Invalid hex prefixes: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "Path too long. Maximum 64 hops allowed.",
-  "path_setPath": "Set Path",
   "repeater_management": "Repeater Management",
   "room_management": "Room Server Management",
   "repeater_guest": "Repeater Information",
@@ -1507,9 +1512,6 @@
   },
   "repeater_statusTitle": "Repeater Status",
   "repeater_routingMode": "Routing mode",
-  "repeater_autoUseSavedPath": "Auto (use saved path)",
-  "repeater_forceFloodMode": "Force Flood Mode",
-  "repeater_pathManagement": "Path management",
   "repeater_refresh": "Refresh",
   "repeater_statusRequestTimeout": "Status request timed out.",
   "repeater_errorLoadingStatus": "Error loading status: {error}",
@@ -2850,6 +2852,20 @@
   "contact_typeRoom": "Room",
   "contact_typeSensor": "Sensor",
   "contact_typeUnknown": "Unknown",
+  "map_zoomIn": "Zoom in",
+  "map_zoomOut": "Zoom out",
+  "map_centerMap": "Center map",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth requires a Chromium browser",
+  "channels_communityShortId": "ID: {id}...",
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "pathTrace_legendGpsConfirmed": "GPS confirmed",
+  "pathTrace_legendInferred": "Inferred position",
   "chat_canvas": "Canvas",
   "chat_canvasCrop": "Crop/expand",
   "chat_canvasResize": "Scale",

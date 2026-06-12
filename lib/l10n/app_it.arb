@@ -2382,5 +2382,98 @@
   "settings_companionDebugLog": "Registro di debug per il supporto",
   "chat_newMessages": "Nuovi messaggi",
   "chat_markAsUnread": "Segna come non letto",
-  "repeater_chanUtil": "Utilizzo del canale"
+  "repeater_chanUtil": "Utilizzo del canale",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "common_undo": "Annulla",
+  "messageStatus_delivered": "Consegnato",
+  "messageStatus_sent": "Invia",
+  "messageStatus_pending": "Invio",
+  "messageStatus_failed": "Impossibile inviare",
+  "messageStatus_repeated": "Sentito ripetutamente",
+  "contacts_moreOptions": "Ulteriori opzioni",
+  "contacts_searchOpen": "Cerca contatti",
+  "contacts_searchClose": "Ricerca avanzata",
+  "routing_title": "Instradamento",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Inondazione",
+  "routing_modeManual": "Manuale",
+  "routing_modeAutoHint": "Seleziona automaticamente il percorso più noto, e in caso di assenza di informazioni, utilizza un percorso casuale.",
+  "routing_modeFloodHint": "Trasmissioni tramite ogni ripetitore. Il metodo più affidabile, ma richiede più tempo di trasmissione.",
+  "routing_modeManualHint": "Invia sempre esattamente il percorso che hai definito.",
+  "routing_currentRoute": "Percorso attuale",
+  "routing_directNoHops": "Diretto — senza passaggi tramite ripetitori",
+  "routing_noPathYet": "Al momento non è stata individuata alcuna via. Il messaggio viene inviato ripetutamente finché non viene trovata una rotta.",
+  "routing_floodBroadcast": "Trasmissione attraverso ogni ripetitore",
+  "routing_editPath": "Percorso di modifica",
+  "routing_forgetPath": "Dimentica il percorso",
+  "routing_knownPaths": "Percorsi noti",
+  "routing_knownPathsHint": "Seleziona un percorso per accedere a questa opzione.",
+  "routing_inUse": "In uso",
+  "routing_qualityStrong": "Primo salto molto deciso",
+  "routing_qualityGood": "Primo tentativo di successo",
+  "routing_qualityFair": "Primo salto di qualità",
+  "routing_qualityWorked": "È stato consegnato",
+  "routing_qualityFlood": "Ho sentito tramite un messaggio urgente",
+  "routing_qualityUntested": "Non testato",
+  "routing_neverWorked": "mai confermato",
+  "routing_floodDelivery": "Consegna in caso di alluvione",
+  "pathEditor_title": "Creare percorso",
+  "pathEditor_hopCounter": "{count} tra 64 varietà di luppolo",
+  "pathEditor_noHops": "Al momento non ci sono ingredienti aggiuntivi. Per aggiungerli nell'ordine desiderato, cliccate sui ripetitori sottostanti. In alternativa, potete salvare la ricetta senza ingredienti aggiuntivi per inviarla direttamente.",
+  "pathEditor_addHops": "Aggiungere i luppoli nell'ordine desiderato.",
+  "pathEditor_searchRepeaters": "Ricerca ripetitori",
+  "pathEditor_advancedHex": "Avanzato: percorso esadecimale grezzo",
+  "pathEditor_hexLabel": "Prefissi esadecimali",
+  "pathEditor_hexHelper": "Due caratteri esadecimali per ogni salto, separati da virgole.",
+  "pathEditor_invalidTokens": "Non valido: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "pathEditor_tooManyHops": "Massimo 64 orari",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_usePath": "Utilizza questo percorso",
+  "pathEditor_removeHop": "Rimuovere il luppolo",
+  "pathEditor_unknownHop": "Ripetitore sconosciuto",
+  "map_zoomIn": "Ingrandisci",
+  "map_zoomOut": "Riduci la visualizzazione",
+  "map_centerMap": "Mappa del centro",
+  "channels_communityShortId": "ID: {id}...",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth richiede un browser basato su Chromium.",
+  "pathTrace_legendGpsConfirmed": "Il GPS conferma",
+  "pathTrace_legendInferred": "Posizione dedotta"
 }

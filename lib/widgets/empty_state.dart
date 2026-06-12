@@ -17,18 +17,22 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: Colors.grey[400]),
+          Icon(icon, size: 64, color: onSurfaceVariant.withValues(alpha: 0.6)),
           const SizedBox(height: 16),
-          Text(title, style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+          Text(title, style: TextStyle(fontSize: 16, color: onSurfaceVariant)),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(
               subtitle!,
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 14,
+                color: onSurfaceVariant.withValues(alpha: 0.8),
+              ),
               textAlign: TextAlign.center,
             ),
           ],

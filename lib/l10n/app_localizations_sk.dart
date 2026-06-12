@@ -93,6 +93,24 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_disable => 'Zakázať';
 
   @override
+  String get common_undo => 'Zrušiť';
+
+  @override
+  String get messageStatus_sent => 'Odoslané';
+
+  @override
+  String get messageStatus_delivered => 'Doručené';
+
+  @override
+  String get messageStatus_pending => 'Odoslanie';
+
+  @override
+  String get messageStatus_failed => 'Neúspešné odeslanie';
+
+  @override
+  String get messageStatus_repeated => 'Slyšal som to opakovane';
+
+  @override
   String get common_reboot => 'Restartovať';
 
   @override
@@ -914,11 +932,6 @@ class AppLocalizationsSk extends AppLocalizations {
       'Počet pokusov o odošleť pred označením správy ako neúspešnej';
 
   @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
-
-  @override
   String get appSettings_battery => 'Batéria';
 
   @override
@@ -1118,6 +1131,15 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contacts_newGroup => 'Nová skupina';
+
+  @override
+  String get contacts_moreOptions => 'Ďalšie možnosti';
+
+  @override
+  String get contacts_searchOpen => 'Vyhľadajte kontakty';
+
+  @override
+  String get contacts_searchClose => 'Zavrieť vyhľadávanie';
 
   @override
   String get contacts_groupName => 'Názov skupiny';
@@ -1657,35 +1679,6 @@ class AppLocalizationsSk extends AppLocalizations {
   String get debugFrame_hexDump => 'Hexová analýza:';
 
   @override
-  String get chat_pathManagement => 'Správa ciest';
-
-  @override
-  String get chat_ShowAllPaths => 'Zobraziť všetky cesty';
-
-  @override
-  String get chat_routingMode => 'Režim trasy';
-
-  @override
-  String get chat_autoUseSavedPath => 'Použiť uloženú cestu';
-
-  @override
-  String get chat_forceFloodMode =>
-      'Zavrieť režim núdzového povodňového režimu';
-
-  @override
-  String get chat_recentAckPaths => 'Nedávne cesty ACK (klepni na použitie):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      'História ciest je plná. Odstráňte záznamy, aby ste mohli pridať nové.';
-
-  @override
-  String get chat_hopSingular => 'Skok';
-
-  @override
-  String get chat_hopPlural => 'Skákať';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1697,12 +1690,6 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => 'Úspechy';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => 'Odstrániť cestu';
 
   @override
@@ -1710,50 +1697,146 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zatiaľ žiadna história trás.\nPošlite správu a objavte trasy.';
 
   @override
-  String get chat_pathActions => 'Cesty:';
-
-  @override
-  String get chat_setCustomPath => 'Nastaviť vlastnú cestu';
-
-  @override
-  String get chat_setCustomPathSubtitle => 'Ručne zadajte trasu.';
-
-  @override
-  String get chat_clearPath => 'Vyčistiš cestu';
-
-  @override
-  String get chat_clearPathSubtitle =>
-      'Znovu nájsť vynútene pri nasledujúcej pošlite';
-
-  @override
   String get chat_pathCleared =>
       'Cesta vyčistená. Nasledujúce prepočetné získa trasu znova.';
-
-  @override
-  String get chat_floodModeSubtitle =>
-      'Použite prepínanie trasy v navigačnom paneli.';
-
-  @override
-  String get chat_floodModeEnabled =>
-      'Odosporňovacia prevádzka je zapnutá. Vypnite ju znova cez ikonu routovania v navigačnom páse.';
 
   @override
   String get chat_fullPath => 'Celá cesta';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      'Podrobnosti o ceste zatiaľ dostupné nie sú. Skúste poslať správu na obnovenie.';
+  String get routing_title => 'Navigácia';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Cesta nastavená: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => 'Auto';
+
+  @override
+  String get routing_modeFlood => 'Povodňová vlna';
+
+  @override
+  String get routing_modeManual => 'Ručná príručka';
+
+  @override
+  String get routing_modeAutoHint =>
+      'Automaticky vyberá najznámejší trasa, a ak žiadna nie je známa, použije náhodnú trasu.';
+
+  @override
+  String get routing_modeFloodHint =>
+      'Prenos prostredníctvom všetkých opakovačov. Najspoľahlivejší spôsob, ale vyžaduje viac času vysielania.';
+
+  @override
+  String get routing_modeManualHint =>
+      'Vždy dodáva presne podľa zadaného trasy.';
+
+  @override
+  String get routing_currentRoute => 'Aktuálna trasa';
+
+  @override
+  String get routing_directNoHops => 'Priamo – bez prechodných trás';
+
+  @override
+  String get routing_noPathYet =>
+      'Zatiaľ neexistuje žiadna cesta. Nasledujúce správy budú pokračovať, kým sa nenájde trasa.';
+
+  @override
+  String get routing_floodBroadcast =>
+      'Prenos prostredníctvom každého opakovača';
+
+  @override
+  String get routing_editPath => 'Upraviť trasu';
+
+  @override
+  String get routing_forgetPath => 'Zabudnite na trasu';
+
+  @override
+  String get routing_knownPaths => 'Známe cesty';
+
+  @override
+  String get routing_knownPathsHint =>
+      'Kliknite na cestu, aby ste sa k nej presunuli.';
+
+  @override
+  String get routing_inUse => 'V prevádzke';
+
+  @override
+  String get routing_qualityStrong => 'Silný prvý krok';
+
+  @override
+  String get routing_qualityGood => 'Úspešný prvý krok';
+
+  @override
+  String get routing_qualityFair => 'Prvá, spravodlivá fáza';
+
+  @override
+  String get routing_qualityWorked => 'Dosiahnutý úspech';
+
+  @override
+  String get routing_qualityFlood =>
+      'Zistil som to z informácií, ktoré som získal v dôsledku povodňovej situácie.';
+
+  @override
+  String get routing_qualityUntested => 'Neotestované';
+
+  @override
+  String routing_lastWorked(String when) {
+    return 'worked $when';
   }
+
+  @override
+  String get routing_neverWorked => 'nikedy nebolo potvrdené';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => 'Doručenie v prípade povodní';
+
+  @override
+  String get pathEditor_title => 'Vytvorenie cesty';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count z 64 chmelových zŕš';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      'Zatiaľ žiadne chmel. Kliknite na opakované, aby ste ich pridali postupne, alebo uložte bez chmelu, aby ste ho mohli poslať priamo.';
+
+  @override
+  String get pathEditor_addHops => 'Pridávajte chmel podľa zadaného poriadku.';
+
+  @override
+  String get pathEditor_searchRepeaters => 'Hľadať opakované';
+
+  @override
+  String get pathEditor_advancedHex => 'Pokročilé: pôvodná hexová cesta';
+
+  @override
+  String get pathEditor_hexLabel => 'Prefiksy pre hexadecimálne čísla';
+
+  @override
+  String get pathEditor_hexHelper =>
+      'Dve hexové čísla na každý krok, oddelené čiarkami';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return 'Neplatné: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => 'Maximálne 64 krokov';
+
+  @override
+  String get pathEditor_usePath => 'Použite túto cestu';
+
+  @override
+  String get pathEditor_removeHop => 'Odstráňte chmel';
+
+  @override
+  String get pathEditor_unknownHop =>
+      'Neznáme zariadenie na opakované vysielanie';
 
   @override
   String get chat_pathSavedLocally =>
@@ -2563,64 +2646,11 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_reload => 'Načítať';
 
   @override
-  String path_currentPath(String path) {
-    return 'Aktívna cesta: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Používa $count $_temp0 cestu';
-  }
-
-  @override
-  String get path_enterCustomPath => 'Zadajte vlastný priebeh';
-
-  @override
   String get path_currentPathLabel => 'Aktuálny priebeh';
-
-  @override
-  String get path_hexPrefixInstructions =>
-      'Zadajte 2-miestne hexové predpony pre každú fázu, oddelené čiarkami.';
-
-  @override
-  String get path_hexPrefixExample =>
-      'A1,F2,3C (každý uzel používa prvý bajt svojho verejného kľúča)';
-
-  @override
-  String get path_labelHexPrefixes => 'Cesty (hexové predpony)';
-
-  @override
-  String get path_helperMaxHops =>
-      'Max 64 skokov. Každý prefix je 2 hexadecimálne znaky (1 bajt).';
-
-  @override
-  String get path_selectFromContacts => 'Vyberte sa z kontaktov:';
 
   @override
   String get path_noRepeatersFound =>
       'Nenašli sa žiadne opakovače ani serverové miestnosti.';
-
-  @override
-  String get path_customPathsRequire =>
-      'Vlastné cesty vyžadujú medziletoch, ktoré môžu prenášať správky.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return 'Neplatné hexové predpony: $prefixes';
-  }
-
-  @override
-  String get path_tooLong =>
-      'Cesta je príliš dlhá. Umožnené je maximum 64 skokov.';
-
-  @override
-  String get path_setPath => 'Nastaviť cestu';
 
   @override
   String get repeater_management => 'Správa opakérov';
@@ -2685,16 +2715,6 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_routingMode => 'Režim trasy';
-
-  @override
-  String get repeater_autoUseSavedPath => 'Použiť uloženú cestu';
-
-  @override
-  String get repeater_forceFloodMode =>
-      'Zavrieť režim núdzového povodňového režimu';
-
-  @override
-  String get repeater_pathManagement => 'Správa trás';
 
   @override
   String get repeater_refresh => 'Obnoviť';
@@ -5006,6 +5026,30 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => 'Zväčšiť';
+
+  @override
+  String get map_zoomOut => 'Zmenť zamer zblízka';
+
+  @override
+  String get map_centerMap => 'Mapa centra';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth vyžaduje prehliadač Chromium.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'GPS potvrdilo';
+
+  @override
+  String get pathTrace_legendInferred => 'Odvodená poloha';
 
   @override
   String get chat_canvas => 'Canvas';

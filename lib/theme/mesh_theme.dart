@@ -1,34 +1,30 @@
 import 'package:flutter/material.dart';
 
-/// MeshCore redesign palette — warm field-journal dark theme with
-/// phosphor-green signal accents. Mirrors values from the redesign spec.
+/// MeshCore palette — cool slate dark theme with sky-blue accents.
 class MeshPalette {
   MeshPalette._();
 
-  // Surfaces (warm near-black, olive undertone)
-  static const bg = Color(0xFF0F1412);
-  static const bg1 = Color(0xFF161C19);
-  static const bg2 = Color(0xFF1D2521);
-  static const bg3 = Color(0xFF28322D);
-  static const bg4 = Color(0xFF34403A);
+  // Surfaces (cool near-black, slate undertone)
+  static const bg = Color(0xFF101417);
+  static const bg1 = Color(0xFF161B1F);
+  static const bg2 = Color(0xFF1D242A);
+  static const bg3 = Color(0xFF28313A);
+  static const bg4 = Color(0xFF344049);
 
   // Lines
-  static const line = Color(0xFF232C28);
-  static const line2 = Color(0xFF34403A);
-  static const line3 = Color(0xFF48564F);
+  static const line = Color(0xFF222B31);
+  static const line2 = Color(0xFF344049);
+  static const line3 = Color(0xFF485762);
 
   // Ink
-  static const ink = Color(0xFFEFF3E8);
-  static const ink2 = Color(0xFFBAC4B5);
-  static const ink3 = Color(0xFF7C8B82);
-  static const ink4 = Color(0xFF55635B);
+  static const ink = Color(0xFFE9EEF3);
+  static const ink2 = Color(0xFFB5C0C9);
+  static const ink3 = Color(0xFF7C8A95);
+  static const ink4 = Color(0xFF556470);
 
-  // Signal (phosphor)
+  // Signal-quality green (used only for SNR coloring, not UI chrome)
   static const signal = Color(0xFF7BEFA8);
   static const signalDim = Color(0xFF4DC580);
-  static const signalBg = Color(0x177BEFA8); // ~9% alpha
-  static const signalLine = Color(0x427BEFA8); // ~26%
-  static const signalGlow = Color(0x597BEFA8); // ~35%
 
   // Warn (ember)
   static const warn = Color(0xFFFFA552);
@@ -41,8 +37,9 @@ class MeshPalette {
   static const alertBg = Color(0x1CFF6A5C);
   static const alertLine = Color(0x52FF6A5C);
 
-  // Blue (dusk sky)
+  // Blue (sky) — primary accent
   static const blue = Color(0xFF7FCBF5);
+  static const blueDim = Color(0xFF4A9CC9);
   static const blueBg = Color(0x1C7FCBF5);
   static const blueLine = Color(0x477FCBF5);
 
@@ -51,20 +48,20 @@ class MeshPalette {
   static const magentaBg = Color(0x1CDE7FDB);
   static const magentaLine = Color(0x47DE7FDB);
 
-  // Me bubble (mossy)
-  static const me = Color(0xFF1E3527);
-  static const meBorder = Color(0xFF2D5039);
-  static const meInk = Color(0xFFDEF0DC);
+  // Me bubble (dusk blue)
+  static const me = Color(0xFF1B2C3D);
+  static const meBorder = Color(0xFF2C4A66);
+  static const meInk = Color(0xFFDCE9F5);
 
   // ── Light variant (used when user explicitly picks light theme)
-  static const lightBg = Color(0xFFF5F3EC);
-  static const lightBg1 = Color(0xFFECE9DF);
-  static const lightBg2 = Color(0xFFE2DED2);
-  static const lightLine = Color(0xFFCAC5B4);
-  static const lightInk = Color(0xFF0F1410);
-  static const lightInk2 = Color(0xFF3D463E);
-  static const lightInk3 = Color(0xFF6A756D);
-  static const lightSignal = Color(0xFF1A7A44);
+  static const lightBg = Color(0xFFF4F6F8);
+  static const lightBg1 = Color(0xFFEAEEF2);
+  static const lightBg2 = Color(0xFFDFE5EA);
+  static const lightLine = Color(0xFFC3CCD4);
+  static const lightInk = Color(0xFF10161B);
+  static const lightInk2 = Color(0xFF3C4853);
+  static const lightInk3 = Color(0xFF69767F);
+  static const lightBlue = Color(0xFF2F6EA8);
 }
 
 /// Named font stacks — Flutter falls back to system fonts when the named
@@ -115,14 +112,18 @@ class MeshTheme {
 
   static ThemeData dark() {
     const scheme = ColorScheme.dark(
-      primary: MeshPalette.signal,
-      onPrimary: Color(0xFF0A1810),
-      primaryContainer: MeshPalette.signalBg,
-      onPrimaryContainer: MeshPalette.signal,
-      secondary: MeshPalette.blue,
-      onSecondary: Color(0xFF0A1520),
-      tertiary: MeshPalette.magenta,
-      onTertiary: Color(0xFF201020),
+      primary: MeshPalette.blue,
+      onPrimary: Color(0xFF0A1A26),
+      primaryContainer: MeshPalette.blueBg,
+      onPrimaryContainer: MeshPalette.blue,
+      secondary: MeshPalette.magenta,
+      onSecondary: Color(0xFF201020),
+      secondaryContainer: Color(0xFF331A33),
+      onSecondaryContainer: MeshPalette.magenta,
+      tertiary: MeshPalette.warn,
+      onTertiary: Color(0xFF1F1206),
+      tertiaryContainer: Color(0xFF3A2710),
+      onTertiaryContainer: Color(0xFFFFC58A),
       error: MeshPalette.alert,
       onError: Color(0xFF1A0A08),
       errorContainer: MeshPalette.alertBg,
@@ -141,33 +142,39 @@ class MeshTheme {
       scrim: Colors.black54,
       inverseSurface: MeshPalette.ink,
       onInverseSurface: MeshPalette.bg,
-      inversePrimary: MeshPalette.signalDim,
+      inversePrimary: MeshPalette.blueDim,
     );
     return _build(scheme, Brightness.dark);
   }
 
   static ThemeData light() {
     const scheme = ColorScheme.light(
-      primary: MeshPalette.lightSignal,
+      primary: MeshPalette.lightBlue,
       onPrimary: Colors.white,
-      primaryContainer: Color(0xFFD4E8D8),
-      onPrimaryContainer: MeshPalette.lightSignal,
-      secondary: Color(0xFF2F6EA8),
+      primaryContainer: Color(0xFFD3E4F5),
+      onPrimaryContainer: Color(0xFF12354F),
+      secondary: Color(0xFF8C4A8A),
       onSecondary: Colors.white,
-      tertiary: Color(0xFF8C4A8A),
+      secondaryContainer: Color(0xFFEFD6EE),
+      onSecondaryContainer: Color(0xFF3D1A3C),
+      tertiary: Color(0xFF9A5B16),
       onTertiary: Colors.white,
+      tertiaryContainer: Color(0xFFF8E3C9),
+      onTertiaryContainer: Color(0xFF4A2A05),
       error: Color(0xFFB53D2F),
       onError: Colors.white,
+      errorContainer: Color(0xFFF6D9D4),
+      onErrorContainer: Color(0xFF5C1A12),
       surface: MeshPalette.lightBg,
       onSurface: MeshPalette.lightInk,
       surfaceContainerLowest: MeshPalette.lightBg,
       surfaceContainerLow: MeshPalette.lightBg1,
       surfaceContainer: MeshPalette.lightBg1,
       surfaceContainerHigh: MeshPalette.lightBg2,
-      surfaceContainerHighest: Color(0xFFD5D0C0),
+      surfaceContainerHighest: Color(0xFFD2DAE1),
       onSurfaceVariant: MeshPalette.lightInk2,
       outline: MeshPalette.lightLine,
-      outlineVariant: Color(0xFFDBD6C6),
+      outlineVariant: Color(0xFFD8DEE5),
     );
     return _build(scheme, Brightness.light);
   }

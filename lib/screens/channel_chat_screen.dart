@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:meshcore_open/screens/region_management_screen.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:provider/provider.dart';
@@ -548,10 +548,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {
               if (value == 'clearChat') {
-                final connector = context.read<MeshCoreConnector>();
-                final confirmed = await _confirmClearChat();
-                if (!confirmed || !mounted) return;
-                connector.clearMessagesForChannel(widget.channel.index);
+                _confirmClearChat();
               }
             },
             itemBuilder: (context) => [
@@ -624,6 +621,23 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   final itemCount =
                       reversedMessages.length + (_isLoadingOlder ? 1 : 0);
 
+                  // Prune stale keys (deleted/cleared messages) to avoid
+                  // unbounded growth.
+                  final liveIds = reversedMessages
+                      .map((m) => m.messageId)
+                      .toSet();
+                  _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+
+                  // Rare messageId collisions must not reuse the same
+                  // GlobalKey in the list.
+                  final seenIds = <String>{};
+                  final keyedIndices = <int>{};
+                  for (var i = 0; i < reversedMessages.length; i++) {
+                    if (seenIds.add(reversedMessages[i].messageId)) {
+                      keyedIndices.add(i);
+                    }
+                  }
+
                   // Auto-scroll to bottom if user is already at bottom
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (_channelSkipNextBottomSnap) {
@@ -671,17 +685,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 }
                                 final messageIndex = adjustedIndex;
                                 final message = reversedMessages[messageIndex];
-                                if (!_messageKeys.containsKey(
-                                  message.messageId,
-                                )) {
-                                  _messageKeys[message.messageId] = GlobalKey();
-                                }
+                                final messageKey =
+                                    keyedIndices.contains(messageIndex)
+                                    ? _messageKeys.putIfAbsent(
+                                        message.messageId,
+                                        GlobalKey.new,
+                                      )
+                                    : GlobalKey();
                                 final isUnreadAnchor =
                                     _unreadDividerMessageId != null &&
                                     message.messageId ==
                                         _unreadDividerMessageId;
                                 return Container(
-                                  key: _messageKeys[message.messageId]!,
+                                  key: messageKey,
                                   child: Builder(
                                     builder: (context) {
                                       final textScale = context
@@ -2028,24 +2044,32 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return ChannelBinaryDataHelper.mcmpPayloadLength(text, senderName);
   }
 
-  Future<bool> _confirmClearChat() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            content: Text(context.l10n.contact_clearChatConfirm),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.common_cancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.common_continue),
-              ),
-            ],
+  Future<void> _confirmClearChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.contact_clearChat),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
           ),
-        ) ??
-        false;
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(context.l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      if (!mounted) return;
+      context.read<MeshCoreConnector>().clearMessagesForChannel(
+        widget.channel.index,
+      );
+    }
   }
 
   String _byteCountPlaceholder(int bytes) => List.filled(bytes, 'x').join();

@@ -11,7 +11,7 @@ import '../connector/meshcore_protocol.dart';
 import '../services/app_settings_service.dart';
 import '../services/repeater_command_service.dart';
 import '../utils/battery_utils.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class RepeaterStatusScreen extends StatefulWidget {
@@ -318,7 +318,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.repeater_statusRequestTimeout),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
         _recordStatusResult(false);
       });
@@ -331,7 +331,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.repeater_errorLoadingStatus(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
       _recordStatusResult(false);
@@ -360,82 +360,29 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(l10n.repeater_statusTitle),
+            Text(
+              l10n.repeater_statusTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             Text(
               repeater.name,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
         centerTitle: false,
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(repeater, pathLen: -1);
-              } else {
-                await connector.setPathOverride(repeater, pathLen: null);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
             onPressed: () =>
-                PathManagementDialog.show(context, contact: repeater),
+                ContactRoutingSheet.show(context, contact: repeater),
           ),
           IconButton(
             icon: _isLoading
@@ -588,21 +535,20 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 130,
+          Expanded(
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w400),
-            ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w400),
+            textAlign: TextAlign.end,
           ),
         ],
       ),

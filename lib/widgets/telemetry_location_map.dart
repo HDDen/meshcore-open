@@ -147,19 +147,19 @@ class _TelemetryLocationMapState extends State<TelemetryLocationMap> {
                       children: [
                         _MapButton(
                           icon: Icons.add,
-                          tooltip: 'Zoom in',
+                          tooltip: context.l10n.map_zoomIn,
                           onPressed: () => _zoomBy(1),
                         ),
                         const SizedBox(height: 6),
                         _MapButton(
                           icon: Icons.remove,
-                          tooltip: 'Zoom out',
+                          tooltip: context.l10n.map_zoomOut,
                           onPressed: () => _zoomBy(-1),
                         ),
                         const SizedBox(height: 6),
                         _MapButton(
                           icon: Icons.my_location,
-                          tooltip: 'Center map',
+                          tooltip: context.l10n.map_centerMap,
                           onPressed: () =>
                               _mapController.move(_position, _initialZoom),
                         ),

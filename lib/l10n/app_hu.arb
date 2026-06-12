@@ -2456,6 +2456,99 @@
   "settings_companionDebugLog": "Párhuzamos hibakeresési napló",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB parancsok, válaszok és alapvető adatok",
   "repeater_chanUtil": "Csatorna-használat",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_delivered": "Szállítva",
+  "common_undo": "Még egyszer",
+  "messageStatus_sent": "Elküldve",
+  "messageStatus_pending": "Elküldés",
+  "messageStatus_failed": "Nem sikerült elküldeni",
+  "messageStatus_repeated": "Ismételtem",
+  "contacts_moreOptions": "További lehetőségek",
+  "contacts_searchOpen": "Keresssz kapcsolatokat",
+  "contacts_searchClose": "Teljesítse a keresést",
+  "routing_title": "Útvonal meghatározás",
+  "routing_modeAuto": "Autó",
+  "routing_modeFlood": "Áradás",
+  "routing_modeManual": "Használati útmutató",
+  "routing_modeAutoHint": "Automatikusan kiválasztja a legismertebb útvonalat, és ha egyik sem ismert, akkor \"vízzel\" tölti ki.",
+  "routing_modeFloodHint": "Átvisszaadások minden erősítőn keresztül. A legmegbízhatóbb megoldás, de több időt igényel.",
+  "routing_modeManualHint": "Mindig pontosan az útvonalat követi, amelyet megad.",
+  "routing_currentRoute": "Jelenlegi útvonal",
+  "routing_directNoHops": "Közvetlen – nincs átjáró állomás",
+  "routing_noPathYet": "Még nincs útvonal. A következő üzenet a keresésig vár.",
+  "routing_floodBroadcast": "Azonnali továbbítás minden erősítőn keresztül.",
+  "routing_editPath": "Útvonal szerkesztése",
+  "routing_forgetPath": "Felejtsd el a útvonalat",
+  "routing_knownPaths": "Jellegzetes útvonalak",
+  "routing_knownPathsHint": "Készíts egy útvonalat, hogy átválhass rá.",
+  "routing_inUse": "Használatban",
+  "routing_qualityStrong": "Erős első lépés",
+  "routing_qualityGood": "Jó első lépés",
+  "routing_qualityFair": "Jó első lépés",
+  "routing_qualityWorked": "Előállított",
+  "routing_qualityFlood": "Információt hallottam a katasztrófa miatt.",
+  "routing_qualityUntested": "Vizsgálatnak nem подвержен",
+  "routing_neverWorked": "sosem megerősítve",
+  "routing_floodDelivery": "Vízparti szállítás",
+  "pathEditor_title": "Út megépítése",
+  "pathEditor_hopCounter": "{count} db 64-ből",
+  "pathEditor_noHops": "Még nem adtam hozzá a bazsalikomot. A lent található gombokat használhatod, hogy sorrendben adjd hozzá, vagy mentheted anélkül, hogy bazsalikomot adnál hozzá, hogy közvetlenül elküldd.",
+  "pathEditor_addHops": "Adja hozzá a bazsaidat a megfelelő sorrendben.",
+  "pathEditor_searchRepeaters": "Ismétlő eszközök keresése",
+  "pathEditor_advancedHex": "Haladó szint: alapvető hex-út",
+  "pathEditor_hexLabel": "Hex előtagok",
+  "pathEditor_hexHelper": "Két hatjegyű szám minden lépésen, amelyek egymástól elválasztják a kommák.",
+  "pathEditor_invalidTokens": "Érvénytelen: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_tooManyHops": "A maximális szám 64.",
+  "pathEditor_usePath": "Használja ezt az útvonalat.",
+  "pathEditor_removeHop": "Távolítsa el a bazsalikomot",
+  "pathEditor_unknownHop": "Tudatlan erősítő",
+  "map_zoomIn": "Nagyítva",
+  "map_zoomOut": "Kicsökkentett nézet",
+  "map_centerMap": "Központi tér térkép",
+  "chrome_bluetoothRequiresChromium": "A Web Bluetooth-hoz egy Chromium-alapú böngésző szükséges.",
+  "channels_communityShortId": "Az azonosító: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS-en megerősítve",
+  "pathTrace_legendInferred": "Feltehető helyzet",
   "settings_quickAnswersSendAtSelect": "Küldés kiválasztáskor",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

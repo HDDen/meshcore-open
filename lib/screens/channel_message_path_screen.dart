@@ -128,7 +128,9 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 if (!hasHopDetails)
                   Text(
                     l10n.channelPath_noHopDetails,
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   )
                 else
                   ..._buildHopTiles(context, hops),
@@ -158,8 +160,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            _buildDetailRow(l10n.channelPath_senderLabel, message.senderName),
             _buildDetailRow(
+              context,
+              l10n.channelPath_senderLabel,
+              message.senderName,
+            ),
+            _buildDetailRow(
+              context,
               l10n.channelPath_timeLabel,
               _formatTime(message.timestamp, l10n),
             ),
@@ -170,15 +177,21 @@ class ChannelMessagePathScreen extends StatelessWidget {
               ),
             if (message.repeatCount > 0)
               _buildDetailRow(
+                context,
                 l10n.channelPath_repeatsLabel,
                 message.repeatCount.toString(),
               ),
             _buildDetailRow(
+              context,
               l10n.channelPath_pathLabelTitle,
               _formatPathLabel(effectiveHopCount, l10n),
             ),
             if (observedLabel != null)
-              _buildDetailRow(l10n.channelPath_observedLabel, observedLabel),
+              _buildDetailRow(
+                context,
+                l10n.channelPath_observedLabel,
+                observedLabel,
+              ),
           ],
         ),
       ),
@@ -298,7 +311,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
     return l10n.channelPath_observedSomeOf(observedCount, targetHopCount);
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: LayoutBuilder(
@@ -466,17 +479,17 @@ class _ChannelMessagePathMapScreenState
           children: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Zoom in',
+              tooltip: context.l10n.map_zoomIn,
               onPressed: () => _zoomMapBy(1),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              tooltip: 'Zoom out',
+              tooltip: context.l10n.map_zoomOut,
               onPressed: () => _zoomMapBy(-1),
             ),
             IconButton(
               icon: const Icon(Icons.my_location),
-              tooltip: 'Center map',
+              tooltip: context.l10n.map_centerMap,
               onPressed: () => _resetMapView(
                 initialCenter: initialCenter,
                 initialZoom: initialZoom,
@@ -654,7 +667,9 @@ class _ChannelMessagePathMapScreenState
                 if (points.isEmpty)
                   Center(
                     child: Card(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.9),
                       child: Padding(
                         padding: EdgeInsets.all(12),
                         child: Text(
@@ -727,7 +742,10 @@ class _ChannelMessagePathMapScreenState
                     label,
                     _formatPathPrefixes(selectedPath.pathBytes, width),
                   ),
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -748,28 +766,32 @@ class _ChannelMessagePathMapScreenState
       markers.add(
         Marker(
           point: point,
-          width: 35,
-          height: 35,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                hop.index.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              hop.index.toString(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
               ),
             ),
           ),
@@ -792,28 +814,32 @@ class _ChannelMessagePathMapScreenState
       markers.add(
         Marker(
           point: selfPoint,
-          width: 35,
-          height: 35,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.teal,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                color: Colors.teal,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                context.l10n.pathTrace_you,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              context.l10n.pathTrace_you,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
               ),
             ),
           ),
@@ -867,6 +893,12 @@ class _ChannelMessagePathMapScreenState
     );
   }
 
+  Widget _colorDot(Color color) => Container(
+    width: 10,
+    height: 10,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
+
   Widget _buildLegendCard(
     BuildContext context,
     List<_PathHop> hops,
@@ -889,9 +921,25 @@ class _ChannelMessagePathMapScreenState
             children: [
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text(
-                  '${l10n.channelPath_repeaterHops} ${formatDistance(_pathDistance, isImperial: isImperial)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${l10n.channelPath_repeaterHops} ${formatDistance(_pathDistance, isImperial: isImperial)}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _colorDot(Colors.green),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.pathTrace_legendGpsConfirmed,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const Divider(height: 1),

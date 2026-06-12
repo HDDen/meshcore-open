@@ -55,6 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
     setState(() {
       _appVersion = packageInfo.version;
     });
@@ -215,12 +216,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (percent == null) {
       icon = Icons.battery_unknown;
-      iconColor = Colors.grey;
+      iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
       valueColor = null;
     } else if (percent <= 15) {
       icon = Icons.battery_alert;
-      iconColor = Colors.orange;
-      valueColor = Colors.orange;
+      iconColor = Theme.of(context).colorScheme.tertiary;
+      valueColor = Theme.of(context).colorScheme.tertiary;
     } else {
       icon = Icons.battery_full;
       iconColor = null;
@@ -326,18 +327,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _editLocation(context, connector),
           ),
-          if (connector.currentCustomVars?.containsKey('gps') ?? false) ...[
-            const Divider(height: 1),
-            SwitchListTile(
-              secondary: const Icon(Icons.gps_fixed),
-              title: Text(l10n.settings_locationGPSEnable),
-              subtitle: Text(l10n.settings_locationGPSEnableSubtitle),
-              value: connector.currentCustomVars?['gps'] == '1',
-              onChanged: (value) async {
-                await connector.setCustomVar(value ? 'gps:1' : 'gps:0');
-              },
-            ),
-          ],
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.group_add_outlined),
@@ -380,13 +369,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
+            leading: Icon(
+              Icons.delete_outline,
+              color: Theme.of(context).colorScheme.error,
+            ),
             title: Text(l10n.settings_deleteAllPaths),
             subtitle: Text(
               l10n.settings_deleteAllPathsSubtitle,
-              style: TextStyle(color: Colors.red[700]),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-            onTap: () => connector.deleteAllPaths(),
+            onTap: () => _confirmDeleteAllPaths(context, connector),
           ),
           const Divider(height: 1),
           ListTile(
@@ -404,7 +396,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.restart_alt, color: Colors.orange),
+            leading: Icon(
+              Icons.restart_alt,
+              color: Theme.of(context).colorScheme.tertiary,
+            ),
             title: Text(l10n.settings_rebootDevice),
             subtitle: Text(l10n.settings_rebootDeviceSubtitle),
             onTap: () => _confirmReboot(context, connector),
@@ -672,6 +667,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         int.tryParse(customVars["gps_interval"] ?? "") ?? 900;
     intervalController.text = currentInterval.toString();
 
+    String? intervalError;
+
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -707,9 +704,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: intervalController,
+                  onChanged: (_) {
+                    if (intervalError != null) {
+                      setDialogState(() => intervalError = null);
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: l10n.settings_locationIntervalSec,
                     border: const OutlineInputBorder(),
+                    errorText: intervalError,
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
@@ -740,24 +743,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
-
+                int? interval;
                 if (hasGPS) {
                   final intervalText = intervalController.text.trim();
-                  if (intervalText.isEmpty) {
-                    return;
+                  if (intervalText.isNotEmpty) {
+                    interval = int.tryParse(intervalText);
+                    if (interval == null ||
+                        interval < 60 ||
+                        interval >= 86400) {
+                      setDialogState(() {
+                        intervalError = l10n.settings_locationIntervalInvalid;
+                      });
+                      return;
+                    }
                   }
+                }
 
-                  final interval = int.tryParse(intervalText);
-                  if (interval == null || interval < 60 || interval >= 86400) {
-                    if (!context.mounted) return;
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(l10n.settings_locationIntervalInvalid),
-                    );
-                    return;
-                  }
+                Navigator.pop(context);
 
+                if (interval != null) {
                   await connector.setCustomVar("gps_interval:$interval");
                   await connector.refreshDeviceInfo();
                   if (!context.mounted) return;
@@ -823,6 +827,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _confirmDeleteAllPaths(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settings_deleteAllPaths),
+        content: Text(l10n.settings_deleteAllPathsSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              connector.deleteAllPaths();
+            },
+            child: Text(
+              l10n.common_deleteAll,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmReboot(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
     showDialog(
@@ -842,7 +876,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
             child: Text(
               l10n.common_reboot,
-              style: const TextStyle(color: Colors.orange),
+              style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
             ),
           ),
         ],
@@ -1246,6 +1280,8 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
   bool _clientRepeat = false;
   int? _selectedPresetIndex;
   _RadioSettingsSnapshot? _lastNonRepeatSnapshot;
+  String? _frequencyError;
+  String? _txPowerError;
 
   AppDebugLogService get _appLog =>
       Provider.of<AppDebugLogService>(context, listen: false);
@@ -1512,7 +1548,24 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
 
   void _handleManualSettingsChanged(String source) {
     _logRadioSettingsState('Manual settings edit: $source');
-    setState(_syncPresetSelection);
+    setState(() {
+      _validateFields();
+      _syncPresetSelection();
+    });
+  }
+
+  void _validateFields() {
+    final l10n = context.l10n;
+    final freqMHz = double.tryParse(_frequencyController.text);
+    _frequencyError = (freqMHz == null || freqMHz < 300 || freqMHz > 2500)
+        ? l10n.settings_frequencyInvalid
+        : null;
+
+    final maxTxPower = widget.connector.maxTxPower ?? 22;
+    final txPower = int.tryParse(_txPowerController.text);
+    _txPowerError = (txPower == null || txPower < 0 || txPower > maxTxPower)
+        ? '${l10n.settings_txPowerInvalid} (0-$maxTxPower dBm)'
+        : null;
   }
 
   void _handleClientRepeatChanged(bool enabled) {
@@ -1624,6 +1677,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
         content: Text(l10n.settings_error(e.toString())),
       );
     }
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -1699,6 +1753,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
                 labelText: l10n.settings_frequency,
                 border: const OutlineInputBorder(),
                 helperText: l10n.settings_frequencyHelper,
+                errorText: _frequencyError,
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1782,6 +1837,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
                 helperText: widget.connector.maxTxPower != null
                     ? '${l10n.settings_txPowerHelper} (max: ${widget.connector.maxTxPower} dBm)'
                     : l10n.settings_txPowerHelper,
+                errorText: _txPowerError,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -1803,7 +1859,12 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.common_cancel),
         ),
-        FilledButton(onPressed: _saveSettings, child: Text(l10n.common_save)),
+        FilledButton(
+          onPressed: (_frequencyError != null || _txPowerError != null)
+              ? null
+              : _saveSettings,
+          child: Text(l10n.common_save),
+        ),
       ],
     );
   }

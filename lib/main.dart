@@ -29,11 +29,21 @@ import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'helpers/mesh_compressor.dart';
+import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/app_route_observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // On desktop, debugPrint is not suppressed in release builds and every
+  // call is a synchronous stdout write. The connector logs heavily on hot
+  // paths (frame handling, queue/channel sync), which shows up as syscall
+  // overhead on low-end Linux machines (issue #202). The in-app debug log
+  // screens are unaffected — they store entries themselves.
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
 
   // Initialize SharedPreferences cache
   await PrefsManager.initialize();
@@ -213,23 +223,8 @@ class MeshCoreApp extends StatelessWidget {
             locale: _localeFromSetting(
               settingsService.settings.languageOverride,
             ),
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-              useMaterial3: true,
-              snackBarTheme: const SnackBarThemeData(
-                behavior: SnackBarBehavior.floating,
-              ),
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
-                brightness: Brightness.dark,
-              ),
-              useMaterial3: true,
-              snackBarTheme: const SnackBarThemeData(
-                behavior: SnackBarBehavior.floating,
-              ),
-            ),
+            theme: MeshTheme.light(),
+            darkTheme: MeshTheme.dark(),
             themeMode: _themeModeFromSetting(
               settingsService.settings.themeMode,
             ),

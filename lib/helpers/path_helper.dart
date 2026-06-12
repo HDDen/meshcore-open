@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../models/contact.dart';
+
 import '../connector/meshcore_protocol.dart';
+import '../models/contact.dart';
 
 class PathHelper {
   static String formatPathHex(List<int> pathBytes) {
@@ -9,10 +10,28 @@ class PathHelper {
         .join(',');
   }
 
+  static String hopHex(int byte) {
+    return byte.toRadixString(16).padLeft(2, '0').toUpperCase();
+  }
+
   static String formatHopHex(List<int> hopBytes) {
     return hopBytes
         .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
         .join();
+  }
+
+  static String? hopName(int byte, List<Contact> allContacts) {
+    final matches = allContacts
+        .where(
+          (c) =>
+              c.publicKey.isNotEmpty &&
+              c.publicKey.first == byte &&
+              (c.type == advTypeRepeater || c.type == advTypeRoom),
+        )
+        .toList();
+    if (matches.isEmpty) return null;
+    if (matches.length == 1) return matches.first.name;
+    return matches.map((c) => c.name).join(' | ');
   }
 
   static List<Uint8List> splitPathBytes(
@@ -34,7 +53,7 @@ class PathHelper {
   }
 
   /// Resolves path bytes to contact names, supporting multi-byte hash widths.
-
+  ///
   /// Groups path bytes according to [hashByteWidth]:
   /// - 1: Single byte per hop (256 unique nodes)
   /// - 2: Two bytes per hop (65K unique nodes)
@@ -52,11 +71,9 @@ class PathHelper {
     for (final hopBytes in splitPathBytes(pathBytes, hashByteWidth)) {
       final hex = formatHopHex(hopBytes);
 
-      // Find matching contacts by comparing public key prefix
       final matches = allContacts.where((c) {
         if (c.publicKey.length < hopBytes.length) return false;
         if (c.type != advTypeRepeater && c.type != advTypeRoom) return false;
-        // Compare bytes using listEquals for multi-byte support
         return listEquals(c.publicKey.sublist(0, hopBytes.length), hopBytes);
       }).toList();
 

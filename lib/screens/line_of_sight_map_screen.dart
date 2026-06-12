@@ -73,7 +73,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   double _startAntennaHeight = 5.0;
   double _endAntennaHeight = 5.0;
   bool _showHud = true;
-  bool _menuExpanded = true;
+  bool _menuExpanded = false;
   bool _showDisplayNodes = true;
   bool _showMarkerLabels = true;
   bool _didReceivePositionUpdate = false;
@@ -159,17 +159,17 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Zoom in',
+              tooltip: context.l10n.map_zoomIn,
               onPressed: () => _zoomMapBy(1),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              tooltip: 'Zoom out',
+              tooltip: context.l10n.map_zoomOut,
               onPressed: () => _zoomMapBy(-1),
             ),
             IconButton(
               icon: const Icon(Icons.my_location),
-              tooltip: 'Center map',
+              tooltip: context.l10n.map_centerMap,
               onPressed: () => _resetMapView(
                 initialCenter: initialCenter,
                 initialZoom: initialZoom,
@@ -224,6 +224,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       setState(() {
         _result = result;
         _selectedObstruction = _defaultObstructionFor(result);
+        _menuExpanded = true;
       });
     } catch (e) {
       if (!mounted) return;
@@ -506,7 +507,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
               bottom: 12,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Padding(
@@ -516,10 +519,20 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                   ),
                   child: Text(
                     context.l10n.losElevationAttribution,
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ),
+            ),
+          if (_loading)
+            const Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: LinearProgressIndicator(),
             ),
         ],
       ),
@@ -623,7 +636,10 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                 const SizedBox(height: 4),
                 Text(
                   context.l10n.losBlockedSpotsHint,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Wrap(
@@ -692,7 +708,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                             '${_selectedObstruction!.point.longitude.toStringAsFixed(5)}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey[700],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -711,14 +729,17 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                         context.l10n.losFrequencyLabel,
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey[700],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '${displayFrequencyMHz.toStringAsFixed(3)} MHz',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       if (kFactorUsed != null) ...[
                         const SizedBox(width: 8),
@@ -726,7 +747,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                           'k=${kFactorUsed.toStringAsFixed(3)}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[700],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -734,7 +757,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           icon: const Icon(Icons.info_outline, size: 16),
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           tooltip: context.l10n.losFrequencyInfoTooltip,
                           onPressed: () {
                             _showFrequencyInfoDialog(
@@ -750,7 +773,10 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                 ),
               Text(
                 context.l10n.losElevationAttribution,
-                style: TextStyle(fontSize: 10, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 6),
               ExpansionTile(
@@ -1730,12 +1756,12 @@ class _LosLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final textStyle =
         Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.white70,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 11,
           fontWeight: FontWeight.w500,
         ) ??
-        const TextStyle(
-          color: Colors.white70,
+        TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 11,
           fontWeight: FontWeight.w500,
         );

@@ -348,17 +348,17 @@ class _MapScreenState extends State<MapScreen>
           children: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Zoom in',
+              tooltip: context.l10n.map_zoomIn,
               onPressed: () => _zoomMapBy(1),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              tooltip: 'Zoom out',
+              tooltip: context.l10n.map_zoomOut,
               onPressed: () => _zoomMapBy(-1),
             ),
             IconButton(
               icon: const Icon(Icons.my_location),
-              tooltip: 'Center map',
+              tooltip: context.l10n.map_centerMap,
               onPressed: () => _mapController.move(center, zoom),
             ),
           ],
@@ -676,10 +676,77 @@ class _MapScreenState extends State<MapScreen>
                   ),
                 PopupMenuButton(
                   itemBuilder: (context) => [
+                    if (!_isBuildingPathTrace &&
+                        connector.selfLatitude != null &&
+                        connector.selfLongitude != null)
+                      PopupMenuItem(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.radar),
+                            const SizedBox(width: 8),
+                            Text(context.l10n.contacts_pathTrace),
+                          ],
+                        ),
+                        onTap: () => _startPath(
+                          LatLng(
+                            connector.selfLatitude!,
+                            connector.selfLongitude!,
+                          ),
+                        ),
+                      ),
+                    if (!_isBuildingPathTrace)
+                      PopupMenuItem(
+                        child: Row(
+                          children: [
+                            const LosIcon(),
+                            const SizedBox(width: 8),
+                            Text(context.l10n.map_lineOfSight),
+                          ],
+                        ),
+                        onTap: () {
+                          final candidates = <LineOfSightEndpoint>[];
+                          if (connector.selfLatitude != null &&
+                              connector.selfLongitude != null) {
+                            candidates.add(
+                              LineOfSightEndpoint(
+                                label: context.l10n.pathTrace_you,
+                                point: LatLng(
+                                  connector.selfLatitude!,
+                                  connector.selfLongitude!,
+                                ),
+                                color: Colors.teal,
+                                icon: Icons.person_pin_circle,
+                              ),
+                            );
+                          }
+                          for (final c in contactsWithLocation) {
+                            candidates.add(
+                              LineOfSightEndpoint(
+                                label: c.name,
+                                point: LatLng(c.latitude!, c.longitude!),
+                                color: _getNodeColor(c.type),
+                                icon: _getNodeIcon(c.type),
+                              ),
+                            );
+                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LineOfSightMapScreen(
+                                title: context.l10n.map_losScreenTitle,
+                                candidates: candidates,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     PopupMenuItem(
                       child: Row(
                         children: [
-                          const Icon(Icons.logout, color: Colors.red),
+                          Icon(
+                            Icons.logout,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                           const SizedBox(width: 8),
                           Text(context.l10n.common_disconnect),
                         ],
@@ -2246,8 +2313,8 @@ class _MapScreenState extends State<MapScreen>
       );
       final marker = Marker(
         point: guess.position,
-        width: 35,
-        height: 35,
+        width: 48,
+        height: 48,
         child: GestureDetector(
           onLongPress: () => _isBuildingPathTrace
               ? _showNodeInfo(context, guess.contact)
@@ -2395,8 +2462,8 @@ class _MapScreenState extends State<MapScreen>
       );
       final marker = Marker(
         point: LatLng(contact.latitude!, contact.longitude!),
-        width: 35,
-        height: 35,
+        width: 48,
+        height: 48,
         child: GestureDetector(
           onLongPress: () =>
               _isBuildingPathTrace ? _showNodeInfo(context, contact) : null,
@@ -2430,7 +2497,7 @@ class _MapScreenState extends State<MapScreen>
                   size: 20,
                 ),
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -3029,10 +3096,12 @@ class _MapScreenState extends State<MapScreen>
                     ),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.location_on,
                           size: 16,
-                          color: Colors.grey,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": $nodeCount",
@@ -3045,10 +3114,12 @@ class _MapScreenState extends State<MapScreen>
                     ),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.wrong_location,
                           size: 16,
-                          color: Colors.grey,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": ${nodeCountAll - nodeCount}",
@@ -3061,10 +3132,12 @@ class _MapScreenState extends State<MapScreen>
                     ),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.add_outlined,
                           size: 16,
-                          color: Colors.grey,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": $nodeCountAll",
@@ -3358,56 +3431,14 @@ class _MapScreenState extends State<MapScreen>
     LatLng? guessedPosition,
   }) {
     final connector = context.read<MeshCoreConnector>();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              _getNodeIcon(contact.type),
-              color: _getNodeColor(contact.type),
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: SelectableText(contact.name)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow(
-              context.l10n.map_type,
-              contact.typeLabel(context.l10n),
-            ),
-            _buildInfoRow(
-              context.l10n.map_path,
-              contact.pathLabel(context.l10n),
-            ),
-            if (contact.hasLocation)
-              _buildInfoRow(
-                context.l10n.map_location,
-                '${contact.latitude!.toStringAsFixed(6)}, ${contact.longitude!.toStringAsFixed(6)}',
-              )
-            else if (guessedPosition != null)
-              _buildInfoRow(
-                context.l10n.map_estLocation,
-                '~${guessedPosition.latitude.toStringAsFixed(6)}, ${guessedPosition.longitude.toStringAsFixed(6)}',
-              ),
-            _buildInfoRow(
-              context.l10n.map_lastSeen,
-              _formatLastSeen(contact.lastSeen),
-            ),
-            _buildInfoRow(context.l10n.map_publicKey, contact.publicKeyHex),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_close),
-          ),
-          if (contact.type ==
-              advTypeChat) // Only show chat button for chat nodes
-            TextButton(
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final actions = <Widget>[];
+        if (contact.type == advTypeChat) {
+          actions.add(
+            FilledButton(
               onPressed: () {
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
@@ -3415,7 +3446,7 @@ class _MapScreenState extends State<MapScreen>
                 final unread = connector.getUnreadCountForContactKey(
                   contact.publicKeyHex,
                 );
-                Navigator.pop(dialogContext);
+                Navigator.pop(sheetContext);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -3428,30 +3459,93 @@ class _MapScreenState extends State<MapScreen>
               },
               child: Text(context.l10n.contacts_openChat),
             ),
-          if (contact.type == advTypeRepeater)
-            TextButton(
+          );
+        }
+        if (contact.type == advTypeRepeater) {
+          actions.add(
+            FilledButton(
               onPressed: () {
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
-                Navigator.pop(dialogContext);
+                Navigator.pop(sheetContext);
                 _showRepeaterLogin(context, contact);
               },
               child: Text(context.l10n.map_manageRepeater),
             ),
-          if (contact.type == advTypeRoom)
-            TextButton(
+          );
+        }
+        if (contact.type == advTypeRoom) {
+          actions.add(
+            FilledButton(
               onPressed: () {
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
-                Navigator.pop(dialogContext);
+                Navigator.pop(sheetContext);
                 _showRoomLogin(context, contact);
               },
               child: Text(context.l10n.map_joinRoom),
             ),
-        ],
-      ),
+          );
+        }
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _getNodeIcon(contact.type),
+                        color: _getNodeColor(contact.type),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: SelectableText(contact.name)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoRow(
+                    context.l10n.map_type,
+                    contact.typeLabel(context.l10n),
+                  ),
+                  _buildInfoRow(
+                    context.l10n.map_path,
+                    contact.pathLabel(context.l10n),
+                  ),
+                  if (contact.hasLocation)
+                    _buildInfoRow(
+                      context.l10n.map_location,
+                      '${contact.latitude!.toStringAsFixed(6)}, ${contact.longitude!.toStringAsFixed(6)}',
+                    )
+                  else if (guessedPosition != null)
+                    _buildInfoRow(
+                      context.l10n.map_estLocation,
+                      '~${guessedPosition.latitude.toStringAsFixed(6)}, ${guessedPosition.longitude.toStringAsFixed(6)}',
+                    ),
+                  _buildInfoRow(
+                    context.l10n.map_lastSeen,
+                    _formatLastSeen(contact.lastSeen),
+                  ),
+                  _buildInfoRow(
+                    context.l10n.map_publicKey,
+                    contact.publicKeyHex,
+                  ),
+                  const SizedBox(height: 16),
+                  ...actions,
+                  TextButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    child: Text(context.l10n.common_close),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -3536,6 +3630,9 @@ class _MapScreenState extends State<MapScreen>
             child: Text(context.l10n.common_hide),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () async {
               setState(() {
                 _hiddenMarkerIds.add(marker.id);
@@ -3567,7 +3664,7 @@ class _MapScreenState extends State<MapScreen>
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -3632,10 +3729,7 @@ class _MapScreenState extends State<MapScreen>
                 );
                 await connector.refreshDeviceInfo();
                 if (!mounted) return;
-                showDismissibleSnackBar(
-                  messenger.context,
-                  content: Text(successMsg),
-                );
+                messenger.showSnackBar(SnackBar(content: Text(successMsg)));
               },
             ),
             ListTile(
@@ -4024,7 +4118,10 @@ class _MapScreenState extends State<MapScreen>
                   const SizedBox(height: 8),
                   Text(
                     _getTimeFilterLabel(settings.mapTimeFilterHours),
-                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   Slider(
                     value: _hoursToSliderValue(settings.mapTimeFilterHours),
@@ -4186,9 +4283,6 @@ class _MapScreenState extends State<MapScreen>
           title: context.l10n.contacts_pathTrace,
           path: Uint8List.fromList(_pathTrace),
           flipPathAround: flipPathAround,
-          targetContact: _pathTraceContacts.isNotEmpty
-              ? _pathTraceContacts.last
-              : null,
           pathHashByteWidth: hashW,
           pathContacts: _pathTraceContacts,
         ),
@@ -4222,7 +4316,10 @@ class _MapScreenState extends State<MapScreen>
               if (_pathTrace.isNotEmpty)
                 Text(
                   "${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}",
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               SelectableText(
                 PathHelper.splitPathBytes(
@@ -4240,7 +4337,7 @@ class _MapScreenState extends State<MapScreen>
                   if (_pathTrace.isNotEmpty)
                     IconButton(
                       onPressed: () =>
-                          _openPathTraceResult(flipPathAround: true),
+                          _openPathTraceResult(flipPathAround: false),
                       tooltip: l10n.map_runTrace,
                       icon: const Icon(Icons.arrow_forward_outlined),
                     ),
