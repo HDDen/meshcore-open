@@ -1138,7 +1138,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   message.wasMcmpCompressed) ...[
                                 const SizedBox(width: 6),
                                 Text(
-                                  'mcmp',
+                                  message.wasBinaryTransport
+                                      ? 'mcmp bin'
+                                      : 'mcmp',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey[600],

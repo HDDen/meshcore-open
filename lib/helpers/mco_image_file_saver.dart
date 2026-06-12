@@ -20,6 +20,7 @@ class MCOImageFileSaver {
             label: 'PNG image',
             extensions: ['png'],
             mimeTypes: ['image/png'],
+            uniformTypeIdentifiers: ['public.png'],
           ),
         ],
       );
@@ -55,6 +56,7 @@ class MCOImageFileSaver {
             label: 'MCO image binary',
             extensions: ['bin'],
             mimeTypes: ['application/octet-stream'],
+            uniformTypeIdentifiers: ['public.data'],
           ),
         ],
       );

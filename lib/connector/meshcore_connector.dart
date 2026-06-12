@@ -3662,6 +3662,15 @@ class MeshCoreConnector extends ChangeNotifier {
         isChannelMcmpEnabled(channel.index) && ChannelBinaryDataHelper.canSend
         ? ChannelBinaryDataHelper.mcmpPayloadLength(text, _selfName ?? 'Me')
         : null;
+    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
+      text: text,
+      senderName: _selfName ?? 'Me',
+      mcmpEnabled: isChannelMcmpEnabled(channel.index),
+    );
+    final isBinaryMcmpTransport =
+        binaryOutbound != null &&
+        binaryOutbound.kind == ChannelBinaryDataKind.mcmp &&
+        binaryOutbound.payload.length <= maxChannelDataLength;
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
@@ -3673,6 +3682,7 @@ class MeshCoreConnector extends ChangeNotifier {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      wasBinaryTransport: isBinaryMcmpTransport,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
@@ -3681,11 +3691,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
-    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
-      text: text,
-      senderName: message.senderName,
-      mcmpEnabled: isChannelMcmpEnabled(channel.index),
-    );
     await _runScopedChannelSend(() async {
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       final sentByRadioAt = DateTime.now();
@@ -6029,6 +6034,7 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
+      wasBinaryTransport: decoded.kind == ChannelBinaryDataKind.mcmp,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -6231,6 +6237,7 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
+      wasBinaryTransport: decoded.kind == ChannelBinaryDataKind.mcmp,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -6994,6 +7001,7 @@ class MeshCoreConnector extends ChangeNotifier {
         translationStatus: message.translationStatus,
         translationModelId: message.translationModelId,
         wasMcmpCompressed: message.wasMcmpCompressed,
+        wasBinaryTransport: message.wasBinaryTransport,
         timestamp: message.timestamp,
         sentByRadioAt: message.sentByRadioAt,
         isOutgoing: message.isOutgoing,

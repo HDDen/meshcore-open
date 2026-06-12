@@ -1723,14 +1723,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_modeAuto => 'Авто';
 
   @override
-  String get routing_modeFlood => 'Наводнение';
+  String get routing_modeFlood => 'Флуд';
 
   @override
-  String get routing_modeManual => 'Инструкция';
+  String get routing_modeManual => 'Вручную';
 
   @override
   String get routing_modeAutoHint =>
-      'Автоматически выбирает наиболее известный путь, и если такой путь неизвестен, использует алгоритм поиска пути.';
+      'Лучший известный маршрут выбирается автоматически, режим флуда включается, если маршрут неизвестен.';
 
   @override
   String get routing_modeFloodHint =>
@@ -1758,20 +1758,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_editPath => 'Изменить путь';
 
   @override
-  String get routing_forgetPath => 'Забудьте о маршруте';
+  String get routing_forgetPath => 'Забыть маршрут';
 
   @override
   String get routing_knownPaths => 'Известные маршруты';
 
   @override
   String get routing_knownPathsHint =>
-      'Создайте маршрут для переключения на этот пункт.';
+      'Нажмите на маршрут для переключения на него.';
 
   @override
   String get routing_inUse => 'В эксплуатации';
 
   @override
-  String get routing_qualityStrong => 'Сильный первый скачок';
+  String get routing_qualityStrong => 'Сильный первый хоп';
 
   @override
   String get routing_qualityGood => 'Хорошее начало';
@@ -1783,8 +1783,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_qualityWorked => 'Осуществлено';
 
   @override
-  String get routing_qualityFlood =>
-      'Узнал из новостей, распространяющихся в интернете.';
+  String get routing_qualityFlood => 'Найден через флуд.';
 
   @override
   String get routing_qualityUntested => 'Непроверенный';
@@ -1795,7 +1794,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get routing_neverWorked => 'никогда не было подтверждено';
+  String get routing_neverWorked => 'неподтверждённый';
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
@@ -1803,14 +1802,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => 'Доставка при затоплении';
+  String get routing_floodDelivery => 'Доставка флудом';
 
   @override
   String get pathEditor_title => 'Создать маршрут';
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '$count из 64 хмеля';
+    return '$count из 64 хопов';
   }
 
   @override

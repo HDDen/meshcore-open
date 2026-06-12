@@ -37,6 +37,7 @@ class ChannelMessage {
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
   final bool wasMcmpCompressed;
+  final bool wasBinaryTransport;
   final DateTime timestamp;
   // Internal TX anchor; UI keeps using timestamp as the visible compose time.
   final DateTime? sentByRadioAt;
@@ -67,6 +68,7 @@ class ChannelMessage {
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
     this.wasMcmpCompressed = false,
+    this.wasBinaryTransport = false,
     required this.timestamp,
     this.sentByRadioAt,
     List<int>? sentByRadioWaitSeconds,
@@ -117,6 +119,7 @@ class ChannelMessage {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    bool? wasBinaryTransport,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
     Map<String, int>? reactions,
@@ -139,6 +142,7 @@ class ChannelMessage {
           ? this.translationModelId
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
+      wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
       timestamp: timestamp,
       sentByRadioAt: sentByRadioAt == _unset
           ? this.sentByRadioAt
@@ -262,6 +266,7 @@ class ChannelMessage {
     String? replyToSenderName,
     String? replyToText,
     bool wasMcmpCompressed = false,
+    bool wasBinaryTransport = false,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -271,6 +276,7 @@ class ChannelMessage {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
       wasMcmpCompressed: wasMcmpCompressed,
+      wasBinaryTransport: wasBinaryTransport,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: ChannelMessageStatus.pending,

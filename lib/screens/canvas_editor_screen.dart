@@ -2203,11 +2203,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             label: 'MCO image binary',
             extensions: ['bin'],
             mimeTypes: ['application/octet-stream'],
+            uniformTypeIdentifiers: ['public.data'],
           ),
           file_selector.XTypeGroup(
             label: 'Images',
             extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
             mimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/bmp'],
+            uniformTypeIdentifiers: ['public.image'],
           ),
         ],
       );
@@ -2471,6 +2473,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             label: 'PNG image',
             extensions: ['png'],
             mimeTypes: ['image/png'],
+            uniformTypeIdentifiers: ['public.png'],
           ),
         ],
       );

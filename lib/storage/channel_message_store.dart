@@ -106,6 +106,7 @@ class ChannelMessageStore {
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
+      'wasBinaryTransport': msg.wasBinaryTransport,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
@@ -180,6 +181,7 @@ class ChannelMessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
+      wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       sentByRadioAt: json['sentByRadioAt'] is int
           ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
