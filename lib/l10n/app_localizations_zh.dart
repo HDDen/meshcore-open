@@ -1117,6 +1117,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contact_clearChat => '清除聊天记录';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => '遥测基站';
 
   @override

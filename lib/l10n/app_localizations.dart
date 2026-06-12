@@ -2224,6 +2224,12 @@ abstract class AppLocalizations {
   /// **'Clear Chat'**
   String get contact_clearChat;
 
+  /// No description provided for @contact_clearChatConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm chat clear'**
+  String get contact_clearChatConfirm;
+
   /// No description provided for @contact_teleBase.
   ///
   /// In en, this message translates to:

@@ -1190,6 +1190,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contact_clearChat => 'Очистити чат';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'Базова телеметрія';
 
   @override

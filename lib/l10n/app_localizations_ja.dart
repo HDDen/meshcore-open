@@ -1138,6 +1138,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contact_clearChat => 'チャットのクリア';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'テレメトリ基地';
 
   @override

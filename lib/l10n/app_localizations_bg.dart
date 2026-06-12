@@ -1197,6 +1197,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contact_clearChat => 'Изчисти чата';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'Базата данни за телеметрия';
 
   @override

@@ -1200,6 +1200,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contact_clearChat => 'Tiszta beszélgetés';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'Adatgyűjtő központ';
 
   @override

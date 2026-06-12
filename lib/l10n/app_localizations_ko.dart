@@ -1133,6 +1133,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contact_clearChat => '명확한 대화';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => '텔레메트리 기반';
 
   @override

@@ -518,11 +518,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           const RadioStatsIconButton(),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'clearChat') {
-                context.read<MeshCoreConnector>().clearMessagesForChannel(
-                  widget.channel.index,
-                );
+                final connector = context.read<MeshCoreConnector>();
+                final confirmed = await _confirmClearChat();
+                if (!confirmed || !mounted) return;
+                connector.clearMessagesForChannel(widget.channel.index);
               }
             },
             itemBuilder: (context) => [
@@ -1975,6 +1976,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (imagePayloadBytes != null) return imagePayloadBytes;
     if (!connector.isChannelMcmpEnabled(widget.channel.index)) return null;
     return ChannelBinaryDataHelper.mcmpPayloadLength(text, senderName);
+  }
+
+  Future<bool> _confirmClearChat() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            content: Text(context.l10n.contact_clearChatConfirm),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(context.l10n.common_cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(context.l10n.common_continue),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   String _byteCountPlaceholder(int bytes) => List.filled(bytes, 'x').join();

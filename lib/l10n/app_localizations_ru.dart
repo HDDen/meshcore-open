@@ -1196,6 +1196,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contact_clearChat => 'Очистить чат';
 
   @override
+  String get contact_clearChatConfirm => 'Удалить сообщения из чата?';
+
+  @override
   String get contact_teleBase => 'База телеметрии';
 
   @override

@@ -1194,6 +1194,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contact_clearChat => 'Chat löschen';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'Telemetriebasis';
 
   @override

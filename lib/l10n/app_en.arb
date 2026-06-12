@@ -545,6 +545,7 @@
   "contact_telemetry": "Telemetry",
   "contact_lastSeen": "Last seen",
   "contact_clearChat": "Clear Chat",
+  "contact_clearChatConfirm": "Confirm chat clear",
   "contact_teleBase": "Telemetry Base",
   "contact_teleBaseSubtitle": "Allow sharing battery level and basic telemetry",
   "contact_teleLoc": "Telemetry Location",

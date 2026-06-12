@@ -1177,6 +1177,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contact_clearChat => 'Rensa Chatt';
 
   @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
+
+  @override
   String get contact_teleBase => 'Telemetribas';
 
   @override

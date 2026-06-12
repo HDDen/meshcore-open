@@ -1289,6 +1289,7 @@
   "contact_settings": "Настройки контактов",
   "contact_telemetry": "Телеметрия",
   "contact_clearChat": "Очистить чат",
+  "contact_clearChatConfirm": "Удалить сообщения из чата?",
   "contact_lastSeen": "Последний раз видели",
   "contact_teleBaseSubtitle": "Разрешить обмен уровнем заряда батареи и базовой телеметрией",
   "appSettings_maxRouteWeight": "Максимальный допустимый вес маршрута",

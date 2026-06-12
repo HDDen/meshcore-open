@@ -3567,7 +3567,6 @@ class MeshCoreConnector extends ChangeNotifier {
     final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
       text: text,
       senderName: message.senderName,
-      timestamp: message.timestamp,
       mcmpEnabled: isChannelMcmpEnabled(channel.index),
     );
     await _runScopedChannelSend(() async {
@@ -5898,11 +5897,10 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     _lastChannelMsgRxTime = DateTime.now();
-    final timestampSecs = decoded.timestamp.millisecondsSinceEpoch ~/ 1000;
-    final contentHash = _computeContentHash(
+    final contentHash = _computeChannelDataHash(
       dataFrame.channelIndex,
-      timestampSecs,
-      '${decoded.senderName}: ${decoded.text}',
+      dataFrame.dataType,
+      dataFrame.payload,
     );
     final message = ChannelMessage(
       senderName: decoded.senderName,
@@ -6744,6 +6742,22 @@ class MeshCoreConnector extends ChangeNotifier {
     input.setRange(5, 5 + textBytes.length, textBytes);
     final digest = crypto.sha256.convert(input).bytes;
     return 'c:${digest.sublist(0, 8).map((b) => b.toRadixString(16).padLeft(2, '0')).join()}';
+  }
+
+  /// Binary channel data has no protocol timestamp, so deduplicate repeats by
+  /// the received channel, data type, and raw payload.
+  String _computeChannelDataHash(
+    int channelIdx,
+    int dataType,
+    Uint8List payload,
+  ) {
+    final input = Uint8List(3 + payload.length);
+    input[0] = channelIdx;
+    input[1] = dataType & 0xFF;
+    input[2] = (dataType >> 8) & 0xFF;
+    input.setRange(3, input.length, payload);
+    final digest = crypto.sha256.convert(input).bytes;
+    return 'd:${digest.sublist(0, 8).map((b) => b.toRadixString(16).padLeft(2, '0')).join()}';
   }
 
   Uint8List? _decryptPayload(Uint8List psk, Uint8List encrypted) {

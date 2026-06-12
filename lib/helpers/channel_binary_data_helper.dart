@@ -43,11 +43,8 @@ class ChannelBinaryDataHelper {
   // official channel binary transport.
   static bool enabled = true;
   static bool sendEnabled = false;
-  static const int dataType = 0xFFFF;
-
-  static const int _kindMcoImage = 1;
-  static const int _kindMcmp = 2;
-  static const List<int> _signature = [0x42, 0x30]; // B0
+  static const int mcoImageDataType = 0xFFF0;
+  static const int mcmpDataType = 0xFFF1;
 
   static bool get isAvailable => enabled;
   static bool get canSend => isAvailable && sendEnabled;
@@ -55,7 +52,6 @@ class ChannelBinaryDataHelper {
   static ChannelBinaryDataOutbound? tryEncodeOutbound({
     required String text,
     required String senderName,
-    required DateTime timestamp,
     required bool mcmpEnabled,
   }) {
     if (!canSend) return null;
@@ -65,10 +61,9 @@ class ChannelBinaryDataHelper {
       if (trimmedLeft.startsWith(MCOImageCodec.prefix)) {
         final imagePayload = MCOImageCodec.binaryPayloadFromText(trimmedLeft);
         return _encodeEnvelope(
-          kind: _kindMcoImage,
+          dataType: mcoImageDataType,
           body: imagePayload,
           senderName: senderName,
-          timestamp: timestamp,
         );
       }
 
@@ -82,10 +77,9 @@ class ChannelBinaryDataHelper {
       if (mcmpEnabled) {
         final compressed = MeshCompressor.instance.compressToBytes(text);
         return _encodeEnvelope(
-          kind: _kindMcmp,
+          dataType: mcmpDataType,
           body: compressed,
           senderName: senderName,
-          timestamp: timestamp,
         );
       }
     } catch (_) {
@@ -134,39 +128,34 @@ class ChannelBinaryDataHelper {
     required int dataType,
     required Uint8List payload,
   }) {
-    if (!enabled || dataType != ChannelBinaryDataHelper.dataType) return null;
+    if (!enabled) return null;
+    final kind = _kindForDataType(dataType);
+    if (kind == null) return null;
 
     try {
       final reader = _EnvelopeReader(payload);
-      if (!reader.readMagic(_signature)) return null;
-
-      final kind = reader.readByte();
-      final timestampSeconds = reader.readUint32LE();
       final senderNameLength = reader.readVarUint();
       final senderName = utf8.decode(reader.readBytes(senderNameLength));
       final body = reader.readRemainingBytes();
+      final timestamp = DateTime.now();
 
-      if (kind == _kindMcoImage) {
+      if (kind == ChannelBinaryDataKind.mcoImage) {
         final text = MCOImageCodec.textFromBinaryPayload(body);
         return ChannelBinaryDataInbound(
           senderName: senderName.isEmpty ? 'Unknown' : senderName,
           text: text,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(
-            timestampSeconds * 1000,
-          ),
+          timestamp: timestamp,
           wasMcmpCompressed: false,
           kind: ChannelBinaryDataKind.mcoImage,
         );
       }
 
-      if (kind == _kindMcmp) {
+      if (kind == ChannelBinaryDataKind.mcmp) {
         final text = MeshCompressor.instance.decompressBytes(body);
         return ChannelBinaryDataInbound(
           senderName: senderName.isEmpty ? 'Unknown' : senderName,
           text: text,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(
-            timestampSeconds * 1000,
-          ),
+          timestamp: timestamp,
           wasMcmpCompressed: true,
           kind: ChannelBinaryDataKind.mcmp,
         );
@@ -183,25 +172,18 @@ class ChannelBinaryDataHelper {
     required String senderName,
   }) {
     final senderNameBytes = utf8.encode(senderName);
-    return _signature.length +
-        1 + // kind
-        4 + // unix timestamp
-        _varUint(senderNameBytes.length).length +
+    return _varUint(senderNameBytes.length).length +
         senderNameBytes.length +
         bodyLength;
   }
 
   static ChannelBinaryDataOutbound? _encodeEnvelope({
-    required int kind,
+    required int dataType,
     required Uint8List body,
     required String senderName,
-    required DateTime timestamp,
   }) {
     final senderNameBytes = utf8.encode(senderName);
     final bytes = <int>[
-      ..._signature,
-      kind,
-      ..._uint32LE(timestamp.millisecondsSinceEpoch ~/ 1000),
       ..._varUint(senderNameBytes.length),
       ...senderNameBytes,
       ...body,
@@ -212,19 +194,16 @@ class ChannelBinaryDataHelper {
     return ChannelBinaryDataOutbound(
       dataType: dataType,
       payload: payload,
-      kind: kind == _kindMcoImage
-          ? ChannelBinaryDataKind.mcoImage
-          : ChannelBinaryDataKind.mcmp,
+      kind: _kindForDataType(dataType)!,
     );
   }
 
-  static List<int> _uint32LE(int value) {
-    return [
-      value & 0xFF,
-      (value >> 8) & 0xFF,
-      (value >> 16) & 0xFF,
-      (value >> 24) & 0xFF,
-    ];
+  static ChannelBinaryDataKind? _kindForDataType(int dataType) {
+    return switch (dataType) {
+      mcoImageDataType => ChannelBinaryDataKind.mcoImage,
+      mcmpDataType => ChannelBinaryDataKind.mcmp,
+      _ => null,
+    };
   }
 
   static List<int> _varUint(int value) {
@@ -246,29 +225,9 @@ class _EnvelopeReader {
 
   _EnvelopeReader(this._bytes);
 
-  bool readMagic(List<int> magic) {
-    if (_bytes.length < magic.length) return false;
-    for (var i = 0; i < magic.length; i++) {
-      if (_bytes[i] != magic[i]) return false;
-    }
-    _offset = magic.length;
-    return true;
-  }
-
   int readByte() {
     if (_offset >= _bytes.length) throw const FormatException('EOF');
     return _bytes[_offset++];
-  }
-
-  int readUint32LE() {
-    if (_offset + 4 > _bytes.length) throw const FormatException('EOF');
-    final value =
-        _bytes[_offset] |
-        (_bytes[_offset + 1] << 8) |
-        (_bytes[_offset + 2] << 16) |
-        (_bytes[_offset + 3] << 24);
-    _offset += 4;
-    return value;
   }
 
   int readVarUint() {

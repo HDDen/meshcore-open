@@ -342,7 +342,7 @@ class _ChatScreenState extends State<ChatScreen> {
             builder: (context, connector, _) {
               return PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
+                onSelected: (value) async {
                   if (value == 'info') {
                     _showContactInfo(context);
                   }
@@ -359,6 +359,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                   }
                   if (value == 'clearChat') {
+                    final confirmed = await _confirmClearChat();
+                    if (!confirmed || !mounted) return;
                     connector.clearMessagesForContact(widget.contact);
                   }
                 },
@@ -1844,6 +1846,26 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context) => ChannelMessagePathScreen(message: pathMessage),
       ),
     );
+  }
+
+  Future<bool> _confirmClearChat() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            content: Text(context.l10n.contact_clearChatConfirm),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(context.l10n.common_cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(context.l10n.common_continue),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _showMessageActions(Message message, Contact contact) {
