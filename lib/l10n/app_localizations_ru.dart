@@ -5136,5 +5136,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get chat_canvasSaveBinary => 'Сохранить в бинарный файл';
+
+  @override
   String get chat_showHops => 'Отображать хопы';
 }

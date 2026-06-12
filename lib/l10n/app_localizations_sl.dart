@@ -5094,5 +5094,8 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
+  String get chat_canvasSaveBinary => 'Save fo binary file';
+
+  @override
   String get chat_showHops => 'Show hops';
 }

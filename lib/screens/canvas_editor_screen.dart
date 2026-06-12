@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -356,6 +357,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   ),
                 ],
               ),
+              if (ChannelBinaryDataHelper.isAvailable) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _saveCanvasToBinary,
+                    icon: const Icon(Icons.data_object_outlined),
+                    label: Text(context.l10n.chat_canvasSaveBinary),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -2188,6 +2200,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final file = await file_selector.openFile(
         acceptedTypeGroups: const [
           file_selector.XTypeGroup(
+            label: 'MCO image binary',
+            extensions: ['bin'],
+            mimeTypes: ['application/octet-stream'],
+          ),
+          file_selector.XTypeGroup(
             label: 'Images',
             extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
             mimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/bmp'],
@@ -2197,6 +2214,24 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (file == null) return;
 
       final bytes = await file.readAsBytes();
+      if (file.name.toLowerCase().endsWith('.mcoimg.bin')) {
+        final image = _codec.decode(MCOImageCodec.textFromBinaryPayload(bytes));
+        if (!mounted) return;
+        _clearCanvasHistory();
+        setState(() {
+          _loadInitialImage(image);
+          _lineStartIndex = null;
+          _ovalFirstIndex = null;
+          _ovalSecondIndex = null;
+          _rectangleFirstIndex = null;
+          _rectangleSecondIndex = null;
+        });
+        _markPayloadDirty();
+        unawaited(_saveCanvasPalette(image.paletteProfile));
+        unawaited(_saveCanvasSize(image.width, image.height));
+        return;
+      }
+
       final importedImage = await _imageBytesToCanvasPixels(bytes);
       if (!mounted) return;
       _setControllerValue(_widthController, importedImage.width);
@@ -2456,6 +2491,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
+  Future<void> _saveCanvasToBinary() async {
+    try {
+      // Store the raw MCOimg payload, not the channel B0 transport envelope,
+      // so the file can be imported back into the editor directly.
+      final encoded = _encodeCanvas();
+      await MCOImageFileSaver.saveBinaryPayloadFromText(encoded.text);
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   Future<bool> _shareCanvasPngFallback() async {
     try {
       final bytes = await _renderCanvasPngBytes();
@@ -2511,22 +2562,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _sendCanvas() {
     try {
-      final encoded = _codec.encode(
-        MCOImage(
-          width: _width,
-          height: _height,
-          paletteProfile: _paletteProfile,
-          pixels: _pixels,
-          transparentColor: _supportsAlphaTransparency
-              ? _transparentColor
-              : null,
-          encodingVersion: _encodingVersion,
-        ),
-        backgroundColor: _supportsAlphaTransparency
-            ? (_transparentColor ?? _whiteIndex)
-            : _whiteIndex,
-        encodingVersion: _encodingVersion,
-      );
+      final encoded = _encodeCanvas();
       final payloadSize = _payloadSizeForEncoded(encoded);
       _currentPayloadChars = payloadSize;
       final overflow = payloadSize - _effectivePayloadLimit;
@@ -2547,6 +2583,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  EncodedMCOImage _encodeCanvas() {
+    return _codec.encode(
+      MCOImage(
+        width: _width,
+        height: _height,
+        paletteProfile: _paletteProfile,
+        pixels: _pixels,
+        transparentColor: _supportsAlphaTransparency ? _transparentColor : null,
+        encodingVersion: _encodingVersion,
+      ),
+      backgroundColor: _supportsAlphaTransparency
+          ? (_transparentColor ?? _whiteIndex)
+          : _whiteIndex,
+      encodingVersion: _encodingVersion,
+    );
   }
 
   String _paletteLabel(PaletteProfile profile) {

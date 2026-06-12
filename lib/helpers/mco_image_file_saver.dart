@@ -40,6 +40,47 @@ class MCOImageFileSaver {
     }
   }
 
+  static Future<bool> saveBinaryPayloadFromText(String text) async {
+    final payload = MCOImageCodec.binaryPayloadFromText(text.trimLeft());
+    return saveBinaryPayload(payload);
+  }
+
+  static Future<bool> saveBinaryPayload(Uint8List payload) async {
+    final fileName = _binaryFileName();
+    try {
+      final location = await file_selector.getSaveLocation(
+        suggestedName: fileName,
+        acceptedTypeGroups: const [
+          file_selector.XTypeGroup(
+            label: 'MCO image binary',
+            extensions: ['bin'],
+            mimeTypes: ['application/octet-stream'],
+          ),
+        ],
+      );
+      if (location == null) return false;
+      await XFile.fromData(
+        payload,
+        mimeType: 'application/octet-stream',
+        name: fileName,
+      ).saveTo(location.path);
+      return true;
+    } catch (_) {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(
+              payload,
+              mimeType: 'application/octet-stream',
+              name: fileName,
+            ),
+          ],
+        ),
+      );
+      return true;
+    }
+  }
+
   static Future<Uint8List> _renderOriginalPngBytes(MCOImage image) async {
     final rgba = Uint8List(image.width * image.height * 4);
     final palette = image.paletteProfile.isDynamic
@@ -99,5 +140,14 @@ class MCOImageFileSaver {
         .replaceAll(':', '-')
         .replaceAll('.', '-');
     return 'meshcore_canvas_$timestamp.png';
+  }
+
+  static String _binaryFileName() {
+    final timestamp = DateTime.now()
+        .toUtc()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .replaceAll('.', '-');
+    return 'meshcore_canvas_$timestamp.mcoimg.bin';
   }
 }

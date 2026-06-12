@@ -83,6 +83,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -157,6 +158,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -244,6 +246,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -331,6 +334,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -418,6 +422,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -585,6 +590,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -672,6 +678,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -759,6 +766,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -926,6 +934,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1013,6 +1022,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1180,6 +1190,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1267,6 +1278,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1354,6 +1366,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1521,6 +1534,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1608,6 +1622,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ],
 
@@ -1695,6 +1710,7 @@
     "chat_canvasShowLockBtn",
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
+    "chat_canvasSaveBinary",
     "chat_showHops"
   ]
 }

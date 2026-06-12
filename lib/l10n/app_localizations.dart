@@ -8740,6 +8740,12 @@ abstract class AppLocalizations {
   /// **'MCOimg format version: {received}, current codec supports up to {current}'**
   String chat_canvasFormatNotSupported(int received, int current);
 
+  /// No description provided for @chat_canvasSaveBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Save fo binary file'**
+  String get chat_canvasSaveBinary;
+
   /// No description provided for @chat_showHops.
   ///
   /// In en, this message translates to:

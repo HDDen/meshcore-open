@@ -2068,5 +2068,6 @@
   "chat_canvasShowLockBtn": "Отображать кнопку блокировки холста",
   "chat_canvasSendToEdit": "Отправить в холст",
   "chat_canvasFormatNotSupported": "Версия MCOimg: {received}, текущий кодек поддерживает до {current}",
+  "chat_canvasSaveBinary": "Сохранить в бинарный файл",
   "chat_showHops": "Отображать хопы"
 }

@@ -2901,5 +2901,6 @@
       }
     }
   },
+  "chat_canvasSaveBinary": "Save fo binary file",
   "chat_showHops": "Show hops"
 }

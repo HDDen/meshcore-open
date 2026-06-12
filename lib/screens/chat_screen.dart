@@ -13,6 +13,7 @@ import '../utils/platform_info.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
@@ -1905,6 +1906,15 @@ class _ChatScreenState extends State<ChatScreen> {
                       unawaited(_saveMcoImageMessage(mcoImage));
                     },
                   ),
+                if (mcoImage != null && ChannelBinaryDataHelper.isAvailable)
+                  ListTile(
+                    leading: const Icon(Icons.data_object_outlined),
+                    title: Text(context.l10n.chat_canvasSaveBinary),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageBinaryMessage(message.text));
+                    },
+                  ),
                 if (mcoImage != null && settings.canvasActive)
                   ListTile(
                     leading: const Icon(Icons.edit_outlined),
@@ -1999,6 +2009,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _saveMcoImageMessage(MCOImage image) async {
     try {
       await MCOImageFileSaver.savePng(image);
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _saveMcoImageBinaryMessage(String text) async {
+    try {
+      await MCOImageFileSaver.saveBinaryPayloadFromText(text);
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
