@@ -536,12 +536,13 @@
           <button id="trimEmpty" type="button" class="secondary">Trim empty</button>
           <button id="cropCanvas" type="button" class="secondary">Crop/Expand</button>
           <button id="resize" type="button">Resize scale</button>
-          <button id="loadImage" type="button" class="secondary">Load image</button>
+          <button id="loadImage" type="button" class="secondary">Load image/bin</button>
           <button id="savePng" type="button" class="secondary">Save PNG</button>
+          <button id="saveBinary" type="button" class="secondary">Save as binary</button>
           <button id="clear" type="button" class="secondary">Clear</button>
           <button id="sample" type="button" class="secondary">Sample</button>
         </div>
-        <input id="imageFile" type="file" accept="image/*" hidden>
+        <input id="imageFile" type="file" accept="image/*,.mcoimg.bin,application/octet-stream" hidden>
       </section>
 
       <section class="panel">
@@ -703,13 +704,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       });
 
       paletteSelect.addEventListener('change', () => {
-        state.paletteProfile = Number(paletteSelect.value);
-        const firstColor = paletteValueForProfileColorId(state.paletteProfile, 0);
-        state.selectedColor = firstColor;
-        state.transparentColor = null;
-        state.pickingTransparentColor = false;
-        state.paletteExpanded = false;
-        state.pixels = state.pixels.map(() => firstColor);
+        changePaletteProfile(Number(paletteSelect.value));
         renderAll();
       });
 
@@ -734,6 +729,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       });
       imageFileInput.addEventListener('change', loadImageFile);
       document.getElementById('savePng').addEventListener('click', savePng);
+      document.getElementById('saveBinary').addEventListener('click', saveBinary);
       imageFileInput.addEventListener('cancel', () => {
         console.log('[mcoimg-demo] file picker cancelled');
       });
@@ -815,6 +811,50 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     function profileColorIdForPaletteValue(profile, value) {
       if (!isDynamicProfile(profile)) return value;
       return DynamicGlobalIndices[profile].indexOf(value);
+    }
+
+    function colorValueToArgb(profile, value) {
+      const paletteIndex = profileColorIdForPaletteValue(profile, value);
+      const palette = getPalette(profile);
+      if (paletteIndex < 0 || paletteIndex >= palette.length) {
+        return palette[profileColorIdForPaletteValue(profile, whiteIndexFor(profile))] ?? 0xffffffff;
+      }
+      return palette[paletteIndex];
+    }
+
+    function mapColorBetweenPalettes(colorValue, oldProfile, newProfile) {
+      const rgba = argbToRgbaComponents(colorValueToArgb(oldProfile, colorValue));
+      const alpha = rgba.a / 255;
+      const red = Math.round(rgba.r * alpha + 255 * (1 - alpha));
+      const green = Math.round(rgba.g * alpha + 255 * (1 - alpha));
+      const blue = Math.round(rgba.b * alpha + 255 * (1 - alpha));
+      return nearestPaletteIndex(newProfile, red, green, blue);
+    }
+
+    function changePaletteProfile(nextProfile) {
+      if (nextProfile === state.paletteProfile) return;
+      const before = captureCanvasSnapshot();
+      const oldProfile = state.paletteProfile;
+      const nextPixels = state.pixels.map((pixel) =>
+        mapColorBetweenPalettes(pixel, oldProfile, nextProfile),
+      );
+      const nextSelectedColor = mapColorBetweenPalettes(
+        state.selectedColor,
+        oldProfile,
+        nextProfile,
+      );
+      const nextTransparentColor = state.transparentColor === null
+        ? null
+        : mapColorBetweenPalettes(state.transparentColor, oldProfile, nextProfile);
+
+      state.paletteProfile = nextProfile;
+      state.selectedColor = nextSelectedColor;
+      state.transparentColor = nextTransparentColor;
+      state.pickingTransparentColor = false;
+      state.paletteExpanded = false;
+      state.pixels = nextPixels;
+      clearPendingToolPoints();
+      rememberCanvasAction(before, captureCanvasSnapshot());
     }
 
     function selectedEncodingVersion() {
@@ -1607,6 +1647,37 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       }, 'image/png');
     }
 
+    function saveBinary() {
+      try {
+        const bytes = codec.encodeBytes({
+          width: state.width,
+          height: state.height,
+          paletteProfile: state.paletteProfile,
+          pixels: state.pixels,
+          transparentColor:
+            selectedEncodingVersion() === MCOImageEncodingVersion.v2
+              ? state.transparentColor
+              : null,
+          encodingVersion: selectedEncodingVersion(),
+        }, {
+          encodingVersion: selectedEncodingVersion(),
+        });
+        const blob = new Blob([bytes], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        link.href = url;
+        link.download = `mcoimg-canvas-${timestamp}.mcoimg.bin`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        encodedMeta.textContent = `Saved binary ${state.width}×${state.height}, ${bytes.length} bytes`;
+      } catch (error) {
+        encodedMeta.textContent = `Binary export failed: ${error.message}`;
+      }
+    }
+
     function setCanvasImporting(isImporting) {
       state.importingImage = isImporting;
       canvasLoadingOverlay.hidden = !isImporting;
@@ -1634,6 +1705,11 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       event.target.value = '';
       if (!file) return;
 
+      if (isMCOImageBinaryFile(file)) {
+        loadMCOImageBinaryFile(file);
+        return;
+      }
+
       const image = new Image();
       const objectUrl = URL.createObjectURL(file);
       console.log('[mcoimg-demo] object url created', objectUrl);
@@ -1658,6 +1734,36 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         encodedMeta.textContent = 'Image file could not be loaded';
       };
       image.src = objectUrl;
+    }
+
+    function isMCOImageBinaryFile(file) {
+      const name = file.name.toLowerCase();
+      const looksLikeImage = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+      return name.endsWith('.mcoimg.bin') || (!file.type.startsWith('image/') && !looksLikeImage);
+    }
+
+    async function loadMCOImageBinaryFile(file) {
+      console.log('[mcoimg-demo] loading mcoimg binary file', {
+        fileName: file.name,
+        fileSize: file.size,
+      });
+      setCanvasImporting(true);
+      try {
+        await nextPaintFrame();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const image = codec.decodeBytes(bytes);
+        applyDecodedImageToEditor(image);
+        encodedText.value = MCOImageCodec.prefix + window.MCOImg.base91Encode(bytes);
+        drawMCOImage(decodedCanvas, image, { scale: 12 });
+        renderAll();
+        renderBinaryInspector(encodedText.value);
+        encodedMeta.textContent = `Loaded binary ${image.width}×${image.height}, ${bytes.length} bytes`;
+      } catch (error) {
+        console.log('[mcoimg-demo] mcoimg binary import failed', error);
+        encodedMeta.textContent = `Binary import failed: ${error.message}`;
+      } finally {
+        setCanvasImporting(false);
+      }
     }
 
     function limitDynamicImportedColors(pixels, profile) {
@@ -2036,32 +2142,36 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     function decodeTextarea() {
       try {
         const image = codec.decode(encodedText.value.trim());
-        state.width = image.width;
-        state.height = image.height;
-        state.paletteProfile = image.paletteProfile;
-        state.encodingVersion = image.encodingVersion || MCOImageEncodingVersion.v1Legacy;
-        state.transparentColor =
-          state.encodingVersion === MCOImageEncodingVersion.v2
-            ? image.transparentColor
-            : null;
-        state.pickingTransparentColor = false;
-        state.paletteExpanded = false;
-        state.pixels = image.pixels.slice();
-        clearPendingToolPoints();
-        clearCanvasHistory();
-        state.selectedColor = blackIndexFor(state.paletteProfile);
-        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
-        heightInput.max = widthInput.max;
-        widthInput.value = String(state.width);
-        heightInput.value = String(state.height);
-        formatVersionSelect.value = String(state.encodingVersion);
-        renderPaletteOptions();
-        paletteSelect.value = String(state.paletteProfile);
+        applyDecodedImageToEditor(image);
         drawMCOImage(decodedCanvas, image, { scale: 12 });
         renderAll();
       } catch (error) {
         encodedMeta.textContent = error.message;
       }
+    }
+
+    function applyDecodedImageToEditor(image) {
+      state.width = image.width;
+      state.height = image.height;
+      state.paletteProfile = image.paletteProfile;
+      state.encodingVersion = image.encodingVersion || MCOImageEncodingVersion.v1Legacy;
+      state.transparentColor =
+        state.encodingVersion === MCOImageEncodingVersion.v2
+          ? image.transparentColor
+          : null;
+      state.pickingTransparentColor = false;
+      state.paletteExpanded = false;
+      state.pixels = image.pixels.slice();
+      clearPendingToolPoints();
+      clearCanvasHistory();
+      state.selectedColor = blackIndexFor(state.paletteProfile);
+      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+      heightInput.max = widthInput.max;
+      widthInput.value = String(state.width);
+      heightInput.value = String(state.height);
+      formatVersionSelect.value = String(state.encodingVersion);
+      renderPaletteOptions();
+      paletteSelect.value = String(state.paletteProfile);
     }
 
     function plotLineInto(pixels, fromX, fromY, toX, toY) {

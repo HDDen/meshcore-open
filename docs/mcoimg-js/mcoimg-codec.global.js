@@ -638,6 +638,7 @@
     const text = `${MCOImageCodec.prefix}${base91Encode(payload)}`;
     const bounds = options.bounds;
     return {
+      payload: payload.slice(),
       text,
       mode,
       modeName: ImageModeName[mode],
@@ -2295,14 +2296,16 @@
   }
 
   function candidateFromV2Payload(payload, mode, scan, options = {}) {
+    const text = MCOImageCodec.prefix + base91Encode(payload);
     return {
-      text: MCOImageCodec.prefix + base91Encode(payload),
+      payload: payload.slice(),
+      text,
       mode,
       modeName: ImageModeName[mode],
       scan,
       scanName: ScanModeName[scan],
       byteLength: payload.length,
-      charLength: MCOImageCodec.prefix.length + base91Encode(payload).length,
+      charLength: text.length,
       boundsPresent: options.bounds != null,
       boundsX: options.bounds && options.bounds.x,
       boundsY: options.bounds && options.bounds.y,
@@ -2679,6 +2682,11 @@
     return diagnostics.result;
   };
 
+  MCOImageCodec.prototype.encodeBytes = function(imageLike, options = {}) {
+    const encoded = this.encode(imageLike, options);
+    return new Uint8Array(encoded.payload || base91Decode(encoded.text.slice(MCOImageCodec.prefix.length)));
+  };
+
   MCOImageCodec.prototype.decode = function(text) {
     if (!text.startsWith(MCOImageCodec.prefix)) throw new MCOImageInvalidPayloadError('Missing im: prefix');
     const bytes = base91Decode(text.slice(MCOImageCodec.prefix.length));
@@ -2693,6 +2701,11 @@
     image.encodingVersion = MCOImageEncodingVersion.v1Legacy;
     image.transparentColor = null;
     return image;
+  };
+
+  MCOImageCodec.prototype.decodeBytes = function(bytes) {
+    const payload = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    return this.decode(MCOImageCodec.prefix + base91Encode(payload));
   };
 
   // Replace palette helpers with v2-aware variants for exported consumers.
