@@ -79,6 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textController = TextEditingController();
   final _scrollController = ChatScrollController();
   final _textFieldFocusNode = FocusNode();
+  final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
@@ -183,6 +184,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _connector?.setActiveContact(null);
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
+    _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
@@ -191,14 +193,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: PlatformInfo.isDesktop
-          ? <ShortcutActivator, VoidCallback>{
-              const SingleActivator(LogicalKeyboardKey.escape): () {
-                unawaited(_handleEscapeNavigation());
-              },
-            }
-          : const <ShortcutActivator, VoidCallback>{},
+    return Focus(
+      focusNode: _screenFocusNode,
+      autofocus: PlatformInfo.isDesktop,
+      onKeyEvent: (node, event) {
+        if (!PlatformInfo.isDesktop ||
+            event is! KeyDownEvent ||
+            event.logicalKey != LogicalKeyboardKey.escape) {
+          return KeyEventResult.ignored;
+        }
+        unawaited(_handleEscapeNavigation());
+        return KeyEventResult.handled;
+      },
       child: Scaffold(
         appBar: AppBar(
         title: Consumer2<PathHistoryService, MeshCoreConnector>(

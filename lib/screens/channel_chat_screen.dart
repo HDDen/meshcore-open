@@ -75,6 +75,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ChatScrollController _scrollController = ChatScrollController();
   final FocusNode _textFieldFocusNode = FocusNode();
+  final FocusNode _screenFocusNode = FocusNode();
   ChannelMessage? _replyingToMessage;
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
@@ -84,6 +85,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Region region = '';
   String? _highlightedMessageId;
   int _highlightSequence = 0;
+  String? _replyReturnMessageId;
 
   MeshCoreConnector? _connector;
   DateTime? _lastChannelSendAt;
@@ -201,6 +203,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _connector?.setActiveChannel(null);
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
+    _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
@@ -354,7 +357,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return null;
   }
 
-  Future<void> _scrollToMessage(
+  Future<bool> _scrollToMessage(
     String messageId, {
     bool highlightOnSuccess = false,
   }) async {
@@ -363,7 +366,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         context.l10n.chat_originalMessageNotFound;
     final targetContext = await _materializeMessageContext(messageId);
 
-    if (!mounted) return;
+    if (!mounted) return false;
 
     if (targetContext == null) {
       messenger.showSnackBar(
@@ -377,11 +380,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           clipBehavior: Clip.hardEdge,
         ),
       );
-      return;
+      return false;
     }
 
     if (!targetContext.mounted) {
-      return;
+      return false;
     }
 
     Scrollable.ensureVisible(
@@ -393,6 +396,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (highlightOnSuccess) {
       _highlightMessage(messageId);
     }
+    return true;
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
@@ -418,7 +422,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return;
     }
 
-    await _scrollToMessage(resolvedMessageId, highlightOnSuccess: true);
+    final didScroll = await _scrollToMessage(
+      resolvedMessageId,
+      highlightOnSuccess: true,
+    );
+    if (!mounted || !didScroll || resolvedMessageId == reply.messageId) return;
+
+    // Escape returns from the quoted message back to the bubble that opened it.
+    _replyReturnMessageId = reply.messageId;
+    _screenFocusNode.requestFocus();
   }
 
   Widget _channelIcon(Channel channel) {
@@ -473,14 +485,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: PlatformInfo.isDesktop
-          ? <ShortcutActivator, VoidCallback>{
-              const SingleActivator(LogicalKeyboardKey.escape): () {
-                unawaited(_handleEscapeNavigation());
-              },
-            }
-          : const <ShortcutActivator, VoidCallback>{},
+    return Focus(
+      focusNode: _screenFocusNode,
+      autofocus: PlatformInfo.isDesktop,
+      onKeyEvent: (node, event) {
+        if (!PlatformInfo.isDesktop ||
+            event is! KeyDownEvent ||
+            event.logicalKey != LogicalKeyboardKey.escape) {
+          return KeyEventResult.ignored;
+        }
+        unawaited(_handleEscapeNavigation());
+        return KeyEventResult.handled;
+      },
       child: Scaffold(
         appBar: AppBar(
         title: GestureDetector(
@@ -721,6 +737,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _handleEscapeNavigation() async {
+    final returnMessageId = _replyReturnMessageId;
+    if (returnMessageId != null) {
+      _replyReturnMessageId = null;
+      final didReturn = await _scrollToMessage(
+        returnMessageId,
+        highlightOnSuccess: true,
+      );
+      if (didReturn || !mounted) return;
+    }
+
     final navigator = Navigator.of(context);
     final didPop = await navigator.maybePop();
     if (!mounted || didPop) return;
