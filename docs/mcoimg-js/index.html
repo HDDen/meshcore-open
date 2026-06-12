@@ -325,6 +325,92 @@
       font-size: 13px;
     }
 
+    .binary-inspector {
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .binary-summary {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hex-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: Canvas;
+      padding: 10px;
+      font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      word-break: break-word;
+    }
+
+    .hex-block {
+      display: inline;
+      border-radius: 5px;
+      padding: 2px 5px;
+      color: CanvasText;
+      white-space: normal;
+    }
+
+    .hex-header {
+      background: color-mix(in srgb, #60a5fa 34%, transparent);
+    }
+
+    .hex-transparent {
+      background: color-mix(in srgb, #f472b6 34%, transparent);
+    }
+
+    .hex-bounds {
+      background: color-mix(in srgb, #f59e0b 34%, transparent);
+    }
+
+    .hex-palette {
+      background: color-mix(in srgb, #34d399 34%, transparent);
+    }
+
+    .hex-control {
+      background: color-mix(in srgb, #a78bfa 34%, transparent);
+    }
+
+    .hex-body {
+      background: color-mix(in srgb, #9ca3af 30%, transparent);
+    }
+
+    .hex-regions {
+      background: color-mix(in srgb, #fb7185 34%, transparent);
+    }
+
+    .hex-unknown {
+      background: color-mix(in srgb, CanvasText 14%, transparent);
+    }
+
+    .hex-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hex-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hex-legend-chip {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      flex: 0 0 auto;
+    }
+
     pre {
       overflow: auto;
       margin: 0;
@@ -467,6 +553,13 @@
 
         <h2 class="section-title" style="margin-top: 22px;">Decoded preview</h2>
         <canvas id="decoded" class="checkerboard"></canvas>
+
+        <div class="binary-inspector" aria-label="Binary hex view">
+          <h2 class="section-title" style="margin-top: 8px;">Binary hex view</h2>
+          <div id="binarySummary" class="binary-summary"></div>
+          <div id="binaryHex" class="hex-strip"></div>
+          <div id="binaryLegend" class="hex-legend"></div>
+        </div>
       </section>
     </div>
 
@@ -510,6 +603,10 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       argbToCss,
       drawMCOImage,
       nearestPaletteIndex,
+      base91Decode,
+      ImageModeName,
+      ScanModeName,
+      DynamicPaletteReferenceEncodingName,
     } = window.MCOImg;
 
     const codec = new MCOImageCodec();
@@ -522,6 +619,9 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     const encodedText = document.getElementById('encoded');
     const selectedColorText = document.getElementById('selectedColor');
     const encodedMeta = document.getElementById('encodedMeta');
+    const binarySummary = document.getElementById('binarySummary');
+    const binaryHex = document.getElementById('binaryHex');
+    const binaryLegend = document.getElementById('binaryLegend');
     const widthInput = document.getElementById('width');
     const heightInput = document.getElementById('height');
     const imageFileInput = document.getElementById('imageFile');
@@ -1113,6 +1213,347 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       };
     }
 
+    function byteToHex(byte) {
+      return Number(byte).toString(16).padStart(2, '0');
+    }
+
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(byteToHex).join(' ');
+    }
+
+    function bitsForChoiceCount(count) {
+      if (count <= 1) return 1;
+      return Math.ceil(Math.log2(count));
+    }
+
+    function colorRefBitsForProfile(profile) {
+      if (isDynamicProfile(profile)) {
+        return bitsForChoiceCount(DynamicGlobalIndices[profile].length);
+      }
+      return bitsForChoiceCount(getPalette(profile).length);
+    }
+
+    class InspectorBitReader {
+      constructor(bytes, byteIndex = 0) {
+        this.bytes = bytes;
+        this.byteIndex = byteIndex;
+        this.bitOffset = 0;
+      }
+
+      position() {
+        return { byteIndex: this.byteIndex, bitOffset: this.bitOffset };
+      }
+
+      byteEnd() {
+        return this.bitOffset === 0 ? this.byteIndex : this.byteIndex + 1;
+      }
+
+      readBits(bitCount) {
+        let result = 0;
+        let shift = 0;
+        let remaining = bitCount;
+        while (remaining > 0) {
+          if (this.byteIndex >= this.bytes.length) {
+            throw new Error('Unexpected end of binary payload');
+          }
+          const available = 8 - this.bitOffset;
+          const take = Math.min(remaining, available);
+          const mask = (1 << take) - 1;
+          result |= ((this.bytes[this.byteIndex] >> this.bitOffset) & mask) << shift;
+          this.bitOffset += take;
+          if (this.bitOffset === 8) {
+            this.bitOffset = 0;
+            this.byteIndex++;
+          }
+          shift += take;
+          remaining -= take;
+        }
+        return result;
+      }
+
+      readBitVarUint(maxBytes = 5) {
+        let result = 0;
+        let shift = 0;
+        for (let i = 0; i < maxBytes; i++) {
+          const byte = this.readBits(8);
+          result |= (byte & 0x7f) << shift;
+          if ((byte & 0x80) === 0) return result;
+          shift += 7;
+        }
+        throw new Error('Binary inspector varuint is too long');
+      }
+
+      alignToByte() {
+        if (this.bitOffset !== 0) {
+          this.bitOffset = 0;
+          this.byteIndex++;
+        }
+      }
+    }
+
+    function semanticByteEnd(reader) {
+      return Math.min(reader.byteEnd(), reader.bytes.length);
+    }
+
+    function readInspectorColorRef(reader, profile) {
+      return reader.readBits(colorRefBitsForProfile(profile));
+    }
+
+    function readInspectorV2Bounds(reader) {
+      reader.readBitVarUint();
+      reader.readBitVarUint();
+      reader.readBitVarUint();
+      reader.readBitVarUint();
+    }
+
+    function modeNameForBits(modeBits) {
+      return ImageModeName?.[modeBits] || `mode ${modeBits}`;
+    }
+
+    function scanNameForBits(scanBits) {
+      return ScanModeName?.[scanBits] || `scan ${scanBits}`;
+    }
+
+    function referenceNameForBits(refBits) {
+      return DynamicPaletteReferenceEncodingName?.[refBits] || `ref ${refBits}`;
+    }
+
+    function parseBinarySegments(bytes, encodedTextValue) {
+      const segments = [];
+      const details = [];
+      if (!bytes || bytes.length === 0) {
+        return { segments, details, summary: 'No binary payload' };
+      }
+
+      const addSegment = (start, end, label, cssClass, description) => {
+        const safeStart = Math.max(0, Math.min(bytes.length, start));
+        const safeEnd = Math.max(safeStart, Math.min(bytes.length, end));
+        if (safeEnd <= safeStart) return;
+        segments.push({ start: safeStart, end: safeEnd, label, cssClass, description });
+      };
+
+      addSegment(0, Math.min(4, bytes.length), 'Header', 'hex-header', 'Version, mode, scan, palette/profile, size');
+      if (bytes.length < 4) {
+        return {
+          segments,
+          details,
+          summary: `${bytes.length} decoded bytes; payload is shorter than header`,
+        };
+      }
+
+      let decodedImage = null;
+      try {
+        decodedImage = codec.decode(encodedTextValue);
+      } catch (_) {
+        decodedImage = null;
+      }
+
+      const byte0 = bytes[0];
+      const byte1 = bytes[1];
+      const version = (byte0 >> 6) & 0x03;
+      const profile = decodedImage?.paletteProfile ?? state.paletteProfile;
+      const width = bytes[2] + 1;
+      const height = bytes[3] + 1;
+
+      if (version === MCOImageEncodingVersion.v2) {
+        const modeBits = (byte0 >> 3) & 0x07;
+        const scanBits = (byte0 >> 1) & 0x03;
+        const boundsPresent = (byte0 & 0x01) !== 0;
+        const paletteKind = (byte1 >> 7) & 0x01;
+        const container = (byte1 >> 6) & 0x01;
+        const referenceEncoding = (byte1 >> 5) & 0x01;
+        const hasTransparentColor = (byte1 & 0x10) !== 0;
+
+        details.push(`version v2`);
+        details.push(`${width}×${height}`);
+        details.push(`${container === 1 ? 'regions' : 'block'} container`);
+        details.push(`${modeNameForBits(modeBits)} / ${scanNameForBits(scanBits)}`);
+        details.push(`${paletteKind === 1 ? 'dynamic' : 'fixed'} palette`);
+        if (paletteKind === 1) details.push(referenceNameForBits(referenceEncoding));
+        if (hasTransparentColor) details.push('transparent color');
+
+        const reader = new InspectorBitReader(bytes, 4);
+
+        if (hasTransparentColor) {
+          const start = reader.byteIndex;
+          readInspectorColorRef(reader, profile);
+          addSegment(start, semanticByteEnd(reader), 'Transparent', 'hex-transparent', 'Optional v2 transparent color reference');
+        }
+
+        if (boundsPresent) {
+          const start = reader.byteIndex;
+          readInspectorColorRef(reader, profile);
+          readInspectorV2Bounds(reader);
+          addSegment(start, semanticByteEnd(reader), 'Bounds', 'hex-bounds', 'Background color and cropped bounds');
+        }
+
+        reader.alignToByte();
+        const blockStart = reader.byteIndex;
+
+        if (container === 1) {
+          addSegment(blockStart, bytes.length, 'Regions', 'hex-regions', 'Regions container body');
+        } else {
+          const modeName = modeNameForBits(modeBits);
+          if (modeName === 'rawGlobal') {
+            addSegment(blockStart, bytes.length, 'Image body', 'hex-body', 'RAW_GLOBAL bit-packed global pixels');
+          } else if (modeName === 'biColorMask') {
+            const start = reader.byteIndex;
+            if (!boundsPresent) {
+              readInspectorColorRef(reader, profile);
+            }
+            readInspectorColorRef(reader, profile);
+            addSegment(start, semanticByteEnd(reader), 'Mode/color refs', 'hex-control', 'BI_COLOR_MASK background/foreground color references');
+            addSegment(semanticByteEnd(reader), bytes.length, 'Image body', 'hex-body', 'BI_COLOR_MASK bitmap');
+          } else {
+            const paletteStart = reader.byteIndex;
+            try {
+              if (isDynamicProfile(profile)) {
+                const localPaletteLength = reader.readBitVarUint();
+                const localBits = bitsForChoiceCount(DynamicGlobalIndices[profile].length);
+                for (let i = 0; i < localPaletteLength; i++) {
+                  reader.readBits(localBits);
+                }
+              } else if (modeName === 'sparseBg') {
+                if (!boundsPresent) {
+                  readInspectorColorRef(reader, profile);
+                }
+                const localPaletteLength = reader.readBitVarUint();
+                const localBits = colorRefBitsForProfile(profile);
+                for (let i = 0; i < localPaletteLength; i++) {
+                  readInspectorColorRef(reader, profile);
+                }
+              } else {
+                const localPaletteLength = reader.readBitVarUint();
+                for (let i = 0; i < localPaletteLength; i++) {
+                  readInspectorColorRef(reader, profile);
+                }
+              }
+              const paletteEnd = semanticByteEnd(reader);
+              addSegment(paletteStart, paletteEnd, 'Palette', 'hex-palette', 'Local palette / mode color references');
+
+              const controlStart = reader.byteIndex;
+              if (modeName === 'rowDelta') {
+                reader.readBits(1); // useVirtualBaseRow
+                reader.readBits(1); // allowShiftPredictors
+                addSegment(controlStart, semanticByteEnd(reader), 'Mode flags', 'hex-control', 'ROW_DELTA virtual-base and shift-predictor flags');
+              } else if (modeName === 'rleLocal' || modeName === 'sparseBg') {
+                reader.readBitVarUint();
+                addSegment(controlStart, semanticByteEnd(reader), 'Mode count', 'hex-control', `${modeName} run/segment count`);
+              }
+
+              addSegment(semanticByteEnd(reader), bytes.length, 'Image body', 'hex-body', `${modeName} encoded image body`);
+            } catch (error) {
+              addSegment(blockStart, bytes.length, 'Payload body', 'hex-body', `Body parser stopped: ${error.message}`);
+            }
+          }
+        }
+
+        return {
+          segments,
+          details,
+          summary: `${bytes.length} decoded bytes; ${details.join(', ')}`,
+        };
+      }
+
+      // Legacy v1/v0 fallback: byte-level grouping is intentionally coarse.
+      details.push(`legacy v${version}`);
+      details.push(`${width}×${height}`);
+      details.push(`${modeNameForBits((byte0 >> 4) & 0x03)} / ${scanNameForBits((byte0 >> 2) & 0x03)}`);
+      addSegment(4, bytes.length, 'Legacy body', 'hex-body', 'Legacy v1/v0 payload body');
+      return {
+        segments,
+        details,
+        summary: `${bytes.length} decoded bytes; ${details.join(', ')}`,
+      };
+    }
+
+    function normalizeSegments(segments, byteLength) {
+      const sorted = segments
+        .slice()
+        .sort((a, b) => a.start - b.start || b.end - a.end);
+      const result = [];
+      let cursor = 0;
+      for (const segment of sorted) {
+        if (segment.start > cursor) {
+          result.push({
+            start: cursor,
+            end: segment.start,
+            label: 'Other',
+            cssClass: 'hex-unknown',
+            description: 'Unclassified bytes',
+          });
+        }
+        const start = Math.max(cursor, segment.start);
+        const end = Math.max(start, segment.end);
+        if (end > start) {
+          result.push({ ...segment, start, end });
+          cursor = end;
+        }
+      }
+      if (cursor < byteLength) {
+        result.push({
+          start: cursor,
+          end: byteLength,
+          label: 'Other',
+          cssClass: 'hex-unknown',
+          description: 'Unclassified bytes',
+        });
+      }
+      return result;
+    }
+
+    function renderBinaryInspector(encodedTextValue) {
+      try {
+        const text = encodedTextValue.trim();
+        if (!text) {
+          binarySummary.textContent = 'No encoded payload yet.';
+          binaryHex.textContent = '';
+          binaryLegend.textContent = '';
+          return;
+        }
+
+        const prefix = 'im:';
+        const bytes = Array.from(base91Decode(text.startsWith(prefix) ? text.slice(prefix.length) : text));
+        const parsed = parseBinarySegments(bytes, text);
+        const segments = normalizeSegments(parsed.segments, bytes.length);
+
+        binarySummary.textContent = parsed.summary;
+        binaryHex.textContent = '';
+        binaryLegend.textContent = '';
+
+        for (const segment of segments) {
+          const span = document.createElement('span');
+          span.className = `hex-block ${segment.cssClass}`;
+          span.title = `${segment.label}: bytes ${segment.start}..${segment.end - 1}`;
+          span.textContent = bytesToHex(bytes.slice(segment.start, segment.end));
+          binaryHex.appendChild(span);
+        }
+
+        const seen = new Set();
+        for (const segment of segments) {
+          const key = segment.cssClass;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          const item = document.createElement('span');
+          item.className = 'hex-legend-item';
+
+          const chip = document.createElement('span');
+          chip.className = `hex-legend-chip ${segment.cssClass}`;
+
+          const label = document.createElement('span');
+          label.textContent = `${segment.label}: ${segment.description}`;
+
+          item.append(chip, label);
+          binaryLegend.appendChild(item);
+        }
+      } catch (error) {
+        binarySummary.textContent = `Binary inspector error: ${error.message}`;
+        binaryHex.textContent = '';
+        binaryLegend.textContent = '';
+      }
+    }
+
     function savePng() {
       const exportCanvas = document.createElement('canvas');
       exportCanvas.width = state.width;
@@ -1585,8 +2026,10 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
           (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
         drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
+        renderBinaryInspector(encoded.text);
       } catch (error) {
         encodedMeta.textContent = error.message;
+        renderBinaryInspector(encodedText.value);
       }
     }
 
