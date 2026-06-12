@@ -172,6 +172,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
             ),
             if (outgoingRadioWaitLabel != null)
               _buildDetailRow(
+                context,
                 l10n.channelPath_outgoingSentByRadioAt,
                 outgoingRadioWaitLabel,
               ),

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
@@ -28,14 +27,11 @@ import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
-import '../models/path_history.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
-import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
-import '../widgets/elements_ui.dart';
 import '../widgets/byte_count_input.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
@@ -206,8 +202,8 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-        title: Consumer2<PathHistoryService, MeshCoreConnector>(
-          builder: (context, pathService, connector, _) {
+          title: Consumer<MeshCoreConnector>(
+          builder: (context, connector, _) {
             final contact = _resolveContact(connector);
             final unreadCount = connector.getUnreadCountForContactKey(
               widget.contact.publicKeyHex,
@@ -226,9 +222,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 Text(contact.name),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: hasPathData
-                      ? () => _showFullPathDialog(context, effectivePath)
-                      : null,
+                  onTap: () => ContactRoutingSheet.show(
+                    context,
+                    contact: contact,
+                  ),
                   child: Text(
                     '$pathLabel • $unreadLabel',
                     overflow: TextOverflow.ellipsis,
@@ -251,108 +248,15 @@ class _ChatScreenState extends State<ChatScreen> {
             builder: (context, connector, _) {
               final contact = _resolveContact(connector);
               final isFloodMode = contact.pathOverride == -1;
-
-              final isDirectMode = contact.pathOverride == 0;
-              final activeMode = isFloodMode
-                  ? 'flood'
-                  : isDirectMode
-                  ? 'direct'
-                  : 'auto';
-
-              return PopupMenuButton<String>(
+              return IconButton(
                 icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-                tooltip: context.l10n.chat_routingMode,
-                onSelected: (mode) async {
-                  if (mode == 'flood') {
-                    await connector.setPathOverride(contact, pathLen: -1);
-                  } else if (mode == 'direct') {
-                    await connector.setPathOverride(
-                      contact,
-                      pathLen: 0,
-                      pathBytes: Uint8List(0),
-                    );
-                  } else {
-                    await connector.setPathOverride(contact, pathLen: null);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'auto',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.auto_mode,
-                          size: 20,
-                          color: activeMode == 'auto'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_autoUseSavedPath,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'auto'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'direct',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.near_me,
-                          size: 20,
-                          color: activeMode == 'direct'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_direct,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'direct'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'flood',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.waves,
-                          size: 20,
-                          color: activeMode == 'flood'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_forceFloodMode,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'flood'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                tooltip: context.l10n.repeater_routingMode,
+                onPressed: () => ContactRoutingSheet.show(
+                  context,
+                  contact: contact,
+                ),
               );
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: context.l10n.chat_pathManagement,
-            onPressed: () => _showPathHistory(context),
           ),
           const RadioStatsIconButton(),
           Consumer<MeshCoreConnector>(
@@ -967,399 +871,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return limit;
   }
 
-  void _showPathHistory(BuildContext context) {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    bool showAllPaths = false;
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Consumer<PathHistoryService>(
-          builder: (context, pathService, _) {
-            final paths = pathService.getRecentPaths(
-              widget.contact.publicKeyHex,
-            );
-
-            final repeatersList = List.of(connector.directRepeaters)
-              ..sort((a, b) => b.ranking.compareTo(a.ranking));
-
-            if (repeatersList.isEmpty) {
-              showAllPaths = true;
-            }
-
-            final directRepeater = repeatersList.isEmpty
-                ? null
-                : repeatersList.first;
-            final secondDirectRepeater = repeatersList.length < 2
-                ? null
-                : repeatersList.elementAt(1);
-            final thirdDirectRepeater = repeatersList.length < 3
-                ? null
-                : repeatersList.elementAt(2);
-
-            List<MapEntry<int, MapEntry<Color, PathRecord>>>
-            pathsWithRepeaters = paths.map((path) {
-              final isDirectRepeater =
-                  directRepeater != null &&
-                  directRepeater.matchesPathStart(
-                    path.pathBytes,
-                    connector.pathHashByteWidth,
-                  );
-              final isSecondDirectRepeater =
-                  secondDirectRepeater != null &&
-                  secondDirectRepeater.matchesPathStart(
-                    path.pathBytes,
-                    connector.pathHashByteWidth,
-                  );
-              final isThirdDirectRepeater =
-                  thirdDirectRepeater != null &&
-                  thirdDirectRepeater.matchesPathStart(
-                    path.pathBytes,
-                    connector.pathHashByteWidth,
-                  );
-
-              int ranking = -1;
-              Color color = Colors.grey;
-              if (isDirectRepeater) {
-                color = Colors.green;
-                ranking = 3;
-              } else if (isSecondDirectRepeater) {
-                color = Colors.yellow;
-                ranking = 2;
-              } else if (isThirdDirectRepeater) {
-                color = Colors.red;
-                ranking = 1;
-              } else if (path.wasFloodDiscovery) {
-                color = Colors.blue;
-                ranking = 0;
-              }
-
-              return MapEntry(ranking, MapEntry(color, path));
-            }).toList();
-
-            pathsWithRepeaters.sort((a, b) => b.key.compareTo(a.key));
-
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.timeline),
-                  const SizedBox(width: 8),
-                  Text(context.l10n.chat_pathManagement),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (pathsWithRepeaters.isNotEmpty) ...[
-                      if (repeatersList.isNotEmpty)
-                        FeatureToggleRow(
-                          title: context.l10n.chat_ShowAllPaths,
-                          subtitle: "",
-                          value: showAllPaths,
-                          onChanged: (val) {
-                            setDialogState(() {
-                              showAllPaths = val;
-                            });
-                          },
-                        ),
-                      Text(
-                        context.l10n.chat_recentAckPaths,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (pathsWithRepeaters.length >= 100) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            context.l10n.chat_pathHistoryFull,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      ...pathsWithRepeaters.map((entry) {
-                        final path = entry.value.value;
-                        final color = entry.value.key;
-                        if (!showAllPaths && entry.key < 1) {
-                          return const SizedBox.shrink();
-                        } else {
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              dense: true,
-                              leading: CircleAvatar(
-                                radius: 16,
-                                backgroundColor: color,
-                                child: Text(
-                                  '${path.hopCount}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              title: Text(
-                                '${path.hopCount} ${path.hopCount == 1 ? context.l10n.chat_hopSingular : context.l10n.chat_hopPlural}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                '${(path.tripTimeMs / 1000).toStringAsFixed(2)}s • ${_formatRelativeTime(path.timestamp)} • ${path.successCount} ${context.l10n.chat_successes}',
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.close, size: 16),
-                                    tooltip: context.l10n.chat_removePath,
-                                    onPressed: () async {
-                                      await pathService.removePathRecord(
-                                        widget.contact.publicKeyHex,
-                                        path.pathBytes,
-                                      );
-                                    },
-                                  ),
-                                  path.wasFloodDiscovery
-                                      ? const Icon(
-                                          Icons.waves,
-                                          size: 16,
-                                          color: Colors.grey,
-                                        )
-                                      : const Icon(
-                                          Icons.route,
-                                          size: 16,
-                                          color: Colors.grey,
-                                        ),
-                                ],
-                              ),
-                              onLongPress: () =>
-                                  _showFullPathDialog(context, path.pathBytes),
-                              onTap: () async {
-                                if (path.pathBytes.isEmpty) {
-                                  showDismissibleSnackBar(
-                                    context,
-                                    content: Text(
-                                      context.l10n.chat_pathDetailsNotAvailable,
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  );
-                                  return;
-                                }
-
-                                final pathBytes = Uint8List.fromList(
-                                  path.pathBytes,
-                                );
-                                // Set the path override to persist user's choice
-                                await connector.setPathOverride(
-                                  _resolveContact(connector),
-                                  pathLen: path.hopCount,
-                                  pathBytes: pathBytes,
-                                );
-
-                                if (!context.mounted) return;
-                                Navigator.pop(context);
-                                await _notifyPathSet(
-                                  connector,
-                                  _resolveContact(connector),
-                                  pathBytes,
-                                  path.hopCount,
-                                );
-                              },
-                            ),
-                          );
-                        }
-                      }),
-                      const Divider(),
-                    ] else ...[
-                      Text(context.l10n.chat_noPathHistoryYet),
-                      const Divider(),
-                    ],
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.chat_pathActions,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.purple,
-                        child: Icon(Icons.edit_road, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_setCustomPath,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_setCustomPathSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showCustomPathDialog(context);
-                      },
-                    ),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.orange,
-                        child: Icon(Icons.clear_all, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_clearPath,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_clearPathSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () async {
-                        await connector.clearContactPath(
-                          _resolveContact(connector),
-                        );
-                        if (!context.mounted) return;
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(context.l10n.chat_pathCleared),
-                          duration: const Duration(seconds: 2),
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.blue,
-                        child: Icon(Icons.waves, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_forceFloodMode,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_floodModeSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () async {
-                        await connector.setPathOverride(
-                          _resolveContact(connector),
-                          pathLen: -1,
-                        );
-                        if (!context.mounted) return;
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(context.l10n.chat_floodModeEnabled),
-                          duration: const Duration(seconds: 2),
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(context.l10n.common_close),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  String _formatRelativeTime(DateTime? time) {
-    if (time == null) return '—';
-    final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return context.l10n.time_justNow;
-    if (diff.inMinutes < 60) {
-      return context.l10n.time_minutesAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) return context.l10n.time_hoursAgo(diff.inHours);
-    return context.l10n.time_daysAgo(diff.inDays);
-  }
-
-  void _showFullPathDialog(BuildContext context, List<int> pathBytes) {
-    if (pathBytes.isEmpty) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_pathDetailsNotAvailable),
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
-
-    final connector = context.read<MeshCoreConnector>();
-    final allContacts = connector.allContacts;
-
-    final formattedPath = PathHelper.formatPathHex(pathBytes);
-    final resolvedNames = PathHelper.resolvePathNames(
-      pathBytes,
-      allContacts,
-      connector.pathHashByteWidth,
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.chat_fullPath),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SelectableText(formattedPath),
-            const SizedBox(height: 8),
-            SelectableText(
-              resolvedNames,
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PathTraceMapScreen(
-                  title: context.l10n.contacts_repeaterPathTrace,
-                  path: Uint8List.fromList(pathBytes),
-                  flipPathAround: true,
-                  targetContact: widget.contact,
-                  pathHashByteWidth: connector.pathHashByteWidth,
-                ),
-              ),
-            ),
-            child: Text(context.l10n.contacts_pathTrace),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
-          ),
-        ],
-      ),
-    );
-  }
-
   int _resolveContactIndex = -1;
 
   Contact _resolveContact(MeshCoreConnector connector) {
@@ -1418,29 +929,6 @@ class _ChatScreenState extends State<ChatScreen> {
   int _displayHopCount(List<int> pathBytes, int storedHopCount, int hashWidth) {
     if (pathBytes.isEmpty) return storedHopCount;
     return PathHelper.splitPathBytes(pathBytes, hashWidth).length;
-  }
-
-  Future<void> _notifyPathSet(
-    MeshCoreConnector connector,
-    Contact contact,
-    Uint8List pathBytes,
-    int hopCount,
-  ) async {
-    final verified = connector.isConnected
-        ? await connector.verifyContactPathOnDevice(contact, pathBytes)
-        : false;
-    if (!mounted) return;
-
-    final status = !connector.isConnected
-        ? context.l10n.chat_pathSavedLocally
-        : (verified
-              ? context.l10n.chat_pathDeviceConfirmed
-              : context.l10n.chat_pathDeviceNotConfirmed);
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.chat_pathSetHops(hopCount, status)),
-      duration: const Duration(seconds: 3),
-    );
   }
 
   void _showContactInfo(BuildContext context) {
@@ -1790,18 +1278,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ChatScreen(contact: contact, initialUnreadCount: unread),
       ),
     );
-  }
-
-  Future<void> _showCustomPathDialog(BuildContext context) async {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    final currentContact = _resolveContact(connector);
-    if (currentContact.pathLength > 0 &&
-        currentContact.path.isEmpty &&
-        connector.isConnected) {
-      connector.getContacts();
-    }
-    if (!context.mounted) return;
-    await ContactRoutingSheet.show(context, contact: currentContact);
   }
 
   void _openMessagePath(Message message, Contact contact) {

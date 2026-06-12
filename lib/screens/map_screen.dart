@@ -2497,7 +2497,7 @@ class _MapScreenState extends State<MapScreen>
                   size: 20,
                 ),
               ),
-            ),
+            ],
           ),
         ),
       );
