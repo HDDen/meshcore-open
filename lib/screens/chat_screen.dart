@@ -203,159 +203,159 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Consumer<MeshCoreConnector>(
-          builder: (context, connector, _) {
-            final contact = _resolveContact(connector);
-            final unreadCount = connector.getUnreadCountForContactKey(
-              widget.contact.publicKeyHex,
-            );
-            final unreadLabel = context.l10n.chat_unread(unreadCount);
-            final pathLabel = _currentPathLabel(contact);
-
-            // Show path details if we have non-empty path data (from device or override)
-            final effectivePath = contact.pathOverrideBytes ?? contact.path;
-            final hasPathData = effectivePath.isNotEmpty;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(contact.name),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => ContactRoutingSheet.show(
-                    context,
-                    contact: contact,
-                  ),
-                  child: Text(
-                    '$pathLabel • $unreadLabel',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.normal,
-                      decoration: hasPathData ? TextDecoration.underline : null,
-                      decorationStyle: TextDecorationStyle.dotted,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        centerTitle: false,
-        bottom: const SyncProgressAppBarBottom(),
-        actions: [
-          Consumer<MeshCoreConnector>(
             builder: (context, connector, _) {
               final contact = _resolveContact(connector);
-              final isFloodMode = contact.pathOverride == -1;
-              return IconButton(
-                icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-                tooltip: context.l10n.repeater_routingMode,
-                onPressed: () => ContactRoutingSheet.show(
-                  context,
-                  contact: contact,
-                ),
+              final unreadCount = connector.getUnreadCountForContactKey(
+                widget.contact.publicKeyHex,
               );
-            },
-          ),
-          const RadioStatsIconButton(),
-          Consumer<MeshCoreConnector>(
-            builder: (context, connector, _) {
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) async {
-                  if (value == 'info') {
-                    _showContactInfo(context);
-                  }
-                  if (value == 'settings') {
-                    _showContactSettings(context);
-                  }
-                  if (value == 'telemetry') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TelemetryScreen(contact: widget.contact),
+              final unreadLabel = context.l10n.chat_unread(unreadCount);
+              final pathLabel = _currentPathLabel(contact);
+
+              // Show path details if we have non-empty path data (from device or override)
+              final effectivePath = contact.pathOverrideBytes ?? contact.path;
+              final hasPathData = effectivePath.isNotEmpty;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(contact.name),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () =>
+                        ContactRoutingSheet.show(context, contact: contact),
+                    child: Text(
+                      '$pathLabel • $unreadLabel',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.normal,
+                        decoration: hasPathData
+                            ? TextDecoration.underline
+                            : null,
+                        decorationStyle: TextDecorationStyle.dotted,
                       ),
-                    );
-                  }
-                  if (value == 'clearChat') {
-                    _confirmClearChat(context, connector);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'info',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_info),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'telemetry',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.bar_chart, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_telemetry),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.settings, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_settings),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'clearChat',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete, size: 20, color: Colors.red),
-                        const SizedBox(width: 12),
-                        Text(
-                          context.l10n.contact_clearChat,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
                     ),
                   ),
                 ],
               );
             },
           ),
-        ],
-      ),
-      body: Consumer<MeshCoreConnector>(
-        builder: (context, connector, child) {
-          final messages = [
-            ...connector.getMessages(widget.contact),
-            ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
-          ];
-          return Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    messages.isEmpty
-                        ? _buildEmptyState()
-                        : _buildMessageList(messages, connector),
-                    JumpToBottomButton(scrollController: _scrollController),
+          centerTitle: false,
+          bottom: const SyncProgressAppBarBottom(),
+          actions: [
+            Consumer<MeshCoreConnector>(
+              builder: (context, connector, _) {
+                final contact = _resolveContact(connector);
+                final isFloodMode = contact.pathOverride == -1;
+                return IconButton(
+                  icon: Icon(isFloodMode ? Icons.waves : Icons.route),
+                  tooltip: context.l10n.repeater_routingMode,
+                  onPressed: () =>
+                      ContactRoutingSheet.show(context, contact: contact),
+                );
+              },
+            ),
+            const RadioStatsIconButton(),
+            Consumer<MeshCoreConnector>(
+              builder: (context, connector, _) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) async {
+                    if (value == 'info') {
+                      _showContactInfo(context);
+                    }
+                    if (value == 'settings') {
+                      _showContactSettings(context);
+                    }
+                    if (value == 'telemetry') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TelemetryScreen(contact: widget.contact),
+                        ),
+                      );
+                    }
+                    if (value == 'clearChat') {
+                      _confirmClearChat(context, connector);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'info',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 20),
+                          const SizedBox(width: 12),
+                          Text(context.l10n.contact_info),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'telemetry',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.bar_chart, size: 20),
+                          const SizedBox(width: 12),
+                          Text(context.l10n.contact_telemetry),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.settings, size: 20),
+                          const SizedBox(width: 12),
+                          Text(context.l10n.contact_settings),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'clearChat',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete, size: 20, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Text(
+                            context.l10n.contact_clearChat,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: Consumer<MeshCoreConnector>(
+          builder: (context, connector, child) {
+            final messages = [
+              ...connector.getMessages(widget.contact),
+              ...connector.getPendingContactMessages(
+                widget.contact.publicKeyHex,
               ),
-              _buildInputBar(connector),
-            ],
-          );
-        },
-      ),
+            ];
+            return Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      messages.isEmpty
+                          ? _buildEmptyState()
+                          : _buildMessageList(messages, connector),
+                      JumpToBottomButton(scrollController: _scrollController),
+                    ],
+                  ),
+                ),
+                _buildInputBar(connector),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

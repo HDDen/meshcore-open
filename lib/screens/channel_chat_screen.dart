@@ -499,243 +499,249 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-        title: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => openRegionSelectDialog(widget.channel),
-          child: Row(
-            children: [
-              _channelIcon(widget.channel),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.channel.name.isEmpty
-                          ? context.l10n.channels_channelIndex(
-                              widget.channel.index,
-                            )
-                          : widget.channel.name,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    Consumer<MeshCoreConnector>(
-                      builder: (context, connector, _) {
-                        final unreadCount = connector
-                            .getUnreadCountForChannelIndex(
-                              widget.channel.index,
-                            );
-                        final regionHeader = region.isNotEmpty
-                            ? context.l10n.channels_regionSetTo(region)
-                            : context.l10n.channels_regionNotSet;
-                        return Text(
-                          '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        centerTitle: false,
-        bottom: const SyncProgressAppBarBottom(),
-        actions: [
-          const RadioStatsIconButton(),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) async {
-              if (value == 'clearChat') {
-                _confirmClearChat();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'clearChat',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete, size: 20, color: Colors.red),
-                    const SizedBox(width: 12),
-                    Text(
-                      context.l10n.contact_clearChat,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: Consumer<MeshCoreConnector>(
-                builder: (context, connector, child) {
-                  final messages = [
-                    ...connector.getChannelMessages(widget.channel),
-                    ...connector.getPendingChannelMessages(
-                      widget.channel.index,
-                    ),
-                  ];
-
-                  if (messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            widget.channel.isPublicChannel
-                                ? Icons.public
-                                : Icons.tag,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            context.l10n.chat_noMessages,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            context.l10n.chat_sendMessageToStart,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  // Reverse messages so newest appear at bottom with reverse: true
-                  final reversedMessages = messages.reversed.toList();
-                  final itemCount =
-                      reversedMessages.length + (_isLoadingOlder ? 1 : 0);
-
-                  // Prune stale keys (deleted/cleared messages) to avoid
-                  // unbounded growth.
-                  final liveIds = reversedMessages
-                      .map((m) => m.messageId)
-                      .toSet();
-                  _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
-
-                  // Rare messageId collisions must not reuse the same
-                  // GlobalKey in the list.
-                  final seenIds = <String>{};
-                  final keyedIndices = <int>{};
-                  for (var i = 0; i < reversedMessages.length; i++) {
-                    if (seenIds.add(reversedMessages[i].messageId)) {
-                      keyedIndices.add(i);
-                    }
-                  }
-
-                  // Auto-scroll to bottom if user is already at bottom
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (_channelSkipNextBottomSnap) {
-                      _channelSkipNextBottomSnap = false;
-                      return;
-                    }
-                    _scrollController.scrollToBottomIfAtBottom();
-                  });
-
-                  return Stack(
+          title: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => openRegionSelectDialog(widget.channel),
+            child: Row(
+              children: [
+                _channelIcon(widget.channel),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      JumpToBottomReservedPadding(
-                        scrollController: _scrollController,
-                        basePadding: const EdgeInsets.all(8),
-                        builder: (context, padding, bottomReservedExtent) {
-                          final hasBottomSpacer = bottomReservedExtent > 0;
-                          final spacerItemCount = hasBottomSpacer ? 1 : 0;
-                          return ChatZoomWrapper(
-                            child: ListView.builder(
-                              reverse: true, // List grows from bottom up
-                              controller: _scrollController,
-                              padding: padding,
-                              itemCount: itemCount + spacerItemCount,
-                              itemBuilder: (context, index) {
-                                if (hasBottomSpacer && index == 0) {
-                                  return SizedBox(height: bottomReservedExtent);
-                                }
-                                final adjustedIndex = index - spacerItemCount;
-
-                                // Loading indicator now appears at end (bottom) of reversed list
-                                if (_isLoadingOlder &&
-                                    adjustedIndex == itemCount - 1) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 16),
-                                    child: Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                                final messageIndex = adjustedIndex;
-                                final message = reversedMessages[messageIndex];
-                                final messageKey =
-                                    keyedIndices.contains(messageIndex)
-                                    ? _messageKeys.putIfAbsent(
-                                        message.messageId,
-                                        GlobalKey.new,
-                                      )
-                                    : GlobalKey();
-                                final isUnreadAnchor =
-                                    _unreadDividerMessageId != null &&
-                                    message.messageId ==
-                                        _unreadDividerMessageId;
-                                return Container(
-                                  key: messageKey,
-                                  child: Builder(
-                                    builder: (context) {
-                                      final textScale = context
-                                          .select<ChatTextScaleService, double>(
-                                            (service) => service.scale,
-                                          );
-                                      final bubble = _buildMessageBubble(
-                                        message,
-                                        textScale,
-                                      );
-                                      if (isUnreadAnchor) {
-                                        return Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const UnreadDivider(),
-                                            bubble,
-                                          ],
-                                        );
-                                      }
-                                      return bubble;
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
+                      Text(
+                        widget.channel.name.isEmpty
+                            ? context.l10n.channels_channelIndex(
+                                widget.channel.index,
+                              )
+                            : widget.channel.name,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Consumer<MeshCoreConnector>(
+                        builder: (context, connector, _) {
+                          final unreadCount = connector
+                              .getUnreadCountForChannelIndex(
+                                widget.channel.index,
+                              );
+                          final regionHeader = region.isNotEmpty
+                              ? context.l10n.channels_regionSetTo(region)
+                              : context.l10n.channels_regionNotSet;
+                          return Text(
+                            '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
                           );
                         },
                       ),
-                      JumpToBottomButton(scrollController: _scrollController),
                     ],
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-            _buildMessageComposer(),
+          ),
+          centerTitle: false,
+          bottom: const SyncProgressAppBarBottom(),
+          actions: [
+            const RadioStatsIconButton(),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) async {
+                if (value == 'clearChat') {
+                  _confirmClearChat();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'clearChat',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete, size: 20, color: Colors.red),
+                      const SizedBox(width: 12),
+                      Text(
+                        context.l10n.contact_clearChat,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-      ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: Consumer<MeshCoreConnector>(
+                  builder: (context, connector, child) {
+                    final messages = [
+                      ...connector.getChannelMessages(widget.channel),
+                      ...connector.getPendingChannelMessages(
+                        widget.channel.index,
+                      ),
+                    ];
+
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.channel.isPublicChannel
+                                  ? Icons.public
+                                  : Icons.tag,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              context.l10n.chat_noMessages,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              context.l10n.chat_sendMessageToStart,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Reverse messages so newest appear at bottom with reverse: true
+                    final reversedMessages = messages.reversed.toList();
+                    final itemCount =
+                        reversedMessages.length + (_isLoadingOlder ? 1 : 0);
+
+                    // Prune stale keys (deleted/cleared messages) to avoid
+                    // unbounded growth.
+                    final liveIds = reversedMessages
+                        .map((m) => m.messageId)
+                        .toSet();
+                    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+
+                    // Rare messageId collisions must not reuse the same
+                    // GlobalKey in the list.
+                    final seenIds = <String>{};
+                    final keyedIndices = <int>{};
+                    for (var i = 0; i < reversedMessages.length; i++) {
+                      if (seenIds.add(reversedMessages[i].messageId)) {
+                        keyedIndices.add(i);
+                      }
+                    }
+
+                    // Auto-scroll to bottom if user is already at bottom
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_channelSkipNextBottomSnap) {
+                        _channelSkipNextBottomSnap = false;
+                        return;
+                      }
+                      _scrollController.scrollToBottomIfAtBottom();
+                    });
+
+                    return Stack(
+                      children: [
+                        JumpToBottomReservedPadding(
+                          scrollController: _scrollController,
+                          basePadding: const EdgeInsets.all(8),
+                          builder: (context, padding, bottomReservedExtent) {
+                            final hasBottomSpacer = bottomReservedExtent > 0;
+                            final spacerItemCount = hasBottomSpacer ? 1 : 0;
+                            return ChatZoomWrapper(
+                              child: ListView.builder(
+                                reverse: true, // List grows from bottom up
+                                controller: _scrollController,
+                                padding: padding,
+                                itemCount: itemCount + spacerItemCount,
+                                itemBuilder: (context, index) {
+                                  if (hasBottomSpacer && index == 0) {
+                                    return SizedBox(
+                                      height: bottomReservedExtent,
+                                    );
+                                  }
+                                  final adjustedIndex = index - spacerItemCount;
+
+                                  // Loading indicator now appears at end (bottom) of reversed list
+                                  if (_isLoadingOlder &&
+                                      adjustedIndex == itemCount - 1) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final messageIndex = adjustedIndex;
+                                  final message =
+                                      reversedMessages[messageIndex];
+                                  final messageKey =
+                                      keyedIndices.contains(messageIndex)
+                                      ? _messageKeys.putIfAbsent(
+                                          message.messageId,
+                                          GlobalKey.new,
+                                        )
+                                      : GlobalKey();
+                                  final isUnreadAnchor =
+                                      _unreadDividerMessageId != null &&
+                                      message.messageId ==
+                                          _unreadDividerMessageId;
+                                  return Container(
+                                    key: messageKey,
+                                    child: Builder(
+                                      builder: (context) {
+                                        final textScale = context
+                                            .select<
+                                              ChatTextScaleService,
+                                              double
+                                            >((service) => service.scale);
+                                        final bubble = _buildMessageBubble(
+                                          message,
+                                          textScale,
+                                        );
+                                        if (isUnreadAnchor) {
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const UnreadDivider(),
+                                              bubble,
+                                            ],
+                                          );
+                                        }
+                                        return bubble;
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        JumpToBottomButton(scrollController: _scrollController),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              _buildMessageComposer(),
+            ],
+          ),
+        ),
       ),
     );
   }

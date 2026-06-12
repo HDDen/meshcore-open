@@ -3099,9 +3099,7 @@ class _MapScreenState extends State<MapScreen>
                         Icon(
                           Icons.location_on,
                           size: 16,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": $nodeCount",
@@ -3117,9 +3115,7 @@ class _MapScreenState extends State<MapScreen>
                         Icon(
                           Icons.wrong_location,
                           size: 16,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": ${nodeCountAll - nodeCount}",
@@ -3135,9 +3131,7 @@ class _MapScreenState extends State<MapScreen>
                         Icon(
                           Icons.add_outlined,
                           size: 16,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         Text(
                           ": $nodeCountAll",
