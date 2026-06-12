@@ -518,6 +518,8 @@ class AppSettingsScreen extends StatelessWidget {
           _buildQuickAnswersTile(context, settingsService),
           const Divider(height: 1),
           _buildCopyMsgPathTile(context, settingsService),
+          const Divider(height: 1),
+          _buildChannelsSendAsBinaryTile(context, settingsService),
         ],
       ),
     );
@@ -1570,6 +1572,18 @@ class AppSettingsScreen extends StatelessWidget {
       subtitle: Text(context.l10n.settings_copyMsgPathDscr),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => _showCopyMsgPathTemplateDialog(context, settingsService),
+    );
+  }
+
+  Widget _buildChannelsSendAsBinaryTile(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return SwitchListTile(
+      secondary: const Icon(Icons.data_object_outlined),
+      title: Text(context.l10n.settings_channelsSendAsBinary),
+      value: settingsService.settings.channelsSendAsBinary,
+      onChanged: settingsService.setChannelsSendAsBinary,
     );
   }
 

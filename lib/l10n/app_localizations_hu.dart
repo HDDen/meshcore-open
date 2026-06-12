@@ -5026,6 +5026,14 @@ class AppLocalizationsHu extends AppLocalizations {
       'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
 
   @override
+  String get settings_channelsSendAsBinary =>
+      'Send extended data as binary (channels)';
+
+  @override
+  String get settings_dmSendAsBinary =>
+      'Send extended data as binary (direct messages)';
+
+  @override
   String get contact_typeChat => 'Chat';
 
   @override

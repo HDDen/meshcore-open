@@ -8530,6 +8530,18 @@ abstract class AppLocalizations {
   /// **'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break'**
   String get settings_copyMsgPathEditFinalDscr;
 
+  /// No description provided for @settings_channelsSendAsBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Send extended data as binary (channels)'**
+  String get settings_channelsSendAsBinary;
+
+  /// No description provided for @settings_dmSendAsBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Send extended data as binary (direct messages)'**
+  String get settings_dmSendAsBinary;
+
   /// No description provided for @contact_typeChat.
   ///
   /// In en, this message translates to:

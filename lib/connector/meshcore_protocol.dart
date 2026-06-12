@@ -213,6 +213,7 @@ const int cmdSendAnonReq = 57;
 const int cmdSetAutoAddConfig = 58;
 const int cmdGetAutoAddConfig = 59;
 const int cmdSetPathHashMode = 61;
+const int cmdSendChannelData = 62;
 const int cmdSetFloodScope = 54;
 
 // Text message types
@@ -286,6 +287,7 @@ const int respCodeChannelMsgRecvV3 = 17;
 const int respCodeChannelInfo = 18;
 const int respCodeCustomVars = 21;
 const int respCodeAutoAddConfig = 25;
+const int respCodeChannelDataRecv = 27;
 const int respCodeStats = 24;
 
 const int statsTypeCore = 0;
@@ -361,6 +363,7 @@ const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
 const int maxFrameSize = 172;
+const int maxChannelDataLength = maxFrameSize - 9;
 const int appProtocolVersion = 4;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
@@ -563,6 +566,78 @@ Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
   writer.writeUInt32LE(timestamp);
   writer.writeString(text);
   return writer.toBytes();
+}
+
+// Build CMD_SEND_CHANNEL_DATA frame.
+// Format: [cmd][channel_idx][path_len][path?][data_type u16][payload...]
+Uint8List buildSendChannelDataFrame(
+  int channelIndex,
+  int dataType,
+  Uint8List payload, {
+  Uint8List? pathBytes,
+}) {
+  if (payload.length > maxChannelDataLength) {
+    throw ArgumentError.value(
+      payload.length,
+      'payload.length',
+      'Channel data payload exceeds $maxChannelDataLength bytes',
+    );
+  }
+
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendChannelData);
+  writer.writeByte(channelIndex);
+  if (pathBytes == null || pathBytes.isEmpty) {
+    writer.writeByte(0xFF); // OUT_PATH_UNKNOWN: send as flood.
+  } else {
+    writer.writeByte(pathBytes.length);
+    writer.writeBytes(pathBytes);
+  }
+  writer.writeByte(dataType & 0xFF);
+  writer.writeByte((dataType >> 8) & 0xFF);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+class ChannelDataReceivedFrame {
+  final int channelIndex;
+  final int pathLength;
+  final int dataType;
+  final Uint8List payload;
+  final double snr;
+
+  const ChannelDataReceivedFrame({
+    required this.channelIndex,
+    required this.pathLength,
+    required this.dataType,
+    required this.payload,
+    required this.snr,
+  });
+}
+
+ChannelDataReceivedFrame? parseChannelDataReceivedFrame(Uint8List frame) {
+  if (frame.length < 9 || frame[0] != respCodeChannelDataRecv) return null;
+  final reader = BufferReader(frame);
+  try {
+    reader.skipBytes(1); // code
+    final snr = reader.readInt8() / 4.0;
+    reader.skipBytes(2); // reserved
+    final channelIndex = reader.readByte();
+    final pathLengthRaw = reader.readByte();
+    final dataType = reader.readByte() | (reader.readByte() << 8);
+    final dataLength = reader.readByte();
+    if (dataLength > frame.length - 9) return null;
+    final payload = reader.readBytes(dataLength);
+    return ChannelDataReceivedFrame(
+      channelIndex: channelIndex,
+      pathLength: pathLengthRaw == 0xFF ? -1 : pathLengthRaw,
+      dataType: dataType,
+      payload: payload,
+      snr: snr,
+    );
+  } catch (_) {
+    return null;
+  }
 }
 
 // Build CMD_REMOVE_CONTACT frame

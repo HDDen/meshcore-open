@@ -2038,6 +2038,8 @@
   "settings_copyMsgPathEditTemplateDscr": "Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n%hops% - количество хопов\n\\n - перенос строки",
   "settings_copyMsgPathEditFinalTitle": "Итоговое сообщение",
   "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки",
+  "settings_channelsSendAsBinary": "Отправлять расширенные форматы в бинарном виде (каналы)",
+  "settings_dmSendAsBinary": "Отправлять расширенные форматы в бинарном виде (личные сообщения)",
   "chat_canvas": "Холст",
   "chat_canvasCrop": "Обрезать/расширить",
   "chat_canvasResize": "Сжать/растянуть",

@@ -18,6 +18,7 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
@@ -3539,13 +3540,19 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
+    final outboundText = prepareChannelOutboundText(channel.index, text);
+    final binaryMcmpPayloadBytes =
+        isChannelMcmpEnabled(channel.index) && ChannelBinaryDataHelper.canSend
+        ? ChannelBinaryDataHelper.mcmpPayloadLength(text, _selfName ?? 'Me')
+        : null;
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
       channel.index,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        prepareChannelOutboundText(channel.index, text),
-      ),
+      wasMcmpCompressed:
+          MeshCompressor.instance.hasPrefix(outboundText) ||
+          (binaryMcmpPayloadBytes != null &&
+              binaryMcmpPayloadBytes <= maxChannelDataLength),
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -3557,11 +3564,28 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
-    final outboundText = prepareChannelOutboundText(channel.index, text);
+    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
+      text: text,
+      senderName: message.senderName,
+      timestamp: message.timestamp,
+      mcmpEnabled: isChannelMcmpEnabled(channel.index),
+    );
     await _runScopedChannelSend(() async {
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       final sentByRadioAt = DateTime.now();
       _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
+      if (binaryOutbound != null) {
+        await _sendFrameAndWaitForCommandAck(
+          buildSendChannelDataFrame(
+            channel.index,
+            binaryOutbound.dataType,
+            binaryOutbound.payload,
+          ),
+          channelSendQueueId: message.messageId,
+          expectsGenericAck: true,
+        );
+        return;
+      }
       await _sendFrameAndWaitForCommandAck(
         buildSendChannelTextMsgFrame(channel.index, outboundText),
         channelSendQueueId: message.messageId,
@@ -4489,6 +4513,9 @@ class MeshCoreConnector extends ChangeNotifier {
       case respCodeChannelMsgRecvV3:
         _handleIncomingChannelMessage(frame);
         break;
+      case respCodeChannelDataRecv:
+        _handleIncomingChannelData(frame);
+        break;
       case respCodeSent:
         _handleMessageSent(frame);
         break;
@@ -4558,7 +4585,8 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final failedAck = _pendingGenericAckQueue.removeAt(0);
-    if (failedAck.commandCode != cmdSendChannelTxtMsg ||
+    if ((failedAck.commandCode != cmdSendChannelTxtMsg &&
+            failedAck.commandCode != cmdSendChannelData) ||
         failedAck.channelSendQueueId == null) {
       return;
     }
@@ -5841,6 +5869,78 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  void _handleIncomingChannelData(Uint8List frame) async {
+    if (_isSyncingQueuedMessages) {
+      _handleQueuedMessageReceived();
+    }
+
+    final dataFrame = parseChannelDataReceivedFrame(frame);
+    if (dataFrame == null) {
+      if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
+      return;
+    }
+
+    final decoded = ChannelBinaryDataHelper.tryDecodeInbound(
+      dataType: dataFrame.dataType,
+      payload: dataFrame.payload,
+    );
+    if (decoded == null) {
+      if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
+      return;
+    }
+
+    final channelName = _channelDisplayName(dataFrame.channelIndex);
+    final isSelfDirect =
+        dataFrame.pathLength <= 0 &&
+        decoded.senderName.trim() == (_selfName ?? '').trim();
+    if (isSelfDirect && !_isSelfChannelFilterBypassed(channelName)) {
+      return;
+    }
+
+    _lastChannelMsgRxTime = DateTime.now();
+    final timestampSecs = decoded.timestamp.millisecondsSinceEpoch ~/ 1000;
+    final contentHash = _computeContentHash(
+      dataFrame.channelIndex,
+      timestampSecs,
+      '${decoded.senderName}: ${decoded.text}',
+    );
+    final message = ChannelMessage(
+      senderName: decoded.senderName,
+      text: decoded.text,
+      wasMcmpCompressed: decoded.wasMcmpCompressed,
+      timestamp: decoded.timestamp,
+      isOutgoing: false,
+      status: ChannelMessageStatus.sent,
+      pathLength: dataFrame.pathLength,
+      channelIndex: dataFrame.channelIndex,
+      packetHash: contentHash,
+    );
+
+    _updateContactLastMessageAtByName(
+      message.senderName,
+      message.timestamp,
+      pathHashWidth: message.pathHashWidth,
+    );
+    final isNew = _addChannelMessage(dataFrame.channelIndex, message);
+    _maybeIncrementChannelUnread(message, isNew: isNew);
+    notifyListeners();
+    if (isNew && !message.isOutgoing) {
+      final msg = message;
+      unawaited(() async {
+        final translationResult = await translateChannelMessage(
+          msg.channelIndex!,
+          msg,
+        );
+        _maybeNotifyChannelMessage(
+          msg,
+          channelName: channelName,
+          translationResult: translationResult,
+        );
+      }());
+    }
+    _handleQueuedMessageReceived();
+  }
+
   void _handleLogRxData(Uint8List frame) async {
     if (frame.length < 4) return;
     try {
@@ -5849,7 +5949,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
-      if (packet == null || packet.payloadType != _payloadTypeGroupText) return;
+      if (packet == null ||
+          (packet.payloadType != _payloadTypeGroupText &&
+              packet.payloadType != _payloadTypeGroupData)) {
+        return;
+      }
 
       final payload = BufferReader(packet.payload);
       final channelHash = payload.readByte();
@@ -5865,7 +5969,44 @@ class MeshCoreConnector extends ChangeNotifier {
         if (hash != channelHash) continue;
         try {
           final decryptedBytes = _decryptPayload(channel.psk, encrypted);
-          if (decryptedBytes == null || decryptedBytes.length < 6) return;
+          if (decryptedBytes == null) return;
+          if (packet.payloadType == _payloadTypeGroupData) {
+            final message = _parseLogRxChannelData(
+              packet,
+              channel.index,
+              decryptedBytes,
+            );
+            if (message == null) return;
+
+            _updateContactLastMessageAtByName(
+              message.senderName,
+              message.timestamp,
+              pathBytes: message.pathBytes,
+              pathHashWidth: message.pathHashWidth,
+            );
+            final isNew = _addChannelMessage(channel.index, message);
+            _maybeIncrementChannelUnread(message, isNew: isNew);
+            notifyListeners();
+            if (isNew) {
+              unawaited(() async {
+                final translationResult = await translateChannelMessage(
+                  channel.index,
+                  message,
+                );
+                final label = channel.name.isEmpty
+                    ? 'Channel ${channel.index}'
+                    : channel.name;
+                _maybeNotifyChannelMessage(
+                  message,
+                  channelName: label,
+                  translationResult: translationResult,
+                );
+              }());
+            }
+            return;
+          }
+
+          if (decryptedBytes.length < 6) return;
           final decrypted = BufferReader(decryptedBytes);
 
           final timestampRaw = decrypted.readUInt32LE();
@@ -5944,6 +6085,40 @@ class MeshCoreConnector extends ChangeNotifier {
     } catch (e) {
       appLogger.warn('Error handling log RX data frame: $e');
     }
+  }
+
+  ChannelMessage? _parseLogRxChannelData(
+    _RawPacket packet,
+    int channelIndex,
+    Uint8List decryptedBytes,
+  ) {
+    if (decryptedBytes.length < 3) return null;
+    final decrypted = BufferReader(decryptedBytes);
+    final dataType = decrypted.readByte() | (decrypted.readByte() << 8);
+    final dataLength = decrypted.readByte();
+    if (dataLength > decrypted.remaining) return null;
+    final dataPayload = decrypted.readBytes(dataLength);
+    final decoded = ChannelBinaryDataHelper.tryDecodeInbound(
+      dataType: dataType,
+      payload: dataPayload,
+    );
+    if (decoded == null) return null;
+
+    final pktHash = _computePacketHash(packet.payloadType, packet.payload);
+    return ChannelMessage(
+      senderKey: null,
+      senderName: decoded.senderName,
+      text: decoded.text,
+      wasMcmpCompressed: decoded.wasMcmpCompressed,
+      timestamp: decoded.timestamp,
+      isOutgoing: false,
+      status: ChannelMessageStatus.sent,
+      pathLength: packet.isFlood ? packet.hopCount : 0,
+      pathHashWidth: packet.pathHashWidth,
+      pathBytes: packet.pathBytes,
+      channelIndex: channelIndex,
+      packetHash: pktHash,
+    );
   }
 
   void _handleMessageSent(Uint8List frame) {
@@ -6041,7 +6216,8 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final pendingAck = _pendingGenericAckQueue.removeAt(0);
-    if (pendingAck.commandCode != cmdSendChannelTxtMsg ||
+    if ((pendingAck.commandCode != cmdSendChannelTxtMsg &&
+            pendingAck.commandCode != cmdSendChannelData) ||
         pendingAck.channelSendQueueId == null) {
       return;
     }
@@ -7639,6 +7815,7 @@ const int _routeFlood = 0x01;
 const int _routeTransportDirect = 0x03;
 
 const int _payloadTypeGroupText = 0x05;
+const int _payloadTypeGroupData = 0x06;
 const int _cipherMacSize = 2;
 
 /// Decodes the firmware's encoded path_len byte into actual byte length.

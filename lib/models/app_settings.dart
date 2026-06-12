@@ -199,6 +199,7 @@ class AppSettings {
   final List<QuickAnswer> quickAnswers;
   final String copyMsgPathTemplate;
   final String copyMsgPathFinalTemplate;
+  final bool channelsSendAsBinary;
   final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
@@ -439,6 +440,7 @@ class AppSettings {
     List<QuickAnswer>? quickAnswers,
     String? copyMsgPathTemplate,
     String? copyMsgPathFinalTemplate,
+    this.channelsSendAsBinary = false,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -528,6 +530,7 @@ class AppSettings {
       'quick_answers': quickAnswers.map((answer) => answer.toJson()).toList(),
       'copy_msg_path_template': copyMsgPathTemplate,
       'copy_msg_path_final_template': copyMsgPathFinalTemplate,
+      'channels_send_as_binary': channelsSendAsBinary,
       'sending_delay_for_cancellation_seconds':
           sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
@@ -650,6 +653,7 @@ class AppSettings {
       quickAnswers: normalizeQuickAnswers(json['quick_answers']),
       copyMsgPathTemplate: json['copy_msg_path_template'] as String?,
       copyMsgPathFinalTemplate: json['copy_msg_path_final_template'] as String?,
+      channelsSendAsBinary: json['channels_send_as_binary'] as bool? ?? false,
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
@@ -740,6 +744,7 @@ class AppSettings {
     List<QuickAnswer>? quickAnswers,
     String? copyMsgPathTemplate,
     String? copyMsgPathFinalTemplate,
+    bool? channelsSendAsBinary,
     int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -828,6 +833,8 @@ class AppSettings {
       copyMsgPathTemplate: copyMsgPathTemplate ?? this.copyMsgPathTemplate,
       copyMsgPathFinalTemplate:
           copyMsgPathFinalTemplate ?? this.copyMsgPathFinalTemplate,
+      channelsSendAsBinary:
+          channelsSendAsBinary ?? this.channelsSendAsBinary,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,

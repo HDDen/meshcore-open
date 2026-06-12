@@ -4,6 +4,7 @@ import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/app_logger.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 
 class AppSettingsService extends ChangeNotifier {
@@ -32,28 +33,49 @@ class AppSettingsService extends ChangeNotifier {
     if (jsonStr != null) {
       try {
         final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-        _settings = AppSettings.fromJson(json);
-        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+        final loadedSettings = AppSettings.fromJson(json);
+        _settings = _normalizeRuntimeDependentSettings(loadedSettings);
+        _applyRuntimeSettings();
+        if (_settings.channelsSendAsBinary !=
+            loadedSettings.channelsSendAsBinary) {
+          await _saveSettings();
+        }
         notifyListeners();
       } catch (e) {
         // If parsing fails, use defaults
-        _settings = AppSettings();
-        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+        _settings = _normalizeRuntimeDependentSettings(AppSettings());
+        _applyRuntimeSettings();
       }
     } else {
-      _settings = AppSettings();
-      Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+      _settings = _normalizeRuntimeDependentSettings(AppSettings());
+      _applyRuntimeSettings();
     }
   }
 
   Future<void> updateSettings(AppSettings newSettings) async {
-    _settings = newSettings;
-    Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+    _settings = _normalizeRuntimeDependentSettings(newSettings);
+    _applyRuntimeSettings();
     notifyListeners();
 
+    await _saveSettings();
+  }
+
+  Future<void> _saveSettings() async {
     final prefs = PrefsManager.instance;
     final jsonStr = jsonEncode(_settings.toJson());
     await prefs.setString(_settingsKey, jsonStr);
+  }
+
+  AppSettings _normalizeRuntimeDependentSettings(AppSettings settings) {
+    if (!ChannelBinaryDataHelper.isAvailable && settings.channelsSendAsBinary) {
+      return settings.copyWith(channelsSendAsBinary: false);
+    }
+    return settings;
+  }
+
+  void _applyRuntimeSettings() {
+    Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+    ChannelBinaryDataHelper.sendEnabled = _settings.channelsSendAsBinary;
   }
 
   Future<void> setClearPathOnMaxRetry(bool value) async {
@@ -458,6 +480,10 @@ class AppSettingsService extends ChangeNotifier {
         ),
       ),
     );
+  }
+
+  Future<void> setChannelsSendAsBinary(bool value) async {
+    await updateSettings(_settings.copyWith(channelsSendAsBinary: value));
   }
 
   Future<void> setSendingDelayForCancellationSeconds(int value) async {

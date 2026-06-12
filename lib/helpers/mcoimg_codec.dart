@@ -1416,6 +1416,17 @@ class MCOImageCodec {
     }
   }
 
+  static Uint8List binaryPayloadFromText(String text) {
+    if (!text.startsWith(prefix)) {
+      throw const MCOImageInvalidPayloadException('Missing im: prefix');
+    }
+    return _Base91.decode(text.substring(prefix.length));
+  }
+
+  static String textFromBinaryPayload(Uint8List payload) {
+    return '$prefix${_Base91.encode(payload)}';
+  }
+
   MCOImage decode(String text) {
     if (!text.startsWith(prefix)) {
       throw const MCOImageInvalidPayloadException('Missing im: prefix');

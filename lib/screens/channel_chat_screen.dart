@@ -14,6 +14,7 @@ import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
 import '../utils/platform_info.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/cyr2lat.dart';
@@ -1410,6 +1411,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       MaterialPageRoute(
         builder: (context) => CanvasEditorScreen(
           maxTextChars: maxTextChars,
+          maxBinaryPayloadBytes: ChannelBinaryDataHelper.canSend
+              ? _maxChannelBinaryPayloadBytes(
+                  context.read<AppSettingsService>().settings,
+                )
+              : null,
+          binarySenderName: context.read<MeshCoreConnector>().selfName,
           initialImage: initialImage,
         ),
       ),
@@ -1574,7 +1581,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildMessageComposer() {
     final connector = context.watch<MeshCoreConnector>();
     final settings = context.watch<AppSettingsService>().settings;
-    final maxBytes = _maxChannelInputBytes(connector, settings);
+    final maxBytes = _maxChannelComposerBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
     final replyBannerHeight = _replyingToMessage != null
         ? (MCOImageMessage.decodeMetadata(_replyingToMessage!.text).image !=
@@ -1598,6 +1605,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     String encodeComposerText(String text) {
       final sendText = _applyReplyMention(text);
+      final binaryPayloadBytes = _channelBinaryPayloadBytes(
+        connector,
+        sendText,
+      );
+      if (binaryPayloadBytes != null) {
+        // ByteCountedTextField measures UTF-8 bytes, so use an ASCII marker
+        // with the same length as our binary channel data envelope.
+        return _byteCountPlaceholder(binaryPayloadBytes);
+      }
       return usesChannelEncoding
           ? connector.prepareChannelOutboundText(widget.channel.index, sendText)
           : sendText;
@@ -1852,12 +1868,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       messageText = _applyReplyMention(messageText);
     }
 
-    final maxBytes = _maxChannelInputBytes(connector, settings);
     final outboundText = connector.prepareChannelOutboundText(
       widget.channel.index,
       messageText,
     );
-    if (utf8.encode(outboundText).length > maxBytes) {
+    final textPayloadBytes = utf8.encode(outboundText).length;
+    final binaryPayloadBytes = _channelBinaryPayloadBytes(
+      connector,
+      messageText,
+    );
+    final payloadBytes = binaryPayloadBytes ?? textPayloadBytes;
+    final maxBytes = binaryPayloadBytes == null
+        ? _maxChannelInputBytes(connector, settings)
+        : _maxChannelBinaryPayloadBytes(settings);
+    if (payloadBytes > maxBytes) {
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.chat_messageTooLong(maxBytes)),
@@ -1921,6 +1945,39 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textController.selection = TextSelection.collapsed(offset: text.length);
     _textFieldFocusNode.requestFocus();
   }
+
+  int _maxChannelComposerBytes(
+    MeshCoreConnector connector,
+    AppSettings settings,
+  ) {
+    if (ChannelBinaryDataHelper.canSend &&
+        connector.isChannelMcmpEnabled(widget.channel.index)) {
+      return _maxChannelBinaryPayloadBytes(settings);
+    }
+    return _maxChannelInputBytes(connector, settings);
+  }
+
+  int _maxChannelBinaryPayloadBytes(AppSettings settings) {
+    final outgoingLimit = settings.channelMaxbytesOutgoing;
+    if (outgoingLimit > 0) {
+      return math.min(maxChannelDataLength, outgoingLimit);
+    }
+    return maxChannelDataLength;
+  }
+
+  int? _channelBinaryPayloadBytes(MeshCoreConnector connector, String text) {
+    if (!ChannelBinaryDataHelper.canSend) return null;
+    final senderName = connector.selfName ?? 'Me';
+    final imagePayloadBytes = ChannelBinaryDataHelper.mcoImagePayloadLength(
+      text,
+      senderName,
+    );
+    if (imagePayloadBytes != null) return imagePayloadBytes;
+    if (!connector.isChannelMcmpEnabled(widget.channel.index)) return null;
+    return ChannelBinaryDataHelper.mcmpPayloadLength(text, senderName);
+  }
+
+  String _byteCountPlaceholder(int bytes) => List.filled(bytes, 'x').join();
 
   int _maxChannelInputBytes(MeshCoreConnector connector, AppSettings settings) {
     var limit = maxChannelMessageBytes(connector.selfName);

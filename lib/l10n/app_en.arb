@@ -2842,6 +2842,8 @@
   "settings_copyMsgPathEditTemplateDscr": "Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break",
   "settings_copyMsgPathEditFinalTitle": "Final message",
   "settings_copyMsgPathEditFinalDscr": "Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break",
+  "settings_channelsSendAsBinary": "Send extended data as binary (channels)",
+  "settings_dmSendAsBinary": "Send extended data as binary (direct messages)",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",

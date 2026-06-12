@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -62,11 +63,15 @@ class _ImportedCanvasImage {
 
 class CanvasEditorScreen extends StatefulWidget {
   final int maxTextChars;
+  final int? maxBinaryPayloadBytes;
+  final String? binarySenderName;
   final MCOImage? initialImage;
 
   const CanvasEditorScreen({
     super.key,
     required this.maxTextChars,
+    this.maxBinaryPayloadBytes,
+    this.binarySenderName,
     this.initialImage,
   });
 
@@ -89,6 +94,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsWidthKey = 'canvas_editor_width';
   static const String _prefsHeightKey = 'canvas_editor_height';
   static const String _prefsPaletteKey = 'canvas_editor_palette';
+  static const String _prefsUnlockSizeKey = 'canvas_editor_unlock_size';
   static const List<PaletteProfile> _paletteProfileOptions = [
     PaletteProfile.mono,
     PaletteProfile.grayscale8,
@@ -858,7 +864,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     BuildContext context, {
     required bool showLockButton,
   }) {
-    final isOverLimit = _currentPayloadChars > _sendPayloadLimit;
+    final isOverLimit = _currentPayloadChars > _effectivePayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
     return LayoutBuilder(
@@ -1163,7 +1169,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _master64CellBudgetMultiplier *
         _master64BitsPerCell /
         _paletteBitsPerCell(profile);
-    final byCompressedBudget = (_sendPayloadLimit * multiplier).floor();
+    final byCompressedBudget = (_effectivePayloadLimit * multiplier).floor();
     return math.max(
       _minCanvasSize * _minCanvasSize,
       math.min(
@@ -1174,8 +1180,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  int get _sendPayloadLimit =>
+  int get _textPayloadLimit =>
       math.max(0, widget.maxTextChars - _humanReadablePrefixReserveChars);
+
+  int get _effectivePayloadLimit =>
+      widget.maxBinaryPayloadBytes ?? _textPayloadLimit;
 
   void _loadSavedCanvasSettings() {
     final prefs = PrefsManager.instance;
@@ -1186,15 +1195,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
     final requestedWidth = prefs.getInt(_prefsWidthKey) ?? _defaultSize;
     final requestedHeight = prefs.getInt(_prefsHeightKey) ?? _defaultSize;
+    final unlockCanvasSize = prefs.getBool(_prefsUnlockSizeKey) ?? false;
     final bounded = _boundedCanvasSizeForProfile(
       requestedWidth,
       requestedHeight,
       profile,
+      unlockAdaptiveLimit: unlockCanvasSize,
     );
     final width = bounded[0];
     final height = bounded[1];
 
     _paletteProfile = profile;
+    _unlockCanvasSize = unlockCanvasSize;
     if (profile.isDynamic) {
       _dynamicPaletteProfile = profile;
     }
@@ -1211,6 +1223,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _loadInitialImage(MCOImage image) {
     // Reusing an existing message image should preserve its codec palette and
     // exact canvas dimensions instead of applying the user's last editor preset.
+    _unlockCanvasSize =
+        PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
     _encodingVersion = image.encodingVersion;
     _paletteProfile = image.paletteProfile;
     if (image.paletteProfile.isDynamic) {
@@ -1235,6 +1249,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final prefs = PrefsManager.instance;
     await prefs.setInt(_prefsWidthKey, width);
     await prefs.setInt(_prefsHeightKey, height);
+  }
+
+  Future<void> _saveCanvasSizeUnlocked(bool value) async {
+    await PrefsManager.instance.setBool(_prefsUnlockSizeKey, value);
   }
 
   bool get _supportsDynamicPalettes =>
@@ -1357,6 +1375,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (unlocked == _unlockCanvasSize) return;
 
     setState(() => _unlockCanvasSize = unlocked);
+    unawaited(_saveCanvasSizeUnlocked(unlocked));
 
     if (!unlocked) {
       final size = _requestedBoundedCanvasSize();
@@ -1569,6 +1588,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           : _whiteIndex,
       encodingVersion: _encodingVersion,
     );
+    return _payloadSizeForEncoded(encoded);
+  }
+
+  int _payloadSizeForEncoded(EncodedMCOImage encoded) {
+    final binaryLimit = widget.maxBinaryPayloadBytes;
+    if (binaryLimit != null) {
+      final payloadBytes = ChannelBinaryDataHelper.mcoImagePayloadLength(
+        encoded.text,
+        widget.binarySenderName ?? 'Me',
+      );
+      if (payloadBytes != null) return payloadBytes;
+    }
     return encoded.charLength;
   }
 
@@ -2496,8 +2527,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             : _whiteIndex,
         encodingVersion: _encodingVersion,
       );
-      _currentPayloadChars = encoded.charLength;
-      final overflow = encoded.charLength - _sendPayloadLimit;
+      final payloadSize = _payloadSizeForEncoded(encoded);
+      _currentPayloadChars = payloadSize;
+      final overflow = payloadSize - _effectivePayloadLimit;
       if (overflow > 0) {
         showDismissibleSnackBar(
           context,

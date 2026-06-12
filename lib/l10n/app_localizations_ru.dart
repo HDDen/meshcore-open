@@ -5021,6 +5021,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки';
 
   @override
+  String get settings_channelsSendAsBinary =>
+      'Отправлять расширенные форматы в бинарном виде (каналы)';
+
+  @override
+  String get settings_dmSendAsBinary =>
+      'Отправлять расширенные форматы в бинарном виде (личные сообщения)';
+
+  @override
   String get contact_typeChat => 'Чат';
 
   @override
