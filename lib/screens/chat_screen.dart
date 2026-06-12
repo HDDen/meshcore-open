@@ -39,6 +39,7 @@ import '../widgets/elements_ui.dart';
 import '../widgets/byte_count_input.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
+import 'contacts_screen.dart';
 import 'map_screen.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/emoji_picker.dart';
@@ -110,6 +111,9 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       connector.setActiveContact(keyHex);
       _connector = connector;
+      if (PlatformInfo.isDesktop) {
+        _textFieldFocusNode.requestFocus();
+      }
       if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -187,8 +191,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return CallbackShortcuts(
+      bindings: PlatformInfo.isDesktop
+          ? <ShortcutActivator, VoidCallback>{
+              const SingleActivator(LogicalKeyboardKey.escape): () {
+                unawaited(_handleEscapeNavigation());
+              },
+            }
+          : const <ShortcutActivator, VoidCallback>{},
+      child: Scaffold(
+        appBar: AppBar(
         title: Consumer2<PathHistoryService, MeshCoreConnector>(
           builder: (context, pathService, connector, _) {
             final contact = _resolveContact(connector);
@@ -437,6 +449,7 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         },
       ),
+      ),
     );
   }
 
@@ -573,6 +586,17 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _handleEscapeNavigation() async {
+    final navigator = Navigator.of(context);
+    final didPop = await navigator.maybePop();
+    if (!mounted || didPop) return;
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(hideBackButton: true),
+      ),
     );
   }
 

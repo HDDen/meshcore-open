@@ -53,6 +53,7 @@ import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
 import 'channel_message_path_screen.dart';
 import 'canvas_editor_screen.dart';
+import 'channels_screen.dart';
 import 'map_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 
@@ -121,6 +122,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       });
       connector.setActiveChannel(idx);
       _connector = connector;
+      if (PlatformInfo.isDesktop) {
+        _textFieldFocusNode.requestFocus();
+      }
       if (anchor != null && settings.jumpToOldestUnread) {
         _channelSkipNextBottomSnap = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -469,8 +473,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return CallbackShortcuts(
+      bindings: PlatformInfo.isDesktop
+          ? <ShortcutActivator, VoidCallback>{
+              const SingleActivator(LogicalKeyboardKey.escape): () {
+                unawaited(_handleEscapeNavigation());
+              },
+            }
+          : const <ShortcutActivator, VoidCallback>{},
+      child: Scaffold(
+        appBar: AppBar(
         title: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => openRegionSelectDialog(widget.channel),
@@ -692,6 +704,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -705,6 +718,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       if (found && !m.isOutgoing) count++;
     }
     connector.setChannelUnreadCount(widget.channel.index, count);
+  }
+
+  Future<void> _handleEscapeNavigation() async {
+    final navigator = Navigator.of(context);
+    final didPop = await navigator.maybePop();
+    if (!mounted || didPop) return;
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const ChannelsScreen(hideBackButton: true),
+      ),
+    );
   }
 
   Widget _buildMessageBubble(ChannelMessage message, double textScale) {
