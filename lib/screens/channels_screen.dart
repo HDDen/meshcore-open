@@ -524,7 +524,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 const SizedBox(width: 4),
               ],
               if (showDragHandle && dragIndex != null)
-                ReorderableDragStartListener(
+                ReorderableDelayedDragStartListener(
                   index: dragIndex,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
