@@ -9,15 +9,21 @@ import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/path_hop_resolver.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
-import '../connector/meshcore_protocol.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
 import '../models/app_settings.dart';
 import '../models/contact.dart';
+import '../models/display_path.dart';
+import '../models/path_playback.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/mesh_ui.dart';
+import '../widgets/path_map_ui.dart';
+import '../widgets/themed_map_tile_layer.dart';
 
 class ChannelMessagePathScreen extends StatelessWidget {
   final ChannelMessage message;
@@ -33,7 +39,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
     return Consumer<MeshCoreConnector>(
       builder: (context, connector, _) {
         final l10n = context.l10n;
-        final primaryPath = _selectPrimaryPath(
+        final primaryPathTmp = _selectPrimaryPath(
           message.pathBytes,
           message.pathVariants,
         );
@@ -42,11 +48,17 @@ class ChannelMessagePathScreen extends StatelessWidget {
             (message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
+        final primaryPath = _orientPathBytes(
+          primaryPathTmp,
+          hashByteWidth,
+          reverse: !channelMessage && !message.isOutgoing,
+        );
         final hops = _buildPathHops(
           primaryPath,
           connector,
           l10n,
           hashByteWidth,
+          resolveFromEnd: !message.isOutgoing,
         );
         final hasHopDetails = primaryPath.isNotEmpty;
 
@@ -103,7 +115,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
           body: SafeArea(
             top: false,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 _buildSummaryCard(
                   context,
@@ -112,28 +124,23 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 if (extraPaths.isNotEmpty) ...[
-                  Text(
+                  SectionHeader(
                     l10n.channelPath_otherObservedPaths,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   ),
                   const SizedBox(height: 8),
                   _buildPathVariants(context, extraPaths, hashByteWidth),
                   const SizedBox(height: 16),
                 ],
-                Text(
+                SectionHeader(
                   l10n.channelPath_repeaterHops,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 ),
-                const SizedBox(height: 8),
                 if (!hasHopDetails)
-                  Text(
-                    l10n.channelPath_noHopDetails,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  )
+                  _buildNoHopCard(context, l10n)
                 else
-                  ..._buildHopTiles(context, hops),
+                  _buildHopTimeline(context, hops, l10n),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -149,52 +156,71 @@ class ChannelMessagePathScreen extends StatelessWidget {
   }) {
     final l10n = context.l10n;
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.channelPath_messageDetails,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
+    final scheme = Theme.of(context).colorScheme;
+    final routeChip = effectiveHopCount == null
+        ? null
+        : effectiveHopCount < 0
+        ? const RouteChip(isDirect: false)
+        : RouteChip(isDirect: true, hops: effectiveHopCount);
+
+    return MeshCard(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: SectionHeader(
+                  l10n.channelPath_messageDetails,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              ?routeChip,
+            ],
+          ),
+          const SizedBox(height: 10),
+          _buildDetailRow(
+            context,
+            l10n.channelPath_senderLabel,
+            message.senderName,
+            scheme: scheme,
+          ),
+          _buildDetailRow(
+            context,
+            l10n.channelPath_timeLabel,
+            _formatTime(message.timestamp, l10n),
+            scheme: scheme,
+          ),
+          if (outgoingRadioWaitLabel != null)
             _buildDetailRow(
               context,
-              l10n.channelPath_senderLabel,
-              message.senderName,
+              l10n.channelPath_outgoingSentByRadioAt,
+              outgoingRadioWaitLabel,
+              scheme: scheme,
             ),
+          if (message.repeatCount > 0)
             _buildDetailRow(
               context,
-              l10n.channelPath_timeLabel,
-              _formatTime(message.timestamp, l10n),
+              l10n.channelPath_repeatsLabel,
+              message.repeatCount.toString(),
+              scheme: scheme,
             ),
-            if (outgoingRadioWaitLabel != null)
-              _buildDetailRow(
-                context,
-                l10n.channelPath_outgoingSentByRadioAt,
-                outgoingRadioWaitLabel,
-              ),
-            if (message.repeatCount > 0)
-              _buildDetailRow(
-                context,
-                l10n.channelPath_repeatsLabel,
-                message.repeatCount.toString(),
-              ),
+          _buildDetailRow(
+            context,
+            l10n.channelPath_pathLabelTitle,
+            _formatPathLabel(effectiveHopCount, l10n),
+            scheme: scheme,
+          ),
+          if (observedLabel != null)
             _buildDetailRow(
               context,
-              l10n.channelPath_pathLabelTitle,
-              _formatPathLabel(effectiveHopCount, l10n),
+              l10n.channelPath_observedLabel,
+              observedLabel,
+              scheme: scheme,
             ),
-            if (observedLabel != null)
-              _buildDetailRow(
-                context,
-                l10n.channelPath_observedLabel,
-                observedLabel,
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -209,54 +235,203 @@ class ChannelMessagePathScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < variants.length; i++)
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            child: ListTile(
-              dense: true,
-              title: Text(
-                l10n.channelPath_observedPathTitle(
-                  i + 1,
-                  _formatHopCount(variants[i].length, hashByteWidth, l10n),
+          MeshCard(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            onTap: () => _openPathMap(
+              context,
+              initialPath: variants[i],
+              channelMessage: channelMessage,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.channelPath_observedPathTitle(
+                          i + 1,
+                          _formatHopCount(
+                            variants[i].length,
+                            hashByteWidth,
+                            l10n,
+                          ),
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatPathPrefixes(variants[i], hashByteWidth),
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              subtitle: Text(_formatPathPrefixes(variants[i], hashByteWidth)),
-              trailing: const Icon(Icons.map_outlined, size: 20),
-              onTap: () => _openPathMap(
-                context,
-                initialPath: variants[i],
-                channelMessage: channelMessage,
-              ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.map_outlined,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
             ),
           ),
       ],
     );
   }
 
-  List<Widget> _buildHopTiles(BuildContext context, List<_PathHop> hops) {
-    final l10n = context.l10n;
-    return [
-      for (final hop in hops)
-        Card(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          child: ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              radius: 14,
-              child: Text(
-                hop.index.toString(),
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-            title: Text(hop.displayLabel),
-            subtitle: Text(
-              hop.hasLocation
-                  ? '${hop.position!.latitude.toStringAsFixed(5)}, '
-                        '${hop.position!.longitude.toStringAsFixed(5)}'
-                  : l10n.channelPath_noLocationData,
+  Widget _buildNoHopCard(BuildContext context, AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    return MeshCard(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Icon(Icons.route_outlined, size: 20, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.channelPath_noHopDetails,
+              style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ),
-        ),
-    ];
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHopTimeline(
+    BuildContext context,
+    List<_PathHop> hops,
+    AppLocalizations l10n,
+  ) {
+    if (hops.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          for (int i = 0; i < hops.length; i++)
+            ListEntrance(
+              index: i,
+              child: _buildTimelineNode(
+                context,
+                hops[i],
+                l10n,
+                isLast: i == hops.length - 1,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineNode(
+    BuildContext context,
+    _PathHop hop,
+    AppLocalizations l10n, {
+    required bool isLast,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final hexPrefix = _formatPrefix(hop.prefix);
+    final locationText = hop.hasLocation
+        ? '${hop.position!.latitude.toStringAsFixed(5)}, '
+              '${hop.position!.longitude.toStringAsFixed(5)}'
+        : l10n.channelPath_noLocationData;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 48,
+            child: Column(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AvatarCircle(name: hop.displayLabel, size: 36),
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: MeshPalette.blueDim,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: scheme.surfaceContainerLow,
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          hop.index.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: MeshPalette.blueLine,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 12),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16, top: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hop.displayLabel,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hexPrefix,
+                    style: MeshTheme.mono(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    locationText,
+                    style: MeshTheme.mono(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatTime(DateTime time, AppLocalizations l10n) {
@@ -312,7 +487,12 @@ class ChannelMessagePathScreen extends StatelessWidget {
     return l10n.channelPath_observedSomeOf(observedCount, targetHopCount);
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    required ColorScheme scheme,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: LayoutBuilder(
@@ -323,7 +503,10 @@ class ChannelMessagePathScreen extends StatelessWidget {
             children: [
               SizedBox(
                 width: labelWidth,
-                child: Text(label, style: TextStyle(color: Colors.grey[600])),
+                child: Text(
+                  label.toUpperCase(),
+                  style: MeshTheme.accentLabel(color: scheme.onSurfaceVariant),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(child: Text(value)),
@@ -370,7 +553,8 @@ class ChannelMessagePathMapScreen extends StatefulWidget {
 }
 
 class _ChannelMessagePathMapScreenState
-    extends State<ChannelMessagePathMapScreen> {
+    extends State<ChannelMessagePathMapScreen>
+    with SingleTickerProviderStateMixin {
   static const double _labelZoomThreshold = 8.5;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
@@ -382,10 +566,39 @@ class _ChannelMessagePathMapScreenState
   bool _didReceivePositionUpdate = false;
   int? _focusedHopIndex;
 
+  // Packet-flow animation + multi-path view state.
+  late final PathPlaybackController _playback;
+  PathViewMode _viewMode = PathViewMode.single;
+  final Set<String> _hiddenPathIds = {};
+  bool _panelCollapsed = false;
+  bool _animationEnabled = true;
+  bool _followPacket = false;
+
   @override
   void initState() {
     super.initState();
     _selectedPath = widget.initialPath;
+    _playback = PathPlaybackController(this);
+    _playback.addListener(_followPacketCamera);
+  }
+
+  /// Keeps the camera centered on the packet while the follow lock is on.
+  void _followPacketCamera() {
+    if (!_followPacket ||
+        !_animationEnabled ||
+        !_playback.started ||
+        !_playback.hasPath ||
+        !mounted) {
+      return;
+    }
+    _mapController.move(_playback.position, _mapController.camera.zoom);
+  }
+
+  void _toggleFollowPacket() {
+    setState(() {
+      _followPacket = !_followPacket;
+    });
+    _followPacketCamera();
   }
 
   @override
@@ -402,8 +615,143 @@ class _ChannelMessagePathMapScreenState
 
   @override
   void dispose() {
+    _playback.dispose();
     _mapController.dispose();
     super.dispose();
+  }
+
+  /// Builds a renderable [DisplayPath] for one observed route, oriented in
+  /// the direction the packet traveled (sender first, receiver last).
+  DisplayPath? _buildDisplayPath({
+    required int index,
+    required bool isPrimary,
+    required Uint8List orientedBytes,
+    required List<_PathHop> hops,
+    required MeshCoreConnector connector,
+  }) {
+    final l10n = context.l10n;
+    final selfLat = connector.selfLatitude;
+    final selfLon = connector.selfLongitude;
+
+    final points = <LatLng>[];
+    final labels = <String>[];
+    final confirmed = <bool>[];
+    final rowIdx = <int>[];
+    final gapBefore = <bool>[];
+    var pendingGap = false;
+    var locatedHops = 0;
+
+    void addSelf() {
+      if (selfLat == null || selfLon == null) return;
+      points.add(LatLng(selfLat, selfLon));
+      labels.add(l10n.pathTrace_you);
+      confirmed.add(true);
+      rowIdx.add(-1);
+      gapBefore.add(pendingGap);
+      pendingGap = false;
+    }
+
+    final selfFirst = widget.message.isOutgoing;
+    if (selfFirst) addSelf();
+    for (var i = 0; i < hops.length; i++) {
+      final hop = hops[i];
+      if (!hop.hasLocation) {
+        pendingGap = true;
+        continue;
+      }
+      locatedHops++;
+      points.add(hop.position!);
+      labels.add(hop.contact?.name ?? _formatPrefix(hop.prefix));
+      confirmed.add(true);
+      rowIdx.add(i);
+      gapBefore.add(pendingGap);
+      pendingGap = false;
+    }
+    if (!selfFirst) addSelf();
+
+    if (points.length < 2) return null;
+
+    final segmentEstimated = <bool>[];
+    final rowForSegment = <int>[];
+    for (var i = 0; i < points.length - 1; i++) {
+      segmentEstimated.add(gapBefore[i + 1]);
+      final dest = rowIdx[i + 1];
+      rowForSegment.add(dest >= 0 ? dest : (rowIdx[i] >= 0 ? rowIdx[i] : 0));
+    }
+
+    return DisplayPath(
+      id: 'op-$index',
+      label: isPrimary ? l10n.pathMap_primary : l10n.pathMap_alternate(index),
+      color: isPrimary
+          ? kPrimaryPathColor
+          : kAlternatePathColors[(index - 1) % kAlternatePathColors.length],
+      isPrimary: isPrimary,
+      hopBytes: [
+        for (final hop in hops)
+          if (hop.hopBytes != null) Uint8List.fromList(hop.hopBytes!),
+      ],
+      points: points,
+      pointLabels: labels,
+      pointConfirmed: confirmed,
+      segmentEstimated: segmentEstimated,
+      rowForSegment: rowForSegment,
+      totalTransmissions: hops.length,
+      hasTargetEndpoint: false,
+      gpsConfirmedHops: locatedHops,
+      unresolvedHops: hops.length - locatedHops,
+      distanceMeters: getPathDistanceMeters(points),
+      record: null,
+    );
+  }
+
+  /// Updates the playback path after this frame, but only when the selected
+  /// path's geometry actually changed, so rebuilds don't reset a running
+  /// animation.
+  void _schedulePlaybackSync(DisplayPath? selected) {
+    final points = selected?.points ?? const <LatLng>[];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (points.length == _playback.points.length) {
+        var same = true;
+        for (var i = 0; i < points.length; i++) {
+          if (points[i] != _playback.points[i]) {
+            same = false;
+            break;
+          }
+        }
+        if (same) return;
+      }
+      _playback.setPath(points);
+    });
+  }
+
+  void _selectEntry(_ObservedPathEntry entry) {
+    setState(() {
+      _selectedPath = entry.observedBytes;
+      _hiddenPathIds.remove(entry.display.id);
+      _focusedHopIndex = null;
+    });
+  }
+
+  void _togglePathVisibility(
+    DisplayPath path,
+    List<_ObservedPathEntry> entries,
+    DisplayPath? selected,
+  ) {
+    setState(() {
+      if (!_hiddenPathIds.remove(path.id)) {
+        _hiddenPathIds.add(path.id);
+        if (path.id == selected?.id) {
+          final visible = entries.where(
+            (e) => !_hiddenPathIds.contains(e.display.id),
+          );
+          if (visible.isNotEmpty) {
+            _selectedPath = visible.first.observedBytes;
+            _focusedHopIndex = null;
+          }
+        }
+      }
+    });
   }
 
   bool _isDesktopPlatform(TargetPlatform platform) {
@@ -510,6 +858,7 @@ class _ChannelMessagePathMapScreenState
         final settings = context.watch<AppSettingsService>().settings;
         final isImperial = settings.unitSystem == UnitSystem.imperial;
         final tileCache = context.read<MapTileCacheService>();
+        final mapScheme = Theme.of(context).colorScheme;
         final primaryPath = _selectPrimaryPath(
           widget.message.pathBytes,
           widget.message.pathVariants,
@@ -519,7 +868,7 @@ class _ChannelMessagePathMapScreenState
           widget.message.pathVariants,
         );
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
-        final selectedPath = _resolveSelectedPath(
+        final selectedPathTmp = _resolveSelectedPath(
           _selectedPath,
           observedPaths,
           primaryPath,
@@ -529,13 +878,68 @@ class _ChannelMessagePathMapScreenState
             (widget.message.pathHashWidth ?? connector.pathHashByteWidth)
                 .clamp(1, 4)
                 .toInt();
-        final selectedIndex = _indexForPath(selectedPath, observedPaths);
+        final selectedPath = _orientPath(selectedPathTmp, width);
+
+        // Match on the unoriented bytes — observedPaths stores them as
+        // recorded, while selectedPath may be reversed for display.
+        final selectedIndex = _indexForPath(selectedPathTmp, observedPaths);
         final hops = _buildPathHops(
           selectedPath,
           connector,
           context.l10n,
           width,
+          resolveFromEnd: !widget.message.isOutgoing,
         );
+
+        // Renderable paths for the animation and combined view.
+        final entries = <_ObservedPathEntry>[];
+        for (var i = 0; i < observedPaths.length; i++) {
+          final oriented = _orientPath(observedPaths[i].pathBytes, width);
+          final pathHops = i == selectedIndex
+              ? hops
+              : _buildPathHops(
+                  oriented,
+                  connector,
+                  context.l10n,
+                  width,
+                  resolveFromEnd: !widget.message.isOutgoing,
+                );
+          final display = _buildDisplayPath(
+            index: i,
+            isPrimary: observedPaths[i].isPrimary,
+            orientedBytes: oriented,
+            hops: pathHops,
+            connector: connector,
+          );
+          if (display != null) {
+            entries.add(
+              _ObservedPathEntry(
+                index: i,
+                observedBytes: observedPaths[i].pathBytes,
+                display: display,
+                hops: pathHops,
+              ),
+            );
+          }
+        }
+        final effectiveMode = entries.length > 1
+            ? _viewMode
+            : PathViewMode.single;
+        _ObservedPathEntry? selectedEntry;
+        for (final entry in entries) {
+          if (entry.index == selectedIndex) {
+            selectedEntry = entry;
+            break;
+          }
+        }
+        final selectedDisplay = selectedEntry?.display;
+        final visibleEntries = effectiveMode == PathViewMode.single
+            ? [?selectedEntry]
+            : entries
+                  .where((e) => !_hiddenPathIds.contains(e.display.id))
+                  .toList();
+        final visibleDisplays = visibleEntries.map((e) => e.display).toList();
+        _schedulePlaybackSync(selectedDisplay);
 
         final points = <LatLng>[];
 
@@ -560,7 +964,7 @@ class _ChannelMessagePathMapScreenState
                 Polyline(
                   points: points,
                   strokeWidth: 4,
-                  color: Colors.blueAccent,
+                  color: MeshPalette.blue,
                 ),
               ]
             : <Polyline>[];
@@ -617,10 +1021,16 @@ class _ChannelMessagePathMapScreenState
                           : const KeyboardOptions.disabled(),
                     ),
                     onPositionChanged: (camera, hasGesture) {
+                      if (!mounted) return;
+                      // A manual pan/zoom releases the follow lock.
+                      if (hasGesture && _followPacket) {
+                        setState(() {
+                          _followPacket = false;
+                        });
+                      }
                       final shouldShow = camera.zoom >= _labelZoomThreshold;
                       if (!_didReceivePositionUpdate ||
                           shouldShow != _showNodeLabels) {
-                        if (!mounted) return;
                         setState(() {
                           _didReceivePositionUpdate = true;
                           _showNodeLabels = shouldShow;
@@ -629,20 +1039,64 @@ class _ChannelMessagePathMapScreenState
                     },
                   ),
                   children: [
-                    TileLayer(
-                      urlTemplate: kMapTileUrlTemplate,
-                      tileProvider: tileCache.tileProvider,
-                      userAgentPackageName:
-                          MapTileCacheService.userAgentPackageName,
-                      maxZoom: 19,
+                    ThemedMapTileLayer(tileCache: tileCache),
+                    AnimatedBuilder(
+                      animation: _playback,
+                      builder: (context, _) {
+                        List<Polyline> lines;
+                        if (visibleDisplays.isEmpty) {
+                          lines = polylines;
+                        } else {
+                          final animating =
+                              _animationEnabled &&
+                              _playback.started &&
+                              _playback.hasPath;
+                          lines = buildMultiPathPolylines(
+                            visible: visibleDisplays,
+                            selected: selectedDisplay,
+                            combined: effectiveMode == PathViewMode.combined,
+                            animating: animating,
+                          );
+                          if (animating && selectedDisplay != null) {
+                            lines.addAll(
+                              buildPacketTrailPolylines(
+                                _playback,
+                                selectedDisplay.color,
+                              ),
+                            );
+                          }
+                        }
+                        if (lines.isEmpty) return const SizedBox.shrink();
+                        return PolylineLayer(polylines: lines);
+                      },
                     ),
-                    if (polylines.isNotEmpty)
-                      PolylineLayer(polylines: polylines),
-                    MarkerLayer(
-                      markers: _buildHopMarkers(
-                        hops,
-                        showLabels: _showNodeLabels,
+                    if (effectiveMode == PathViewMode.combined)
+                      MarkerLayer(
+                        markers: _buildCombinedHopMarkers(
+                          visibleEntries,
+                          showLabels: _showNodeLabels,
+                        ),
+                      )
+                    else
+                      MarkerLayer(
+                        markers: _buildHopMarkers(
+                          hops,
+                          showLabels: _showNodeLabels,
+                        ),
                       ),
+                    AnimatedBuilder(
+                      animation: _playback,
+                      builder: (context, _) {
+                        if (!_animationEnabled || selectedDisplay == null) {
+                          return const SizedBox.shrink();
+                        }
+                        final markers = buildPacketMarkers(
+                          _playback,
+                          selectedDisplay.color,
+                        );
+                        if (markers.isEmpty) return const SizedBox.shrink();
+                        return MarkerLayer(markers: markers);
+                      },
                     ),
                   ],
                 ),
@@ -652,7 +1106,13 @@ class _ChannelMessagePathMapScreenState
                     initialZoom: initialZoom,
                     bounds: bounds,
                   ),
-                if (observedPaths.length > 1)
+                if (entries.length > 1)
+                  PathViewModeToggle(
+                    mode: effectiveMode,
+                    onChanged: (mode) => setState(() => _viewMode = mode),
+                  ),
+                if (observedPaths.length > 1 &&
+                    effectiveMode == PathViewMode.single)
                   _buildPathSelector(
                     context,
                     observedPaths,
@@ -664,22 +1124,29 @@ class _ChannelMessagePathMapScreenState
                         _focusedHopIndex = null;
                       });
                     },
+                    topOffset: entries.length > 1 ? 60.0 : 16.0,
                   ),
                 if (points.isEmpty)
                   Center(
-                    child: Card(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surface.withValues(alpha: 0.9),
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          context.l10n.channelPath_noRepeaterLocations,
-                        ),
+                    child: Container(
+                      margin: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: mapScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(MeshRadii.md),
+                        border: Border.all(color: mapScheme.outlineVariant),
                       ),
+                      child: Text(context.l10n.channelPath_noRepeaterLocations),
                     ),
                   ),
-                _buildLegendCard(context, hops, isImperial),
+                _buildLegendCard(
+                  context,
+                  hops,
+                  isImperial,
+                  entries: entries,
+                  selectedEntry: selectedEntry,
+                  effectiveMode: effectiveMode,
+                ),
               ],
             ),
           ),
@@ -693,10 +1160,11 @@ class _ChannelMessagePathMapScreenState
     List<_ObservedPath> paths,
     int selectedIndex,
     int hashByteWidth,
-    ValueChanged<int> onSelected,
-  ) {
+    ValueChanged<int> onSelected, {
+    double topOffset = 16,
+  }) {
     final l10n = context.l10n;
-    final width = hashByteWidth.clamp(1, 4);
+    final width = hashByteWidth.clamp(1, 4).toInt();
     final selectedPath = paths[selectedIndex];
     final label = selectedPath.isPrimary
         ? l10n.channelPath_primaryPath(selectedIndex + 1)
@@ -704,7 +1172,7 @@ class _ChannelMessagePathMapScreenState
     return Positioned(
       left: 16,
       right: 16,
-      top: 16,
+      top: topOffset,
       child: SafeArea(
         child: Card(
           child: Padding(
@@ -774,7 +1242,7 @@ class _ChannelMessagePathMapScreenState
               width: 35,
               height: 35,
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: MeshPalette.blue,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: [
@@ -808,40 +1276,163 @@ class _ChannelMessagePathMapScreenState
       }
     }
 
+    markers.addAll(_buildSelfMarkers(showLabels: showLabels));
+
+    return markers;
+  }
+
+  List<Marker> _buildSelfMarkers({required bool showLabels}) {
     final selfLat = context.read<MeshCoreConnector>().selfLatitude;
     final selfLon = context.read<MeshCoreConnector>().selfLongitude;
-    if (selfLat != null && selfLon != null) {
-      final selfPoint = LatLng(selfLat, selfLon);
+    if (selfLat == null || selfLon == null) return const [];
+    final markers = <Marker>[];
+    final selfPoint = LatLng(selfLat, selfLon);
+    markers.add(
+      Marker(
+        point: selfPoint,
+        width: 48,
+        height: 48,
+        child: Center(
+          child: Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: MeshPalette.signal,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              context.l10n.pathTrace_you,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (showLabels) {
+      markers.add(
+        _buildNodeLabelMarker(
+          point: selfPoint,
+          label: context.l10n.pathTrace_you,
+        ),
+      );
+    }
+    return markers;
+  }
+
+  /// Markers for the union of located hops across all visible paths, with a
+  /// badge on repeaters used by more than one path.
+  List<Marker> _buildCombinedHopMarkers(
+    List<_ObservedPathEntry> visibleEntries, {
+    required bool showLabels,
+  }) {
+    final markers = <Marker>[];
+
+    final nodes = <String, _SharedNode>{};
+    for (final entry in visibleEntries) {
+      final seenInPath = <String>{};
+      for (final hop in entry.hops) {
+        if (!hop.hasLocation) continue;
+        final key =
+            '${hop.prefix}|${hop.position!.latitude.toStringAsFixed(5)},'
+            '${hop.position!.longitude.toStringAsFixed(5)}';
+        if (!seenInPath.add(key)) continue;
+        nodes.putIfAbsent(key, () => _SharedNode(hop)).paths.add(entry.display);
+      }
+    }
+
+    for (final node in nodes.values) {
+      final hop = node.hop;
+      final point = hop.position!;
+      final label = _formatPrefix(hop.prefix);
+      final shared = node.paths.length > 1;
+
       markers.add(
         Marker(
-          point: selfPoint,
+          point: point,
           width: 48,
           height: 48,
-          child: Center(
-            child: Container(
-              width: 35,
-              height: 35,
-              decoration: BoxDecoration(
-                color: Colors.teal,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+          child: GestureDetector(
+            onTap: () => showSharedNodeSheet(
+              context,
+              title: '$label: ${_resolveName(hop.contact, context.l10n)}',
+              paths: node.paths,
+              onSelect: (display) {
+                for (final entry in visibleEntries) {
+                  if (entry.display.id == display.id) {
+                    _selectEntry(entry);
+                    break;
+                  }
+                }
+              },
+            ),
+            child: Stack(
               alignment: Alignment.center,
-              child: Text(
-                context.l10n.pathTrace_you,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+              children: [
+                Container(
+                  width: 35,
+                  height: 35,
+                  decoration: BoxDecoration(
+                    color: MeshPalette.blue,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: shared ? 2.5 : 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
-              ),
+                if (shared)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: MeshPalette.bg1,
+                        border: Border.all(color: MeshPalette.line3),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${node.paths.length}',
+                        style: MeshTheme.mono(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: MeshPalette.ink,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -849,14 +1440,24 @@ class _ChannelMessagePathMapScreenState
       if (showLabels) {
         markers.add(
           _buildNodeLabelMarker(
-            point: selfPoint,
-            label: context.l10n.pathTrace_you,
+            point: point,
+            label: hop.contact?.name ?? label,
           ),
         );
       }
     }
 
+    markers.addAll(_buildSelfMarkers(showLabels: showLabels));
+
     return markers;
+  }
+
+  /// Orients recorded path bytes in the direction the packet traveled.
+  Uint8List _orientPath(Uint8List bytes, int hashByteWidth) {
+    final reverse =
+        (!widget.message.isOutgoing && !widget.channelMessage) ||
+        (widget.message.isOutgoing && widget.channelMessage);
+    return _orientPathBytes(bytes, hashByteWidth, reverse: reverse);
   }
 
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {
@@ -894,21 +1495,38 @@ class _ChannelMessagePathMapScreenState
     );
   }
 
-  Widget _colorDot(Color color) => Container(
-    width: 10,
-    height: 10,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-  );
-
   Widget _buildLegendCard(
     BuildContext context,
     List<_PathHop> hops,
-    bool isImperial,
-  ) {
+    bool isImperial, {
+    required List<_ObservedPathEntry> entries,
+    required _ObservedPathEntry? selectedEntry,
+    required PathViewMode effectiveMode,
+  }) {
     final l10n = context.l10n;
-    final maxHeight = MediaQuery.of(context).size.height * 0.35;
-    final estimatedHeight = 72.0 + (hops.length * 56.0);
-    final cardHeight = max(96.0, min(maxHeight, estimatedHeight));
+    final combined = effectiveMode == PathViewMode.combined;
+    final selectedDisplay = selectedEntry?.display;
+    final maxHeight =
+        MediaQuery.of(context).size.height * (combined ? 0.45 : 0.35);
+
+    double cardHeight;
+    if (_panelCollapsed) {
+      cardHeight = 128;
+    } else {
+      final summaryHeight = combined ? 34.0 + entries.length * 36.0 : 0;
+      final estimatedHeight = 132.0 + summaryHeight + hops.length * 56.0;
+      cardHeight = max(176.0, min(maxHeight, estimatedHeight));
+    }
+
+    final hopUseCount = <int, int>{};
+    if (combined) {
+      for (final entry in entries) {
+        if (_hiddenPathIds.contains(entry.display.id)) continue;
+        for (final prefix in entry.hops.map((h) => h.prefix).toSet()) {
+          hopUseCount.update(prefix, (v) => v + 1, ifAbsent: () => 1);
+        }
+      }
+    }
 
     return Positioned(
       left: 16,
@@ -916,80 +1534,277 @@ class _ChannelMessagePathMapScreenState
       bottom: 16,
       child: SizedBox(
         height: cardHeight,
-        child: Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: MeshPalette.bg1,
+            borderRadius: BorderRadius.circular(MeshRadii.md),
+            border: Border.all(color: MeshPalette.line2),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: DefaultTextStyle(
+            style: const TextStyle(color: MeshPalette.ink),
+            child: IconTheme(
+              data: const IconThemeData(color: MeshPalette.ink),
+              child: TextButtonTheme(
+                data: TextButtonThemeData(
+                  style: TextButton.styleFrom(foregroundColor: MeshPalette.ink),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${l10n.channelPath_repeaterHops} ${formatDistance(_pathDistance, isImperial: isImperial)}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        l10n.channelPath_repeaterHops,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      formatDistance(
+                                        selectedDisplay?.distanceMeters ??
+                                            _pathDistance,
+                                        isImperial: isImperial,
+                                      ),
+                                      style: MeshTheme.mono(
+                                        fontSize: 12,
+                                        color: MeshPalette.ink2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                PathMiniLegend(
+                                  combined: combined,
+                                  showInferred: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(
+                              _panelCollapsed
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
+                              size: 20,
+                            ),
+                            tooltip: _panelCollapsed
+                                ? l10n.pathMap_expandPanel
+                                : l10n.pathMap_collapsePanel,
+                            onPressed: () => setState(
+                              () => _panelCollapsed = !_panelCollapsed,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _colorDot(Colors.green),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.pathTrace_legendGpsConfirmed,
-                          style: const TextStyle(fontSize: 11),
+                    PathAnimationControls(
+                      playback: _playback,
+                      selected: selectedDisplay,
+                      animationEnabled: _animationEnabled,
+                      onToggleAnimation: () => setState(() {
+                        _animationEnabled = !_animationEnabled;
+                        if (!_animationEnabled) _playback.stop();
+                      }),
+                      followEnabled: _followPacket,
+                      onToggleFollow: _toggleFollowPacket,
+                    ),
+                    if (!_panelCollapsed) ...[
+                      if (selectedDisplay != null &&
+                          selectedDisplay.unresolvedHops > 0)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                          child: Text(
+                            l10n.pathMap_partialAnimation(
+                              selectedDisplay.unresolvedHops,
+                            ),
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: MeshPalette.warn,
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
+                      if (combined)
+                        PathSummaryList(
+                          paths: entries.map((e) => e.display).toList(),
+                          selectedId: selectedDisplay?.id ?? '',
+                          hiddenIds: _hiddenPathIds,
+                          isImperial: isImperial,
+                          onSelect: (display) {
+                            for (final entry in entries) {
+                              if (entry.display.id == display.id) {
+                                _selectEntry(entry);
+                                break;
+                              }
+                            }
+                          },
+                          onToggleVisibility: (display) =>
+                              _togglePathVisibility(
+                                display,
+                                entries,
+                                selectedDisplay,
+                              ),
+                          onShowAll: () => setState(_hiddenPathIds.clear),
+                        ),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: _buildHopListView(
+                          hops,
+                          selectedDisplay,
+                          hopUseCount,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              const Divider(height: 1),
-              Expanded(
-                child: hops.isEmpty
-                    ? Center(
-                        child: Text(l10n.channelPath_noHopDetailsAvailable),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        itemCount: hops.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final hop = hops[index];
-                          final isFocused = _focusedHopIndex == hop.index;
-                          return ListTile(
-                            dense: true,
-                            enabled: hop.hasLocation,
-                            selected: isFocused,
-                            selectedTileColor: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.12),
-                            onTap: hop.hasLocation
-                                ? () => _onHopTapped(hop)
-                                : null,
-                            leading: CircleAvatar(
-                              radius: 14,
-                              child: Text(
-                                hop.index.toString(),
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                            title: Text(hop.displayLabel),
-                            subtitle: Text(
-                              hop.hasLocation
-                                  ? '${hop.position!.latitude.toStringAsFixed(5)}, '
-                                        '${hop.position!.longitude.toStringAsFixed(5)}'
-                                  : l10n.channelPath_noLocationData,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildHopListView(
+    List<_PathHop> hops,
+    DisplayPath? selectedDisplay,
+    Map<int, int> hopUseCount,
+  ) {
+    final l10n = context.l10n;
+    if (hops.isEmpty) {
+      return Center(child: Text(l10n.channelPath_noHopDetailsAvailable));
+    }
+    return ValueListenableBuilder<int>(
+      valueListenable: _playback.activeSegment,
+      builder: (context, activeSegment, _) {
+        int highlightRow = -1;
+        if (_animationEnabled &&
+            selectedDisplay != null &&
+            activeSegment >= 0 &&
+            activeSegment < selectedDisplay.rowForSegment.length) {
+          highlightRow = selectedDisplay.rowForSegment[activeSegment];
+        }
+        final highlightColor = (selectedDisplay?.color ?? MeshPalette.blue)
+            .withValues(alpha: 0.14);
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          itemCount: hops.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final hop = hops[index];
+            final isFocused = _focusedHopIndex == hop.index;
+            final sharedCount = hopUseCount[hop.prefix] ?? 0;
+            return InkWell(
+              onTap: hop.hasLocation ? () => _onHopTapped(hop) : null,
+              child: Container(
+                color: index == highlightRow
+                    ? highlightColor
+                    : isFocused
+                    ? MeshPalette.blueBg
+                    : Colors.transparent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: MeshPalette.blueDim.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: MeshPalette.blueDim.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        hop.index.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hop.displayLabel,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            [
+                              hop.hasLocation
+                                  ? '${hop.position!.latitude.toStringAsFixed(5)}, '
+                                        '${hop.position!.longitude.toStringAsFixed(5)}'
+                                  : context.l10n.channelPath_noLocationData,
+                              if (sharedCount > 1)
+                                context.l10n.pathMap_sharedNodeCount(
+                                  sharedCount,
+                                ),
+                            ].join(' · '),
+                            style: MeshTheme.mono(
+                              fontSize: 10,
+                              color: MeshPalette.ink3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// One observed route paired with its renderable form and resolved hops.
+class _ObservedPathEntry {
+  final int index;
+  final Uint8List observedBytes;
+  final DisplayPath display;
+  final List<_PathHop> hops;
+
+  const _ObservedPathEntry({
+    required this.index,
+    required this.observedBytes,
+    required this.display,
+    required this.hops,
+  });
+}
+
+/// A located hop shared across one or more visible paths.
+class _SharedNode {
+  final _PathHop hop;
+  final List<DisplayPath> paths = [];
+
+  _SharedNode(this.hop);
 }
 
 class _PathHop {
@@ -1033,93 +1848,32 @@ List<_PathHop> _buildPathHops(
   Uint8List pathBytes,
   MeshCoreConnector connector,
   AppLocalizations l10n,
-  int hashByteWidth,
-) {
+  int hashByteWidth, {
+  bool resolveFromEnd = false,
+}) {
   if (pathBytes.isEmpty) return const [];
-
-  final width = hashByteWidth.clamp(1, 4);
-  final candidatesByHashBytes = <String, List<Contact>>{};
-  final allContacts = connector.allContacts;
-
-  // Build lookup map using hash byte sequences
-  for (final contact in allContacts) {
-    if (contact.publicKey.isEmpty) continue;
-    if (contact.type != advTypeRepeater && contact.type != advTypeRoom) {
-      continue;
-    }
-    // Extract the hash bytes that match the device width
-    final keyBytes = contact.publicKey.sublist(
-      0,
-      min(width, contact.publicKey.length),
-    );
-    final keyHex = PathHelper.formatHopHex(keyBytes);
-    candidatesByHashBytes.putIfAbsent(keyHex, () => <Contact>[]).add(contact);
-  }
-
-  // Sort candidates by last seen
-  for (final candidates in candidatesByHashBytes.values) {
-    candidates.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
-  }
-
-  final startPoint =
+  final width = hashByteWidth.clamp(1, 4).toInt();
+  final endpoint =
       (connector.selfLatitude != null && connector.selfLongitude != null)
       ? LatLng(connector.selfLatitude!, connector.selfLongitude!)
       : null;
-  var previousPosition = startPoint;
-  final distance = Distance();
-  var bestDistance = 0.0;
+  final resolvedContacts = PathHopResolver.resolve(
+    pathBytes: pathBytes,
+    contacts: connector.allContacts,
+    endpoint: endpoint,
+    resolveFromEnd: resolveFromEnd,
+    pathHashByteWidth: width,
+  );
+
+  final hopChunks = PathHelper.splitPathBytes(pathBytes, width);
   final hops = <_PathHop>[];
-
-  // Process path in hop-sized chunks
-  for (var hopIdx = 0; hopIdx * width < pathBytes.length; hopIdx++) {
-    final startByte = hopIdx * width;
-    final endByte = min(startByte + width, pathBytes.length);
-    final hopBytes = pathBytes.sublist(startByte, endByte);
-    final hopKey = PathHelper.formatHopHex(hopBytes);
-
-    final searchPoint = hopIdx == 0 ? startPoint : previousPosition;
-    final candidates = candidatesByHashBytes[hopKey];
-    Contact? contact;
-
-    if (candidates != null && candidates.isNotEmpty) {
-      var bestIndex = 0;
-      if (searchPoint != null) {
-        bestDistance = double.infinity;
-        for (var j = 0; j < candidates.length; j++) {
-          final candidate = candidates[j];
-          if (!candidate.hasLocation ||
-              candidate.latitude == null ||
-              candidate.longitude == null) {
-            continue;
-          }
-          final currentDistance = distance(
-            searchPoint,
-            LatLng(candidate.latitude!, candidate.longitude!),
-          );
-          if (currentDistance < bestDistance) {
-            bestDistance = currentDistance;
-            bestIndex = j;
-          }
-        }
-      }
-      contact = candidates.removeAt(bestIndex);
-      if (candidates.isEmpty) {
-        candidatesByHashBytes.remove(hopKey);
-      }
-    }
-
+  for (var i = 0; i < hopChunks.length; i++) {
+    final hopBytes = hopChunks[i];
+    final contact = i < resolvedContacts.length ? resolvedContacts[i] : null;
     final resolvedPosition = _resolvePosition(contact);
-    if (resolvedPosition != null) {
-      previousPosition = resolvedPosition;
-    }
-
-    // NOTE: removed distance-based rejection filter. Accept the best candidate
-    // even if the distance is large — historical filtering could drop valid
-    // long-distance links and cause cascading mismatches.
-
     hops.add(
       _PathHop(
-        index: hopIdx + 1,
+        index: i + 1,
         prefix: hopBytes.isNotEmpty ? hopBytes[0] : 0,
         contact: contact,
         position: resolvedPosition,
@@ -1151,9 +1905,19 @@ String _formatPathPrefixes(Uint8List pathBytes, int hashByteWidth) {
   ).map(PathHelper.formatHopHex).join(',');
 }
 
+Uint8List _orientPathBytes(
+  Uint8List pathBytes,
+  int hashByteWidth, {
+  required bool reverse,
+}) {
+  if (!reverse || pathBytes.isEmpty) return pathBytes;
+  final hops = PathHelper.splitPathBytes(pathBytes, hashByteWidth);
+  return Uint8List.fromList([for (final hop in hops.reversed) ...hop]);
+}
+
 int _hopCountFromBytes(int byteCount, int hashByteWidth) {
   if (byteCount <= 0) return 0;
-  final width = hashByteWidth.clamp(1, 4);
+  final width = hashByteWidth.clamp(1, 4).toInt();
   return (byteCount + width - 1) ~/ width;
 }
 

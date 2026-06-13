@@ -1826,6 +1826,100 @@
   "channels_communityShortId": "Идентификатор: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS подтверждено",
   "pathTrace_legendInferred": "Выведенная позиция",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_searchHint": "Поиск по имени или ID узла",
+  "map_online": "Онлайн",
+  "scanner_bluetoothWebUnsupported": "Bluetooth недоступен в браузере. Подключитесь через USB.",
+  "map_activity": "Активность",
+  "map_recent": "Недавно",
+  "map_stale": "Устаревший",
+  "map_visible": "Видимый",
+  "map_hidden": "Скрытый",
+  "map_centerOnNode": "Центрировать на узле",
+  "map_details": "Детали",
+  "map_noGps": "Без GPS",
+  "map_noResults": "Не найдено соответствующих узлов",
+  "pathMap_viewSingle": "Одиночный",
+  "pathMap_viewCombined": "Объединённые",
+  "pathMap_play": "Воспроизвести",
+  "pathMap_pause": "Пауза",
+  "pathMap_replay": "Повтор",
+  "pathMap_stepBack": "Предыдущий хоп",
+  "pathMap_stepForward": "Следующий хоп",
+  "pathMap_animationOn": "Показать анимацию пакета",
+  "pathMap_animationOff": "Скрыть анимацию пакета",
+  "pathMap_hopOf": "Хоп {current} из {total}",
+  "pathMap_observedPaths": "Наблюдаемые маршруты: {count}",
+  "pathMap_primary": "Основной",
+  "pathMap_alternate": "Альт {index}",
+  "pathMap_hopCount": "{count, plural, one{{count} хоп} few{{count} хопа} many{{count} хопов} other{{count} хопов}}",
+  "pathMap_legendShared": "Общий сегмент",
+  "pathMap_legendEstimated": "Расчётный сегмент",
+  "pathMap_sharedNodeCount": "Используется в {count} маршрутах",
+  "pathMap_partialAnimation": "{count, plural, one{{count} хоп не имеет координат — показанный путь неполный} few{{count} хопа не имеют координат — показанный путь неполный} many{{count} хопов не имеют координат — показанный путь неполный} other{{count} хопов не имеют координат — показанный путь неполный}}",
+  "pathMap_showAllPaths": "Показать всё",
+  "pathMap_hidePath": "Скрыть путь",
+  "pathMap_collapsePanel": "Скрыть панель",
+  "pathMap_showPath": "Показать маршрут",
+  "pathMap_expandPanel": "Расширить панель",
+  "pathMap_noLocation": "Нет координат",
+  "pathMap_followPacket": "Следить за пакетом",
+  "pathMap_unfollowPacket": "Не следить за пакетом",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",
   "repeater_pathHashModeOption2": "2 - 3 bytes",

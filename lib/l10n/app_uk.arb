@@ -2491,6 +2491,100 @@
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS підтверджено",
   "pathTrace_legendInferred": "Висновок щодо положення",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanner_bluetoothWebUnsupported": "Bluetooth недоступний у браузері. Підключіться через USB.",
+  "map_searchHint": "Назва або ID вузла",
+  "map_activity": "Активність",
+  "map_online": "Онлайн",
+  "map_recent": "Нещодавні",
+  "map_stale": "Застаріло",
+  "map_visible": "Видимий",
+  "map_hidden": "Прихований",
+  "map_centerOnNode": "Центрувати на вузлі",
+  "map_details": "Деталі",
+  "map_noGps": "Без GPS",
+  "map_noResults": "Не знайдено відповідних вузлів",
+  "pathMap_viewSingle": "Один",
+  "pathMap_viewCombined": "Об'єднаний",
+  "pathMap_play": "Відтворити",
+  "pathMap_pause": "Призупинити",
+  "pathMap_replay": "Повтор",
+  "pathMap_stepForward": "Наступний перехід",
+  "pathMap_stepBack": "Попередній перехід",
+  "pathMap_animationOn": "Відобразити анімацію пакета",
+  "pathMap_animationOff": "Приховати анімацію пакета",
+  "pathMap_hopOf": "Перехід {current} з {total}",
+  "pathMap_observedPaths": "Зафіксовані маршрути: {count}",
+  "pathMap_primary": "Основний",
+  "pathMap_alternate": "Альт. {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 перехід} few{{count} переходи} many{{count} переходів} other{{count} переходів}}",
+  "pathMap_legendShared": "Об'єднаний сегмент",
+  "pathMap_legendEstimated": "Орієнтовний сегмент",
+  "pathMap_sharedNodeCount": "Використовується {count} шляхами",
+  "pathMap_partialAnimation": "{count, plural, =1{1 перехід не має геопозиції — показаний шлях є частковим} few{{count} переходи не мають геопозиції — показаний шлях є частковим} many{{count} переходів не мають геопозиції — показаний шлях є частковим} other{{count} переходів не мають геопозиції — показаний шлях є частковим}}",
+  "pathMap_showAllPaths": "Показати все",
+  "pathMap_hidePath": "Приховати шлях",
+  "pathMap_showPath": "Показати шлях",
+  "pathMap_collapsePanel": "Згорнути панель",
+  "pathMap_expandPanel": "Розгорнути панель",
+  "pathMap_noLocation": "Без геопозиції",
+  "pathMap_followPacket": "Прив'язати вигляд до пакету",
+  "pathMap_unfollowPacket": "Відв'язати вигляд від пакету",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Надсилати при виборі",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

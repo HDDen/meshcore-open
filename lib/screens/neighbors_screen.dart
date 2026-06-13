@@ -9,9 +9,10 @@ import '../models/path_selection.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/repeater_command_service.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/mesh_ui.dart';
 import '../widgets/routing_sheet.dart';
-import '../widgets/snr_indicator.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class NeighborsScreen extends StatefulWidget {
@@ -321,7 +322,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         child: RefreshIndicator(
           onRefresh: _loadNeighbors,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               if (!_isLoaded &&
                   !_hasData &&
@@ -330,9 +331,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
               if (_isLoaded ||
                   _hasData &&
                       !(_parsedNeighbors == null || _parsedNeighbors!.isEmpty))
-                _buildNeighborsInfoCard(
-                  "${l10n.repeater_neighbors} - $_neighborCount",
-                ),
+                _buildNeighborsList(connector),
             ],
           ),
         ),
@@ -340,81 +339,97 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     );
   }
 
-  Widget _buildNeighborsInfoCard(String title) {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _buildNeighborsList(MeshCoreConnector connector) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          '${l10n.repeater_neighbors} — $_neighborCount',
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+        ),
+        for (var i = 0; i < _parsedNeighbors!.length; i++)
+          ListEntrance(
+            index: i,
+            child: _buildNeighborRow(_parsedNeighbors![i], connector.currentSf),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildNeighborRow(Map<String, dynamic> data, int? spreadingFactor) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final Contact? contact = data['contact'] as Contact?;
+    final double snr = data['snr'] as double;
+    final int lastHeardSeconds = data['lastHeard'] as int;
+
+    final name = contact != null
+        ? contact.name
+        : l10n.neighbors_unknownContact(
+            '<${pubKeyToHex(data['publicKey'] as Uint8List)}>',
+          );
+
+    final snrColor = MeshTheme.snrColor(snr, blocked: false);
+    final heardLabel = l10n.neighbors_heardAgo(
+      fmtDuration(lastHeardSeconds + 0.0),
+    );
+
+    return MeshCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          AvatarCircle(
+            name: name,
+            size: 40,
+            color: contact != null ? MeshPalette.warn : scheme.onSurfaceVariant,
+            icon: contact != null ? Icons.cell_tower : Icons.device_unknown,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  title,
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  heardLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
-            const Divider(),
-            for (final entry in _parsedNeighbors!.asMap().entries)
-              _buildInfoRow(
-                entry.value['contact'] != null
-                    ? entry.value['contact'].name
-                    : context.l10n.neighbors_unknownContact(
-                        "<${pubKeyToHex(entry.value['publicKey'])}>",
-                      ),
-                context.l10n.neighbors_heardAgo(
-                  fmtDuration(entry.value['lastHeard'] + 0.0),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SignalBars(snr: snr, height: 16),
+              const SizedBox(height: 4),
+              Text(
+                '${snr.toStringAsFixed(1)} dB',
+                style: MeshTheme.mono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: snrColor,
                 ),
-                entry.value['snr'],
-                connector.currentSf,
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    String value,
-    double snr,
-    int? spreadingFactor,
-  ) {
-    final snrUi = snrUiFromSNR(snr, spreadingFactor);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              subtitle: Text(value),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(snrUi.icon, color: snrUi.color, size: 18.0),
-                  Text(
-                    snrUi.text,
-                    style: TextStyle(fontSize: 10, color: snrUi.color),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ],
       ),

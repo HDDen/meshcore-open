@@ -33,12 +33,14 @@ class UsbSerialService {
   String? _connectedPortLabel;
   FlSerial? _serial;
   AppDebugLogService? _debugLogService;
+  Object? _lastError;
 
   UsbSerialStatus get status => _status;
   String? get activePortKey => _connectedPortKey;
   String? get activePortDisplayLabel =>
       _connectedPortLabel ?? _connectedPortKey;
   Stream<Uint8List> get frameStream => _frameController.stream;
+  Object? get lastError => _lastError;
   bool get _useAndroidUsbHost =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   bool get _useDesktopFlSerial =>
@@ -434,6 +436,7 @@ class UsbSerialService {
   }
 
   void _addFrameError(Object error, [StackTrace? stackTrace]) {
+    _lastError = error;
     if (_frameController.isClosed) {
       return;
     }

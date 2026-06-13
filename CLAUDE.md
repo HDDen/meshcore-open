@@ -41,7 +41,7 @@ lib/
 ├── models/          # Plain data classes (Contact, Channel, Message, Community, …)
 ├── services/        # ChangeNotifier services + IO services (retry, translation, ML, …)
 ├── storage/         # SharedPreferences-backed stores, scoped per device key
-├── helpers/         # Pure utilities (Smaz compression, GIF parsing, scroll helpers)
+├── helpers/         # Pure utilities (Smaz compression, GIF parsing, scroll helpers, path hop resolution)
 ├── utils/           # Platform / IO / UX utilities (logger, GPX export, dialogs)
 ├── theme/           # MeshPalette (defined, not yet wired in main.dart)
 ├── l10n/            # ARB localization for 18 locales
@@ -194,14 +194,14 @@ enum MeshCoreConnectionState {
 
 ## Dependencies
 
-App version: `8.0.0+11` — Dart SDK constraint: `^3.9.2`
+App version: `9.5.0+13` — Dart SDK constraint: `^3.9.2`
 
 **Connectivity**
 
 | Package | Version | Purpose |
 |---------|---------|---------|
 | flutter_blue_plus | ^2.1.0 | BLE scanning, connecting, and UART data transfer |
-| flutter_blue_plus_platform_interface | ^8.2.1 | Platform-interface layer required by flutter_blue_plus |
+| flutter_blue_plus_platform_interface | ^9.0.2 | Platform-interface layer required by flutter_blue_plus |
 | flserial | git (MeshEnvy fork) | USB serial transport for wired device connections (TODO: upstream pending) |
 
 **State / Storage**
@@ -232,7 +232,7 @@ App version: `8.0.0+11` — Dart SDK constraint: `^3.9.2`
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| material_symbols_icons | ^4.2906.0 | Extended Material Symbols icon set (line-of-sight, etc.) |
+| material_symbols_icons | ^4.2928.1 | Extended Material Symbols icon set (line-of-sight, etc.) |
 | flutter_svg | ^2.0.10+1 | Renders SVG assets (custom icons such as LoS indicator) |
 | cached_network_image | ^3.4.1 | Caches map tile images downloaded over the network |
 | flutter_cache_manager | ^3.4.1 | Underlying cache manager used by cached_network_image |
@@ -246,7 +246,7 @@ App version: `8.0.0+11` — Dart SDK constraint: `^3.9.2`
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| flutter_local_notifications | ^20.1.0 | Shows local push notifications for incoming messages |
+| flutter_local_notifications | ^22.0.0 | Shows local push notifications for incoming messages |
 | flutter_foreground_task | ^9.2.0 | Keeps the app alive in background to maintain BLE/USB connection |
 
 **ML / AI**
@@ -255,7 +255,8 @@ App version: `8.0.0+11` — Dart SDK constraint: `^3.9.2`
 |---------|---------|---------|
 | ml_algo | ^16.0.0 | OLS regression used in `timeout_prediction_service.dart` to predict message ACK timeouts |
 | ml_dataframe | ^1.0.0 | DataFrame input format required by ml_algo |
-| llamadart | >=0.6.8 <0.7.0 | On-device LLM inference used in `translation_service.dart` for message translation |
+| llamadart | ^0.8.0 | On-device LLM inference used in `translation_service.dart` for message translation |
+| flutter_langdetect | ^0.0.1 | Detects a message's source language in `translation_service.dart` before translating |
 
 **Misc**
 
@@ -263,8 +264,8 @@ App version: `8.0.0+11` — Dart SDK constraint: `^3.9.2`
 |---------|---------|---------|
 | http | ^1.2.0 | Fetches tile URLs and any remote API calls |
 | url_launcher | ^6.3.0 | Opens URLs in the system browser from linkified chat text |
-| share_plus | ^12.0.1 | Shares files (e.g. exported GPX tracks) via the system share sheet |
-| package_info_plus | ^9.0.0 | Reads app version/build number displayed in settings |
+| share_plus | ^13.1.0 | Shares files (e.g. exported GPX tracks) via the system share sheet |
+| package_info_plus | ^10.1.0 | Reads app version/build number displayed in settings |
 | web | ^1.1.1 | Web-platform APIs for USB serial and browser detection on Flutter Web |
 | intl | any | Internationalization and locale formatting (required by flutter_localizations) |
 | build_pipe | ^0.3.1 | CI/CD build pipeline configuration (web release builds with versioned assets) |
@@ -333,4 +334,4 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/services/translation_service.dart` | On-device LLM translation (llamadart) |
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |
-| `pubspec.yaml` | Dependencies and project metadata (current version `8.0.0+11`) |
+| `pubspec.yaml` | Dependencies and project metadata (current version `9.5.0+13`) |

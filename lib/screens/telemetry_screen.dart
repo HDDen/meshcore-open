@@ -19,6 +19,8 @@ import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/telemetry_location_map.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 
 class TelemetryScreen extends StatefulWidget {
   final Contact contact;
@@ -319,6 +321,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final connector = context.watch<MeshCoreConnector>();
     final settings = context.watch<AppSettingsService>().settings;
     final isImperialUnits = settings.unitSystem == UnitSystem.imperial;
@@ -387,7 +390,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
                     l10n.telemetry_noData,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -415,34 +418,21 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     int channel,
     bool isImperialUnits,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            for (final entry in channelData.entries)
-              _buildTelemetryField(entry, channel, isImperialUnits),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title, padding: const EdgeInsets.fromLTRB(16, 16, 16, 8)),
+        MeshCard(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final entry in channelData.entries)
+                _buildTelemetryField(entry, channel, isImperialUnits),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -601,89 +591,81 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     final l10n = context.l10n;
     final counterText = _autoRefreshCounterText();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.autorenew,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          l10n.common_autoRefresh,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        ),
+        MeshCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildAutoRefreshNumberField(
+                controller: _autoRefreshIntervalController,
+                label: l10n.common_interval,
+                min: _autoRefreshMinIntervalSeconds,
+                max: _autoRefreshMaxIntervalSeconds,
+                fallback: _autoRefreshIntervalSeconds,
+              ),
+              const SizedBox(height: 12),
+              _buildAutoRefreshNumberField(
+                controller: _autoRefreshQuantityController,
+                label: l10n.telemetry_autoFetchQuantity,
+                min: _autoRefreshMinQuantity,
+                max: _autoRefreshMaxQuantity,
+                fallback: _autoRefreshDefaultQuantity,
+              ),
+              if (counterText != null) ...[
+                const SizedBox(height: 12),
                 Text(
-                  l10n.common_autoRefresh,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  counterText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _autoRefreshLastAttemptFailed
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
-            ),
-            const Divider(),
-            _buildAutoRefreshNumberField(
-              controller: _autoRefreshIntervalController,
-              label: l10n.common_interval,
-              min: _autoRefreshMinIntervalSeconds,
-              max: _autoRefreshMaxIntervalSeconds,
-              fallback: _autoRefreshIntervalSeconds,
-            ),
-            const SizedBox(height: 12),
-            _buildAutoRefreshNumberField(
-              controller: _autoRefreshQuantityController,
-              label: l10n.telemetry_autoFetchQuantity,
-              min: _autoRefreshMinQuantity,
-              max: _autoRefreshMaxQuantity,
-              fallback: _autoRefreshDefaultQuantity,
-            ),
-            if (counterText != null) ...[
               const SizedBox(height: 12),
-              Text(
-                counterText,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _autoRefreshLastAttemptFailed
-                      ? Theme.of(context).colorScheme.error
-                      : null,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _isLoading && !_isAutoRefreshEnabled
-                  ? null
-                  : _toggleAutoRefresh,
-              child: _isAutoRefreshEnabled
-                  ? SizedBox(
-                      width: double.infinity,
-                      height: 20,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Center(child: Text(l10n.common_disable)),
-                          Positioned(
-                            right: 0,
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.onPrimary,
+              FilledButton(
+                onPressed: _isLoading && !_isAutoRefreshEnabled
+                    ? null
+                    : _toggleAutoRefresh,
+                child: _isAutoRefreshEnabled
+                    ? SizedBox(
+                        width: double.infinity,
+                        height: 20,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Center(child: Text(l10n.common_disable)),
+                            Positioned(
+                              right: 0,
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Text(l10n.common_enable),
-            ),
-          ],
+                          ],
+                        ),
+                      )
+                    : Text(l10n.common_enable),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -913,6 +895,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -922,7 +905,8 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
             child: Text(
               label,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: scheme.onSurfaceVariant,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -930,7 +914,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           const SizedBox(width: 8),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w400),
+            style: MeshTheme.mono(fontSize: 13, color: scheme.onSurface),
             textAlign: TextAlign.end,
           ),
         ],

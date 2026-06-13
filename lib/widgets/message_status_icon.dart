@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../l10n/l10n.dart';
+import '../theme/mesh_theme.dart';
 
 class MessageStatusIcon extends StatefulWidget {
   final bool isAcked;
@@ -92,7 +93,10 @@ class _MessageStatusIconState extends State<MessageStatusIcon>
         : widget.isAcked
         ? l10n.messageStatus_delivered
         : l10n.messageStatus_sent;
-    final Color color = delivered ? colorScheme.tertiary : baseColor;
+    // Use palette colors: tertiary (warn/amber) for acked/repeated, base for sent.
+    final Color color = delivered
+        ? MeshPalette.signal.withValues(alpha: 0.9)
+        : baseColor;
 
     return Semantics(
       label: label,

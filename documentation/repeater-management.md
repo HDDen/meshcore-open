@@ -34,8 +34,8 @@ The central management screen showing:
 |---|---|---|
 | Status | Repeater Status Screen | All users |
 | Telemetry | Telemetry Screen | All users |
-| CLI | Repeater CLI Screen | Admin only |
 | Neighbors | Neighbors Screen | All users |
+| CLI | Repeater CLI Screen | Admin only |
 | Settings | Repeater Settings Screen | Admin only |
 
 The battery chemistry selector and CLI/Settings cards are hidden from guest users.
@@ -89,7 +89,7 @@ A terminal-style interface for sending commands directly to the repeater.
 - Type a command and press send (or Enter on desktop)
 - Up/down arrows navigate through command history
 - Quick-command buttons populate and send common commands
-- Bug report icon: Shows raw frame debug info for the next typed command (shows error snackbar if input field is empty)
+- Overflow menu (three-dot icon): "Debug next command" option shows raw frame debug info for the next typed command (shows error snackbar if input field is empty)
 - Help icon: Opens a scrollable reference of all known CLI commands. Tapping any command populates the input field immediately
 - Clear icon: Wipes the command/response history
 - Failed/timed-out commands are automatically retried once
@@ -112,7 +112,9 @@ The in-app help reference (help icon) documents all known commands. Categories:
 
 **Power Management**: `get pwrmgt.support`, `get pwrmgt.source`, `get pwrmgt.bootreason`, `get pwrmgt.bootmv`
 
-**Sensors**: `sensor get {key}`
+**Sensors**: `sensor get {key}`, `sensor set {key} {value}`, `sensor list [start]`
+
+**GPS Management**: `gps`, `gps {on|off}`, `gps sync`, `gps setloc`, `gps advert`, `gps advert {none|share|prefs}`
 
 **Region Management**: `region`, `region load`, `region get`, `region put`, `region remove`, `region allowf`, `region denyf`, `region home`, `region save`, `region default`, `region list allowed`, `region list denied`
 
@@ -207,7 +209,7 @@ Nine configuration cards, each with its own per-field refresh button(s):
 
 **Danger Zone** (red-styled card)
 - Reboot repeater (sends `reboot` with confirmation dialog)
-- Erase filesystem (serial-only; shows informational snackbar only — no command is sent over the air)
+- Erase filesystem (serial-only; shows a confirmation dialog, then an informational snackbar — no command is sent over the air)
 
 ### Key Interactions
 - **Settings are NOT auto-fetched on open**. Name is pre-filled from cached contact data. Each section has its own refresh button to fetch live values from the repeater

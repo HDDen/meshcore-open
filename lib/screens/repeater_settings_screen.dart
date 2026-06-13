@@ -8,6 +8,8 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
@@ -1003,39 +1005,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     }
   }
 
-  Widget _buildSectionHeader({
-    required IconData icon,
-    required String title,
-    String? tooltip,
-    bool isRefreshing = false,
-    VoidCallback? onRefresh,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Theme.of(context).textTheme.headlineSmall?.color),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        if (onRefresh != null) ...[
-          const Spacer(),
-          IconButton(
-            icon: isRefreshing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: isRefreshing ? null : onRefresh,
-            tooltip: tooltip,
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildInlineRefreshButton({
     required bool isRefreshing,
     required VoidCallback onRefresh,
@@ -1067,21 +1036,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.repeater_settingsTitle),
-            Text(
-              repeater.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
+        title: Text(l10n.repeater_settingsTitle),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
@@ -1102,27 +1058,17 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         child: _isLoading && _nameController.text.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(bottom: 32),
                 children: [
                   _buildBasicSettingsCard(),
-                  const SizedBox(height: 16),
                   _buildRadioSettingsCard(),
-                  const SizedBox(height: 16),
                   _buildLocationSettingsCard(),
-                  const SizedBox(height: 16),
                   _buildFeatureTogglesCard(),
-                  const SizedBox(height: 16),
                   _buildNetworkHealthCard(),
-                  const SizedBox(height: 16),
                   _buildAdvertisementSettingsCard(),
-                  const SizedBox(height: 16),
                   _buildOwnerInfoCard(),
-                  const SizedBox(height: 16),
                   _buildActionsCard(),
-                  const SizedBox(height: 16),
                   _buildAdvancedCard(),
-                  const SizedBox(height: 32),
-                  const Divider(),
                   const SizedBox(height: 16),
                   _buildDangerZoneCard(),
                 ],
@@ -1133,363 +1079,348 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
 
   Widget _buildBasicSettingsCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.settings,
-              title: l10n.repeater_basicSettings,
-              tooltip: l10n.repeater_refreshBasicSettings,
-              isRefreshing: _refreshingBasic,
-              onRefresh: _refreshBasicSettings,
-            ),
-            const Divider(),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_repeaterName,
-                helperText: l10n.repeater_repeaterNameHelper,
-                border: const OutlineInputBorder(),
+    final refreshButton = _refreshingBasic
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : IconButton(
+            icon: const Icon(Icons.refresh, size: 18),
+            onPressed: _refreshBasicSettings,
+            tooltip: l10n.repeater_refreshBasicSettings,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_basicSettings, trailing: refreshButton),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_repeaterName,
+                  helperText: l10n.repeater_repeaterNameHelper,
+                ),
+                onChanged: (_) => _markChanged(_SettingField.name),
               ),
-              onChanged: (_) => _markChanged(_SettingField.name),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_adminPassword,
-                helperText: l10n.repeater_adminPasswordHelper,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_adminPassword,
+                  helperText: l10n.repeater_adminPasswordHelper,
+                ),
+                obscureText: true,
+                onChanged: (_) => _flagHasChanges(),
               ),
-              obscureText: true,
-              onChanged: (_) => _flagHasChanges(),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _guestPasswordController,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_guestPassword,
-                helperText: l10n.repeater_guestPasswordHelper,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _guestPasswordController,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_guestPassword,
+                  helperText: l10n.repeater_guestPasswordHelper,
+                ),
+                obscureText: true,
+                onChanged: (_) => _flagHasChanges(),
               ),
-              obscureText: true,
-              onChanged: (_) => _flagHasChanges(),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildRadioSettingsCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.radio,
-              title: l10n.repeater_radioSettings,
-              tooltip: l10n.repeater_refreshRadioSettings,
-              isRefreshing: _refreshingRadio,
-              onRefresh: _refreshRadioSettings,
-            ),
-            const Divider(),
-            TextField(
-              controller: _freqController,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_frequencyMhz,
-                helperText: l10n.repeater_frequencyHelper,
-                border: const OutlineInputBorder(),
-                suffixText: 'MHz',
+    final refreshButton = _refreshingRadio
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : IconButton(
+            icon: const Icon(Icons.refresh, size: 18),
+            onPressed: _refreshRadioSettings,
+            tooltip: l10n.repeater_refreshRadioSettings,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_radioSettings, trailing: refreshButton),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _freqController,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_frequencyMhz,
+                  helperText: l10n.repeater_frequencyHelper,
+                  suffixText: 'MHz',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) => _markChanged(_SettingField.radio),
               ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onChanged: (_) => _markChanged(_SettingField.radio),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _txPowerController,
-                    decoration: InputDecoration(
-                      labelText: l10n.repeater_txPower,
-                      helperText: l10n.repeater_txPowerHelper,
-                      border: const OutlineInputBorder(),
-                      suffixText: 'dBm',
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _txPowerController,
+                      decoration: InputDecoration(
+                        labelText: l10n.repeater_txPower,
+                        helperText: l10n.repeater_txPowerHelper,
+                        suffixText: 'dBm',
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => _markChanged(_SettingField.txPower),
                     ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => _markChanged(_SettingField.txPower),
                   ),
+                  _buildInlineRefreshButton(
+                    isRefreshing: _refreshingTxPower,
+                    onRefresh: _refreshTxPower,
+                    tooltip: l10n.repeater_refreshTxPower,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: _bandwidth,
+                decoration: InputDecoration(labelText: l10n.repeater_bandwidth),
+                items: _bandwidthOptions.map((bw) {
+                  return DropdownMenuItem(
+                    value: bw,
+                    child: Text(_formatBandwidthLabel(bw)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _bandwidth = value;
+                    });
+                    _markChanged(_SettingField.radio);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: _spreadingFactor,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_spreadingFactor,
                 ),
-                const SizedBox(width: 8),
-                _buildInlineRefreshButton(
-                  isRefreshing: _refreshingTxPower,
-                  onRefresh: _refreshTxPower,
-                  tooltip: l10n.repeater_refreshTxPower,
+                items: _spreadingFactorOptions.map((sf) {
+                  return DropdownMenuItem(value: sf, child: Text('SF$sf'));
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _spreadingFactor = value;
+                    });
+                    _markChanged(_SettingField.radio);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: _codingRate,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_codingRate,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              initialValue: _bandwidth,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_bandwidth,
-                border: const OutlineInputBorder(),
+                items: _codingRateOptions.map((cr) {
+                  return DropdownMenuItem(value: cr, child: Text('4/$cr'));
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _codingRate = value;
+                    });
+                    _markChanged(_SettingField.radio);
+                  }
+                },
               ),
-              items: _bandwidthOptions.map((bw) {
-                return DropdownMenuItem(
-                  value: bw,
-                  child: Text(_formatBandwidthLabel(bw)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _bandwidth = value;
-                  });
-                  _markChanged(_SettingField.radio);
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              initialValue: _spreadingFactor,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_spreadingFactor,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 4),
+              _buildFeatureToggleRow(
+                title: l10n.repeater_rxGain,
+                subtitle: l10n.repeater_rxGainHelper,
+                value: _rxGainBoosted,
+                isRefreshing: _refreshingRxGain,
+                onChanged: (v) {
+                  setState(() => _rxGainBoosted = v);
+                  _markChanged(_SettingField.rxGain);
+                },
+                onRefresh: _refreshRxGain,
+                refreshTooltip: l10n.repeater_refreshRxGain,
               ),
-              items: _spreadingFactorOptions.map((sf) {
-                return DropdownMenuItem(value: sf, child: Text('SF$sf'));
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _spreadingFactor = value;
-                  });
-                  _markChanged(_SettingField.radio);
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              initialValue: _codingRate,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_codingRate,
-                border: const OutlineInputBorder(),
-              ),
-              items: _codingRateOptions.map((cr) {
-                return DropdownMenuItem(value: cr, child: Text('4/$cr'));
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _codingRate = value;
-                  });
-                  _markChanged(_SettingField.radio);
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildFeatureToggleRow(
-              title: l10n.repeater_rxGain,
-              subtitle: l10n.repeater_rxGainHelper,
-              value: _rxGainBoosted,
-              isRefreshing: _refreshingRxGain,
-              onChanged: (v) {
-                setState(() => _rxGainBoosted = v);
-                _markChanged(_SettingField.rxGain);
-              },
-              onRefresh: _refreshRxGain,
-              refreshTooltip: l10n.repeater_refreshRxGain,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildLocationSettingsCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.location_on,
-              title: l10n.repeater_locationSettings,
-            ),
-            const Divider(),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _latController,
-                    decoration: InputDecoration(
-                      labelText: l10n.repeater_latitude,
-                      helperText: l10n.repeater_latitudeHelper,
-                      errorText: _latInvalid
-                          ? l10n.settings_locationInvalid
-                          : null,
-                      border: const OutlineInputBorder(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_locationSettings),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _latController,
+                      decoration: InputDecoration(
+                        labelText: l10n.repeater_latitude,
+                        helperText: l10n.repeater_latitudeHelper,
+                        errorText: _latInvalid
+                            ? l10n.settings_locationInvalid
+                            : null,
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      onChanged: (value) {
+                        _markChanged(_SettingField.lat);
+                        final invalid = !_isValidCoordinate(value, 90);
+                        if (invalid != _latInvalid) {
+                          setState(() => _latInvalid = invalid);
+                        }
+                      },
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
-                    ),
-                    onChanged: (value) {
-                      _markChanged(_SettingField.lat);
-                      final invalid = !_isValidCoordinate(value, 90);
-                      if (invalid != _latInvalid) {
-                        setState(() => _latInvalid = invalid);
-                      }
-                    },
                   ),
-                ),
-                const SizedBox(width: 8),
-                _buildInlineRefreshButton(
-                  isRefreshing: _refreshingLat,
-                  onRefresh: _refreshLat,
-                  tooltip: l10n.repeater_latitude,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _lonController,
-                    decoration: InputDecoration(
-                      labelText: l10n.repeater_longitude,
-                      helperText: l10n.repeater_longitudeHelper,
-                      errorText: _lonInvalid
-                          ? l10n.settings_locationInvalid
-                          : null,
-                      border: const OutlineInputBorder(),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
-                    ),
-                    onChanged: (value) {
-                      _markChanged(_SettingField.lon);
-                      final invalid = !_isValidCoordinate(value, 180);
-                      if (invalid != _lonInvalid) {
-                        setState(() => _lonInvalid = invalid);
-                      }
-                    },
+                  _buildInlineRefreshButton(
+                    isRefreshing: _refreshingLat,
+                    onRefresh: _refreshLat,
+                    tooltip: l10n.repeater_latitude,
                   ),
-                ),
-                const SizedBox(width: 8),
-                _buildInlineRefreshButton(
-                  isRefreshing: _refreshingLon,
-                  onRefresh: _refreshLon,
-                  tooltip: l10n.repeater_longitude,
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _lonController,
+                      decoration: InputDecoration(
+                        labelText: l10n.repeater_longitude,
+                        helperText: l10n.repeater_longitudeHelper,
+                        errorText: _lonInvalid
+                            ? l10n.settings_locationInvalid
+                            : null,
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      onChanged: (value) {
+                        _markChanged(_SettingField.lon);
+                        final invalid = !_isValidCoordinate(value, 180);
+                        if (invalid != _lonInvalid) {
+                          setState(() => _lonInvalid = invalid);
+                        }
+                      },
+                    ),
+                  ),
+                  _buildInlineRefreshButton(
+                    isRefreshing: _refreshingLon,
+                    onRefresh: _refreshLon,
+                    tooltip: l10n.repeater_longitude,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildFeatureTogglesCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.toggle_on,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_features,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            _buildFeatureToggleRow(
-              title: l10n.repeater_packetForwarding,
-              subtitle: l10n.repeater_packetForwardingSubtitle,
-              value: _repeatEnabled,
-              isRefreshing: _refreshingRepeat,
-              onChanged: (value) {
-                setState(() {
-                  _repeatEnabled = value;
-                });
-                _markChanged(_SettingField.repeat);
-              },
-              onRefresh: _refreshRepeat,
-              refreshTooltip: l10n.repeater_refreshPacketForwarding,
-            ),
-            _buildFeatureToggleRow(
-              title: l10n.repeater_guestAccess,
-              subtitle: l10n.repeater_guestAccessSubtitle,
-              value: _allowReadOnly,
-              isRefreshing: _refreshingAllowReadOnly,
-              onChanged: (value) {
-                setState(() {
-                  _allowReadOnly = value;
-                });
-                _markChanged(_SettingField.allowReadOnly);
-              },
-              onRefresh: _refreshAllowReadOnly,
-              refreshTooltip: l10n.repeater_refreshGuestAccess,
-            ),
-            _buildFeatureToggleRow(
-              title: l10n.repeater_multiAcks,
-              subtitle: l10n.repeater_multiAcksSubtitle,
-              value: _multiAcks,
-              isRefreshing: _refreshingMultiAcks,
-              onChanged: (v) {
-                setState(() => _multiAcks = v);
-                _markChanged(_SettingField.multiAcks);
-              },
-              onRefresh: _refreshMultiAcks,
-              refreshTooltip: l10n.repeater_refreshMultiAcks,
-            ),
-            SwitchListTile(
-              title: Text(l10n.repeater_clockSyncAfterLogin),
-              subtitle: Text(l10n.repeater_clockSyncAfterLoginSubtitle),
-              value: _autoClockSyncAfterLogin,
-              onChanged: (value) async {
-                setState(() {
-                  _autoClockSyncAfterLogin = value;
-                });
-                await _storage.setRepeaterAutoClockSyncAfterLoginEnabled(
-                  widget.repeater.publicKeyHex,
-                  value,
-                );
-              },
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_features),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFeatureToggleRow(
+                title: l10n.repeater_packetForwarding,
+                subtitle: l10n.repeater_packetForwardingSubtitle,
+                value: _repeatEnabled,
+                isRefreshing: _refreshingRepeat,
+                onChanged: (value) {
+                  setState(() {
+                    _repeatEnabled = value;
+                  });
+                  _markChanged(_SettingField.repeat);
+                },
+                onRefresh: _refreshRepeat,
+                refreshTooltip: l10n.repeater_refreshPacketForwarding,
+              ),
+              _buildFeatureToggleRow(
+                title: l10n.repeater_guestAccess,
+                subtitle: l10n.repeater_guestAccessSubtitle,
+                value: _allowReadOnly,
+                isRefreshing: _refreshingAllowReadOnly,
+                onChanged: (value) {
+                  setState(() {
+                    _allowReadOnly = value;
+                  });
+                  _markChanged(_SettingField.allowReadOnly);
+                },
+                onRefresh: _refreshAllowReadOnly,
+                refreshTooltip: l10n.repeater_refreshGuestAccess,
+              ),
+              _buildFeatureToggleRow(
+                title: l10n.repeater_multiAcks,
+                subtitle: l10n.repeater_multiAcksSubtitle,
+                value: _multiAcks,
+                isRefreshing: _refreshingMultiAcks,
+                onChanged: (v) {
+                  setState(() => _multiAcks = v);
+                  _markChanged(_SettingField.multiAcks);
+                },
+                onRefresh: _refreshMultiAcks,
+                refreshTooltip: l10n.repeater_refreshMultiAcks,
+              ),
+              SwitchListTile(
+                title: Text(l10n.repeater_clockSyncAfterLogin),
+                subtitle: Text(l10n.repeater_clockSyncAfterLoginSubtitle),
+                value: _autoClockSyncAfterLogin,
+                onChanged: (value) async {
+                  setState(() {
+                    _autoClockSyncAfterLogin = value;
+                  });
+                  await _storage.setRepeaterAutoClockSyncAfterLoginEnabled(
+                    widget.repeater.publicKeyHex,
+                    value,
+                  );
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -1531,388 +1462,374 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
 
   Widget _buildAdvertisementSettingsCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.broadcast_on_personal,
-              title: l10n.repeater_advertisementSettings,
-            ),
-            const Divider(),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: Text(l10n.repeater_localAdvertInterval),
-                    subtitle: Text(
-                      l10n.repeater_localAdvertIntervalMinutes(_advertInterval),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_advertisementSettings),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(l10n.repeater_localAdvertInterval),
+                      subtitle: Text(
+                        l10n.repeater_localAdvertIntervalMinutes(
+                          _advertInterval,
+                        ),
+                      ),
+                      trailing: Switch(
+                        value: _advertEnable,
+                        onChanged: (value) {
+                          setState(() {
+                            _advertInterval = value ? 60 : 0;
+                            _advertEnable = value;
+                          });
+                          _markChanged(_SettingField.advertInterval);
+                        },
+                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    trailing: Switch(
-                      value: _advertEnable,
-                      onChanged: (value) {
+                  ),
+                  IconButton(
+                    icon: _refreshingAdvertInterval
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 20),
+                    onPressed: _refreshingAdvertInterval
+                        ? null
+                        : _refreshAdvertInterval,
+                    tooltip: l10n.repeater_localAdvertInterval,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              Slider(
+                value: _advertInterval == 0
+                    ? 60.toDouble()
+                    : _advertInterval.toDouble(),
+                min: 60,
+                max: 240,
+                divisions: 18,
+                label: l10n.repeater_localAdvertIntervalMinutes(
+                  _advertInterval,
+                ),
+                onChanged: _advertEnable
+                    ? (value) {
                         setState(() {
-                          _advertInterval = value ? 60 : 0;
-                          _advertEnable = value;
+                          _advertInterval = value.toInt();
                         });
                         _markChanged(_SettingField.advertInterval);
-                      },
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                IconButton(
-                  icon: _refreshingAdvertInterval
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 20),
-                  onPressed: _refreshingAdvertInterval
-                      ? null
-                      : _refreshAdvertInterval,
-                  tooltip: l10n.repeater_localAdvertInterval,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            Slider(
-              value: _advertInterval == 0
-                  ? 60.toDouble()
-                  : _advertInterval.toDouble(),
-              min: 60,
-              max: 240,
-              divisions: 18,
-              label: l10n.repeater_localAdvertIntervalMinutes(_advertInterval),
-              onChanged: _advertEnable
-                  ? (value) {
-                      setState(() {
-                        _advertInterval = value.toInt();
-                      });
-                      _markChanged(_SettingField.advertInterval);
-                    }
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: Text(l10n.repeater_floodAdvertInterval),
-                    subtitle: Text(
-                      l10n.repeater_floodAdvertIntervalHours(
-                        _floodAdvertInterval,
+                      }
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(l10n.repeater_floodAdvertInterval),
+                      subtitle: Text(
+                        l10n.repeater_floodAdvertIntervalHours(
+                          _floodAdvertInterval,
+                        ),
                       ),
+                      trailing: Switch(
+                        value: _floodAdvertEnable,
+                        onChanged: (value) {
+                          setState(() {
+                            _floodAdvertInterval = value ? 3 : 0;
+                            _floodAdvertEnable = value;
+                          });
+                          _markChanged(_SettingField.floodAdvertInterval);
+                        },
+                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    trailing: Switch(
-                      value: _floodAdvertEnable,
-                      onChanged: (value) {
+                  ),
+                  IconButton(
+                    icon: _refreshingFloodAdvertInterval
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 20),
+                    onPressed: _refreshingFloodAdvertInterval
+                        ? null
+                        : _refreshFloodAdvertInterval,
+                    tooltip: l10n.repeater_floodAdvertInterval,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              Slider(
+                value: _floodAdvertInterval == 0
+                    ? 3.toDouble()
+                    : _floodAdvertInterval.toDouble(),
+                min: 3,
+                max: 168,
+                divisions: 165,
+                label: l10n.repeater_floodAdvertIntervalHours(
+                  _floodAdvertInterval,
+                ),
+                onChanged: _floodAdvertEnable
+                    ? (value) {
                         setState(() {
-                          _floodAdvertInterval = value ? 3 : 0;
-                          _floodAdvertEnable = value;
+                          _floodAdvertInterval = value.toInt();
                         });
                         _markChanged(_SettingField.floodAdvertInterval);
-                      },
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                IconButton(
-                  icon: _refreshingFloodAdvertInterval
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 20),
-                  onPressed: _refreshingFloodAdvertInterval
-                      ? null
-                      : _refreshFloodAdvertInterval,
-                  tooltip: l10n.repeater_floodAdvertInterval,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            Slider(
-              value: _floodAdvertInterval == 0
-                  ? 3.toDouble()
-                  : _floodAdvertInterval.toDouble(),
-              min: 3,
-              max: 168,
-              divisions: 165,
-              label: l10n.repeater_floodAdvertIntervalHours(
-                _floodAdvertInterval,
+                      }
+                    : null,
               ),
-              onChanged: _floodAdvertEnable
-                  ? (value) {
-                      setState(() {
-                        _floodAdvertInterval = value.toInt();
-                      });
-                      _markChanged(_SettingField.floodAdvertInterval);
-                    }
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: Text(l10n.repeater_floodMax),
-                    subtitle: Text(l10n.repeater_floodMaxHelper),
-                    trailing: Text(
-                      '$_floodMax',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(l10n.repeater_floodMax),
+                      subtitle: Text(l10n.repeater_floodMaxHelper),
+                      trailing: Text(
+                        '$_floodMax',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
-                ),
-                IconButton(
-                  icon: _refreshingFloodMax
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 20),
-                  onPressed: _refreshingFloodMax ? null : _refreshFloodMax,
-                  tooltip: l10n.repeater_floodMax,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            Slider(
-              value: _floodMax.toDouble(),
-              min: 0,
-              max: 64,
-              divisions: 64,
-              label: '$_floodMax',
-              onChanged: (v) {
-                setState(() => _floodMax = v.toInt());
-                _markChanged(_SettingField.floodMax);
-              },
-            ),
-          ],
+                  IconButton(
+                    icon: _refreshingFloodMax
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 20),
+                    onPressed: _refreshingFloodMax ? null : _refreshFloodMax,
+                    tooltip: l10n.repeater_floodMax,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              Slider(
+                value: _floodMax.toDouble(),
+                min: 0,
+                max: 64,
+                divisions: 64,
+                label: '$_floodMax',
+                onChanged: (v) {
+                  setState(() => _floodMax = v.toInt());
+                  _markChanged(_SettingField.floodMax);
+                },
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildNetworkHealthCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.health_and_safety,
-              title: l10n.repeater_networkHealth,
-            ),
-            const Divider(),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _loopDetect,
-                    decoration: InputDecoration(
-                      labelText: l10n.repeater_loopDetect,
-                      helperText: l10n.repeater_loopDetectHelper,
-                      helperMaxLines: 3,
-                      border: const OutlineInputBorder(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_networkHealth),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _loopDetect,
+                      decoration: InputDecoration(
+                        labelText: l10n.repeater_loopDetect,
+                        helperText: l10n.repeater_loopDetectHelper,
+                        helperMaxLines: 3,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'off',
+                          child: Text(l10n.repeater_loopDetectOff),
+                        ),
+                        DropdownMenuItem(
+                          value: 'minimal',
+                          child: Text(l10n.repeater_loopDetectMinimal),
+                        ),
+                        DropdownMenuItem(
+                          value: 'moderate',
+                          child: Text(l10n.repeater_loopDetectModerate),
+                        ),
+                        DropdownMenuItem(
+                          value: 'strict',
+                          child: Text(l10n.repeater_loopDetectStrict),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() => _loopDetect = v);
+                          _markChanged(_SettingField.loopDetect);
+                        }
+                      },
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'off',
-                        child: Text(l10n.repeater_loopDetectOff),
-                      ),
-                      DropdownMenuItem(
-                        value: 'minimal',
-                        child: Text(l10n.repeater_loopDetectMinimal),
-                      ),
-                      DropdownMenuItem(
-                        value: 'moderate',
-                        child: Text(l10n.repeater_loopDetectModerate),
-                      ),
-                      DropdownMenuItem(
-                        value: 'strict',
-                        child: Text(l10n.repeater_loopDetectStrict),
-                      ),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) {
-                        setState(() => _loopDetect = v);
-                        _markChanged(_SettingField.loopDetect);
-                      }
-                    },
                   ),
-                ),
-                const SizedBox(width: 8),
-                _buildInlineRefreshButton(
-                  isRefreshing: _refreshingLoopDetect,
-                  onRefresh: _refreshLoopDetect,
-                  tooltip: l10n.repeater_loopDetect,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: Text(l10n.repeater_dutyCycle),
-                    subtitle: Text(l10n.repeater_dutyCycleHelper),
-                    trailing: Text(
-                      l10n.repeater_dutyCyclePercent(_dutyCycle),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  _buildInlineRefreshButton(
+                    isRefreshing: _refreshingLoopDetect,
+                    onRefresh: _refreshLoopDetect,
+                    tooltip: l10n.repeater_loopDetect,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(l10n.repeater_dutyCycle),
+                      subtitle: Text(l10n.repeater_dutyCycleHelper),
+                      trailing: Text(
+                        l10n.repeater_dutyCyclePercent(_dutyCycle),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
-                ),
-                IconButton(
-                  icon: _refreshingDutyCycle
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 20),
-                  onPressed: _refreshingDutyCycle ? null : _refreshDutyCycle,
-                  tooltip: l10n.repeater_dutyCycle,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            Slider(
-              value: _dutyCycle.toDouble(),
-              min: 1,
-              max: 100,
-              divisions: 99,
-              label: l10n.repeater_dutyCyclePercent(_dutyCycle),
-              onChanged: (v) {
-                setState(() => _dutyCycle = v.toInt());
-                _markChanged(_SettingField.dutyCycle);
-              },
-            ),
-          ],
+                  IconButton(
+                    icon: _refreshingDutyCycle
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 20),
+                    onPressed: _refreshingDutyCycle ? null : _refreshDutyCycle,
+                    tooltip: l10n.repeater_dutyCycle,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              Slider(
+                value: _dutyCycle.toDouble(),
+                min: 1,
+                max: 100,
+                divisions: 99,
+                label: l10n.repeater_dutyCyclePercent(_dutyCycle),
+                onChanged: (v) {
+                  setState(() => _dutyCycle = v.toInt());
+                  _markChanged(_SettingField.dutyCycle);
+                },
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildOwnerInfoCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(
-              icon: Icons.person_outline,
-              title: l10n.repeater_ownerInfo,
-              tooltip: l10n.repeater_refreshOwnerInfo,
-              isRefreshing: _refreshingOwnerInfo,
-              onRefresh: _refreshOwnerInfo,
+    final refreshButton = _refreshingOwnerInfo
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : IconButton(
+            icon: const Icon(Icons.refresh, size: 18),
+            onPressed: _refreshOwnerInfo,
+            tooltip: l10n.repeater_refreshOwnerInfo,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_ownerInfo, trailing: refreshButton),
+        MeshCard(
+          child: TextField(
+            controller: _ownerInfoController,
+            decoration: InputDecoration(
+              labelText: l10n.repeater_ownerInfo,
+              helperText: l10n.repeater_ownerInfoHelper,
+              helperMaxLines: 3,
             ),
-            const Divider(),
-            TextField(
-              controller: _ownerInfoController,
-              decoration: InputDecoration(
-                labelText: l10n.repeater_ownerInfo,
-                helperText: l10n.repeater_ownerInfoHelper,
-                helperMaxLines: 3,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 4,
-              minLines: 2,
-              onChanged: (_) => _markChanged(_SettingField.ownerInfo),
-            ),
-          ],
+            maxLines: 4,
+            minLines: 2,
+            onChanged: (_) => _markChanged(_SettingField.ownerInfo),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildActionsCard() {
     final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.flash_on,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_actionsTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.podcasts),
-              title: Text(l10n.repeater_sendAdvert),
-              subtitle: Text(l10n.repeater_sendAdvertSubtitle),
-              enabled: !_runningAction,
-              onTap: _runningAction
-                  ? null
-                  : () => _runAction('advert', l10n.repeater_sendAdvert),
-              contentPadding: EdgeInsets.zero,
-            ),
-            ListTile(
-              leading: const Icon(Icons.cell_tower),
-              title: Text(l10n.repeater_sendAdvertZeroHop),
-              subtitle: Text(l10n.repeater_sendAdvertZeroHopSubtitle),
-              enabled: !_runningAction,
-              onTap: _runningAction
-                  ? null
-                  : () => _runAction(
-                      'advert.zerohop',
-                      l10n.repeater_sendAdvertZeroHop,
-                    ),
-              contentPadding: EdgeInsets.zero,
-            ),
-            ListTile(
-              leading: const Icon(Icons.access_time),
-              title: Text(l10n.repeater_clockSync),
-              subtitle: Text(l10n.repeater_clockSyncSubtitle),
-              enabled: !_runningAction,
-              onTap: _runningAction
-                  ? null
-                  : () => _runAction('clock sync', l10n.repeater_clockSync),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(l10n.repeater_actionsTitle),
+        MeshCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.podcasts),
+                title: Text(l10n.repeater_sendAdvert),
+                subtitle: Text(l10n.repeater_sendAdvertSubtitle),
+                enabled: !_runningAction,
+                onTap: _runningAction
+                    ? null
+                    : () => _runAction('advert', l10n.repeater_sendAdvert),
+                contentPadding: EdgeInsets.zero,
+              ),
+              ListTile(
+                leading: const Icon(Icons.cell_tower),
+                title: Text(l10n.repeater_sendAdvertZeroHop),
+                subtitle: Text(l10n.repeater_sendAdvertZeroHopSubtitle),
+                enabled: !_runningAction,
+                onTap: _runningAction
+                    ? null
+                    : () => _runAction(
+                        'advert.zerohop',
+                        l10n.repeater_sendAdvertZeroHop,
+                      ),
+                contentPadding: EdgeInsets.zero,
+              ),
+              ListTile(
+                leading: const Icon(Icons.access_time),
+                title: Text(l10n.repeater_clockSync),
+                subtitle: Text(l10n.repeater_clockSyncSubtitle),
+                enabled: !_runningAction,
+                onTap: _runningAction
+                    ? null
+                    : () => _runAction('clock sync', l10n.repeater_clockSync),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildAdvancedCard() {
     final l10n = context.l10n;
-    return Card(
+    return MeshCard(
       child: ExpansionTile(
         leading: const Icon(Icons.tune),
         title: Text(
           l10n.repeater_advancedSettings,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(l10n.repeater_advancedSettingsSubtitle),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        childrenPadding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1924,7 +1841,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     labelText: l10n.repeater_pathHashMode,
                     helperText: l10n.repeater_pathHashModeHelper,
                     helperMaxLines: 5,
-                    border: const OutlineInputBorder(),
                   ),
                   items: const [
                     DropdownMenuItem(value: 0, child: Text('0')),
@@ -1939,7 +1855,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 8),
               _buildInlineRefreshButton(
                 isRefreshing: _refreshingPathHashMode,
                 onRefresh: _refreshPathHashMode,
@@ -1947,7 +1862,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1958,7 +1873,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     labelText: l10n.repeater_txDelay,
                     helperText: l10n.repeater_txDelayHelper,
                     helperMaxLines: 3,
-                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -1966,7 +1880,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   onChanged: (_) => _markChanged(_SettingField.txDelay),
                 ),
               ),
-              const SizedBox(width: 8),
               _buildInlineRefreshButton(
                 isRefreshing: _refreshingTxDelay,
                 onRefresh: _refreshTxDelay,
@@ -1974,7 +1887,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1985,7 +1898,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     labelText: l10n.repeater_directTxDelay,
                     helperText: l10n.repeater_directTxDelayHelper,
                     helperMaxLines: 3,
-                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -1993,7 +1905,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   onChanged: (_) => _markChanged(_SettingField.directTxDelay),
                 ),
               ),
-              const SizedBox(width: 8),
               _buildInlineRefreshButton(
                 isRefreshing: _refreshingDirectTxDelay,
                 onRefresh: _refreshDirectTxDelay,
@@ -2001,7 +1912,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2012,13 +1923,11 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     labelText: l10n.repeater_intThresh,
                     helperText: l10n.repeater_intThreshHelper,
                     helperMaxLines: 3,
-                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => _markChanged(_SettingField.intThresh),
                 ),
               ),
-              const SizedBox(width: 8),
               _buildInlineRefreshButton(
                 isRefreshing: _refreshingIntThresh,
                 onRefresh: _refreshIntThresh,
@@ -2026,7 +1935,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -2077,85 +1986,65 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
 
   Widget _buildDangerZoneCard() {
     final l10n = context.l10n;
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      color: colorScheme.errorContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.warning, color: colorScheme.onErrorContainer),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_dangerZone,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onErrorContainer,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(Icons.refresh, color: colorScheme.onErrorContainer),
-              title: Text(
-                l10n.repeater_rebootRepeater,
-                style: TextStyle(color: colorScheme.onErrorContainer),
-              ),
-              subtitle: Text(
-                l10n.repeater_rebootRepeaterSubtitle,
-                style: TextStyle(
-                  color: colorScheme.onErrorContainer.withValues(alpha: 0.8),
+    return MeshCard(
+      color: MeshPalette.alertBg,
+      borderColor: MeshPalette.alertLine,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning, color: MeshPalette.alert),
+              const SizedBox(width: 8),
+              Text(
+                l10n.repeater_dangerZone,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: MeshPalette.alert,
                 ),
               ),
-              onTap: () => _confirmAction(
-                l10n.repeater_rebootRepeater,
-                l10n.repeater_rebootRepeaterConfirm,
-                () => _sendDangerCommand('reboot'),
-              ),
+            ],
+          ),
+          const Divider(height: 20, color: MeshPalette.alertLine),
+          ListTile(
+            leading: const Icon(Icons.refresh, color: MeshPalette.alert),
+            title: Text(
+              l10n.repeater_rebootRepeater,
+              style: const TextStyle(color: MeshPalette.alert),
             ),
-            // Regenerate identity key - hidden until fully implemented
-            // ListTile(
-            //   leading: Icon(Icons.vpn_key, color: colorScheme.onErrorContainer),
-            //   title: Text('Regenerate Identity Key', style: TextStyle(color: colorScheme.onErrorContainer)),
-            //   subtitle: Text(
-            //     'Generate new public/private key pair',
-            //     style: TextStyle(color: colorScheme.onErrorContainer.withValues(alpha: 0.8)),
-            //   ),
-            //   onTap: () => _confirmAction(
-            //     'Regenerate Identity',
-            //     'This will generate a new identity for the repeater. Continue?',
-            //     () => _sendDangerCommand('regen key'),
-            //   ),
-            // ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_forever,
-                color: colorScheme.onErrorContainer,
-              ),
-              title: Text(
-                l10n.repeater_eraseFileSystem,
-                style: TextStyle(color: colorScheme.onErrorContainer),
-              ),
-              subtitle: Text(
-                l10n.repeater_eraseFileSystemSubtitle,
-                style: TextStyle(
-                  color: colorScheme.onErrorContainer.withValues(alpha: 0.8),
-                ),
-              ),
-              onTap: () => _confirmAction(
-                l10n.repeater_eraseFileSystem,
-                l10n.repeater_eraseFileSystemConfirm,
-                () => _sendDangerCommand('erase'),
-                isDestructive: true,
-              ),
+            subtitle: Text(
+              l10n.repeater_rebootRepeaterSubtitle,
+              style: const TextStyle(color: MeshPalette.warnDim),
             ),
-          ],
-        ),
+            onTap: () => _confirmAction(
+              l10n.repeater_rebootRepeater,
+              l10n.repeater_rebootRepeaterConfirm,
+              () => _sendDangerCommand('reboot'),
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+          // Regenerate identity key - hidden until fully implemented
+          ListTile(
+            leading: const Icon(Icons.delete_forever, color: MeshPalette.alert),
+            title: Text(
+              l10n.repeater_eraseFileSystem,
+              style: const TextStyle(color: MeshPalette.alert),
+            ),
+            subtitle: Text(
+              l10n.repeater_eraseFileSystemSubtitle,
+              style: const TextStyle(color: MeshPalette.warnDim),
+            ),
+            onTap: () => _confirmAction(
+              l10n.repeater_eraseFileSystem,
+              l10n.repeater_eraseFileSystemConfirm,
+              () => _sendDangerCommand('erase'),
+              isDestructive: true,
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ],
       ),
     );
   }

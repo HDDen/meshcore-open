@@ -2475,5 +2475,99 @@
   "chrome_bluetoothRequiresChromium": "Web Bluetooth kräver en Chromium-baserad webbläsare.",
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS-verifierat",
-  "pathTrace_legendInferred": "Antagen position"
+  "pathTrace_legendInferred": "Antagen position",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "scanner_bluetoothWebUnsupported": "Bluetooth är inte tillgängligt i webbläsaren. Anslut istället via USB.",
+  "map_activity": "Aktivitet",
+  "map_searchHint": "Sök efter nodens namn eller ID",
+  "map_recent": "Nyligen",
+  "map_stale": "Inaktuell",
+  "map_visible": "Synlig",
+  "map_hidden": "Dold",
+  "map_centerOnNode": "Centrera på nod",
+  "map_details": "Detaljer",
+  "map_noGps": "Ingen GPS",
+  "map_noResults": "Inga matchande noder",
+  "pathMap_viewSingle": "Enkel",
+  "pathMap_viewCombined": "Kombinerat",
+  "pathMap_play": "Spela",
+  "pathMap_pause": "Pausa",
+  "pathMap_replay": "Återspela",
+  "pathMap_stepBack": "Föregående hopp",
+  "pathMap_stepForward": "Nästa hopp",
+  "pathMap_animationOn": "Visa paketanimering",
+  "pathMap_animationOff": "Dölj paketanimering",
+  "pathMap_hopOf": "Hopp {current} av {total}",
+  "pathMap_observedPaths": "Observerade vägar: {count}",
+  "pathMap_primary": "Primär",
+  "pathMap_alternate": "Alternativ {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 hopp} other{{count} hopp}}",
+  "pathMap_legendShared": "Delat segment",
+  "pathMap_legendEstimated": "Uppskattat segment",
+  "pathMap_sharedNodeCount": "Används av {count} vägar",
+  "pathMap_partialAnimation": "{count, plural, =1{1 hopp saknar position — den visade vägen är ofullständig} other{{count} hopp saknar position — den visade vägen är ofullständig}}",
+  "pathMap_showAllPaths": "Visa allt",
+  "pathMap_hidePath": "Dölj väg",
+  "pathMap_showPath": "Visa väg",
+  "pathMap_collapsePanel": "Fäll ihop panel",
+  "pathMap_expandPanel": "Expandera panel",
+  "pathMap_noLocation": "Ingen position",
+  "pathMap_unfollowPacket": "Lås upp vy från paket",
+  "pathMap_followPacket": "Lås vy till paket",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

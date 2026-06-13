@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../helpers/chat_scroll_controller.dart';
 import '../services/app_settings_service.dart';
+import '../theme/mesh_theme.dart';
 
 typedef ChatMessageListBuilder =
     Widget Function(
@@ -79,6 +81,37 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
     final showKeyboardHidingButton = context.select<AppSettingsService, bool>(
       (settingsService) => settingsService.settings.showKeyboardHidingButton,
     );
+    final scheme = Theme.of(context).colorScheme;
+
+    Widget roundButton({
+      required IconData icon,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(MeshRadii.pill),
+          child: Container(
+            width: JumpToBottomButton.smallButtonExtent,
+            height: JumpToBottomButton.smallButtonExtent,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: scheme.surfaceContainerHigh.withValues(alpha: 0.92),
+              border: Border.all(color: scheme.outlineVariant, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 22, color: scheme.primary),
+          ),
+        ),
+      );
+    }
 
     return ValueListenableBuilder<bool>(
       valueListenable: widget.scrollController.showJumpToBottom,
@@ -93,18 +126,16 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
             mainAxisSize: MainAxisSize.min,
             children: [
               if (show)
-                FloatingActionButton.small(
-                  heroTag: 'jump_to_bottom_button',
-                  onPressed: widget.scrollController.jumpToBottom,
-                  child: const Icon(Icons.keyboard_arrow_down),
+                roundButton(
+                  onTap: widget.scrollController.jumpToBottom,
+                  icon: Icons.keyboard_arrow_down,
                 ),
               if (show && showHideKeyboardButton)
                 const SizedBox(height: JumpToBottomButton.buttonSpacing),
               if (showHideKeyboardButton)
-                FloatingActionButton.small(
-                  heroTag: 'hide_keyboard_button',
-                  onPressed: () => FocusScope.of(context).unfocus(),
-                  child: const Icon(Icons.keyboard_hide),
+                roundButton(
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  icon: Icons.keyboard_hide,
                 ),
             ],
           ),

@@ -5,8 +5,8 @@
   "nav_channels": "채널",
   "nav_map": "지도",
   "common_cancel": "취소",
-  "common_ok": "알겠습니다",
-  "common_connect": "연결",
+  "common_ok": "확인",
+  "common_connect": "연결하기",
   "common_unknownDevice": "알 수 없는 장치",
   "common_save": "저장",
   "common_delete": "삭제",
@@ -16,21 +16,21 @@
   "common_add": "추가",
   "common_settings": "설정",
   "common_disconnect": "연결 해제",
-  "common_connected": "연결된",
-  "common_disconnected": "단절",
-  "common_create": "만들다",
+  "common_connected": "연결됨",
+  "common_disconnected": "연결 해제됨",
+  "common_create": "만들기",
   "common_continue": "계속",
   "common_share": "공유",
   "common_copy": "복사",
   "common_retry": "다시 시도",
-  "common_hide": "숨기다",
+  "common_hide": "숨기기",
   "common_remove": "제거",
-  "common_enable": "활성화",
-  "common_disable": "비활성화",
+  "common_enable": "사용",
+  "common_disable": "사용 안 함",
   "common_autoRefresh": "자동 새로고침",
   "common_interval": "간격",
   "common_reboot": "재부팅",
-  "common_loading": "로딩 중...",
+  "common_loading": "불러오는 중...",
   "common_notAvailable": "—",
   "common_voltageValue": "{volts} V",
   "@common_voltageValue": {
@@ -48,16 +48,16 @@
       }
     }
   },
-  "scanner_title": "MeshCore 공개",
+  "scanner_title": "MeshCore Open",
   "connectionChoiceUsbLabel": "USB",
   "connectionChoiceBluetoothLabel": "블루투스",
   "connectionChoiceTcpLabel": "TCP",
   "tcpScreenTitle": "TCP를 통해 연결",
   "tcpHostLabel": "IP 주소",
-  "tcpHostHint": "192.168.40.10",
-  "tcpPortLabel": "항",
+  "tcpHostHint": "192.168.40.10 / example.com",
+  "tcpPortLabel": "포트",
   "tcpPortHint": "5000",
-  "tcpStatus_notConnected": "목적지 주소 입력 후 연결",
+  "tcpStatus_notConnected": "엔드포인트를 입력한 뒤 연결하세요.",
   "tcpStatus_connectingTo": "{endpoint}에 연결 중...",
   "@tcpStatus_connectingTo": {
     "placeholders": {
@@ -80,21 +80,21 @@
   },
   "usbScreenTitle": "USB를 통해 연결",
   "usbScreenSubtitle": "감지된 시리얼 장치를 선택하고 MeshCore 노드에 직접 연결하십시오.",
-  "usbScreenStatus": "USB 장치를 선택합니다.",
-  "usbScreenNote": "USB 직렬 통신은 지원되는 안드로이드 장치 및 데스크톱 플랫폼에서 활성화됩니다.",
-  "usbScreenEmptyState": "USB 장치가 탐지되지 않았습니다. USB 장치를 연결하고 다시 시도해 보세요.",
+  "usbScreenStatus": "USB 장치를 선택하세요.",
+  "usbScreenNote": "USB 직렬 통신은 지원되는 Android 기기 및 데스크톱 플랫폼에서 사용할 수 있습니다.",
+  "usbScreenEmptyState": "USB 장치가 없습니다. 하나 연결한 뒤 새로고침하세요.",
   "usbErrorPermissionDenied": "USB 접근 권한이 거부되었습니다.",
-  "usbErrorDeviceMissing": "선택한 USB 장치는 더 이상 사용 불가능합니다.",
+  "usbErrorDeviceMissing": "선택한 USB 장치를 더 이상 사용할 수 없습니다.",
   "usbErrorInvalidPort": "유효한 USB 장치를 선택하세요.",
-  "usbErrorBusy": "또 다른 USB 연결 요청이 이미 진행 중입니다.",
+  "usbErrorBusy": "다른 USB 연결 요청이 이미 진행 중입니다.",
   "usbErrorNotConnected": "USB 장치가 연결되지 않았습니다.",
   "usbErrorOpenFailed": "선택한 USB 장치를 열 수 없습니다.",
-  "usbErrorConnectFailed": "선택한 USB 장치에 연결에 실패했습니다.",
+  "usbErrorConnectFailed": "선택한 USB 장치에 연결하지 못했습니다.",
   "usbErrorUnsupported": "이 플랫폼에서는 USB 직렬 통신을 지원하지 않습니다.",
-  "usbErrorAlreadyActive": "USB 연결이 이미 활성화되어 있습니다.",
+  "usbErrorAlreadyActive": "USB 연결이 이미 활성 상태입니다.",
   "usbErrorNoDeviceSelected": "USB 장치가 선택되지 않았습니다.",
-  "usbErrorPortClosed": "USB 연결이 활성화되지 않았습니다.",
-  "usbErrorConnectTimedOut": "연결이 시간 초과되었습니다. 장치가 USB Companion 펌웨어를 가지고 있는지 확인해 주세요.",
+  "usbErrorPortClosed": "USB 연결이 열려 있지 않습니다.",
+  "usbErrorConnectTimedOut": "연결 시간이 초과되었습니다. 장치에 USB Companion 펌웨어가 있는지 확인하세요.",
   "usbFallbackDeviceName": "웹 시리얼 장치",
   "usbStatus_notConnected": "USB 장치를 선택합니다.",
   "usbStatus_connecting": "USB 장치에 연결 중...",
@@ -131,13 +131,13 @@
   },
   "scanner_stop": "멈춰",
   "scanner_scan": "스캔",
-  "scanner_bluetoothOff": "블루투스는 꺼져 있습니다.",
-  "scanner_bluetoothOffMessage": "블루투스를 켜서 장치를 검색해주세요.",
-  "scanner_chromeRequired": "크롬 브라우저 필요",
-  "scanner_chromeRequiredMessage": "이 웹 애플리케이션은 블루투드 지원을 위해 Google Chrome 또는 Chromium 기반 브라우저가 필요합니다.",
-  "scanner_enableBluetooth": "블루투스 활성화",
+  "scanner_bluetoothOff": "블루투스가 꺼져 있습니다.",
+  "scanner_bluetoothOffMessage": "기기를 검색하려면 블루투스를 켜세요.",
+  "scanner_chromeRequired": "Chrome 브라우저 필요",
+  "scanner_chromeRequiredMessage": "이 웹 앱은 블루투스 지원을 위해 Google Chrome 또는 Chromium 기반 브라우저가 필요합니다.",
+  "scanner_enableBluetooth": "블루투스 켜기",
   "device_quickSwitch": "빠른 전환",
-  "device_meshcore": "메쉬코어",
+  "device_meshcore": "MeshCore",
   "settings_title": "설정",
   "settings_deviceInfo": "장치 정보",
   "settings_appSettings": "앱 설정",
@@ -148,7 +148,7 @@
   "settings_nodeNameHint": "노드 이름을 입력하세요",
   "settings_nodeNameUpdated": "이름 변경",
   "settings_radioSettings": "라디오 설정",
-  "settings_radioSettingsSubtitle": "주파수, 전력, 스펙트럼",
+  "settings_radioSettingsSubtitle": "주파수, 전력, 확산 계수",
   "settings_radioSettingsUpdated": "라디오 설정이 업데이트되었습니다.",
   "settings_location": "위치",
   "settings_locationSubtitle": "GPS 좌표",
@@ -169,26 +169,26 @@
   "settings_privacyModeEnabled": "개인 정보 보호 모드 활성화",
   "settings_privacyModeDisabled": "개인 정보 보호 모드 비활성화",
   "settings_actions": "행동",
-  "settings_deleteAllPaths": "Delete All Paths",
-  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
+  "settings_deleteAllPaths": "모든 경로 삭제",
+  "settings_deleteAllPathsSubtitle": "연락처의 모든 경로 데이터를 지웁니다.",
   "settings_sendAdvertisement": "광고 전송",
-  "settings_sendAdvertisementSubtitle": "방송 활동",
-  "settings_advertisementSent": "광고 전송",
-  "settings_syncTime": "동기화 시간",
+  "settings_sendAdvertisementSubtitle": "현재 존재를 방송합니다.",
+  "settings_advertisementSent": "광고가 전송되었습니다.",
+  "settings_syncTime": "시간 동기화",
   "settings_syncTimeSubtitle": "장치 시계를 휴대폰 시간으로 설정",
-  "settings_timeSynchronized": "시간 동기화",
-  "settings_refreshContacts": "연락처 갱신",
+  "settings_timeSynchronized": "시간이 동기화되었습니다.",
+  "settings_refreshContacts": "연락처 새로고침",
   "settings_refreshContactsSubtitle": "장치에서 연락처 목록을 다시 불러오기",
   "settings_rebootDevice": "장치 재부팅",
-  "settings_rebootDeviceSubtitle": "MeshCore 장치를 재부팅하세요.",
-  "settings_rebootDeviceConfirm": "정말로 장치를 재부팅하시겠습니까? 이 경우 연결이 끊어집니다.",
-  "settings_debug": "디버깅",
+  "settings_rebootDeviceSubtitle": "MeshCore 장치를 재부팅합니다.",
+  "settings_rebootDeviceConfirm": "정말 장치를 재부팅하시겠습니까? 연결이 끊어집니다.",
+  "settings_debug": "디버그",
   "settings_bleDebugLog": "BLE 디버그 로그",
-  "settings_bleDebugLogSubtitle": "BLE 명령어, 응답 및 원시 데이터",
-  "settings_appDebugLog": "앱 디버깅 로그",
-  "settings_appDebugLogSubtitle": "애플리케이션 디버깅 메시지",
-  "settings_about": "소개",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) {version} 버전",
+  "settings_bleDebugLogSubtitle": "BLE 명령, 응답 및 원시 데이터",
+  "settings_appDebugLog": "앱 디버그 로그",
+  "settings_appDebugLogSubtitle": "애플리케이션 디버그 메시지",
+  "settings_about": "정보",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -196,8 +196,8 @@
       }
     }
   },
-  "settings_aboutLegalese": "2026년 MeshCore 오픈 소스 프로젝트",
-  "settings_aboutDescription": "MeshCore LoRa 메시 네트워크 장치를 위한 오픈 소스 Flutter 클라이언트.",
+  "settings_aboutLegalese": "2026 MeshCore 오픈 소스 프로젝트",
+  "settings_aboutDescription": "MeshCore LoRa 메시 네트워크 장치를 위한 오픈소스 Flutter 클라이언트.",
   "settings_aboutOpenMeteoAttribution": "LOS 고도 데이터: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "이름",
   "settings_infoId": "ID",
@@ -206,19 +206,19 @@
   "settings_infoPublicKey": "공개 키",
   "settings_infoContactsCount": "연락처 수",
   "settings_infoChannelCount": "채널 수",
-  "settings_presets": "기본 설정",
+  "settings_presets": "프리셋",
   "settings_frequency": "주파수 (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
   "settings_frequencyInvalid": "유효하지 않은 주파수 (300-2500 MHz)",
   "settings_bandwidth": "대역폭",
   "settings_spreadingFactor": "분산 계수",
   "settings_codingRate": "코딩 속도",
-  "settings_txPower": "TX 전력 (dBm)",
+  "settings_txPower": "송신 전력 (dBm)",
   "settings_txPowerHelper": "0 - 22",
-  "settings_txPowerInvalid": "유효하지 않은 TX 전력 (0-22 dBm)",
+  "settings_txPowerInvalid": "유효하지 않은 송신 전력 (0-22 dBm)",
   "settings_clientRepeat": "오프그리드 반복",
-  "settings_clientRepeatSubtitle": "이 장치가 다른 사람들을 위해 메시 패킷을 반복하도록 허용합니다.",
-  "settings_clientRepeatFreqWarning": "오프그리드(무전력) 시스템 재연결에는 433MHz, 869MHz, 또는 918MHz 주파수가 필요합니다.",
+  "settings_clientRepeatSubtitle": "이 장치가 다른 장치의 메시 패킷을 반복하도록 허용합니다.",
+  "settings_clientRepeatFreqWarning": "오프그리드 반복에는 433MHz, 869MHz 또는 918MHz 주파수가 필요합니다.",
   "settings_error": "오류: {message}",
   "@settings_error": {
     "placeholders": {
@@ -253,36 +253,36 @@
   "channels_mcmpCompression": "MCMP 압축",
   "channels_mcmpCompressionDescription": "mesh-compressor 모델 사용",
   "appSettings_title": "앱 설정",
-  "appSettings_appearance": "외관",
-  "appSettings_theme": "주제",
-  "appSettings_themeSystem": "기본 설정",
-  "appSettings_themeLight": "빛",
-  "appSettings_themeDark": "어둡다",
+  "appSettings_appearance": "모양",
+  "appSettings_theme": "테마",
+  "appSettings_themeSystem": "시스템 기본값",
+  "appSettings_themeLight": "밝음",
+  "appSettings_themeDark": "어두움",
   "appSettings_language": "언어",
   "appSettings_languageSystem": "기본 설정",
   "appSettings_languageEn": "영어",
   "appSettings_languageFr": "프랑스어",
   "appSettings_languageEs": "스페인어",
   "appSettings_languageDe": "독일어",
-  "appSettings_languagePl": "폴란드",
+  "appSettings_languagePl": "폴란드어",
   "appSettings_languageSl": "슬로베니아어",
   "appSettings_languagePt": "포르투갈어",
   "appSettings_languageIt": "이탈리아어",
   "appSettings_languageZh": "중국어",
   "appSettings_languageSv": "스웨덴어",
   "appSettings_languageNl": "네덜란드어",
-  "appSettings_languageSk": "슬로베니아어",
-  "appSettings_languageBg": "불가리",
+  "appSettings_languageSk": "슬로바키아어",
+  "appSettings_languageBg": "불가리아어",
   "appSettings_languageRu": "러시아어",
-  "appSettings_languageUk": "우크라이나",
+  "appSettings_languageUk": "우크라이나어",
   "appSettings_enableMessageTracing": "메시지 추적 기능 활성화",
   "appSettings_enableMessageTracingSubtitle": "메시지에 대한 상세한 경로 및 시간 정보를 표시",
   "appSettings_notifications": "알림",
   "appSettings_enableNotifications": "알림 활성화",
   "appSettings_enableNotificationsSubtitle": "메시지와 광고에 대한 알림을 받으세요.",
   "appSettings_notificationPermissionDenied": "알림 권한 거부",
-  "appSettings_notificationsEnabled": "알림 기능 활성화",
-  "appSettings_notificationsDisabled": "알림 기능 끄기",
+  "appSettings_notificationsEnabled": "알림 사용",
+  "appSettings_notificationsDisabled": "알림 사용 안 함",
   "appSettings_messageNotifications": "메시지 알림",
   "appSettings_messageNotificationsSubtitle": "새로운 메시지를 받을 때 알림 표시",
   "appSettings_channelMessageNotifications": "채널 메시지 알림",
@@ -290,22 +290,22 @@
   "appSettings_advertisementNotifications": "광고 알림",
   "appSettings_advertisementNotificationsSubtitle": "새 노드가 발견되었을 때 알림 표시",
   "appSettings_messaging": "메시징",
-  "appSettings_clearPathOnMaxRetry": "Max 재시도 시 경로 명확하게 설정",
-  "appSettings_clearPathOnMaxRetrySubtitle": "5번의 전송 시도가 실패하면 연락 경로를 재설정",
-  "appSettings_pathsWillBeCleared": "5번의 시도 실패 후, 해당 경로가 확보될 것입니다.",
-  "appSettings_pathsWillNotBeCleared": "경로는 자동으로 정리되지 않습니다.",
+  "appSettings_clearPathOnMaxRetry": "최대 재시도 시 경로 지우기",
+  "appSettings_clearPathOnMaxRetrySubtitle": "전송 시도가 5번 실패하면 연락 경로를 재설정합니다.",
+  "appSettings_pathsWillBeCleared": "5번 실패하면 해당 경로를 지웁니다.",
+  "appSettings_pathsWillNotBeCleared": "경로를 자동으로 지우지 않습니다.",
   "appSettings_autoRouteRotation": "자동 경로 순환",
-  "appSettings_autoRouteRotationSubtitle": "최적 경로와 방수 모드 사이를 전환",
+  "appSettings_autoRouteRotationSubtitle": "최적 경로와 플러드 모드 사이를 전환합니다.",
   "appSettings_autoRouteRotationEnabled": "자동 경로 순환 기능 활성화",
   "appSettings_autoRouteRotationDisabled": "자동 경로 순환 기능 비활성화",
-  "appSettings_maxRouteWeight": "최대 경로 무게",
-  "appSettings_maxRouteWeightSubtitle": "한 경로가 성공적인 배송을 통해 누적할 수 있는 최대 무게",
+  "appSettings_maxRouteWeight": "최대 경로 가중치",
+  "appSettings_maxRouteWeightSubtitle": "한 경로가 성공적인 전송을 통해 누적할 수 있는 최대 가중치",
   "appSettings_initialRouteWeight": "초기 경로 가중치",
-  "appSettings_initialRouteWeightSubtitle": "새롭게 발견된 경로의 초기 무게",
-  "appSettings_routeWeightSuccessIncrement": "성공 횟수 증가",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "성공적으로 배송된 경로에 추가된 무게",
-  "appSettings_routeWeightFailureDecrement": "오류 가중치 감소",
-  "appSettings_routeWeightFailureDecrementSubtitle": "배송 실패 후 경로에서 제거된 무게",
+  "appSettings_initialRouteWeightSubtitle": "새로 발견된 경로의 초기 가중치",
+  "appSettings_routeWeightSuccessIncrement": "성공 시 증가",
+  "appSettings_routeWeightSuccessIncrementSubtitle": "성공적으로 전송된 경로에 추가되는 가중치",
+  "appSettings_routeWeightFailureDecrement": "실패 시 감소",
+  "appSettings_routeWeightFailureDecrementSubtitle": "전송 실패 후 경로에서 제거되는 가중치",
   "appSettings_maxMessageRetries": "최대 메시지 재시도 횟수",
   "appSettings_maxMessageRetriesSubtitle": "메시지를 실패로 처리하기 전 시도 횟수",
   "path_routeWeight": "{weight}/{max}",
@@ -320,8 +320,8 @@
     }
   },
   "appSettings_battery": "배터리",
-  "appSettings_batteryChemistry": "배터리 화학",
-  "appSettings_batteryChemistryPerDevice": "{deviceName} 당분간",
+  "appSettings_batteryChemistry": "배터리 종류",
+  "appSettings_batteryChemistryPerDevice": "{deviceName}별",
   "@appSettings_batteryChemistryPerDevice": {
     "placeholders": {
       "deviceName": {
@@ -329,20 +329,20 @@
       }
     }
   },
-  "appSettings_batteryChemistryConnectFirst": "장치를 선택하기 위해 연결",
+  "appSettings_batteryChemistryConnectFirst": "배터리 종류를 선택하려면 먼저 장치를 연결하세요.",
   "appSettings_batteryNmc": "18650 NMC (3.0-4.2V)",
   "appSettings_batteryLifepo4": "LiFePO4 (2.6-3.65V)",
   "appSettings_batteryLipo": "리튬 폴리머 (3.0-4.2V)",
   "appSettings_mapDisplay": "지도 표시",
-  "appSettings_showRepeaters": "반복 기능 표시",
-  "appSettings_showRepeatersSubtitle": "지도에 반복자 노드를 표시",
+  "appSettings_showRepeaters": "리피터 표시",
+  "appSettings_showRepeatersSubtitle": "지도에 리피터 노드를 표시",
   "appSettings_showChatNodes": "채팅 노드 표시",
   "appSettings_showChatNodesSubtitle": "지도에 채팅 노드를 표시",
   "appSettings_showOtherNodes": "다른 노드 표시",
-  "appSettings_showOtherNodesSubtitle": "지도에서 다른 노드 유형을 표시",
+  "appSettings_showOtherNodesSubtitle": "지도에 다른 노드 유형을 표시",
   "appSettings_timeFilter": "시간 필터",
   "appSettings_timeFilterShowAll": "모든 노드 표시",
-  "appSettings_timeFilterShowLast": "지난 {hours} 시간 동안의 노드 표시",
+  "appSettings_timeFilterShowLast": "최근 {hours}시간 동안의 노드 표시",
   "@appSettings_timeFilterShowLast": {
     "placeholders": {
       "hours": {
@@ -350,17 +350,17 @@
       }
     }
   },
-  "appSettings_mapTimeFilter": "지도 필터",
-  "appSettings_showNodesDiscoveredWithin": "다음 내역에서 발견된 노드 표시:",
-  "appSettings_allTime": "모든 시간",
-  "appSettings_lastHour": "지난 시간",
+  "appSettings_mapTimeFilter": "지도 시간 필터",
+  "appSettings_showNodesDiscoveredWithin": "다음 기간 내에 발견된 노드 표시:",
+  "appSettings_allTime": "전체 기간",
+  "appSettings_lastHour": "지난 1시간",
   "appSettings_last6Hours": "지난 6시간",
   "appSettings_last24Hours": "지난 24시간",
   "appSettings_lastWeek": "지난 주",
   "appSettings_offlineMapCache": "오프라인 지도 캐시",
   "appSettings_unitsTitle": "단위",
-  "appSettings_unitsMetric": "단위 (m / km)",
-  "appSettings_unitsImperial": "제국 (피트/마일)",
+  "appSettings_unitsMetric": "미터법 (m / km)",
+  "appSettings_unitsImperial": "영국식 (ft / mi)",
   "appSettings_noAreaSelected": "선택된 영역 없음",
   "appSettings_areaSelectedZoom": "선택된 영역 (줌 레벨: {minZoom} - {maxZoom})",
   "@appSettings_areaSelectedZoom": {
@@ -373,9 +373,9 @@
       }
     }
   },
-  "appSettings_debugCard": "디버깅",
-  "appSettings_appDebugLogging": "앱 디버깅 로깅",
-  "appSettings_appDebugLoggingSubtitle": "로그 앱 디버깅 메시지 (문제 해결을 위한)",
+  "appSettings_debugCard": "디버그",
+  "appSettings_appDebugLogging": "앱 디버그 로깅",
+  "appSettings_appDebugLoggingSubtitle": "문제 해결을 위한 앱 디버그 메시지를 기록합니다.",
   "appSettings_appDebugLoggingEnabled": "앱 디버깅 로깅 활성화",
   "appSettings_appDebugLoggingDisabled": "앱 디버깅 로깅 비활성화",
   "contacts_title": "연락처",
@@ -479,7 +479,7 @@
   "contacts_noContactsMatchFilter": "입력하신 검색 조건과 일치하는 연락처가 없습니다.",
   "contacts_noMembers": "회원 없음",
   "contacts_lastSeenNow": "최근",
-  "contacts_lastSeenMinsAgo": "~ {minutes} min.",
+  "contacts_lastSeenMinsAgo": "~ {minutes}분",
   "@contacts_lastSeenMinsAgo": {
     "placeholders": {
       "minutes": {
@@ -488,7 +488,7 @@
     }
   },
   "contacts_lastSeenHourAgo": "약 1시간",
-  "contacts_lastSeenHoursAgo": "~ {hours} hours",
+  "contacts_lastSeenHoursAgo": "~ {hours}시간",
   "@contacts_lastSeenHoursAgo": {
     "placeholders": {
       "hours": {
@@ -750,7 +750,7 @@
     }
   },
   "debugFrame_textTypeCli": "명령줄 인터페이스 (CLI)",
-  "debugFrame_textTypePlain": "단순한",
+  "debugFrame_textTypePlain": "일반 텍스트",
   "debugFrame_text": "- 텍스트: \"{text}\"",
   "@debugFrame_text": {
     "placeholders": {
@@ -764,7 +764,7 @@
   "chat_ShowAllPaths": "모든 경로 표시",
   "chat_routingMode": "라우팅 방식",
   "chat_autoUseSavedPath": "자동 (저장된 경로 사용)",
-  "chat_forceFloodMode": "강수 모드 활성화",
+  "chat_forceFloodMode": "플러드 모드 활성화",
   "chat_recentAckPaths": "최근 사용한 ACK 경로 (사용하려면 탭):",
   "chat_pathHistoryFull": "이력 기록은 이미 가득 차 있습니다. 항목을 삭제하여 새로운 항목을 추가할 수 있습니다.",
   "chat_hopSingular": "점프",
@@ -777,20 +777,20 @@
       }
     }
   },
-  "chat_successes": "성공 사례",
+  "chat_successes": "성공",
   "chat_removePath": "경로 제거",
   "chat_noPathHistoryYet": "아직 경로 기록이 없습니다.\n경로를 찾기 위해 메시지를 보내세요.",
   "chat_pathActions": "경로 작업:",
   "chat_setCustomPath": "사용자 지정 경로 설정",
   "chat_setCustomPathSubtitle": "수동으로 경로를 지정",
-  "chat_clearPath": "명확한 길",
-  "chat_clearPathSubtitle": "다음 전송 시, 강제 재전송 설정",
+  "chat_clearPath": "경로 지우기",
+  "chat_clearPathSubtitle": "다음 전송 시 강제로 새 경로를 찾습니다.",
   "chat_pathCleared": "경로가 확보되었습니다. 다음 메시지는 경로를 다시 찾을 것입니다.",
-  "chat_floodModeSubtitle": "앱 바에서 라우팅 스위치를 사용",
-  "chat_floodModeEnabled": "홍수 모드 활성화됨. 앱 바의 경로 아이콘을 사용하여 다시 전환할 수 있습니다.",
+  "chat_floodModeSubtitle": "앱 바의 라우팅 스위치를 사용하세요.",
+  "chat_floodModeEnabled": "플러드 모드가 활성화되었습니다. 앱 바의 경로 아이콘으로 다시 전환할 수 있습니다.",
   "chat_fullPath": "전체 경로",
   "chat_pathDetailsNotAvailable": "경로 정보는 아직 제공되지 않습니다. 메시지를 보내어 다시 시도해 보세요.",
-  "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "chat_pathSetHops": "경로 설정: {hopCount} {hopCount, plural, =1{홉} other{홉}} - {status}",
   "@chat_pathSetHops": {
     "placeholders": {
       "hopCount": {
@@ -801,16 +801,16 @@
       }
     }
   },
-  "chat_pathSavedLocally": "로컬에 저장. 동기화 연결",
-  "chat_pathDeviceConfirmed": "장치 확인 완료.",
+  "chat_pathSavedLocally": "로컬에 저장되었습니다. 동기화할 장치에 연결하세요.",
+  "chat_pathDeviceConfirmed": "장치가 확인되었습니다.",
   "chat_pathDeviceNotConfirmed": "기기가 아직 확인되지 않았습니다.",
-  "chat_type": "종류",
+  "chat_type": "유형",
   "chat_path": "경로",
   "chat_publicKey": "공개 키",
   "chat_compressOutgoingMessages": "전송되는 메시지 압축",
-  "chat_floodForced": "홍수 (강제)",
-  "chat_directForced": "직접적인 (강제적인)",
-  "chat_hopsForced": "{count}번 띄우기 (강제)",
+  "chat_floodForced": "플러드 (강제)",
+  "chat_directForced": "직접 (강제)",
+  "chat_hopsForced": "{count}홉 (강제)",
   "@chat_hopsForced": {
     "placeholders": {
       "count": {
@@ -818,7 +818,7 @@
       }
     }
   },
-  "chat_floodAuto": "홍수 (자동)",
+  "chat_floodAuto": "플러드 (자동)",
   "chat_direct": "직접",
   "chat_poiShared": "공유된 POI",
   "chat_unread": "읽지 않음: {count}",
@@ -934,7 +934,7 @@
       }
     }
   },
-  "mapCache_cachedTilesWithFailed": "Cached {downloaded} tiles ({failed} failed)",
+  "mapCache_cachedTilesWithFailed": "캐시된 타일 {downloaded}개 ({failed}개 실패)",
   "@mapCache_cachedTilesWithFailed": {
     "placeholders": {
       "downloaded": {
@@ -960,7 +960,7 @@
       }
     }
   },
-  "mapCache_downloadedTiles": "Downloaded {completed} / {total}",
+  "mapCache_downloadedTiles": "다운로드됨 {completed} / {total}",
   "@mapCache_downloadedTiles": {
     "placeholders": {
       "completed": {
@@ -1007,7 +1007,7 @@
       }
     }
   },
-  "time_hoursAgo": "{hours}h ago",
+  "time_hoursAgo": "{hours}시간 전",
   "@time_hoursAgo": {
     "placeholders": {
       "hours": {
@@ -1069,8 +1069,8 @@
     }
   },
   "login_failedMessage": "로그인에 실패했습니다. 비밀번호가 잘못되었거나, 연결이 되지 않는 것 같습니다.",
-  "common_reload": "다시 로드",
-  "common_clear": "명확하게",
+  "common_reload": "다시 불러오기",
+  "common_clear": "지우기",
   "path_currentPath": "현재 경로: {path}",
   "@path_currentPath": {
     "placeholders": {
@@ -1079,7 +1079,7 @@
       }
     }
   },
-  "path_usingHopsPath": "Using {count} {count, plural, =1{hop} other{hops}} path",
+  "path_usingHopsPath": "{count} {count, plural, =1{홉} other{홉}} 경로 사용 중",
   "@path_usingHopsPath": {
     "placeholders": {
       "count": {
@@ -1641,7 +1641,7 @@
       }
     }
   },
-  "neighbors_heardAgo": "Heard: {time} ago",
+  "neighbors_heardAgo": "수신: {time} 전",
   "@neighbors_heardAgo": {
     "placeholders": {
       "time": {
@@ -1705,7 +1705,7 @@
       }
     }
   },
-  "channelPath_observedSomeOf": "{observed} of {total} hops",
+  "channelPath_observedSomeOf": "{observed}/{total} 홉 관찰됨",
   "@channelPath_observedSomeOf": {
     "placeholders": {
       "observed": {
@@ -1941,7 +1941,7 @@
       }
     }
   },
-  "losAntennaB": "Antenna B: {value} {unit}",
+  "losAntennaB": "안테나 B: {value} {unit}",
   "@losAntennaB": {
     "placeholders": {
       "value": {
@@ -1954,7 +1954,7 @@
   },
   "losRun": "LOS (Loss of Signal) 상태로 전환",
   "losNoElevationData": "고도 정보 없음",
-  "losProfileClear": "{distance} {distanceUnit}, clear LOS, min clearance {clearance} {heightUnit}",
+  "losProfileClear": "{distance} {distanceUnit}, LOS 확보, 최소 여유 {clearance} {heightUnit}",
   "@losProfileClear": {
     "placeholders": {
       "distance": {
@@ -1971,7 +1971,7 @@
       }
     }
   },
-  "losProfileBlocked": "{distance} {distanceUnit}, blocked by {obstruction} {heightUnit}",
+  "losProfileBlocked": "{distance} {distanceUnit}, {obstruction} {heightUnit}에 의해 차단됨",
   "@losProfileBlocked": {
     "placeholders": {
       "distance": {
@@ -2369,10 +2369,10 @@
   "repeater_cliHelpStatsPackets": "(전송 속도만 표시) 패킷 수준의 통계 정보를 보여줍니다.",
   "repeater_cliHelpStatsRadio": "(특정 시리즈만 해당) 라디오 통계 정보를 표시합니다.",
   "repeater_cliHelpStatsCore": "(시리얼 번호만 표시) 핵심 펌웨어 통계 정보를 보여줍니다.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
-  "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "common_done": "완료",
+  "background_serviceTitle": "MeshCore 실행 중",
+  "background_serviceText": "BLE 연결 유지 중",
+  "appSettings_translationModelDeleted": "{name} 삭제됨",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2380,7 +2380,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "삭제 실패: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2388,7 +2388,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "채널 업데이트 실패: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2396,19 +2396,19 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
-  "chat_score": "Score",
+  "map_type": "유형",
+  "map_path": "경로",
+  "map_location": "위치",
+  "map_estLocation": "추정 위치",
+  "map_publicKey": "공개 키",
+  "map_publicKeyPrefixHint": "예: ab12",
+  "contact_typeChat": "채팅",
+  "contact_typeRepeater": "리피터",
+  "contact_typeRoom": "룸",
+  "contact_typeSensor": "센서",
+  "contact_typeUnknown": "알 수 없음",
+  "channels_via": "{path} 경유",
+  "chat_score": "점수",
   "settings_multiAck": "다중 ACK",
   "map_sharedAt": "공유됨",
   "@losBlockedSpotChip": {
@@ -2450,7 +2450,7 @@
   "losBlockedSpotsTitle": "차단된 공간",
   "losSelectedObstructionTitle": "선택된 장애물",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "{obstruction} {heightUnit}에 의해 차단됨, A에서 {distanceFromA}, B에서 {distanceFromB} ({distanceUnit})",
   "settings_companionDebugLog": "동반 디버깅 로그",
   "chat_newMessages": "새로운 메시지",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 명령어, 응답 및 원시 데이터",
@@ -2497,58 +2497,251 @@
   "messageStatus_pending": "발송",
   "messageStatus_sent": "발송",
   "messageStatus_delivered": "배송 완료",
-  "common_undo": "취소",
-  "messageStatus_failed": "발송 실패",
-  "messageStatus_repeated": "반복적으로 들었습니다",
+  "common_undo": "되돌리기",
+  "messageStatus_pending": "전송 중",
+  "messageStatus_sent": "전송됨",
+  "messageStatus_delivered": "전달됨",
+  "messageStatus_failed": "전송 실패",
+  "messageStatus_repeated": "반복 수신됨",
   "contacts_searchOpen": "연락처 검색",
   "contacts_moreOptions": "더 많은 옵션",
   "contacts_searchClose": "검색 닫기",
   "routing_title": "라우팅",
   "routing_modeAuto": "자동",
-  "routing_modeFlood": "홍수",
-  "routing_modeManual": "사용 설명서",
-  "routing_modeAutoHint": "가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없을 경우에는 무작위로 경로를 선택합니다.",
-  "routing_modeFloodHint": "모든 증폭기를 통해 방송됩니다. 가장 안정적이지만, 더 많은 송출 시간을 사용합니다.",
-  "routing_modeManualHint": "항상 설정하신 정확한 경로를 따라 이동합니다.",
+  "routing_modeFlood": "플러드",
+  "routing_modeManual": "수동",
+  "routing_modeAutoHint": "가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없으면 플러드로 전환합니다.",
+  "routing_modeFloodHint": "모든 중계기를 통해 방송합니다. 가장 안정적이지만 송신 시간을 더 많이 사용합니다.",
+  "routing_modeManualHint": "항상 지정한 정확한 경로를 따릅니다.",
   "routing_currentRoute": "현재 경로",
-  "routing_directNoHops": "직접 연결 – 중계 장치 사용 없이",
+  "routing_directNoHops": "직접 연결 - 중계 없음",
   "routing_noPathYet": "아직 경로가 없습니다. 다음 메시지가 도착할 때까지 계속 탐색합니다.",
-  "routing_floodBroadcast": "모든 증폭기를 통해 방송",
+  "routing_floodBroadcast": "모든 중계기를 통해 방송",
   "routing_editPath": "경로 편집",
-  "routing_forgetPath": "길을 잊어라",
+  "routing_forgetPath": "경로 지우기",
   "routing_knownPaths": "알려진 경로",
-  "routing_knownPathsHint": "해당 항목으로 전환하기 위한 경로를 선택합니다.",
+  "routing_knownPathsHint": "전환할 경로를 선택하세요.",
   "routing_inUse": "사용 중",
-  "routing_qualityStrong": "강력한 첫 번째 단계",
-  "routing_qualityGood": "좋은 첫 시작",
-  "routing_qualityFair": "처음 시도",
-  "routing_qualityWorked": "완료됨",
-  "routing_qualityFlood": "홍수 피해 상황을 통해 들었습니다.",
-  "routing_qualityUntested": "검증되지 않음",
-  "routing_lastWorked": "{when}에 일했습니다",
-  "routing_neverWorked": "확인되지 않음",
-  "routing_floodDelivery": "홍수 피해 지역 배송",
+  "routing_qualityStrong": "매우 좋음",
+  "routing_qualityGood": "좋음",
+  "routing_qualityFair": "보통",
+  "routing_qualityWorked": "작동함",
+  "routing_qualityFlood": "플러드로 수신됨",
+  "routing_qualityUntested": "미검증",
+  "routing_lastWorked": "{when}에 작동",
+  "routing_neverWorked": "아직 작동한 적 없음",
+  "routing_floodDelivery": "플러드 전송",
   "pathEditor_title": "경로 만들기",
-  "pathEditor_hopCounter": "64개의 홉 중 {count}",
-  "pathEditor_noHops": "현재 홉은 추가되지 않았습니다. 아래의 탭을 사용하여 순서대로 추가하거나, 홉 없이 바로 전송하려면 \"홉 없음\"으로 저장하십시오.",
-  "pathEditor_addHops": "홉을 순서대로 첨가해주세요.",
-  "pathEditor_searchRepeaters": "반복 검색",
-  "pathEditor_advancedHex": "고급: 원시 헥스 경로",
-  "pathEditor_hexLabel": "헥스 접두사",
-  "pathEditor_hexHelper": "각 홉마다 2개의 6자리 숫자, 쉼표로 구분",
+  "pathEditor_hopCounter": "64개 중 {count} 홉",
+  "pathEditor_noHops": "아직 홉이 추가되지 않았습니다. 아래 탭을 사용해 순서대로 추가하거나, 홉 없이 바로 보내려면 \"홉 없음\"으로 저장하세요.",
+  "pathEditor_addHops": "홉을 순서대로 추가하세요.",
+  "pathEditor_searchRepeaters": "리피터 검색",
+  "pathEditor_advancedHex": "고급: 원시 HEX 경로",
+  "pathEditor_hexLabel": "HEX 접두사",
+  "pathEditor_hexHelper": "각 홉마다 2개의 16진수 바이트, 쉼표로 구분",
   "pathEditor_invalidTokens": "유효하지 않음: {tokens}",
   "pathEditor_tooManyHops": "최대 64개의 홉",
-  "pathEditor_usePath": "이 경로를 사용하세요",
+  "pathEditor_usePath": "이 경로 사용",
   "pathEditor_removeHop": "홉 제거",
   "pathEditor_unknownHop": "알 수 없는 중계기",
-  "map_zoomIn": "줌 인",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
-  "map_zoomOut": "줌 아웃",
-  "map_centerMap": "중심 지도",
-  "chrome_bluetoothRequiresChromium": "웹 블루투스는 크롬 브라우저가 필요합니다.",
+  "map_zoomIn": "확대",
+  "routing_deliveryCounts": "{successes}건 성공, {failures}건 실패",
+  "map_zoomOut": "축소",
+  "map_centerMap": "지도 중앙 맞추기",
+  "chrome_bluetoothRequiresChromium": "웹 블루투스는 Chromium 기반 브라우저가 필요합니다.",
   "channels_communityShortId": "ID: {id}...",
-  "pathTrace_legendGpsConfirmed": "GPS 확인 완료",
-  "pathTrace_legendInferred": "추론된 위치",
+  "pathTrace_legendGpsConfirmed": "GPS로 확인됨",
+  "pathTrace_legendInferred": "추정된 위치",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_activity": "활동",
+  "map_searchHint": "노드 이름 또는 ID 검색",
+  "map_online": "온라인",
+  "scanner_bluetoothWebUnsupported": "브라우저에서는 블루투스를 사용할 수 없습니다. 대신 USB로 연결하세요.",
+  "map_recent": "최근",
+  "map_stale": "오래됨",
+  "map_visible": "보임",
+  "map_hidden": "숨김",
+  "map_centerOnNode": "노드 중심으로 보기",
+  "map_details": "세부 정보",
+  "map_noGps": "GPS 없음",
+  "map_noResults": "일치하는 노드가 없습니다.",
+  "pathMap_viewSingle": "단일",
+  "pathMap_viewCombined": "결합",
+  "pathMap_play": "재생",
+  "pathMap_pause": "일시 정지",
+  "pathMap_replay": "다시 재생",
+  "pathMap_stepBack": "이전 홉",
+  "pathMap_stepForward": "다음 홉",
+  "pathMap_animationOn": "패킷 애니메이션 표시",
+  "pathMap_animationOff": "패킷 애니메이션 숨기기",
+  "pathMap_hopOf": "{current}/{total} 홉",
+  "pathMap_observedPaths": "관찰된 경로: {count}",
+  "pathMap_primary": "주 경로",
+  "pathMap_alternate": "대체 {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 홉} other{{count} 홉}}",
+  "pathMap_legendShared": "공유 구간",
+  "pathMap_legendEstimated": "추정 구간",
+  "pathMap_sharedNodeCount": "{count}개의 경로에서 사용됨",
+  "pathMap_partialAnimation": "{count, plural, =1{1 홉은 위치가 없어 표시된 경로가 일부입니다} other{{count} 홉은 위치가 없어 표시된 경로가 일부입니다}}",
+  "pathMap_showAllPaths": "모두 보기",
+  "pathMap_hidePath": "경로 숨기기",
+  "pathMap_showPath": "경로 표시",
+  "pathMap_collapsePanel": "패널 접기",
+  "pathMap_expandPanel": "패널 펼치기",
+  "pathMap_noLocation": "위치 없음",
+  "pathMap_followPacket": "패킷 고정",
+  "pathMap_unfollowPacket": "패킷 고정 해제",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "@channels_cyr2latSettingsDialogWrongJSON": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@channels_via": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@settings_cyr2latProfileDeleteDscr": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_altitudeValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_analogValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_concentrationValue": {
+    "placeholders": {
+      "ppm": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_directionValue": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_distanceValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_energyValue": {
+    "placeholders": {
+      "kilowattHours": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_frequencyValue": {
+    "placeholders": {
+      "hertz": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_luminosityValue": {
+    "placeholders": {
+      "lux": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_percentageValue": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_powerValue": {
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_pressureValue": {
+    "placeholders": {
+      "hpa": {
+        "type": "String"
+      }
+    }
+  },
   "settings_quickAnswersSendAtSelect": "선택 시 전송",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

@@ -150,6 +150,7 @@
   "scanner_chromeRequired": "Chrome Browser Required",
   "scanner_chromeRequiredMessage": "This web application requires Google Chrome or a Chromium-based browser for Bluetooth support.",
   "scanner_enableBluetooth": "Enable Bluetooth",
+  "scanner_bluetoothWebUnsupported": "Bluetooth isn't available in the browser. Connect over USB instead.",
   "device_quickSwitch": "Quick switch",
   "device_meshcore": "MeshCore",
   "settings_title": "Settings",
@@ -970,6 +971,17 @@
   },
   "chat_invalidLink": "Invalid link format",
   "map_title": "Node Map",
+  "map_searchHint": "Search node name or ID",
+  "map_activity": "Activity",
+  "map_online": "Online",
+  "map_recent": "Recent",
+  "map_stale": "Stale",
+  "map_visible": "Visible",
+  "map_hidden": "Hidden",
+  "map_centerOnNode": "Center on node",
+  "map_details": "Details",
+  "map_noGps": "No GPS",
+  "map_noResults": "No matching nodes",
   "map_lineOfSight": "Line of Sight",
   "map_losScreenTitle": "Line of Sight",
   "map_noNodesWithLocation": "No nodes with location data",
@@ -2866,6 +2878,88 @@
   },
   "pathTrace_legendGpsConfirmed": "GPS confirmed",
   "pathTrace_legendInferred": "Inferred position",
+  "pathMap_viewSingle": "Single",
+  "pathMap_viewCombined": "Combined",
+  "pathMap_play": "Play",
+  "pathMap_pause": "Pause",
+  "pathMap_replay": "Replay",
+  "pathMap_stepBack": "Previous hop",
+  "pathMap_stepForward": "Next hop",
+  "pathMap_animationOn": "Show packet animation",
+  "pathMap_animationOff": "Hide packet animation",
+  "pathMap_hopOf": "Hop {current} of {total}",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_observedPaths": "Observed paths: {count}",
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_primary": "Primary",
+  "pathMap_alternate": "Alt {index}",
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_hopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_legendShared": "Shared segment",
+  "pathMap_legendEstimated": "Estimated segment",
+  "pathMap_sharedNodeCount": "Used by {count} paths",
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_partialAnimation": "{count, plural, =1{1 hop has no location — the shown path is partial} other{{count} hops have no location — the shown path is partial}}",
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_showAllPaths": "Show all",
+  "pathMap_hidePath": "Hide path",
+  "pathMap_showPath": "Show path",
+  "pathMap_collapsePanel": "Collapse panel",
+  "pathMap_expandPanel": "Expand panel",
+  "pathMap_noLocation": "No location",
+  "pathMap_followPacket": "Lock view to packet",
+  "pathMap_unfollowPacket": "Unlock view from packet",
   "chat_canvas": "Canvas",
   "chat_canvasCrop": "Crop/expand",
   "chat_canvasResize": "Scale",

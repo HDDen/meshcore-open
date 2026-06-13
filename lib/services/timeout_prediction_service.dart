@@ -63,12 +63,15 @@ class TimeoutPredictionService extends ChangeNotifier {
     required int tripTimeMs,
     int secondsSinceLastRx = 0,
   }) {
+    final isFlood = pathLength < 0;
     final observation = DeliveryObservation(
       contactKey: contactKey,
-      pathLength: pathLength,
+      // Clamp to 0 for flood so the hop-count slope is learned from direct paths
+      // only; isFlood carries the flood signal as a separate feature.
+      pathLength: isFlood ? 0 : pathLength,
       messageBytes: messageBytes,
       secondsSinceLastRx: secondsSinceLastRx,
-      isFlood: pathLength < 0,
+      isFlood: isFlood,
       deliveryMs: tripTimeMs,
       timestamp: DateTime.now(),
     );
@@ -76,10 +79,11 @@ class TimeoutPredictionService extends ChangeNotifier {
     _observations.add(observation);
     if (_observations.length > maxObservations) {
       _observations.removeAt(0);
+      _rebuildContactStats();
+    } else {
+      _contactStats.putIfAbsent(contactKey, () => _ContactStats());
+      _contactStats[contactKey]!.add(tripTimeMs.toDouble());
     }
-
-    _contactStats.putIfAbsent(contactKey, () => _ContactStats());
-    _contactStats[contactKey]!.add(tripTimeMs.toDouble());
 
     _observationsSinceLastTrain++;
     if (_observationsSinceLastTrain >= _retrainInterval &&
@@ -108,11 +112,14 @@ class TimeoutPredictionService extends ChangeNotifier {
     try {
       if (_activeFeatures.isEmpty) return null;
 
+      final flood = pathLength < 0;
       final allFeatures = {
-        'pathLength': pathLength.toDouble(),
+        // Clamp to 0 for flood — mirrors recordObservation so training and
+        // prediction see the same pathLength values; isFlood carries the signal.
+        'pathLength': flood ? 0.0 : pathLength.toDouble(),
         'messageBytes': messageBytes.toDouble(),
         'secSinceRx': secondsSinceLastRx.toDouble(),
-        'isFlood': pathLength < 0 ? 1.0 : 0.0,
+        'isFlood': flood ? 1.0 : 0.0,
       };
       final row = _activeFeatures.map((f) => allFeatures[f]!).toList();
 
@@ -164,7 +171,9 @@ class TimeoutPredictionService extends ChangeNotifier {
       // (ml_algo's OLS produces all-zero coefficients for singular matrices)
       final allNames = ['pathLength', 'messageBytes', 'secSinceRx', 'isFlood'];
       final allExtractors = <double Function(DeliveryObservation)>[
-        (o) => o.pathLength.toDouble(),
+        // pathLength is already clamped to >=0 in recordObservation, but guard
+        // here as well for any observations loaded from older persisted data.
+        (o) => o.pathLength < 0 ? 0.0 : o.pathLength.toDouble(),
         (o) => o.messageBytes.toDouble(),
         (o) => o.secondsSinceLastRx.toDouble(),
         (o) => o.isFlood ? 1.0 : 0.0,
@@ -215,6 +224,9 @@ class TimeoutPredictionService extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_persistTimer?.isActive == true) {
+      _storage?.saveDeliveryObservations(_observations);
+    }
     _persistTimer?.cancel();
     super.dispose();
   }

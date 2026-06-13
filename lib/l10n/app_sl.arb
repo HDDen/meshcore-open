@@ -2511,6 +2511,100 @@
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS potrdilo",
   "pathTrace_legendInferred": "Izpeljana lokacija",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanner_bluetoothWebUnsupported": "Funkcija Bluetooth v brskalniku ni na voljo. Povežite se preko USB-ja namesto tega.",
+  "map_searchHint": "Iščite ime ali ID vozlišča",
+  "map_online": "V omrežju",
+  "map_activity": "Dejavnost",
+  "map_recent": "Nedavni",
+  "map_stale": "Zastarelo",
+  "map_visible": "Vidno",
+  "map_hidden": "Skrit",
+  "map_centerOnNode": "Centriraj na vozlišče",
+  "map_details": "Podrobnosti",
+  "map_noGps": "Brez GPS",
+  "map_noResults": "Ni ujemajočih se vozlišč",
+  "pathMap_viewSingle": "Posamično",
+  "pathMap_viewCombined": "Skupno",
+  "pathMap_play": "Predvajaj",
+  "pathMap_pause": "Premor",
+  "pathMap_replay": "Ponovitev",
+  "pathMap_stepBack": "Prejšnji skok",
+  "pathMap_stepForward": "Naslednji skok",
+  "pathMap_animationOn": "Prikaži animacijo paketa",
+  "pathMap_animationOff": "Skrij animacijo paketa",
+  "pathMap_hopOf": "Skok {current} od {total}",
+  "pathMap_observedPaths": "Opazovane poti: {count}",
+  "pathMap_primary": "Primarna",
+  "pathMap_alternate": "Alternativa {index}",
+  "pathMap_legendShared": "Deljen segment",
+  "pathMap_legendEstimated": "Ocenjen segment",
+  "pathMap_sharedNodeCount": "Uporablja {count} poti",
+  "pathMap_partialAnimation": "{count, plural, =1{1 skok nima lokacije — prikazana pot je delna} =2{2 skoka nimata lokacije — prikazana pot je delna} few{{count} skoki nimajo lokacije — prikazana pot je delna} other{{count} skokov nima lokacije — prikazana pot je delna}}",
+  "pathMap_hopCount": "{count, plural, =1{1 skok} =2{2 skoka} few{{count} skoki} other{{count} skokov}}",
+  "pathMap_showAllPaths": "Pokaži vse",
+  "pathMap_hidePath": "Skrij pot",
+  "pathMap_showPath": "Pokaži pot",
+  "pathMap_collapsePanel": "Strni ploščo",
+  "pathMap_expandPanel": "Razširi ploščo",
+  "pathMap_noLocation": "Brez lokacije",
+  "pathMap_followPacket": "Zakleni pogled na paket",
+  "pathMap_unfollowPacket": "Odkleni pogled od paketa",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Pošlji ob izbiri",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

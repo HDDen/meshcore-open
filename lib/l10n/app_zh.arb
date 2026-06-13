@@ -2516,6 +2516,100 @@
   "channels_communityShortId": "ID：{id}...",
   "pathTrace_legendGpsConfirmed": "通过GPS确认",
   "pathTrace_legendInferred": "推测的位置",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "在线",
+  "scanner_bluetoothWebUnsupported": "浏览器不支持蓝牙，请改用 USB 连接。",
+  "map_activity": "活动",
+  "map_searchHint": "搜索节点名称或ID",
+  "map_recent": "最近",
+  "map_visible": "可见",
+  "map_stale": "过时",
+  "map_hidden": "已隐藏",
+  "map_centerOnNode": "以节点为中心",
+  "map_details": "详细信息",
+  "map_noGps": "无 GPS",
+  "map_noResults": "未找到匹配的节点",
+  "pathMap_viewSingle": "单条",
+  "pathMap_viewCombined": "综合",
+  "pathMap_play": "播放",
+  "pathMap_pause": "暂停",
+  "pathMap_replay": "重播",
+  "pathMap_stepBack": "上一跳",
+  "pathMap_stepForward": "下一跳",
+  "pathMap_animationOn": "显示数据包动画",
+  "pathMap_animationOff": "隐藏数据包动画",
+  "pathMap_hopOf": "第 {current} 跳，共 {total} 跳",
+  "pathMap_observedPaths": "观测到的路径：{count}",
+  "pathMap_primary": "主路径",
+  "pathMap_alternate": "备用 {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 跳} other{{count} 跳}}",
+  "pathMap_legendShared": "共享路段",
+  "pathMap_legendEstimated": "估算路段",
+  "pathMap_sharedNodeCount": "已被 {count} 条路径使用",
+  "pathMap_showAllPaths": "显示全部",
+  "pathMap_hidePath": "隐藏路径",
+  "pathMap_showPath": "显示路径",
+  "pathMap_collapsePanel": "收起面板",
+  "pathMap_expandPanel": "展开面板",
+  "pathMap_noLocation": "无位置",
+  "pathMap_followPacket": "锁定视图跟随数据包",
+  "pathMap_unfollowPacket": "解锁视图跟随",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "pathMap_partialAnimation": "{count, plural, =1{1 跳无位置信息 — 显示的路径不完整} other{{count} 跳无位置信息 — 显示的路径不完整}}",
   "settings_quickAnswersSendAtSelect": "选择时发送",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

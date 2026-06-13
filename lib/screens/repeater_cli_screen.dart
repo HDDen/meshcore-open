@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/debug_frame_viewer.dart';
 import '../services/repeater_command_service.dart';
 import '../widgets/routing_sheet.dart';
@@ -34,7 +35,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   StreamSubscription<Uint8List>? _frameSubscription;
   RepeaterCommandService? _commandService;
 
-  // Common commands for quick access
   late final List<Map<String, String>> _quickCommands = [
     {'labelKey': 'advertise', 'command': 'advert'},
     {'labelKey': 'getName', 'command': 'get name'},
@@ -67,12 +67,8 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
 
   void _setupMessageListener() {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-
-    // Listen for incoming text messages from the repeater
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
-
-      // Check if it's a text message response
       if (frame[0] == respCodeContactMsgRecv ||
           frame[0] == respCodeContactMsgRecvV3) {
         _handleTextMessageResponse(frame);
@@ -102,12 +98,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     final parsed = parseContactMessageText(frame);
     if (parsed == null) return;
     if (!_matchesRepeaterPrefix(parsed.senderPrefix)) return;
-
-    // Notify command service of response (for retry handling)
     _commandService?.handleResponse(widget.repeater, parsed.text);
-
-    // Note: The command service will handle the response via the Future
-    // We don't need to add it to history here anymore as _sendCommand will do it
   }
 
   bool _matchesRepeaterPrefix(Uint8List prefix) {
@@ -133,7 +124,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       });
     });
 
-    // Show debug info if requested
     if (showDebug && mounted) {
       final frame = buildSendCliCommandFrame(
         widget.repeater.publicKey,
@@ -146,7 +136,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       );
     }
 
-    // Send CLI command to repeater with retry
     try {
       if (_commandService != null) {
         final connector = Provider.of<MeshCoreConnector>(
@@ -159,7 +148,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           command,
           retries: 1,
         );
-
         if (mounted) {
           setState(() {
             _commandHistory.add({
@@ -186,7 +174,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     _historyIndex = -1;
     _commandFocusNode.requestFocus();
 
-    // Auto-scroll to bottom
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -241,36 +228,46 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     });
   }
 
+  String _quickCommandLabel(String key) {
+    final l10n = context.l10n;
+    switch (key) {
+      case 'getName':
+        return l10n.repeater_cliQuickGetName;
+      case 'getRadio':
+        return l10n.repeater_cliQuickGetRadio;
+      case 'getTx':
+        return l10n.repeater_cliQuickGetTx;
+      case 'neighbors':
+        return l10n.repeater_cliQuickNeighbors;
+      case 'version':
+        return l10n.repeater_cliQuickVersion;
+      case 'advertise':
+        return l10n.repeater_cliQuickAdvertise;
+      case 'clock':
+        return l10n.repeater_cliQuickClock;
+      case 'clock sync':
+        return l10n.repeater_cliQuickClockSync;
+      case 'discovery':
+        return l10n.repeater_cliQuickDiscovery;
+      default:
+        return key;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
 
     return Scaffold(
+      backgroundColor: MeshPalette.bg,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.repeater_cliTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              repeater.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-        centerTitle: false,
+        backgroundColor: MeshPalette.bg1,
+        title: Text(l10n.repeater_cliTitle),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
@@ -334,66 +331,154 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       ),
       body: Column(
         children: [
-          _buildQuickCommandsBar(),
-          const Divider(height: 1),
+          // Quick commands bar
+          Container(
+            color: MeshPalette.bg1,
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _quickCommands.map((cmd) {
+                  final label = _quickCommandLabel(cmd['labelKey']!);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ActionChip(
+                      label: Text(
+                        label,
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: MeshPalette.blue,
+                        ),
+                      ),
+                      backgroundColor: MeshPalette.blueBg,
+                      side: const BorderSide(color: MeshPalette.blueLine),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _useQuickCommand(cmd['command']!),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          Divider(height: 1, color: MeshPalette.line),
+
+          // Output area
           Expanded(
             child: _commandHistory.isEmpty
                 ? _buildEmptyState()
                 : _buildCommandHistory(),
           ),
-          const Divider(height: 1),
-          _buildCommandInput(),
+
+          Divider(height: 1, color: MeshPalette.line),
+
+          // Command input
+          Container(
+            color: MeshPalette.bg1,
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_upward,
+                      size: 18,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    tooltip: l10n.repeater_previousCommand,
+                    onPressed: () => _navigateHistory(true),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_downward,
+                      size: 18,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    tooltip: l10n.repeater_nextCommand,
+                    onPressed: () => _navigateHistory(false),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: TextField(
+                      controller: _commandController,
+                      focusNode: _commandFocusNode,
+                      style: MeshTheme.mono(
+                        fontSize: 13,
+                        color: MeshPalette.ink,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: context.l10n.repeater_enterCommandHint,
+                        hintStyle: MeshTheme.mono(
+                          fontSize: 13,
+                          color: MeshPalette.ink4,
+                        ),
+                        prefixText: '> ',
+                        prefixStyle: MeshTheme.mono(
+                          fontSize: 13,
+                          color: MeshPalette.blue,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        filled: true,
+                        fillColor: MeshPalette.bg2,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(MeshRadii.pill),
+                          borderSide: const BorderSide(
+                            color: MeshPalette.line2,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(MeshRadii.pill),
+                          borderSide: const BorderSide(
+                            color: MeshPalette.line2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(MeshRadii.pill),
+                          borderSide: const BorderSide(
+                            color: MeshPalette.blue,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendCommand(),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Material(
+                    color: MeshPalette.blue.withValues(alpha: 0.15),
+                    shape: const CircleBorder(
+                      side: BorderSide(color: MeshPalette.blueLine),
+                    ),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _sendCommand();
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.send,
+                          size: 18,
+                          color: MeshPalette.blue,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
-  }
-
-  Widget _buildQuickCommandsBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: _quickCommands.map((cmd) {
-            final label = _quickCommandLabel(cmd['labelKey']!);
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ActionChip(
-                label: Text(label),
-                onPressed: () => _useQuickCommand(cmd['command']!),
-                avatar: const Icon(Icons.play_arrow, size: 16),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  String _quickCommandLabel(String key) {
-    final l10n = context.l10n;
-    switch (key) {
-      case 'getName':
-        return l10n.repeater_cliQuickGetName;
-      case 'getRadio':
-        return l10n.repeater_cliQuickGetRadio;
-      case 'getTx':
-        return l10n.repeater_cliQuickGetTx;
-      case 'neighbors':
-        return l10n.repeater_cliQuickNeighbors;
-      case 'version':
-        return l10n.repeater_cliQuickVersion;
-      case 'advertise':
-        return l10n.repeater_cliQuickAdvertise;
-      case 'clock':
-        return l10n.repeater_cliQuickClock;
-      case 'clock sync':
-        return l10n.repeater_cliQuickClockSync;
-      case 'discovery':
-        return l10n.repeater_cliQuickDiscovery;
-      default:
-        return key;
-    }
   }
 
   Widget _buildEmptyState() {
@@ -402,26 +487,16 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.terminal,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 16),
+          const Icon(Icons.terminal, size: 48, color: MeshPalette.ink4),
+          const SizedBox(height: 12),
           Text(
             l10n.repeater_noCommandsSent,
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: MeshTheme.mono(fontSize: 13, color: MeshPalette.ink3),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             l10n.repeater_typeCommandOrUseQuick,
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: const TextStyle(fontSize: 12, color: MeshPalette.ink4),
           ),
         ],
       ),
@@ -431,103 +506,43 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   Widget _buildCommandHistory() {
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: _commandHistory.length,
       itemBuilder: (context, index) {
         final entry = _commandHistory[index];
         final isCommand = entry['type'] == 'command';
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: 2),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isCommand
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Icon(
-                  isCommand ? Icons.chevron_right : Icons.arrow_back,
-                  size: 16,
-                  color: isCommand
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : Theme.of(context).colorScheme.onSecondaryContainer,
+              // Gutter prefix
+              SizedBox(
+                width: 20,
+                child: Text(
+                  isCommand ? '>' : ' ',
+                  style: MeshTheme.mono(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isCommand ? MeshPalette.blue : MeshPalette.ink3,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 6),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectableText(
-                      entry['text']!,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        color: isCommand
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
+                child: SelectableText(
+                  entry['text']!,
+                  style: MeshTheme.mono(
+                    fontSize: 12.5,
+                    color: isCommand ? MeshPalette.blue : MeshPalette.ink,
+                  ),
                 ),
               ),
             ],
           ),
         );
       },
-    );
-  }
-
-  Widget _buildCommandInput() {
-    final l10n = context.l10n;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: Theme.of(context).colorScheme.surface,
-      child: SafeArea(
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_upward, size: 20),
-              tooltip: l10n.repeater_previousCommand,
-              onPressed: () => _navigateHistory(true),
-            ),
-            IconButton(
-              icon: const Icon(Icons.arrow_downward, size: 20),
-              tooltip: l10n.repeater_nextCommand,
-              onPressed: () => _navigateHistory(false),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _commandController,
-                focusNode: _commandFocusNode,
-                decoration: InputDecoration(
-                  hintText: l10n.repeater_enterCommandHint,
-                  border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  prefixText: '> ',
-                ),
-                style: const TextStyle(fontFamily: 'monospace'),
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendCommand(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              icon: const Icon(Icons.send),
-              onPressed: _sendCommand,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1151,16 +1166,20 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     List<_CommandHelpEntry> commands, {
     String? note,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
         if (note != null) ...[
-          const SizedBox(height: 6),
-          Text(note, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            note,
+            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+          ),
         ],
         const SizedBox(height: 8),
         ...commands.map((entry) => _buildHelpCommandCard(context, entry)),
@@ -1169,39 +1188,35 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   }
 
   Widget _buildHelpCommandCard(BuildContext context, _CommandHelpEntry entry) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      color: colorScheme.surfaceContainerHighest,
+      margin: const EdgeInsets.only(bottom: 6),
+      color: scheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(MeshRadii.sm),
+        side: BorderSide(color: scheme.outlineVariant),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(MeshRadii.sm),
         onTap: () => _applyHelpCommand(entry.command),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 entry.command,
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurfaceVariant,
+                style: MeshTheme.mono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: MeshPalette.blue,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 entry.description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -1214,6 +1229,5 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
 class _CommandHelpEntry {
   final String command;
   final String description;
-
   const _CommandHelpEntry({required this.command, required this.description});
 }

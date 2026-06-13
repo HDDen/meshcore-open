@@ -1,5 +1,5 @@
 {
-  "channels_channelDeleteFailed": "Échec de la suppression de la chaîne \"{name}\"",
+  "channels_channelDeleteFailed": "Échec de la suppression du canal \"{name}\"",
   "@channels_channelDeleteFailed": {
     "placeholders": {
       "name": {
@@ -9,7 +9,7 @@
   },
   "@@locale": "fr",
   "appTitle": "MeshCore Open (Advanced mod)",
-  "nav_contacts": "Coordonnées",
+  "nav_contacts": "Contacts",
   "nav_channels": "Canaux",
   "nav_map": "Carte",
   "common_cancel": "Annuler",
@@ -101,27 +101,27 @@
   "settings_latitude": "Latitude",
   "settings_longitude": "Longitude",
   "settings_privacyMode": "Mode de confidentialité",
-  "settings_privacyModeSubtitle": "Cacher le nom/l'emplacement dans les annonces",
-  "settings_privacyModeToggle": "Activer le mode confidentialité pour masquer votre nom et votre localisation dans les annonces.",
+  "settings_privacyModeSubtitle": "Masquer le nom et la localisation dans les annonces",
+  "settings_privacyModeToggle": "Activez le mode confidentialité pour masquer votre nom et votre localisation dans les annonces.",
   "settings_privacyModeEnabled": "Mode de confidentialité activé",
   "settings_privacyModeDisabled": "Mode de confidentialité désactivé",
   "settings_actions": "Actions",
-  "settings_deleteAllPaths": "Delete All Paths",
-  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
+  "settings_deleteAllPaths": "Supprimer tous les chemins",
+  "settings_deleteAllPathsSubtitle": "Effacer toutes les données de chemin des contacts.",
   "settings_sendAdvertisement": "S'annoncer",
-  "settings_sendAdvertisementSubtitle": "Présence diffusée maintenant",
+  "settings_sendAdvertisementSubtitle": "Diffuser la présence maintenant",
   "settings_advertisementSent": "Annonce envoyée",
-  "settings_syncTime": "Temps de synchronisation",
-  "settings_syncTimeSubtitle": "Définir l'heure de l'appareil sur l'heure du téléphone.",
-  "settings_timeSynchronized": "Synchronisation temporelle",
-  "settings_refreshContacts": "Rafraîchir les Contacts",
+  "settings_syncTime": "Synchroniser l'heure",
+  "settings_syncTimeSubtitle": "Régler l'heure de l'appareil sur celle du téléphone.",
+  "settings_timeSynchronized": "Heure synchronisée",
+  "settings_refreshContacts": "Actualiser les contacts",
   "settings_refreshContactsSubtitle": "Recharger la liste des contacts depuis l'appareil",
   "settings_rebootDevice": "Redémarrer l'appareil",
   "settings_rebootDeviceSubtitle": "Redémarrer l'appareil MeshCore",
   "settings_rebootDeviceConfirm": "Êtes-vous sûr de vouloir redémarrer l'appareil ? Vous serez déconnecté.",
-  "settings_debug": "Déboguer",
-  "settings_bleDebugLog": "Journal de débogage BLE",
-  "settings_bleDebugLogSubtitle": "Commandes BLE, réponses et données brutes",
+  "settings_debug": "Débogage",
+  "settings_bleDebugLog": "Journal de débogage du compagnon",
+  "settings_bleDebugLogSubtitle": "Commandes, réponses et données brutes BLE/TCP/USB",
   "settings_appDebugLog": "Journal de débogage de l'application",
   "settings_appDebugLogSubtitle": "Messages de débogage de l'application",
   "settings_about": "À propos",
@@ -133,13 +133,13 @@
       }
     }
   },
-  "settings_aboutLegalese": "Projet MeshCore Open Source 2026",
-  "settings_aboutDescription": "Un client Flutter open source pour les appareils de réseau mesh MeshCore LoRa.",
+  "settings_aboutLegalese": "Projet open source MeshCore 2026",
+  "settings_aboutDescription": "Client Flutter open source pour les appareils de réseau maillé LoRa MeshCore.",
   "settings_infoName": "Nom",
-  "settings_infoId": "Numéro d'identification",
+  "settings_infoId": "ID",
   "settings_infoStatus": "État",
   "settings_infoBattery": "Batterie",
-  "settings_infoPublicKey": "Clé Publique",
+  "settings_infoPublicKey": "Clé publique",
   "settings_infoContactsCount": "Nombre de contacts",
   "settings_infoChannelCount": "Nombre de canaux",
   "settings_presets": "Préréglages",
@@ -147,9 +147,9 @@
   "settings_frequencyHelper": "300,0 - 2 500,0",
   "settings_frequencyInvalid": "Fréquence invalide (300-2500 MHz)",
   "settings_bandwidth": "Bande passante",
-  "settings_spreadingFactor": "Facteur de répartition (SF)",
+  "settings_spreadingFactor": "Facteur d'étalement (SF)",
   "settings_codingRate": "Taux de codage (CR)",
-  "settings_txPower": "TX Puissance (dBm)",
+  "settings_txPower": "Puissance TX (dBm)",
   "settings_txPowerHelper": "0 - 22",
   "settings_txPowerInvalid": "Puissance TX invalide (0-22 dBm)",
   "settings_error": "Erreur : {message}",
@@ -189,7 +189,7 @@
   "appSettings_appearance": "Apparence",
   "appSettings_theme": "Thème",
   "appSettings_themeSystem": "Défaut système",
-  "appSettings_themeLight": "Lumière",
+  "appSettings_themeLight": "Clair",
   "appSettings_themeDark": "Sombre",
   "appSettings_language": "Langue",
   "appSettings_languageSystem": "Par défaut du système",
@@ -198,35 +198,35 @@
   "appSettings_languageEs": "Espagnol",
   "appSettings_languageDe": "Allemand",
   "appSettings_languagePl": "Polonais",
-  "appSettings_languageSl": "Sloveno",
+  "appSettings_languageSl": "Slovène",
   "appSettings_languagePt": "Portugais",
   "appSettings_languageIt": "Italien",
   "appSettings_languageZh": "Chinois",
   "appSettings_languageSv": "Suédois",
   "appSettings_languageNl": "Néerlandais",
-  "appSettings_languageSk": "Slovène",
+  "appSettings_languageSk": "Slovaque",
   "appSettings_languageBg": "Bulgare",
   "appSettings_notifications": "Notifications",
-  "appSettings_enableNotifications": "Activer les Notifications",
+  "appSettings_enableNotifications": "Activer les notifications",
   "appSettings_enableNotificationsSubtitle": "Recevoir des notifications pour les messages et les annonces",
   "appSettings_notificationPermissionDenied": "Permission de notification refusée",
   "appSettings_notificationsEnabled": "Notifications activées",
   "appSettings_notificationsDisabled": "Notifications désactivées",
-  "appSettings_messageNotifications": "Notifications de Messages",
+  "appSettings_messageNotifications": "Notifications de messages",
   "appSettings_messageNotificationsSubtitle": "Afficher une notification lors de la réception de nouveaux messages",
-  "appSettings_channelMessageNotifications": "Notifications des Messages de Canal",
+  "appSettings_channelMessageNotifications": "Notifications des messages de canal",
   "appSettings_channelMessageNotificationsSubtitle": "Afficher une notification lors de la réception des messages de canal",
   "appSettings_advertisementNotifications": "Notifications d'annonces",
   "appSettings_advertisementNotificationsSubtitle": "Afficher une notification lors de la découverte de nouveaux nœuds",
   "appSettings_messaging": "Messagerie",
-  "appSettings_clearPathOnMaxRetry": "Effacer le chemin sur Max Retry",
+  "appSettings_clearPathOnMaxRetry": "Effacer le chemin après le nombre maximal de tentatives",
   "appSettings_clearPathOnMaxRetrySubtitle": "Réinitialiser le chemin de contact après 5 tentatives d'envoi infructueuses",
-  "appSettings_pathsWillBeCleared": "Les chemins seront effacés après 5 tentatives infructueuses.",
+  "appSettings_pathsWillBeCleared": "Les chemins seront effacés après 5 échecs.",
   "appSettings_pathsWillNotBeCleared": "Les chemins ne seront pas effacés automatiquement.",
-  "appSettings_autoRouteRotation": "Rotation de l'itinéraire automatique",
-  "appSettings_autoRouteRotationSubtitle": "Alterner entre les meilleurs chemins et le mode d'envoi sur tout le réseau (flood)",
-  "appSettings_autoRouteRotationEnabled": "Rotation du routage automatique activée",
-  "appSettings_autoRouteRotationDisabled": "Rotation de l'itinéraire automatique désactivée",
+  "appSettings_autoRouteRotation": "Rotation automatique du routage",
+  "appSettings_autoRouteRotationSubtitle": "Alterner entre les meilleurs chemins et le mode flood",
+  "appSettings_autoRouteRotationEnabled": "Rotation automatique du routage activée",
+  "appSettings_autoRouteRotationDisabled": "Rotation automatique du routage désactivée",
   "appSettings_battery": "Batterie",
   "appSettings_batteryChemistry": "Chimie de la batterie",
   "appSettings_batteryChemistryPerDevice": "Définir par appareil ({deviceName})",
@@ -258,14 +258,14 @@
       }
     }
   },
-  "appSettings_mapTimeFilter": "Filtre du Temps de la Carte",
-  "appSettings_showNodesDiscoveredWithin": "Afficher les nœuds découverts dans :",
+  "appSettings_mapTimeFilter": "Filtre temporel de la carte",
+  "appSettings_showNodesDiscoveredWithin": "Afficher les nœuds découverts au cours de :",
   "appSettings_allTime": "Tout le temps",
   "appSettings_lastHour": "Dernière heure",
   "appSettings_last6Hours": "Dernières 6 heures",
   "appSettings_last24Hours": "Dernières 24 heures",
   "appSettings_lastWeek": "La semaine dernière",
-  "appSettings_offlineMapCache": "Cache de Carte Hors Ligne",
+  "appSettings_offlineMapCache": "Cache de carte hors ligne",
   "appSettings_noAreaSelected": "Aucune zone sélectionnée",
   "appSettings_areaSelectedZoom": "Zone sélectionnée (zoom {minZoom}-{maxZoom})",
   "@appSettings_areaSelectedZoom": {
@@ -278,15 +278,25 @@
       }
     }
   },
-  "appSettings_debugCard": "Déboguer",
-  "appSettings_appDebugLogging": "Journalisation de débogage de l'application",
-  "appSettings_appDebugLoggingSubtitle": "Enregistrez les messages de débogage de l'application Log pour le dépannage.",
+  "appSettings_debugCard": "Débogage",
+  "appSettings_appDebugLogging": "Journalisation des débogages de l'application",
+  "appSettings_appDebugLoggingSubtitle": "Journaliser les messages de débogage de l'application pour le dépannage.",
   "appSettings_appDebugLoggingEnabled": "Journalisation de débogage de l'application activée",
-  "appSettings_appDebugLoggingDisabled": "Le débogage de l'application est désactivé.",
-  "contacts_title": "Coordonnées",
+  "appSettings_appDebugLoggingDisabled": "Journalisation de débogage de l'application désactivée",
+  "contacts_title": "Contacts",
   "contacts_noContacts": "Aucun contact trouvé.",
-  "contacts_contactsWillAppear": "Les contacts apparaîtront lorsque les appareils font leur annonce.",
-  "contacts_searchContacts": "Rechercher des contacts...",
+  "contacts_contactsWillAppear": "Les contacts apparaîtront lorsque les appareils diffuseront leur annonce.",
+  "contacts_searchContacts": "Rechercher {number}{str} contacts...",
+  "@contacts_searchContacts": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "str": {
+        "type": "String"
+      }
+    }
+  },
   "contacts_noUnreadContacts": "Aucun contact non lu",
   "contacts_noContactsFound": "Aucun contact ou groupe trouvé.",
   "contacts_deleteContact": "Supprimer le contact",
@@ -299,11 +309,11 @@
     }
   },
   "contacts_manageRepeater": "Gérer le répéteur",
-  "contacts_roomLogin": "Connexion Room Server",
-  "contacts_openChat": "Ouverture du Chat",
+  "contacts_roomLogin": "Connexion au room server",
+  "contacts_openChat": "Ouvrir le chat",
   "contacts_editGroup": "Modifier le groupe",
   "contacts_deleteGroup": "Supprimer le groupe",
-  "contacts_deleteGroupConfirm": "Supprimer {groupName}?",
+  "contacts_deleteGroupConfirm": "Supprimer le groupe \"{groupName}\" ?",
   "@contacts_deleteGroupConfirm": {
     "placeholders": {
       "groupName": {
@@ -311,7 +321,7 @@
       }
     }
   },
-  "contacts_newGroup": "Nouveau Groupe",
+  "contacts_newGroup": "Nouveau groupe",
   "contacts_groupName": "Nom du groupe",
   "contacts_groupNameRequired": "Le nom du groupe est obligatoire.",
   "contacts_groupNameReserved": "Ce nom de groupe est réservé",
@@ -326,8 +336,8 @@
   "contacts_filterContacts": "Filtrer les contacts...",
   "contacts_noContactsMatchFilter": "Aucun contact ne correspond à votre filtre.",
   "contacts_noMembers": "Aucun membre",
-  "contacts_lastSeenNow": "Vu maintenant",
-  "contacts_lastSeenMinsAgo": "~ {minutes} minutes.",
+  "contacts_lastSeenNow": "À l'instant",
+  "contacts_lastSeenMinsAgo": "~ {minutes} min",
   "@contacts_lastSeenMinsAgo": {
     "placeholders": {
       "minutes": {
@@ -372,7 +382,7 @@
   "channels_muteChannel": "Désactiver les notifications du canal",
   "channels_unmuteChannel": "Réactiver les notifications du canal",
   "channels_deleteChannel": "Supprimer le canal",
-  "channels_deleteChannelConfirm": "Supprimer {name}? Cela ne peut pas être annulé.",
+  "channels_deleteChannelConfirm": "Supprimer \"{name}\" ? Cette action est irréversible.",
   "@channels_deleteChannelConfirm": {
     "placeholders": {
       "name": {
@@ -380,7 +390,7 @@
       }
     }
   },
-  "channels_channelDeleted": "Le canal \"{name}\" a été supprimé",
+  "channels_channelDeleted": "Canal \"{name}\" supprimé",
   "@channels_channelDeleted": {
     "placeholders": {
       "name": {
@@ -388,15 +398,15 @@
       }
     }
   },
-  "channels_addChannel": "Ajouter un Canal",
-  "channels_channelIndexLabel": "Index de canal",
+  "channels_addChannel": "Ajouter un canal",
+  "channels_channelIndexLabel": "Index du canal",
   "channels_channelName": "Nom du canal",
   "channels_usePublicChannel": "Utiliser le canal public",
   "channels_standardPublicPsk": "PSK public standard",
   "channels_pskHex": "PSK (Hexadécimal)",
-  "channels_generateRandomPsk": "Générer une clé de modulation PSK aléatoire",
+  "channels_generateRandomPsk": "Générer une PSK aléatoire",
   "channels_enterChannelName": "Veuillez entrer un nom de canal",
-  "channels_pskMustBe32Hex": "Le PKS doit être composé de 32 caractères hexadécimaux.",
+  "channels_pskMustBe32Hex": "La PSK doit contenir 32 caractères hexadécimaux.",
   "channels_channelAdded": "Le canal \"{name}\" a été ajouté",
   "@channels_channelAdded": {
     "placeholders": {
@@ -421,6 +431,11 @@
   "channels_cyr2latSettingsDscr": "Modifier la configuration JSON des remplacements de caractères",
   "channels_cyr2latSettingsDialogHint": "Tableau de remplacement JSON",
   "channels_cyr2latSettingsDialogWrongJSON": "JSON incorrect : {error}",
+  "@channels_cyr2latSettingsDialogWrongJSON": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "settings_cyr2latProfileAdd": "Ajouter un profil Cyr2Lat",
   "settings_cyr2latProfileName": "Nom du profil",
   "settings_cyr2latProfileNameEmpty": "Le nom du profil ne peut pas être vide",
@@ -429,7 +444,14 @@
   "settings_cyr2latProfileEdit": "Modifier le profil Cyr2Lat",
   "settings_cyr2latProfileDelete": "Supprimer le profil Cyr2Lat",
   "settings_cyr2latProfileDeleted": "Profil supprimé avec succès",
-  "settings_cyr2latProfileDeleteDscr": "Êtes-vous sûr de vouloir supprimer le profil \"{name}\"?",
+  "settings_cyr2latProfileDeleteDscr": "Êtes-vous sûr de vouloir supprimer le profil \"{name}\" ?",
+  "@settings_cyr2latProfileDeleteDscr": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "channels_channelUpdated": "Le canal \"{name}\" a été mis à jour",
   "@channels_channelUpdated": {
     "placeholders": {
@@ -438,13 +460,13 @@
       }
     }
   },
-  "channels_publicChannelAdded": "Le canal public a été ajouté",
+  "channels_publicChannelAdded": "Canal public ajouté",
   "channels_sortBy": "Trier par",
   "channels_sortManual": "Manuel",
   "channels_sortAZ": "A à Z",
   "channels_sortLatestMessages": "Derniers messages",
-  "channels_sortUnread": "Non lu",
-  "chat_noMessages": "Aucun message pour le moment.",
+  "channels_sortUnread": "Non lus",
+  "chat_noMessages": "Aucun message pour le moment",
   "chat_sendMessageToStart": "Envoyer un message pour commencer",
   "chat_originalMessageNotFound": "Message d'origine non trouvé",
   "chat_replyingTo": "Répondre à {name}",
@@ -483,7 +505,7 @@
   },
   "chat_messageCopied": "Message copié",
   "chat_messageDeleted": "Message supprimé",
-  "chat_retryingMessage": "Tentative de récupération.",
+  "chat_retryingMessage": "Nouvelle tentative d'envoi du message",
   "chat_retryCount": "Essai {current}/{max}",
   "@chat_retryCount": {
     "placeholders": {
@@ -495,9 +517,9 @@
       }
     }
   },
-  "chat_sendGif": "Envoyer GIF",
+  "chat_sendGif": "Envoyer un GIF",
   "chat_reply": "Répondre",
-  "chat_addReaction": "Ajouter une Réaction",
+  "chat_addReaction": "Ajouter une réaction",
   "chat_me": "Moi",
   "emojiCategorySmileys": "Émojis",
   "emojiCategoryGestures": "Gestes",
@@ -574,7 +596,7 @@
     }
   },
   "debugFrame_textTypeCli": "CLI",
-  "debugFrame_textTypePlain": "Simple",
+  "debugFrame_textTypePlain": "Texte brut",
   "debugFrame_text": "- Texte : \"{text}\"",
   "@debugFrame_text": {
     "placeholders": {
@@ -583,7 +605,7 @@
       }
     }
   },
-  "debugFrame_hexDump": "Vidéo de Dump Hexadécimal :",
+  "debugFrame_hexDump": "Dump hexadécimal :",
   "chat_pathManagement": "Gestion des chemins",
   "chat_routingMode": "Mode de routage",
   "chat_autoUseSavedPath": "Auto (utiliser le chemin sauvegardé)",
@@ -602,15 +624,15 @@
   },
   "chat_successes": "Succès",
   "chat_removePath": "Supprimer le chemin",
-  "chat_noPathHistoryYet": "Aucune historique de parcours disponible.\nEnvoyez un message pour découvrir les parcours.",
+  "chat_noPathHistoryYet": "Aucun historique de parcours disponible.\nEnvoyez un message pour découvrir les parcours.",
   "chat_pathActions": "Actions du chemin :",
   "chat_setCustomPath": "Définir un chemin personnalisé",
   "chat_setCustomPathSubtitle": "Spécifier manuellement le chemin de routage",
   "chat_clearPath": "Effacer le chemin",
-  "chat_clearPathSubtitle": "Forcer la redécouverte lors de la prochaine envoi",
-  "chat_pathCleared": "Le chemin est dégagé. Le prochain message redécouvrira le tracé.",
-  "chat_floodModeSubtitle": "Désactive l'apprentissage du chemin (à éviter). Utiliser le commutateur de routage dans la barre d'application pour rebasculer en mode auto par la suite.",
-  "chat_floodModeEnabled": "Le mode envoi à tout le réseau est activé. Changer via l'icône de routage dans la barre d'outils.",
+  "chat_clearPathSubtitle": "Forcer la redécouverte lors du prochain envoi",
+  "chat_pathCleared": "Chemin effacé. Le prochain message redécouvrira la route.",
+  "chat_floodModeSubtitle": "Désactive l'apprentissage du chemin (à éviter). Utilisez le sélecteur de routage de la barre d'application pour revenir ensuite au mode auto.",
+  "chat_floodModeEnabled": "Le mode flood est activé. Utilisez l'icône de routage de la barre d'outils pour changer cela.",
   "chat_fullPath": "Chemin complet",
   "chat_pathDetailsNotAvailable": "Les détails du chemin ne sont pas encore disponibles. Essayez d'envoyer un message pour rafraîchir.",
   "chat_pathSetHops": "Chemin défini : {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
@@ -627,11 +649,11 @@
   "chat_pathSavedLocally": "Sauvegardé localement. Connectez-vous pour synchroniser.",
   "chat_pathDeviceConfirmed": "Appareil confirmé.",
   "chat_pathDeviceNotConfirmed": "L'appareil n'a pas encore été confirmé.",
-  "chat_type": "Saisir",
+  "chat_type": "Type",
   "chat_path": "Chemin",
-  "chat_publicKey": "Clé Publique",
+  "chat_publicKey": "Clé publique",
   "chat_compressOutgoingMessages": "Compresser les messages sortants",
-  "chat_floodForced": "Tout le réseau  (forcée)",
+  "chat_floodForced": "Flood (forcé)",
   "chat_directForced": "Direct (forcé)",
   "chat_hopsForced": "{count} sauts (forcés)",
   "@chat_hopsForced": {
@@ -641,9 +663,9 @@
       }
     }
   },
-  "chat_floodAuto": "Tout le réseau (auto)",
-  "chat_direct": "Afficher",
-  "chat_poiShared": "Point d'intérêt Partagé",
+  "chat_floodAuto": "Flood (auto)",
+  "chat_direct": "Direct",
+  "chat_poiShared": "Point d'intérêt partagé",
   "chat_unread": "Non lu : {count}",
   "@chat_unread": {
     "placeholders": {
@@ -675,7 +697,7 @@
       }
     }
   },
-  "map_pinsCount": "Epingles: {count}",
+  "map_pinsCount": "Épingles : {count}",
   "@map_pinsCount": {
     "placeholders": {
       "count": {
@@ -685,25 +707,25 @@
   },
   "map_chat": "Conversation",
   "map_repeater": "Répéteur",
-  "map_room": "Room Server",
+  "map_room": "Room server",
   "map_sensor": "Capteur",
-  "map_pinDm": "Clé (DM)",
-  "map_pinPrivate": "Verrouiller (Privé)",
-  "map_pinPublic": "Clé (Public)",
-  "map_lastSeen": "Dernière fois vu",
+  "map_pinDm": "Épingle (DM)",
+  "map_pinPrivate": "Épingle (privé)",
+  "map_pinPublic": "Épingle (public)",
+  "map_lastSeen": "Vu pour la dernière fois",
   "map_disconnectConfirm": "Êtes-vous sûr de vouloir vous déconnecter de cet appareil ?",
-  "map_from": "À partir de",
+  "map_from": "Depuis",
   "map_source": "Source",
   "map_flags": "Drapeaux",
   "map_shareMarkerHere": "Partager le marqueur ici",
-  "map_pinLabel": "Étiquete de repin",
+  "map_pinLabel": "Libellé de l'épingle",
   "map_label": "Étiquette",
   "map_pointOfInterest": "Point d'intérêt",
   "map_sendToContact": "Envoyer au contact",
   "map_sendToChannel": "Envoyer sur le canal",
   "map_noChannelsAvailable": "Aucun canal disponible",
-  "map_publicLocationShare": "Partager dans un lieu public",
-  "map_publicLocationShareConfirm": "Vous êtes sur le point de partager un emplacement dans {channelLabel}. Ce canal est public et toute personne disposant de la clé PSK peut le voir.",
+  "map_publicLocationShare": "Partage public de localisation",
+  "map_publicLocationShareConfirm": "Vous êtes sur le point de partager une localisation dans {channelLabel}. Ce canal est public et toute personne disposant de la PSK peut la voir.",
   "@map_publicLocationShareConfirm": {
     "placeholders": {
       "channelLabel": {
@@ -714,23 +736,23 @@
   "map_connectToShareMarkers": "Connectez-vous à un appareil pour partager des marqueurs",
   "map_filterNodes": "Filtrer les nœuds",
   "map_nodeTypes": "Types de nœuds",
-  "map_chatNodes": "Nœuds de Chat",
+  "map_chatNodes": "Nœuds de chat",
   "map_repeaters": "Répéteurs",
   "map_otherNodes": "Autres nœuds",
-  "map_keyPrefix": "Préfixe clé",
+  "map_keyPrefix": "Préfixe de clé",
   "map_filterByKeyPrefix": "Filtrer par préfixe de clé",
   "map_publicKeyPrefix": "Préfixe de clé publique",
   "map_markers": "Marqueurs",
   "map_showSharedMarkers": "Afficher les marqueurs partagés",
-  "map_lastSeenTime": "Dernière fois vu",
-  "map_sharedPin": "Clé partagée",
+  "map_lastSeenTime": "Vu pour la dernière fois",
+  "map_sharedPin": "Épingle partagée",
   "map_joinRoom": "Rejoindre le room server",
   "map_manageRepeater": "Gérer le répéteur",
-  "mapCache_title": "Cache de Carte Hors Ligne",
-  "mapCache_selectAreaFirst": "Sélectionner une zone pour la mise en cache en premier",
-  "mapCache_noTilesToDownload": "Aucun tuilage à télécharger pour cette zone.",
+  "mapCache_title": "Cache de carte hors ligne",
+  "mapCache_selectAreaFirst": "Sélectionnez d'abord une zone à mettre en cache",
+  "mapCache_noTilesToDownload": "Aucune tuile à télécharger pour cette zone.",
   "mapCache_downloadTilesTitle": "Télécharger les tuiles",
-  "mapCache_downloadTilesPrompt": "Télécharger {count} tuiles pour un usage hors ligne ?",
+  "mapCache_downloadTilesPrompt": "Télécharger {count} tuiles pour une utilisation hors ligne ?",
   "@mapCache_downloadTilesPrompt": {
     "placeholders": {
       "count": {
@@ -739,7 +761,7 @@
     }
   },
   "mapCache_downloadAction": "Télécharger",
-  "mapCache_cachedTiles": "Cachez {count} tuiles",
+  "mapCache_cachedTiles": "{count} tuiles mises en cache",
   "@mapCache_cachedTiles": {
     "placeholders": {
       "count": {
@@ -747,7 +769,7 @@
       }
     }
   },
-  "mapCache_cachedTilesWithFailed": "Tuiles mis en cache ({downloaded}) ({failed} ratés)",
+  "mapCache_cachedTilesWithFailed": "{downloaded} tuiles mises en cache ({failed} en échec)",
   "@mapCache_cachedTilesWithFailed": {
     "placeholders": {
       "downloaded": {
@@ -758,12 +780,12 @@
       }
     }
   },
-  "mapCache_clearOfflineCacheTitle": "Vider le cache hors ligne",
+  "mapCache_clearOfflineCacheTitle": "Effacer le cache hors ligne",
   "mapCache_clearOfflineCachePrompt": "Supprimer toutes les tuiles de carte mises en cache ?",
   "mapCache_offlineCacheCleared": "Le cache hors ligne a été effacé.",
   "mapCache_noAreaSelected": "Aucune zone sélectionnée",
-  "mapCache_cacheArea": "Zone de cache",
-  "mapCache_useCurrentView": "Utiliser la Vue Actuelle",
+  "mapCache_cacheArea": "Zone à mettre en cache",
+  "mapCache_useCurrentView": "Utiliser la vue actuelle",
   "mapCache_zoomRange": "Plage de zoom",
   "mapCache_estimatedTiles": "Estimation des tuiles : {count}",
   "@mapCache_estimatedTiles": {
@@ -773,7 +795,7 @@
       }
     }
   },
-  "mapCache_downloadedTiles": "Téléchargé {completed} / {total}",
+  "mapCache_downloadedTiles": "{completed} / {total} téléchargées",
   "@mapCache_downloadedTiles": {
     "placeholders": {
       "completed": {
@@ -785,7 +807,7 @@
     }
   },
   "mapCache_downloadTilesButton": "Télécharger les tuiles",
-  "mapCache_clearCacheButton": "Vider le Cache",
+  "mapCache_clearCacheButton": "Vider le cache",
   "mapCache_failedDownloads": "Téléchargements échoués : {count}",
   "@mapCache_failedDownloads": {
     "placeholders": {
@@ -849,7 +871,7 @@
   "dialog_disconnect": "Déconnecter",
   "dialog_disconnectConfirm": "Êtes-vous sûr de vouloir vous déconnecter de cet appareil ?",
   "login_repeaterLogin": "Connexion au répéteur",
-  "login_roomLogin": "Connexion Room Server",
+  "login_roomLogin": "Connexion au room server",
   "login_password": "Mot de passe",
   "login_enterPassword": "Entrez votre mot de passe",
   "login_savePassword": "Sauvegarder le mot de passe",
@@ -892,7 +914,7 @@
       }
     }
   },
-  "path_usingHopsPath": "Utiliser {count} {count, plural, =1{hop} other{hops}} chemin",
+  "path_usingHopsPath": "Utiliser un chemin de {count} {count, plural, =1{saut} other{sauts}}",
   "@path_usingHopsPath": {
     "placeholders": {
       "count": {
@@ -902,13 +924,13 @@
   },
   "path_enterCustomPath": "Entrer un chemin personnalisé",
   "path_currentPathLabel": "Chemin actuel",
-  "path_hexPrefixInstructions": "Entrez les préfixes hexadécimaux de 2 caractères pour chaque saut, séparés par des virgules.",
+  "path_hexPrefixInstructions": "Entrez des préfixes hexadécimaux de 2 caractères pour chaque saut, séparés par des virgules.",
   "path_hexPrefixExample": "Exemple : A1,F2,3C (chaque nœud utilise le premier octet de sa clé publique).",
   "path_labelHexPrefixes": "Préfixes hexadécimaux",
-  "path_helperMaxHops": "Max 64 sauts. Chaque préfixe fait 2 caractères hexadécimaux (1 octet)",
-  "path_selectFromContacts": "Sélectionner à partir des contacts :",
-  "path_noRepeatersFound": "Aucun répéteur ou room server n'a été trouvé.",
-  "path_customPathsRequire": "Les chemins personnalisés nécessitent des sauts intermédiaires qui peuvent transmettre des messages.",
+  "path_helperMaxHops": "Max. 64 sauts. Chaque préfixe fait 2 caractères hexadécimaux (1 octet).",
+  "path_selectFromContacts": "Sélectionner parmi les contacts :",
+  "path_noRepeatersFound": "Aucun répéteur ou room server trouvé.",
+  "path_customPathsRequire": "Les chemins personnalisés nécessitent des sauts intermédiaires capables de transmettre des messages.",
   "path_invalidHexPrefixes": "Préfixes hexadécimaux invalides : {prefixes}",
   "@path_invalidHexPrefixes": {
     "placeholders": {
@@ -1051,7 +1073,7 @@
   "repeater_guestAccess": "Accès Invité",
   "repeater_guestAccessSubtitle": "Autoriser l'accès invité en lecture seule",
   "repeater_privacyMode": "Mode de confidentialité",
-  "repeater_privacyModeSubtitle": "Cacher le nom/l'emplacement dans les annonces",
+  "repeater_privacyModeSubtitle": "Masquer le nom et la localisation dans les annonces",
   "repeater_advertisementSettings": "Paramètres d'annonces",
   "repeater_localAdvertInterval": "Intervalle des annonces Locale (0 saut)",
   "repeater_localAdvertIntervalMinutes": "{minutes} minutes",
@@ -1110,7 +1132,7 @@
   "repeater_networkHealth": "Santé du réseau",
   "repeater_loopDetect": "Détection de boucles",
   "repeater_loopDetectHelper": "Envoyer des paquets de données qui semblent former des boucles de routage.",
-  "repeater_loopDetectOff": "Prix",
+  "repeater_loopDetectOff": "Désactivé",
   "repeater_loopDetectMinimal": "Minimal",
   "repeater_loopDetectModerate": "Modéré",
   "repeater_loopDetectStrict": "Strict",
@@ -1124,28 +1146,28 @@
       }
     }
   },
-  "repeater_ownerInfo": "Informations sur l'opérateur",
-  "repeater_ownerInfoHelper": "Métadonnées publiques pour cet émetteur",
-  "repeater_refreshOwnerInfo": "Rafraîchir les informations sur l'opérateur",
-  "repeater_floodMax": "Nombre maximal de sauts lors des inondations",
+  "repeater_ownerInfo": "Informations sur le propriétaire",
+  "repeater_ownerInfoHelper": "Métadonnées publiques pour cet appareil",
+  "repeater_refreshOwnerInfo": "Rafraîchir les informations du propriétaire",
+  "repeater_floodMax": "Nombre maximal de sauts en flood",
   "repeater_floodMaxHelper": "Nombre maximal de paquets de données qu'un flux peut transmettre (0-64)",
   "repeater_advancedSettings": "Avancé",
-  "repeater_advancedSettingsSubtitle": "Molettes de réglage pour les opérateurs expérimentés",
+  "repeater_advancedSettingsSubtitle": "Réglages avancés pour les opérateurs expérimentés",
   "repeater_pathHashMode": "Mode de hachage de chemin",
-  "repeater_pathHashModeHelper": "Octets utilisés pour encoder l'ID de ce répéteur dans les balises de chemin flood/détection de boucle. 0=1 octet (256 ID, jusqu'à 64 sauts), 1=2 octets (65 000 ID, jusqu'à 32 sauts), 2=3 octets (16 millions d'ID, jusqu'à 21 sauts). Le firmware antérieur à v1.14 utilisait toujours des chemins d'1 octet; v1.14 et les versions ultérieures peuvent être configurées pour des chemins de 2 ou 3 octets.",
-  "repeater_txDelay": "Retard dû aux inondations à Texas",
-  "repeater_txDelayHelper": "Rétransmettre l'espacement pour le trafic de secours en cas de inondation, en multipliant le temps d'émission du paquet (0-2, valeur par défaut : 0,5). Une valeur plus élevée signifie moins de collisions, mais une vitesse de transmission plus lente.",
-  "repeater_directTxDelay": "Retard de transmission direct",
-  "repeater_directTxDelayHelper": "Rétransmettre l'espacement pour le trafic direct (non-inondation), en multipliant le temps de transmission des paquets (0-2, valeur par défaut : 0,3).",
+  "repeater_pathHashModeHelper": "Octets utilisés pour encoder l'ID de ce routeur dans les balises de détection de flux/boucles. 0 = 1 octet (256 ID, jusqu'à 64 sauts), 1 = 2 octets (65 000 ID, jusqu'à 32 sauts), 2 = 3 octets (16 millions d'ID, jusqu'à 21 sauts). Les versions 1.13 et antérieures utilisent des chemins multi-octets ; à partir de la version 1.14, cela n'est plus nécessaire.",
+  "repeater_txDelay": "Délai de transmission en flood",
+  "repeater_txDelayHelper": "Intervalle de retransmission pour le trafic flood, en multipliant le temps d'émission des paquets (0-2, valeur par défaut : 0,5). Une valeur plus élevée réduit les collisions, mais ralentit la transmission.",
+  "repeater_directTxDelay": "Délai de transmission direct",
+  "repeater_directTxDelayHelper": "Intervalle de retransmission pour le trafic direct (non flood), en multipliant le temps de transmission des paquets (0-2, valeur par défaut : 0,3).",
   "repeater_intThresh": "Seuil de perturbation",
   "repeater_intThreshHelper": "Seuil dépassé pour la calibration du niveau de bruit de la radio, afin de rejeter les interférences supérieures à ce niveau. 0 désactive – ne mettez cette valeur que si vous constatez des erreurs RX dans une bande de fréquences bruyante.",
-  "repeater_agcResetInterval": "Interval de réinitialisation de l'AGC",
+  "repeater_agcResetInterval": "Intervalle de réinitialisation de l'AGC",
   "repeater_agcResetIntervalHelper": "À quelle fréquence réinitialiser le contrôle automatique du gain de la radio pour revenir à un état normal ? Chaque seconde, ou à chaque multiple de 4. Désactiver la réinitialisation périodique avec 0.",
   "repeater_actionsTitle": "Actions",
-  "repeater_sendAdvert": "Envoyer une publicité sur les inondations",
-  "repeater_sendAdvertSubtitle": "Diffuser une publicité sur les inondations via le réseau.",
-  "repeater_sendAdvertZeroHop": "Envoyer une publicité sans intermédiaire",
-  "repeater_sendAdvertZeroHopSubtitle": "Diffuser une publicité d'un seul saut (sans relais)",
+  "repeater_sendAdvert": "Envoyer une annonce flood",
+  "repeater_sendAdvertSubtitle": "Diffuser une annonce flood via le réseau.",
+  "repeater_sendAdvertZeroHop": "Envoyer une annonce sans relais",
+  "repeater_sendAdvertZeroHopSubtitle": "Diffuser une annonce d'un seul saut (sans relais)",
   "repeater_clockSync": "Synchroniser l'heure maintenant",
   "repeater_clockSyncSubtitle": "Envoyez l'heure de votre téléphone au répéteur.",
   "repeater_actionSucceeded": "{action} a réussi",
@@ -1186,7 +1208,7 @@
   },
   "repeater_refreshBasicSettings": "Rafraîchir les paramètres de base",
   "repeater_refreshRadioSettings": "Rafraîchir les paramètres Radio",
-  "repeater_refreshTxPower": "Rafraîchir la tension TX",
+  "repeater_refreshTxPower": "Rafraîchir la puissance TX",
   "repeater_refreshPacketForwarding": "Rafraîchir le routage des paquets",
   "repeater_refreshGuestAccess": "Rafraîchir l'accès invité",
   "repeater_refreshPrivacyMode": "Rafraîchir le Mode Confidentialité",
@@ -1206,8 +1228,8 @@
       }
     }
   },
-  "repeater_cliTitle": "Répéteur CLI",
-  "repeater_debugNextCommand": "Déboguer Prochaine Commande",
+  "repeater_cliTitle": "CLI du répéteur",
+  "repeater_debugNextCommand": "Déboguer la prochaine commande",
   "repeater_commandHelp": "Aide",
   "repeater_clearHistory": "Effacer l'historique",
   "repeater_noCommandsSent": "Aucune commande n'a encore été envoyée.",
@@ -1226,11 +1248,11 @@
     }
   },
   "repeater_cliQuickGetName": "Obtenir le nom",
-  "repeater_cliQuickGetRadio": "Obtenir la Radio",
+  "repeater_cliQuickGetRadio": "Obtenir la radio",
   "repeater_cliQuickGetTx": "Obtenir TX",
   "repeater_cliQuickNeighbors": "Voisins",
   "repeater_cliQuickVersion": "Version",
-  "repeater_cliQuickAdvertise": "Publier",
+  "repeater_cliQuickAdvertise": "Diffuser",
   "repeater_cliQuickClock": "Horloge",
   "repeater_cliHelpAdvert": "Envoie un paquet d'annonce",
   "repeater_cliHelpReboot": "Redémarre l'appareil. (Note, vous risquez d'obtenir 'Timeout' ce qui est normal)",
@@ -1342,41 +1364,83 @@
   "telemetry_concentrationValue": "{ppm} ppm",
   "telemetry_percentageValue": "{percent}%",
   "telemetry_analogValue": "{value}",
-  "telemetry_digitalInputLabel": "Entrée numérique",
-  "telemetry_digitalOutputLabel": "Sortie numérique",
-  "telemetry_analogInputLabel": "Entrée analogique",
-  "telemetry_analogOutputLabel": "Sortie analogique",
-  "telemetry_genericLabel": "Capteur générique",
-  "telemetry_luminosityLabel": "Luminosité",
-  "telemetry_presenceLabel": "Présence",
-  "telemetry_humidityLabel": "Humidité",
-  "telemetry_accelerometerLabel": "Accéléromètre",
-  "telemetry_pressureLabel": "Pression",
-  "telemetry_altitudeLabel": "Altitude",
-  "telemetry_frequencyLabel": "Fréquence",
-  "telemetry_percentageLabel": "Pourcentage",
-  "telemetry_concentrationLabel": "Concentration",
-  "telemetry_powerLabel": "Puissance",
-  "telemetry_distanceLabel": "Distance",
-  "telemetry_energyLabel": "Énergie",
-  "telemetry_directionLabel": "Direction",
-  "telemetry_timeLabel": "Heure",
-  "telemetry_gyrometerLabel": "Gyromètre",
-  "telemetry_colourLabel": "Couleur",
-  "telemetry_gpsLabel": "GPS",
-  "telemetry_switchLabel": "Interrupteur",
-  "telemetry_polylineLabel": "Polyligne",
-  "telemetry_altitudeValue": "{meters} m",
-  "telemetry_frequencyValue": "{hertz} Hz",
-  "telemetry_pressureValue": "{hpa} hPa",
-  "telemetry_luminosityValue": "{lux} lx",
-  "telemetry_powerValue": "{watts} W",
-  "telemetry_distanceValue": "{meters} m",
-  "telemetry_energyValue": "{kilowattHours} kWh",
-  "telemetry_directionValue": "{degrees}°",
-  "telemetry_concentrationValue": "{ppm} ppm",
-  "telemetry_percentageValue": "{percent}%",
-  "telemetry_analogValue": "{value}",
+  "@telemetry_altitudeValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_frequencyValue": {
+    "placeholders": {
+      "hertz": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_pressureValue": {
+    "placeholders": {
+      "hpa": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_luminosityValue": {
+    "placeholders": {
+      "lux": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_powerValue": {
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_distanceValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_energyValue": {
+    "placeholders": {
+      "kilowattHours": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_directionValue": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_concentrationValue": {
+    "placeholders": {
+      "ppm": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_percentageValue": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "@telemetry_analogValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "telemetry_autoFetchQuantity": "Nombre de requêtes",
   "telemetry_error": "Impossible de récupérer les données",
   "telemetry_noData": "Aucune donnée de télémétrie disponible.",
@@ -1589,11 +1653,11 @@
   "neighbors_unknownContact": "Clé publique inconnue {pubkey}",
   "neighbors_heardAgo": "Écouté : {time} auparavant",
   "settings_locationGPSEnable": "Activer le GPS",
-  "settings_locationGPSEnableSubtitle": "Activer la mise à jour automatique de la position via GPS",
-  "settings_locationIntervalSec": "Intervalle de mise-à-jour du GPS (Secondes)",
+  "settings_locationGPSEnableSubtitle": "Activer la mise à jour automatique de la localisation via GPS",
+  "settings_locationIntervalSec": "Intervalle de mise à jour du GPS (secondes)",
   "settings_locationIntervalInvalid": "L'intervalle doit être compris entre 60 et 86400 secondes.",
-  "contacts_manageRoom": "Gérer le Room Server",
-  "room_management": "Administrattion Room Server",
+  "contacts_manageRoom": "Gérer le room server",
+  "room_management": "Gestion du room server",
   "@community_joinConfirmation": {
     "placeholders": {
       "name": {
@@ -1739,9 +1803,9 @@
     }
   },
   "pathTrace_you": "Vous",
-  "pathTrace_refreshTooltip": "Actualiser Path Trace",
-  "pathTrace_failed": "Traçage du chemin échoué.",
-  "pathTrace_notAvailable": "Tracé de chemin non disponible.",
+  "pathTrace_refreshTooltip": "Actualiser le traçage du chemin",
+  "pathTrace_failed": "Échec du traçage du chemin.",
+  "pathTrace_notAvailable": "Le traçage du chemin est indisponible.",
   "contacts_pathTrace": "Traçage de chemin",
   "contacts_repeaterPathTrace": "Tracer le chemin vers le répéteur",
   "contacts_repeaterPing": "Pinguer le répéteur",
@@ -1773,6 +1837,27 @@
   "notification_channelMessagesCount": "{count} {count, plural, =1{message de canal} other{messages de canal}}",
   "notification_newNodesCount": "{count} {count, plural, =1{nouveau nœud} other{nouveaux nœuds}}",
   "notification_newTypeDiscovered": "Nouveau {contactType} découvert",
+  "@notification_channelMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@notification_newNodesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@notification_newTypeDiscovered": {
+    "placeholders": {
+      "contactType": {
+        "type": "String"
+      }
+    }
+  },
   "notification_receivedNewMessage": "Nouveau message reçu",
   "settings_gpxExportRepeaters": "Exporter les répéteurs / room servers au format GPX",
   "settings_gpxExportRepeatersSubtitle": "Exporte les répéteurs / roomserver avec une localisation vers un fichier GPX.",
@@ -1800,11 +1885,11 @@
   "scanner_chromeRequiredMessage": "Cette application web nécessite Google Chrome ou un navigateur basé sur Chromium pour le support Bluetooth.",
   "scanner_bluetoothOff": "Le Bluetooth est désactivé.",
   "scanner_enableBluetooth": "Activer le Bluetooth",
-  "snrIndicator_lastSeen": "Dernière fois vu",
+  "snrIndicator_lastSeen": "Vu pour la dernière fois",
   "snrIndicator_nearByRepeaters": "Répéteurs à proximité",
   "chat_ShowAllPaths": "Afficher tous les chemins",
   "settings_clientRepeatFreqWarning": "Pour les transmissions hors réseau, il est nécessaire d'utiliser les fréquences de 433, 869 ou 918 MHz.",
-  "settings_clientRepeatSubtitle": "Permettez à cet appareil de répéter les paquets de données pour les autres.",
+  "settings_clientRepeatSubtitle": "Permettre à cet appareil de relayer les paquets du maillage pour les autres.",
   "settings_clientRepeat": "Répétition hors réseau",
   "settings_aboutOpenMeteoAttribution": "Données d'élévation LOS : Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Unités",
@@ -2016,11 +2101,11 @@
   "discoveredContacts_Title": "Contacts découverts",
   "discoveredContacts_searchHint": "Rechercher des contacts découverts",
   "contactsSettings_overwriteOldestSubtitle": "Lorsque la liste de contacts est pleine, le contact le plus ancien non favori sera remplacé.",
-  "common_deleteAll": "Supprimer tout",
+  "common_deleteAll": "Tout supprimer",
   "discoveredContacts_deleteContactAll": "Supprimer tous les contacts découverts",
   "discoveredContacts_deleteContactAllContent": "Êtes-vous sûr de vouloir supprimer tous les contacts découverts ?",
-  "map_showGuessedLocations": "Afficher les emplacements des nœuds estimés",
-  "map_guessedLocation": "Lieu deviné",
+  "map_showGuessedLocations": "Afficher les emplacements estimés des nœuds",
+  "map_guessedLocation": "Localisation estimée",
   "connectionChoiceUsbLabel": "USB",
   "usbScreenTitle": "Connectez via USB",
   "connectionChoiceBluetoothLabel": "Bluetooth",
@@ -2093,10 +2178,10 @@
   },
   "settings_privacy": "Paramètres de confidentialité",
   "settings_privacySubtitle": "Contrôlez les informations partagées",
-  "settings_telemetryLocationMode": "Mode d'emplacement de télémétrie",
-  "settings_telemetryEnvironmentMode": "Mode d'environnement de télémétrie",
-  "settings_advertLocation": "Emplacement de l'annonce",
-  "settings_advertLocationSubtitle": "Inclure l'emplacement dans l'annonce",
+  "settings_telemetryLocationMode": "Mode de localisation de la télémétrie",
+  "settings_telemetryEnvironmentMode": "Mode d'environnement de la télémétrie",
+  "settings_advertLocation": "Localisation de l'annonce",
+  "settings_advertLocationSubtitle": "Inclure la localisation dans l'annonce",
   "settings_denyAll": "Refuser tout",
   "settings_allowByContact": "Autoriser par drapeaux de contact",
   "settings_privacySettingsDescription": "Choisissez les informations que votre appareil partage avec les autres.",
@@ -2110,22 +2195,22 @@
   "contact_teleEnvSubtitle": "Autoriser le partage des données des capteurs d'environnement",
   "contact_telemetry": "Télémétrie",
   "contact_settings": "Paramètres de contact",
-  "contact_lastSeen": "Dernière fois vu",
+  "contact_lastSeen": "Vu pour la dernière fois",
   "contact_clearChat": "Effacer la conversation",
   "contact_teleBaseSubtitle": "Autoriser le partage du niveau de batterie et de la télémétrie de base",
-  "appSettings_maxRouteWeightSubtitle": "Poids maximal qu'un itinéraire peut accumuler grâce à des livraisons réussies.",
+  "appSettings_maxRouteWeightSubtitle": "Poids maximal qu'un chemin peut accumuler grâce aux livraisons réussies.",
   "appSettings_initialRouteWeight": "Poids initial de l'itinéraire",
-  "appSettings_maxRouteWeight": "Poids maximal autorisé pour le trajet",
+  "appSettings_maxRouteWeight": "Poids maximal du chemin",
   "appSettings_initialRouteWeightSubtitle": "Poids de départ pour les nouveaux chemins découverts",
-  "appSettings_routeWeightSuccessIncrement": "Augmentation du poids de réussite",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Poids ajouté à un itinéraire après une livraison réussie.",
-  "appSettings_routeWeightFailureDecrement": "Réduction du poids de pénalité",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Poids retiré d'un itinéraire après une tentative de livraison infructueuse.",
-  "appSettings_maxMessageRetries": "Nombre maximal de tentatives de récupération de messages",
-  "appSettings_maxMessageRetriesSubtitle": "Nombre de tentatives de relance avant de marquer un message comme ayant échoué.",
+  "appSettings_routeWeightSuccessIncrement": "Incrément du poids de succès",
+  "appSettings_routeWeightSuccessIncrementSubtitle": "Poids ajouté à un chemin après une livraison réussie.",
+  "appSettings_routeWeightFailureDecrement": "Décrément du poids d'échec",
+  "appSettings_routeWeightFailureDecrementSubtitle": "Poids retiré d'un chemin après une tentative de livraison infructueuse.",
+  "appSettings_maxMessageRetries": "Nombre maximal de tentatives d'envoi",
+  "appSettings_maxMessageRetriesSubtitle": "Nombre de tentatives avant de marquer un message comme ayant échoué.",
   "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Le mode télémétrie a été mis à jour",
-  "map_showOverlaps": "Chevauchement de la touche répétitive",
+  "map_showOverlaps": "Chevauchements de clés de répéteur",
   "map_runTraceWithReturnPath": "Revenir sur le même chemin.",
   "@radioStats_noiseFloor": {
     "placeholders": {
@@ -2183,8 +2268,8 @@
   "radioStats_noiseFloor": "Niveau de bruit : {noiseDbm} dBm",
   "radioStats_lastRssi": "Dernier RSSI : {rssiDbm} dBm",
   "radioStats_lastSnr": "Dernier SNR : {snr} dB",
-  "radioStats_txAir": "Temps d'antenne à la télévision du Texas (total) : {seconds} s",
-  "radioStats_rxAir": "Temps d'utilisation de l'appareil RX (total) : {seconds} s",
+  "radioStats_txAir": "Temps d'antenne TX (total) : {seconds} s",
+  "radioStats_rxAir": "Temps d'antenne RX (total) : {seconds} s",
   "radioStats_chartCaption": "Niveau de bruit (dBm) sur les échantillons récents.",
   "radioStats_stripNoise": "Niveau de bruit : {noiseDbm} dBm",
   "radioStats_stripWaiting": "Récupération des statistiques de la radio…",
@@ -2309,7 +2394,7 @@
   "repeater_cliHelpGetLat": "Affiche la latitude configurée.",
   "repeater_cliHelpGetLon": "Affiche la longitude configurée.",
   "repeater_cliHelpGetRxDelay": "Affiche la valeur de base de rxdelay.",
-  "repeater_cliHelpGetTxDelay": "Indique le facteur de délai de transmission en mode inondation.",
+  "repeater_cliHelpGetTxDelay": "Indique le facteur de délai de transmission en mode flood.",
   "repeater_cliHelpGetDirectTxDelay": "Indique le facteur de délai direct.",
   "repeater_cliHelpGetFloodMax": "Indique le nombre maximal de fois où le niveau de l'eau a atteint son point culminant.",
   "repeater_cliHelpGetOwnerInfo": "Affiche la chaîne d'informations de contact du propriétaire.",
@@ -2333,15 +2418,15 @@
   "repeater_cliHelpSensorList": "Affiche toutes les configurations de capteurs personnalisées, avec une pagination à partir d'un index de départ optionnel.",
   "repeater_cliHelpRegionDefault": "Affiche la portée régionale par défaut actuelle.",
   "repeater_cliHelpRegionDefaultSet": "Définit la portée régionale par défaut. Utilisez \"<null>\" pour la réinitialiser.",
-  "repeater_cliHelpRegionListAllowed": "Énumère les régions autorisant la circulation des véhicules en cas de inondation.",
-  "repeater_cliHelpRegionListDenied": "Liste des régions qui interdisent la circulation en cas de inondation.",
+  "repeater_cliHelpRegionListAllowed": "Énumère les régions autorisant la circulation des véhicules en cas de flood.",
+  "repeater_cliHelpRegionListDenied": "Liste les régions qui interdisent la circulation en cas de flood.",
   "repeater_cliHelpStatsPackets": "(Uniquement pour les séries) Affiche des statistiques au niveau des paquets.",
   "repeater_cliHelpStatsRadio": "(Uniquement pour les séries) Affiche les statistiques de la radio.",
   "repeater_cliHelpStatsCore": "(Uniquement pour les séries) Affiche les statistiques du micrologicem intégré.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
-  "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "common_done": "Terminé",
+  "background_serviceTitle": "MeshCore en cours d'exécution",
+  "background_serviceText": "Maintien de la connexion BLE",
+  "appSettings_translationModelDeleted": "Supprimé {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2349,7 +2434,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Échec de la suppression : {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2357,7 +2442,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Échec de la mise à jour du canal : {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2366,17 +2451,24 @@
     }
   },
   "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_path": "Chemin",
+  "map_location": "Localisation",
+  "map_estLocation": "Localisation estimée",
+  "map_publicKey": "Clé publique",
+  "map_publicKeyPrefixHint": "p. ex. ab12",
   "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
+  "contact_typeRepeater": "Répéteur",
   "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
+  "contact_typeSensor": "Capteur",
+  "contact_typeUnknown": "Inconnu",
   "channels_via": "via {path}",
+  "@channels_via": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "chat_score": "Score",
   "settings_multiAck": "Plusieurs accusés de réception",
   "map_sharedAt": "Partagé",
@@ -2464,60 +2556,154 @@
     }
   },
   "common_undo": "Annuler",
-  "messageStatus_sent": "Envoyer",
+  "messageStatus_sent": "Envoyé",
   "messageStatus_delivered": "Livré",
-  "messageStatus_pending": "Envoyer",
+  "messageStatus_pending": "Envoi en cours",
   "messageStatus_failed": "Échec de l'envoi",
-  "messageStatus_repeated": "Répété plusieurs fois",
+  "messageStatus_repeated": "Reçu plusieurs fois",
   "contacts_searchOpen": "Rechercher des contacts",
   "contacts_moreOptions": "Plus d'options",
   "contacts_searchClose": "Recherche avancée",
-  "routing_title": "Planification des itinéraires",
-  "routing_modeAuto": "Voiture",
-  "routing_modeFlood": "Inondation",
+  "routing_title": "Routage",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Flood",
   "routing_modeManual": "Manuel",
   "routing_modeFloodHint": "Diffusion via tous les répéteurs. La méthode la plus fiable, mais qui utilise plus de temps d'antenne.",
-  "routing_modeAutoHint": "Sélectionne automatiquement le chemin le plus connu, et utilise la méthode de \"inondation\" si aucun chemin n'est connu.",
-  "routing_modeManualHint": "Il suit toujours le chemin précis que vous avez défini.",
-  "routing_currentRoute": "Itinéraire actuel",
+  "routing_modeAutoHint": "Sélectionne automatiquement le meilleur chemin connu, et utilise le flood si aucun chemin n'est connu.",
+  "routing_modeManualHint": "Envoie toujours selon le chemin exact que vous avez défini.",
+  "routing_currentRoute": "Route actuelle",
   "routing_directNoHops": "Direct — sans relais",
-  "routing_noPathYet": "Aucune voie encore trouvée. Le message suivant est envoyé jusqu'à ce qu'une route soit découverte.",
+  "routing_noPathYet": "Aucun chemin pour le moment. Le prochain message passera en flood jusqu'à ce qu'une route soit découverte.",
   "routing_floodBroadcast": "Diffusion via tous les répéteurs",
   "routing_editPath": "Modifier le chemin",
-  "routing_forgetPath": "Oubliez le chemin",
+  "routing_forgetPath": "Oublier le chemin",
   "routing_knownPaths": "Chemins connus",
-  "routing_knownPathsHint": "Créez un raccourci pour y accéder.",
+  "routing_knownPathsHint": "Touchez un chemin pour l'utiliser.",
   "routing_inUse": "En cours d'utilisation",
-  "routing_qualityStrong": "Première étape réussie",
-  "routing_qualityGood": "Première étape réussie",
-  "routing_qualityFair": "Première étape réussie",
-  "routing_qualityWorked": "A livré",
-  "routing_qualityFlood": "Rapporté par des informations provenant de plusieurs sources.",
+  "routing_qualityStrong": "Premier saut fort",
+  "routing_qualityGood": "Premier saut correct",
+  "routing_qualityFair": "Premier saut moyen",
+  "routing_qualityWorked": "A déjà fonctionné",
+  "routing_qualityFlood": "Entendu via flood",
   "routing_qualityUntested": "Non testé",
-  "routing_lastWorked": "a travaillé {when}",
+  "routing_lastWorked": "a fonctionné {when}",
   "routing_neverWorked": "jamais confirmé",
-  "routing_floodDelivery": "Livraison en cas de inondation",
-  "pathEditor_hopCounter": "{count} parmi 64 houblons",
+  "routing_floodDelivery": "Livraison flood",
+  "pathEditor_hopCounter": "{count} sur 64 sauts",
   "pathEditor_title": "Créer un chemin",
-  "pathEditor_noHops": "Aucun houblon ajouté pour le moment. Cliquez sur les répétiteurs ci-dessous pour les ajouter dans l'ordre souhaité, ou enregistrez sans houblon pour envoyer directement.",
-  "pathEditor_addHops": "Ajoutez les houblons dans l'ordre souhaité.",
+  "pathEditor_noHops": "Aucun saut pour le moment. Touchez les répéteurs ci-dessous pour les ajouter dans l'ordre, ou enregistrez sans saut pour envoyer directement.",
+  "pathEditor_addHops": "Ajouter les sauts dans l'ordre",
   "pathEditor_searchRepeaters": "Rechercher des répétiteurs",
   "pathEditor_advancedHex": "Avancé : chemin hexadécimal brut",
   "pathEditor_hexLabel": "Préfixes hexadécimaux",
   "pathEditor_hexHelper": "Deux caractères hexadécimaux par saut, séparés par des virgules.",
-  "pathEditor_invalidTokens": "Incorrect : {tokens}",
+  "pathEditor_invalidTokens": "Invalide : {tokens}",
   "pathEditor_tooManyHops": "Maximum 64 sauts",
-  "pathEditor_usePath": "Utilisez ce chemin.",
-  "pathEditor_removeHop": "Éliminer le haricot",
+  "pathEditor_usePath": "Utiliser ce chemin",
+  "pathEditor_removeHop": "Supprimer le saut",
   "pathEditor_unknownHop": "Répéteur non identifié",
-  "map_zoomIn": "Zoomez",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
-  "map_zoomOut": "Zoomez",
-  "map_centerMap": "Carte du centre",
+  "map_zoomIn": "Zoom avant",
+  "routing_deliveryCounts": "{successes} livrés, {failures} échoués",
+  "map_zoomOut": "Zoom arrière",
+  "map_centerMap": "Centrer la carte",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth nécessite un navigateur Chromium.",
   "channels_communityShortId": "ID : {id}…",
-  "pathTrace_legendGpsConfirmed": "Le GPS a confirmé.",
+  "pathTrace_legendGpsConfirmed": "GPS confirmé",
   "pathTrace_legendInferred": "Position déduite",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanner_bluetoothWebUnsupported": "La fonctionnalité Bluetooth n'est pas disponible dans le navigateur. Veuillez vous connecter via USB à la place.",
+  "map_activity": "Activité",
+  "map_searchHint": "Rechercher par nom ou ID de nœud",
+  "map_online": "En ligne",
+  "map_recent": "Récents",
+  "map_stale": "Rancide",
+  "map_visible": "Visible",
+  "map_hidden": "Masqué",
+  "map_centerOnNode": "Centrer sur le nœud",
+  "map_details": "Détails",
+  "map_noGps": "Aucun GPS",
+  "map_noResults": "Aucun nœud correspondant",
+  "pathMap_viewSingle": "Simple",
+  "pathMap_viewCombined": "Combiné",
+  "pathMap_play": "Lecture",
+  "pathMap_pause": "Pause",
+  "pathMap_replay": "Rejouer",
+  "pathMap_stepBack": "Saut précédent",
+  "pathMap_stepForward": "Saut suivant",
+  "pathMap_animationOn": "Afficher l'animation des paquets",
+  "pathMap_animationOff": "Masquer l'animation des paquets",
+  "pathMap_hopOf": "Saut {current} sur {total}",
+  "pathMap_observedPaths": "Chemins observés : {count}",
+  "pathMap_primary": "Principal",
+  "pathMap_alternate": "Alternative {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 saut} other{{count} sauts}}",
+  "pathMap_legendShared": "Segment partagé",
+  "pathMap_legendEstimated": "Segment estimé",
+  "pathMap_sharedNodeCount": "Utilisé par {count} chemins",
+  "pathMap_partialAnimation": "{count, plural, =1{Un saut n'a pas de localisation — le chemin indiqué est partiel} other{{count} sauts n'ont pas de localisation — le chemin indiqué est partiel}}",
+  "pathMap_showAllPaths": "Afficher tout",
+  "pathMap_hidePath": "Masquer le chemin",
+  "pathMap_showPath": "Afficher le chemin",
+  "pathMap_collapsePanel": "Réduire le panneau",
+  "pathMap_expandPanel": "Développer le panneau",
+  "pathMap_noLocation": "Aucune localisation",
+  "pathMap_followPacket": "Verrouiller la vue sur le paquet",
+  "pathMap_unfollowPacket": "Déverrouiller la vue du paquet",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Envoyer à la sélection",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

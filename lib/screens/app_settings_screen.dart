@@ -11,7 +11,9 @@ import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/notification_service.dart';
 import '../services/translation_service.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/cyr2lat.dart';
@@ -45,33 +47,84 @@ class AppSettingsScreen extends StatelessWidget {
                     child,
                   ) {
                     return ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
                       children: [
-                        _buildAppearanceCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildNotificationsCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildMessagingCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        if (!kIsWeb) ...[
-                          _buildTranslationCard(
+                        // APPEARANCE
+                        SectionHeader(context.l10n.appSettings_appearance),
+                        MeshCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildAppearanceContent(
                             context,
                             settingsService,
-                            translationService,
                           ),
-                          const SizedBox(height: 16),
+                        ),
+
+                        // NOTIFICATIONS
+                        SectionHeader(context.l10n.appSettings_notifications),
+                        MeshCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildNotificationsContent(
+                            context,
+                            settingsService,
+                          ),
+                        ),
+
+                        // MESSAGING
+                        SectionHeader(context.l10n.appSettings_messaging),
+                        MeshCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildMessagingContent(
+                            context,
+                            settingsService,
+                          ),
+                        ),
+
+                        // BATTERY
+                        SectionHeader(context.l10n.appSettings_battery),
+                        MeshCard(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          child: _buildBatteryContent(
+                            context,
+                            settingsService,
+                            connector,
+                          ),
+                        ),
+
+                        // MAP
+                        SectionHeader(context.l10n.appSettings_mapDisplay),
+                        MeshCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildMapContent(context, settingsService),
+                        ),
+
+                        // TRANSLATION (non-web only)
+                        if (!kIsWeb) ...[
+                          SectionHeader(context.l10n.translation_title),
+                          MeshCard(
+                            padding: EdgeInsets.zero,
+                            child: _buildTranslationContent(
+                              context,
+                              settingsService,
+                              translationService,
+                            ),
+                          ),
                         ],
-                        _buildBatteryCard(context, settingsService, connector),
-                        const SizedBox(height: 16),
-                        _buildMapSettingsCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildCyr2LatCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildMcmpTextLimitCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildDoNotFilterChannelsCard(context, settingsService),
-                        const SizedBox(height: 16),
-                        _buildDebugCard(context, settingsService),
+
+                        // CYR2LAT
+                        SectionHeader(
+                          context.l10n.channels_cyr2latSettingsHeading,
+                        ),
+                        MeshCard(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          child: _buildCyr2LatContent(context, settingsService),
+                        ),
+
+                        // DEBUG
+                        SectionHeader(context.l10n.appSettings_debugCard),
+                        MeshCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildDebugContent(context, settingsService),
+                        ),
                       ],
                     );
                   },
@@ -80,27 +133,38 @@ class AppSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppearanceCard(
+  Widget _buildAppearanceContent(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_appearance,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.brightness_6_outlined),
-            title: Text(context.l10n.appSettings_theme),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: SegmentedButton<String>(
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.brightness_6_outlined,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    context.l10n.appSettings_theme,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
                     value: 'system',
@@ -120,793 +184,1092 @@ class AppSettingsScreen extends StatelessWidget {
                   settingsService.setThemeMode(selection.first);
                 },
               ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showLanguageSheet(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.language_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_language,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _languageLabel(
+                          context,
+                          settingsService.settings.languageOverride,
+                        ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
             ),
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.language_outlined),
-            title: Text(context.l10n.appSettings_language),
-            subtitle: Text(
-              _languageLabel(
-                context,
-                settingsService.settings.languageOverride,
-              ),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showLanguageDialog(context, settingsService),
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.location_searching),
-            title: Text(context.l10n.appSettings_enableMessageTracing),
-            subtitle: Text(
-              context.l10n.appSettings_enableMessageTracingSubtitle,
-            ),
-            value: settingsService.settings.enableMessageTracing,
-            onChanged: (value) {
-              settingsService.setEnableMessageTracing(value);
-            },
+          secondary: const Icon(Icons.location_searching, size: 20),
+          title: Text(context.l10n.appSettings_enableMessageTracing),
+          subtitle: Text(context.l10n.appSettings_enableMessageTracingSubtitle),
+          value: settingsService.settings.enableMessageTracing,
+          onChanged: settingsService.setEnableMessageTracing,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.timer_outlined),
-            title: Text(context.l10n.appSettings_enableTimeSeconds),
-            value: settingsService.settings.enableTimeSeconds,
-            onChanged: (value) {
-              settingsService.setEnableTimeSeconds(value);
-            },
+          secondary: const Icon(Icons.timer_outlined, size: 20),
+          title: Text(context.l10n.appSettings_enableTimeSeconds),
+          value: settingsService.settings.enableTimeSeconds,
+          onChanged: settingsService.setEnableTimeSeconds,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.keyboard_hide_outlined),
-            title: Text(context.l10n.appSettings_showKeyboardHidingButton),
-            value: settingsService.settings.showKeyboardHidingButton,
-            onChanged: (value) {
-              settingsService.setShowKeyboardHidingButton(value);
-            },
+          secondary: const Icon(Icons.keyboard_hide_outlined, size: 20),
+          title: Text(context.l10n.appSettings_showKeyboardHidingButton),
+          value: settingsService.settings.showKeyboardHidingButton,
+          onChanged: settingsService.setShowKeyboardHidingButton,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.brush_outlined),
-            title: Text(context.l10n.chat_canvasActive),
-            value: settingsService.settings.canvasActive,
-            onChanged: (value) {
-              settingsService.setCanvasActive(value);
-            },
+          secondary: const Icon(Icons.brush_outlined, size: 20),
+          title: Text(context.l10n.chat_canvasActive),
+          value: settingsService.settings.canvasActive,
+          onChanged: settingsService.setCanvasActive,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.lock_outline),
-            title: Text(context.l10n.chat_canvasShowLockBtn),
-            value: settingsService.settings.canvasShowLockButton,
-            onChanged: (value) {
-              settingsService.setCanvasShowLockButton(value);
-            },
+          secondary: const Icon(Icons.lock_outline, size: 20),
+          title: Text(context.l10n.chat_canvasShowLockBtn),
+          value: settingsService.settings.canvasShowLockButton,
+          onChanged: settingsService.setCanvasShowLockButton,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.route_outlined),
-            title: Text(context.l10n.chat_showHops),
-            value: settingsService.settings.showHops,
-            onChanged: (value) {
-              settingsService.setShowHops(value);
-            },
-          ),
-        ],
-      ),
+          secondary: const Icon(Icons.route_outlined, size: 20),
+          title: Text(context.l10n.chat_showHops),
+          value: settingsService.settings.showHops,
+          onChanged: settingsService.setShowHops,
+        ),
+      ],
     );
   }
 
-  Widget _buildNotificationsCard(
+  Widget _buildNotificationsContent(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_notifications,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    final notifEnabled = settingsService.settings.notificationsEnabled;
+    return Column(
+      children: [
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.notifications_outlined, size: 20),
+          title: Text(context.l10n.appSettings_enableNotifications),
+          subtitle: Text(context.l10n.appSettings_enableNotificationsSubtitle),
+          value: settingsService.settings.notificationsEnabled,
+          onChanged: (value) async {
+            if (value) {
+              final granted = await NotificationService().requestPermissions();
+              if (!granted) {
+                if (context.mounted) {
+                  showDismissibleSnackBar(
+                    context,
+                    content: Text(
+                      context.l10n.appSettings_notificationPermissionDenied,
+                    ),
+                    duration: const Duration(seconds: 2),
+                  );
+                }
+                return;
+              }
+            }
+            await settingsService.setNotificationsEnabled(value);
+            if (context.mounted) {
+              showDismissibleSnackBar(
+                context,
+                content: Text(
+                  value
+                      ? context.l10n.appSettings_notificationsEnabled
+                      : context.l10n.appSettings_notificationsDisabled,
+                ),
+                duration: const Duration(seconds: 2),
+              );
+            }
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: Icon(
+            Icons.message_outlined,
+            size: 20,
+            color: notifEnabled ? null : Theme.of(context).disabledColor,
+          ),
+          title: Text(
+            context.l10n.appSettings_messageNotifications,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
             ),
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_outlined),
-            title: Text(context.l10n.appSettings_enableNotifications),
-            subtitle: Text(
-              context.l10n.appSettings_enableNotificationsSubtitle,
+          subtitle: Text(
+            context.l10n.appSettings_messageNotificationsSubtitle,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
             ),
-            value: settingsService.settings.notificationsEnabled,
-            onChanged: (value) async {
-              if (value) {
-                // Request permission when enabling
-                final granted = await NotificationService()
-                    .requestPermissions();
-                if (!granted) {
-                  if (context.mounted) {
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(
-                        context.l10n.appSettings_notificationPermissionDenied,
+          ),
+          value: settingsService.settings.notifyOnNewMessage,
+          onChanged: notifEnabled
+              ? (value) => settingsService.setNotifyOnNewMessage(value)
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: Icon(
+            Icons.forum_outlined,
+            size: 20,
+            color: notifEnabled ? null : Theme.of(context).disabledColor,
+          ),
+          title: Text(
+            context.l10n.appSettings_channelMessageNotifications,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
+            ),
+          ),
+          subtitle: Text(
+            context.l10n.appSettings_channelMessageNotificationsSubtitle,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
+            ),
+          ),
+          value: settingsService.settings.notifyOnNewChannelMessage,
+          onChanged: notifEnabled
+              ? (value) => settingsService.setNotifyOnNewChannelMessage(value)
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: Icon(
+            Icons.cell_tower,
+            size: 20,
+            color: notifEnabled ? null : Theme.of(context).disabledColor,
+          ),
+          title: Text(
+            context.l10n.appSettings_advertisementNotifications,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
+            ),
+          ),
+          subtitle: Text(
+            context.l10n.appSettings_advertisementNotificationsSubtitle,
+            style: TextStyle(
+              color: notifEnabled ? null : Theme.of(context).disabledColor,
+            ),
+          ),
+          value: settingsService.settings.notifyOnNewAdvert,
+          onChanged: notifEnabled
+              ? (value) => settingsService.setNotifyOnNewAdvert(value)
+              : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessagingContent(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final autoRouteEnabled = settingsService.settings.autoRouteRotationEnabled;
+    return Column(
+      children: [
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.refresh_outlined, size: 20),
+          title: Text(context.l10n.appSettings_clearPathOnMaxRetry),
+          subtitle: Text(context.l10n.appSettings_clearPathOnMaxRetrySubtitle),
+          value: settingsService.settings.clearPathOnMaxRetry,
+          onChanged: (value) {
+            settingsService.setClearPathOnMaxRetry(value);
+            showDismissibleSnackBar(
+              context,
+              content: Text(
+                value
+                    ? context.l10n.appSettings_pathsWillBeCleared
+                    : context.l10n.appSettings_pathsWillNotBeCleared,
+              ),
+              duration: const Duration(seconds: 2),
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.vertical_align_top, size: 20),
+          title: Text(context.l10n.appSettings_jumpToOldestUnread),
+          subtitle: Text(context.l10n.appSettings_jumpToOldestUnreadSubtitle),
+          value: settingsService.settings.jumpToOldestUnread,
+          onChanged: settingsService.setJumpToOldestUnread,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.alt_route, size: 20),
+          title: Text(context.l10n.appSettings_autoRouteRotation),
+          subtitle: Text(context.l10n.appSettings_autoRouteRotationSubtitle),
+          value: autoRouteEnabled,
+          onChanged: (value) {
+            settingsService.setAutoRouteRotationEnabled(value);
+            showDismissibleSnackBar(
+              context,
+              content: Text(
+                value
+                    ? context.l10n.appSettings_autoRouteRotationEnabled
+                    : context.l10n.appSettings_autoRouteRotationDisabled,
+              ),
+              duration: const Duration(seconds: 2),
+            );
+          },
+        ),
+        // AnimatedSize sub-options for auto-route rotation
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.topCenter,
+          child: autoRouteEnabled
+              ? Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(context.l10n.appSettings_maxRouteWeight),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.appSettings_maxRouteWeightSubtitle,
+                            ),
+                            Slider(
+                              value: settingsService.settings.maxRouteWeight,
+                              min: 1,
+                              max: 10,
+                              divisions: 9,
+                              label: settingsService.settings.maxRouteWeight
+                                  .round()
+                                  .toString(),
+                              onChanged: (value) =>
+                                  settingsService.setMaxRouteWeight(value),
+                            ),
+                          ],
+                        ),
                       ),
-                      duration: const Duration(seconds: 2),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          context.l10n.appSettings_initialRouteWeight,
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context
+                                  .l10n
+                                  .appSettings_initialRouteWeightSubtitle,
+                            ),
+                            Slider(
+                              value:
+                                  settingsService.settings.initialRouteWeight,
+                              min: 0.5,
+                              max: 5.0,
+                              divisions: 9,
+                              label: settingsService.settings.initialRouteWeight
+                                  .toStringAsFixed(1),
+                              onChanged: (value) =>
+                                  settingsService.setInitialRouteWeight(value),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          context.l10n.appSettings_routeWeightSuccessIncrement,
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context
+                                  .l10n
+                                  .appSettings_routeWeightSuccessIncrementSubtitle,
+                            ),
+                            Slider(
+                              value: settingsService
+                                  .settings
+                                  .routeWeightSuccessIncrement,
+                              min: 0.1,
+                              max: 2.0,
+                              divisions: 19,
+                              label: settingsService
+                                  .settings
+                                  .routeWeightSuccessIncrement
+                                  .toStringAsFixed(1),
+                              onChanged: (value) => settingsService
+                                  .setRouteWeightSuccessIncrement(value),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          context.l10n.appSettings_routeWeightFailureDecrement,
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context
+                                  .l10n
+                                  .appSettings_routeWeightFailureDecrementSubtitle,
+                            ),
+                            Slider(
+                              value: settingsService
+                                  .settings
+                                  .routeWeightFailureDecrement,
+                              min: 0.1,
+                              max: 2.0,
+                              divisions: 19,
+                              label: settingsService
+                                  .settings
+                                  .routeWeightFailureDecrement
+                                  .toStringAsFixed(1),
+                              onChanged: (value) => settingsService
+                                  .setRouteWeightFailureDecrement(value),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(context.l10n.appSettings_maxMessageRetries),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context
+                                  .l10n
+                                  .appSettings_maxMessageRetriesSubtitle,
+                            ),
+                            Slider(
+                              value: settingsService.settings.maxMessageRetries
+                                  .toDouble(),
+                              min: 2,
+                              max: 10,
+                              divisions: 8,
+                              label: settingsService.settings.maxMessageRetries
+                                  .toString(),
+                              onChanged: (value) => settingsService
+                                  .setMaxMessageRetries(value.toInt()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.location_searching, size: 20),
+          title: Text(context.l10n.appSettings_enableMessageTracing),
+          subtitle: Text(context.l10n.appSettings_enableMessageTracingSubtitle),
+          value: settingsService.settings.enableMessageTracing,
+          onChanged: (value) {
+            settingsService.setEnableMessageTracing(value);
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        _buildChannelResendTimeoutTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildSendingDelayTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildChannelMaxbytesOutgoingTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildQuickAnswersTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildCopyMsgPathTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildChannelsSendAsBinaryTile(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildMcmpTextLimitCard(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        _buildDoNotFilterChannelsCard(context, settingsService),
+      ],
+    );
+  }
+
+  Widget _buildBatteryContent(
+    BuildContext context,
+    AppSettingsService settingsService,
+    MeshCoreConnector connector,
+  ) {
+    final deviceId = connector.batteryDeviceKey;
+    final isConnected = connector.isConnected && deviceId != null;
+    final selection = isConnected
+        ? settingsService.batteryChemistryForDevice(deviceId)
+        : 'nmc';
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.battery_full,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.appSettings_batteryChemistry,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isConnected
+                          ? context.l10n.appSettings_batteryChemistryPerDevice(
+                              connector.deviceDisplayName,
+                            )
+                          : context
+                                .l10n
+                                .appSettings_batteryChemistryConnectFirst,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          initialValue: selection,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            border: UnderlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: isConnected
+              ? (value) {
+                  if (value != null) {
+                    settingsService.setBatteryChemistryForDevice(
+                      deviceId,
+                      value,
                     );
                   }
-                  return;
                 }
-              }
-
-              await settingsService.setNotificationsEnabled(value);
-              if (context.mounted) {
-                showDismissibleSnackBar(
-                  context,
-                  content: Text(
-                    value
-                        ? context.l10n.appSettings_notificationsEnabled
-                        : context.l10n.appSettings_notificationsDisabled,
-                  ),
-                  duration: const Duration(seconds: 2),
-                );
-              }
-            },
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: Icon(
-              Icons.message_outlined,
-              color: settingsService.settings.notificationsEnabled
-                  ? null
-                  : Theme.of(context).disabledColor,
+              : null,
+          items: [
+            DropdownMenuItem(
+              value: 'nmc',
+              child: Text(context.l10n.appSettings_batteryNmc),
             ),
-            title: Text(
-              context.l10n.appSettings_messageNotifications,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
+            DropdownMenuItem(
+              value: 'lifepo4',
+              child: Text(context.l10n.appSettings_batteryLifepo4),
             ),
-            subtitle: Text(
-              context.l10n.appSettings_messageNotificationsSubtitle,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
+            DropdownMenuItem(
+              value: 'lipo',
+              child: Text(context.l10n.appSettings_batteryLipo),
             ),
-            value: settingsService.settings.notifyOnNewMessage,
-            onChanged: settingsService.settings.notificationsEnabled
-                ? (value) {
-                    settingsService.setNotifyOnNewMessage(value);
-                  }
-                : null,
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: Icon(
-              Icons.forum_outlined,
-              color: settingsService.settings.notificationsEnabled
-                  ? null
-                  : Theme.of(context).disabledColor,
-            ),
-            title: Text(
-              context.l10n.appSettings_channelMessageNotifications,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.appSettings_channelMessageNotificationsSubtitle,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            value: settingsService.settings.notifyOnNewChannelMessage,
-            onChanged: settingsService.settings.notificationsEnabled
-                ? (value) {
-                    settingsService.setNotifyOnNewChannelMessage(value);
-                  }
-                : null,
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: Icon(
-              Icons.cell_tower,
-              color: settingsService.settings.notificationsEnabled
-                  ? null
-                  : Theme.of(context).disabledColor,
-            ),
-            title: Text(
-              context.l10n.appSettings_advertisementNotifications,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.appSettings_advertisementNotificationsSubtitle,
-              style: TextStyle(
-                color: settingsService.settings.notificationsEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            value: settingsService.settings.notifyOnNewAdvert,
-            onChanged: settingsService.settings.notificationsEnabled
-                ? (value) {
-                    settingsService.setNotifyOnNewAdvert(value);
-                  }
-                : null,
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildMessagingCard(
+  Widget _buildMapContent(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_messaging,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.refresh_outlined),
-            title: Text(context.l10n.appSettings_clearPathOnMaxRetry),
-            subtitle: Text(
-              context.l10n.appSettings_clearPathOnMaxRetrySubtitle,
-            ),
-            value: settingsService.settings.clearPathOnMaxRetry,
-            onChanged: (value) {
-              settingsService.setClearPathOnMaxRetry(value);
-              showDismissibleSnackBar(
-                context,
-                content: Text(
-                  value
-                      ? context.l10n.appSettings_pathsWillBeCleared
-                      : context.l10n.appSettings_pathsWillNotBeCleared,
+          secondary: const Icon(Icons.router_outlined, size: 20),
+          title: Text(context.l10n.appSettings_showRepeaters),
+          subtitle: Text(context.l10n.appSettings_showRepeatersSubtitle),
+          value: settingsService.settings.mapShowRepeaters,
+          onChanged: (value) => settingsService.setMapShowRepeaters(value),
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.chat_outlined, size: 20),
+          title: Text(context.l10n.appSettings_showChatNodes),
+          subtitle: Text(context.l10n.appSettings_showChatNodesSubtitle),
+          value: settingsService.settings.mapShowChatNodes,
+          onChanged: (value) => settingsService.setMapShowChatNodes(value),
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.people_outline, size: 20),
+          title: Text(context.l10n.appSettings_showOtherNodes),
+          subtitle: Text(context.l10n.appSettings_showOtherNodesSubtitle),
+          value: settingsService.settings.mapShowOtherNodes,
+          onChanged: (value) => settingsService.setMapShowOtherNodes(value),
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.more_time_outlined, size: 20),
+          title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
+          value: settingsService.settings.pathTraceHighTimeoutEnabled,
+          onChanged: (value) {
+            settingsService.setPathTraceHighTimeoutEnabled(value);
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showTimeFilterSheet(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
                 ),
-                duration: const Duration(seconds: 2),
-              );
-            },
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.vertical_align_top),
-            title: Text(context.l10n.appSettings_jumpToOldestUnread),
-            subtitle: Text(context.l10n.appSettings_jumpToOldestUnreadSubtitle),
-            value: settingsService.settings.jumpToOldestUnread,
-            onChanged: settingsService.setJumpToOldestUnread,
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.alt_route),
-            title: Text(context.l10n.appSettings_autoRouteRotation),
-            subtitle: Text(context.l10n.appSettings_autoRouteRotationSubtitle),
-            value: settingsService.settings.autoRouteRotationEnabled,
-            onChanged: (value) {
-              settingsService.setAutoRouteRotationEnabled(value);
-              showDismissibleSnackBar(
-                context,
-                content: Text(
-                  value
-                      ? context.l10n.appSettings_autoRouteRotationEnabled
-                      : context.l10n.appSettings_autoRouteRotationDisabled,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_timeFilter,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        settingsService.settings.mapTimeFilterHours == 0
+                            ? context.l10n.appSettings_timeFilterShowAll
+                            : context.l10n.appSettings_timeFilterShowLast(
+                                settingsService.settings.mapTimeFilterHours
+                                    .toInt(),
+                              ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                duration: const Duration(seconds: 2),
-              );
-            },
-          ),
-          if (settingsService.settings.autoRouteRotationEnabled)
-            Container(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              padding: const EdgeInsets.only(left: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(context.l10n.appSettings_maxRouteWeight),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(context.l10n.appSettings_maxRouteWeightSubtitle),
-                        Slider(
-                          value: settingsService.settings.maxRouteWeight,
-                          min: 1,
-                          max: 10,
-                          divisions: 9,
-                          label: settingsService.settings.maxRouteWeight
-                              .round()
-                              .toString(),
-                          onChanged: (value) =>
-                              settingsService.setMaxRouteWeight(value),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(context.l10n.appSettings_initialRouteWeight),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.appSettings_initialRouteWeightSubtitle,
-                        ),
-                        Slider(
-                          value: settingsService.settings.initialRouteWeight,
-                          min: 0.5,
-                          max: 5.0,
-                          divisions: 9,
-                          label: settingsService.settings.initialRouteWeight
-                              .toStringAsFixed(1),
-                          onChanged: (value) =>
-                              settingsService.setInitialRouteWeight(value),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(
-                      context.l10n.appSettings_routeWeightSuccessIncrement,
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context
-                              .l10n
-                              .appSettings_routeWeightSuccessIncrementSubtitle,
-                        ),
-                        Slider(
-                          value: settingsService
-                              .settings
-                              .routeWeightSuccessIncrement,
-                          min: 0.1,
-                          max: 2.0,
-                          divisions: 19,
-                          label: settingsService
-                              .settings
-                              .routeWeightSuccessIncrement
-                              .toStringAsFixed(1),
-                          onChanged: (value) => settingsService
-                              .setRouteWeightSuccessIncrement(value),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(
-                      context.l10n.appSettings_routeWeightFailureDecrement,
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context
-                              .l10n
-                              .appSettings_routeWeightFailureDecrementSubtitle,
-                        ),
-                        Slider(
-                          value: settingsService
-                              .settings
-                              .routeWeightFailureDecrement,
-                          min: 0.1,
-                          max: 2.0,
-                          divisions: 19,
-                          label: settingsService
-                              .settings
-                              .routeWeightFailureDecrement
-                              .toStringAsFixed(1),
-                          onChanged: (value) => settingsService
-                              .setRouteWeightFailureDecrement(value),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(context.l10n.appSettings_maxMessageRetries),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.appSettings_maxMessageRetriesSubtitle,
-                        ),
-                        Slider(
-                          value: settingsService.settings.maxMessageRetries
-                              .toDouble(),
-                          min: 2,
-                          max: 10,
-                          divisions: 8,
-                          label: settingsService.settings.maxMessageRetries
-                              .toString(),
-                          onChanged: (value) => settingsService
-                              .setMaxMessageRetries(value.toInt()),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
             ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.location_searching),
-            title: Text(context.l10n.appSettings_enableMessageTracing),
-            subtitle: Text(
-              context.l10n.appSettings_enableMessageTracingSubtitle,
-            ),
-            value: settingsService.settings.enableMessageTracing,
-            onChanged: (value) {
-              settingsService.setEnableMessageTracing(value);
-            },
           ),
-          // Timing controls belong with message sending behavior and must stay
-          // visible independently from auto route rotation.
-          const Divider(height: 1),
-          _buildChannelResendTimeoutTile(context, settingsService),
-          const Divider(height: 1),
-          _buildSendingDelayTile(context, settingsService),
-          const Divider(height: 1),
-          _buildChannelMaxbytesOutgoingTile(context, settingsService),
-          const Divider(height: 1),
-          _buildQuickAnswersTile(context, settingsService),
-          const Divider(height: 1),
-          _buildCopyMsgPathTile(context, settingsService),
-          const Divider(height: 1),
-          _buildChannelsSendAsBinaryTile(context, settingsService),
-        ],
-      ),
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showUnitsSheet(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.straighten,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_unitsTitle,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        settingsService.settings.unitSystem ==
+                                UnitSystem.imperial
+                            ? context.l10n.appSettings_unitsImperial
+                            : context.l10n.appSettings_unitsMetric,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MapCacheScreen()),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.download_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_offlineMapCache,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        settingsService.settings.mapCacheBounds == null
+                            ? context.l10n.appSettings_noAreaSelected
+                            : context.l10n.appSettings_areaSelectedZoom(
+                                settingsService.settings.mapCacheMinZoom,
+                                settingsService.settings.mapCacheMaxZoom,
+                              ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildMapSettingsCard(
-    BuildContext context,
-    AppSettingsService settingsService,
-  ) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_mapDisplay,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.router_outlined),
-            title: Text(context.l10n.appSettings_showRepeaters),
-            subtitle: Text(context.l10n.appSettings_showRepeatersSubtitle),
-            value: settingsService.settings.mapShowRepeaters,
-            onChanged: (value) {
-              settingsService.setMapShowRepeaters(value);
-            },
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.chat_outlined),
-            title: Text(context.l10n.appSettings_showChatNodes),
-            subtitle: Text(context.l10n.appSettings_showChatNodesSubtitle),
-            value: settingsService.settings.mapShowChatNodes,
-            onChanged: (value) {
-              settingsService.setMapShowChatNodes(value);
-            },
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.people_outline),
-            title: Text(context.l10n.appSettings_showOtherNodes),
-            subtitle: Text(context.l10n.appSettings_showOtherNodesSubtitle),
-            value: settingsService.settings.mapShowOtherNodes,
-            onChanged: (value) {
-              settingsService.setMapShowOtherNodes(value);
-            },
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.more_time_outlined),
-            title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
-            value: settingsService.settings.pathTraceHighTimeoutEnabled,
-            onChanged: (value) {
-              settingsService.setPathTraceHighTimeoutEnabled(value);
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.timer_outlined),
-            title: Text(context.l10n.appSettings_timeFilter),
-            subtitle: Text(
-              settingsService.settings.mapTimeFilterHours == 0
-                  ? context.l10n.appSettings_timeFilterShowAll
-                  : context.l10n.appSettings_timeFilterShowLast(
-                      settingsService.settings.mapTimeFilterHours.toInt(),
-                    ),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showTimeFilterDialog(context, settingsService),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.straighten),
-            title: Text(context.l10n.appSettings_unitsTitle),
-            subtitle: Text(
-              settingsService.settings.unitSystem == UnitSystem.imperial
-                  ? context.l10n.appSettings_unitsImperial
-                  : context.l10n.appSettings_unitsMetric,
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showUnitsDialog(context, settingsService),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(context.l10n.appSettings_offlineMapCache),
-            subtitle: Text(
-              settingsService.settings.mapCacheBounds == null
-                  ? context.l10n.appSettings_noAreaSelected
-                  : context.l10n.appSettings_areaSelectedZoom(
-                      settingsService.settings.mapCacheMinZoom,
-                      settingsService.settings.mapCacheMaxZoom,
-                    ),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MapCacheScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTranslationCard(
+  Widget _buildTranslationContent(
     BuildContext context,
     AppSettingsService settingsService,
     TranslationService translationService,
   ) {
     final settings = settingsService.settings;
     final translationEnabled = settings.translationEnabled;
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.translation_title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.translate),
-            title: Text(context.l10n.translation_enableTitle),
-            subtitle: Text(context.l10n.translation_enableSubtitle),
-            value: settings.translationEnabled,
-            onChanged: settingsService.setTranslationEnabled,
+          secondary: const Icon(Icons.translate, size: 20),
+          title: Text(context.l10n.translation_enableTitle),
+          subtitle: Text(context.l10n.translation_enableSubtitle),
+          value: settings.translationEnabled,
+          onChanged: settingsService.setTranslationEnabled,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: Icon(
-              Icons.auto_awesome_outlined,
+          secondary: Icon(
+            Icons.auto_awesome_outlined,
+            size: 20,
+            color: translationEnabled ? null : Theme.of(context).disabledColor,
+          ),
+          title: Text(
+            context.l10n.translation_autoIncomingTitle,
+            style: TextStyle(
               color: translationEnabled
                   ? null
                   : Theme.of(context).disabledColor,
             ),
-            title: Text(
-              context.l10n.translation_autoIncomingTitle,
-              style: TextStyle(
-                color: translationEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.translation_autoIncomingSubtitle,
-              style: TextStyle(
-                color: translationEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            value: settings.autoTranslateIncomingMessages,
-            onChanged: translationEnabled
-                ? settingsService.setAutoTranslateIncomingMessages
-                : null,
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: Icon(
-              Icons.outgoing_mail,
+          subtitle: Text(
+            context.l10n.translation_autoIncomingSubtitle,
+            style: TextStyle(
               color: translationEnabled
                   ? null
                   : Theme.of(context).disabledColor,
             ),
-            title: Text(
-              context.l10n.translation_composerTitle,
-              style: TextStyle(
-                color: translationEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.translation_composerSubtitle,
-              style: TextStyle(
-                color: translationEnabled
-                    ? null
-                    : Theme.of(context).disabledColor,
-              ),
-            ),
-            value: settings.composerTranslationEnabled,
-            onChanged: translationEnabled
-                ? settingsService.setComposerTranslationEnabled
-                : null,
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: Text(context.l10n.translation_targetLanguage),
-            subtitle: Text(
-              _translationLanguageLabel(
-                context,
-                settings.translationTargetLanguageCode,
-              ),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () =>
-                _showTranslationLanguageDialog(context, settingsService),
+          value: settings.autoTranslateIncomingMessages,
+          onChanged: translationEnabled
+              ? settingsService.setAutoTranslateIncomingMessages
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: DropdownButtonFormField<String>(
-              initialValue: settings.translationSelectedModelId,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: context.l10n.translation_downloadedModelLabel,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final model in settings.translationDownloadedModels)
-                  DropdownMenuItem(
-                    value: model.id,
-                    child: Text(translationModelFriendlyName(model)),
-                  ),
-              ],
-              onChanged: settings.translationDownloadedModels.isEmpty
+          secondary: Icon(
+            Icons.outgoing_mail,
+            size: 20,
+            color: translationEnabled ? null : Theme.of(context).disabledColor,
+          ),
+          title: Text(
+            context.l10n.translation_composerTitle,
+            style: TextStyle(
+              color: translationEnabled
                   ? null
-                  : (value) {
-                      settingsService.setTranslationSelectedModelId(value);
-                    },
+                  : Theme.of(context).disabledColor,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: DropdownButtonFormField<String>(
-              initialValue: null,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: context.l10n.translation_presetModelLabel,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final preset in translationPresetModels)
-                  DropdownMenuItem(
-                    value: preset.sourceUrl,
-                    child: Text(translationModelFriendlyName(preset)),
-                  ),
-              ],
-              onChanged: translationService.isBusy
+          subtitle: Text(
+            context.l10n.translation_composerSubtitle,
+            style: TextStyle(
+              color: translationEnabled
                   ? null
-                  : (value) async {
-                      if (value == null) return;
-                      final preset = translationPresetModels.firstWhere(
-                        (entry) => entry.sourceUrl == value,
-                      );
-                      await _downloadTranslationModel(
+                  : Theme.of(context).disabledColor,
+            ),
+          ),
+          value: settings.composerTranslationEnabled,
+          onChanged: translationEnabled
+              ? settingsService.setComposerTranslationEnabled
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showTranslationLanguageDialog(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(Icons.language, size: 20, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.translation_targetLanguage,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _translationLanguageLabel(
+                          context,
+                          settings.translationTargetLanguageCode,
+                        ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: DropdownButtonFormField<String>(
+            initialValue: settings.translationSelectedModelId,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.translation_downloadedModelLabel,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final model in settings.translationDownloadedModels)
+                DropdownMenuItem(
+                  value: model.id,
+                  child: Text(translationModelFriendlyName(model)),
+                ),
+            ],
+            onChanged: settings.translationDownloadedModels.isEmpty
+                ? null
+                : (value) {
+                    settingsService.setTranslationSelectedModelId(value);
+                  },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: DropdownButtonFormField<String>(
+            initialValue: null,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.translation_presetModelLabel,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final preset in translationPresetModels)
+                DropdownMenuItem(
+                  value: preset.sourceUrl,
+                  child: Text(translationModelFriendlyName(preset)),
+                ),
+            ],
+            onChanged: translationService.isBusy
+                ? null
+                : (value) async {
+                    if (value == null) return;
+                    final preset = translationPresetModels.firstWhere(
+                      (entry) => entry.sourceUrl == value,
+                    );
+                    await _downloadTranslationModel(
+                      context,
+                      translationService,
+                      settingsService,
+                      sourceUrl: preset.sourceUrl,
+                      fileName: preset.name,
+                      id: preset.id,
+                    );
+                  },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TranslationUrlField(
+                initialValue: settings.translationModelSourceUrl ?? '',
+                onChanged: settingsService.setTranslationModelSourceUrl,
+                onDownload: translationService.isBusy
+                    ? null
+                    : (url) => _downloadTranslationModel(
                         context,
                         translationService,
                         settingsService,
-                        sourceUrl: preset.sourceUrl,
-                        fileName: preset.name,
-                        id: preset.id,
-                      );
-                    },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              children: [
-                _TranslationUrlField(
-                  initialValue: settings.translationModelSourceUrl ?? '',
-                  onChanged: settingsService.setTranslationModelSourceUrl,
-                  onDownload: translationService.isBusy
-                      ? null
-                      : (url) => _downloadTranslationModel(
-                          context,
-                          translationService,
-                          settingsService,
-                          sourceUrl: url,
-                        ),
-                  downloadLabel: translationService.isDownloading
-                      ? context.l10n.translation_downloading
-                      : translationService.isBusy
-                      ? context.l10n.translation_working
-                      : context.l10n.translation_downloadModel,
-                  isDownloading: translationService.isDownloading,
-                  onCancel: translationService.cancelDownload,
-                  labelText: context.l10n.translation_manualUrlLabel,
-                  stopLabel: context.l10n.translation_stop,
-                ),
-                if (translationService.isDownloading) ...[
-                  const SizedBox(height: 12),
-                  LinearProgressIndicator(
+                        sourceUrl: url,
+                      ),
+                downloadLabel: translationService.isDownloading
+                    ? context.l10n.translation_downloading
+                    : translationService.isBusy
+                    ? context.l10n.translation_working
+                    : context.l10n.translation_downloadModel,
+                isDownloading: translationService.isDownloading,
+                onCancel: translationService.cancelDownload,
+                labelText: context.l10n.translation_manualUrlLabel,
+                stopLabel: context.l10n.translation_stop,
+              ),
+              if (translationService.isDownloading) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
                     value:
                         translationService.downloadFileName ==
                             'Merging chunks...'
                         ? null
                         : translationService.downloadProgress,
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      _downloadProgressLabel(context, translationService),
-                      style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _downloadProgressLabel(context, translationService),
+                    style: MeshTheme.mono(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
-                ],
-                if (settings.translationDownloadedModels.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      context.l10n.translation_downloadedModels,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
+                ),
+              ],
+              if (settings.translationDownloadedModels.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    context.l10n.translation_downloadedModels,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                  const SizedBox(height: 8),
-                  for (final model in settings.translationDownloadedModels)
-                    Card.outlined(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        leading: Icon(
+                ),
+                const SizedBox(height: 8),
+                for (final model in settings.translationDownloadedModels)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(
                           model.id == settings.translationSelectedModelId
                               ? Icons.check_circle
                               : Icons.memory_outlined,
+                          size: 20,
+                          color: model.id == settings.translationSelectedModelId
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
                         ),
-                        title: Text(translationModelFriendlyName(model)),
-                        subtitle: Text(_downloadedModelLabel(model)),
-                        trailing: IconButton(
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(MeshRadii.xs),
+                            onTap: () => settingsService
+                                .setTranslationSelectedModelId(model.id),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  translationModelFriendlyName(model),
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  _downloadedModelLabel(model),
+                                  style: MeshTheme.mono(
+                                    fontSize: 11,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        IconButton(
                           tooltip: context.l10n.translation_deleteModel,
                           onPressed: translationService.isBusy
                               ? null
@@ -917,105 +1280,117 @@ class AppSettingsScreen extends StatelessWidget {
                                 ),
                           icon: const Icon(Icons.delete_outline),
                         ),
-                        onTap: () => settingsService
-                            .setTranslationSelectedModelId(model.id),
-                      ),
-                    ),
-                ],
-                if (translationService.lastError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    translationService.lastError!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                      ],
                     ),
                   ),
-                ],
               ],
-            ),
+              if (translationService.lastError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  translationService.lastError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  // Fixed rendering issues
-  Widget _buildBatteryCard(
+  Widget _buildCyr2LatContent(
     BuildContext context,
     AppSettingsService settingsService,
-    MeshCoreConnector connector,
   ) {
-    final deviceId = connector.deviceId;
-    final isConnected = connector.isConnected && deviceId != null;
-    final selection = isConnected
-        ? settingsService.batteryChemistryForDevice(deviceId)
-        : 'nmc';
-
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_battery,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+    final selectedProfile = settingsService.getSelectedCyr2LatProfile();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          initialValue: settingsService.settings.selectedCyr2latProfileId,
+          decoration: InputDecoration(
+            labelText: context.l10n.channels_cyr2latSettingsSubheading,
+            border: const OutlineInputBorder(),
           ),
-
-          // Main tile (icon + text only)
-          ListTile(
-            leading: const Icon(Icons.battery_full),
-            title: Text(context.l10n.appSettings_batteryChemistry),
-            subtitle: Text(
-              isConnected
-                  ? context.l10n.appSettings_batteryChemistryPerDevice(
-                      connector.deviceDisplayName,
-                    )
-                  : context.l10n.appSettings_batteryChemistryConnectFirst,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-
-          // Dropdown (separate full-width row)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: DropdownButtonFormField<String>(
-              initialValue: selection,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                isDense: true,
+          items: settingsService.settings.cyr2latProfiles.map((profile) {
+            return DropdownMenuItem(
+              value: profile.id,
+              child: Text(profile.name),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              settingsService.setSelectedCyr2LatProfile(value);
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    _showAddCyr2LatProfileDialog(context, settingsService),
+                icon: const Icon(Icons.add),
+                label: Text(context.l10n.common_add),
               ),
-              onChanged: isConnected
-                  ? (value) {
-                      if (value != null) {
-                        settingsService.setBatteryChemistryForDevice(
-                          deviceId,
-                          value,
-                        );
-                      }
-                    }
-                  : null,
-              items: [
-                DropdownMenuItem(
-                  value: 'nmc',
-                  child: Text(context.l10n.appSettings_batteryNmc),
-                ),
-                DropdownMenuItem(
-                  value: 'lifepo4',
-                  child: Text(context.l10n.appSettings_batteryLifepo4),
-                ),
-                DropdownMenuItem(
-                  value: 'lipo',
-                  child: Text(context.l10n.appSettings_batteryLipo),
-                ),
-              ],
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _showEditCyr2LatProfileDialog(
+                  context,
+                  settingsService,
+                  selectedProfile,
+                ),
+                icon: const Icon(Icons.edit),
+                label: Text(context.l10n.common_edit),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: settingsService.settings.cyr2latProfiles.length > 1
+                    ? () => _showDeleteCyr2LatProfileDialog(
+                        context,
+                        settingsService,
+                        selectedProfile,
+                      )
+                    : null,
+                icon: const Icon(Icons.delete),
+                label: Text(context.l10n.common_delete),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDebugContent(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      secondary: const Icon(Icons.bug_report_outlined, size: 20),
+      title: Text(context.l10n.appSettings_appDebugLogging),
+      subtitle: Text(context.l10n.appSettings_appDebugLoggingSubtitle),
+      value: settingsService.settings.appDebugLogEnabled,
+      onChanged: (value) async {
+        await settingsService.setAppDebugLogEnabled(value);
+        if (!context.mounted) return;
+        showDismissibleSnackBar(
+          context,
+          content: Text(
+            value
+                ? context.l10n.appSettings_appDebugLoggingEnabled
+                : context.l10n.appSettings_appDebugLoggingDisabled,
           ),
-        ],
-      ),
+          duration: const Duration(seconds: 2),
+        );
+      },
     );
   }
 
@@ -1062,205 +1437,341 @@ class AppSettingsScreen extends StatelessWidget {
     }
   }
 
-  void _showLanguageDialog(
+  void _showLanguageSheet(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.appSettings_language),
-        content: SingleChildScrollView(
-          child: RadioGroup<String?>(
-            groupValue: settingsService.settings.languageOverride,
-            onChanged: (value) {
-              settingsService.setLanguageOverride(value);
-              Navigator.pop(context);
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+    showMeshSheet(
+      context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(title: context.l10n.appSettings_language),
+          SizedBox(
+            height: 400,
+            child: ListView(
               children: [
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageSystem),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageSystem,
                   value: null,
+                  selected: settingsService.settings.languageOverride == null,
+                  onTap: () {
+                    settingsService.setLanguageOverride(null);
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageEn),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageEn,
                   value: 'en',
+                  selected: settingsService.settings.languageOverride == 'en',
+                  onTap: () {
+                    settingsService.setLanguageOverride('en');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageFr),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageFr,
                   value: 'fr',
+                  selected: settingsService.settings.languageOverride == 'fr',
+                  onTap: () {
+                    settingsService.setLanguageOverride('fr');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageEs),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageEs,
                   value: 'es',
+                  selected: settingsService.settings.languageOverride == 'es',
+                  onTap: () {
+                    settingsService.setLanguageOverride('es');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageDe),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageDe,
                   value: 'de',
+                  selected: settingsService.settings.languageOverride == 'de',
+                  onTap: () {
+                    settingsService.setLanguageOverride('de');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languagePl),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languagePl,
                   value: 'pl',
+                  selected: settingsService.settings.languageOverride == 'pl',
+                  onTap: () {
+                    settingsService.setLanguageOverride('pl');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageSl),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageSl,
                   value: 'sl',
+                  selected: settingsService.settings.languageOverride == 'sl',
+                  onTap: () {
+                    settingsService.setLanguageOverride('sl');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languagePt),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languagePt,
                   value: 'pt',
+                  selected: settingsService.settings.languageOverride == 'pt',
+                  onTap: () {
+                    settingsService.setLanguageOverride('pt');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageIt),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageIt,
                   value: 'it',
+                  selected: settingsService.settings.languageOverride == 'it',
+                  onTap: () {
+                    settingsService.setLanguageOverride('it');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageZh),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageZh,
                   value: 'zh',
+                  selected: settingsService.settings.languageOverride == 'zh',
+                  onTap: () {
+                    settingsService.setLanguageOverride('zh');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageSv),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageSv,
                   value: 'sv',
+                  selected: settingsService.settings.languageOverride == 'sv',
+                  onTap: () {
+                    settingsService.setLanguageOverride('sv');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageNl),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageNl,
                   value: 'nl',
+                  selected: settingsService.settings.languageOverride == 'nl',
+                  onTap: () {
+                    settingsService.setLanguageOverride('nl');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageSk),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageSk,
                   value: 'sk',
+                  selected: settingsService.settings.languageOverride == 'sk',
+                  onTap: () {
+                    settingsService.setLanguageOverride('sk');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageBg),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageBg,
                   value: 'bg',
+                  selected: settingsService.settings.languageOverride == 'bg',
+                  onTap: () {
+                    settingsService.setLanguageOverride('bg');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageRu),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageRu,
                   value: 'ru',
+                  selected: settingsService.settings.languageOverride == 'ru',
+                  onTap: () {
+                    settingsService.setLanguageOverride('ru');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageUk),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageUk,
                   value: 'uk',
+                  selected: settingsService.settings.languageOverride == 'uk',
+                  onTap: () {
+                    settingsService.setLanguageOverride('uk');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageHu),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageHu,
                   value: 'hu',
+                  selected: settingsService.settings.languageOverride == 'hu',
+                  onTap: () {
+                    settingsService.setLanguageOverride('hu');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageJa),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageJa,
                   value: 'ja',
+                  selected: settingsService.settings.languageOverride == 'ja',
+                  onTap: () {
+                    settingsService.setLanguageOverride('ja');
+                    Navigator.pop(ctx);
+                  },
                 ),
-                RadioListTile<String?>(
-                  title: Text(context.l10n.appSettings_languageKo),
+                _sheetOption<String?>(
+                  ctx,
+                  label: context.l10n.appSettings_languageKo,
                   value: 'ko',
+                  selected: settingsService.settings.languageOverride == 'ko',
+                  onTap: () {
+                    settingsService.setLanguageOverride('ko');
+                    Navigator.pop(ctx);
+                  },
                 ),
+                SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
               ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
-          ),
         ],
       ),
     );
   }
 
-  void _showTimeFilterDialog(
+  void _showTimeFilterSheet(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.appSettings_mapTimeFilter),
-        content: RadioGroup<double>(
-          groupValue: settingsService.settings.mapTimeFilterHours,
-          onChanged: (value) {
-            if (value != null) {
-              settingsService.setMapTimeFilterHours(value);
-              Navigator.pop(context);
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(context.l10n.appSettings_showNodesDiscoveredWithin),
-              const SizedBox(height: 16),
-              RadioListTile<double>(
-                title: Text(context.l10n.appSettings_allTime),
-                value: 0,
-              ),
-              RadioListTile<double>(
-                title: Text(context.l10n.appSettings_lastHour),
-                value: 1,
-              ),
-              RadioListTile<double>(
-                title: Text(context.l10n.appSettings_last6Hours),
-                value: 6,
-              ),
-              RadioListTile<double>(
-                title: Text(context.l10n.appSettings_last24Hours),
-                value: 24,
-              ),
-              RadioListTile<double>(
-                title: Text(context.l10n.appSettings_lastWeek),
-                value: 168,
-              ),
-            ],
+    showMeshSheet(
+      context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(title: context.l10n.appSettings_mapTimeFilter),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(context.l10n.appSettings_showNodesDiscoveredWithin),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
+          _sheetOption<double>(
+            ctx,
+            label: context.l10n.appSettings_allTime,
+            value: 0,
+            selected: settingsService.settings.mapTimeFilterHours == 0,
+            onTap: () {
+              settingsService.setMapTimeFilterHours(0);
+              Navigator.pop(ctx);
+            },
           ),
+          _sheetOption<double>(
+            ctx,
+            label: context.l10n.appSettings_lastHour,
+            value: 1,
+            selected: settingsService.settings.mapTimeFilterHours == 1,
+            onTap: () {
+              settingsService.setMapTimeFilterHours(1);
+              Navigator.pop(ctx);
+            },
+          ),
+          _sheetOption<double>(
+            ctx,
+            label: context.l10n.appSettings_last6Hours,
+            value: 6,
+            selected: settingsService.settings.mapTimeFilterHours == 6,
+            onTap: () {
+              settingsService.setMapTimeFilterHours(6);
+              Navigator.pop(ctx);
+            },
+          ),
+          _sheetOption<double>(
+            ctx,
+            label: context.l10n.appSettings_last24Hours,
+            value: 24,
+            selected: settingsService.settings.mapTimeFilterHours == 24,
+            onTap: () {
+              settingsService.setMapTimeFilterHours(24);
+              Navigator.pop(ctx);
+            },
+          ),
+          _sheetOption<double>(
+            ctx,
+            label: context.l10n.appSettings_lastWeek,
+            value: 168,
+            selected: settingsService.settings.mapTimeFilterHours == 168,
+            onTap: () {
+              settingsService.setMapTimeFilterHours(168);
+              Navigator.pop(ctx);
+            },
+          ),
+          SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
         ],
       ),
     );
   }
 
-  void _showUnitsDialog(
+  void _showUnitsSheet(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.appSettings_unitsTitle),
-        content: RadioGroup<UnitSystem>(
-          groupValue: settingsService.settings.unitSystem,
-          onChanged: (value) {
-            if (value != null) {
-              settingsService.setUnitSystem(value);
-              Navigator.pop(context);
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<UnitSystem>(
-                title: Text(context.l10n.appSettings_unitsMetric),
-                value: UnitSystem.metric,
-              ),
-              RadioListTile<UnitSystem>(
-                title: Text(context.l10n.appSettings_unitsImperial),
-                value: UnitSystem.imperial,
-              ),
-            ],
+    showMeshSheet(
+      context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(title: context.l10n.appSettings_unitsTitle),
+          _sheetOption<UnitSystem>(
+            ctx,
+            label: context.l10n.appSettings_unitsMetric,
+            value: UnitSystem.metric,
+            selected: settingsService.settings.unitSystem == UnitSystem.metric,
+            onTap: () {
+              settingsService.setUnitSystem(UnitSystem.metric);
+              Navigator.pop(ctx);
+            },
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
+          _sheetOption<UnitSystem>(
+            ctx,
+            label: context.l10n.appSettings_unitsImperial,
+            value: UnitSystem.imperial,
+            selected:
+                settingsService.settings.unitSystem == UnitSystem.imperial,
+            onTap: () {
+              settingsService.setUnitSystem(UnitSystem.imperial);
+              Navigator.pop(ctx);
+            },
           ),
+          SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
         ],
       ),
+    );
+  }
+
+  Widget _sheetOption<T>(
+    BuildContext context, {
+    required String label,
+    required T value,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(
+        selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: selected ? scheme.primary : scheme.onSurfaceVariant,
+      ),
+      title: Text(label),
+      onTap: onTap,
     );
   }
 
@@ -1389,102 +1900,17 @@ class AppSettingsScreen extends StatelessWidget {
     return '${sizeMb.toStringAsFixed(1)} MB • $source';
   }
 
-  Widget _buildCyr2LatCard(
-    BuildContext context,
-    AppSettingsService settingsService,
-  ) {
-    final selectedProfile = settingsService.getSelectedCyr2LatProfile();
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.channels_cyr2latSettingsHeading,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: DropdownButtonFormField<String>(
-              initialValue: settingsService.settings.selectedCyr2latProfileId,
-              decoration: InputDecoration(
-                labelText: context.l10n.channels_cyr2latSettingsSubheading,
-                border: const OutlineInputBorder(),
-              ),
-              items: settingsService.settings.cyr2latProfiles.map((profile) {
-                return DropdownMenuItem(
-                  value: profile.id,
-                  child: Text(profile.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  settingsService.setSelectedCyr2LatProfile(value);
-                }
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _showAddCyr2LatProfileDialog(context, settingsService),
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.common_add),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showEditCyr2LatProfileDialog(
-                      context,
-                      settingsService,
-                      selectedProfile,
-                    ),
-                    icon: const Icon(Icons.edit),
-                    label: Text(context.l10n.common_edit),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        settingsService.settings.cyr2latProfiles.length > 1
-                        ? () => _showDeleteCyr2LatProfileDialog(
-                            context,
-                            settingsService,
-                            selectedProfile,
-                          )
-                        : null,
-                    icon: const Icon(Icons.delete),
-                    label: Text(context.l10n.common_delete),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMcmpTextLimitCard(
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.compress),
-        title: Text(context.l10n.settings_mcmpTextLimit),
-        subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showMcmpTextLimitDialog(context, settingsService),
-      ),
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: const Icon(Icons.compress, size: 20),
+      title: Text(context.l10n.settings_mcmpTextLimit),
+      subtitle: Text('${settingsService.settings.mcmpTextLimit}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showMcmpTextLimitDialog(context, settingsService),
     );
   }
 
@@ -1492,37 +1918,37 @@ class AppSettingsScreen extends StatelessWidget {
     BuildContext context,
     AppSettingsService settingsService,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.settings_doNotFilterMessagesOnChannels,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.settings_doNotFilterMessagesOnChannels,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.settings_doNotFilterMessagesOnChannelsSubtitle,
-              style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.settings_doNotFilterMessagesOnChannelsSubtitle,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue:
+                settingsService.settings.doNotFilterMessagesOnChannels,
+            minLines: 3,
+            maxLines: 6,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'One channel name per line',
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              initialValue:
-                  settingsService.settings.doNotFilterMessagesOnChannels,
-              minLines: 3,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'One channel name per line',
-              ),
-              onChanged: (value) {
-                settingsService.setDoNotFilterMessagesOnChannels(value);
-              },
-            ),
-          ],
-        ),
+            onChanged: (value) {
+              settingsService.setDoNotFilterMessagesOnChannels(value);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -2467,45 +2893,6 @@ class AppSettingsScreen extends StatelessWidget {
               );
             },
             child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDebugCard(
-    BuildContext context,
-    AppSettingsService settingsService,
-  ) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.appSettings_debugCard,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.bug_report_outlined),
-            title: Text(context.l10n.appSettings_appDebugLogging),
-            subtitle: Text(context.l10n.appSettings_appDebugLoggingSubtitle),
-            value: settingsService.settings.appDebugLogEnabled,
-            onChanged: (value) async {
-              await settingsService.setAppDebugLogEnabled(value);
-              if (!context.mounted) return;
-              showDismissibleSnackBar(
-                context,
-                content: Text(
-                  value
-                      ? context.l10n.appSettings_appDebugLoggingEnabled
-                      : context.l10n.appSettings_appDebugLoggingDisabled,
-                ),
-                duration: const Duration(seconds: 2),
-              );
-            },
           ),
         ],
       ),

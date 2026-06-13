@@ -35,9 +35,9 @@ Location pins shared in chat messages are displayed as flags:
 
 Tap a pin to see its info. Options to "Hide" (session only) or "Remove" (persistent).
 
-### Predicted / Guessed Locations (Semi-Transparent)
+### Predicted / Guessed Locations
 
-Many contacts on the mesh don't have GPS hardware, so the map has no explicit coordinates for them. Instead of leaving these contacts invisible, the app **infers an approximate position** by analyzing the repeater path the contact's messages travel through. These inferred positions are displayed as semi-transparent markers with a `not_listed_location` icon, visually distinct from confirmed-location markers.
+Many contacts on the mesh don't have GPS hardware, so the map has no explicit coordinates for them. Instead of leaving these contacts invisible, the app **infers an approximate position** by analyzing the repeater path the contact's messages travel through. These inferred positions are displayed as markers with a `not_listed_location` icon and a muted grey or colored border, visually distinct from confirmed-location markers.
 
 #### Why guessed locations exist
 
@@ -55,19 +55,19 @@ In a mesh network, every message hops through one or more repeaters on its way t
 
 5. **Compute the estimated position**:
    - **Single anchor**: The contact is placed on a small circle (330m radius) around the repeater. The angle on the circle is deterministic — derived from an FNV-1a hash of the contact's public key — so the same contact always appears at the same offset, preventing markers from stacking on top of each other.
-   - **Two or more anchors**: The position is the average (centroid) of all anchor coordinates, with a smaller offset radius (80–120m) applied for visual separation.
+   - **Two or more anchors**: The position is a weighted average of all anchor coordinates (each subsequent anchor weighted at half the previous one, biasing toward the first), with a smaller offset radius (120m for 2 anchors, 80m for 3+) applied for visual separation.
 
 6. **Assign confidence level**:
-   - **High confidence** (2+ anchors): Displayed at 55% opacity.
-   - **Low confidence** (1 anchor): Displayed at 30% opacity.
+   - **High confidence** (2+ anchors): The marker border uses the node's type color (brighter border).
+   - **Low confidence** (1 anchor): The marker border is rendered in a muted grey.
 
 7. **Cache the result**: The computation is cached using a key derived from the contact's paths, anchor positions, path-history version, and radio parameters. The cache is only invalidated when any of these inputs change, avoiding recomputation on every UI rebuild.
 
 #### How to read guessed locations on the map
 
-- **Semi-transparent marker** with a `not_listed_location` icon: This is a guessed position, not a confirmed GPS fix.
-- **More opaque** (55%): Higher confidence — the contact was seen through 2 or more repeaters with known positions.
-- **More transparent** (30%): Lower confidence — based on a single repeater anchor only.
+- **Marker with `not_listed_location` icon**: This is a guessed position, not a confirmed GPS fix.
+- **Colored border** (type color): Higher confidence — the contact was seen through 2 or more repeaters with known positions.
+- **Grey border**: Lower confidence — based on a single repeater anchor only.
 - Coordinates shown in the marker info dialog are prefixed with `~` to indicate they are estimated.
 - Guessed locations can be toggled on/off in the map filter dialog (FAB → "Guessed locations" toggle).
 
@@ -110,9 +110,16 @@ A map with a polyline showing the route from your node through repeater hops to 
 - **Green circles**: Hops with known GPS coordinates
 - **Orange circles** (`~HH`): Inferred positions (no GPS but deducible from contacts)
 - **Red endpoint**: Target contact with known GPS
-- **Purple semi-transparent endpoint**: Target with guessed position
+- **Magenta endpoint**: Target with guessed position
 
-A legend card at the bottom lists each hop pair with SNR quality icons and total path distance.
+A bottom panel shows each hop pair with SNR quality icons and total path distance. When multiple observed paths are available, a **Single / Combined** toggle appears at the top of the map. In Combined view, all paths are overlaid; shared segments are highlighted with a white halo and a path count badge appears on shared nodes.
+
+The bottom panel also provides **packet animation controls**:
+- **Animation toggle** (on/off)
+- **Step back / Play / Step forward / Replay** buttons
+- **Follow packet lock** — keeps the map camera centered on the moving packet dot
+- **Speed selector** (0.5×, 1×, 2×, 4×)
+- A live **"Hop x of y · from → to"** label that tracks the active segment
 
 ### How It Works
 Sends a trace request frame over the mesh. The repeater network traces the path hop-by-hop and returns per-hop SNR data. For hops without GPS, positions are inferred by averaging GPS coordinates of contacts sharing that last-hop byte.
@@ -125,17 +132,17 @@ Sends a trace request frame over the mesh. The repeater network traces the path 
 From the main map, tap the terrain/antenna icon.
 
 ### What the User Sees
-A full-screen map with a collapsible control panel containing:
-- **Elevation profile chart**: Terrain fill (green), LOS beam line (white), radio horizon line (yellow)
-- **Status**: Clear (green) or blocked (red) with distance and minimum clearance
-- **Options panel**: Node toggles, endpoint dropdowns, antenna height sliders (0–400 ft), Run LOS button
+A full-screen map with a draggable bottom sheet containing:
+- **Elevation profile chart**: Terrain fill (green), LOS beam line (white), radio horizon line (yellow); obstruction points are marked as clickable dots on the chart
+- **Status summary**: Clear (green), Marginal (amber, within 5 m of obstruction), or Blocked (red) with distance and clearance/obstruction amount
+- **Options section** (collapsible): Node toggles, endpoint dropdowns, antenna height sliders (0–400 ft), Run LOS button
 
 ### Key Interactions
-- **Long-press the map** to add custom endpoints (orange pushpin markers, renameable/deleteable)
+- **Long-press the map** to add custom endpoints (pushpin markers, renameable/deleteable)
 - **Tap a marker** to select it as Point A or B; LOS runs automatically when both are set
 - **Antenna heights** are adjustable for both endpoints
-- **Map line** between endpoints is colored green (clear) or red (blocked)
-- Terrain elevation is fetched from the Open-Meteo API (21–81 sample points, cached 24 hours)
+- **Map line** between endpoints is colored green (clear), amber (marginal), or red (blocked)
+- Terrain elevation is fetched from the Open-Meteo API (21, 41, or 81 sample points depending on link distance, cached 24 hours)
 - K-factor is adjusted per radio frequency from a baseline of 4/3 at 915 MHz
 
 ---
@@ -149,7 +156,7 @@ Settings → App Settings → Map Display → Offline Map Cache
 - Map with a blue polygon overlay showing previously selected cache bounds
 - Bounding box coordinates card
 - **Cache Area** controls: "Use Current View" and Clear buttons
-- **Zoom Range** slider (3–18) with estimated tile count
+- **Zoom Range** range slider (3–18, dual-handle for min and max) with estimated tile count
 - **Download progress** bar (when downloading)
 - **Download Tiles** and **Clear Cache** buttons
 

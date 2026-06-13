@@ -23,13 +23,13 @@
   "common_settings": "Настройки",
   "common_disconnect": "Прекъсни",
   "common_connected": "Свързано",
-  "common_disconnected": "Откъснато",
+  "common_disconnected": "Прекъснато",
   "common_create": "Създай",
   "common_continue": "Продължи",
   "common_share": "Сподели",
   "common_copy": "Копирай",
   "common_retry": "Опитай отново",
-  "common_hide": "Скриване",
+  "common_hide": "Скрий",
   "common_remove": "Изтрий",
   "common_enable": "Активирай",
   "common_disable": "Деактивирай",
@@ -68,7 +68,7 @@
     }
   },
   "scanner_searchingDevices": "Търсене на устройства MeshCore...",
-  "scanner_tapToScan": "Натиснете Сканиране, за да намерите устройства MeshCore.",
+  "scanner_tapToScan": "Докоснете „Сканирай“, за да намерите устройства MeshCore.",
   "scanner_connectionFailed": "Връзката не успя: {error}",
   "@scanner_connectionFailed": {
     "placeholders": {
@@ -94,7 +94,7 @@
   "settings_radioSettingsSubtitle": "Честота, мощност, разпространяващ фактор",
   "settings_radioSettingsUpdated": "Радио настройките са актуализирани",
   "settings_location": "Местоположение",
-  "settings_locationSubtitle": "Координати на GPS",
+  "settings_locationSubtitle": "GPS координати",
   "settings_locationUpdated": "Местоположението е актуализирано",
   "settings_locationBothRequired": "Въведете както географска ширина, така и географска дължина.",
   "settings_locationInvalid": "Невалидна ширина или дължина.",
@@ -106,22 +106,22 @@
   "settings_privacyModeEnabled": "Режим на поверителност е активиран",
   "settings_privacyModeDisabled": "Режим на поверителност е деактивиран",
   "settings_actions": "Действия",
-  "settings_deleteAllPaths": "Delete All Paths",
-  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
-  "settings_sendAdvertisement": "Изпрати Реклама",
-  "settings_sendAdvertisementSubtitle": "Сега присъствие в ефир",
-  "settings_advertisementSent": "Реклама изпратена",
+  "settings_deleteAllPaths": "Изтрий всички пътища",
+  "settings_deleteAllPathsSubtitle": "Изчисти всички данни за пътищата от контактите.",
+  "settings_sendAdvertisement": "Изпрати реклама",
+  "settings_sendAdvertisementSubtitle": "Излъчи присъствието сега",
+  "settings_advertisementSent": "Рекламата е изпратена",
   "settings_syncTime": "Време за синхронизация",
   "settings_syncTimeSubtitle": "Задайте часовника на устройството да отговаря на времето на телефона.",
   "settings_timeSynchronized": "Синхронизирано във времето",
   "settings_refreshContacts": "Презареди контакти",
   "settings_refreshContactsSubtitle": "Презареди списъка с контакти от устройството",
-  "settings_rebootDevice": "Рестартирайте устройството",
-  "settings_rebootDeviceSubtitle": "Рестартирайте устройството MeshCore",
-  "settings_rebootDeviceConfirm": "Сигурни ли сте, че искате да рестартирате устройството? Ще бъдете откъснати.",
+  "settings_rebootDevice": "Рестартирай устройството",
+  "settings_rebootDeviceSubtitle": "Рестартирай устройството MeshCore",
+  "settings_rebootDeviceConfirm": "Сигурни ли сте, че искате да рестартирате устройството? Ще бъдете прекъснати.",
   "settings_debug": "Отстрани",
-  "settings_bleDebugLog": "Лог за отстраняване на грешки на BLE",
-  "settings_bleDebugLogSubtitle": "Команди, отговори и сурови данни BLE",
+  "settings_bleDebugLog": "Дневник за отстраняване на грешки на BLE",
+  "settings_bleDebugLogSubtitle": "Команди, отговори и сурови BLE данни",
   "settings_appDebugLog": "Лог на отстраняване на грешки на приложението",
   "settings_appDebugLogSubtitle": "Съобщения за отстраняване на грешки на приложението",
   "settings_about": "За нас",
@@ -134,22 +134,22 @@
     }
   },
   "settings_aboutLegalese": "Проект MeshCore с отворен код 2024 г.",
-  "settings_aboutDescription": "Отворен софтуер за Flutter клиент за MeshCore LoRa мрежови устройства.",
+  "settings_aboutDescription": "Отворен Flutter клиент за MeshCore LoRa мрежови устройства.",
   "settings_infoName": "Име",
   "settings_infoId": "ИД",
   "settings_infoStatus": "Статус",
   "settings_infoBattery": "Батерия",
-  "settings_infoPublicKey": "Общ публичен ключ",
+  "settings_infoPublicKey": "Публичен ключ",
   "settings_infoContactsCount": "Брой контакти",
   "settings_infoChannelCount": "Брой канали",
   "settings_presets": "Предварителни настройки",
   "settings_frequency": "Честота (MHz)",
   "settings_frequencyHelper": "300,0 – 2500,0",
   "settings_frequencyInvalid": "Невалидна честота (300-2500 MHz)",
-  "settings_bandwidth": "Ширина на честотния спектър",
+  "settings_bandwidth": "Ширина на честотната лента",
   "settings_spreadingFactor": "Фактор на разпространение",
-  "settings_codingRate": "Такса за кодиране",
-  "settings_txPower": "TX Мощност (dBm)",
+  "settings_codingRate": "Скорост на кодиране",
+  "settings_txPower": "TX мощност (dBm)",
   "settings_txPowerHelper": "0 - 22",
   "settings_txPowerInvalid": "Невалидна мощност на TX (0-22 dBm)",
   "settings_error": "Грешка: {message}",
@@ -189,8 +189,8 @@
   "appSettings_appearance": "Външен вид",
   "appSettings_theme": "Тема",
   "appSettings_themeSystem": "Система по подразбиране",
-  "appSettings_themeLight": "Ярка",
-  "appSettings_themeDark": "Тъмно",
+  "appSettings_themeLight": "Светла",
+  "appSettings_themeDark": "Тъмна",
   "appSettings_language": "Език",
   "appSettings_languageSystem": "Система по подразбиране",
   "appSettings_languageEn": "Английски",
@@ -198,35 +198,35 @@
   "appSettings_languageEs": "Испански",
   "appSettings_languageDe": "Немски",
   "appSettings_languagePl": "Полски",
-  "appSettings_languageSl": "Словенски език",
+  "appSettings_languageSl": "Словенски",
   "appSettings_languagePt": "Португалски",
   "appSettings_languageIt": "Италиански",
   "appSettings_languageZh": "Китайски",
   "appSettings_languageSv": "Шведски",
-  "appSettings_languageNl": "Хололандски",
-  "appSettings_languageSk": "Словенски",
+  "appSettings_languageNl": "Нидерландски",
+  "appSettings_languageSk": "Словашки",
   "appSettings_languageBg": "Български",
   "appSettings_notifications": "Уведомления",
-  "appSettings_enableNotifications": "Активирай Известия",
-  "appSettings_enableNotificationsSubtitle": "Получете известия за съобщения и реклами",
+  "appSettings_enableNotifications": "Включи известията",
+  "appSettings_enableNotificationsSubtitle": "Получавайте известия за съобщения и реклами",
   "appSettings_notificationPermissionDenied": "Отказвано е разрешение за известия",
-  "appSettings_notificationsEnabled": "Уведомителни са активирани",
-  "appSettings_notificationsDisabled": "Известия са изключени",
-  "appSettings_messageNotifications": "Уведомления",
-  "appSettings_messageNotificationsSubtitle": "Покажи известие при получаване на нови съобщения",
-  "appSettings_channelMessageNotifications": "Уведомления за съобщения от канал",
-  "appSettings_channelMessageNotificationsSubtitle": "Покажи известие при получаване на съобщения от канали",
+  "appSettings_notificationsEnabled": "Известията са включени",
+  "appSettings_notificationsDisabled": "Известията са изключени",
+  "appSettings_messageNotifications": "Известия за съобщения",
+  "appSettings_messageNotificationsSubtitle": "Показвай известие при получаване на нови съобщения",
+  "appSettings_channelMessageNotifications": "Известия за канални съобщения",
+  "appSettings_channelMessageNotificationsSubtitle": "Показвай известие при получаване на съобщения от канали",
   "appSettings_advertisementNotifications": "Уведомления за реклами",
   "appSettings_advertisementNotificationsSubtitle": "Покажи известие, когато бъдат открити нови възли.",
   "appSettings_messaging": "Съобщения",
-  "appSettings_clearPathOnMaxRetry": "Изчисти Път на Макс Опит",
-  "appSettings_clearPathOnMaxRetrySubtitle": "Възстанови контактния път след 5 неуспешни опита за изпращане",
+  "appSettings_clearPathOnMaxRetry": "Изчисти пътя при максимален брой опити",
+  "appSettings_clearPathOnMaxRetrySubtitle": "Възстанови пътя към контакта след 5 неуспешни опита за изпращане",
   "appSettings_pathsWillBeCleared": "Пътищата ще бъдат почистени след 5 неуспешни опита.",
   "appSettings_pathsWillNotBeCleared": "Пътищата няма да бъдат автоматично изчистени.",
-  "appSettings_autoRouteRotation": "Автоматично маршрутизиране на завъртания",
-  "appSettings_autoRouteRotationSubtitle": "Превключете между най-добрите пътища и режим на наводняване",
-  "appSettings_autoRouteRotationEnabled": "Автоматично маршрутизиране вкл.",
-  "appSettings_autoRouteRotationDisabled": "Автоматично маршрутизирането е деактивирано",
+  "appSettings_autoRouteRotation": "Автоматична ротация на маршрутите",
+  "appSettings_autoRouteRotationSubtitle": "Превключвайте между най-добрите пътища и режим на наводняване",
+  "appSettings_autoRouteRotationEnabled": "Автоматичната ротация на маршрутите е включена",
+  "appSettings_autoRouteRotationDisabled": "Автоматичната ротация на маршрутите е изключена",
   "appSettings_battery": "Батерия",
   "appSettings_batteryChemistry": "Химия на батерията",
   "appSettings_batteryChemistryPerDevice": "Зададено за устройство ({deviceName})",
@@ -279,10 +279,10 @@
     }
   },
   "appSettings_debugCard": "Отстрани",
-  "appSettings_appDebugLogging": "Логване за отстраняване на грешки на приложението",
-  "appSettings_appDebugLoggingSubtitle": "Записване на съобщения за отстраняване на грешки от приложението за отстраняване на грешки.",
-  "appSettings_appDebugLoggingEnabled": "Режимът за отстраняване на грешки в приложението е активиран.",
-  "appSettings_appDebugLoggingDisabled": "Логването за отстраняване на грешки в приложението е изключено.",
+  "appSettings_appDebugLogging": "Дневник за отстраняване на грешки на приложението",
+  "appSettings_appDebugLoggingSubtitle": "Записвай съобщенията за отстраняване на грешки на приложението.",
+  "appSettings_appDebugLoggingEnabled": "Дневникът за отстраняване на грешки на приложението е включен.",
+  "appSettings_appDebugLoggingDisabled": "Дневникът за отстраняване на грешки на приложението е изключен.",
   "contacts_title": "Контакти",
   "contacts_noContacts": "Няма контакти към момента.",
   "contacts_contactsWillAppear": "Контактите ще се появят, когато устройствата рекламират.",
@@ -298,7 +298,7 @@
       }
     }
   },
-  "contacts_manageRepeater": "Управление на Повтарящ се Елемент",
+  "contacts_manageRepeater": "Управление на повторителя",
   "contacts_roomLogin": "Вход в стаята",
   "contacts_openChat": "Отвори чат",
   "contacts_editGroup": "Редактирай Група",
@@ -312,7 +312,7 @@
     }
   },
   "contacts_newGroup": "Нова група",
-  "contacts_groupName": "Група",
+  "contacts_groupName": "Име на групата",
   "contacts_groupNameRequired": "Името на групата е задължително.",
   "contacts_groupNameReserved": "Това име на група е запазено",
   "contacts_groupAlreadyExists": "Групата \"{name}\" вече съществува.",
@@ -323,11 +323,11 @@
       }
     }
   },
-  "contacts_filterContacts": "Филтрирайте контактите...",
+  "contacts_filterContacts": "Филтрирай контактите...",
   "contacts_noContactsMatchFilter": "Няма съвпадения с вашия филтър.",
   "contacts_noMembers": "Няма членове",
-  "contacts_lastSeenNow": "Последно видяно сега",
-  "contacts_lastSeenMinsAgo": "Последна активност {minutes} минути преди",
+  "contacts_lastSeenNow": "Видян току-що",
+  "contacts_lastSeenMinsAgo": "Преди {minutes} минути",
   "@contacts_lastSeenMinsAgo": {
     "placeholders": {
       "minutes": {
@@ -335,8 +335,8 @@
       }
     }
   },
-  "contacts_lastSeenHourAgo": "Последно видяно преди час",
-  "contacts_lastSeenHoursAgo": "Последно видян {hours} часа преди.",
+  "contacts_lastSeenHourAgo": "Преди час",
+  "contacts_lastSeenHoursAgo": "Преди {hours} часа",
   "@contacts_lastSeenHoursAgo": {
     "placeholders": {
       "hours": {
@@ -344,8 +344,8 @@
       }
     }
   },
-  "contacts_lastSeenDayAgo": "Последно видяно преди 1 ден",
-  "contacts_lastSeenDaysAgo": "Последно видян {days} дни преди.",
+  "contacts_lastSeenDayAgo": "Преди 1 ден",
+  "contacts_lastSeenDaysAgo": "Преди {days} дни",
   "@contacts_lastSeenDaysAgo": {
     "placeholders": {
       "days": {
@@ -367,7 +367,7 @@
     }
   },
   "channels_public": "Публично",
-  "channels_private": "Личен",
+  "channels_private": "Частен",
   "channels_editChannel": "Редактирай канал",
   "channels_muteChannel": "Заглуши канала",
   "channels_unmuteChannel": "Включи известията на канала",
@@ -391,12 +391,12 @@
   "channels_addChannel": "Добави Канал",
   "channels_channelIndexLabel": "Индекс на канал",
   "channels_channelName": "Име на канала",
-  "channels_usePublicChannel": "Използвайте публичен канал",
+  "channels_usePublicChannel": "Използвай публичен канал",
   "channels_standardPublicPsk": "Стандартен публичен PSK",
   "channels_pskHex": "PSK (шестнадесетичен код)",
   "channels_generateRandomPsk": "Генерирай случайна PSK",
   "channels_enterChannelName": "Моля, въведете име на канал.",
-  "channels_pskMustBe32Hex": "PSK трябва да бъде 32 шестнаредни знака.",
+  "channels_pskMustBe32Hex": "PSK трябва да бъде 32 шестнадесетични знака.",
   "channels_channelAdded": "Каналът \"{name}\" е добавен",
   "@channels_channelAdded": {
     "placeholders": {
@@ -441,7 +441,7 @@
   "channels_publicChannelAdded": "Публичен канал добавен",
   "channels_sortBy": "Сортирай по",
   "channels_sortManual": "Ръчно",
-  "channels_sortAZ": "От A до Я",
+  "channels_sortAZ": "От А до Я",
   "channels_sortLatestMessages": "Последни съобщения",
   "channels_sortUnread": "Непрочетено",
   "chat_noMessages": "Няма съобщения.",
@@ -584,15 +584,15 @@
     }
   },
   "debugFrame_hexDump": "Хексадесетичен Dump:",
-  "chat_pathManagement": "Управление на пътища",
+  "chat_pathManagement": "Управление на пътищата",
   "chat_routingMode": "Режим на маршрутизиране",
   "chat_autoUseSavedPath": "Автоматично (използвай запазения път)",
   "chat_forceFloodMode": "Принуди режим на наводняване",
-  "chat_recentAckPaths": "Неотдавни ACK пътища (докоснете, за да използвате):",
+  "chat_recentAckPaths": "Последни ACK пътища (докоснете, за да използвате):",
   "chat_pathHistoryFull": "Историята на пътя е пълна. Премахнете записи, за да добавите нови.",
-  "chat_hopSingular": "скочи",
-  "chat_hopPlural": "скоци",
-  "chat_hopsCount": "{count} {count, plural, =1{скача} other{скача}}",
+  "chat_hopSingular": "скок",
+  "chat_hopPlural": "скока",
+  "chat_hopsCount": "{count} {count, plural, =1{скок} other{скока}}",
   "@chat_hopsCount": {
     "placeholders": {
       "count": {
@@ -604,16 +604,16 @@
   "chat_removePath": "Премахни пътя",
   "chat_noPathHistoryYet": "Няма история на пътищата още.\nИзпратете съобщение, за да откриете пътища.",
   "chat_pathActions": "Действия по пътя:",
-  "chat_setCustomPath": "Задайте персонализиран път",
-  "chat_setCustomPathSubtitle": "Ръчно укажете маршрутен път",
-  "chat_clearPath": "Почисти Път",
+  "chat_setCustomPath": "Задай персонализиран път",
+  "chat_setCustomPathSubtitle": "Ръчно задайте маршрутен път",
+  "chat_clearPath": "Изчисти пътя",
   "chat_clearPathSubtitle": "Принуди преоткриване при следващо изпращане",
   "chat_pathCleared": "Пътят е почистен. Следващото съобщение ще открие маршрута отново.",
   "chat_floodModeSubtitle": "Използвайте превключвателя за маршрутизиране в лентата на приложението.",
-  "chat_floodModeEnabled": "Режим на наводнение е активиран. Включете го отново чрез иконката за маршрутизиране в лентата на приложението.",
+  "chat_floodModeEnabled": "Режимът на наводняване е включен. Включете го отново чрез иконата за маршрутизиране в лентата на приложението.",
   "chat_fullPath": "Пълен път",
-  "chat_pathDetailsNotAvailable": "Детайлите за пътя все още не са налични. Опитайте да изпратите съобщение, за да освежите.",
-  "chat_pathSetHops": "Пътят е зададен: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "chat_pathDetailsNotAvailable": "Подробности за пътя все още не са налични. Опитайте да изпратите съобщение, за да ги обновите.",
+  "chat_pathSetHops": "Пътят е зададен: {hopCount} {hopCount, plural, =1{скок} other{скока}} - {status}",
   "@chat_pathSetHops": {
     "placeholders": {
       "hopCount": {
@@ -628,10 +628,10 @@
   "chat_pathDeviceConfirmed": "Устройство потвърдено.",
   "chat_pathDeviceNotConfirmed": "Устройството все още не е потвърдено.",
   "chat_type": "Въведете",
-  "chat_path": "Пътекино",
+  "chat_path": "Път",
   "chat_publicKey": "Публичен ключ",
   "chat_compressOutgoingMessages": "Компресиране на изходящи съобщения",
-  "chat_floodForced": "Потоп (принуден)",
+  "chat_floodForced": "Наводняване (принудително)",
   "chat_directForced": "Директно (принудително)",
   "chat_hopsForced": "{count} скока (принудително)",
   "@chat_hopsForced": {
@@ -641,9 +641,9 @@
       }
     }
   },
-  "chat_floodAuto": "Потоп (автоматично)",
+  "chat_floodAuto": "Наводняване (автоматично)",
   "chat_direct": "Директно",
-  "chat_poiShared": "Споделено място от интерес",
+  "chat_poiShared": "Споделена точка на интерес",
   "chat_unread": "Непрочетени: {count}",
   "@chat_unread": {
     "placeholders": {
@@ -652,7 +652,7 @@
       }
     }
   },
-  "chat_openLink": "Отваряне на връзката?",
+  "chat_openLink": "Отворете връзката?",
   "chat_openLinkConfirmation": "Искате ли да отворите тази връзка в браузъра си?",
   "chat_open": "Отвори",
   "chat_couldNotOpenLink": "Не можа да се отвори връзката: {url}",
@@ -666,8 +666,8 @@
   "chat_invalidLink": "Невалиден формат на връзката",
   "map_title": "Карта на възлите",
   "map_noNodesWithLocation": "Няма възли с данни за местоположение.",
-  "map_nodesNeedGps": "Възлагат се възлозите да споделят техните GPS координати,\nза да се появят на картата.",
-  "map_nodesCount": "Нодове: {count}",
+  "map_nodesNeedGps": "Възлите трябва да споделят GPS координатите си,\nза да се появят на картата.",
+  "map_nodesCount": "Възли: {count}",
   "@map_nodesCount": {
     "placeholders": {
       "count": {
@@ -675,7 +675,7 @@
       }
     }
   },
-  "map_pinsCount": "Ключове: {count}",
+  "map_pinsCount": "Пинове: {count}",
   "@map_pinsCount": {
     "placeholders": {
       "count": {
@@ -684,25 +684,25 @@
     }
   },
   "map_chat": "Чат",
-  "map_repeater": "Повтарящ се",
+  "map_repeater": "Повторител",
   "map_room": "Стая",
-  "map_sensor": "Датчик",
-  "map_pinDm": "Задържане (DM)",
-  "map_pinPrivate": "Задържане (Приватно)",
-  "map_pinPublic": "Публичен ключ",
-  "map_lastSeen": "Последна видяна",
-  "map_disconnectConfirm": "Сигурни ли сте, че искате да се откъснете от това устройство?",
+  "map_sensor": "Сензор",
+  "map_pinDm": "Пин (DM)",
+  "map_pinPrivate": "Пин (личен)",
+  "map_pinPublic": "Публичен пин",
+  "map_lastSeen": "Последно видян",
+  "map_disconnectConfirm": "Сигурни ли сте, че искате да прекъснете връзката с това устройство?",
   "map_from": "От",
   "map_source": "Източник",
-  "map_flags": "Флаг",
+  "map_flags": "Флагове",
   "map_shareMarkerHere": "Споделете маркер тук",
-  "map_pinLabel": "Етикетиране на пин",
+  "map_pinLabel": "Етикет на пина",
   "map_label": "Етикет",
   "map_pointOfInterest": "Точка на интерес",
   "map_sendToContact": "Изпрати на контакт",
   "map_sendToChannel": "Изпрати в канала",
   "map_noChannelsAvailable": "Няма налични канали",
-  "map_publicLocationShare": "Споделяне на публично място",
+  "map_publicLocationShare": "Споделяне на публично местоположение",
   "map_publicLocationShareConfirm": "Ще споделите местоположение в {channelLabel}. Този канал е публичен и всеки с PSK може да го види.",
   "@map_publicLocationShareConfirm": {
     "placeholders": {
@@ -711,21 +711,21 @@
       }
     }
   },
-  "map_connectToShareMarkers": "Свържете се с устройство, за да споделите маркери.",
-  "map_filterNodes": "Филтрирайте възли",
+  "map_connectToShareMarkers": "Свържете се с устройство, за да споделяте маркери.",
+  "map_filterNodes": "Филтрирай възлите",
   "map_nodeTypes": "Типове възли",
   "map_chatNodes": "Възли на чата",
   "map_repeaters": "Повторители",
   "map_otherNodes": "Други възли",
   "map_keyPrefix": "Префикс на ключа",
   "map_filterByKeyPrefix": "Филтрирайте по префикс на ключ",
-  "map_publicKeyPrefix": "Префикс на публичен ключ",
+  "map_publicKeyPrefix": "Префикс на публичния ключ",
   "map_markers": "Маркери",
-  "map_showSharedMarkers": "Покажи споделени маркери",
-  "map_lastSeenTime": "Последна видяна дата",
-  "map_sharedPin": "Споделено копие",
+  "map_showSharedMarkers": "Показвай споделените маркери",
+  "map_lastSeenTime": "Последно видян",
+  "map_sharedPin": "Споделен пин",
   "map_joinRoom": "Присъедини се към стаята",
-  "map_manageRepeater": "Управление на Повтарящ се Елемент",
+  "map_manageRepeater": "Управление на повторителя",
   "mapCache_title": "Кеш на офлайн карти",
   "mapCache_selectAreaFirst": "Изберете област за кеширане първа",
   "mapCache_noTilesToDownload": "Няма плочки за изтегляне за тази област.",
@@ -784,7 +784,7 @@
       }
     }
   },
-  "mapCache_downloadTilesButton": "Изтегли Плочки",
+  "mapCache_downloadTilesButton": "Изтегли плочките",
   "mapCache_clearCacheButton": "Изчисти кеша",
   "mapCache_failedDownloads": "Неуспешни изтегляния: {count}",
   "@mapCache_failedDownloads": {
@@ -811,8 +811,8 @@
       }
     }
   },
-  "time_justNow": "Сега",
-  "time_minutesAgo": "{minutes} минути преди",
+  "time_justNow": "Току-що",
+  "time_minutesAgo": "Преди {minutes} минути",
   "@time_minutesAgo": {
     "placeholders": {
       "minutes": {
@@ -820,7 +820,7 @@
       }
     }
   },
-  "time_hoursAgo": "{hours} часа преди",
+  "time_hoursAgo": "Преди {hours} часа",
   "@time_hoursAgo": {
     "placeholders": {
       "hours": {
@@ -828,7 +828,7 @@
       }
     }
   },
-  "time_daysAgo": "{days} дни преди",
+  "time_daysAgo": "Преди {days} дни",
   "@time_daysAgo": {
     "placeholders": {
       "days": {
@@ -841,26 +841,26 @@
   "time_day": "ден",
   "time_days": "дни",
   "time_week": "седмица",
-  "time_weeks": "секти",
+  "time_weeks": "седмици",
   "time_month": "месец",
   "time_months": "месеци",
   "time_minutes": "минути",
-  "time_allTime": "Всичко време",
+  "time_allTime": "За цялото време",
   "dialog_disconnect": "Прекъсни",
-  "dialog_disconnectConfirm": "Сигурни ли сте, че искате да се откъснете от това устройство?",
-  "login_repeaterLogin": "Повторител Вход",
+  "dialog_disconnectConfirm": "Сигурни ли сте, че искате да прекъснете връзката с това устройство?",
+  "login_repeaterLogin": "Вход за повторител",
   "login_roomLogin": "Вход в стаята",
   "login_password": "Парола",
   "login_enterPassword": "Въведете парола",
-  "login_savePassword": "Запази парола",
+  "login_savePassword": "Запази паролата",
   "login_savePasswordSubtitle": "Паролата ще бъде съхранена сигурно на това устройство.",
-  "login_repeaterDescription": "Въведете паролата на репитера, за да получите достъп до настройките и статуса.",
+  "login_repeaterDescription": "Въведете паролата на повторителя, за да получите достъп до настройките и статуса.",
   "login_roomDescription": "Въведете паролата на стаята, за да получите достъп до настройките и статуса.",
   "login_routing": "Маршрутизиране",
   "login_routingMode": "Режим на маршрутизиране",
   "login_autoUseSavedPath": "Автоматично (използвай запазения път)",
   "login_forceFloodMode": "Принуди режим на наводняване",
-  "login_managePaths": "Управление на пътища",
+  "login_managePaths": "Управление на пътищата",
   "login_login": "Вход",
   "login_attempt": "Опитвате {current}/{max}",
   "@login_attempt": {
@@ -928,7 +928,7 @@
   "repeater_cli": "Команден ред (CLI)",
   "repeater_cliSubtitle": "Изпрати команди към ретранслатора",
   "repeater_settings": "Настройки",
-  "repeater_settingsSubtitle": "Конфигурирайте параметрите на репитера",
+  "repeater_settingsSubtitle": "Конфигурирайте параметрите на повторителя",
   "repeater_statusTitle": "Статус на повтарянето",
   "repeater_routingMode": "Режим на маршрутизиране",
   "repeater_autoUseSavedPath": "Автоматично (използвай запазения път)",
@@ -954,8 +954,8 @@
   "repeater_lastRssi": "Последна RSSI",
   "repeater_lastSnr": "Последна SNR",
   "repeater_noiseFloor": "Ниво на шум",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "TX време в ефир",
+  "repeater_rxAirtime": "RX време в ефир",
   "repeater_packetStatistics": "Статистика на пакетите",
   "repeater_sent": "Изпратено",
   "repeater_received": "Получено",
@@ -1027,7 +1027,7 @@
   "repeater_settingsTitle": "Настройки на повтарящия се елемент",
   "repeater_basicSettings": "Основни настройки",
   "repeater_repeaterName": "Име на повтарящ се елемент",
-  "repeater_repeaterNameHelper": "Показване на името на този репитер",
+  "repeater_repeaterNameHelper": "Показване на името на този повторител",
   "repeater_adminPassword": "Парола на администратора",
   "repeater_adminPasswordHelper": "Пълен достъпен парола",
   "repeater_guestPassword": "Парола на гост",
@@ -1035,11 +1035,11 @@
   "repeater_radioSettings": "Настройки на радиостанцията",
   "repeater_frequencyMhz": "Честота (MHz)",
   "repeater_frequencyHelper": "300-2500 MHz",
-  "repeater_txPower": "TX Power",
+  "repeater_txPower": "TX мощност",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Ширина на честотния спектър",
   "repeater_spreadingFactor": "Фактор на разпространение",
-  "repeater_codingRate": "Такса за кодиране",
+  "repeater_codingRate": "Скорост на кодиране",
   "repeater_locationSettings": "Настройки на местоположението",
   "repeater_latitude": "Широчина",
   "repeater_latitudeHelper": "Десетични градуси (напр. 37.7749)",
@@ -1047,13 +1047,13 @@
   "repeater_longitudeHelper": "Градуси с десетични знаци (напр. -122.4194)",
   "repeater_features": "Характеристики",
   "repeater_packetForwarding": "Пренасочване на пакети",
-  "repeater_packetForwardingSubtitle": "Активирайте репитера, за да препращате пакети.",
-  "repeater_guestAccess": "Достъп за Гост",
-  "repeater_guestAccessSubtitle": "Разрешете самочетене за гости",
+  "repeater_packetForwardingSubtitle": "Активирайте повторителя, за да препраща пакети.",
+  "repeater_guestAccess": "Достъп за гости",
+  "repeater_guestAccessSubtitle": "Разрешете само четене за гости",
   "repeater_privacyMode": "Режим на поверителност",
   "repeater_privacyModeSubtitle": "Скриване на име/местоположение в рекламите",
   "repeater_advertisementSettings": "Настройки на рекламите",
-  "repeater_localAdvertInterval": "Местен Рекламен Интервал",
+  "repeater_localAdvertInterval": "Интервал на местната реклама",
   "repeater_localAdvertIntervalMinutes": "{minutes} минути",
   "@repeater_localAdvertIntervalMinutes": {
     "placeholders": {
@@ -1062,7 +1062,7 @@
       }
     }
   },
-  "repeater_floodAdvertInterval": "Интервал на рекламата за наводнения",
+  "repeater_floodAdvertInterval": "Интервал на рекламата за наводняване",
   "repeater_floodAdvertIntervalHours": "{hours} часа",
   "@repeater_floodAdvertIntervalHours": {
     "placeholders": {
@@ -1071,17 +1071,17 @@
       }
     }
   },
-  "repeater_encryptedAdvertInterval": "Криптиран Рекламен Интервал",
-  "repeater_dangerZone": "Опасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно Безопасно",
-  "repeater_rebootRepeater": "БеРестартирай Репитер",
-  "repeater_rebootRepeaterSubtitle": "Рестартирайте ретранслатора.",
-  "repeater_rebootRepeaterConfirm": "Сигурни ли сте, че искате да рестартирате този репитер?",
-  "repeater_regenerateIdentityKey": "Генериране на Ключ за Идентичност",
-  "repeater_regenerateIdentityKeySubtitle": "Генериране на нова двойка публичен/частен ключ",
-  "repeater_regenerateIdentityKeyConfirm": "БеТова ще генерира нова идентичност за репитера. Продължете?",
-  "repeater_eraseFileSystem": "Изтрий Файлова Система",
-  "repeater_eraseFileSystemSubtitle": "Форматирайте файла на репитера",
-  "repeater_eraseFileSystemConfirm": "ВНИМАНИЕ: Това ще изтрие всички данни от репетитора. Това не може да бъде отменено!",
+  "repeater_encryptedAdvertInterval": "Криптиран интервал на рекламата",
+  "repeater_dangerZone": "Опасна зона",
+  "repeater_rebootRepeater": "Рестартирай повторителя",
+  "repeater_rebootRepeaterSubtitle": "Рестартира повторителя.",
+  "repeater_rebootRepeaterConfirm": "Сигурни ли сте, че искате да рестартирате този повторител?",
+  "repeater_regenerateIdentityKey": "Генерирай нов идентификационен ключ",
+  "repeater_regenerateIdentityKeySubtitle": "Генерирай нова двойка публичен/частен ключ",
+  "repeater_regenerateIdentityKeyConfirm": "Това ще генерира нова идентичност за повторителя. Продължете?",
+  "repeater_eraseFileSystem": "Изтрий файловата система",
+  "repeater_eraseFileSystemSubtitle": "Форматирай файловата система на повторителя",
+  "repeater_eraseFileSystemConfirm": "ВНИМАНИЕ: Това ще изтрие всички данни от повторителя. Това не може да бъде отменено!",
   "repeater_eraseSerialOnly": "Изтриването е достъпно само през серийния терминал.",
   "repeater_commandSent": "Командата е изпратена: {command}",
   "@repeater_commandSent": {
@@ -1099,14 +1099,14 @@
       }
     }
   },
-  "repeater_confirm": "БеПотвърди",
+  "repeater_confirm": "Потвърди",
   "repeater_settingsSaved": "Настройките са запазени успешно.",
-  "repeater_rxGain": "Увеличен коефициент на възвръщаемост (RX)",
+  "repeater_rxGain": "RX усилване",
   "repeater_rxGainHelper": "По-висока чувствителност, по-голям ток (само за SX1262/SX1268)",
-  "repeater_refreshRxGain": "Възстановете повишената ефективност на RX",
+  "repeater_refreshRxGain": "Обнови RX усилването",
   "repeater_multiAcks": "Множество потвърждения",
-  "repeater_multiAcksSubtitle": "Признавайте съобщения по множество канали за по-добро доставяне.",
-  "repeater_refreshMultiAcks": "Обновете множество потвърждения",
+  "repeater_multiAcksSubtitle": "Потвърждавай съобщенията по множество канали за по-добро доставяне.",
+  "repeater_refreshMultiAcks": "Обнови множествените ACK",
   "repeater_networkHealth": "Състояние на мрежата",
   "repeater_loopDetect": "Откриване на цикли",
   "repeater_loopDetectHelper": "Изпратете пакети, които изглеждат като цикли в маршрутизацията.",
@@ -1114,8 +1114,8 @@
   "repeater_loopDetectMinimal": "Минимален",
   "repeater_loopDetectModerate": "Умерен",
   "repeater_loopDetectStrict": "Строг",
-  "repeater_dutyCycle": "Цикъл на работа/почивка",
-  "repeater_dutyCycleHelper": "Максимален процент на използване на времето на въздуха",
+  "repeater_dutyCycle": "Работен цикъл",
+  "repeater_dutyCycleHelper": "Максимален процент на използване на времето в ефир",
   "repeater_dutyCyclePercent": "{percent}%",
   "@repeater_dutyCyclePercent": {
     "placeholders": {
@@ -1125,30 +1125,30 @@
     }
   },
   "repeater_ownerInfo": "Информация за оператора",
-  "repeater_ownerInfoHelper": "Публични метаданни за този репитер",
+  "repeater_ownerInfoHelper": "Публични метаданни за този повторител",
   "repeater_refreshOwnerInfo": "Обновете информацията за оператора",
-  "repeater_floodMax": "Максимален брой скачания при наводнение",
-  "repeater_floodMaxHelper": "Максималният брой пакети, които един поток може да пренесе (0-64)",
-  "repeater_advancedSettings": "Напреднал",
-  "repeater_advancedSettingsSubtitle": "Регулаторни копчета за опитни оператори",
+  "repeater_floodMax": "Максимален брой хопове при наводняване",
+  "repeater_floodMaxHelper": "Максималният брой хопове, които един пакет може да премине (0-64)",
+  "repeater_advancedSettings": "Разширени настройки",
+  "repeater_advancedSettingsSubtitle": "Експериментални настройки за опитни оператори",
   "repeater_pathHashMode": "Режим за хеширане на пътища",
-  "repeater_pathHashModeHelper": "Байтовете, използвани за кодиране на идентификатора на този репитер в таговете за flood път/откриване на цикли. 0=1 байт (256 идентификатора, до 64 скока), 1=2 байта (65 000 идентификатора, до 32 скока), 2=3 байта (16 милиона идентификатора, до 21 скока). Фърмуер преди v1.14 винаги използва 1-байтови пътища; v1.14 и по-нови версии могат да се конфигурират за 2- или 3-байтови пътища.",
-  "repeater_txDelay": "Забавяне на проекта \"Flood TX\"",
-  "repeater_txDelayHelper": "Предавайте разстоянието между пакетите за трафик при наводнения, като множител на времето за пренос на пакета (0-2, по подразбиране 0.5). По-висока стойност означава по-малко сблъсъци, но по-бавно предаване.",
-  "repeater_directTxDelay": "Директно забавяне на сигнала",
-  "repeater_directTxDelayHelper": "Предаване на интервали за директен (не-масивен) трафик, като множител на времето за пренос на пакета (0-2, по подразбиране 0.3).",
-  "repeater_intThresh": "Праг на интерференция",
+  "repeater_pathHashModeHelper": "Байтовете, използвани за кодиране на идентификатора на този повторител в таговете за откриване на потоци/цикли, са: 0=1 байт (256 идентификатора, до 64 скока), 1=2 байта (65 000 идентификатора, до 32 скока), 2=3 байта (16 милиона идентификатора, до 21 скока). Версиите 1.13 и по-старите фърмуери използват многобайтови пътища - само след като мрежата е актуализирана до версия 1.14 или по-нова.",
+  "repeater_txDelay": "Забавяне на Flood TX",
+  "repeater_txDelayHelper": "Разстоянието между пакетите при наводняване като множител на времето за пренос на пакета (0-2, по подразбиране 0.5). По-висока стойност означава по-малко сблъсъци, но по-бавно предаване.",
+  "repeater_directTxDelay": "Забавяне на директното предаване",
+  "repeater_directTxDelayHelper": "Интервал за директен (не-масов) трафик, като множител на времето за пренос на пакета (0-2, по подразбиране 0.3).",
+  "repeater_intThresh": "Праг на смущенията",
   "repeater_intThreshHelper": "Прагът е зададен на нивото на шума на радиото, така че да отхвърля смущения, които са над този праг. 0 – изключва; активирайте само, ако забележите грешки в шумна честотна лента.",
-  "repeater_agcResetInterval": "Интервал за рестартиране на AGC",
+  "repeater_agcResetInterval": "Интервал за нулиране на AGC",
   "repeater_agcResetIntervalHelper": "Колко често да се рестартира автоматичната настройка на усилването, за да се възстанови от състояние, в което усилването е блокирано. Времето за рестартиране е няколко секунди, като се определя като кратна на 4. 0 деактивира периодичното рестартиране.",
   "repeater_actionsTitle": "Действия",
-  "repeater_sendAdvert": "Изпратете реклама за навод",
-  "repeater_sendAdvertSubtitle": "Публикувайте реклама за навод в мрежата.",
-  "repeater_sendAdvertZeroHop": "Изпратете реклама без преминаване през други системи",
-  "repeater_sendAdvertZeroHopSubtitle": "Публикувайте реклама, която достига до целевата аудитория само чрез директно разпространение (без използване на посредници).",
-  "repeater_clockSync": "Синхронизиране на часовника сега",
-  "repeater_clockSyncSubtitle": "Настройте времето на телефона си да съвпада с времето на репитера.",
-  "repeater_actionSucceeded": "{action} succeeded",
+  "repeater_sendAdvert": "Изпрати реклама за наводняване",
+  "repeater_sendAdvertSubtitle": "Публикувай реклама за наводняване в мрежата.",
+  "repeater_sendAdvertZeroHop": "Изпрати реклама без хопове",
+  "repeater_sendAdvertZeroHopSubtitle": "Публикувай реклама, която достига до целевата аудитория само чрез директно разпространение.",
+  "repeater_clockSync": "Синхронизирай часовника сега",
+  "repeater_clockSyncSubtitle": "Настройте времето на телефона си да съвпада с времето на повторителя.",
+  "repeater_actionSucceeded": "{action} успешно",
   "@repeater_actionSucceeded": {
     "placeholders": {
       "action": {
@@ -1156,7 +1156,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} не успя: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -1167,7 +1167,7 @@
       }
     }
   },
-  "repeater_settingsSavedRebootNeeded": "Настройки запаметени – рестартирайте ретранслатора, за да ги приложите.",
+  "repeater_settingsSavedRebootNeeded": "Настройките са запазени - рестартирайте повторителя, за да ги приложите.",
   "repeater_settingsPartialFailure": "Някои настройки не успяха: {failures}",
   "@repeater_settingsPartialFailure": {
     "placeholders": {
@@ -1184,12 +1184,12 @@
       }
     }
   },
-  "repeater_refreshBasicSettings": "Обнови Основни Настройки",
-  "repeater_refreshRadioSettings": "Обнови настройките на радиопредавателите",
-  "repeater_refreshTxPower": "Обнови TX захранване",
-  "repeater_refreshPacketForwarding": "Обнови пакетно пренасочване",
-  "repeater_refreshGuestAccess": "Обнови достъп за гости",
-  "repeater_refreshPrivacyMode": "Обнови Режим на поверителност",
+  "repeater_refreshBasicSettings": "Обнови основните настройки",
+  "repeater_refreshRadioSettings": "Обнови настройките на радиото",
+  "repeater_refreshTxPower": "Обнови TX мощността",
+  "repeater_refreshPacketForwarding": "Обнови препращането на пакети",
+  "repeater_refreshGuestAccess": "Обнови достъпа за гости",
+  "repeater_refreshPrivacyMode": "Обнови режима на поверителност",
   "repeater_refreshed": "{label} е обновено",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1206,17 +1206,17 @@
       }
     }
   },
-  "repeater_cliTitle": "Повторител CLI",
-  "repeater_debugNextCommand": "Поправи Следваща Команда",
+  "repeater_cliTitle": "CLI на повторителя",
+  "repeater_debugNextCommand": "Отстрани следващата команда",
   "repeater_commandHelp": "Помощ",
-  "repeater_clearHistory": "Изчисти История",
+  "repeater_clearHistory": "Изчисти историята",
   "repeater_noCommandsSent": "Няма изпратени команди засега.",
   "repeater_typeCommandOrUseQuick": "Въведете команда по-долу или използвайте бързи команди",
   "repeater_enterCommandHint": "Въведете команда...",
-  "repeater_previousCommand": "Предходна команда",
+  "repeater_previousCommand": "Предишна команда",
   "repeater_nextCommand": "Следваща команда",
   "repeater_enterCommandFirst": "Въведете първо команда.",
-  "repeater_cliCommandFrameTitle": "Рамка за команда CLI",
+  "repeater_cliCommandFrameTitle": "Рамка на CLI команда",
   "repeater_cliCommandError": "Грешка: {error}",
   "@repeater_cliCommandError": {
     "placeholders": {
@@ -1225,9 +1225,9 @@
       }
     }
   },
-  "repeater_cliQuickGetName": "Получи име",
-  "repeater_cliQuickGetRadio": "Получи радио",
-  "repeater_cliQuickGetTx": "Получи TX",
+  "repeater_cliQuickGetName": "Вземи име",
+  "repeater_cliQuickGetRadio": "Вземи радио",
+  "repeater_cliQuickGetTx": "Вземи TX",
   "repeater_cliQuickNeighbors": "Съседи",
   "repeater_cliQuickVersion": "Версия",
   "repeater_cliQuickAdvertise": "Рекламирай",
@@ -1264,7 +1264,7 @@
   "repeater_cliHelpSetAdcMultiplier": "Задава персонализиран коефициент за коригиране на отчетеното напрежение на батерията (поддържа се само на избрани дъски).",
   "repeater_cliHelpTempRadio": "Задава временни радио параметри за посочения брой минути, връщайки се към оригиналните радио параметри след това. (не се запазва в предпочитанията).",
   "repeater_cliHelpSetPerm": "Променя ACL. Премахва съответстващия запис (по префикс на pubkey), ако \"permissions\" е нула. Добавя нов запис, ако pubkey-hex е с пълна дължина и не е в ACL. Актуализира запис, съответстващ на префикса на pubkey. Битовете за разрешения варират според ролята на firmware, но долните 2 бита са: 0 (Гост), 1 (Само четене), 2 (Четене и писане), 3 (Администратор).",
-  "repeater_cliHelpGetBridgeType": "Получава тип мост none, rs232, espnow",
+  "repeater_cliHelpGetBridgeType": "Получава типа на моста: none, rs232, espnow",
   "repeater_cliHelpLogStart": "Започва записване на пакети във файловата система.",
   "repeater_cliHelpLogStop": "Спира записването на пакети във файловата система.",
   "repeater_cliHelpLogErase": "Изтрива логовете от пакета от файловата система.",
@@ -1275,8 +1275,8 @@
   "repeater_cliHelpRegionGet": "Търси регион с даден префикс на име (или \"\" за глобалния обхват). Отговаря с \"-> region-name (parent-name) 'F'\"",
   "repeater_cliHelpRegionPut": "Добавя или актуализира дефиниция на регион с дадено име.",
   "repeater_cliHelpRegionRemove": "Премахва дефиниция на регион с дадено име. (трябва да съвпада точно и да няма подрегиони)",
-  "repeater_cliHelpRegionAllowf": "Задава 'Потоп' разрешение за посочената област. ('' за глобалния/стария обхват)",
-  "repeater_cliHelpRegionDenyf": "Премахва разрешението \"F\"лоуд за посочената област. (ЗАБЕЛЕЖКА: в момента не се препоръчва да се използва на глобалното/старото ниво!! )",
+  "repeater_cliHelpRegionAllowf": "Задава разрешение 'Flood' за посочената област. ('' за глобалния/стария обхват)",
+  "repeater_cliHelpRegionDenyf": "Премахва разрешението \"F\" за посочената област. (ЗАБЕЛЕЖКА: в момента не се препоръчва да се използва на глобално/старо ниво!!)",
   "repeater_cliHelpRegionHome": "Отговаря с текущия 'home' регион. (Забележка: не е приложена никъде, запазена за бъдещи нужди).",
   "repeater_cliHelpRegionHomeSet": "Задава 'домашно' региона.",
   "repeater_cliHelpRegionSave": "Запазва списъка/картата с региони в съхранение.",
@@ -1515,7 +1515,7 @@
       }
     }
   },
-  "channelPath_pathLabelTitle": "Пътекино",
+  "channelPath_pathLabelTitle": "Пътеки",
   "channelPath_observedPathHeader": "Наблюдаван път",
   "channelPath_selectedPathLabel": "{label} • {prefixes}",
   "@channelPath_selectedPathLabel": {
@@ -1741,7 +1741,7 @@
   "pathTrace_you": "Вие",
   "pathTrace_notAvailable": "Пътека за проследяване не е достъпна.",
   "contacts_pathTrace": "Пътен проследяване",
-  "pathTrace_refreshTooltip": "Обнови Path Trace.",
+  "pathTrace_refreshTooltip": "Обнови проследяването на пътя.",
   "pathTrace_failed": "Пътят за проследяване не успя.",
   "contacts_repeaterPing": "Пингване на повторителя",
   "contacts_repeaterPathTrace": "Трасировка до повторител",
@@ -1759,7 +1759,7 @@
   "contacts_contactImported": "Контактът е импортиран.",
   "contacts_zeroHopAdvert": "Реклама без скок",
   "contacts_contactImportFailed": "Контактът не е успешно импортиран.",
-  "contacts_floodAdvert": "Потопна реклама",
+  "contacts_floodAdvert": "Реклама за наводняване",
   "contacts_addContactFromClipboard": "Добави контакт от клипборда",
   "contacts_copyAdvertToClipboard": "Копирай обявата в клипборда",
   "contacts_ShareContact": "Копирай контакт в клипборда",
@@ -1792,20 +1792,20 @@
   "pathTrace_someHopsNoLocation": "Един или повече от хмелите липсва местоположение!",
   "map_pathTraceCancelled": "Отменен е следването на пътя.",
   "pathTrace_clearTooltip": "Изчисти пътя",
-  "map_removeLast": "Премахни Последно",
-  "map_runTrace": "Изпълни Път на Следване",
-  "map_tapToAdd": "Натиснете върху възлите, за да ги добавите към пътя.",
+  "map_removeLast": "Премахни последното",
+  "map_runTrace": "Стартирай проследяването на пътя",
+  "map_tapToAdd": "Докоснете възлите, за да ги добавите към пътя.",
   "scanner_bluetoothOff": "Bluetooth е изключен.",
   "scanner_enableBluetooth": "Активирайте Bluetooth",
   "scanner_bluetoothOffMessage": "Моля, активирайте Bluetooth, за да сканирате за устройства.",
   "scanner_chromeRequired": "Изисква се браузър Chrome",
   "scanner_chromeRequiredMessage": "Това уеб приложение изисква Google Chrome или браузър, базиран на Chromium, за поддръжка на Bluetooth.",
   "snrIndicator_lastSeen": "Последно видян",
-  "snrIndicator_nearByRepeaters": "Близки повтарящи се устройства",
+  "snrIndicator_nearByRepeaters": "Близки повторители",
   "chat_ShowAllPaths": "Покажи всички пътища",
   "settings_clientRepeatSubtitle": "Позволете на това устройство да предава пакети към мрежата за други устройства.",
   "settings_clientRepeatFreqWarning": "За повторение извън мрежата са необходими честоти от 433, 869 или 918 MHz.",
-  "settings_clientRepeat": "Без електричество – повторение",
+  "settings_clientRepeat": "Клиентско повторение",
   "settings_aboutOpenMeteoAttribution": "Данни за надморска височина на LOS: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "единици",
   "appSettings_unitsMetric": "Метрика (m / km)",
@@ -2282,10 +2282,10 @@
   "repeater_cliHelpSetFreq": "(Само за серийно управление) Бързо задава само честотата. Необходимо е рестартиране. Препоръчително е да се използват настройките за \"радио\", за да се зададат всички параметри.",
   "repeater_cliHelpSetBridgeChannel": "(Само за моста ESPNow) Определя WiFi канала (от 1 до 14), използван от моста.",
   "repeater_cliHelpGetName": "Показва зададеното име на възела.",
-  "repeater_cliHelpGetRole": "Показва ролята на фърмуера (например, репитер, сървър за стая и т.н.).",
+  "repeater_cliHelpGetRole": "Показва ролята на фърмуера (например повторител, сървър на стая и т.н.).",
   "repeater_cliHelpGetPublicKey": "Показва публичния ключ на устройството.",
   "repeater_cliHelpGetPrvKey": "(Само за серийния номер) Показва личната ключа на устройството. Трябва да се третира като тайна.",
-  "repeater_cliHelpGetRepeat": "Показва дали функцията за пренасочване на пакети (ролята на репитер) е активирана или деактивирана.",
+  "repeater_cliHelpGetRepeat": "Показва дали функцията за пренасочване на пакети (ролята на повторителя) е активирана или деактивирана.",
   "repeater_cliHelpGetTx": "Показва текущата мощност на TX в dBm.",
   "repeater_cliHelpGetFreq": "Показва зададената честота в MHz.",
   "repeater_cliHelpGetRadio": "Показва пълните радио параметри: честота, ширина на честотния обхват, фактор на разпространение, скорост на кодиране.",
@@ -2308,7 +2308,7 @@
   "repeater_cliHelpGetOwnerInfo": "Показва информацията за контакт на собственика.",
   "repeater_cliHelpGetPathHashMode": "Показва режима на хеширане на пътя (0/1/2).",
   "repeater_cliHelpGetLoopDetect": "Показва чувствителността към откриване на цикли.",
-  "repeater_cliHelpGetAcl": "(Само за серийни номера) Изброява настройките за контрол на достъпа в репитера.",
+  "repeater_cliHelpGetAcl": "(Само за серийни устройства) Изброява настройките за контрол на достъпа в повторителя.",
   "repeater_cliHelpGetBridgeEnabled": "Показва дали мостът е активиран.",
   "repeater_cliHelpGetBridgeDelay": "Показва забавянето на моста в милисекунди.",
   "repeater_cliHelpGetBridgeSource": "Показва дали мостът изпраща или получава пакети RX или TX.",
@@ -2331,10 +2331,10 @@
   "repeater_cliHelpStatsPackets": "(Само за серия) Показва статистически данни на ниво пакет.",
   "repeater_cliHelpStatsRadio": "(Само за конкретен сериал) Показва радиостатистика.",
   "repeater_cliHelpStatsCore": "(Само за серийния номер) Показва основните статистически данни за фърмуера.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
-  "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "common_done": "Готово",
+  "background_serviceTitle": "MeshCore работи",
+  "background_serviceText": "Поддържа BLE връзката активна",
+  "appSettings_translationModelDeleted": "Изтрит {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2342,7 +2342,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Неуспешно изтриване: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2350,7 +2350,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Неуспешно обновяване на канала: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2358,20 +2358,20 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
-  "chat_score": "Score",
-  "settings_multiAck": "Множество потвърждения",
+  "map_type": "Тип",
+  "map_path": "Път",
+  "map_location": "Местоположение",
+  "map_estLocation": "Прибл. местоположение",
+  "map_publicKey": "Публичен ключ",
+  "map_publicKeyPrefixHint": "напр. ab12",
+  "contact_typeChat": "Чат",
+  "contact_typeRepeater": "Повторител",
+  "contact_typeRoom": "Стая",
+  "contact_typeSensor": "Сензор",
+  "contact_typeUnknown": "Неизвестен",
+  "channels_via": "чрез {path}",
+  "chat_score": "Оценка",
+  "settings_multiAck": "Множество ACK",
   "map_sharedAt": "Споделено",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2412,11 +2412,11 @@
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
   "losBlockedSpotsHint": "Кликнете върху блокираната точка, за да я отбележите на картата.",
   "losBlockedSpotsTitle": "Ограничени места",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Блокирано от {obstruction} {heightUnit}, {distanceFromA} от A и {distanceFromB} от B ({distanceUnit}).",
   "chat_markAsUnread": "Отбелязване като непрочетено",
   "settings_companionDebugLogSubtitle": "Команди, отговори и сурови данни за протоколите BLE/TCP/USB",
   "chat_newMessages": "Нови съобщения",
-  "settings_companionDebugLog": "Лог за отстраняване на грешки (за съпътстваща програма)",
+  "settings_companionDebugLog": "Дневник за отстраняване на грешки на придружаващото приложение",
   "repeater_chanUtil": "Използване на канала",
   "@routing_lastWorked": {
     "placeholders": {
@@ -2456,61 +2456,155 @@
       }
     }
   },
-  "messageStatus_pending": "Изпращане",
-  "common_undo": "Отмяни",
-  "messageStatus_delivered": "Доставен",
+  "messageStatus_pending": "Изпраща се",
+  "common_undo": "Отмени",
+  "messageStatus_delivered": "Доставено",
   "messageStatus_sent": "Изпратено",
-  "messageStatus_failed": "Не успях да изпратя",
-  "messageStatus_repeated": "Слушах го многократно",
+  "messageStatus_failed": "Неуспешно изпращане",
+  "messageStatus_repeated": "Повторно чуто",
   "contacts_moreOptions": "Повече възможности",
   "contacts_searchOpen": "Търсене на контакти",
   "contacts_searchClose": "Затвори търсене",
   "routing_title": "Маршрутизиране",
-  "routing_modeAuto": "Автомобил",
-  "routing_modeFlood": "Наводнение",
-  "routing_modeManual": "Ръководство",
-  "routing_modeAutoHint": "Автоматично избира най-известния път, като при липса на информация, използва стратегия за \"запълване\" на празните пространства.",
-  "routing_modeFloodHint": "Излъчване през всички ретранслатори. Най-надежният начин, но изисква повече време на въздуха.",
+  "routing_modeAuto": "Автоматично",
+  "routing_modeFlood": "Наводняване",
+  "routing_modeManual": "Ръчно",
+  "routing_modeAutoHint": "Автоматично избира най-добрия известен път, а при липса на информация използва стратегия за наводняване.",
+  "routing_modeFloodHint": "Излъчва през всички повторители. Най-надеждният начин, но изисква повече време в ефира.",
   "routing_modeManualHint": "Винаги следва точно пътя, който сте определили.",
   "routing_currentRoute": "Текущ маршрут",
-  "routing_directNoHops": "Директ – без превключватели",
+  "routing_directNoHops": "Директно - без скокове",
   "routing_noPathYet": "Все още няма път. Съобщението продължава да се изпраща, докато не бъде открит маршрут.",
-  "routing_floodBroadcast": "Предаване през всички ретранслатори",
-  "routing_editPath": "Редактиране на пътя",
-  "routing_forgetPath": "Забравете за пътя",
-  "routing_knownPaths": "Известни маршрути",
-  "routing_knownPathsHint": "Натиснете бутона, за да превключите към него.",
-  "routing_inUse": "В експлоатация",
+  "routing_floodBroadcast": "Предаване през всички повторители",
+  "routing_editPath": "Редактирай пътя",
+  "routing_forgetPath": "Забрави пътя",
+  "routing_knownPaths": "Известни пътища",
+  "routing_knownPathsHint": "Докоснете бутона, за да превключите към него.",
+  "routing_inUse": "В употреба",
   "routing_qualityStrong": "Силен първи скок",
   "routing_qualityGood": "Добър първи опит",
-  "routing_qualityFair": "Първият добър скок",
-  "routing_qualityWorked": "Беше изпълнено/Доведено до край",
-  "routing_qualityFlood": "Получено чрез информация, разпространена в резултат на навод.",
-  "routing_qualityUntested": "Не тестван",
-  "routing_neverWorked": "никога не е потвърдено",
-  "routing_floodDelivery": "Доставка при навод",
+  "routing_qualityFair": "Приемлив първи скок",
+  "routing_qualityWorked": "Работил",
+  "routing_qualityFlood": "Получено чрез наводняване",
+  "routing_qualityUntested": "Нетестирано",
+  "routing_neverWorked": "Никога не е потвърдено",
+  "routing_floodDelivery": "Доставка при наводняване",
   "pathEditor_title": "Създаване на път",
-  "pathEditor_hopCounter": "{count} от 64 различни вида малц",
-  "pathEditor_noHops": "Все още няма добавени хмел. Можете да използвате бутоните по-долу, за да ги добавите по ред, или да запазите рецептата без хмел, за да я изпратите директно.",
-  "pathEditor_addHops": "Добавете хмела в реда, в който е посочено.",
-  "pathEditor_searchRepeaters": "Търсене на повтори",
-  "pathEditor_advancedHex": "Разширено: необработен шестничен път",
-  "pathEditor_hexLabel": "Префикси на шестнадесетична система",
-  "pathEditor_hexHelper": "Два шест-символни идентификатора на скок, разделени със запетаи",
-  "pathEditor_invalidTokens": "Невалидно: {tokens}",
-  "routing_lastWorked": "worked {when}",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
-  "pathEditor_tooManyHops": "Максимум 64 крачета",
-  "pathEditor_usePath": "Използвайте този маршрут.",
-  "pathEditor_removeHop": "Премахнете хмела",
-  "pathEditor_unknownHop": "Неизвестен репитер",
+  "pathEditor_hopCounter": "{count} от 64 скока",
+  "pathEditor_noHops": "Все още няма добавени скокове. Можете да използвате бутоните по-долу, за да ги добавите по ред, или да запазите пътя без скокове, за да го изпратите директно.",
+  "pathEditor_addHops": "Добавете скоковете в посочения ред.",
+  "pathEditor_searchRepeaters": "Търсене на повторители",
+  "pathEditor_advancedHex": "Разширено: суров шестнадесетичен път",
+  "pathEditor_hexLabel": "Шестнадесетични префикси",
+  "pathEditor_hexHelper": "Два шестнадесетични идентификатора на скок, разделени със запетаи",
+  "pathEditor_invalidTokens": "Невалидни: {tokens}",
+  "routing_lastWorked": "последно работил {when}",
+  "routing_deliveryCounts": "{successes} доставени, {failures} неуспешни",
+  "pathEditor_tooManyHops": "Максимум 64 скока",
+  "pathEditor_usePath": "Използвай този маршрут.",
+  "pathEditor_removeHop": "Премахни скока",
+  "pathEditor_unknownHop": "Неизвестен повторител",
   "map_zoomIn": "Увеличи",
-  "map_zoomOut": "Приближете се по-малко",
-  "map_centerMap": "Карта на центъра",
+  "map_zoomOut": "Намали мащаба",
+  "map_centerMap": "Центрирай картата",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth изисква браузър, базиран на Chromium.",
   "channels_communityShortId": "Идентификационен номер: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS потвърдено",
   "pathTrace_legendInferred": "Извлечена позиция",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_searchHint": "Търсене по име или идентификатор на възел",
+  "map_activity": "Дейност",
+  "map_online": "Онлайн",
+  "scanner_bluetoothWebUnsupported": "Функцията Bluetooth не е налична в браузъра. Моля, свържете се чрез USB вместо това.",
+  "map_recent": "Скорошни",
+  "map_stale": "Остарял",
+  "map_visible": "Видими",
+  "map_hidden": "Скрит",
+  "map_centerOnNode": "Центрирай върху възела",
+  "map_details": "Подробности",
+  "map_noGps": "Без GPS",
+  "map_noResults": "Няма съвпадащи възли",
+  "pathMap_viewSingle": "Самостоятелен",
+  "pathMap_viewCombined": "Комбиниран",
+  "pathMap_play": "Пусни",
+  "pathMap_pause": "Пауза",
+  "pathMap_replay": "Повторение",
+  "pathMap_stepBack": "Предишна стъпка",
+  "pathMap_stepForward": "Следваща стъпка",
+  "pathMap_animationOn": "Показвай анимацията на пакета",
+  "pathMap_animationOff": "Скрий анимацията на пакета",
+  "pathMap_hopOf": "Стъпка {current} от {total}",
+  "pathMap_observedPaths": "Наблюдавани пътища: {count}",
+  "pathMap_primary": "Основен",
+  "pathMap_alternate": "Алтернативен {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 скок} other{{count} скока}}",
+  "pathMap_legendShared": "Споделена секция",
+  "pathMap_legendEstimated": "Очаквана стойност на сегмента",
+  "pathMap_sharedNodeCount": "Използвани от {count} пътища",
+  "pathMap_partialAnimation": "{count, plural, =1{1 скок няма определено местоположение — показаният път е непълен} other{{count} скока нямат определено местоположение — показаният път е непълен}}",
+  "pathMap_showAllPaths": "Покажи всички пътища",
+  "pathMap_hidePath": "Скрий пътя",
+  "pathMap_showPath": "Покажи пътя",
+  "pathMap_collapsePanel": "Сгъни панела",
+  "pathMap_expandPanel": "Разгъни панела",
+  "pathMap_noLocation": "Без посочено местоположение",
+  "pathMap_followPacket": "Проследи пакета",
+  "pathMap_unfollowPacket": "Спри проследяването на пакета",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Изпращане при избор",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

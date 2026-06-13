@@ -396,7 +396,7 @@ class AppSettings {
     this.mapKeyPrefix = '',
     this.mapShowMarkers = true,
     this.mapShowGuessedLocations = true,
-    this.enableMessageTracing = false,
+    this.enableMessageTracing = true,
     this.enableTimeSeconds = false,
     this.showKeyboardHidingButton = true,
     this.canvasActive = true,
@@ -409,7 +409,7 @@ class AppSettings {
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
-    this.autoRouteRotationEnabled = false,
+    this.autoRouteRotationEnabled = true,
     this.maxRouteWeight = 5.0,
     this.initialRouteWeight = 3.0,
     this.routeWeightSuccessIncrement = 0.5,
@@ -564,7 +564,7 @@ class AppSettings {
       mapShowMarkers: json['map_show_markers'] as bool? ?? true,
       mapShowGuessedLocations:
           json['map_show_guessed_locations'] as bool? ?? true,
-      enableMessageTracing: json['enable_message_tracing'] as bool? ?? false,
+      enableMessageTracing: json['enable_message_tracing'] as bool? ?? true,
       enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
       showKeyboardHidingButton:
           json['show_keyboard_hiding_button'] as bool? ?? true,
@@ -582,7 +582,7 @@ class AppSettings {
           json['notify_on_new_channel_message'] as bool? ?? true,
       notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
       autoRouteRotationEnabled:
-          json['auto_route_rotation_enabled'] as bool? ?? false,
+          json['auto_route_rotation_enabled'] as bool? ?? true,
       maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
       initialRouteWeight:
           (json['initial_route_weight'] as num?)?.toDouble() ?? 3.0,

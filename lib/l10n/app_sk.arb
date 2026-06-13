@@ -2511,6 +2511,100 @@
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS potvrdilo",
   "pathTrace_legendInferred": "Odvodená poloha",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "scanner_bluetoothWebUnsupported": "Funkcia Bluetooth nie je dostupná v prehliadači. Prepojte sa pomocou USB.",
+  "map_searchHint": "Vyhľadajte podľa názvu alebo ID uzla",
+  "map_activity": "Aktivita",
+  "map_recent": "Nedávne",
+  "map_stale": "Neaktuálne",
+  "map_hidden": "Skrytý",
+  "map_visible": "Viditeľný",
+  "map_centerOnNode": "Nacentrovať na uzol",
+  "map_details": "Podrobnosti",
+  "map_noGps": "Bez GPS",
+  "map_noResults": "Nenašli sa žiadne zodpovedajúce uzly.",
+  "pathMap_viewSingle": "Jednotlivý",
+  "pathMap_viewCombined": "Spojené",
+  "pathMap_play": "Prehrať",
+  "pathMap_pause": "Pozastaviť",
+  "pathMap_replay": "Prehrať znova",
+  "pathMap_stepBack": "Predchádzajúci skok",
+  "pathMap_stepForward": "Nasledujúci skok",
+  "pathMap_animationOn": "Zobraziť animáciu paketu",
+  "pathMap_animationOff": "Skryť animáciu paketu",
+  "pathMap_hopOf": "Skok {current} z {total}",
+  "pathMap_observedPaths": "Pozorované cesty: {count}",
+  "pathMap_primary": "Primárna",
+  "pathMap_alternate": "Alternatívny {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 skok} few{{count} skoky} other{{count} skokov}}",
+  "pathMap_legendShared": "Spoločný segment",
+  "pathMap_legendEstimated": "Odhadovaný segment",
+  "pathMap_sharedNodeCount": "Používané {count} cestami",
+  "pathMap_partialAnimation": "{count, plural, =1{1 skok nemá polohu — zobrazená trasa je neúplná} few{{count} skoky nemajú polohu — zobrazená trasa je neúplná} other{{count} skokov nemá polohu — zobrazená trasa je neúplná}}",
+  "pathMap_showAllPaths": "Zobraziť všetky",
+  "pathMap_hidePath": "Skryť cestu",
+  "pathMap_showPath": "Zobraziť trasu",
+  "pathMap_collapsePanel": "Zatvoriť panel",
+  "pathMap_expandPanel": "Rozbaliť panel",
+  "pathMap_noLocation": "Bez polohy",
+  "pathMap_followPacket": "Uzamknúť pohľad na paket",
+  "pathMap_unfollowPacket": "Odomknúť pohľad od paketu",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Odoslať pri výbere",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

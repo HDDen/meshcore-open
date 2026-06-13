@@ -132,6 +132,36 @@ class NotificationService {
     return _isInitialized;
   }
 
+  // Cached "are we allowed to post notifications" result. Null = not yet
+  // determined. Avoids calling _notifications.show() when it would only throw
+  // "You must request notifications permissions first" (every web build, and
+  // Android 13+ before the user grants the permission).
+  bool? _canNotify;
+
+  Future<bool> _ensureCanNotify() async {
+    if (!await _ensureInitialized()) return false;
+    final cached = _canNotify;
+    if (cached != null) return cached;
+
+    // flutter_local_notifications has no web backend, so show() always throws.
+    // Skip silently instead of logging an error per incoming message.
+    if (kIsWeb) return _canNotify = false;
+
+    // On Android 13+ notifications require an explicit grant; reflect the real
+    // OS state so we don't spam failed show() calls when denied.
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      return _canNotify = enabled ?? false;
+    }
+
+    // iOS/macOS request permission during initialize(); desktop has no gate.
+    return _canNotify = true;
+  }
+
   Future<bool> requestPermissions() async {
     if (!_isInitialized) {
       await initialize();
@@ -144,7 +174,8 @@ class NotificationService {
         >();
     if (androidPlugin != null) {
       final granted = await androidPlugin.requestNotificationsPermission();
-      return granted ?? false;
+      _canNotify = granted ?? false;
+      return _canNotify!;
     }
 
     // iOS permissions are requested during initialization
@@ -158,7 +189,8 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      return granted ?? false;
+      _canNotify = granted ?? false;
+      return _canNotify!;
     }
 
     return true;
@@ -183,7 +215,7 @@ class NotificationService {
     String? contactId,
     int? badgeCount,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     final androidDetails = AndroidNotificationDetails(
       'messages',
@@ -233,7 +265,7 @@ class NotificationService {
     required String contactType,
     String? contactId,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     const androidDetails = AndroidNotificationDetails(
       'adverts',
@@ -283,7 +315,7 @@ class NotificationService {
     int? channelIndex,
     int? badgeCount,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -567,7 +599,7 @@ class NotificationService {
   }
 
   Future<void> _showBatchSummary(List<_PendingNotification> batch) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     // Group by type
     final messages = batch

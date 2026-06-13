@@ -9,6 +9,8 @@ import '../l10n/contact_localization.dart';
 import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import 'routing_sheet.dart';
 
@@ -269,26 +271,40 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.cell_tower, color: Theme.of(context).colorScheme.tertiary),
-          const SizedBox(width: 8),
+          AvatarCircle(
+            name: repeater.name,
+            size: 40,
+            color: MeshPalette.warn,
+            icon: Icons.cell_tower,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.login_repeaterLogin),
+                Text(
+                  l10n.login_repeaterLogin,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 Text(
                   repeater.name,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.normal,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: scheme.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -316,19 +332,12 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.error,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                        Icon(Icons.error, size: 18, color: scheme.error),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _loginError!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: scheme.error, fontSize: 13),
                           ),
                         ),
                       ],
@@ -341,7 +350,6 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     decoration: InputDecoration(
                       labelText: l10n.login_password,
                       hintText: l10n.login_enterPassword,
-                      border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -390,9 +398,9 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     children: [
                       Text(
                         l10n.login_routing,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        style: MeshTheme.accentLabel(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 11,
                         ),
                       ),
                       const Spacer(),
@@ -420,9 +428,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                                 Icon(
                                   Icons.auto_mode,
                                   size: 20,
-                                  color: !isFloodMode
-                                      ? Theme.of(context).primaryColor
-                                      : null,
+                                  color: !isFloodMode ? scheme.primary : null,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -443,9 +449,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                                 Icon(
                                   Icons.waves,
                                   size: 20,
-                                  color: isFloodMode
-                                      ? Theme.of(context).primaryColor
-                                      : null,
+                                  color: isFloodMode ? scheme.primary : null,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -468,7 +472,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     repeater.pathLabel(context.l10n),
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -502,7 +506,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: scheme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 12),

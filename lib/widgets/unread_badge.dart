@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/mesh_theme.dart';
+
 class UnreadBadge extends StatelessWidget {
   final int count;
 
@@ -9,17 +11,18 @@ class UnreadBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final display = count > 9999 ? '9999+' : count.toString();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.redAccent,
-        borderRadius: BorderRadius.circular(10),
+        color: MeshPalette.blue.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(MeshRadii.pill),
+        border: Border.all(color: MeshPalette.blue.withValues(alpha: 0.45)),
       ),
       child: Text(
         display,
-        style: const TextStyle(
-          color: Colors.white,
+        style: MeshTheme.mono(
           fontSize: 11,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
+          color: MeshPalette.blue,
         ),
       ),
     );

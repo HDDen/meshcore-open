@@ -2549,6 +2549,100 @@
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS potwierdzone",
   "pathTrace_legendInferred": "Wywnioskowana pozycja",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "map_searchHint": "Wyszukaj nazwę lub identyfikator węzła",
+  "scanner_bluetoothWebUnsupported": "Bluetooth nie jest dostępny w przeglądarce. Połącz się przez USB.",
+  "map_activity": "Aktywność",
+  "map_recent": "Ostatnie",
+  "map_stale": "Nieaktualne",
+  "map_visible": "Widoczny",
+  "map_hidden": "Ukryty",
+  "map_centerOnNode": "Wyśrodkuj na węźle",
+  "map_details": "Szczegóły",
+  "map_noGps": "Brak GPS",
+  "map_noResults": "Brak pasujących węzłów",
+  "pathMap_viewSingle": "Pojedyncza",
+  "pathMap_viewCombined": "Połączone",
+  "pathMap_play": "Odtwórz",
+  "pathMap_pause": "Wstrzymaj",
+  "pathMap_replay": "Odtwórz ponownie",
+  "pathMap_stepBack": "Poprzedni skok",
+  "pathMap_stepForward": "Następny skok",
+  "pathMap_animationOn": "Pokaż animację pakietu",
+  "pathMap_animationOff": "Ukryj animację pakietu",
+  "pathMap_hopOf": "Skok {current} z {total}",
+  "pathMap_observedPaths": "Obserwowane trasy: {count}",
+  "pathMap_primary": "Główna",
+  "pathMap_alternate": "Alt. {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 skok} few{{count} skoki} many{{count} skoków} other{{count} skoku}}",
+  "pathMap_legendShared": "Wspólny segment",
+  "pathMap_legendEstimated": "Szacunkowy segment",
+  "pathMap_sharedNodeCount": "Wykorzystywane przez {count} ścieżek",
+  "pathMap_partialAnimation": "{count, plural, =1{1 skok nie ma lokalizacji — pokazana ścieżka jest niekompletna} few{{count} skoki nie mają lokalizacji — pokazana ścieżka jest niekompletna} many{{count} skoków nie ma lokalizacji — pokazana ścieżka jest niekompletna} other{{count} skoku nie ma lokalizacji — pokazana ścieżka jest niekompletna}}",
+  "pathMap_showAllPaths": "Pokaż wszystkie",
+  "pathMap_hidePath": "Ukryj ścieżkę",
+  "pathMap_showPath": "Wyświetl trasę",
+  "pathMap_collapsePanel": "Zwiń panel",
+  "pathMap_expandPanel": "Rozwiń panel",
+  "pathMap_noLocation": "Brak lokalizacji",
+  "pathMap_followPacket": "Śledź pakiet",
+  "pathMap_unfollowPacket": "Przestań śledzić pakiet",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Wyślij po wybraniu",
   "repeater_pathHashModeOption0": "0 - 1 byte",
   "repeater_pathHashModeOption1": "1 - 2 bytes",

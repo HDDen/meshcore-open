@@ -5,7 +5,7 @@
 The app follows this general flow:
 
 ```
-Launch → Scanner Screen → [Connect via BLE/USB/TCP] → Contacts Screen
+Launch → Scanner Screen → [Connect via BLE/USB/TCP] → Channels Screen
 ```
 
 After connecting, the three main screens (Contacts, Channels, Map) are accessible via a persistent bottom navigation bar called the **QuickSwitchBar**.
@@ -24,7 +24,7 @@ Tapping a tab replaces the current screen with a subtle fade + slight horizontal
 
 ## Disconnection
 
-- The disconnect button (available in the Settings screen and other main screens) shows a confirmation dialog before disconnecting
+- The disconnect button (available in the overflow menu of each main screen) shows a confirmation dialog before disconnecting
 - If the device disconnects unexpectedly, the app automatically navigates back to the Scanner screen (fires after the current frame completes via a post-frame callback)
 - This auto-navigation behavior (`DisconnectNavigationMixin`) is shared across all main screens
 
@@ -38,11 +38,11 @@ Tapping a tab replaces the current screen with a subtle fade + slight horizontal
 
 ```
 ScannerScreen (root, always on stack)
-  ├─ [BLE connect] → push → ContactsScreen
-  ├─ [TCP FAB] → push → TcpScreen
-  │     └─ [TCP connected] → pushReplacement → ContactsScreen
-  └─ [USB FAB] → push → UsbScreen
-        └─ [USB connected] → pushReplacement → ContactsScreen
+  ├─ [BLE connect] → push → ChannelsScreen
+  ├─ [TCP icon button] → push → TcpScreen
+  │     └─ [TCP connected] → pushReplacement → ChannelsScreen
+  └─ [USB icon button] → push → UsbScreen
+        └─ [USB connected] → pushReplacement → ChannelsScreen
 
 ContactsScreen (selected=0)
   ├─ [quick-switch 1] → pushReplacement → ChannelsScreen
@@ -60,9 +60,9 @@ ChannelsScreen (selected=1)
 MapScreen (selected=2)
   ├─ [quick-switch 0] → pushReplacement → ContactsScreen
   ├─ [quick-switch 1] → pushReplacement → ChannelsScreen
-  ├─ [radar button] → push → PathTraceMapScreen
-  ├─ [terrain button] → push → LineOfSightMapScreen
-  └─ [long-press] → share marker / set location
+  ├─ [radar menu item] → enters in-map path trace mode (push → PathTraceMapScreen after path is built)
+  ├─ [terrain menu item] → push → LineOfSightMapScreen
+  └─ [long-press] → share marker sheet
 
 Settings (push from any main screen)
   └─ [App Settings] → push → AppSettingsScreen

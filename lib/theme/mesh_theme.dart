@@ -1,47 +1,48 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
-/// MeshCore palette — cool slate dark theme with sky-blue accents.
+/// MeshCore palette — high-contrast slate surfaces with sky-blue accents.
 class MeshPalette {
   MeshPalette._();
 
-  // Surfaces (cool near-black, slate undertone)
-  static const bg = Color(0xFF101417);
-  static const bg1 = Color(0xFF161B1F);
-  static const bg2 = Color(0xFF1D242A);
-  static const bg3 = Color(0xFF28313A);
-  static const bg4 = Color(0xFF344049);
+  // Surfaces shared with the map overlays and navigation.
+  static const bg = Color(0xFF0B1220);
+  static const bg1 = Color(0xFF0F172A);
+  static const bg2 = Color(0xFF162033);
+  static const bg3 = Color(0xFF1E293B);
+  static const bg4 = Color(0xFF334155);
 
   // Lines
-  static const line = Color(0xFF222B31);
-  static const line2 = Color(0xFF344049);
-  static const line3 = Color(0xFF485762);
+  static const line = Color(0xFF1E293B);
+  static const line2 = Color(0xFF334155);
+  static const line3 = Color(0xFF475569);
 
   // Ink
-  static const ink = Color(0xFFE9EEF3);
-  static const ink2 = Color(0xFFB5C0C9);
-  static const ink3 = Color(0xFF7C8A95);
-  static const ink4 = Color(0xFF556470);
+  static const ink = Color(0xFFF8FAFC);
+  static const ink2 = Color(0xFFCBD5E1);
+  static const ink3 = Color(0xFF94A3B8);
+  static const ink4 = Color(0xFF64748B);
 
   // Signal-quality green (used only for SNR coloring, not UI chrome)
-  static const signal = Color(0xFF7BEFA8);
-  static const signalDim = Color(0xFF4DC580);
+  static const signal = Color(0xFF22C55E);
+  static const signalDim = Color(0xFF16A34A);
 
-  // Warn (ember)
-  static const warn = Color(0xFFFFA552);
-  static const warnDim = Color(0xFFC27E3C);
-  static const warnBg = Color(0x1CFFA552);
-  static const warnLine = Color(0x4DFFA552);
+  // Warn
+  static const warn = Color(0xFFF59E0B);
+  static const warnDim = Color(0xFFD97706);
+  static const warnBg = Color(0x1FF59E0B);
+  static const warnLine = Color(0x66F59E0B);
 
-  // Alert (coral)
-  static const alert = Color(0xFFFF6A5C);
-  static const alertBg = Color(0x1CFF6A5C);
-  static const alertLine = Color(0x52FF6A5C);
+  // Alert
+  static const alert = Color(0xFFEF4444);
+  static const alertBg = Color(0x1FEF4444);
+  static const alertLine = Color(0x66EF4444);
 
-  // Blue (sky) — primary accent
-  static const blue = Color(0xFF7FCBF5);
-  static const blueDim = Color(0xFF4A9CC9);
-  static const blueBg = Color(0x1C7FCBF5);
-  static const blueLine = Color(0x477FCBF5);
+  // Blue — primary map/app accent
+  static const blue = Color(0xFF0EA5E9);
+  static const blueDim = Color(0xFF0284C7);
+  static const blueBg = Color(0x290EA5E9);
+  static const blueLine = Color(0x800EA5E9);
 
   // Magenta
   static const magenta = Color(0xFFDE7FDB);
@@ -49,9 +50,9 @@ class MeshPalette {
   static const magentaLine = Color(0x47DE7FDB);
 
   // Me bubble (dusk blue)
-  static const me = Color(0xFF1B2C3D);
-  static const meBorder = Color(0xFF2C4A66);
-  static const meInk = Color(0xFFDCE9F5);
+  static const me = Color(0xFF0C4A6E);
+  static const meBorder = Color(0xFF0369A1);
+  static const meInk = Color(0xFFF0F9FF);
 
   // ── Light variant (used when user explicitly picks light theme)
   static const lightBg = Color(0xFFF4F6F8);
@@ -64,6 +65,51 @@ class MeshPalette {
   static const lightBlue = Color(0xFF2F6EA8);
 }
 
+/// High-contrast semantic colors for UI rendered over variable map tiles.
+class MapPalette {
+  MapPalette._();
+
+  static const online = Color(0xFF22C55E);
+  static const offline = Color(0xFF6B7280);
+  static const stale = Color(0xFFF59E0B);
+  static const repeater = Color(0xFF2563EB);
+  static const router = Color(0xFF7C3AED);
+  static const batteryLow = Color(0xFFEF4444);
+  static const cluster = Color(0xFFF97316);
+  static const selected = Color(0xFF0EA5E9);
+  static const sensor = Color(0xFF0F766E);
+  static const shared = Color(0xFF0369A1);
+
+  static const panelLight = Color(0xF0FFFFFF);
+  static const panelDark = Color(0xF50B1220);
+  static const textPrimary = Color(0xFFF8FAFC);
+  static const textSecondary = Color(0xFFCBD5E1);
+  static const textMuted = Color(0xFF94A3B8);
+  static const border = Color(0x5264758B);
+  static const markerOutline = Colors.white;
+  static const markerShadow = Color(0xB3000000);
+}
+
+/// High-contrast colors for line-of-sight maps and elevation profiles.
+class LosPalette {
+  LosPalette._();
+
+  static const terrain = Color(0xFFA3E635);
+  static const beam = Color(0xFF38BDF8);
+  static const horizon = Color(0xFFFBBF24);
+  static const blocked = Color(0xFFEF4444);
+  static const marginal = Color(0xFFF59E0B);
+  static const clear = Color(0xFF22C55E);
+  static const selected = Color(0xFF0EA5E9);
+  static const chartBackground = Color(0xFF0B1220);
+  static const panelDark = Color(0xF00F172A);
+  static const panelLight = Color(0xF5FFFFFF);
+  static const text = Color(0xFFF8FAFC);
+  static const textMuted = Color(0xFFCBD5E1);
+  static const border = Color(0x5264758B);
+  static const shadow = Color(0x99000000);
+}
+
 /// Named font stacks — Flutter falls back to system fonts when the named
 /// family isn't installed, keeping things working without bundled assets.
 class MeshFonts {
@@ -72,6 +118,7 @@ class MeshFonts {
   static const sans = 'Inter';
   static const mono = 'JetBrains Mono';
   static const display = 'Instrument Serif';
+  static const emoji = 'Noto Color Emoji';
 
   static const List<String> sansFallback = [
     'system-ui',
@@ -93,6 +140,11 @@ class MeshFonts {
     'Times New Roman',
     'serif',
   ];
+  static const List<String> emojiFallback = [
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Noto Emoji',
+  ];
 }
 
 /// Radii used consistently across the app.
@@ -113,21 +165,21 @@ class MeshTheme {
   static ThemeData dark() {
     const scheme = ColorScheme.dark(
       primary: MeshPalette.blue,
-      onPrimary: Color(0xFF0A1A26),
-      primaryContainer: MeshPalette.blueBg,
-      onPrimaryContainer: MeshPalette.blue,
+      onPrimary: Colors.white,
+      primaryContainer: Color(0xFF075985),
+      onPrimaryContainer: Colors.white,
       secondary: MeshPalette.magenta,
-      onSecondary: Color(0xFF201020),
+      onSecondary: Colors.white,
       secondaryContainer: Color(0xFF331A33),
-      onSecondaryContainer: MeshPalette.magenta,
+      onSecondaryContainer: Colors.white,
       tertiary: MeshPalette.warn,
-      onTertiary: Color(0xFF1F1206),
-      tertiaryContainer: Color(0xFF3A2710),
-      onTertiaryContainer: Color(0xFFFFC58A),
+      onTertiary: Color(0xFF0B1220),
+      tertiaryContainer: Color(0xFF78350F),
+      onTertiaryContainer: Colors.white,
       error: MeshPalette.alert,
-      onError: Color(0xFF1A0A08),
-      errorContainer: MeshPalette.alertBg,
-      onErrorContainer: MeshPalette.alert,
+      onError: Colors.white,
+      errorContainer: Color(0xFF7F1D1D),
+      onErrorContainer: Colors.white,
       surface: MeshPalette.bg,
       onSurface: MeshPalette.ink,
       surfaceContainerLowest: MeshPalette.bg,
@@ -334,9 +386,9 @@ class MeshTheme {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surfaceContainerLow,
+        backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: scheme.primary.withValues(alpha: 0.14),
+        indicatorColor: scheme.primary,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(MeshRadii.md),
         ),
@@ -348,13 +400,13 @@ class MeshTheme {
             fontSize: 10,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             letterSpacing: 0.1,
-            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
             size: 22,
           );
         }),
@@ -393,6 +445,106 @@ class MeshTheme {
       ),
       iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 22),
       splashFactory: InkSparkle.splashFactory,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor: scheme.primary.withValues(alpha: 0.16),
+          selectedForegroundColor: scheme.primary,
+          side: BorderSide(color: scheme.outlineVariant),
+          textStyle: const TextStyle(
+            fontFamily: MeshFonts.sans,
+            fontFamilyFallback: MeshFonts.sansFallback,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.onPrimary
+              : scheme.onSurfaceVariant,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primary
+              : scheme.surfaceContainerHighest,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.transparent
+              : scheme.outline,
+        ),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: scheme.primary,
+        inactiveTrackColor: scheme.surfaceContainerHighest,
+        thumbColor: scheme.primary,
+        overlayColor: scheme.primary.withValues(alpha: 0.12),
+        valueIndicatorColor: scheme.surfaceContainerHighest,
+        valueIndicatorTextStyle: TextStyle(
+          fontFamily: MeshFonts.mono,
+          fontFamilyFallback: MeshFonts.monoFallback,
+          color: scheme.onSurface,
+          fontSize: 12,
+        ),
+        trackHeight: 3,
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        indicatorColor: scheme.primary,
+        dividerColor: scheme.outlineVariant,
+        labelStyle: const TextStyle(
+          fontFamily: MeshFonts.sans,
+          fontFamilyFallback: MeshFonts.sansFallback,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontFamily: MeshFonts.sans,
+          fontFamilyFallback: MeshFonts.sansFallback,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+        linearTrackColor: scheme.surfaceContainerHigh,
+        circularTrackColor: Colors.transparent,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(MeshRadii.sm),
+          border: Border.all(color: scheme.outline),
+        ),
+        textStyle: TextStyle(color: scheme.onSurface, fontSize: 12),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MeshRadii.pill),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: MeshFonts.sans,
+            fontFamilyFallback: MeshFonts.sansFallback,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ),
     );
   }
 
@@ -440,6 +592,16 @@ class MeshTheme {
       fontWeight: FontWeight.w600,
       letterSpacing: 1.8,
       color: color,
+    );
+  }
+
+  /// Color-emoji style with platform fallbacks and stable vertical metrics.
+  static TextStyle emoji({double fontSize = 28}) {
+    return TextStyle(
+      fontFamily: MeshFonts.emoji,
+      fontFamilyFallback: MeshFonts.emojiFallback,
+      fontSize: fontSize,
+      height: 1,
     );
   }
 

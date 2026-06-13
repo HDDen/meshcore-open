@@ -46,6 +46,7 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
     Uint8List frame, {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
+    bool waitForGenericAck = false,
   }) async {
     sentFrames.add(frame);
   }

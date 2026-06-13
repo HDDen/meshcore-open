@@ -7,12 +7,14 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
+import '../l10n/contact_localization.dart';
 import '../models/contact.dart';
+import '../theme/mesh_theme.dart';
 import '../utils/contact_search.dart';
 import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
-import '../helpers/contact_ui.dart';
+import '../widgets/mesh_ui.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum DiscoverySortOption { lastSeen, name, type }
@@ -45,6 +47,34 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return contact.lastMessageAt.isAfter(contact.lastSeen)
         ? contact.lastMessageAt
         : contact.lastSeen;
+  }
+
+  /// Node-type avatar color per design language.
+  Color _avatarColor(int type) {
+    switch (type) {
+      case advTypeRepeater:
+        return MeshPalette.warn;
+      case advTypeRoom:
+        return MeshPalette.magenta;
+      case advTypeSensor:
+        return const Color(0xFF4ACCC4); // teal
+      default:
+        return MeshPalette.blue;
+    }
+  }
+
+  /// Node-type avatar icon; null = show initials for chat nodes.
+  IconData? _avatarIcon(int type) {
+    switch (type) {
+      case advTypeRepeater:
+        return Icons.cell_tower;
+      case advTypeRoom:
+        return Icons.meeting_room;
+      case advTypeSensor:
+        return Icons.sensors;
+      default:
+        return null;
+    }
   }
 
   @override
@@ -93,121 +123,185 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         children: [
           _buildFilters(filteredAndSorted, connector),
           Expanded(
-            child: discoveredContacts.isEmpty
-                ? Center(child: Text(l10n.contacts_noContacts))
-                : filteredAndSorted.isEmpty
-                ? Center(child: Text(l10n.discoveredContacts_noMatching))
-                : ListView.builder(
-                    itemCount: filteredAndSorted.length,
-                    itemBuilder: (context, index) {
-                      final contact = filteredAndSorted[index];
-                      final tile = ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: contactTypeColor(contact.type),
-                          child: Icon(
-                            contactTypeIcon(contact.type),
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: discoveredContacts.isEmpty
+                  ? Center(
+                      key: const ValueKey('empty_all'),
+                      child: Text(l10n.contacts_noContacts),
+                    )
+                  : filteredAndSorted.isEmpty
+                  ? Center(
+                      key: const ValueKey('empty_filtered'),
+                      child: Text(l10n.discoveredContacts_noMatching),
+                    )
+                  : ListView.builder(
+                      key: const ValueKey('list'),
+                      padding: const EdgeInsets.only(bottom: 24),
+                      itemCount: filteredAndSorted.length,
+                      itemBuilder: (context, index) {
+                        final contact = filteredAndSorted[index];
+                        final tile = _buildDiscoveryTile(
+                          context,
+                          contact,
+                          connector,
+                          index,
+                        );
+                        if (PlatformInfo.isDesktop) {
+                          return GestureDetector(
+                            onSecondaryTapUp: (_) =>
+                                _showContactContextMenu(contact, connector),
+                            child: tile,
+                          );
+                        }
+                        return tile;
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscoveryTile(
+    BuildContext context,
+    Contact contact,
+    MeshCoreConnector connector,
+    int index,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final isChat = contact.type == advTypeChat;
+
+    return ListEntrance(
+      index: index,
+      child: MeshCard(
+        onTap: () async {
+          try {
+            final imported = await connector.importDiscoveredContact(contact);
+            if (!context.mounted) return;
+            if (!imported) {
+              showDismissibleSnackBar(
+                context,
+                content: Text(context.l10n.contacts_contactImportFailed),
+              );
+              return;
+            }
+            showDismissibleSnackBar(
+              context,
+              content: Text(context.l10n.discoveredContacts_contactAdded),
+              action: SnackBarAction(
+                label: context.l10n.common_undo,
+                onPressed: () => connector.removeContact(contact),
+              ),
+            );
+          } catch (_) {
+            if (!context.mounted) return;
+            showDismissibleSnackBar(
+              context,
+              content: Text(context.l10n.contacts_contactImportFailed),
+            );
+          }
+        },
+        onLongPress: () => _showContactContextMenu(contact, connector),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            AvatarCircle(
+              name: contact.name,
+              size: 42,
+              color: isChat ? null : _avatarColor(contact.type),
+              icon: _avatarIcon(contact.type),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Name + type chip
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           contact.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                          ),
                         ),
-                        subtitle: Text(
+                      ),
+                      const SizedBox(width: 6),
+                      StatusChip(
+                        label: contact.typeLabel(context.l10n).toUpperCase(),
+                        color: _avatarColor(contact.type),
+                        icon: _avatarIcon(contact.type),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  // Short pub key
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           contact.shortPubKeyHex,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                        ),
-                        // Clamp text scaling in trailing section to prevent overflow while
-                        // maintaining accessibility. Primary content (title/subtitle) scales normally.
-                        trailing: MediaQuery(
-                          data: MediaQuery.of(context).copyWith(
-                            textScaler: TextScaler.linear(
-                              MediaQuery.textScalerOf(
-                                context,
-                              ).scale(1.0).clamp(1.0, 1.3),
-                            ),
-                          ),
-                          child: SizedBox(
-                            width: 120,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  _formatLastSeen(
-                                    context,
-                                    _resolveLastSeen(contact),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (contact.hasLocation)
-                                      Icon(
-                                        Icons.location_on,
-                                        size: 14,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant
-                                            .withValues(alpha: 0.6),
-                                      ),
-                                    if (contact.rawPacket != null)
-                                      const SizedBox(width: 2),
-                                    if (contact.rawPacket != null)
-                                      Icon(
-                                        Icons.cell_tower,
-                                        size: 14,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant
-                                            .withValues(alpha: 0.6),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                          style: MeshTheme.mono(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
-                        onTap: () {
-                          connector.importDiscoveredContact(contact);
-                          showDismissibleSnackBar(
-                            context,
-                            content: Text(
-                              context.l10n.discoveredContacts_contactAdded,
-                            ),
-                            action: SnackBarAction(
-                              label: context.l10n.common_undo,
-                              onPressed: () => connector.removeContact(contact),
-                            ),
-                          );
-                        },
-                        onLongPress: () =>
-                            _showContactContextMenu(contact, connector),
-                      );
-                      if (PlatformInfo.isDesktop) {
-                        return GestureDetector(
-                          onSecondaryTapUp: (_) =>
-                              _showContactContextMenu(contact, connector),
-                          child: tile,
-                        );
-                      }
-                      return tile;
-                    },
+                      ),
+                      if (contact.hasLocation) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.location_on,
+                          size: 13,
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: 0.55,
+                          ),
+                        ),
+                      ],
+                      if (contact.rawPacket != null) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.cell_tower,
+                          size: 13,
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: 0.55,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Last seen time
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(
+                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
+                ),
+              ),
+              child: Text(
+                _formatLastSeen(context, _resolveLastSeen(contact)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: MeshTheme.mono(
+                  fontSize: 11,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -216,15 +310,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     Contact contact,
     MeshCoreConnector connector,
   ) async {
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
+    final action = await showMeshSheet<String>(
+      context,
       builder: (sheetContext) {
         final l10n = context.l10n;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              BottomSheetHeader(
+                title: contact.name,
+                subtitle: contact.typeLabel(l10n),
+              ),
               ListTile(
                 leading: const Icon(Icons.copy),
                 title: Text(l10n.discoveredContacts_copyContact),
@@ -235,6 +332,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 title: Text(l10n.discoveredContacts_deleteContact),
                 onTap: () => Navigator.of(sheetContext).pop('delete_contact'),
               ),
+              const SizedBox(height: 8),
             ],
           ),
         );

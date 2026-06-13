@@ -2475,5 +2475,99 @@
   "chrome_bluetoothRequiresChromium": "Web Bluetooth vereist een Chromium-browser.",
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS-locatie bevestigd",
-  "pathTrace_legendInferred": "Afgeleide positie"
+  "pathTrace_legendInferred": "Afgeleide positie",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_activity": "Activiteit",
+  "map_searchHint": "Zoek op naam of ID van de knoop",
+  "scanner_bluetoothWebUnsupported": "Bluetooth is niet beschikbaar in de browser. Verbind dan via USB.",
+  "map_online": "Online",
+  "map_recent": "Recent",
+  "map_stale": "Verouderd",
+  "map_visible": "Zichtbaar",
+  "map_hidden": "Verborgen",
+  "map_centerOnNode": "Centreer op node",
+  "map_details": "Details",
+  "map_noGps": "Geen GPS",
+  "map_noResults": "Geen overeenkomende nodes",
+  "pathMap_viewSingle": "Enkel",
+  "pathMap_viewCombined": "Gezamenlijk",
+  "pathMap_play": "Afspelen",
+  "pathMap_pause": "Pauze",
+  "pathMap_replay": "Herhalen",
+  "pathMap_stepBack": "Vorige hop",
+  "pathMap_stepForward": "Volgende hop",
+  "pathMap_animationOn": "Pakketanimatie tonen",
+  "pathMap_animationOff": "Pakketanimatie verbergen",
+  "pathMap_hopOf": "Hop {current} van {total}",
+  "pathMap_observedPaths": "Waargenomen paden: {count}",
+  "pathMap_primary": "Primair",
+  "pathMap_alternate": "Alternatief {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "pathMap_legendShared": "Gedeeld segment",
+  "pathMap_legendEstimated": "Geschat segment",
+  "pathMap_sharedNodeCount": "Gebruikt door {count} paden",
+  "pathMap_partialAnimation": "{count, plural, =1{1 hop heeft geen locatie — het weergegeven pad is onvolledig} other{{count} hops hebben geen locatie — het weergegeven pad is onvolledig}}",
+  "pathMap_showAllPaths": "Toon alles",
+  "pathMap_hidePath": "Verberg pad",
+  "pathMap_showPath": "Toon pad",
+  "pathMap_collapsePanel": "Paneel inklappen",
+  "pathMap_expandPanel": "Paneel uitklappen",
+  "pathMap_noLocation": "Geen locatie",
+  "pathMap_followPacket": "Weergave vergrendelen op pakket",
+  "pathMap_unfollowPacket": "Weergave ontgrendelen van pakket",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

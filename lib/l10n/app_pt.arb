@@ -2475,5 +2475,99 @@
   "chrome_bluetoothRequiresChromium": "O Web Bluetooth requer um navegador Chromium.",
   "channels_communityShortId": "ID: {id}...",
   "pathTrace_legendGpsConfirmed": "GPS confirmado",
-  "pathTrace_legendInferred": "Posição inferida"
+  "pathTrace_legendInferred": "Posição inferida",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "map_activity": "Atividade",
+  "scanner_bluetoothWebUnsupported": "A funcionalidade Bluetooth não está disponível no navegador. Conecte-se via USB em vez disso.",
+  "map_searchHint": "Pesquisar por nome ou ID do nó",
+  "map_recent": "Recente",
+  "map_stale": "Vencido",
+  "map_visible": "Visível",
+  "map_hidden": "Escondido",
+  "map_centerOnNode": "Centralizar no nó",
+  "map_details": "Detalhes",
+  "map_noGps": "Sem GPS",
+  "map_noResults": "Nenhum nó encontrado",
+  "pathMap_viewSingle": "Único",
+  "pathMap_viewCombined": "Combinado",
+  "pathMap_play": "Reproduzir",
+  "pathMap_pause": "Pausa",
+  "pathMap_stepBack": "Salto anterior",
+  "pathMap_replay": "Repetir",
+  "pathMap_stepForward": "Próximo salto",
+  "pathMap_animationOn": "Exibir animação do pacote",
+  "pathMap_animationOff": "Ocultar a animação do pacote",
+  "pathMap_hopOf": "Salto {current} de {total}",
+  "pathMap_observedPaths": "Caminhos observados: {count}",
+  "pathMap_primary": "Primário",
+  "pathMap_alternate": "Alt {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 salto} other{{count} saltos}}",
+  "pathMap_legendShared": "Segmento compartilhado",
+  "pathMap_legendEstimated": "Segmento estimado",
+  "pathMap_sharedNodeCount": "Utilizado em {count} caminhos",
+  "pathMap_partialAnimation": "{count, plural, =1{1 salto não tem localização — o caminho mostrado é parcial} other{{count} saltos não têm localização — o caminho mostrado é parcial}}",
+  "pathMap_showAllPaths": "Mostrar tudo",
+  "pathMap_hidePath": "Esconder caminho",
+  "pathMap_showPath": "Mostrar o caminho",
+  "pathMap_collapsePanel": "Recolher painel",
+  "pathMap_expandPanel": "Expandir painel",
+  "pathMap_noLocation": "Sem localização",
+  "pathMap_followPacket": "Fixar vista no pacote",
+  "pathMap_unfollowPacket": "Liberar vista do pacote",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

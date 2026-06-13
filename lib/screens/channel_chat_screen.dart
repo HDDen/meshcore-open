@@ -51,6 +51,8 @@ import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 import 'channel_message_path_screen.dart';
 import 'canvas_editor_screen.dart';
 import 'channels_screen.dart';
@@ -136,7 +138,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             totalMessages: messages.length,
             onJumped: () {
               if (!mounted) return;
-              _scrollToMessage(anchor!.messageId);
+              _scrollToMessage(anchor!.messageId, quiet: true);
             },
           );
         });
@@ -786,6 +788,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
+    final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
@@ -814,6 +817,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final displayPathHashWidth =
         message.pathHashWidth ??
         context.read<MeshCoreConnector>().pathHashByteWidth;
+    final displayHopCount = _displayHopCount(
+      displayPath,
+      displayPathHashWidth,
+      message.pathLength,
+    );
+
+    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
+    final bubbleColor = isOutgoing
+        ? MeshPalette.me
+        : scheme.surfaceContainerLow;
+    final bubbleBorder = isOutgoing
+        ? MeshPalette.meBorder
+        : scheme.outlineVariant;
+    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
+    final metaColor = textColor.withValues(alpha: 0.65);
+    const bodyFontSize = 14.0;
+
+    // Asymmetric radius matching chat_screen bubbles.
+    final borderRadius = isOutgoing
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.lg),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.xs),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.xs),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.lg),
+          );
 
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
@@ -1054,11 +1088,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             padding: isMediaMessage
                                 ? const EdgeInsets.symmetric(horizontal: 8)
                                 : EdgeInsets.zero,
-                            child: Text(
-                              context.l10n.channels_via(
-                                _formatPathPrefixes(
-                                  displayPath,
-                                  displayPathHashWidth,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RouteChip(
+                                  isDirect: (message.pathLength ?? -1) >= 0,
+                                  hops: displayHopCount,
                                 ),
                               ),
                               style: TextStyle(
@@ -1068,7 +1103,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Padding(
                           padding: isMediaMessage
                               ? const EdgeInsets.only(
@@ -1192,7 +1227,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
     } else {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         child: messageBody,
       );
     }
@@ -1325,7 +1360,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(MeshRadii.sm),
           border: Border(
             left: BorderSide(color: colorScheme.primary, width: 3),
           ),
@@ -1338,9 +1373,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               style: TextStyle(
                 fontSize: 11 * textScale,
                 fontWeight: FontWeight.bold,
-                color: isOwnNode
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurface,
+                color: isOwnNode ? colorScheme.primary : colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 2),
@@ -1352,6 +1385,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Widget _buildReactionsDisplay(ChannelMessage message) {
+    final scheme = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -1362,27 +1396,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(MeshRadii.pill),
+            border: Border.all(color: scheme.outlineVariant, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
+              Text(
+                emoji,
+                style: MeshTheme.emoji(fontSize: 16),
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                ),
+              ),
               if (count > 1) ...[
                 const SizedBox(width: 4),
                 Text(
                   '$count',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  style: MeshTheme.mono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
                   ),
                 ),
               ],
@@ -1401,20 +1437,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String senderName, {
     Widget? trailing,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textColor = isOutgoing
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.onSurface;
+    final scheme = Theme.of(context).colorScheme;
+    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.7);
-    final channelColor = widget.channel.isPublicChannel
-        ? Colors.orange
-        : Colors.blue;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          icon: Icon(Icons.location_on_outlined, color: channelColor),
+          icon: Icon(Icons.location_on_outlined, color: scheme.primary),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           onPressed: () {
@@ -1611,18 +1642,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
+        color: scheme.surfaceContainerHigh,
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+          bottom: BorderSide(color: scheme.outlineVariant, width: 1),
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.reply,
-            size: 18,
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
-          ),
+          Icon(Icons.reply, size: 18, color: scheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1630,10 +1657,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               children: [
                 Text(
                   context.l10n.chat_replyingTo(message.senderName),
-                  style: TextStyle(
-                    fontSize: 12 * textScale,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  style: MeshTheme.mono(
+                    fontSize: 11 * textScale,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.primary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1707,16 +1734,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             },
           ),
         Container(
-          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
+            color: scheme.surface,
+            border: Border(
+              top: BorderSide(color: scheme.outlineVariant, width: 1),
+            ),
           ),
           child: Row(
             children: [
@@ -1772,17 +1794,101 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       .withValues(alpha: 0.6),
                                   maxSize: 160,
                                 ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    _textController.clear();
+                                    _textFieldFocusNode.requestFocus();
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return ByteCountedTextField(
+                          maxBytes: maxBytes,
+                          controller: _textController,
+                          focusNode: _textFieldFocusNode,
+                          hintText: context.l10n.chat_typeMessage,
+                          onSubmitted: (_) => _sendMessage(),
+                          encoder:
+                              (connector.isChannelSmazEnabled(
+                                    widget.channel.index,
+                                  ) ||
+                                  connector.isChannelCyr2LatEnabled(
+                                    widget.channel.index,
+                                  ))
+                              ? (text) => connector.prepareChannelOutboundText(
+                                  widget.channel.index,
+                                  text,
+                                )
+                              : null,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.chat_typeMessage,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                MeshRadii.pill,
+                              ),
+                              borderSide: BorderSide(
+                                color: scheme.outlineVariant,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                _textController.clear();
-                                _textFieldFocusNode.requestFocus();
-                              },
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                MeshRadii.pill,
+                              ),
+                              borderSide: BorderSide(
+                                color: scheme.outlineVariant,
+                              ),
                             ),
-                          ],
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                MeshRadii.pill,
+                              ),
+                              borderSide: BorderSide(
+                                color: scheme.primary,
+                                width: 1.5,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: scheme.surfaceContainerLow,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, _) {
+                      final hasText = value.text.trim().isNotEmpty;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeInOut,
+                        child: IconButton.filled(
+                          icon: const Icon(Icons.send, size: 20),
+                          tooltip: context.l10n.chat_sendMessage,
+                          style: IconButton.styleFrom(
+                            backgroundColor: hasText
+                                ? scheme.primary
+                                : scheme.surfaceContainerHighest,
+                            foregroundColor: hasText
+                                ? scheme.onPrimary
+                                : scheme.onSurfaceVariant,
+                            minimumSize: const Size(40, 40),
+                            shape: const CircleBorder(),
+                          ),
+                          onPressed: hasText
+                              ? () {
+                                  HapticFeedback.lightImpact();
+                                  _sendMessage();
+                                }
+                              : null,
                         ),
                       );
                     }
@@ -2470,6 +2576,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ).map(PathHelper.formatHopHex).join(',');
   }
 
+  int _displayHopCount(
+    Uint8List pathBytes,
+    int pathHashByteWidth,
+    int? storedHopCount,
+  ) {
+    if (pathBytes.isEmpty) {
+      return storedHopCount ?? 0;
+    }
+    return PathHelper.splitPathBytes(pathBytes, pathHashByteWidth).length;
+  }
+
   String _messagePathText(ChannelMessage message, {bool extended = false}) {
     final pathBytes = message.pathBytes.isNotEmpty
         ? message.pathBytes
@@ -2825,7 +2942,7 @@ class _SwipeReplyBubbleState extends State<_SwipeReplyBubble> {
       onPointerUp: (event) => _handleSwipePointerUp(event.position),
       onPointerCancel: (_) => _resetSwipe(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
         child: Stack(
           alignment: Alignment.center,
           children: [

@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
 import '../l10n/l10n.dart';
+import '../theme/mesh_theme.dart';
+import 'mesh_ui.dart';
 import 'signal_ui.dart';
 
-/// A reusable tile widget for displaying a MeshCore device in a list
+/// A MeshCard-based row for displaying a scanned BLE device.
+/// Shows an AvatarCircle (router icon, deterministic hue from device name),
+/// device name, mono MAC address, mono RSSI dBm, and SignalBars on the right.
+/// While connecting, shows a small progress ring instead of signal bars.
 class DeviceTile extends StatelessWidget {
   final ScanResult scanResult;
   final VoidCallback? onTap;
@@ -23,27 +30,12 @@ class DeviceTile extends StatelessWidget {
     final name = device.platformName.isNotEmpty
         ? device.platformName
         : scanResult.advertisementData.advName;
+    final displayName = name.isNotEmpty
+        ? name
+        : context.l10n.common_unknownDevice;
+    final mac = device.remoteId.toString();
+    final scheme = Theme.of(context).colorScheme;
 
-    return ListTile(
-      enabled: onTap != null || isConnecting,
-      leading: _buildSignalIcon(rssi),
-      title: Text(
-        name.isNotEmpty ? name : context.l10n.common_unknownDevice,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(device.remoteId.toString()),
-      trailing: isConnecting
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : null,
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildSignalIcon(int rssi) {
     final tier = rssi >= -60
         ? 0
         : rssi >= -70
@@ -55,15 +47,70 @@ class DeviceTile extends StatelessWidget {
         : 4;
     final signalUi = signalUiForStrengthTier(tier);
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(signalUi.icon, color: signalUi.color),
-        Text(
-          '$rssi dBm',
-          style: TextStyle(fontSize: 10, color: signalUi.color),
-        ),
-      ],
+    return MeshCard(
+      onTap: onTap == null
+          ? null
+          : () {
+              HapticFeedback.selectionClick();
+              onTap!();
+            },
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          AvatarCircle(name: displayName, size: 42, icon: Icons.router),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  mac,
+                  style: MeshTheme.mono(
+                    fontSize: 11,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (isConnecting)
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: scheme.primary,
+              ),
+            )
+          else
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Icon(signalUi.icon, size: 16, color: signalUi.color),
+                const SizedBox(height: 3),
+                Text(
+                  '$rssi dBm',
+                  style: MeshTheme.mono(fontSize: 10, color: signalUi.color),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

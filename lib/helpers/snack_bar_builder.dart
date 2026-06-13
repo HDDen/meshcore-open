@@ -25,7 +25,19 @@ void showDismissibleSnackBar(
   DismissDirection? dismissDirection,
   Clip? clipBehavior,
 }) {
-  final messenger = ScaffoldMessenger.of(context);
+  // Callers often reach here after an async gap; the context may already be
+  // unmounted, or deactivated (popped but not yet disposed) — ancestor
+  // lookups on a deactivated element throw. Showing nothing is the right
+  // outcome in both cases.
+  if (!context.mounted) return;
+  var isActive = true;
+  assert(() {
+    isActive = (context as Element).debugIsActive;
+    return true;
+  }());
+  if (!isActive) return;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
   final contentPadding =
       padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
   messenger.showSnackBar(

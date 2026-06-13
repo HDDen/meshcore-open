@@ -1,14 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/mesh_ui.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
@@ -97,25 +100,41 @@ class _TcpScreenState extends State<TcpScreen> {
             final isConnecting =
                 connector.state == MeshCoreConnectionState.connecting &&
                 connector.activeTransport == MeshCoreTransportType.tcp;
-            // A running BLE scan must not block TCP connect: connectTcp() stops
-            // any active scan before connecting, so the only reason to disable
-            // the button is a TCP connect already in flight.
-            final isButtonDisabled = isConnecting;
-            return Column(
+            // Connect is only available from a fully disconnected state —
+            // scanning, connecting, or an active session must settle first.
+            final isButtonDisabled =
+                connector.state != MeshCoreConnectionState.disconnected;
+            return ListView(
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
-                _buildStatusBar(context, connector),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
+                // Status header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Align(
+                      key: ValueKey(connector.state),
+                      alignment: Alignment.centerLeft,
+                      child: _buildStatusChip(context, connector),
+                    ),
+                  ),
+                ),
+
+                // Transport switcher
+                _buildTransportLinks(context),
+
+                // Connection form
+                const SectionHeader('TCP / IP'),
+                MeshCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildTransportLinks(context),
-                      const SizedBox(height: 16),
                       TextField(
                         controller: _hostController,
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpHostLabel,
                           hintText: context.l10n.tcpHostHint,
-                          border: const OutlineInputBorder(),
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.url,
@@ -126,7 +145,6 @@ class _TcpScreenState extends State<TcpScreen> {
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpPortLabel,
                           hintText: context.l10n.tcpPortHint,
-                          border: const OutlineInputBorder(),
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.number,
@@ -134,7 +152,12 @@ class _TcpScreenState extends State<TcpScreen> {
                       const SizedBox(height: 16),
                       FilledButton.icon(
                         key: const Key('tcp_connect_button'),
-                        onPressed: isButtonDisabled ? null : _connectTcp,
+                        onPressed: isButtonDisabled
+                            ? null
+                            : () {
+                                HapticFeedback.lightImpact();
+                                _connectTcp();
+                              },
                         icon: isConnecting
                             ? const SizedBox(
                                 width: 18,
@@ -165,12 +188,77 @@ class _TcpScreenState extends State<TcpScreen> {
                     ],
                   ),
                 ),
+
+                // Last used endpoint
+                if (connector.activeTcpEndpoint != null &&
+                    connector.isTcpTransportConnected) ...[
+                  const SectionHeader('CONNECTED TO'),
+                  MeshCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lan,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            connector.activeTcpEndpoint!,
+                            style: MeshTheme.mono(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             );
           },
         ),
       ),
     );
+  }
+
+  Widget _buildStatusChip(BuildContext context, MeshCoreConnector connector) {
+    final l10n = context.l10n;
+
+    if (connector.isTcpTransportConnected) {
+      return StatusChip(
+        label: l10n.scanner_connectedTo(connector.activeTcpEndpoint ?? 'TCP'),
+        color: MeshPalette.signal,
+      );
+    } else if (connector.state == MeshCoreConnectionState.connecting &&
+        connector.activeTransport == MeshCoreTransportType.tcp) {
+      return StatusChip(
+        label: l10n.tcpStatus_connectingTo(
+          '${_hostController.text}:${_portController.text}',
+        ),
+        color: MeshPalette.warn,
+        pulse: true,
+      );
+    } else if (connector.state == MeshCoreConnectionState.disconnecting &&
+        connector.activeTransport == MeshCoreTransportType.tcp) {
+      return StatusChip(
+        label: l10n.scanner_disconnecting,
+        color: MeshPalette.warn,
+        pulse: true,
+      );
+    } else {
+      return StatusChip(
+        label: l10n.tcpStatus_notConnected,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+    }
   }
 
   Widget _buildTransportLinks(BuildContext context) {
@@ -305,52 +393,6 @@ class _TcpScreenState extends State<TcpScreen> {
         const SizedBox(height: 6),
         Text(date, style: detailStyle),
       ],
-    );
-  }
-
-  Widget _buildStatusBar(BuildContext context, MeshCoreConnector connector) {
-    final l10n = context.l10n;
-    String statusText;
-    Color statusColor;
-
-    if (connector.isTcpTransportConnected) {
-      statusText = l10n.scanner_connectedTo(
-        connector.activeTcpEndpoint ?? 'TCP',
-      );
-      statusColor = Colors.green;
-    } else if (connector.state == MeshCoreConnectionState.connecting &&
-        connector.activeTransport == MeshCoreTransportType.tcp) {
-      statusText = l10n.tcpStatus_connectingTo(
-        '${_hostController.text}:${_portController.text}',
-      );
-      statusColor = Colors.orange;
-    } else if (connector.state == MeshCoreConnectionState.disconnecting &&
-        connector.activeTransport == MeshCoreTransportType.tcp) {
-      statusText = l10n.scanner_disconnecting;
-      statusColor = Colors.orange;
-    } else {
-      statusText = l10n.tcpStatus_notConnected;
-      statusColor = Theme.of(context).colorScheme.onSurfaceVariant;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      color: statusColor.withValues(alpha: 0.1),
-      child: Row(
-        children: [
-          Icon(Icons.circle, size: 12, color: statusColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              statusText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: statusColor, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

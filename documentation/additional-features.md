@@ -198,6 +198,7 @@ Tap the translate button on any received message. On first use, the GGUF model f
 
 ### How It Works
 - Model files are managed by `TranslationFileStore`; download progress is shown in-place
+- Before translating, the source language is automatically detected using the `flutter_langdetect` package. If the detected language already matches the target language, translation is skipped
 - Translation runs via `TranslationService` using the llamadart CPU backend (arm64 and x64 on Android)
 - Translated text is shown in `TranslatedMessageContent` as an inline overlay on the original message bubble
 - Each translation is cached; re-tapping shows the cached result without re-running inference
