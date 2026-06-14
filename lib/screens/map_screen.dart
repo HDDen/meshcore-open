@@ -1105,6 +1105,7 @@ class _MapScreenState extends State<MapScreen>
                         _wardriveUploadService.isAutoUploadEnabledSync,
                     screenWakelockEnabled: wardrive.screenWakelockEnabled,
                     inBackgroundEnabled: wardrive.runInBackgroundEnabled,
+                    continuousGpsEnabled: wardrive.continuousGpsEnabled,
                     followMeEnabled: wardrive.followMeEnabled,
                     repeaterNames: _wardriveUploadRepeaterNames(),
                     onToggleCollapsed: () {
@@ -1302,6 +1303,9 @@ class _MapScreenState extends State<MapScreen>
       case WardriveDataAction.inBackground:
         await _toggleWardriveInBackground(wardrive);
         break;
+      case WardriveDataAction.continuousGps:
+        await _toggleWardriveContinuousGps(wardrive);
+        break;
       case WardriveDataAction.followMe:
         await _toggleWardriveFollowMe(wardrive);
         break;
@@ -1356,6 +1360,10 @@ class _MapScreenState extends State<MapScreen>
         backgroundColor: Colors.red,
       );
     }
+  }
+
+  Future<void> _toggleWardriveContinuousGps(WardriveService wardrive) async {
+    await wardrive.setContinuousGpsEnabled(!wardrive.continuousGpsEnabled);
   }
 
   Future<void> _toggleWardriveFollowMe(WardriveService wardrive) async {

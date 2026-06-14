@@ -17,6 +17,7 @@ enum WardriveDataAction {
   autoUpload,
   screenWakelock,
   inBackground,
+  continuousGps,
   followMe,
   coverageResolution,
   exportSamples,
@@ -30,6 +31,7 @@ class WardriveStatusPanel extends StatelessWidget {
   final bool autoUploadEnabled;
   final bool screenWakelockEnabled;
   final bool inBackgroundEnabled;
+  final bool continuousGpsEnabled;
   final bool followMeEnabled;
   final Map<String, String> repeaterNames;
   final Key? panelKey;
@@ -46,6 +48,7 @@ class WardriveStatusPanel extends StatelessWidget {
     required this.autoUploadEnabled,
     required this.screenWakelockEnabled,
     required this.inBackgroundEnabled,
+    required this.continuousGpsEnabled,
     required this.followMeEnabled,
     required this.repeaterNames,
     this.panelKey,
@@ -322,6 +325,16 @@ class WardriveStatusPanel extends StatelessWidget {
                 ],
               ),
             ),
+          PopupMenuItem(
+            value: WardriveDataAction.continuousGps,
+            child: Row(
+              children: [
+                _buildMenuCheckbox(continuousGpsEnabled),
+                const SizedBox(width: 4),
+                Text(context.l10n.map_wardriveContinuousGPS),
+              ],
+            ),
+          ),
           PopupMenuItem(
             value: WardriveDataAction.followMe,
             child: Row(

@@ -4468,6 +4468,12 @@ abstract class AppLocalizations {
   /// **'Run in background'**
   String get map_wardriveInBackground;
 
+  /// No description provided for @map_wardriveContinuousGPS.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuous GPS location'**
+  String get map_wardriveContinuousGPS;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

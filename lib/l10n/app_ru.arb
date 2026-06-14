@@ -2173,6 +2173,7 @@
   "map_wardriveFollowMe": "Следовать за мной",
   "map_wardriveDeleteBlock": "Удалить блок",
   "map_wardriveInBackground": "Работать в фоне",
+  "map_wardriveContinuousGPS": "Непрерывный GPS-location",
   "settings_regionSettings": "Регионы",
   "settings_regionSettingsSubtitle": "Управление хранилищем регионов",
   "settings_regionManagement_screenTitle": "Управление регионами",

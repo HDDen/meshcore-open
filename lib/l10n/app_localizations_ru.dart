@@ -2490,6 +2490,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveInBackground => 'Работать в фоне';
 
   @override
+  String get map_wardriveContinuousGPS => 'Непрерывный GPS-location';
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

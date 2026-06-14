@@ -2498,6 +2498,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get map_wardriveInBackground => 'Run in background';
 
   @override
+  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+
+  @override
   String get mapCache_title => 'Cache de carte hors ligne';
 
   @override

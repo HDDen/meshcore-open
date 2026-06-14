@@ -66,6 +66,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   int? _currentDiscoveryTag;
   static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 25);
   static const Duration _discoveryResponseWindow = Duration(seconds: 10);
+  static const Duration _continuousGpsMaxAge = Duration(seconds: 60);
   static const int minAutoDiscoveryIntervalSeconds = 5;
   static const int maxAutoDiscoveryIntervalSeconds = 300;
   static const int _recentSamplesLimit = 3000;
@@ -75,10 +76,13 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       'wardrive_screen_wakelock_enabled_v1';
   static const String _runInBackgroundEnabledKey =
       'wardrive_run_in_background_enabled_v1';
+  static const String _continuousGpsEnabledKey =
+      'wardrive_continuous_gps_enabled_v1';
   static const String _followMeEnabledKey = 'wardrive_follow_me_enabled_v1';
   static const String _coveragePrecisionKey = 'wardrive_coverage_precision_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
+  StreamSubscription<Position>? _positionSubscription;
   Timer? _autoDiscoveryTimer;
   Timer? _oneShotDiscoveryTimer;
   Timer? _autoUploadTimer;
@@ -90,6 +94,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool _isUpdatingLocation = false;
   bool _screenWakelockEnabled = false;
   bool _runInBackgroundEnabled = false;
+  bool _continuousGpsEnabled = false;
   bool _resumeAfterForegroundPause = false;
   bool _followMeEnabled = false;
   bool _isAutoUploadInProgress = false;
@@ -122,6 +127,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool get isUpdatingLocation => _isUpdatingLocation;
   bool get screenWakelockEnabled => _screenWakelockEnabled;
   bool get runInBackgroundEnabled => _runInBackgroundEnabled;
+  bool get continuousGpsEnabled => _continuousGpsEnabled;
   bool get followMeEnabled => _followMeEnabled;
   int get discoveryRequestsSent => _discoveryRequestsSent;
   int get discoveryResponsesReceived => _discoveryResponsesReceived;
@@ -183,6 +189,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _isRunning = true;
     _showMapState = true;
     _syncBackgroundKeepAlive();
+    _syncContinuousLocationStream();
     _startSession();
     _lastAutoDiscoveryError = null;
     _loadSavedSamples();
@@ -214,6 +221,8 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
         PrefsManager.instance.getBool(_screenWakelockEnabledKey) ?? false;
     _runInBackgroundEnabled =
         PrefsManager.instance.getBool(_runInBackgroundEnabledKey) ?? false;
+    _continuousGpsEnabled =
+        PrefsManager.instance.getBool(_continuousGpsEnabledKey) ?? false;
     _followMeEnabled =
         PrefsManager.instance.getBool(_followMeEnabledKey) ?? false;
     final savedCoveragePrecision = PrefsManager.instance.getInt(
@@ -253,6 +262,14 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<void> setContinuousGpsEnabled(bool enabled) async {
+    if (_continuousGpsEnabled == enabled) return;
+    _continuousGpsEnabled = enabled;
+    await PrefsManager.instance.setBool(_continuousGpsEnabledKey, enabled);
+    _syncContinuousLocationStream();
+    notifyListeners();
+  }
+
   void _syncBackgroundKeepAlive() {
     if (!PlatformInfo.isAndroid) return;
     // This reason only controls wardrive's extra background keep-alive; the
@@ -265,6 +282,57 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  void _syncContinuousLocationStream() {
+    if (_isRunning && _continuousGpsEnabled) {
+      unawaited(_startContinuousLocationStream());
+    } else {
+      unawaited(_stopContinuousLocationStream());
+    }
+  }
+
+  Future<void> _startContinuousLocationStream() async {
+    if (_positionSubscription != null) return;
+    try {
+      await _ensureLocationAvailable();
+      _positionSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 0,
+        ),
+      ).listen(
+        _handleContinuousLocation,
+        onError: (Object error) {
+          _lastPhoneLatitude = null;
+          _lastPhoneLongitude = null;
+          _lastPhoneLocationAt = null;
+          _lastLocationError = _formatWardriveError(error);
+          notifyListeners();
+        },
+      );
+    } catch (error) {
+      _lastPhoneLatitude = null;
+      _lastPhoneLongitude = null;
+      _lastPhoneLocationAt = null;
+      _lastLocationError = _formatWardriveError(error);
+      notifyListeners();
+    }
+  }
+
+  Future<void> _stopContinuousLocationStream() async {
+    final subscription = _positionSubscription;
+    if (subscription == null) return;
+    _positionSubscription = null;
+    await subscription.cancel();
+  }
+
+  void _handleContinuousLocation(Position position) {
+    _lastPhoneLatitude = position.latitude;
+    _lastPhoneLongitude = position.longitude;
+    _lastPhoneLocationAt = DateTime.now();
+    _lastLocationError = null;
+    notifyListeners();
+  }
+
   Future<void> _startAndroidBackgroundServices() async {
     try {
       await _foregroundService.ensureAndroidRequirements();
@@ -275,7 +343,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, false);
       await _backgroundService?.stop(reason: 'wardrive');
       await _foregroundService.stop();
-      _lastAutoDiscoveryError = error.toString();
+      _lastAutoDiscoveryError = _formatWardriveError(error);
       notifyListeners();
     }
   }
@@ -332,6 +400,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _finishSession();
     _isRunning = false;
     _syncBackgroundKeepAlive();
+    _syncContinuousLocationStream();
     _autoDiscoveryTimer?.cancel();
     _autoDiscoveryTimer = null;
     _oneShotDiscoveryTimer?.cancel();
@@ -383,7 +452,14 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       await sendZeroHopDiscoveryRequest();
       _lastAutoDiscoveryError = null;
     } catch (error) {
-      _lastAutoDiscoveryError = error.toString();
+      final errorText = _formatWardriveError(error);
+      // GPS failures are already displayed in the dedicated "Phone GPS" row.
+      // Showing the same error again as "Auto discovery" creates noisy panels
+      // like "Auto discovery: Bad state: TimeoutException...".
+      _lastAutoDiscoveryError =
+          _lastLocationError != null && errorText == _lastLocationError
+          ? null
+          : errorText;
     } finally {
       if (_isRunning) notifyListeners();
     }
@@ -420,13 +496,15 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     final previousRequestAt = _lastDiscoveryRequestAt;
     int? pendingTag;
     try {
-      await _updateNodeLocationFromPhone();
+      await _updateNodeLocationFromPhone(reportErrors: startWardrive);
       if (_lastPhoneLatitude == null || _lastPhoneLongitude == null) {
-        // Wardrive pings are location-bound measurements; skip the radio
-        // request if the phone did not provide a fresh GPS fix for this point.
-        throw StateError(
-          _lastLocationError ?? 'Phone GPS is not available for this request',
-        );
+        if (startWardrive) {
+          // Wardrive pings are location-bound measurements; skip the radio
+          // request if the phone did not provide a fresh GPS fix for this point.
+          throw StateError(
+            _lastLocationError ?? 'Phone GPS is not available for this request',
+          );
+        }
       }
       if (!startWardrive &&
           _lastPhoneLatitude != null &&
@@ -512,27 +590,20 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> _updateNodeLocationFromPhone() async {
+  Future<void> _updateNodeLocationFromPhone({required bool reportErrors}) async {
     _isUpdatingLocation = true;
     _lastLocationError = null;
     notifyListeners();
 
     try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw StateError('Phone location service is disabled');
+      if (_continuousGpsEnabled) {
+        await _startContinuousLocationStream();
+        if (_hasFreshPhoneLocation()) {
+          return;
+        }
       }
 
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied) {
-        throw StateError('Phone location permission was denied');
-      }
-      if (permission == LocationPermission.deniedForever) {
-        throw StateError('Phone location permission is permanently denied');
-      }
+      await _ensureLocationAvailable();
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -552,11 +623,75 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       _lastPhoneLatitude = null;
       _lastPhoneLongitude = null;
       _lastPhoneLocationAt = null;
-      _lastLocationError = error.toString();
+      if (reportErrors) {
+        _lastLocationError = _formatWardriveError(error);
+      }
     } finally {
       _isUpdatingLocation = false;
       notifyListeners();
     }
+  }
+
+  bool _hasFreshPhoneLocation() {
+    final locationAt = _lastPhoneLocationAt;
+    if (_lastPhoneLatitude == null ||
+        _lastPhoneLongitude == null ||
+        locationAt == null) {
+      return false;
+    }
+    return DateTime.now().difference(locationAt) <= _continuousGpsMaxAge;
+  }
+
+  Future<void> _ensureLocationAvailable() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw StateError('Phone location service is disabled');
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied) {
+      throw StateError('Phone location permission was denied');
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw StateError('Phone location permission is permanently denied');
+    }
+  }
+
+  String _formatWardriveError(Object error) {
+    if (error is TimeoutException) {
+      final duration = error.duration;
+      if (duration != null) {
+        return 'Timeout after ${duration.inSeconds} seconds';
+      }
+      return 'Timeout';
+    }
+
+    if (error is StateError) {
+      return _formatWardriveErrorText(error.message);
+    }
+
+    return _formatWardriveErrorText(error.toString());
+  }
+
+  String _formatWardriveErrorText(String text) {
+    const timeoutPrefix = 'TimeoutException after ';
+    if (text.startsWith(timeoutPrefix)) {
+      final end = text.indexOf(': Future not completed');
+      if (end > timeoutPrefix.length) {
+        return 'Timeout after ${text.substring(timeoutPrefix.length, end)}';
+      }
+      return 'Timeout';
+    }
+
+    const badStatePrefix = 'Bad state: ';
+    if (text.startsWith(badStatePrefix)) {
+      return text.substring(badStatePrefix.length);
+    }
+
+    return text;
   }
 
   void _handleFrame(Uint8List frame) {
@@ -892,6 +1027,10 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _oneShotDiscoveryTimer?.cancel();
     _autoUploadTimer?.cancel();
     _clearDiscoveryTracking();
+    final positionSubscription = _positionSubscription;
+    if (positionSubscription != null) {
+      unawaited(positionSubscription.cancel());
+    }
     _framesSubscription?.cancel();
     super.dispose();
   }
