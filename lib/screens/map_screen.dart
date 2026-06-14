@@ -21,7 +21,6 @@ import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
-import '../storage/prefs_manager.dart';
 import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
@@ -84,7 +83,6 @@ class _MapScreenState extends State<MapScreen>
   static const double _mapMaxZoom = 18.0;
   static const double _wardrivePanelBottomInset = 16.0;
   static const Duration _wardriveDiscoveryRetryDelay = Duration(seconds: 10);
-  static const String _mapStatsCollapsedKey = 'map_stats_collapsed_v1';
 
   final MapController _mapController = MapController();
   final GlobalKey _mapBodyKey = GlobalKey();
@@ -102,8 +100,7 @@ class _MapScreenState extends State<MapScreen>
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
-  bool _legendExpanded = false;
-  bool _mapStatsCollapsed = false;
+  bool _mapControlsCollapsed = false;
   bool _statsExpanded = false;
   bool _showNodeLabels = true;
   double _zoom = 10.0;
@@ -136,7 +133,6 @@ class _MapScreenState extends State<MapScreen>
   @override
   void initState() {
     super.initState();
-    _loadMapStatsCollapsedState();
     _loadRemovedMarkers();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -293,18 +289,6 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-  void _loadMapStatsCollapsedState() {
-    _mapStatsCollapsed =
-        PrefsManager.instance.getBool(_mapStatsCollapsedKey) ?? false;
-  }
-
-  void _setMapStatsCollapsed(bool collapsed) {
-    setState(() {
-      _mapStatsCollapsed = collapsed;
-    });
-    unawaited(PrefsManager.instance.setBool(_mapStatsCollapsedKey, collapsed));
-  }
-
   Future<void> _loadRemovedMarkers() async {
     final ids = await _markerService.loadRemovedIds();
     if (!mounted) return;
@@ -387,39 +371,62 @@ class _MapScreenState extends State<MapScreen>
   }) {
     final hasSelf =
         connector.selfLatitude != null && connector.selfLongitude != null;
+    final toggleIcon = _mapControlsCollapsed
+        ? Icons.add_location_alt_outlined
+        : Icons.remove;
     return Positioned(
-      left: 12,
+      right: 12,
       bottom: 96,
       child: Card(
         elevation: 4,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: context.l10n.map_zoomIn,
-              onPressed: () => _zoomMapBy(1),
-            ),
-            IconButton(
-              icon: const Icon(Icons.remove),
-              tooltip: context.l10n.map_zoomOut,
-              onPressed: () => _zoomMapBy(-1),
-            ),
-            IconButton(
-              icon: const Icon(Icons.crop_free),
-              tooltip: context.l10n.map_centerMap,
-              onPressed: () => _mapController.move(center, zoom),
-            ),
-            if (hasSelf)
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               IconButton(
-                icon: const Icon(Icons.my_location),
-                tooltip: context.l10n.map_setAsMyLocation,
-                onPressed: () => _mapController.move(
-                  LatLng(connector.selfLatitude!, connector.selfLongitude!),
-                  max(_zoom, 14),
-                ),
+                icon: Icon(toggleIcon),
+                tooltip: _mapControlsCollapsed
+                    ? context.l10n.pathMap_expandPanel
+                    : context.l10n.pathMap_collapsePanel,
+                onPressed: () {
+                  setState(() {
+                    _mapControlsCollapsed = !_mapControlsCollapsed;
+                  });
+                },
               ),
-          ],
+              if (!_mapControlsCollapsed) ...[
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  tooltip: context.l10n.map_zoomIn,
+                  onPressed: () => _zoomMapBy(1),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  tooltip: context.l10n.map_zoomOut,
+                  onPressed: () => _zoomMapBy(-1),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.crop_free),
+                  tooltip: context.l10n.map_centerMap,
+                  onPressed: () => _mapController.move(center, zoom),
+                ),
+                if (hasSelf)
+                  IconButton(
+                    icon: const Icon(Icons.my_location),
+                    tooltip: context.l10n.map_setAsMyLocation,
+                    onPressed: () => _mapController.move(
+                      LatLng(
+                        connector.selfLatitude!,
+                        connector.selfLongitude!,
+                      ),
+                      max(_zoom, 14),
+                    ),
+                  ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -1088,13 +1095,12 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
-                if (!_isBuildingPathTrace)
-                  _buildLegend(
-                    contacts,
-                    contactsWithLocation,
-                    settings,
-                    sharedMarkers.length,
-                    guessedLocations.length,
+                if (isDesktop)
+                  _buildDesktopMapControls(
+                    context,
+                    center: center,
+                    zoom: initialZoom,
+                    connector: connector,
                   ),
                 if (!_isBuildingPathTrace && wardrive.hasMapState)
                   WardriveStatusPanel(
@@ -1121,13 +1127,6 @@ class _MapScreenState extends State<MapScreen>
                     onIntervalSubmitted: (value) =>
                         _updateWardriveAutoDiscoveryInterval(wardrive, value),
                     formatLastSeen: _formatLastSeen,
-                  ),
-                if (isDesktop)
-                  _buildDesktopMapControls(
-                    context,
-                    center: center,
-                    zoom: initialZoom,
-                    connector: connector,
                   ),
                 if (!_isBuildingPathTrace)
                   _buildTopOverlay(
@@ -3429,265 +3428,6 @@ class _MapScreenState extends State<MapScreen>
       default:
         return Icons.device_unknown;
     }
-  }
-
-  Widget _buildLegend(
-    List<Contact> contacts,
-    List<Contact> contactsWithLocation,
-    AppSettings settings,
-    int markerCount,
-    int guessedCount,
-  ) {
-    final filteredContacts = _filterContactsBySettings(
-      contacts,
-      settings,
-      noLocations: false,
-    );
-    final filteredContactsAll = _filterContactsBySettings(
-      contacts,
-      settings,
-      noLocations: true,
-    );
-
-    final nodeCount = filteredContacts.length;
-    final nodeCountAll = filteredContactsAll.length;
-    final totalVisibleNodes =
-        nodeCount + (settings.mapShowGuessedLocations ? guessedCount : 0);
-
-    return Positioned(
-      top: 16,
-      right: 16,
-      child: Card(
-        child: _mapStatsCollapsed
-            ? InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _setMapStatsCollapsed(false),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        context.l10n.map_nodesCount(totalVisibleNodes),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.expand_more, size: 18),
-                    ],
-                  ),
-                ),
-              )
-            : _buildExpandedMapStats(
-                settings,
-                nodeCount,
-                nodeCountAll,
-                markerCount,
-                guessedCount,
-                totalVisibleNodes,
-              ),
-      ),
-    );
-  }
-
-  Widget _buildExpandedMapStats(
-    AppSettings settings,
-    int nodeCount,
-    int nodeCountAll,
-    int markerCount,
-    int guessedCount,
-    int totalVisibleNodes,
-  ) {
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 34),
-          child: _buildExpandedMapStatsContent(
-            settings,
-            nodeCount,
-            nodeCountAll,
-            markerCount,
-            guessedCount,
-            totalVisibleNodes,
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: IconButton(
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-            iconSize: 18,
-            onPressed: () => _setMapStatsCollapsed(true),
-            icon: const Icon(Icons.expand_less),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExpandedMapStatsContent(
-    AppSettings settings,
-    int nodeCount,
-    int nodeCountAll,
-    int markerCount,
-    int guessedCount,
-    int totalVisibleNodes,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _legendExpanded = !_legendExpanded;
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.map_nodesCount(totalVisibleNodes),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        Text(
-                          ": $nodeCount",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.wrong_location,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        Text(
-                          ": ${nodeCountAll - nodeCount}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.add_outlined,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        Text(
-                          ": $nodeCountAll",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      context.l10n.map_pinsCount(markerCount),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                AnimatedRotation(
-                  turns: _legendExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(Icons.expand_more, size: 20),
-                ),
-              ],
-            ),
-          ),
-        ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 6),
-                _buildLegendItem(
-                  Icons.person,
-                  context.l10n.map_chat,
-                  Colors.blue,
-                ),
-                _buildLegendItem(
-                  Icons.router,
-                  context.l10n.map_repeater,
-                  Colors.green,
-                ),
-                _buildLegendItem(
-                  Icons.meeting_room,
-                  context.l10n.map_room,
-                  Colors.purple,
-                ),
-                _buildLegendItem(
-                  Icons.sensors,
-                  context.l10n.map_sensor,
-                  Colors.orange,
-                ),
-                _buildLegendItem(
-                  Icons.flag,
-                  context.l10n.map_pinDm,
-                  Colors.blue,
-                ),
-                _buildLegendItem(
-                  Icons.flag,
-                  context.l10n.map_pinPrivate,
-                  Colors.purple,
-                ),
-                _buildLegendItem(
-                  Icons.flag,
-                  context.l10n.map_pinPublic,
-                  Colors.orange,
-                ),
-                if (settings.mapShowGuessedLocations && guessedCount > 0)
-                  _buildLegendItem(
-                    Icons.not_listed_location,
-                    context.l10n.map_guessedLocation,
-                    Colors.grey,
-                  ),
-              ],
-            ),
-          ),
-          crossFadeState: _legendExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 200),
-        ),
-      ],
-    );
   }
 
   Widget _buildLegendItem(IconData icon, String label, Color color) {
