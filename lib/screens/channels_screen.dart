@@ -981,7 +981,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           ? (_) => _showChannelGroupActions(context, group)
           : null,
       child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.symmetric(vertical: 4),
         color: groupWidgetColor,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1040,7 +1040,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               // not squeeze channel titles during collapse/expand animation.
               firstChild: const SizedBox(width: double.infinity, height: 0),
               secondChild: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                padding: const EdgeInsets.fromLTRB(9, 0, 9, 5),
                 child: _buildChannelGroupContent(
                   context,
                   connector,
@@ -1096,6 +1096,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               channelMessageStore,
               channel,
               isMuted: mutedChannelNames.contains(channel.name),
+              margin: const EdgeInsets.symmetric(vertical: 4),
             ),
         ],
       );
@@ -1119,6 +1120,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           isMuted: mutedChannelNames.contains(channel.name),
           showDragHandle: true,
           dragIndex: index,
+          margin: const EdgeInsets.symmetric(vertical: 4),
         );
       },
     );
