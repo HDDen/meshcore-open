@@ -100,7 +100,7 @@ class _MapScreenState extends State<MapScreen>
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
-  bool _mapControlsCollapsed = false;
+  bool _mapControlsCollapsed = true;
   bool _statsExpanded = false;
   bool _showNodeLabels = true;
   double _zoom = 10.0;
@@ -374,58 +374,67 @@ class _MapScreenState extends State<MapScreen>
     final toggleIcon = _mapControlsCollapsed
         ? Icons.add_location_alt_outlined
         : Icons.remove;
+    final expandedButtonCount = hasSelf ? 5 : 4;
+    final expandedHeight = expandedButtonCount * 48.0;
     return Positioned(
       right: 12,
-      bottom: 96,
-      child: Card(
-        elevation: 4,
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(toggleIcon),
-                tooltip: _mapControlsCollapsed
-                    ? context.l10n.pathMap_expandPanel
-                    : context.l10n.pathMap_collapsePanel,
-                onPressed: () {
-                  setState(() {
-                    _mapControlsCollapsed = !_mapControlsCollapsed;
-                  });
-                },
-              ),
-              if (!_mapControlsCollapsed) ...[
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: context.l10n.map_zoomIn,
-                  onPressed: () => _zoomMapBy(1),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.remove),
-                  tooltip: context.l10n.map_zoomOut,
-                  onPressed: () => _zoomMapBy(-1),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.crop_free),
-                  tooltip: context.l10n.map_centerMap,
-                  onPressed: () => _mapController.move(center, zoom),
-                ),
-                if (hasSelf)
+      bottom: 188,
+      child: SizedBox(
+        height: expandedHeight,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Card(
+            elevation: 4,
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              alignment: Alignment.bottomCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   IconButton(
-                    icon: const Icon(Icons.my_location),
-                    tooltip: context.l10n.map_setAsMyLocation,
-                    onPressed: () => _mapController.move(
-                      LatLng(
-                        connector.selfLatitude!,
-                        connector.selfLongitude!,
-                      ),
-                      max(_zoom, 14),
-                    ),
+                    icon: Icon(toggleIcon),
+                    tooltip: _mapControlsCollapsed
+                        ? context.l10n.pathMap_expandPanel
+                        : context.l10n.pathMap_collapsePanel,
+                    onPressed: () {
+                      setState(() {
+                        _mapControlsCollapsed = !_mapControlsCollapsed;
+                      });
+                    },
                   ),
-              ],
-            ],
+                  if (!_mapControlsCollapsed) ...[
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      tooltip: context.l10n.map_zoomIn,
+                      onPressed: () => _zoomMapBy(1),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      tooltip: context.l10n.map_zoomOut,
+                      onPressed: () => _zoomMapBy(-1),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.crop_free),
+                      tooltip: context.l10n.map_centerMap,
+                      onPressed: () => _mapController.move(center, zoom),
+                    ),
+                    if (hasSelf)
+                      IconButton(
+                        icon: const Icon(Icons.my_location),
+                        tooltip: context.l10n.map_setAsMyLocation,
+                        onPressed: () => _mapController.move(
+                          LatLng(
+                            connector.selfLatitude!,
+                            connector.selfLongitude!,
+                          ),
+                          max(_zoom, 14),
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
