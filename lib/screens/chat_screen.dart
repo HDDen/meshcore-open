@@ -1648,8 +1648,8 @@ class _MessageBubble extends StatelessWidget {
         : scheme.outlineVariant;
     final textColor = isFailed
         ? scheme.onErrorContainer
-        : (isOutgoing ? scheme.onPrimary : scheme.onSurface);
-    final metaColor = textColor.withValues(alpha: 0.7);
+        : (isOutgoing ? MeshPalette.meInk : scheme.onSurface);
+    final metaColor = textColor.withValues(alpha: 0.65);
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     const bodyFontSize = 14.0;
 
@@ -1697,11 +1697,11 @@ class _MessageBubble extends StatelessWidget {
               mainAxisAlignment: isOutgoing
                   ? MainAxisAlignment.end
                   : MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (!isOutgoing) ...[
                   _buildAvatar(senderName, scheme),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ],
                 Flexible(
                   child: Container(
@@ -1712,7 +1712,7 @@ class _MessageBubble extends StatelessWidget {
                             vertical: 8,
                           ),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.65,
+                      maxWidth: MediaQuery.of(context).size.width * 0.72,
                     ),
                     decoration: BoxDecoration(
                       color: bubbleColor,
@@ -1733,14 +1733,14 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                             child: Text(
                               senderName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: scheme.primary,
+                              style: MeshTheme.mono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _colorForName(senderName),
                               ),
                             ),
                           ),
-                          if (!isMediaMessage) const SizedBox(height: 4),
+                          if (!isMediaMessage) const SizedBox(height: 2),
                         ],
                         if (poi != null)
                           _buildPoiMessage(
@@ -1896,8 +1896,8 @@ class _MessageBubble extends StatelessWidget {
                                       .settings
                                       .maxMessageRetries,
                                 ),
-                                style: TextStyle(
-                                  fontSize: 10,
+                                style: MeshTheme.mono(
+                                  fontSize: 9.5 * textScale,
                                   color: metaColor,
                                 ),
                               ),
@@ -1922,16 +1922,16 @@ class _MessageBubble extends StatelessWidget {
                                     message.timestamp,
                                     enableSeconds: enableTimeSeconds,
                                   ),
-                                  style: TextStyle(
-                                    fontSize: 10,
+                                  style: MeshTheme.mono(
+                                    fontSize: 10 * textScale,
                                     color: metaColor,
                                   ),
                                 ),
                                 if (outgoingRadioWaitLabel != null)
                                   Text(
                                     '($outgoingRadioWaitLabel)',
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
                                   ),
@@ -1952,8 +1952,8 @@ class _MessageBubble extends StatelessWidget {
                                   ),
                                   Text(
                                     '${(message.tripTimeMs! / 1000).toStringAsFixed(1)}s',
-                                    style: TextStyle(
-                                      fontSize: 9,
+                                    style: MeshTheme.mono(
+                                      fontSize: 9 * textScale,
                                       color: isOutgoing
                                           ? metaColor
                                           : Colors.green[700],
@@ -1965,8 +1965,8 @@ class _MessageBubble extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     'mcmp',
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
                                   ),
@@ -2251,4 +2251,21 @@ class _MessageBubble extends StatelessWidget {
         .inSeconds;
     return (waitSeconds < 0 ? 0 : waitSeconds).toString();
   }
+}
+
+/// Deterministic name-to-hue mapping consistent with [AvatarCircle].
+Color _colorForName(String name) {
+  const hues = [
+    MeshPalette.blue,
+    MeshPalette.magenta,
+    MeshPalette.signal,
+    MeshPalette.warn,
+    Color(0xFF8FA8F0),
+    Color(0xFF6FD9CE),
+  ];
+  var h = 0;
+  for (final c in name.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return hues[h % hues.length];
 }

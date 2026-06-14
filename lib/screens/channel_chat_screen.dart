@@ -790,6 +790,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
+    final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
@@ -824,27 +825,42 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       message.pathLength,
     );
 
+    final isHighlighted = _highlightedMessageId == message.messageId;
+    final bubbleColor = isOutgoing ? MeshPalette.me : scheme.surfaceContainerLow;
+    final bubbleBorder = isOutgoing ? MeshPalette.meBorder : scheme.outlineVariant;
+    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
+    final metaColor = textColor.withValues(alpha: 0.65);
+    final borderRadius = isOutgoing
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.lg),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.xs),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.xs),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.lg),
+          );
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
     const bodyFontSize = 14.0;
-    final isHighlighted = _highlightedMessageId == message.messageId;
-    final baseBubbleColor = isOutgoing
-        ? Theme.of(context).colorScheme.primaryContainer
-        : Theme.of(context).colorScheme.surfaceContainerHighest;
-    final messageBody = Column(
-      crossAxisAlignment: isOutgoing
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
+    final messageBody = LayoutBuilder(
+      builder: (context, constraints) => Column(
+        crossAxisAlignment: isOutgoing
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
         Row(
           mainAxisAlignment: isOutgoing
               ? MainAxisAlignment.end
               : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isOutgoing) ...[
               _buildAvatar(message.senderName),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
             ],
             Flexible(
               child: GestureDetector(
@@ -862,16 +878,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       ? const EdgeInsets.all(4)
                       : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.65,
+                    maxWidth: constraints.maxWidth * 0.72,
                   ),
                   decoration: BoxDecoration(
                     color: isHighlighted
                         ? Color.alphaBlend(
                             Colors.green.withValues(alpha: 0.5),
-                            baseBubbleColor,
+                            bubbleColor,
                           )
-                        : baseBubbleColor,
-                    borderRadius: BorderRadius.circular(12),
+                        : bubbleColor,
+                    borderRadius: borderRadius,
+                    border: Border.all(color: bubbleBorder, width: 1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -887,14 +904,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               : EdgeInsets.zero,
                           child: Text(
                             message.senderName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
+                            style: MeshTheme.mono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _colorForName(message.senderName),
                             ),
                           ),
                         ),
-                        if (!isMediaMessage) const SizedBox(height: 4),
+                        if (!isMediaMessage) const SizedBox(height: 2),
                       ],
                       if (message.replyToSenderName != null ||
                           message.replyToText != null) ...[
@@ -939,13 +956,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 url:
                                     'https://media.giphy.com/media/$gifId/giphy.gif',
                                 backgroundColor: Colors.transparent,
-                                fallbackTextColor: isOutgoing
-                                    ? Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer
-                                          .withValues(alpha: 0.7)
-                                    : Theme.of(context).colorScheme.onSurface
-                                          .withValues(alpha: 0.6),
+                                fallbackTextColor: textColor.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                             if (!enableTracing && isOutgoing)
@@ -955,16 +968,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(3),
                                   decoration: BoxDecoration(
-                                    color: isOutgoing
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.surfaceContainerHighest,
+                                    color: bubbleColor,
                                     borderRadius: const BorderRadius.only(
                                       bottomLeft: Radius.circular(10),
-                                      topRight: Radius.circular(8),
+                                      topRight: Radius.circular(12),
                                     ),
                                   ),
                                   child: MessageStatusIcon(
@@ -994,16 +1001,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(3),
                                   decoration: BoxDecoration(
-                                    color: isOutgoing
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.surfaceContainerHighest,
+                                    color: bubbleColor,
                                     borderRadius: const BorderRadius.only(
                                       bottomLeft: Radius.circular(10),
-                                      topRight: Radius.circular(8),
+                                      topRight: Radius.circular(12),
                                     ),
                                   ),
                                   child: MessageStatusIcon(
@@ -1029,13 +1030,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 displayText: translatedDisplayText,
                                 originalText: originalDisplayText,
                                 style: TextStyle(
+                                  color: textColor,
                                   fontSize: bodyFontSize * textScale,
                                 ),
                                 originalStyle: TextStyle(
                                   fontSize: bodyFontSize * textScale,
                                   fontStyle: FontStyle.italic,
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.72),
+                                  color: textColor.withValues(alpha: 0.72),
                                 ),
                               ),
                             ),
@@ -1078,9 +1079,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       displayPathHashWidth,
                                     ),
                                   ),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
+                                  style: MeshTheme.mono(
+                                    fontSize: 9.5 * textScale,
+                                    color: metaColor,
                                   ),
                                 ),
                               ],
@@ -1105,18 +1106,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   message.timestamp,
                                   enableSeconds: enableTimeSeconds,
                                 ),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[600],
+                                style: MeshTheme.mono(
+                                  fontSize: 10 * textScale,
+                                  color: metaColor,
                                 ),
                               ),
                               if (outgoingRadioWaitSeconds != null) ...[
                                 const SizedBox(width: 3),
                                 Text(
                                   '($outgoingRadioWaitSeconds)',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
+                                  style: MeshTheme.mono(
+                                    fontSize: 10 * textScale,
+                                    color: metaColor,
                                   ),
                                 ),
                               ],
@@ -1124,15 +1125,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 const SizedBox(width: 6),
                                 Icon(
                                   Icons.repeat,
-                                  size: 12,
-                                  color: Colors.grey[600],
+                                  size: 11 * textScale,
+                                  color: metaColor,
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
                                   '${message.repeatCount}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
+                                  style: MeshTheme.mono(
+                                    fontSize: 10 * textScale,
+                                    color: metaColor,
                                   ),
                                 ),
                               ],
@@ -1145,12 +1146,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             ChannelMessageStatus.pending
                                       ? Icons.schedule
                                       : Icons.error_outline,
-                                  size: 14,
+                                  size: 12 * textScale,
                                   color:
                                       message.status ==
                                           ChannelMessageStatus.failed
                                       ? Colors.red
-                                      : Colors.grey[600],
+                                      : metaColor,
                                 ),
                               ],
                               if (enableTracing &&
@@ -1160,9 +1161,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   message.wasBinaryTransport
                                       ? 'mcmp bin'
                                       : 'mcmp',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
+                                  style: MeshTheme.mono(
+                                    fontSize: 10 * textScale,
+                                    color: metaColor,
                                   ),
                                 ),
                               ],
@@ -1179,9 +1180,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             connector,
                             message.messageId,
                           ),
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onPrimaryContainer,
+                          foregroundColor: textColor,
                         ),
                     ],
                   ),
@@ -1193,11 +1192,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         if (message.reactions.isNotEmpty) ...[
           const SizedBox(height: 4),
           Padding(
-            padding: EdgeInsets.only(left: isOutgoing ? 0 : 48),
+            padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
             child: _buildReactionsDisplay(message),
           ),
         ],
       ],
+      ),
     );
 
     if (!isOutgoing && !PlatformInfo.isDesktop) {
@@ -2498,6 +2498,23 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return storedHopCount ?? 0;
     }
     return PathHelper.splitPathBytes(pathBytes, pathHashByteWidth).length;
+  }
+
+  /// Deterministic name-to-hue mapping consistent with [AvatarCircle].
+  Color _colorForName(String name) {
+    const hues = [
+      MeshPalette.blue,
+      MeshPalette.magenta,
+      MeshPalette.signal,
+      MeshPalette.warn,
+      Color(0xFF8FA8F0),
+      Color(0xFF6FD9CE),
+    ];
+    var h = 0;
+    for (final c in name.codeUnits) {
+      h = (h * 31 + c) & 0x7fffffff;
+    }
+    return hues[h % hues.length];
   }
 
   String _messagePathText(ChannelMessage message, {bool extended = false}) {
