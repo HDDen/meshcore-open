@@ -455,7 +455,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       index: dragIndex ?? listIndex,
       child: MeshCard(
         key: ValueKey('channel_${channel.index}'),
-        margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin:
+            margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         color: widgetColor,
         onTap: () {
@@ -2384,9 +2385,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       contentPadding: EdgeInsets.zero,
                       title: Text(sheetContext.l10n.channels_mcmpCompression),
                       subtitle: Text(
-                        sheetContext
-                            .l10n
-                            .channels_mcmpCompressionDescription,
+                        sheetContext.l10n.channels_mcmpCompressionDescription,
                       ),
                       value: mcmpEnabled,
                       onChanged: (value) => setSheetState(() {

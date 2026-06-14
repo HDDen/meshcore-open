@@ -294,21 +294,22 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     if (_positionSubscription != null) return;
     try {
       await _ensureLocationAvailable();
-      _positionSubscription = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 0,
-        ),
-      ).listen(
-        _handleContinuousLocation,
-        onError: (Object error) {
-          _lastPhoneLatitude = null;
-          _lastPhoneLongitude = null;
-          _lastPhoneLocationAt = null;
-          _lastLocationError = _formatWardriveError(error);
-          notifyListeners();
-        },
-      );
+      _positionSubscription =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 0,
+            ),
+          ).listen(
+            _handleContinuousLocation,
+            onError: (Object error) {
+              _lastPhoneLatitude = null;
+              _lastPhoneLongitude = null;
+              _lastPhoneLocationAt = null;
+              _lastLocationError = _formatWardriveError(error);
+              notifyListeners();
+            },
+          );
     } catch (error) {
       _lastPhoneLatitude = null;
       _lastPhoneLongitude = null;
@@ -590,7 +591,9 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> _updateNodeLocationFromPhone({required bool reportErrors}) async {
+  Future<void> _updateNodeLocationFromPhone({
+    required bool reportErrors,
+  }) async {
     _isUpdatingLocation = true;
     _lastLocationError = null;
     notifyListeners();

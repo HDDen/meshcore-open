@@ -484,29 +484,29 @@ class _ContactsScreenState extends State<ContactsScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            BottomSheetHeader(title: context.l10n.contacts_title),
-            ListTile(
-              leading: const Icon(Icons.paste),
-              title: Text(context.l10n.contacts_addContactFromClipboard),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _contactImport();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_add_rounded),
-              title: Text(context.l10n.discoveredContacts_Title),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const DiscoveryScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
+              BottomSheetHeader(title: context.l10n.contacts_title),
+              ListTile(
+                leading: const Icon(Icons.paste),
+                title: Text(context.l10n.contacts_addContactFromClipboard),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _contactImport();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_add_rounded),
+                title: Text(context.l10n.discoveredContacts_Title),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DiscoveryScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -1344,6 +1344,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       ),
     );
   }
+
   void _showContactOptions(
     BuildContext context,
     MeshCoreConnector connector,
@@ -1578,14 +1579,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                               context.l10n.channels_cyr2latSettingsSubheading,
                           border: const OutlineInputBorder(),
                         ),
-                        items: appSettingsService.settings.cyr2latProfiles
-                            .map((profile) {
-                              return DropdownMenuItem(
-                                value: profile.id,
-                                child: Text(profile.name),
-                              );
-                            })
-                            .toList(),
+                        items: appSettingsService.settings.cyr2latProfiles.map((
+                          profile,
+                        ) {
+                          return DropdownMenuItem(
+                            value: profile.id,
+                            child: Text(profile.name),
+                          );
+                        }).toList(),
                         onChanged: (value) {
                           connector.setContactCyr2LatProfileId(
                             contact.publicKeyHex,

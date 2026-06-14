@@ -83,10 +83,7 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
     );
     final scheme = Theme.of(context).colorScheme;
 
-    Widget roundButton({
-      required IconData icon,
-      required VoidCallback onTap,
-    }) {
+    Widget roundButton({required IconData icon, required VoidCallback onTap}) {
       return Material(
         color: Colors.transparent,
         child: InkWell(

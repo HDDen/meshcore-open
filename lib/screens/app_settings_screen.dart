@@ -1925,9 +1925,9 @@ class AppSettingsScreen extends StatelessWidget {
         children: [
           Text(
             context.l10n.settings_doNotFilterMessagesOnChannels,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(

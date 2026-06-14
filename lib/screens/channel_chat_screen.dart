@@ -826,8 +826,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
 
     final isHighlighted = _highlightedMessageId == message.messageId;
-    final bubbleColor = isOutgoing ? MeshPalette.me : scheme.surfaceContainerLow;
-    final bubbleBorder = isOutgoing ? MeshPalette.meBorder : scheme.outlineVariant;
+    final bubbleColor = isOutgoing
+        ? MeshPalette.me
+        : scheme.surfaceContainerLow;
+    final bubbleBorder = isOutgoing
+        ? MeshPalette.meBorder
+        : scheme.outlineVariant;
     final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
     final borderRadius = isOutgoing
@@ -852,81 +856,200 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-        Row(
-          mainAxisAlignment: isOutgoing
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!isOutgoing) ...[
-              _buildAvatar(message.senderName),
-              const SizedBox(width: 6),
-            ],
-            Flexible(
-              child: GestureDetector(
-                onTap: PlatformInfo.isDesktop
-                    ? null
-                    : () => _showMessagePathInfo(message),
-                onLongPress: () => _showMessageActions(message),
-                onSecondaryTapUp: PlatformInfo.isDesktop
-                    ? (_) => _showMessageActions(message)
-                    : null,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeInOut,
-                  padding: isMediaMessage
-                      ? const EdgeInsets.all(4)
-                      : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  constraints: BoxConstraints(
-                    maxWidth: constraints.maxWidth * 0.72,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isHighlighted
-                        ? Color.alphaBlend(
-                            Colors.green.withValues(alpha: 0.5),
-                            bubbleColor,
-                          )
-                        : bubbleColor,
-                    borderRadius: borderRadius,
-                    border: Border.all(color: bubbleBorder, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!isOutgoing) ...[
-                        Padding(
-                          padding: isMediaMessage
-                              ? const EdgeInsets.only(
-                                  left: 8,
-                                  top: 4,
-                                  bottom: 4,
-                                )
-                              : EdgeInsets.zero,
-                          child: Text(
-                            message.senderName,
-                            style: MeshTheme.mono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _colorForName(message.senderName),
+          Row(
+            mainAxisAlignment: isOutgoing
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isOutgoing) ...[
+                _buildAvatar(message.senderName),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: GestureDetector(
+                  onTap: PlatformInfo.isDesktop
+                      ? null
+                      : () => _showMessagePathInfo(message),
+                  onLongPress: () => _showMessageActions(message),
+                  onSecondaryTapUp: PlatformInfo.isDesktop
+                      ? (_) => _showMessageActions(message)
+                      : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeInOut,
+                    padding: isMediaMessage
+                        ? const EdgeInsets.all(4)
+                        : const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth * 0.72,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isHighlighted
+                          ? Color.alphaBlend(
+                              Colors.green.withValues(alpha: 0.5),
+                              bubbleColor,
+                            )
+                          : bubbleColor,
+                      borderRadius: borderRadius,
+                      border: Border.all(color: bubbleBorder, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isOutgoing) ...[
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.only(
+                                    left: 8,
+                                    top: 4,
+                                    bottom: 4,
+                                  )
+                                : EdgeInsets.zero,
+                            child: Text(
+                              message.senderName,
+                              style: MeshTheme.mono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _colorForName(message.senderName),
+                              ),
                             ),
                           ),
-                        ),
-                        if (!isMediaMessage) const SizedBox(height: 2),
-                      ],
-                      if (message.replyToSenderName != null ||
-                          message.replyToText != null) ...[
-                        _buildReplyPreview(message, textScale),
-                        const SizedBox(height: 8),
-                      ],
-                      if (poi != null)
-                        _buildPoiMessage(
-                          context,
-                          poi,
-                          isOutgoing,
-                          textScale,
-                          message.senderName,
-                          trailing: (!enableTracing && isOutgoing)
-                              ? Padding(
+                          if (!isMediaMessage) const SizedBox(height: 2),
+                        ],
+                        if (message.replyToSenderName != null ||
+                            message.replyToText != null) ...[
+                          _buildReplyPreview(message, textScale),
+                          const SizedBox(height: 8),
+                        ],
+                        if (poi != null)
+                          _buildPoiMessage(
+                            context,
+                            poi,
+                            isOutgoing,
+                            textScale,
+                            message.senderName,
+                            trailing: (!enableTracing && isOutgoing)
+                                ? Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: MessageStatusIcon(
+                                      isAcked:
+                                          message.status ==
+                                              ChannelMessageStatus.sent &&
+                                          displayPath.isNotEmpty,
+                                      isFailed:
+                                          message.status ==
+                                          ChannelMessageStatus.failed,
+                                    ),
+                                  )
+                                : null,
+                          )
+                        else if (unsupportedMcoImageVersion != null)
+                          _buildUnsupportedMcoImageMessage(
+                            context,
+                            unsupportedMcoImageVersion,
+                            mcoImageMetadata.currentMaxSupportedVersion,
+                            textScale,
+                          )
+                        else if (gifId != null)
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: GifMessage(
+                                  url:
+                                      'https://media.giphy.com/media/$gifId/giphy.gif',
+                                  backgroundColor: Colors.transparent,
+                                  fallbackTextColor: textColor.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor,
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(10),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: MessageStatusIcon(
+                                      isAcked:
+                                          message.status ==
+                                              ChannelMessageStatus.sent &&
+                                          displayPath.isNotEmpty,
+                                      isFailed:
+                                          message.status ==
+                                          ChannelMessageStatus.failed,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          )
+                        else if (mcoImage != null)
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: MCOImageMessage(image: mcoImage),
+                              ),
+                              if (!enableTracing && isOutgoing)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor,
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(10),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: MessageStatusIcon(
+                                      isAcked:
+                                          message.status ==
+                                              ChannelMessageStatus.sent &&
+                                          displayPath.isNotEmpty,
+                                      isFailed:
+                                          message.status ==
+                                          ChannelMessageStatus.failed,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          )
+                        else
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: TranslatedMessageContent(
+                                  displayText: translatedDisplayText,
+                                  originalText: originalDisplayText,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                  ),
+                                  originalStyle: TextStyle(
+                                    fontSize: bodyFontSize * textScale,
+                                    fontStyle: FontStyle.italic,
+                                    color: textColor.withValues(alpha: 0.72),
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
                                   padding: const EdgeInsets.only(bottom: 2),
                                   child: MessageStatusIcon(
                                     isAcked:
@@ -937,266 +1060,150 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                         message.status ==
                                         ChannelMessageStatus.failed,
                                   ),
-                                )
-                              : null,
-                        )
-                      else if (unsupportedMcoImageVersion != null)
-                        _buildUnsupportedMcoImageMessage(
-                          context,
-                          unsupportedMcoImageVersion,
-                          mcoImageMetadata.currentMaxSupportedVersion,
-                          textScale,
-                        )
-                      else if (gifId != null)
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: GifMessage(
-                                url:
-                                    'https://media.giphy.com/media/$gifId/giphy.gif',
-                                backgroundColor: Colors.transparent,
-                                fallbackTextColor: textColor.withValues(
-                                  alpha: 0.7,
                                 ),
-                              ),
-                            ),
-                            if (!enableTracing && isOutgoing)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: bubbleColor,
-                                    borderRadius: const BorderRadius.only(
-                                      bottomLeft: Radius.circular(10),
-                                      topRight: Radius.circular(12),
-                                    ),
-                                  ),
-                                  child: MessageStatusIcon(
-                                    isAcked:
-                                        message.status ==
-                                            ChannelMessageStatus.sent &&
-                                        displayPath.isNotEmpty,
-                                    isFailed:
-                                        message.status ==
-                                        ChannelMessageStatus.failed,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        )
-                      else if (mcoImage != null)
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: MCOImageMessage(image: mcoImage),
-                            ),
-                            if (!enableTracing && isOutgoing)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: bubbleColor,
-                                    borderRadius: const BorderRadius.only(
-                                      bottomLeft: Radius.circular(10),
-                                      topRight: Radius.circular(12),
-                                    ),
-                                  ),
-                                  child: MessageStatusIcon(
-                                    isAcked:
-                                        message.status ==
-                                            ChannelMessageStatus.sent &&
-                                        displayPath.isNotEmpty,
-                                    isFailed:
-                                        message.status ==
-                                        ChannelMessageStatus.failed,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        )
-                      else
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Flexible(
-                              child: TranslatedMessageContent(
-                                displayText: translatedDisplayText,
-                                originalText: originalDisplayText,
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: bodyFontSize * textScale,
-                                ),
-                                originalStyle: TextStyle(
-                                  fontSize: bodyFontSize * textScale,
-                                  fontStyle: FontStyle.italic,
-                                  color: textColor.withValues(alpha: 0.72),
-                                ),
-                              ),
-                            ),
-                            if (!enableTracing && isOutgoing) ...[
-                              const SizedBox(width: 4),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: MessageStatusIcon(
-                                  isAcked:
-                                      message.status ==
-                                          ChannelMessageStatus.sent &&
-                                      displayPath.isNotEmpty,
-                                  isFailed:
-                                      message.status ==
-                                      ChannelMessageStatus.failed,
-                                ),
-                              ),
+                              ],
                             ],
+                          ),
+                        if (enableTracing) ...[
+                          if (showHops && displayPath.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: isMediaMessage
+                                  ? const EdgeInsets.symmetric(horizontal: 8)
+                                  : EdgeInsets.zero,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  RouteChip(
+                                    isDirect: (message.pathLength ?? -1) >= 0,
+                                    hops: displayHopCount,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.l10n.channels_via(
+                                      _formatPathPrefixes(
+                                        displayPath,
+                                        displayPathHashWidth,
+                                      ),
+                                    ),
+                                    style: MeshTheme.mono(
+                                      fontSize: 9.5 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
-                        ),
-                      if (enableTracing) ...[
-                        if (showHops && displayPath.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Padding(
                             padding: isMediaMessage
-                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                ? const EdgeInsets.only(
+                                    left: 8,
+                                    right: 8,
+                                    bottom: 4,
+                                  )
                                 : EdgeInsets.zero,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                RouteChip(
-                                  isDirect: (message.pathLength ?? -1) >= 0,
-                                  hops: displayHopCount,
-                                ),
-                                const SizedBox(width: 4),
                                 Text(
-                                  context.l10n.channels_via(
-                                    _formatPathPrefixes(
-                                      displayPath,
-                                      displayPathHashWidth,
-                                    ),
+                                  _formatTime(
+                                    context,
+                                    message.timestamp,
+                                    enableSeconds: enableTimeSeconds,
                                   ),
                                   style: MeshTheme.mono(
-                                    fontSize: 9.5 * textScale,
+                                    fontSize: 10 * textScale,
                                     color: metaColor,
                                   ),
                                 ),
+                                if (outgoingRadioWaitSeconds != null) ...[
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '($outgoingRadioWaitSeconds)',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (message.repeatCount > 0) ...[
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.repeat,
+                                    size: 11 * textScale,
+                                    color: metaColor,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${message.repeatCount}',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (isOutgoing) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    message.status == ChannelMessageStatus.sent
+                                        ? Icons.check
+                                        : message.status ==
+                                              ChannelMessageStatus.pending
+                                        ? Icons.schedule
+                                        : Icons.error_outline,
+                                    size: 12 * textScale,
+                                    color:
+                                        message.status ==
+                                            ChannelMessageStatus.failed
+                                        ? Colors.red
+                                        : metaColor,
+                                  ),
+                                ],
+                                if (enableTracing &&
+                                    message.wasMcmpCompressed) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    message.wasBinaryTransport
+                                        ? 'mcmp bin'
+                                        : 'mcmp',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
                         ],
-                        const SizedBox(height: 3),
-                        Padding(
-                          padding: isMediaMessage
-                              ? const EdgeInsets.only(
-                                  left: 8,
-                                  right: 8,
-                                  bottom: 4,
-                                )
-                              : EdgeInsets.zero,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _formatTime(
-                                  context,
-                                  message.timestamp,
-                                  enableSeconds: enableTimeSeconds,
-                                ),
-                                style: MeshTheme.mono(
-                                  fontSize: 10 * textScale,
-                                  color: metaColor,
-                                ),
-                              ),
-                              if (outgoingRadioWaitSeconds != null) ...[
-                                const SizedBox(width: 3),
-                                Text(
-                                  '($outgoingRadioWaitSeconds)',
-                                  style: MeshTheme.mono(
-                                    fontSize: 10 * textScale,
-                                    color: metaColor,
-                                  ),
-                                ),
-                              ],
-                              if (message.repeatCount > 0) ...[
-                                const SizedBox(width: 6),
-                                Icon(
-                                  Icons.repeat,
-                                  size: 11 * textScale,
-                                  color: metaColor,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '${message.repeatCount}',
-                                  style: MeshTheme.mono(
-                                    fontSize: 10 * textScale,
-                                    color: metaColor,
-                                  ),
-                                ),
-                              ],
-                              if (isOutgoing) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  message.status == ChannelMessageStatus.sent
-                                      ? Icons.check
-                                      : message.status ==
-                                            ChannelMessageStatus.pending
-                                      ? Icons.schedule
-                                      : Icons.error_outline,
-                                  size: 12 * textScale,
-                                  color:
-                                      message.status ==
-                                          ChannelMessageStatus.failed
-                                      ? Colors.red
-                                      : metaColor,
-                                ),
-                              ],
-                              if (enableTracing &&
-                                  message.wasMcmpCompressed) ...[
-                                const SizedBox(width: 6),
-                                Text(
-                                  message.wasBinaryTransport
-                                      ? 'mcmp bin'
-                                      : 'mcmp',
-                                  style: MeshTheme.mono(
-                                    fontSize: 10 * textScale,
-                                    color: metaColor,
-                                  ),
-                                ),
-                              ],
-                            ],
+                        if (pendingSendAt != null &&
+                            pendingSendDelaySeconds != null)
+                          PendingSendCancelBar(
+                            sendAt: pendingSendAt,
+                            delaySeconds: pendingSendDelaySeconds,
+                            onCancel: () => _cancelPendingChannelSend(
+                              connector,
+                              message.messageId,
+                            ),
+                            foregroundColor: textColor,
                           ),
-                        ),
                       ],
-                      if (pendingSendAt != null &&
-                          pendingSendDelaySeconds != null)
-                        PendingSendCancelBar(
-                          sendAt: pendingSendAt,
-                          delaySeconds: pendingSendDelaySeconds,
-                          onCancel: () => _cancelPendingChannelSend(
-                            connector,
-                            message.messageId,
-                          ),
-                          foregroundColor: textColor,
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+          if (message.reactions.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
+              child: _buildReactionsDisplay(message),
             ),
           ],
-        ),
-        if (message.reactions.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Padding(
-            padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
-            child: _buildReactionsDisplay(message),
-          ),
         ],
-      ],
       ),
     );
 
@@ -1805,7 +1812,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 ),
                               ]
                             : const [],
-                        encoder: _replyingToMessage != null || usesChannelEncoding
+                        encoder:
+                            _replyingToMessage != null || usesChannelEncoding
                             ? encodeComposerText
                             : null,
                         decoration: InputDecoration(
@@ -1863,6 +1871,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       ],
     );
   }
+
   String _applyReplyMention(String text) {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;
