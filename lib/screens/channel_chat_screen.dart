@@ -362,6 +362,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Future<bool> _scrollToMessage(
     String messageId, {
     bool highlightOnSuccess = false,
+    bool quiet = false,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final originalMessageNotFoundText =
@@ -371,6 +372,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (!mounted) return false;
 
     if (targetContext == null) {
+      if (quiet) return false;
       messenger.showSnackBar(
         SnackBar(
           content: GestureDetector(
@@ -788,7 +790,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
-    final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
@@ -822,32 +823,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       displayPathHashWidth,
       message.pathLength,
     );
-
-    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
-    final bubbleColor = isOutgoing
-        ? MeshPalette.me
-        : scheme.surfaceContainerLow;
-    final bubbleBorder = isOutgoing
-        ? MeshPalette.meBorder
-        : scheme.outlineVariant;
-    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
-    final metaColor = textColor.withValues(alpha: 0.65);
-    const bodyFontSize = 14.0;
-
-    // Asymmetric radius matching chat_screen bubbles.
-    final borderRadius = isOutgoing
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.lg),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.xs),
-          )
-        : const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.xs),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.lg),
-          );
 
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
@@ -1095,11 +1070,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   isDirect: (message.pathLength ?? -1) >= 0,
                                   hops: displayHopCount,
                                 ),
-                              ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[600],
-                              ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  context.l10n.channels_via(
+                                    _formatPathPrefixes(
+                                      displayPath,
+                                      displayPathHashWidth,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -1586,12 +1570,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildReplyBanner(double textScale) {
     final message = _replyingToMessage!;
+    final scheme = Theme.of(context).colorScheme;
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
-    final previewTextColor = Theme.of(
-      context,
-    ).colorScheme.onSecondaryContainer.withValues(alpha: 0.7);
+    final previewTextColor = scheme.onSecondaryContainer.withValues(alpha: 0.7);
 
     Widget preview;
     if (mcoImage != null) {
@@ -1683,6 +1666,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildMessageComposer() {
     final connector = context.watch<MeshCoreConnector>();
     final settings = context.watch<AppSettingsService>().settings;
+    final scheme = Theme.of(context).colorScheme;
     final maxBytes = _maxChannelComposerBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
     final replyBannerHeight = _replyingToMessage != null
@@ -1712,8 +1696,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         sendText,
       );
       if (binaryPayloadBytes != null) {
-        // ByteCountedTextField measures UTF-8 bytes, so use an ASCII marker
-        // with the same length as our binary channel data envelope.
         return _byteCountPlaceholder(binaryPayloadBytes);
       }
       return usesChannelEncoding
@@ -1734,222 +1716,153 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             },
           ),
         Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: scheme.surface,
             border: Border(
               top: BorderSide(color: scheme.outlineVariant, width: 1),
             ),
           ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.gif_box),
-                onPressed: () => _showGifPicker(context),
-                tooltip: context.l10n.chat_sendGif,
-              ),
-              if (settings.canvasActive)
+          child: SafeArea(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
                 IconButton(
-                  icon: const Icon(Icons.brush_outlined),
-                  onPressed: () => _showCanvasEditor(maxBytes),
-                  tooltip: context.l10n.chat_canvas,
+                  icon: const Icon(Icons.gif_box),
+                  onPressed: () => _showGifPicker(context),
+                  tooltip: context.l10n.chat_sendGif,
                 ),
-              if (settings.translationEnabled)
-                MessageTranslationButton(
-                  enabled: settings.composerTranslationEnabled,
-                  languageCode: settings.translationTargetLanguageCode,
-                  onPressed: _showTranslationOptions,
-                ),
-              Expanded(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _textController,
-                  builder: (context, value, child) {
-                    final gifId = GifHelper.parseGif(value.text);
-                    if (gifId != null) {
-                      return Focus(
-                        autofocus: true,
-                        onKeyEvent: (node, event) {
-                          if (event is KeyDownEvent &&
-                              (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey ==
-                                      LogicalKeyboardKey.numpadEnter)) {
-                            _sendMessage();
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
-                        },
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: GifMessage(
-                                  url:
-                                      'https://media.giphy.com/media/$gifId/giphy.gif',
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest,
-                                  fallbackTextColor: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.6),
-                                  maxSize: 160,
+                if (settings.canvasActive)
+                  IconButton(
+                    icon: const Icon(Icons.brush_outlined),
+                    onPressed: () => _showCanvasEditor(maxBytes),
+                    tooltip: context.l10n.chat_canvas,
+                  ),
+                if (settings.translationEnabled)
+                  MessageTranslationButton(
+                    enabled: settings.composerTranslationEnabled,
+                    languageCode: settings.translationTargetLanguageCode,
+                    onPressed: _showTranslationOptions,
+                  ),
+                Expanded(
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, child) {
+                      final gifId = GifHelper.parseGif(value.text);
+                      if (gifId != null) {
+                        return Focus(
+                          autofocus: true,
+                          onKeyEvent: (node, event) {
+                            if (event is KeyDownEvent &&
+                                (event.logicalKey == LogicalKeyboardKey.enter ||
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.numpadEnter)) {
+                              _sendMessage();
+                              return KeyEventResult.handled;
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: GifMessage(
+                                    url:
+                                        'https://media.giphy.com/media/$gifId/giphy.gif',
+                                    backgroundColor:
+                                        scheme.surfaceContainerHighest,
+                                    fallbackTextColor: scheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                    maxSize: 160,
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () {
-                                    _textController.clear();
-                                    _textFieldFocusNode.requestFocus();
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        return ByteCountedTextField(
-                          maxBytes: maxBytes,
-                          controller: _textController,
-                          focusNode: _textFieldFocusNode,
-                          hintText: context.l10n.chat_typeMessage,
-                          onSubmitted: (_) => _sendMessage(),
-                          encoder:
-                              (connector.isChannelSmazEnabled(
-                                    widget.channel.index,
-                                  ) ||
-                                  connector.isChannelCyr2LatEnabled(
-                                    widget.channel.index,
-                                  ))
-                              ? (text) => connector.prepareChannelOutboundText(
-                                  widget.channel.index,
-                                  text,
-                                )
-                              : null,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.chat_typeMessage,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                MeshRadii.pill,
                               ),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant,
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  _textController.clear();
+                                  _textFieldFocusNode.requestFocus();
+                                },
                               ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                MeshRadii.pill,
-                              ),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                MeshRadii.pill,
-                              ),
-                              borderSide: BorderSide(
-                                color: scheme.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: scheme.surfaceContainerLow,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 12,
-                            ),
+                            ],
                           ),
                         );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, _) {
-                      final hasText = value.text.trim().isNotEmpty;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        child: IconButton.filled(
-                          icon: const Icon(Icons.send, size: 20),
-                          tooltip: context.l10n.chat_sendMessage,
-                          style: IconButton.styleFrom(
-                            backgroundColor: hasText
-                                ? scheme.primary
-                                : scheme.surfaceContainerHighest,
-                            foregroundColor: hasText
-                                ? scheme.onPrimary
-                                : scheme.onSurfaceVariant,
-                            minimumSize: const Size(40, 40),
-                            shape: const CircleBorder(),
+                      }
+                      return ByteCountedTextField(
+                        maxBytes: maxBytes,
+                        controller: _textController,
+                        focusNode: _textFieldFocusNode,
+                        maxHeight: maxInputHeight,
+                        hintText: context.l10n.chat_typeMessage,
+                        onSubmitted: (_) => _sendMessage(),
+                        extraFormatters:
+                            connector.isChannelMcmpEnabled(widget.channel.index)
+                            ? [
+                                NewlineToSpaceFormatter(
+                                  maxInsertedChars: settings.mcmpTextLimit,
+                                ),
+                              ]
+                            : const [],
+                        encoder: _replyingToMessage != null || usesChannelEncoding
+                            ? encodeComposerText
+                            : null,
+                        decoration: InputDecoration(
+                          hintText: context.l10n.chat_typeMessage,
+                          hintMaxLines: 1,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                          onPressed: hasText
-                              ? () {
-                                  HapticFeedback.lightImpact();
-                                  _sendMessage();
-                                }
-                              : null,
+                          filled: true,
+                          fillColor: scheme.surfaceContainerLow,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                         ),
                       );
-                    }
-                    return ByteCountedTextField(
-                      maxBytes: maxBytes,
-                      controller: _textController,
-                      focusNode: _textFieldFocusNode,
-                      maxHeight: maxInputHeight,
-                      hintText: context.l10n.chat_typeMessage,
-                      onSubmitted: (_) => _sendMessage(),
-                      extraFormatters:
-                          connector.isChannelMcmpEnabled(widget.channel.index)
-                          ? [
-                              NewlineToSpaceFormatter(
-                                maxInsertedChars: settings.mcmpTextLimit,
-                              ),
-                            ]
-                          : const [],
-                      encoder: _replyingToMessage != null || usesChannelEncoding
-                          ? encodeComposerText
-                          : null,
-                      decoration: InputDecoration(
-                        hintText: context.l10n.chat_typeMessage,
-                        hintMaxLines: 1,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _textController,
+                  builder: (context, value, _) {
+                    final hasText = value.text.trim().isNotEmpty;
+                    return GestureDetector(
+                      onLongPress: _showQuickAnswersPicker,
+                      onSecondaryTap: _showQuickAnswersPicker,
+                      child: IconButton.filled(
+                        icon: const Icon(Icons.send, size: 20),
+                        tooltip: context.l10n.chat_sendMessage,
+                        style: IconButton.styleFrom(
+                          backgroundColor: hasText
+                              ? scheme.primary
+                              : scheme.surfaceContainerHighest,
+                          foregroundColor: hasText
+                              ? scheme.onPrimary
+                              : scheme.onSurfaceVariant,
+                          minimumSize: const Size(40, 40),
+                          shape: const CircleBorder(),
                         ),
-                        filled: true,
-                        fillColor: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerLow,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
-                        ),
+                        onPressed: hasText
+                            ? () {
+                                HapticFeedback.lightImpact();
+                                _sendMessage();
+                              }
+                            : null,
                       ),
                     );
                   },
                 ),
-              ),
-              const SizedBox(width: 8),
-              Semantics(
-                button: true,
-                label: context.l10n.chat_sendMessage,
-                child: GestureDetector(
-                  onLongPress: _showQuickAnswersPicker,
-                  onSecondaryTap: _showQuickAnswersPicker,
-                  child: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _sendMessage,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
     );
   }
-
   String _applyReplyMention(String text) {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;

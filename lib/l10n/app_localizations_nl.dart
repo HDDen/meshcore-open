@@ -340,6 +340,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get scanner_enableBluetooth => 'Activeer Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'Bluetooth is niet beschikbaar in de browser. Verbind dan via USB.';
+
+  @override
   String get device_quickSwitch => 'Snelle overschakeling';
 
   @override
@@ -1907,6 +1911,39 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_title => 'Kaart van de knopen';
+
+  @override
+  String get map_searchHint => 'Zoek op naam of ID van de knoop';
+
+  @override
+  String get map_activity => 'Activiteit';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Recent';
+
+  @override
+  String get map_stale => 'Verouderd';
+
+  @override
+  String get map_visible => 'Zichtbaar';
+
+  @override
+  String get map_hidden => 'Verborgen';
+
+  @override
+  String get map_centerOnNode => 'Centreer op node';
+
+  @override
+  String get map_details => 'Details';
+
+  @override
+  String get map_noGps => 'Geen GPS';
+
+  @override
+  String get map_noResults => 'Geen overeenkomende nodes';
 
   @override
   String get map_lineOfSight => 'Zichtlijn';
@@ -5046,6 +5083,114 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => 'Afgeleide positie';
+
+  @override
+  String get pathMap_viewSingle => 'Enkel';
+
+  @override
+  String get pathMap_viewCombined => 'Gezamenlijk';
+
+  @override
+  String get pathMap_play => 'Afspelen';
+
+  @override
+  String get pathMap_pause => 'Pauze';
+
+  @override
+  String get pathMap_replay => 'Herhalen';
+
+  @override
+  String get pathMap_stepBack => 'Vorige hop';
+
+  @override
+  String get pathMap_stepForward => 'Volgende hop';
+
+  @override
+  String get pathMap_animationOn => 'Pakketanimatie tonen';
+
+  @override
+  String get pathMap_animationOff => 'Pakketanimatie verbergen';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Hop $current van $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Waargenomen paden: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primair';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alternatief $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Gedeeld segment';
+
+  @override
+  String get pathMap_legendEstimated => 'Geschat segment';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Gebruikt door $count paden';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count hops hebben geen locatie — het weergegeven pad is onvolledig',
+      one: '1 hop heeft geen locatie — het weergegeven pad is onvolledig',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Toon alles';
+
+  @override
+  String get pathMap_hidePath => 'Verberg pad';
+
+  @override
+  String get pathMap_showPath => 'Toon pad';
+
+  @override
+  String get pathMap_collapsePanel => 'Paneel inklappen';
+
+  @override
+  String get pathMap_expandPanel => 'Paneel uitklappen';
+
+  @override
+  String get pathMap_noLocation => 'Geen locatie';
+
+  @override
+  String get pathMap_followPacket => 'Weergave vergrendelen op pakket';
+
+  @override
+  String get pathMap_unfollowPacket => 'Weergave ontgrendelen van pakket';
 
   @override
   String get chat_canvas => 'Canvas';

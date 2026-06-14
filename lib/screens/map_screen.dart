@@ -36,6 +36,7 @@ import '../utils/route_transitions.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../widgets/themed_map_tile_layer.dart';
 import '../widgets/wardrive_status_panel.dart';
 import '../icons/los_icon.dart';
 import 'channels_screen.dart';
@@ -74,8 +75,6 @@ class _MapScreenState extends State<MapScreen>
     with DisconnectNavigationMixin, RouteAware {
   // Zoom level at which node labels start to appear
   static const double _labelZoomThreshold = 14.0;
-  // Below this zoom, nearby nodes collapse into clusters.
-  static const double _clusterOffZoom = 12.5;
   // Guessed (estimated) locations only render at closer zooms to avoid a
   // carpet of approximate markers at city-wide scale.
   static const double _guessedZoomThreshold = 12.0;
@@ -103,10 +102,23 @@ class _MapScreenState extends State<MapScreen>
   final List<Polyline> _polylines = [];
   bool _legendExpanded = false;
   bool _mapStatsCollapsed = false;
+  bool _statsExpanded = false;
   bool _showNodeLabels = true;
+  double _zoom = 10.0;
+  String? _selectedKey;
+  LatLng? _selectedGuessPos;
+  _Freshness _freshness = _Freshness.all;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+  String _searchQuery = '';
   bool _wardrivePanelCollapsed = false;
   List<_GuessedLocation> _cachedGuessedLocations = [];
   String _guessedLocationsCacheKey = '';
+  int? _sharedMarkersCacheSignature;
+  Locale? _sharedMarkersCacheLocale;
+  List<_SharedMarker> _cachedSharedMarkers = const [];
+  _NodeMarkersCacheKey? _nodeMarkersCacheKey;
+  List<Marker> _cachedNodeMarkers = const [];
   WardriveService? _wardriveService;
   VoidCallback? _wardriveServiceListener;
   PageRoute<dynamic>? _observedRoute;
@@ -168,12 +180,39 @@ class _MapScreenState extends State<MapScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _searchController.dispose();
+    _searchFocus.dispose();
     _disableWardriveScreenWakelock();
     if (_wardriveServiceListener != null) {
       _wardriveService?.removeListener(_wardriveServiceListener!);
     }
     _wardriveService?.clearMapState();
     super.dispose();
+  }
+
+  _NodeAge _ageOf(Contact contact) {
+    final d = DateTime.now().difference(contact.lastSeen);
+    if (d.inMinutes <= 60) return _NodeAge.online;
+    if (d.inHours <= 24) return _NodeAge.recent;
+    return _NodeAge.stale;
+  }
+
+  void _selectNode(Contact contact, {LatLng? guessedPosition}) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedKey = contact.publicKeyHex;
+      _selectedGuessPos = guessedPosition;
+      _searchQuery = '';
+      _searchController.clear();
+      _searchFocus.unfocus();
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedKey = null;
+      _selectedGuessPos = null;
+    });
   }
 
   @override
@@ -338,7 +377,7 @@ class _MapScreenState extends State<MapScreen>
     _mapController.move(camera.center, nextZoom);
   }
 
-  Widget _buildControlRail(
+  Widget _buildDesktopMapControls(
     BuildContext context, {
     required LatLng center,
     required double zoom,
@@ -349,55 +388,36 @@ class _MapScreenState extends State<MapScreen>
     return Positioned(
       left: 12,
       bottom: 96,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: MapPalette.panelDark,
-          borderRadius: BorderRadius.circular(MeshRadii.md),
-          border: Border.all(color: MapPalette.border),
-          boxShadow: const [
-            BoxShadow(
-              color: MapPalette.markerShadow,
-              blurRadius: 8,
-              offset: Offset(0, 3),
+      child: Card(
+        elevation: 4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: context.l10n.map_zoomIn,
+              onPressed: () => _zoomMapBy(1),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(MeshRadii.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+            IconButton(
+              icon: const Icon(Icons.remove),
+              tooltip: context.l10n.map_zoomOut,
+              onPressed: () => _zoomMapBy(-1),
+            ),
+            IconButton(
+              icon: const Icon(Icons.crop_free),
+              tooltip: context.l10n.map_centerMap,
+              onPressed: () => _mapController.move(center, zoom),
+            ),
+            if (hasSelf)
               IconButton(
-                color: MapPalette.textPrimary,
-                icon: const Icon(Icons.add),
-                visualDensity: VisualDensity.standard,
-                tooltip: context.l10n.map_zoomIn,
-                onPressed: () => _zoomMapBy(1),
-              ),
-              IconButton(
-                color: MapPalette.textPrimary,
-                icon: const Icon(Icons.remove),
-                tooltip: context.l10n.map_zoomOut,
-                onPressed: () => _zoomMapBy(-1),
-              ),
-              IconButton(
-                color: MapPalette.textPrimary,
-                icon: const Icon(Icons.crop_free),
-                tooltip: context.l10n.map_centerMap,
-                onPressed: () => _mapController.move(center, zoom),
-              ),
-              if (hasSelf)
-                IconButton(
-                  color: MapPalette.selected,
-                  icon: const Icon(Icons.my_location),
-                  tooltip: context.l10n.map_setAsMyLocation,
-                  onPressed: () => _mapController.move(
-                    LatLng(connector.selfLatitude!, connector.selfLongitude!),
-                    max(_zoom, 14),
-                  ),
+                icon: const Icon(Icons.my_location),
+                tooltip: context.l10n.map_setAsMyLocation,
+                onPressed: () => _mapController.move(
+                  LatLng(connector.selfLatitude!, connector.selfLongitude!),
+                  max(_zoom, 14),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -413,6 +433,11 @@ class _MapScreenState extends State<MapScreen>
 
         final tileCache = context.read<MapTileCacheService>();
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
+        final settings = settingsService.settings;
+        final connectorSnapshot = _MapConnectorSnapshot.fromConnector(
+          connector,
+        );
+        final pathHistoryVersion = pathHistory.version;
         final allContacts = connector.allContacts;
 
         final contacts = settings.mapShowDiscoveryContacts
@@ -2551,6 +2576,61 @@ class _MapScreenState extends State<MapScreen>
     return filtered;
   }
 
+  List<Marker> _buildNodeMarkersCached(
+    List<Contact> contacts,
+    AppSettings settings,
+    int contactsSignature,
+    int batterySignature,
+    _Freshness freshness,
+    double timeFilterHours,
+    bool keyPrefixEnabled,
+    String keyPrefix,
+    bool showDiscoveryContacts,
+    int batteryChemistrySignature, {
+    required bool showLabels,
+    bool wardriveHighlightActive = false,
+    Set<String> wardriveAnsweredKeys = const <String>{},
+  }) {
+    final visibleContactsSignature = Object.hashAll(
+      contacts.map(
+        (contact) =>
+            Object.hash(_mapContactSignature(contact), _ageOf(contact)),
+      ),
+    );
+    final key = _NodeMarkersCacheKey(
+      contactsSignature: contactsSignature,
+      visibleContactsSignature: visibleContactsSignature,
+      batterySignature: batterySignature,
+      freshness: freshness,
+      timeFilterHours: timeFilterHours,
+      keyPrefixEnabled: keyPrefixEnabled,
+      keyPrefix: keyPrefix,
+      showDiscoveryContacts: showDiscoveryContacts,
+      batteryChemistrySignature: batteryChemistrySignature,
+      showLabels: showLabels,
+      selectedKey: _selectedKey,
+      zoom: _zoom,
+      overlapsMode: settings.mapShowOverlaps,
+      showRepeaters: settings.mapShowRepeaters,
+      showChatNodes: settings.mapShowChatNodes,
+      showOtherNodes: settings.mapShowOtherNodes,
+      isBuildingPathTrace: _isBuildingPathTrace,
+    );
+    if (key != _nodeMarkersCacheKey) {
+      _nodeMarkersCacheKey = key;
+      _cachedNodeMarkers = List.unmodifiable(
+        _buildNodeMarkers(
+          contacts,
+          settings,
+          showLabels: showLabels,
+          wardriveHighlightActive: wardriveHighlightActive,
+          wardriveAnsweredKeys: wardriveAnsweredKeys,
+        ),
+      );
+    }
+    return _cachedNodeMarkers;
+  }
+
   List<Marker> _buildNodeMarkers(
     List<Contact> contacts,
     settings, {
@@ -2561,6 +2641,7 @@ class _MapScreenState extends State<MapScreen>
     final markers = <Marker>[];
     final foregroundMarkers = <Marker>[];
     final filteredContacts = _filterContactsBySettings(contacts, settings);
+    final overlapsMode = settings.mapShowOverlaps && !_isBuildingPathTrace;
     for (final contact in filteredContacts) {
       final opacity = _wardriveNodeOpacity(
         contact,
@@ -2582,7 +2663,7 @@ class _MapScreenState extends State<MapScreen>
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: settings.mapShowOverlaps && !_isBuildingPathTrace
+                  color: overlapsMode
                       ? Colors.red.withValues(alpha: opacity)
                       : _getNodeColor(contact.type).withValues(alpha: opacity),
                   shape: BoxShape.circle,
@@ -2618,7 +2699,7 @@ class _MapScreenState extends State<MapScreen>
         targetMarkers.add(
           _buildNodeLabelMarker(
             point: LatLng(contact.latitude!, contact.longitude!),
-            label: overlap
+            label: overlapsMode
                 ? "${contact.publicKeyHex.substring(0, 2)}:${contact.name}"
                 : contact.name,
           ),
@@ -3005,152 +3086,6 @@ class _MapScreenState extends State<MapScreen>
     return polylines;
   }
 
-  Marker _nodeMarker(
-    Contact contact, {
-    bool overlapsMode = false,
-    bool dot = false,
-    bool selected = false,
-  }) {
-    final age = _ageOf(contact);
-    final baseColor = overlapsMode
-        ? MapPalette.batteryLow
-        : _markerColor(contact);
-    final stale = age == _NodeAge.stale;
-    final online = age == _NodeAge.online;
-    final batteryLow = _isBatteryLow(contact);
-    final size = selected ? 46.0 : (dot ? 22.0 : 40.0);
-    return Marker(
-      point: LatLng(contact.latitude!, contact.longitude!),
-      width: size,
-      height: size,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPress: () =>
-            _isBuildingPathTrace ? _showNodeInfo(context, contact) : null,
-        onTap: () => _isBuildingPathTrace
-            ? _addToPath(context, contact)
-            : _selectNode(contact),
-        child: Center(
-          child: dot && !selected
-              ? Container(
-                  width: 15,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: baseColor,
-                    border: Border.all(
-                      color: MapPalette.markerOutline,
-                      width: 2,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: MapPalette.markerShadow,
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                )
-              : _buildNodeMarkerWidget(
-                  color: baseColor,
-                  icon: _getNodeIcon(contact.type),
-                  selected: selected,
-                  stale: stale,
-                  online: online,
-                  batteryLow: batteryLow,
-                ),
-        ),
-      ),
-    );
-  }
-
-  Marker _clusterMarker(List<Contact> members) {
-    final count = members.length;
-    double lat = 0, lon = 0;
-    var online = 0;
-    for (final m in members) {
-      lat += m.latitude!;
-      lon += m.longitude!;
-      if (_ageOf(m) == _NodeAge.online) online++;
-    }
-    final center = LatLng(lat / count, lon / count);
-    final size = count >= 50
-        ? 54.0
-        : count >= 16
-        ? 50.0
-        : count >= 6
-        ? 46.0
-        : 42.0;
-    return Marker(
-      point: center,
-      width: size,
-      height: size,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _zoomToCluster(members),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: MapPalette.cluster,
-            border: Border.all(color: MapPalette.markerOutline, width: 3),
-            boxShadow: const [
-              BoxShadow(
-                color: MapPalette.markerShadow,
-                blurRadius: 8,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$count',
-                style: MeshTheme.mono(
-                  fontSize: count >= 100 ? 11.5 : 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              if (online > 0)
-                Container(
-                  width: 7,
-                  height: 7,
-                  margin: const EdgeInsets.only(top: 1),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: MapPalette.online,
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _zoomToCluster(List<Contact> members) {
-    HapticFeedback.selectionClick();
-    var minLat = double.infinity, maxLat = -double.infinity;
-    var minLon = double.infinity, maxLon = -double.infinity;
-    for (final m in members) {
-      minLat = min(minLat, m.latitude!);
-      maxLat = max(maxLat, m.latitude!);
-      minLon = min(minLon, m.longitude!);
-      maxLon = max(maxLon, m.longitude!);
-    }
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: LatLngBounds(LatLng(minLat, minLon), LatLng(maxLat, maxLon)),
-        padding: const EdgeInsets.all(72),
-        maxZoom: 16,
-      ),
-    );
-  }
-
   Marker _buildNodeLabelMarker({required LatLng point, required String label}) {
     return Marker(
       point: point,
@@ -3220,19 +3155,6 @@ class _MapScreenState extends State<MapScreen>
       default:
         return _ageColor(_ageOf(contact));
     }
-  }
-
-  bool _isBatteryLow(Contact contact) {
-    if (contact.type != advTypeRepeater) return false;
-    final connector = context.read<MeshCoreConnector>();
-    final millivolts = connector.getRepeaterBatteryMillivolts(
-      contact.publicKeyHex,
-    );
-    if (millivolts == null) return false;
-    final chemistry = context
-        .read<AppSettingsService>()
-        .batteryChemistryForRepeater(contact.publicKeyHex);
-    return estimateBatteryPercentFromMillivolts(millivolts, chemistry) <= 20;
   }
 
   IconData _getNodeIcon(int type) {
@@ -5064,6 +4986,13 @@ class _MapScreenState extends State<MapScreen>
     return result ?? false;
   }
 
+  void _showFilterDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    _showFilterSheet(context, settingsService);
+  }
+
   void _showFilterSheet(
     BuildContext context,
     AppSettingsService settingsService,
@@ -5440,15 +5369,15 @@ class _MapScreenState extends State<MapScreen>
               children: [
                 Text(
                   l10n.contacts_pathTrace,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 if (_pathTrace.isEmpty) const SizedBox(height: 8),
                 if (_pathTrace.isEmpty)
-                  Text(l10n.map_tapToAdd, style: TextStyle(fontSize: 12)),
+                  Text(l10n.map_tapToAdd, style: const TextStyle(fontSize: 12)),
                 const SizedBox(height: 6),
                 if (_pathTrace.isNotEmpty)
                   Text(
-                    "${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}",
+                    '${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}',
                     style: MeshTheme.mono(
                       fontSize: 12,
                       color: MapPalette.textSecondary,
@@ -5465,60 +5394,53 @@ class _MapScreenState extends State<MapScreen>
                     color: MapPalette.selected,
                   ),
                 ),
-              SelectableText(
-                PathHelper.splitPathBytes(
-                  _pathTrace,
-                  context.read<MeshCoreConnector>().pathHashByteWidth,
-                ).map(PathHelper.formatHopHex).join(','),
-                style: TextStyle(fontSize: 18),
-              ),
-              // const SizedBox(height: 6),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 1,
-                runSpacing: 1,
-                children: [
-                  if (_pathTrace.isNotEmpty)
-                    IconButton(
-                      onPressed: () =>
-                          _openPathTraceResult(flipPathAround: false),
-                      tooltip: l10n.map_runTrace,
-                      icon: const Icon(Icons.arrow_forward_outlined),
-                    ),
-                  if (_pathTrace.isNotEmpty)
-                    IconButton(
-                      onPressed: () =>
-                          _openPathTraceResult(flipPathAround: true),
-                      tooltip: l10n.map_runTraceWithReturnPath,
-                      icon: const Icon(Icons.replay),
-                    ),
-                  if (_pathTrace.isNotEmpty)
-                    IconButton(
-                      onPressed: _removePath,
-                      tooltip: l10n.map_removeLast,
-                      icon: const Icon(Icons.undo),
-                    ),
-                  if (_pathTrace.isEmpty)
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isBuildingPathTrace = false;
-                          _pathTrace.clear();
-                          _pathTraceHopWidths.clear();
-                          _points.clear();
-                          _polylines.clear();
-                        });
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(l10n.map_pathTraceCancelled),
-                        );
-                      },
-                      tooltip: l10n.common_cancel,
-                      icon: const Icon(Icons.close),
-                    ),
-                ],
-              ),
-            ],
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 1,
+                  runSpacing: 1,
+                  children: [
+                    if (_pathTrace.isNotEmpty)
+                      IconButton(
+                        onPressed: () =>
+                            _openPathTraceResult(flipPathAround: false),
+                        tooltip: l10n.map_runTrace,
+                        icon: const Icon(Icons.arrow_forward_outlined),
+                      ),
+                    if (_pathTrace.isNotEmpty)
+                      IconButton(
+                        onPressed: () =>
+                            _openPathTraceResult(flipPathAround: true),
+                        tooltip: l10n.map_runTraceWithReturnPath,
+                        icon: const Icon(Icons.replay),
+                      ),
+                    if (_pathTrace.isNotEmpty)
+                      IconButton(
+                        onPressed: _removePath,
+                        tooltip: l10n.map_removeLast,
+                        icon: const Icon(Icons.undo),
+                      ),
+                    if (_pathTrace.isEmpty)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isBuildingPathTrace = false;
+                            _pathTrace.clear();
+                            _pathTraceHopWidths.clear();
+                            _points.clear();
+                            _polylines.clear();
+                          });
+                          showDismissibleSnackBar(
+                            context,
+                            content: Text(l10n.map_pathTraceCancelled),
+                          );
+                        },
+                        tooltip: l10n.common_cancel,
+                        icon: const Icon(Icons.close),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

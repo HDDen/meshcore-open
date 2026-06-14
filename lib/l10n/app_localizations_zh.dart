@@ -327,6 +327,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanner_enableBluetooth => '启用蓝牙';
 
   @override
+  String get scanner_bluetoothWebUnsupported => '浏览器不支持蓝牙，请改用 USB 连接。';
+
+  @override
   String get device_quickSwitch => '快速切换';
 
   @override
@@ -1809,6 +1812,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_title => '节点地图';
+
+  @override
+  String get map_searchHint => '搜索节点名称或ID';
+
+  @override
+  String get map_activity => '活动';
+
+  @override
+  String get map_online => '在线';
+
+  @override
+  String get map_recent => '最近';
+
+  @override
+  String get map_stale => '过时';
+
+  @override
+  String get map_visible => '可见';
+
+  @override
+  String get map_hidden => '已隐藏';
+
+  @override
+  String get map_centerOnNode => '以节点为中心';
+
+  @override
+  String get map_details => '详细信息';
+
+  @override
+  String get map_noGps => '无 GPS';
+
+  @override
+  String get map_noResults => '未找到匹配的节点';
 
   @override
   String get map_lineOfSight => '视线';
@@ -4710,6 +4746,113 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => '推测的位置';
+
+  @override
+  String get pathMap_viewSingle => '单条';
+
+  @override
+  String get pathMap_viewCombined => '综合';
+
+  @override
+  String get pathMap_play => '播放';
+
+  @override
+  String get pathMap_pause => '暂停';
+
+  @override
+  String get pathMap_replay => '重播';
+
+  @override
+  String get pathMap_stepBack => '上一跳';
+
+  @override
+  String get pathMap_stepForward => '下一跳';
+
+  @override
+  String get pathMap_animationOn => '显示数据包动画';
+
+  @override
+  String get pathMap_animationOff => '隐藏数据包动画';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return '第 $current 跳，共 $total 跳';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return '观测到的路径：$count';
+  }
+
+  @override
+  String get pathMap_primary => '主路径';
+
+  @override
+  String pathMap_alternate(int index) {
+    return '备用 $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 跳',
+      one: '1 跳',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => '共享路段';
+
+  @override
+  String get pathMap_legendEstimated => '估算路段';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return '已被 $count 条路径使用';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 跳无位置信息 — 显示的路径不完整',
+      one: '1 跳无位置信息 — 显示的路径不完整',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => '显示全部';
+
+  @override
+  String get pathMap_hidePath => '隐藏路径';
+
+  @override
+  String get pathMap_showPath => '显示路径';
+
+  @override
+  String get pathMap_collapsePanel => '收起面板';
+
+  @override
+  String get pathMap_expandPanel => '展开面板';
+
+  @override
+  String get pathMap_noLocation => '无位置';
+
+  @override
+  String get pathMap_followPacket => '锁定视图跟随数据包';
+
+  @override
+  String get pathMap_unfollowPacket => '解锁视图跟随';
 
   @override
   String get chat_canvas => 'Canvas';

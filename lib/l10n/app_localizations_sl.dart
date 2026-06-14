@@ -341,6 +341,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get scanner_enableBluetooth => 'Omogočite Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'Funkcija Bluetooth v brskalniku ni na voljo. Povežite se preko USB-ja namesto tega.';
+
+  @override
   String get device_quickSwitch => 'Hitro preklop';
 
   @override
@@ -1905,6 +1909,39 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_title => 'Mapa omrežja';
+
+  @override
+  String get map_searchHint => 'Iščite ime ali ID vozlišča';
+
+  @override
+  String get map_activity => 'Dejavnost';
+
+  @override
+  String get map_online => 'V omrežju';
+
+  @override
+  String get map_recent => 'Nedavni';
+
+  @override
+  String get map_stale => 'Zastarelo';
+
+  @override
+  String get map_visible => 'Vidno';
+
+  @override
+  String get map_hidden => 'Skrit';
+
+  @override
+  String get map_centerOnNode => 'Centriraj na vozlišče';
+
+  @override
+  String get map_details => 'Podrobnosti';
+
+  @override
+  String get map_noGps => 'Brez GPS';
+
+  @override
+  String get map_noResults => 'Ni ujemajočih se vozlišč';
 
   @override
   String get map_lineOfSight => 'Linija vida';
@@ -5049,6 +5086,117 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => 'Izpeljana lokacija';
+
+  @override
+  String get pathMap_viewSingle => 'Posamično';
+
+  @override
+  String get pathMap_viewCombined => 'Skupno';
+
+  @override
+  String get pathMap_play => 'Predvajaj';
+
+  @override
+  String get pathMap_pause => 'Premor';
+
+  @override
+  String get pathMap_replay => 'Ponovitev';
+
+  @override
+  String get pathMap_stepBack => 'Prejšnji skok';
+
+  @override
+  String get pathMap_stepForward => 'Naslednji skok';
+
+  @override
+  String get pathMap_animationOn => 'Prikaži animacijo paketa';
+
+  @override
+  String get pathMap_animationOff => 'Skrij animacijo paketa';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Skok $current od $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Opazovane poti: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primarna';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alternativa $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skokov',
+      few: '$count skoki',
+      two: '2 skoka',
+      one: '1 skok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Deljen segment';
+
+  @override
+  String get pathMap_legendEstimated => 'Ocenjen segment';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Uporablja $count poti';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skokov nima lokacije — prikazana pot je delna',
+      few: '$count skoki nimajo lokacije — prikazana pot je delna',
+      two: '2 skoka nimata lokacije — prikazana pot je delna',
+      one: '1 skok nima lokacije — prikazana pot je delna',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Pokaži vse';
+
+  @override
+  String get pathMap_hidePath => 'Skrij pot';
+
+  @override
+  String get pathMap_showPath => 'Pokaži pot';
+
+  @override
+  String get pathMap_collapsePanel => 'Strni ploščo';
+
+  @override
+  String get pathMap_expandPanel => 'Razširi ploščo';
+
+  @override
+  String get pathMap_noLocation => 'Brez lokacije';
+
+  @override
+  String get pathMap_followPacket => 'Zakleni pogled na paket';
+
+  @override
+  String get pathMap_unfollowPacket => 'Odkleni pogled od paketa';
 
   @override
   String get chat_canvas => 'Canvas';

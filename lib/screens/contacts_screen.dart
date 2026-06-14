@@ -482,8 +482,8 @@ class _ContactsScreenState extends State<ContactsScreen>
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) => SafeArea(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+            mainAxisSize: MainAxisSize.min,
+            children: [
             BottomSheetHeader(title: context.l10n.contacts_title),
             ListTile(
               leading: const Icon(Icons.paste),
@@ -507,7 +507,8 @@ class _ContactsScreenState extends State<ContactsScreen>
               },
             ),
             const SizedBox(height: 8),
-          ],
+            ],
+          ),
         ),
       ),
     );

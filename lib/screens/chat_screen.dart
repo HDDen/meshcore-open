@@ -54,7 +54,6 @@ import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
-import '../widgets/mesh_ui.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 
@@ -438,12 +437,14 @@ class _ChatScreenState extends State<ChatScreen> {
               if (contact.type == advTypeRoom) {
                 // Room-server messages carry the original author's 4-byte prefix
                 // separately from message.text; use it only for resolving the name.
-                contact = _resolveContactFrom4Bytes(
-                  connector,
-                  message.fourByteRoomContactKey.isEmpty
-                      ? Uint8List.fromList([0, 0, 0, 0])
-                      : message.fourByteRoomContactKey,
-                );
+                contact =
+                    _resolveContactFrom4Bytes(
+                      connector,
+                      message.fourByteRoomContactKey.isEmpty
+                          ? Uint8List.fromList([0, 0, 0, 0])
+                          : message.fourByteRoomContactKey,
+                    ) ??
+                    contact;
                 fourByteHex = message.fourByteRoomContactKey
                     .map((b) => b.toRadixString(16).padLeft(2, '0'))
                     .join()
@@ -535,9 +536,10 @@ class _ChatScreenState extends State<ChatScreen> {
             .clamp(56.0, 240.0)
             .toDouble();
     return Container(
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.outlineVariant, width: 1)),
+        color: colorScheme.surface,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: SafeArea(
         child: Row(
@@ -559,99 +561,49 @@ class _ChatScreenState extends State<ChatScreen> {
                 languageCode: settings.translationTargetLanguageCode,
                 onPressed: _showTranslationOptions,
               ),
-              if (settings.translationEnabled)
-                MessageTranslationButton(
-                  enabled: settings.composerTranslationEnabled,
-                  languageCode: settings.translationTargetLanguageCode,
-                  onPressed: _showTranslationOptions,
-                ),
-              Expanded(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _textController,
-                  builder: (context, value, child) {
-                    final gifId = GifHelper.parseGif(value.text);
-                    if (gifId != null) {
-                      return Focus(
-                        autofocus: true,
-                        onKeyEvent: (node, event) {
-                          if (event is KeyDownEvent &&
-                              (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey ==
-                                      LogicalKeyboardKey.numpadEnter)) {
-                            _sendMessage(connector);
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
-                        },
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: GifMessage(
-                                  url:
-                                      'https://media.giphy.com/media/$gifId/giphy.gif',
-                                  backgroundColor:
-                                      scheme.surfaceContainerHighest,
-                                  fallbackTextColor: scheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                  maxSize: 160,
-                                ),
+            Expanded(
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _textController,
+                builder: (context, value, child) {
+                  final gifId = GifHelper.parseGif(value.text);
+                  if (gifId != null) {
+                    return Focus(
+                      autofocus: true,
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent &&
+                            (event.logicalKey == LogicalKeyboardKey.enter ||
+                                event.logicalKey ==
+                                    LogicalKeyboardKey.numpadEnter)) {
+                          _sendMessage(connector);
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: GifMessage(
+                                url:
+                                    'https://media.giphy.com/media/$gifId/giphy.gif',
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHighest,
+                                fallbackTextColor: colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                                maxSize: 160,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                _textController.clear();
-                                _textFieldFocusNode.requestFocus();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return ByteCountedTextField(
-                      maxBytes: maxBytes,
-                      controller: _textController,
-                      focusNode: _textFieldFocusNode,
-                      hintText: context.l10n.chat_typeMessage,
-                      onSubmitted: (_) => _sendMessage(connector),
-                      encoder:
-                          (connector.isContactSmazEnabled(
-                                widget.contact.publicKeyHex,
-                              ) ||
-                              connector.isContactCyr2LatEnabled(
-                                widget.contact.publicKeyHex,
-                              ))
-                          ? (text) => connector.prepareContactOutboundText(
-                              widget.contact,
-                              text,
-                            )
-                          : null,
-                      decoration: InputDecoration(
-                        hintText: context.l10n.chat_typeMessage,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: BorderSide(color: scheme.outlineVariant),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: BorderSide(color: scheme.outlineVariant),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: BorderSide(
-                            color: scheme.primary,
-                            width: 1.5,
                           ),
-                        ),
-                        filled: true,
-                        fillColor: scheme.surfaceContainerLow,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _textController.clear();
+                              _textFieldFocusNode.requestFocus();
+                            },
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -693,22 +645,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: hasText
-                            ? scheme.primary
-                            : scheme.surfaceContainerHighest,
-                        foregroundColor: hasText
-                            ? scheme.onPrimary
-                            : scheme.onSurfaceVariant,
-                        minimumSize: const Size(40, 40),
-                        shape: const CircleBorder(),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLow,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
                       ),
-                      onPressed: hasText
-                          ? () {
-                              HapticFeedback.lightImpact();
-                              _sendMessage(connector);
-                            }
-                          : null,
                     ),
                   );
                 },
@@ -1703,8 +1647,8 @@ class _MessageBubble extends StatelessWidget {
         ? MeshPalette.meBorder
         : scheme.outlineVariant;
     final textColor = isFailed
-        ? colorScheme.onErrorContainer
-        : (isOutgoing ? colorScheme.onPrimary : colorScheme.onSurface);
+        ? scheme.onErrorContainer
+        : (isOutgoing ? scheme.onPrimary : scheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.7);
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     const bodyFontSize = 14.0;
@@ -1756,7 +1700,7 @@ class _MessageBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (!isOutgoing) ...[
-                  _buildAvatar(senderName, colorScheme),
+                  _buildAvatar(senderName, scheme),
                   const SizedBox(width: 8),
                 ],
                 Flexible(
@@ -1772,7 +1716,8 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: bubbleColor,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: borderRadius,
+                      border: Border.all(color: bubbleBorder, width: 1),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1791,7 +1736,7 @@ class _MessageBubble extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
+                                color: scheme.primary,
                               ),
                             ),
                           ),
@@ -2306,21 +2251,4 @@ class _MessageBubble extends StatelessWidget {
         .inSeconds;
     return (waitSeconds < 0 ? 0 : waitSeconds).toString();
   }
-}
-
-/// Deterministic name-to-hue mapping consistent with [AvatarCircle].
-Color _colorForName(String name) {
-  const hues = [
-    MeshPalette.blue,
-    MeshPalette.magenta,
-    MeshPalette.signal,
-    MeshPalette.warn,
-    Color(0xFF8FA8F0),
-    Color(0xFF6FD9CE),
-  ];
-  var h = 0;
-  for (final c in name.codeUnits) {
-    h = (h * 31 + c) & 0x7fffffff;
-  }
-  return hues[h % hues.length];
 }

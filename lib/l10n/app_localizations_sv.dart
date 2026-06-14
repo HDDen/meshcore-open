@@ -339,6 +339,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get scanner_enableBluetooth => 'Aktivera Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'Bluetooth är inte tillgängligt i webbläsaren. Anslut istället via USB.';
+
+  @override
   String get device_quickSwitch => 'Snabb växling';
 
   @override
@@ -1898,6 +1902,39 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_title => 'Nodkarta';
+
+  @override
+  String get map_searchHint => 'Sök efter nodens namn eller ID';
+
+  @override
+  String get map_activity => 'Aktivitet';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Nyligen';
+
+  @override
+  String get map_stale => 'Inaktuell';
+
+  @override
+  String get map_visible => 'Synlig';
+
+  @override
+  String get map_hidden => 'Dold';
+
+  @override
+  String get map_centerOnNode => 'Centrera på nod';
+
+  @override
+  String get map_details => 'Detaljer';
+
+  @override
+  String get map_noGps => 'Ingen GPS';
+
+  @override
+  String get map_noResults => 'Inga matchande noder';
 
   @override
   String get map_lineOfSight => 'Synlinje';
@@ -5018,6 +5055,113 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => 'Antagen position';
+
+  @override
+  String get pathMap_viewSingle => 'Enkel';
+
+  @override
+  String get pathMap_viewCombined => 'Kombinerat';
+
+  @override
+  String get pathMap_play => 'Spela';
+
+  @override
+  String get pathMap_pause => 'Pausa';
+
+  @override
+  String get pathMap_replay => 'Återspela';
+
+  @override
+  String get pathMap_stepBack => 'Föregående hopp';
+
+  @override
+  String get pathMap_stepForward => 'Nästa hopp';
+
+  @override
+  String get pathMap_animationOn => 'Visa paketanimering';
+
+  @override
+  String get pathMap_animationOff => 'Dölj paketanimering';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Hopp $current av $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Observerade vägar: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primär';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alternativ $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hopp',
+      one: '1 hopp',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Delat segment';
+
+  @override
+  String get pathMap_legendEstimated => 'Uppskattat segment';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Används av $count vägar';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hopp saknar position — den visade vägen är ofullständig',
+      one: '1 hopp saknar position — den visade vägen är ofullständig',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Visa allt';
+
+  @override
+  String get pathMap_hidePath => 'Dölj väg';
+
+  @override
+  String get pathMap_showPath => 'Visa väg';
+
+  @override
+  String get pathMap_collapsePanel => 'Fäll ihop panel';
+
+  @override
+  String get pathMap_expandPanel => 'Expandera panel';
+
+  @override
+  String get pathMap_noLocation => 'Ingen position';
+
+  @override
+  String get pathMap_followPacket => 'Lås vy till paket';
+
+  @override
+  String get pathMap_unfollowPacket => 'Lås upp vy från paket';
 
   @override
   String get chat_canvas => 'Canvas';

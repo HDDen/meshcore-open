@@ -24,10 +24,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_cancel => 'キャンセル';
 
   @override
-  String get common_ok => '了解';
+  String get common_ok => 'OK';
 
   @override
-  String get common_connect => '接続する';
+  String get common_connect => '接続';
 
   @override
   String get common_unknownDevice => '不明なデバイス';
@@ -45,7 +45,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_close => '閉じる';
 
   @override
-  String get common_done => 'Done';
+  String get common_done => '完了';
 
   @override
   String get common_edit => '編集';
@@ -57,28 +57,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_settings => '設定';
 
   @override
-  String get common_disconnect => '切断する';
+  String get common_disconnect => '切断';
 
   @override
-  String get common_connected => '接続されている';
+  String get common_connected => '接続済み';
 
   @override
-  String get common_disconnected => '切断';
+  String get common_disconnected => '切断済み';
 
   @override
-  String get common_create => '作成する';
+  String get common_create => '作成';
 
   @override
-  String get common_continue => '続き';
+  String get common_continue => '続行';
 
   @override
-  String get common_share => '共有する';
+  String get common_share => '共有';
 
   @override
   String get common_copy => 'コピー';
 
   @override
-  String get common_retry => '再試';
+  String get common_retry => '再試行';
 
   @override
   String get common_hide => '隠す';
@@ -87,10 +87,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_remove => '削除';
 
   @override
-  String get common_enable => '有効化する';
+  String get common_enable => '有効にする';
 
   @override
-  String get common_disable => '無効化する';
+  String get common_disable => '無効にする';
 
   @override
   String get common_undo => '元に戻す';
@@ -139,7 +139,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_default => 'Default';
 
   @override
-  String get common_clear => '明確';
+  String get common_clear => 'クリア';
 
   @override
   String get common_send => 'Send';
@@ -148,34 +148,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_apply => 'Apply';
 
   @override
-  String get scanner_title => 'MeshCore オープン';
+  String get scanner_title => 'MeshCore Open';
 
   @override
   String get connectionChoiceUsbLabel => 'USB';
 
   @override
-  String get connectionChoiceBluetoothLabel => 'ブルートゥース';
+  String get connectionChoiceBluetoothLabel => 'Bluetooth';
 
   @override
-  String get connectionChoiceTcpLabel => 'TCP (Transmission Control Protocol)';
+  String get connectionChoiceTcpLabel => 'TCP';
 
   @override
-  String get tcpScreenTitle => 'TCP を使用して接続';
+  String get tcpScreenTitle => 'TCP で接続';
 
   @override
-  String get tcpHostLabel => 'IPアドレス';
+  String get tcpHostLabel => '接続先';
 
   @override
-  String get tcpHostHint => '192.168.40.10';
+  String get tcpHostHint => '192.168.40.10 / example.com';
 
   @override
-  String get tcpPortLabel => '港';
+  String get tcpPortLabel => 'ポート';
 
   @override
   String get tcpPortHint => '5000';
 
   @override
-  String get tcpStatus_notConnected => 'エンドポイントを入力し、接続する';
+  String get tcpStatus_notConnected => '接続先を入力して接続してください';
 
   @override
   String tcpStatus_connectingTo(String endpoint) {
@@ -183,7 +183,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'IPアドレスが必要です。';
+  String get tcpErrorHostRequired => '接続先は必須です。';
 
   @override
   String get tcpErrorPortInvalid => 'ポート番号は1から65535の範囲で指定してください。';
@@ -212,18 +212,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usbScreenTitle => 'USB経由で接続';
 
   @override
-  String get usbScreenSubtitle => '検出されたシリアルデバイスを選択し、MeshCoreノードに直接接続してください。';
+  String get usbScreenSubtitle => '検出されたシリアルデバイスを選択して、MeshCore ノードに直接接続します。';
 
   @override
-  String get usbScreenStatus => 'USBデバイスを選択する';
+  String get usbScreenStatus => 'USB デバイスを選択してください';
 
   @override
   String get usbScreenNote =>
-      'USBシリアルポートは、サポートされているAndroidデバイスおよびデスクトッププラットフォームで利用可能です。';
+      'USB シリアルは、対応する Android デバイスとデスクトップ プラットフォームで利用できます。';
 
   @override
-  String get usbScreenEmptyState =>
-      'USBデバイスが見つかりませんでした。「別のUSBデバイスを接続して、再度確認してください。」';
+  String get usbScreenEmptyState => 'USB デバイスが見つかりません。接続してから再度更新してください。';
 
   @override
   String get usbErrorPermissionDenied => 'USBへのアクセス許可が拒否されました。';
@@ -235,7 +234,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usbErrorInvalidPort => '有効なUSBデバイスを選択してください。';
 
   @override
-  String get usbErrorBusy => '別のUSB接続の要求がすでに処理中です。';
+  String get usbErrorBusy => '別の USB 接続要求がすでに進行中です。';
 
   @override
   String get usbErrorNotConnected => 'USBデバイスは接続されていません。';
@@ -250,13 +249,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usbErrorUnsupported => 'このプラットフォームでは、USBシリアル通信はサポートされていません。';
 
   @override
-  String get usbErrorAlreadyActive => 'USB接続はすでに確立されています。';
+  String get usbErrorAlreadyActive => 'USB 接続はすでにアクティブです。';
 
   @override
   String get usbErrorNoDeviceSelected => 'USBデバイスは選択されていません。';
 
   @override
-  String get usbErrorPortClosed => 'USB接続は確立されていません。';
+  String get usbErrorPortClosed => 'USB 接続は開かれていません。';
 
   @override
   String get usbErrorConnectTimedOut =>
@@ -266,7 +265,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usbFallbackDeviceName => 'ウェブシリアルデバイス';
 
   @override
-  String get usbStatus_notConnected => 'USBデバイスを選択する';
+  String get usbStatus_notConnected => 'USB デバイスを選択してください';
 
   @override
   String get usbStatus_connecting => 'USBデバイスへの接続中...';
@@ -293,14 +292,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String scanner_connectedTo(String deviceName) {
-    return '$deviceName に接続';
+    return '$deviceName に接続済み';
   }
 
   @override
-  String get scanner_searchingDevices => 'MeshCoreデバイスの検索';
+  String get scanner_searchingDevices => 'MeshCore デバイスを検索中...';
 
   @override
-  String get scanner_tapToScan => 'MeshCore デバイスを検索するには、「スキャン」ボタンをタップしてください。';
+  String get scanner_tapToScan => 'MeshCore デバイスを見つけるには、「スキャン」をタップしてください。';
 
   @override
   String scanner_connectionFailed(String error) {
@@ -314,10 +313,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scanner_scan => 'スキャン';
 
   @override
-  String get scanner_bluetoothOff => 'Bluetooth はオフになっています';
+  String get scanner_bluetoothOff => 'Bluetooth はオフです';
 
   @override
-  String get scanner_bluetoothOffMessage => 'Bluetoothを有効にして、デバイスを検索してください。';
+  String get scanner_bluetoothOffMessage => 'Bluetooth を有効にしてデバイスを検索してください。';
 
   @override
   String get scanner_chromeRequired => 'Chrome ブラウザが必須です';
@@ -327,13 +326,17 @@ class AppLocalizationsJa extends AppLocalizations {
       'このWebアプリケーションは、Bluetooth機能を利用するために、Google ChromeまたはChromiumベースのブラウザが必要です。';
 
   @override
-  String get scanner_enableBluetooth => 'Bluetoothを有効にする';
+  String get scanner_enableBluetooth => 'Bluetooth を有効にする';
 
   @override
-  String get device_quickSwitch => '素早い切り替え';
+  String get scanner_bluetoothWebUnsupported =>
+      'ブラウザでは Bluetooth は利用できません。代わりに USB で接続してください。';
 
   @override
-  String get device_meshcore => 'メッシュコア';
+  String get device_quickSwitch => 'クイックスイッチ';
+
+  @override
+  String get device_meshcore => 'MeshCore';
 
   @override
   String get settings_title => '設定';
@@ -360,7 +363,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_nodeNameHint => 'ノード名を入力してください';
 
   @override
-  String get settings_nodeNameUpdated => '氏名変更';
+  String get settings_nodeNameUpdated => '名前を更新しました';
 
   @override
   String get settings_radioSettings => 'ラジオ設定';
@@ -426,13 +429,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_locationInvalid => '無効な緯度または経度。';
 
   @override
-  String get settings_locationGPSEnable => 'GPS機能有効';
+  String get settings_locationGPSEnable => 'GPS を有効にする';
 
   @override
-  String get settings_locationGPSEnableSubtitle => 'GPSが自動的に位置情報を更新できるようにする。';
+  String get settings_locationGPSEnableSubtitle => 'GPS が自動的に位置情報を更新できるようにします。';
 
   @override
-  String get settings_locationIntervalSec => 'GPS データの取得間隔（秒）';
+  String get settings_locationIntervalSec => 'GPS 更新間隔（秒）';
 
   @override
   String get settings_locationIntervalInvalid =>
@@ -445,26 +448,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_longitude => '経度';
 
   @override
-  String get settings_contactSettings => '連絡設定';
+  String get settings_contactSettings => '連絡先設定';
 
   @override
-  String get settings_contactSettingsSubtitle => '連絡先を追加する設定';
+  String get settings_contactSettingsSubtitle => '連絡先の追加方法に関する設定';
 
   @override
   String get settings_privacyMode => 'プライバシーモード';
 
   @override
-  String get settings_privacyModeSubtitle => '広告に名前/場所を記載しない';
+  String get settings_privacyModeSubtitle => '広告に名前や位置を表示しない';
 
   @override
   String get settings_privacyModeToggle =>
-      'プライバシーモードをオンにして、広告に表示される名前や場所を非表示にします。';
+      'プライバシーモードを有効にすると、広告に表示される名前と位置を非表示にします。';
 
   @override
   String get settings_privacyModeEnabled => 'プライバシーモードが有効になっています';
 
   @override
-  String get settings_privacyModeDisabled => 'プライバシーモードは無効化されています';
+  String get settings_privacyModeDisabled => 'プライバシーモードは無効です';
 
   @override
   String get settings_privacy => 'プライバシー設定';
@@ -501,50 +504,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_advertLocationSubtitle => '広告に場所を記載してください。';
 
   @override
-  String get settings_multiAck => '複数のACK（応答）';
+  String get settings_multiAck => 'マルチ ACK';
 
   @override
   String get settings_telemetryModeUpdated => 'テレメトリモードが更新されました';
 
   @override
-  String get settings_actions => '行動';
+  String get settings_actions => '操作';
 
   @override
-  String get settings_deleteAllPaths => 'Delete All Paths';
+  String get settings_deleteAllPaths => 'すべての経路を削除';
 
   @override
-  String get settings_deleteAllPathsSubtitle =>
-      'Clear all path data from contacts.';
+  String get settings_deleteAllPathsSubtitle => '連絡先からすべての経路データを消去します。';
 
   @override
-  String get settings_sendAdvertisement => '広告を送信する';
+  String get settings_sendAdvertisement => '広告を送信';
 
   @override
-  String get settings_sendAdvertisementSubtitle => '現在、放送での活動';
+  String get settings_sendAdvertisementSubtitle => '現在の存在を送信します';
 
   @override
-  String get settings_advertisementSent => '広告が送信されました';
+  String get settings_advertisementSent => '広告を送信しました';
 
   @override
-  String get settings_syncTime => '同期時間';
+  String get settings_syncTime => '時刻を同期';
 
   @override
-  String get settings_syncTimeSubtitle => 'デバイスの時刻を、携帯電話の時刻に合わせる';
+  String get settings_syncTimeSubtitle => 'デバイスの時刻をスマートフォンに合わせます';
 
   @override
-  String get settings_timeSynchronized => '時間同期';
+  String get settings_timeSynchronized => '時刻を同期しました';
 
   @override
-  String get settings_refreshContacts => '連絡先を更新する';
+  String get settings_refreshContacts => '連絡先を更新';
 
   @override
-  String get settings_refreshContactsSubtitle => 'デバイスから連絡先リストを再読み込みする';
+  String get settings_refreshContactsSubtitle => 'デバイスから連絡先リストを再読み込みします';
 
   @override
-  String get settings_rebootDevice => 'デバイスを再起動する';
+  String get settings_rebootDevice => 'デバイスを再起動';
 
   @override
-  String get settings_rebootDeviceSubtitle => 'MeshCore デバイスを再起動する';
+  String get settings_rebootDeviceSubtitle => 'MeshCore デバイスを再起動します';
 
   @override
   String get settings_rebootDeviceConfirm =>
@@ -561,7 +563,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'BLE/TCP/USB 関連のコマンド、応答、および生のデータ';
 
   @override
-  String get settings_appDebugLog => 'アプリケーションのデバッグログ';
+  String get settings_appDebugLog => 'アプリのデバッグログ';
 
   @override
   String get settings_appDebugLogSubtitle => 'アプリケーションのデバッグメッセージ';
@@ -575,11 +577,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese => '2026年のMeshCoreオープンソースプロジェクト';
+  String get settings_aboutLegalese => '2026 MeshCore オープンソースプロジェクト';
 
   @override
   String get settings_aboutDescription =>
-      'MeshCore LoRaメッシュネットワークデバイス用の、オープンソースのFlutterクライアント。';
+      'MeshCore LoRa メッシュネットワークデバイス向けのオープンソース Flutter クライアント。';
 
   @override
   String get settings_aboutModDescription =>
@@ -645,19 +647,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_txPowerInvalid => '無効な送信電力 (0-22 dBm)';
 
   @override
-  String get settings_clientRepeat => 'オフグリッドリピータ';
+  String get settings_clientRepeat => 'オフグリッド中継';
 
   @override
   String get settings_clientRepeatSubtitle =>
-      'このデバイスが、他のデバイスに対してメッシュパケットを繰り返し送信できるようにする。';
+      'このデバイスが他のデバイス向けにメッシュパケットを中継できるようにします。';
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'オフグリッドでの再送には、433MHz、869MHz、または918MHzの周波数が必要です。';
+      'オフグリッド中継には 433、869、または 918 MHz の周波数が必要です。';
 
   @override
   String settings_error(String message) {
-    return 'エラー：$message';
+    return 'エラー: $message';
   }
 
   @override
@@ -709,19 +711,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_theme => 'テーマ';
 
   @override
-  String get appSettings_themeSystem => 'システムデフォルト';
+  String get appSettings_themeSystem => 'システム設定';
 
   @override
-  String get appSettings_themeLight => '光';
+  String get appSettings_themeLight => 'ライト';
 
   @override
-  String get appSettings_themeDark => '暗い';
+  String get appSettings_themeDark => 'ダーク';
 
   @override
   String get appSettings_language => '言語';
 
   @override
-  String get appSettings_languageSystem => 'システムデフォルト';
+  String get appSettings_languageSystem => 'システム設定';
 
   @override
   String get appSettings_languageEn => '英語';
@@ -781,11 +783,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_pathHashModeOption3 => '3 - 4 bytes';
 
   @override
-  String get appSettings_enableMessageTracing => 'メッセージ追跡機能を有効にする';
+  String get appSettings_enableMessageTracing => 'メッセージ追跡を有効にする';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
-      'メッセージに関する詳細な経路およびタイミングに関するメタデータを表示する';
+      'メッセージの詳細な経路とタイミングのメタデータを表示します';
 
   @override
   String get appSettings_enableTimeSeconds => 'メッセージ情報に秒を表示';
@@ -800,7 +802,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_enableNotifications => '通知を有効にする';
 
   @override
-  String get appSettings_enableNotificationsSubtitle => 'メッセージや広告に関する通知を受け取る';
+  String get appSettings_enableNotificationsSubtitle => 'メッセージや広告の通知を受け取ります';
 
   @override
   String get appSettings_notificationPermissionDenied => '通知の許可が拒否されました';
@@ -836,77 +838,75 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_messaging => 'メッセージング';
 
   @override
-  String get appSettings_clearPathOnMaxRetry => 'マックスリトライでの明確な手順';
+  String get appSettings_clearPathOnMaxRetry => '最大再試行時に経路を消去';
 
   @override
   String get appSettings_clearPathOnMaxRetrySubtitle =>
-      '5回送信に失敗した場合、連絡経路をリセットする';
+      '5 回送信に失敗したら連絡先の経路をリセットします';
 
   @override
-  String get appSettings_pathsWillBeCleared => '5回失敗した後、経路が再開されます。';
+  String get appSettings_pathsWillBeCleared => '5 回失敗すると経路を消去します';
 
   @override
-  String get appSettings_pathsWillNotBeCleared => 'パスは自動で削除されません。';
+  String get appSettings_pathsWillNotBeCleared => '経路は自動では消去されません';
 
   @override
-  String get appSettings_autoRouteRotation => '自動ルートの切り替え';
+  String get appSettings_autoRouteRotation => '自動経路切り替え';
 
   @override
-  String get appSettings_autoRouteRotationSubtitle => '最適なルートと、フラッドモードを切り替える';
+  String get appSettings_autoRouteRotationSubtitle => '最適な経路とフラッドモードを切り替えます';
 
   @override
-  String get appSettings_autoRouteRotationEnabled => '自動ルートの切り替え機能が有効になっています';
+  String get appSettings_autoRouteRotationEnabled => '自動経路切り替えが有効です';
 
   @override
-  String get appSettings_autoRouteRotationDisabled => '自動ルートの変更機能が無効になっています。';
+  String get appSettings_autoRouteRotationDisabled => '自動経路切り替えは無効です';
 
   @override
-  String get appSettings_maxRouteWeight => '最大ルート重量';
+  String get appSettings_maxRouteWeight => '最大経路重み';
 
   @override
-  String get appSettings_maxRouteWeightSubtitle =>
-      'ある経路が、成功裏に配送された場合に、積み上げられる最大重量';
+  String get appSettings_maxRouteWeightSubtitle => '成功配送によって経路に蓄積できる最大重み';
 
   @override
-  String get appSettings_initialRouteWeight => '初期ルートの重み';
+  String get appSettings_initialRouteWeight => '初期経路重み';
 
   @override
-  String get appSettings_initialRouteWeightSubtitle => '新たに発見された経路の初期重量';
+  String get appSettings_initialRouteWeightSubtitle => '新しく発見された経路の初期重み';
 
   @override
   String get appSettings_routeWeightSuccessIncrement => '成功時の重み増加';
 
   @override
   String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      '配送が成功した場合に、経路に追加される重量';
+      '成功配送後に経路へ加算する重み';
 
   @override
   String get appSettings_routeWeightFailureDecrement => '失敗時の重み減少';
 
   @override
   String get appSettings_routeWeightFailureDecrementSubtitle =>
-      '配送に失敗した際に、経路から取り除かれた重量';
+      '失敗配送後に経路から差し引く重み';
 
   @override
   String get appSettings_maxMessageRetries => '最大メッセージ再試行回数';
 
   @override
-  String get appSettings_maxMessageRetriesSubtitle =>
-      'メッセージを「失敗」とマークするまでの、再試行回数';
+  String get appSettings_maxMessageRetriesSubtitle => 'メッセージを失敗として扱うまでの再試行回数';
 
   @override
   String get appSettings_battery => 'バッテリー';
 
   @override
-  String get appSettings_batteryChemistry => '電池の化学';
+  String get appSettings_batteryChemistry => 'バッテリー種別';
 
   @override
   String appSettings_batteryChemistryPerDevice(String deviceName) {
-    return '$deviceName 単位';
+    return '$deviceName ごとに設定';
   }
 
   @override
-  String get appSettings_batteryChemistryConnectFirst => 'デバイスを選択するために接続する';
+  String get appSettings_batteryChemistryConnectFirst => '選択するにはデバイスに接続してください';
 
   @override
   String get appSettings_batteryNmc => '18650型 NMC (3.0-4.2V)';
@@ -918,22 +918,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_batteryLipo => 'LiPo (3.0-4.2V)';
 
   @override
-  String get appSettings_mapDisplay => '地図の表示';
+  String get appSettings_mapDisplay => '地図表示';
 
   @override
-  String get appSettings_showRepeaters => '繰り返し再生機能';
+  String get appSettings_showRepeaters => 'リピータを表示';
 
   @override
   String get appSettings_showRepeatersSubtitle => '地図上にリピータノードを表示する';
 
   @override
-  String get appSettings_showChatNodes => 'チャットノードの表示';
+  String get appSettings_showChatNodes => 'チャットノードを表示';
 
   @override
   String get appSettings_showChatNodesSubtitle => '地図上にチャットノードを表示する';
 
   @override
-  String get appSettings_showOtherNodes => '他のノードを表示する';
+  String get appSettings_showOtherNodes => 'その他のノードを表示';
 
   @override
   String get appSettings_showOtherNodesSubtitle => '地図上に、他のノードの種類を表示する';
@@ -942,24 +942,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_timeFilter => '時間フィルター';
 
   @override
-  String get appSettings_timeFilterShowAll => 'すべてのノードを表示する';
+  String get appSettings_timeFilterShowAll => 'すべてのノードを表示';
 
   @override
   String appSettings_timeFilterShowLast(int hours) {
-    return '過去 $hours 時間のノードを表示する';
+    return '過去 $hours 時間以内に発見されたノードを表示';
   }
 
   @override
-  String get appSettings_mapTimeFilter => '地図の表示期間を絞り込む';
+  String get appSettings_mapTimeFilter => '地図の時間フィルター';
 
   @override
-  String get appSettings_showNodesDiscoveredWithin => '以下の範囲内で発見されたノードを表示する：';
+  String get appSettings_showNodesDiscoveredWithin => '次の期間内に発見されたノードを表示:';
 
   @override
-  String get appSettings_allTime => 'すべての期間';
+  String get appSettings_allTime => '全期間';
 
   @override
-  String get appSettings_lastHour => '直前の';
+  String get appSettings_lastHour => '過去1時間';
 
   @override
   String get appSettings_last6Hours => '過去6時間';
@@ -968,54 +968,52 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_last24Hours => '過去24時間';
 
   @override
-  String get appSettings_lastWeek => '先週';
+  String get appSettings_lastWeek => '過去1週間';
 
   @override
-  String get appSettings_offlineMapCache => 'オフライン用地図キャッシュ';
+  String get appSettings_offlineMapCache => 'オフライン地図キャッシュ';
 
   @override
   String get appSettings_unitsTitle => '単位';
 
   @override
-  String get appSettings_unitsMetric => 'メートル (m) / キロメートル (km)';
+  String get appSettings_unitsMetric => 'メートル法 (m / km)';
 
   @override
-  String get appSettings_unitsImperial => '帝国 (フィート / マイル)';
+  String get appSettings_unitsImperial => 'ヤード・ポンド法 (ft / mi)';
 
   @override
-  String get appSettings_noAreaSelected => '選択されたエリアはありません';
+  String get appSettings_noAreaSelected => 'エリアが選択されていません';
 
   @override
   String appSettings_areaSelectedZoom(int minZoom, int maxZoom) {
-    return '選択された範囲（ズームレベル：$minZoom～$maxZoom）';
+    return 'エリア選択中（ズーム $minZoom-$maxZoom）';
   }
 
   @override
   String get appSettings_debugCard => 'デバッグ';
 
   @override
-  String get appSettings_appDebugLogging => 'アプリケーションのデバッグ用ログ';
+  String get appSettings_appDebugLogging => 'アプリのデバッグログ';
 
   @override
   String get appSettings_appDebugLoggingSubtitle =>
-      'ログアプリのデバッグメッセージ（トラブルシューティング用）';
+      'トラブルシューティング用にアプリのデバッグメッセージを記録します';
 
   @override
-  String get appSettings_appDebugLoggingEnabled =>
-      'アプリケーションのデバッグ用ログ機能が有効になっています。';
+  String get appSettings_appDebugLoggingEnabled => 'アプリのデバッグログは有効です';
 
   @override
-  String get appSettings_appDebugLoggingDisabled =>
-      'アプリケーションのデバッグログが無効化されています。';
+  String get appSettings_appDebugLoggingDisabled => 'アプリのデバッグログは無効です';
 
   @override
   String get contacts_title => '連絡先';
 
   @override
-  String get contacts_noContacts => '現時点では、連絡先はまだありません。';
+  String get contacts_noContacts => 'まだ連絡先はありません';
 
   @override
-  String get contacts_contactsWillAppear => 'デバイスが広告を行う際に、連絡先が表示されます。';
+  String get contacts_contactsWillAppear => 'デバイスが広告を送信すると連絡先が表示されます';
 
   @override
   String get contacts_unread => '未読';
@@ -1025,27 +1023,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return '$number件の$strに関する連絡先を検索...';
+    return '連絡先を検索... $number 件の $str';
   }
 
   @override
   String contacts_searchFavorites(int number, String str) {
-    return '$number件の$strを検索...';
+    return 'お気に入りを検索... $number 件の $str';
   }
 
   @override
   String contacts_searchUsers(int number, String str) {
-    return '$number件の$strに関するユーザーを検索する...';
+    return 'ユーザーを検索... $number 件の $str';
   }
 
   @override
   String contacts_searchRepeaters(int number, String str) {
-    return '$number $str までの検索...';
+    return 'リピータを検索... $number 件の $str';
   }
 
   @override
   String contacts_searchRoomServers(int number, String str) {
-    return '$number $str 部屋のサーバーを検索する...';
+    return 'ルームサーバーを検索... $number 件の $str';
   }
 
   @override
@@ -1066,16 +1064,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_manageRepeater => 'リピータの管理';
 
   @override
-  String get contacts_manageRoom => 'ルームサーバーの管理';
+  String get contacts_manageRoom => 'ルームサーバーを管理';
 
   @override
-  String get contacts_roomLogin => 'ルームサーバーへのログイン';
+  String get contacts_roomLogin => 'ルームサーバーログイン';
 
   @override
-  String get contacts_openChat => '自由な会話';
+  String get contacts_openChat => 'チャットを開く';
 
   @override
-  String get contacts_editGroup => '編集グループ';
+  String get contacts_editGroup => 'グループを編集';
 
   @override
   String get contacts_deleteGroup => 'グループを削除';
@@ -1104,44 +1102,44 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_groupNameRequired => 'グループ名が必須です';
 
   @override
-  String get contacts_groupNameReserved => 'このグループ名はすでに使用されています。';
+  String get contacts_groupNameReserved => 'このグループ名は予約済みです';
 
   @override
   String contacts_groupAlreadyExists(String name) {
-    return 'グループ「$name」はすでに存在しています';
+    return 'グループ「$name」はすでに存在します';
   }
 
   @override
-  String get contacts_filterContacts => '連絡先をフィルタリングする…';
+  String get contacts_filterContacts => '連絡先をフィルタ...';
 
   @override
-  String get contacts_noContactsMatchFilter => '指定された条件に合致する連絡先は見つかりませんでした。';
+  String get contacts_noContactsMatchFilter => '条件に一致する連絡先はありません';
 
   @override
-  String get contacts_noMembers => 'メンバーはいない';
+  String get contacts_noMembers => 'メンバーなし';
 
   @override
   String get contacts_lastSeenNow => '最近';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return '～$minutes 分';
+    return '約 $minutes 分前';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => '約1時間';
+  String get contacts_lastSeenHourAgo => '約 1 時間前';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return '～ $hours 時間';
+    return '約 $hours 時間前';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => '～1日';
+  String get contacts_lastSeenDayAgo => '約 1 日前';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return '～$days日間';
+    return '約 $days 日前';
   }
 
   @override
@@ -1187,10 +1185,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_noChannelsConfigured => '設定されたチャンネルがありません';
 
   @override
-  String get channels_addPublicChannel => 'パブリックチャンネルを追加する';
+  String get channels_addPublicChannel => '公開チャンネルを追加';
 
   @override
-  String get channels_searchChannels => '検索オプション...';
+  String get channels_searchChannels => 'チャンネルを検索...';
 
   @override
   String get channels_noChannelsFound => 'チャンネルが見つかりませんでした';
@@ -1201,27 +1199,27 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get channels_public => '一般の人々';
+  String get channels_public => '公開';
 
   @override
   String channels_via(String path) {
-    return 'via $path';
+    return '経由: $path';
   }
 
   @override
-  String get channels_private => '個人の';
+  String get channels_private => '非公開';
 
   @override
-  String get channels_editChannel => 'チャンネルを編集する';
+  String get channels_editChannel => 'チャンネルを編集';
 
   @override
-  String get channels_muteChannel => 'ミュート機能';
+  String get channels_muteChannel => 'チャンネルをミュート';
 
   @override
-  String get channels_unmuteChannel => 'ミュートを解除する';
+  String get channels_unmuteChannel => 'チャンネルのミュートを解除';
 
   @override
-  String get channels_deleteChannel => 'チャンネルを削除する';
+  String get channels_deleteChannel => 'チャンネルを削除';
 
   @override
   String channels_deleteChannelConfirm(String name) {
@@ -1251,13 +1249,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_usePublicChannel => 'パブリックチャンネルを使用する';
 
   @override
-  String get channels_standardPublicPsk => '標準的な公用 PSK';
+  String get channels_standardPublicPsk => '公開用の標準 PSK';
 
   @override
-  String get channels_pskHex => 'PSK (ヘックス)';
+  String get channels_pskHex => 'PSK（16 進数）';
 
   @override
-  String get channels_generateRandomPsk => 'ランダムなPSK（正交符号分割変調）を生成する';
+  String get channels_generateRandomPsk => 'ランダムな PSK を生成';
 
   @override
   String get channels_enterChannelName => 'チャンネル名を入力してください';
@@ -1267,7 +1265,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String channels_channelAdded(String name) {
-    return 'チャンネル「$name」を追加';
+    return 'チャンネル「$name」を追加しました';
   }
 
   @override
@@ -1285,20 +1283,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '送信時に一部のキリル文字をラテン文字に置き換えます。';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'cyr2latの設定';
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 設定';
 
   @override
   String get channels_cyr2latSettingsSubheading => '置換リスト';
 
   @override
-  String get channels_cyr2latSettingsDscr => '文字置換のJSON設定を編集する';
+  String get channels_cyr2latSettingsDscr => '文字置換の JSON 設定を編集します';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON置換マップ';
+  String get channels_cyr2latSettingsDialogHint => 'JSON 置換マップ';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return '不正なJSON: $error';
+    return '無効な JSON: $error';
   }
 
   @override
@@ -1319,7 +1317,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_allowOrderingInGroup => 'グループ内のチャンネルの並び替えを許可';
 
   @override
-  String get settings_cyr2latProfileAdd => 'Cyr2Latプロファイルの追加';
+  String get settings_cyr2latProfileAdd => 'Cyr2Lat プロファイルを追加';
 
   @override
   String get settings_cyr2latProfileName => 'プロファイル名';
@@ -1328,23 +1326,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_cyr2latProfileNameEmpty => 'プロファイル名は空にできません';
 
   @override
-  String get settings_cyr2latProfileAdded => 'プロファイルが正常に追加されました';
+  String get settings_cyr2latProfileAdded => 'プロファイルを追加しました';
 
   @override
-  String get settings_cyr2latProfileUpdated => 'プロファイルの更新に成功しました';
+  String get settings_cyr2latProfileUpdated => 'プロファイルを更新しました';
 
   @override
-  String get settings_cyr2latProfileEdit => 'Cyr2Latプロファイルを編集';
+  String get settings_cyr2latProfileEdit => 'Cyr2Lat プロファイルを編集';
 
   @override
-  String get settings_cyr2latProfileDelete => 'Cyr2Latプロファイルを削除';
+  String get settings_cyr2latProfileDelete => 'Cyr2Lat プロファイルを削除';
 
   @override
-  String get settings_cyr2latProfileDeleted => 'プロファイルの削除に成功しました';
+  String get settings_cyr2latProfileDeleted => 'プロファイルを削除しました';
 
   @override
   String settings_cyr2latProfileDeleteDscr(String name) {
-    return 'プロファイル \"$name\" を削除してもよろしいですか？';
+    return 'プロファイル「$name」を削除しますか？';
   }
 
   @override
@@ -1368,13 +1366,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '既定では、自分のノードからのメッセージは無視されます。組み込みTerminalCLIを持つ一部のファームウェアでは問題が発生します';
 
   @override
-  String get channels_publicChannelAdded => 'パブリックチャンネルが追加されました';
+  String get channels_publicChannelAdded => '公開チャンネルを追加しました';
 
   @override
   String get channels_sortBy => '並び替え';
 
   @override
-  String get channels_sortManual => 'マニュアル';
+  String get channels_sortManual => '手動';
 
   @override
   String get channels_sortAZ => 'AからZ';
@@ -1389,19 +1387,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_createPrivateChannel => 'プライベートチャンネルを作成する';
 
   @override
-  String get channels_createPrivateChannelDesc => '秘密鍵を使用して保護されています。';
+  String get channels_createPrivateChannelDesc => '秘密鍵で保護されます。';
 
   @override
   String get channels_joinPrivateChannel => 'プライベートチャンネルに参加する';
 
   @override
-  String get channels_joinPrivateChannelDesc => '手動で秘密のキーを入力する。';
+  String get channels_joinPrivateChannelDesc => '秘密鍵を手動で入力します。';
 
   @override
   String get channels_joinPublicChannel => '公開チャンネルに参加する';
 
   @override
-  String get channels_joinPublicChannelDesc => 'このチャンネルには、誰でも参加できます。';
+  String get channels_joinPublicChannelDesc => '誰でもこのチャンネルに参加できます。';
 
   @override
   String get channels_joinHashtagChannel => 'ハッシュタグチャンネルに参加する';
@@ -1470,7 +1468,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String chat_messageTooLong(int maxBytes) {
-    return 'メッセージが長すぎる（$maxBytes バイトを超える）。';
+    return 'メッセージが長すぎます（$maxBytes バイトを超えています）';
   }
 
   @override
@@ -1480,7 +1478,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_messageDeleted => 'メッセージは削除されました';
 
   @override
-  String get chat_retryingMessage => '再試行メッセージ';
+  String get chat_retryingMessage => 'メッセージを再試行中';
 
   @override
   String chat_retryingMessageWait(Object seconds) {
@@ -1489,86 +1487,86 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String chat_retryCount(int current, int max) {
-    return '$current / $max 回目';
+    return '$current/$max 回目';
   }
 
   @override
-  String get chat_sendGif => 'GIFを送信する';
+  String get chat_sendGif => 'GIF を送信';
 
   @override
   String get chat_reply => '返信';
 
   @override
-  String get chat_addReaction => '反応を追加';
+  String get chat_addReaction => 'リアクションを追加';
 
   @override
   String get chat_me => '私';
 
   @override
-  String get emojiCategorySmileys => '笑顔の絵文字';
+  String get emojiCategorySmileys => '顔文字';
 
   @override
-  String get emojiCategoryGestures => '身振り、動作';
+  String get emojiCategoryGestures => 'ジェスチャー';
 
   @override
-  String get emojiCategoryHearts => '心';
+  String get emojiCategoryHearts => 'ハート';
 
   @override
-  String get emojiCategoryObjects => '対象物';
+  String get emojiCategoryObjects => '物';
 
   @override
-  String get gifPicker_title => 'GIF を選択してください';
+  String get gifPicker_title => 'GIF を選択';
 
   @override
-  String get gifPicker_searchHint => 'GIFの検索...';
+  String get gifPicker_searchHint => 'GIF を検索...';
 
   @override
-  String get gifPicker_poweredBy => 'GIPHYによる提供';
+  String get gifPicker_poweredBy => 'GIPHY 提供';
 
   @override
-  String get gifPicker_noGifsFound => 'GIF形式のファイルは見つかりませんでした';
+  String get gifPicker_noGifsFound => 'GIF が見つかりませんでした';
 
   @override
-  String get gifPicker_failedLoad => 'GIFファイルの読み込みに失敗しました';
+  String get gifPicker_failedLoad => 'GIF の読み込みに失敗しました';
 
   @override
-  String get gifPicker_failedSearch => 'GIFファイルの検索に失敗しました';
+  String get gifPicker_failedSearch => 'GIF の検索に失敗しました';
 
   @override
-  String get gifPicker_noInternet => 'インターネット接続なし';
+  String get gifPicker_noInternet => 'インターネット接続がありません';
 
   @override
-  String get debugLog_appTitle => 'アプリケーションのデバッグログ';
+  String get debugLog_appTitle => 'アプリのデバッグログ';
 
   @override
   String get debugLog_bleTitle => 'BLE デバッグログ';
 
   @override
-  String get debugLog_copyLog => '記録';
+  String get debugLog_copyLog => 'ログをコピー';
 
   @override
-  String get debugLog_clearLog => '詳細なログ';
+  String get debugLog_clearLog => 'ログをクリア';
 
   @override
-  String get debugLog_copied => 'デバッグログをコピー';
+  String get debugLog_copied => 'デバッグログをコピーしました';
 
   @override
-  String get debugLog_bleCopied => 'BLEログのコピー';
+  String get debugLog_bleCopied => 'BLE ログをコピーしました';
 
   @override
-  String get debugLog_noEntries => 'デバッグログはまだ生成されていません';
+  String get debugLog_noEntries => 'まだデバッグログはありません';
 
   @override
-  String get debugLog_enableInSettings => 'アプリのデバッグログを有効にするには、設定から操作してください。';
+  String get debugLog_enableInSettings => '設定でアプリのデバッグログを有効にしてください';
 
   @override
   String get debugLog_frames => 'フレーム';
 
   @override
-  String get debugLog_rawLogRx => '生のログ-RX';
+  String get debugLog_rawLogRx => '生の Log-RX';
 
   @override
-  String get debugLog_noBleActivity => '現時点では、BLE関連の活動は行われていません。';
+  String get debugLog_noBleActivity => 'まだ BLE アクティビティはありません';
 
   @override
   String debugFrame_length(int count) {
@@ -1581,7 +1579,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get debugFrame_textMessageHeader => 'テキストメッセージ用フレーム：';
+  String get debugFrame_textMessageHeader => 'テキストメッセージフレーム:';
 
   @override
   String debugFrame_destinationPubKey(String pubKey) {
@@ -1604,18 +1602,18 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get debugFrame_textTypeCli => 'CLI（コマンドラインインターフェース）';
+  String get debugFrame_textTypeCli => 'CLI';
 
   @override
-  String get debugFrame_textTypePlain => 'シンプルな';
+  String get debugFrame_textTypePlain => 'プレーン';
 
   @override
   String debugFrame_text(String text) {
-    return '- テキスト：「$text」';
+    return '- テキスト: \"$text\"';
   }
 
   @override
-  String get debugFrame_hexDump => 'ヘックスダンプ：';
+  String get debugFrame_hexDump => '16 進ダンプ:';
 
   @override
   String chat_hopsCount(int count) {
@@ -1629,127 +1627,126 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get chat_removePath => 'パスを削除する';
+  String get chat_removePath => '経路を削除';
 
   @override
-  String get chat_noPathHistoryYet => 'まだ履歴はありません。\nパスを特定するためにメッセージを送信してください。';
+  String get chat_noPathHistoryYet => 'まだ経路履歴はありません。\n経路を見つけるにはメッセージを送信してください。';
 
   @override
-  String get chat_pathCleared => '経路が確保されました。次のメッセージでルートを再確認します。';
+  String get chat_pathCleared => '経路をクリアしました。次のメッセージで再探索します。';
 
   @override
-  String get chat_fullPath => 'フルパス';
+  String get chat_fullPath => '完全な経路';
 
   @override
   String get routing_title => '経路設定';
 
   @override
-  String get routing_modeAuto => '自動車';
+  String get routing_modeAuto => '自動';
 
   @override
-  String get routing_modeFlood => '洪水';
+  String get routing_modeFlood => 'フラッド';
 
   @override
-  String get routing_modeManual => 'マニュアル';
+  String get routing_modeManual => '手動';
 
   @override
-  String get routing_modeAutoHint => '最も一般的な経路を自動的に選択し、経路が不明な場合は、水没状態にします。';
+  String get routing_modeAutoHint => '既知の最良経路を自動で選び、経路がないときはフラッドします。';
 
   @override
   String get routing_modeFloodHint =>
-      'すべてのリピーターを通じて放送。最も信頼性が高いですが、より多くの時間を使用します。';
+      'すべてのリピータを通じてブロードキャストします。最も信頼性は高いですが、空中時間を多く使います。';
 
   @override
-  String get routing_modeManualHint => '常に、あなたが設定した正確な経路を辿って移動します。';
+  String get routing_modeManualHint => '常に、設定した正確な経路を使います。';
 
   @override
-  String get routing_currentRoute => '現在までのルート';
+  String get routing_currentRoute => '現在の経路';
 
   @override
-  String get routing_directNoHops => '直接接続—中継装置を経由しない';
+  String get routing_directNoHops => '直接 - 中継ホップなし';
 
   @override
-  String get routing_noPathYet =>
-      'まだ経路は確立されていません。「次のメッセージを送信し、経路が特定されるまで待ちます」。';
+  String get routing_noPathYet => 'まだ経路はありません。次のメッセージは経路が見つかるまでフラッドされます。';
 
   @override
-  String get routing_floodBroadcast => 'すべてのリピーターを通じて放送';
+  String get routing_floodBroadcast => 'すべてのリピータにブロードキャスト';
 
   @override
-  String get routing_editPath => 'パスの編集';
+  String get routing_editPath => '経路を編集';
 
   @override
-  String get routing_forgetPath => '道にこだわらない';
+  String get routing_forgetPath => '経路を忘れる';
 
   @override
   String get routing_knownPaths => '既知の経路';
 
   @override
-  String get routing_knownPathsHint => 'そのアプリケーションに切り替えるためのショートカットを作成します。';
+  String get routing_knownPathsHint => '経路をタップして切り替えます。';
 
   @override
   String get routing_inUse => '使用中';
 
   @override
-  String get routing_qualityStrong => '最初の段階で大きな成果を上げる';
+  String get routing_qualityStrong => '強い最初のホップ';
 
   @override
-  String get routing_qualityGood => '最初の成功';
+  String get routing_qualityGood => '良好な最初のホップ';
 
   @override
-  String get routing_qualityFair => '最初の試みは成功を収めた';
+  String get routing_qualityFair => 'まずまずの最初のホップ';
 
   @override
-  String get routing_qualityWorked => '完了しました';
+  String get routing_qualityWorked => '配信済み';
 
   @override
-  String get routing_qualityFlood => '氾濫によって伝聞';
+  String get routing_qualityFlood => 'フラッドで受信';
 
   @override
   String get routing_qualityUntested => '未検証';
 
   @override
   String routing_lastWorked(String when) {
-    return '$whenに勤務';
+    return '$when に確認';
   }
 
   @override
-  String get routing_neverWorked => '確認されていない';
+  String get routing_neverWorked => '未確認';
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes 件配信済み、$failures 件失敗';
   }
 
   @override
-  String get routing_floodDelivery => '洪水による配送';
+  String get routing_floodDelivery => 'フラッド配送';
 
   @override
-  String get pathEditor_title => '経路の作成';
+  String get pathEditor_title => '経路を作成';
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '64個のホップのうち、$count個';
+    return '64 ホップ中 $count';
   }
 
   @override
   String get pathEditor_noHops =>
-      'まだホップは追加されていません。ホップを順番に追加するには、以下の「タップ」ボタンをクリックしてください。または、ホップを一切追加せずに直接送信するには、「保存」ボタンをクリックしてください。';
+      'まだホップはありません。下のリピータをタップして順番に追加するか、ホップなしで保存して直接送信します。';
 
   @override
-  String get pathEditor_addHops => 'ホップを、指定された順番に加える';
+  String get pathEditor_addHops => '順番にホップを追加';
 
   @override
-  String get pathEditor_searchRepeaters => '繰り返し検索';
+  String get pathEditor_searchRepeaters => 'リピータを検索';
 
   @override
-  String get pathEditor_advancedHex => '高度なレベル：生のヘックスパス';
+  String get pathEditor_advancedHex => '詳細: 生の 16 進経路';
 
   @override
-  String get pathEditor_hexLabel => 'ヘックスプレフィックス';
+  String get pathEditor_hexLabel => '16 進接頭辞';
 
   @override
-  String get pathEditor_hexHelper => '各ホップごとに2つのハッシュ文字を、カンマで区切って記述';
+  String get pathEditor_hexHelper => 'ホップごとに 16 進数 2 文字をカンマ区切りで入力します';
 
   @override
   String pathEditor_invalidTokens(String tokens) {
@@ -1757,25 +1754,25 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get pathEditor_tooManyHops => '最大64段階';
+  String get pathEditor_tooManyHops => '最大 64 ホップ';
 
   @override
-  String get pathEditor_usePath => 'この経路を使用してください';
+  String get pathEditor_usePath => 'この経路を使用';
 
   @override
-  String get pathEditor_removeHop => 'ホップを取り除く';
+  String get pathEditor_removeHop => 'ホップを削除';
 
   @override
-  String get pathEditor_unknownHop => '不明な増幅器';
+  String get pathEditor_unknownHop => '不明なリピータ';
 
   @override
-  String get chat_pathSavedLocally => 'ローカルで保存。同期のために接続する。';
+  String get chat_pathSavedLocally => 'ローカルに保存しました。同期するには接続してください。';
 
   @override
-  String get chat_pathDeviceConfirmed => 'デバイスの確認済み。';
+  String get chat_pathDeviceConfirmed => 'デバイスで確認済み';
 
   @override
-  String get chat_pathDeviceNotConfirmed => 'デバイスの確認はまだできていません。';
+  String get chat_pathDeviceNotConfirmed => 'デバイスではまだ確認されていません';
 
   @override
   String get chat_type => '種類';
@@ -1787,17 +1784,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_publicKey => '公開鍵';
 
   @override
-  String get chat_compressOutgoingMessages => '送信されるメッセージを圧縮する';
+  String get chat_compressOutgoingMessages => '送信メッセージを圧縮する';
 
   @override
-  String get chat_floodForced => 'フラッド（強制的な）';
+  String get chat_floodForced => 'フラッド（強制）';
 
   @override
-  String get chat_directForced => '直接的な（強制的な）';
+  String get chat_directForced => 'ダイレクト（強制）';
 
   @override
   String chat_hopsForced(int count) {
-    return '$count 本のホップ（強制的に採取）';
+    return '$count ホップ（強制）';
   }
 
   @override
@@ -1807,7 +1804,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_direct => '直接';
 
   @override
-  String get chat_poiShared => '共有されたPOI';
+  String get chat_poiShared => '共有された POI';
 
   @override
   String chat_unread(int count) {
@@ -1821,17 +1818,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_newMessages => '新しいメッセージ';
 
   @override
-  String get chat_openLink => 'リンクを開く？';
+  String get chat_openLink => 'リンクを開きますか？';
 
   @override
-  String get chat_openLinkConfirmation => 'このリンクをブラウザで開くことはご希望ですか？';
+  String get chat_openLinkConfirmation => 'このリンクをブラウザで開きますか？';
 
   @override
   String get chat_open => '開く';
 
   @override
   String chat_couldNotOpenLink(String url) {
-    return 'リンクを開けられませんでした: $url';
+    return 'リンクを開けませんでした: $url';
   }
 
   @override
@@ -1841,25 +1838,58 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_title => 'ノードマップ';
 
   @override
-  String get map_lineOfSight => '視界';
+  String get map_searchHint => 'ノード名またはIDで検索';
 
   @override
-  String get map_losScreenTitle => '視界';
+  String get map_activity => 'アクティビティ';
 
   @override
-  String get map_noNodesWithLocation => '位置情報データを持つノードは存在しません';
+  String get map_online => 'オンライン';
 
   @override
-  String get map_nodesNeedGps => 'ノードは、地図上に表示されるために、GPS座標を共有する必要があります。';
+  String get map_recent => '最近';
+
+  @override
+  String get map_stale => '古い';
+
+  @override
+  String get map_visible => '表示中';
+
+  @override
+  String get map_hidden => '非表示';
+
+  @override
+  String get map_centerOnNode => 'ノードを中央に表示';
+
+  @override
+  String get map_details => '詳細';
+
+  @override
+  String get map_noGps => 'GPS なし';
+
+  @override
+  String get map_noResults => '一致するノードなし';
+
+  @override
+  String get map_lineOfSight => '見通し';
+
+  @override
+  String get map_losScreenTitle => '見通し';
+
+  @override
+  String get map_noNodesWithLocation => '位置情報を持つノードはありません';
+
+  @override
+  String get map_nodesNeedGps => 'ノードを地図に表示するには GPS 座標の共有が必要です';
 
   @override
   String map_nodesCount(int count) {
-    return 'ノード：$count';
+    return 'ノード: $count';
   }
 
   @override
   String map_pinsCount(int count) {
-    return 'ピン：$count個';
+    return 'ピン: $count';
   }
 
   @override
@@ -1878,46 +1908,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_pinDm => 'ピン（DM）';
 
   @override
-  String get map_pinPrivate => 'プライベート（非公開）';
+  String get map_pinPrivate => 'ピン（非公開）';
 
   @override
-  String get map_pinPublic => '公開 (一般公開)';
+  String get map_pinPublic => 'ピン（公開）';
 
   @override
-  String get map_lastSeen => '最後に確認された場所';
+  String get map_lastSeen => '最後に確認';
 
   @override
   String get map_disconnectConfirm => '本当にこのデバイスとの接続を解除したいですか？';
 
   @override
-  String get map_from => '～から';
+  String get map_from => '送信元';
 
   @override
   String get map_source => '出典';
 
   @override
-  String get map_flags => '旗';
+  String get map_flags => 'フラグ';
 
   @override
-  String get map_type => 'Type';
+  String get map_type => '種類';
 
   @override
-  String get map_path => 'Path';
+  String get map_path => '経路';
 
   @override
-  String get map_location => 'Location';
+  String get map_location => '位置';
 
   @override
-  String get map_estLocation => 'Est. Location';
+  String get map_estLocation => '推定位置';
 
   @override
-  String get map_publicKey => 'Public Key';
+  String get map_publicKey => '公開鍵';
 
   @override
   String get map_publicKeyPrefixHint => 'e.g. ab12';
 
   @override
-  String get map_shareMarkerHere => 'この場所でシェア';
+  String get map_shareMarkerHere => 'ここにマーカーを共有';
 
   @override
   String get map_setAsMyLocation => '現在地として設定';
@@ -1929,30 +1959,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_label => 'ラベル';
 
   @override
-  String get map_pointOfInterest => '注目すべき点';
+  String get map_pointOfInterest => '興味地点';
 
   @override
   String get map_sendToContact => '連絡先へ送信';
 
   @override
-  String get map_sendToChannel => '特定のチャンネルに送信する';
+  String get map_sendToChannel => 'チャンネルへ送信';
 
   @override
   String get map_noChannelsAvailable => '利用可能なチャンネルはありません';
 
   @override
-  String get map_publicLocationShare => '公共スペースの共有';
+  String get map_publicLocationShare => '公開位置情報の共有';
 
   @override
   String map_publicLocationShareConfirm(String channelLabel) {
-    return '現在、$channelLabel で位置情報を共有する準備をしています。このチャンネルは公開されており、PSK を持つ誰でも閲覧できます。';
+    return '$channelLabel で位置情報を共有しようとしています。このチャンネルは公開されており、PSK を持つ誰でも閲覧できます。';
   }
 
   @override
-  String get map_connectToShareMarkers => '他のデバイスと接続して、マーカーを共有する';
+  String get map_connectToShareMarkers => 'マーカーを共有するにはデバイスに接続してください';
 
   @override
-  String get map_filterNodes => 'フィルタノード';
+  String get map_filterNodes => 'ノードを絞り込む';
 
   @override
   String get map_nodeTypes => 'ノードの種類';
@@ -1970,10 +2000,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_showOverlaps => 'リピータキーの重複';
 
   @override
-  String get map_keyPrefix => '主要なプレフィックス';
+  String get map_keyPrefix => 'キー接頭辞';
 
   @override
-  String get map_filterByKeyPrefix => '主要なプレフィックスでフィルタリングする';
+  String get map_filterByKeyPrefix => 'キー接頭辞で絞り込む';
 
   @override
   String get map_publicKeyPrefix => '公開鍵のプレフィックス';
@@ -1988,7 +2018,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_showGuessedLocations => '推測されたノードの位置を表示する';
 
   @override
-  String get map_showDiscoveryContacts => 'Discovery社の連絡先を表示する';
+  String get map_showDiscoveryContacts => 'Discovery 連絡先を表示';
 
   @override
   String get map_guessedLocation => '推測された場所';
@@ -1997,7 +2027,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_lastSeenTime => '最後に確認された時間';
 
   @override
-  String get map_sharedPin => '共有パスワード';
+  String get map_sharedPin => '共有ピン';
 
   @override
   String get map_sharedAt => '共有済み';
@@ -2009,19 +2039,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_manageRepeater => 'リピータの管理';
 
   @override
-  String get map_tapToAdd => 'ノードをクリックして、パスに追加します。';
+  String get map_tapToAdd => 'ノードをタップして経路に追加します。';
 
   @override
-  String get map_runTrace => 'パスの追跡を実行';
+  String get map_runTrace => '経路トレースを実行';
 
   @override
   String get map_runTraceWithReturnPath => '元の経路に戻る。';
 
   @override
-  String get map_removeLast => '最後のものを削除';
+  String get map_removeLast => '最後を削除';
 
   @override
-  String get map_pathTraceCancelled => 'パスの追跡は中止。';
+  String get map_pathTraceCancelled => '経路トレースはキャンセルされました';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2378,12 +2408,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String mapCache_cachedTiles(int count) {
-    return '$count 個のタイルをキャッシュ';
+    return '$count 枚のタイルをキャッシュしました';
   }
 
   @override
   String mapCache_cachedTilesWithFailed(int downloaded, int failed) {
-    return 'Cached $downloaded tiles ($failed failed)';
+    return '$downloaded 枚をキャッシュ済み（$failed 件失敗）';
   }
 
   @override
@@ -2414,7 +2444,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String mapCache_downloadedTiles(int completed, int total) {
-    return 'Downloaded $completed / $total';
+    return 'ダウンロード済み $completed / $total';
   }
 
   @override
@@ -2607,11 +2637,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_settingsSubtitle => 'リピータのパラメータを設定する';
 
   @override
-  String get repeater_clockSyncAfterLogin => 'ログイン後、時計の時刻を同期する';
+  String get repeater_clockSyncAfterLogin => 'ログイン後に時刻を同期';
 
   @override
-  String get repeater_clockSyncAfterLoginSubtitle =>
-      'ログインが成功した場合、自動的に「時刻同期」を送信する。';
+  String get repeater_clockSyncAfterLoginSubtitle => 'ログイン成功時に自動で時刻同期を送信します';
 
   @override
   String get repeater_statusTitle => '再送ステータス';
@@ -2640,7 +2669,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_clockAtLogin => 'ログイン時の時刻表示';
 
   @override
-  String get repeater_uptime => '稼働率';
+  String get repeater_uptime => '稼働時間';
 
   @override
   String get repeater_queueLength => '待ち行列の長さ';
@@ -2661,10 +2690,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_noiseFloor => 'ノイズレベル';
 
   @override
-  String get repeater_txAirtime => 'TXの放送時間';
+  String get repeater_txAirtime => 'TX 送信時間';
 
   @override
-  String get repeater_rxAirtime => 'RX 空き時間';
+  String get repeater_rxAirtime => 'RX 受信時間';
 
   @override
   String get repeater_chanUtil => 'チャンネルの利用状況';
@@ -2673,10 +2702,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_packetStatistics => 'パケット統計';
 
   @override
-  String get repeater_sent => '送信';
+  String get repeater_sent => '送信済み';
 
   @override
-  String get repeater_received => '受領';
+  String get repeater_received => '受信済み';
 
   @override
   String get repeater_duplicates => '重複';
@@ -2975,25 +3004,25 @@ class AppLocalizationsJa extends AppLocalizations {
       'ラジオの自動ゲイン制御をリセットする頻度について：ゲインが固定状態になった場合に、回復するために、何度リセットするかを設定します。4の倍数でリセットする場合、0を設定すると、定期的なリセットは停止します。';
 
   @override
-  String get repeater_actionsTitle => '行動';
+  String get repeater_actionsTitle => '操作';
 
   @override
-  String get repeater_sendAdvert => 'フラッドに関する広告を送信';
+  String get repeater_sendAdvert => 'フラッド広告を送信';
 
   @override
-  String get repeater_sendAdvertSubtitle => 'ネットワークを通じて、フラッドに関する広告を放送する';
+  String get repeater_sendAdvertSubtitle => 'ネットワーク全体にフラッド広告をブロードキャストします';
 
   @override
-  String get repeater_sendAdvertZeroHop => 'ゼロホップ形式の広告を送信する';
+  String get repeater_sendAdvertZeroHop => 'ゼロホップ広告を送信';
 
   @override
-  String get repeater_sendAdvertZeroHopSubtitle => 'ワンホップでの広告放送（リピータなし）';
+  String get repeater_sendAdvertZeroHopSubtitle => '1 ホップ広告を送信します（リピータなし）';
 
   @override
-  String get repeater_clockSync => '現在、時刻を同期する';
+  String get repeater_clockSync => '時刻を同期';
 
   @override
-  String get repeater_clockSyncSubtitle => 'スマートフォンの時刻をルーターに設定する';
+  String get repeater_clockSyncSubtitle => 'スマートフォンの時刻をデバイスに設定します';
 
   @override
   String repeater_actionSucceeded(String action) {
@@ -3048,7 +3077,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get repeater_cliTitle => 'リピータのコマンドラインインターフェース';
+  String get repeater_cliTitle => 'リピータ CLI';
 
   @override
   String get repeater_debugNextCommand => '次のコマンドのデバッグ';
@@ -3057,7 +3086,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_commandHelp => 'コマンドヘルプ';
 
   @override
-  String get repeater_clearHistory => '明確な歴史';
+  String get repeater_clearHistory => '履歴をクリア';
 
   @override
   String get repeater_noCommandsSent => 'まだコマンドは送信されていません';
@@ -3093,22 +3122,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_cliQuickGetRadio => 'ラジオを聴く';
 
   @override
-  String get repeater_cliQuickGetTx => 'TXを入手する';
+  String get repeater_cliQuickGetTx => 'TX を取得';
 
   @override
-  String get repeater_cliQuickNeighbors => '近隣住民';
+  String get repeater_cliQuickNeighbors => '近隣';
 
   @override
   String get repeater_cliQuickVersion => 'バージョン';
 
   @override
-  String get repeater_cliQuickAdvertise => '広告';
+  String get repeater_cliQuickAdvertise => '広告送信';
 
   @override
-  String get repeater_cliQuickClock => '時計';
+  String get repeater_cliQuickClock => '時刻';
 
   @override
-  String get repeater_cliQuickClockSync => 'クロック同期';
+  String get repeater_cliQuickClockSync => '時刻同期';
 
   @override
   String get repeater_cliQuickDiscovery => '近隣を発見する';
@@ -3863,7 +3892,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String channelPath_observedSomeOf(int observed, int total) {
-    return '$observed of $total hops';
+    return '$observed/$total ホップ';
   }
 
   @override
@@ -3898,36 +3927,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channelPath_outgoingSentByRadioAt => '無線送信待ち、秒';
 
   @override
-  String get community_title => '地域';
+  String get community_title => 'コミュニティ';
 
   @override
-  String get community_create => 'コミュニティを構築する';
+  String get community_create => 'コミュニティを作成';
 
   @override
-  String get community_createDesc => '新しいコミュニティを作成し、QRコードで共有する。';
+  String get community_createDesc => '新しいコミュニティを作成して QR コードで共有します。';
 
   @override
-  String get community_join => '参加する';
+  String get community_join => '参加';
 
   @override
-  String get community_joinTitle => 'コミュニティに参加する';
+  String get community_joinTitle => 'コミュニティに参加';
 
   @override
   String community_joinConfirmation(String name) {
-    return '$nameさんのようなコミュニティに参加したいですか？';
+    return '$name のコミュニティに参加しますか？';
   }
 
   @override
-  String get community_scanQr => 'コミュニティのQRコードをスキャン';
+  String get community_scanQr => 'コミュニティの QR コードをスキャン';
 
   @override
-  String get community_scanInstructions => 'カメラを、地域のQRコードを向けて';
+  String get community_scanInstructions => 'カメラをコミュニティの QR コードに向けてください';
 
   @override
-  String get community_showQr => 'QRコードを表示する';
+  String get community_showQr => 'QR コードを表示';
 
   @override
-  String get community_publicChannel => '地域住民向け';
+  String get community_publicChannel => '公開チャンネル';
 
   @override
   String get community_hashtagChannel => 'コミュニティ用ハッシュタグ';
@@ -3940,12 +3969,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String community_created(String name) {
-    return 'コミュニティ「$name」が作成されました';
+    return 'コミュニティ「$name」を作成しました';
   }
 
   @override
   String community_joined(String name) {
-    return '$name のコミュニティに参加';
+    return '$name のコミュニティに参加しました';
   }
 
   @override
@@ -3953,45 +3982,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String community_qrInstructions(String name) {
-    return 'このQRコードをスキャンして、$nameに参加してください。';
+    return 'この QR コードをスキャンして $name に参加してください。';
   }
 
   @override
   String get community_hashtagPrivacyHint =>
-      'コミュニティハッシュタグのチャンネルは、コミュニティのメンバーのみが参加できます。';
+      'コミュニティのハッシュタグチャンネルには、コミュニティのメンバーだけが参加できます。';
 
   @override
   String get community_invalidQrCode => '無効なコミュニティQRコード';
 
   @override
-  String get community_alreadyMember => 'すでに会員である';
+  String get community_alreadyMember => 'すでにメンバーです';
 
   @override
   String community_alreadyMemberMessage(String name) {
-    return 'あなたはすでに $name の会員です。';
+    return 'あなたはすでに $name のメンバーです。';
   }
 
   @override
-  String get community_addPublicChannel => 'コミュニティ用の公開チャンネルを追加';
+  String get community_addPublicChannel => '公開チャンネルを追加';
 
   @override
-  String get community_addPublicChannelHint => 'このコミュニティの公開チャンネルを自動的に追加する';
+  String get community_addPublicChannelHint => 'このコミュニティの公開チャンネルを自動で追加します';
 
   @override
-  String get community_noCommunities => 'まだコミュニティは形成されていません。';
+  String get community_noCommunities => 'まだコミュニティはありません';
 
   @override
-  String get community_scanOrCreate => 'QRコードをスキャンするか、コミュニティを作成して開始してください。';
+  String get community_scanOrCreate => 'QR コードをスキャンするか、コミュニティを作成して始めてください。';
 
   @override
-  String get community_manageCommunities => 'コミュニティの管理';
+  String get community_manageCommunities => 'コミュニティを管理';
 
   @override
-  String get community_delete => 'コミュニティからの離脱';
+  String get community_delete => 'コミュニティを離脱';
 
   @override
   String community_deleteConfirm(String name) {
-    return '$nameを辞める？';
+    return '$name から離脱しますか？';
   }
 
   @override
@@ -4001,62 +4030,62 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String community_deleted(String name) {
-    return 'コミュニティ「$name」を離れる';
+    return 'コミュニティ「$name」から離脱しました';
   }
 
   @override
-  String get community_regenerateSecret => '秘密の復元';
+  String get community_regenerateSecret => '秘密鍵を再生成';
 
   @override
   String community_regenerateSecretConfirm(String name) {
-    return '$name の秘密鍵を再生成しますか？ 継続的に通信するため、すべてのメンバーは新しいQRコードをスキャンする必要があります。';
+    return '$name の秘密鍵を再生成しますか？ 継続して通信するには、すべてのメンバーが新しい QR コードをスキャンする必要があります。';
   }
 
   @override
-  String get community_regenerate => '再生';
+  String get community_regenerate => '再生成';
 
   @override
   String community_secretRegenerated(String name) {
-    return '$name への秘密が再設定されました';
+    return '$name の秘密鍵を再生成しました';
   }
 
   @override
-  String get community_updateSecret => '秘密情報の更新';
+  String get community_updateSecret => '秘密鍵を更新';
 
   @override
   String community_secretUpdated(String name) {
-    return '$name 向けの秘密設定を更新';
+    return '$name の秘密設定を更新しました';
   }
 
   @override
   String community_scanToUpdateSecret(String name) {
-    return '新しいQRコードをスキャンして、$nameの秘密情報を更新してください。';
+    return '新しい QR コードをスキャンして $name の秘密設定を更新してください。';
   }
 
   @override
-  String get community_addHashtagChannel => 'コミュニティのハッシュタグを追加';
+  String get community_addHashtagChannel => 'ハッシュタグチャンネルを追加';
 
   @override
-  String get community_addHashtagChannelDesc => 'このコミュニティ用のハッシュタグチャンネルを追加する';
+  String get community_addHashtagChannelDesc => 'このコミュニティ用のハッシュタグチャンネルを追加します';
 
   @override
   String get community_selectCommunity => 'コミュニティを選択';
 
   @override
-  String get community_regularHashtag => '定期的なハッシュタグ';
+  String get community_regularHashtag => '通常のハッシュタグ';
 
   @override
-  String get community_regularHashtagDesc => '一般のハッシュタグ（誰でも参加可能）';
+  String get community_regularHashtagDesc => '公開ハッシュタグ（誰でも参加可能）';
 
   @override
   String get community_communityHashtag => 'コミュニティ用ハッシュタグ';
 
   @override
-  String get community_communityHashtagDesc => 'コミュニティメンバーのみへの限定';
+  String get community_communityHashtagDesc => 'コミュニティメンバーのみ利用できます';
 
   @override
   String community_forCommunity(String name) {
-    return '$name 様';
+    return '$name 向け';
   }
 
   @override
@@ -4721,24 +4750,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get translation_systemLanguage => 'システム言語';
 
   @override
-  String get background_serviceTitle => 'MeshCore running';
+  String get background_serviceTitle => 'MeshCore 実行中';
 
   @override
-  String get background_serviceText => 'Keeping BLE connected';
+  String get background_serviceText => 'BLE 接続を維持しています';
 
   @override
   String appSettings_translationModelDeleted(String name) {
-    return 'Deleted $name';
+    return '$name を削除しました';
   }
 
   @override
   String appSettings_translationModelDeleteFailed(String error) {
-    return 'Failed to delete: $error';
+    return '削除に失敗しました: $error';
   }
 
   @override
   String channels_channelUpdateFailed(String error) {
-    return 'Failed to update channel: $error';
+    return 'チャンネルの更新に失敗しました: $error';
   }
 
   @override
@@ -4789,19 +4818,19 @@ class AppLocalizationsJa extends AppLocalizations {
       'Send extended data as binary (direct messages)';
 
   @override
-  String get contact_typeChat => 'Chat';
+  String get contact_typeChat => 'チャット';
 
   @override
-  String get contact_typeRepeater => 'Repeater';
+  String get contact_typeRepeater => 'リピータ';
 
   @override
-  String get contact_typeRoom => 'Room';
+  String get contact_typeRoom => 'ルーム';
 
   @override
-  String get contact_typeSensor => 'Sensor';
+  String get contact_typeSensor => 'センサー';
 
   @override
-  String get contact_typeUnknown => 'Unknown';
+  String get contact_typeUnknown => '不明';
 
   @override
   String get map_zoomIn => 'ズームイン';
@@ -4810,11 +4839,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_zoomOut => 'ズームアウト';
 
   @override
-  String get map_centerMap => '中心地図';
+  String get map_centerMap => '地図を中央に移動';
 
   @override
   String get chrome_bluetoothRequiresChromium =>
-      'Web Bluetooth は、Chromium ブラウザが必要です。';
+      'Web Bluetooth には Chromium ベースのブラウザが必要です。';
 
   @override
   String channels_communityShortId(String id) {
@@ -4826,6 +4855,113 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => '推測される位置';
+
+  @override
+  String get pathMap_viewSingle => '単独表示';
+
+  @override
+  String get pathMap_viewCombined => '統合表示';
+
+  @override
+  String get pathMap_play => '再生';
+
+  @override
+  String get pathMap_pause => '一時停止';
+
+  @override
+  String get pathMap_replay => 'リプレイ';
+
+  @override
+  String get pathMap_stepBack => '前のホップ';
+
+  @override
+  String get pathMap_stepForward => '次のホップ';
+
+  @override
+  String get pathMap_animationOn => 'パケットアニメーションを表示';
+
+  @override
+  String get pathMap_animationOff => 'パケットアニメーションを非表示';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return '$current/$total ホップ目';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return '観測された経路: $count';
+  }
+
+  @override
+  String get pathMap_primary => '主要';
+
+  @override
+  String pathMap_alternate(int index) {
+    return '代替 $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ホップ',
+      one: '1 ホップ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => '共有セグメント';
+
+  @override
+  String get pathMap_legendEstimated => '概算のセグメント';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return '$count 経路で使用されています';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count つのホップに位置情報がありません - 表示中の経路は一部です',
+      one: '1 つのホップに位置情報がありません - 表示中の経路は一部です',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'すべて表示';
+
+  @override
+  String get pathMap_hidePath => '経路を非表示';
+
+  @override
+  String get pathMap_showPath => '経路を表示';
+
+  @override
+  String get pathMap_collapsePanel => 'パネルを折りたたむ';
+
+  @override
+  String get pathMap_expandPanel => 'パネルを展開';
+
+  @override
+  String get pathMap_noLocation => '位置情報なし';
+
+  @override
+  String get pathMap_followPacket => 'パケットを追跡';
+
+  @override
+  String get pathMap_unfollowPacket => 'パケットの追跡を解除';
 
   @override
   String get chat_canvas => 'Canvas';

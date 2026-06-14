@@ -736,6 +736,12 @@ abstract class AppLocalizations {
   /// **'Enable Bluetooth'**
   String get scanner_enableBluetooth;
 
+  /// No description provided for @scanner_bluetoothWebUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth isn\'t available in the browser. Connect over USB instead.'**
+  String get scanner_bluetoothWebUnsupported;
+
   /// No description provided for @device_quickSwitch.
   ///
   /// In en, this message translates to:
@@ -3483,6 +3489,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Node Map'**
   String get map_title;
+
+  /// No description provided for @map_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search node name or ID'**
+  String get map_searchHint;
+
+  /// No description provided for @map_activity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get map_activity;
+
+  /// No description provided for @map_online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get map_online;
+
+  /// No description provided for @map_recent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get map_recent;
+
+  /// No description provided for @map_stale.
+  ///
+  /// In en, this message translates to:
+  /// **'Stale'**
+  String get map_stale;
+
+  /// No description provided for @map_visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible'**
+  String get map_visible;
+
+  /// No description provided for @map_hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get map_hidden;
+
+  /// No description provided for @map_centerOnNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Center on node'**
+  String get map_centerOnNode;
+
+  /// No description provided for @map_details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get map_details;
+
+  /// No description provided for @map_noGps.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS'**
+  String get map_noGps;
+
+  /// No description provided for @map_noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching nodes'**
+  String get map_noResults;
 
   /// No description provided for @map_lineOfSight.
   ///
@@ -8691,6 +8763,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inferred position'**
   String get pathTrace_legendInferred;
+
+  /// No description provided for @pathMap_viewSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single'**
+  String get pathMap_viewSingle;
+
+  /// No description provided for @pathMap_viewCombined.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined'**
+  String get pathMap_viewCombined;
+
+  /// No description provided for @pathMap_play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get pathMap_play;
+
+  /// No description provided for @pathMap_pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pathMap_pause;
+
+  /// No description provided for @pathMap_replay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get pathMap_replay;
+
+  /// No description provided for @pathMap_stepBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous hop'**
+  String get pathMap_stepBack;
+
+  /// No description provided for @pathMap_stepForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Next hop'**
+  String get pathMap_stepForward;
+
+  /// No description provided for @pathMap_animationOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show packet animation'**
+  String get pathMap_animationOn;
+
+  /// No description provided for @pathMap_animationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide packet animation'**
+  String get pathMap_animationOff;
+
+  /// No description provided for @pathMap_hopOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop {current} of {total}'**
+  String pathMap_hopOf(int current, int total);
+
+  /// No description provided for @pathMap_observedPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed paths: {count}'**
+  String pathMap_observedPaths(int count);
+
+  /// No description provided for @pathMap_primary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary'**
+  String get pathMap_primary;
+
+  /// No description provided for @pathMap_alternate.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt {index}'**
+  String pathMap_alternate(int index);
+
+  /// No description provided for @pathMap_hopCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String pathMap_hopCount(int count);
+
+  /// No description provided for @pathMap_gpsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{confirmed}/{total} GPS'**
+  String pathMap_gpsCount(int confirmed, int total);
+
+  /// No description provided for @pathMap_legendShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared segment'**
+  String get pathMap_legendShared;
+
+  /// No description provided for @pathMap_legendEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated segment'**
+  String get pathMap_legendEstimated;
+
+  /// No description provided for @pathMap_sharedNodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by {count} paths'**
+  String pathMap_sharedNodeCount(int count);
+
+  /// No description provided for @pathMap_partialAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop has no location — the shown path is partial} other{{count} hops have no location — the shown path is partial}}'**
+  String pathMap_partialAnimation(int count);
+
+  /// No description provided for @pathMap_showAllPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get pathMap_showAllPaths;
+
+  /// No description provided for @pathMap_hidePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide path'**
+  String get pathMap_hidePath;
+
+  /// No description provided for @pathMap_showPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Show path'**
+  String get pathMap_showPath;
+
+  /// No description provided for @pathMap_collapsePanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse panel'**
+  String get pathMap_collapsePanel;
+
+  /// No description provided for @pathMap_expandPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand panel'**
+  String get pathMap_expandPanel;
+
+  /// No description provided for @pathMap_noLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No location'**
+  String get pathMap_noLocation;
+
+  /// No description provided for @pathMap_followPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock view to packet'**
+  String get pathMap_followPacket;
+
+  /// No description provided for @pathMap_unfollowPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock view from packet'**
+  String get pathMap_unfollowPacket;
 
   /// No description provided for @chat_canvas.
   ///

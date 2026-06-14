@@ -345,6 +345,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get scanner_enableBluetooth => 'Włącz Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'Bluetooth nie jest dostępny w przeglądarce. Połącz się przez USB.';
+
+  @override
   String get device_quickSwitch => 'Szybka zmiana';
 
   @override
@@ -1936,6 +1940,39 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get map_title => 'Mapa węzłów';
+
+  @override
+  String get map_searchHint => 'Wyszukaj nazwę lub identyfikator węzła';
+
+  @override
+  String get map_activity => 'Aktywność';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Ostatnie';
+
+  @override
+  String get map_stale => 'Nieaktualne';
+
+  @override
+  String get map_visible => 'Widoczny';
+
+  @override
+  String get map_hidden => 'Ukryty';
+
+  @override
+  String get map_centerOnNode => 'Wyśrodkuj na węźle';
+
+  @override
+  String get map_details => 'Szczegóły';
+
+  @override
+  String get map_noGps => 'Brak GPS';
+
+  @override
+  String get map_noResults => 'Brak pasujących węzłów';
 
   @override
   String get map_lineOfSight => 'Linia wzroku';
@@ -5092,6 +5129,120 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => 'Wywnioskowana pozycja';
+
+  @override
+  String get pathMap_viewSingle => 'Pojedyncza';
+
+  @override
+  String get pathMap_viewCombined => 'Połączone';
+
+  @override
+  String get pathMap_play => 'Odtwórz';
+
+  @override
+  String get pathMap_pause => 'Wstrzymaj';
+
+  @override
+  String get pathMap_replay => 'Odtwórz ponownie';
+
+  @override
+  String get pathMap_stepBack => 'Poprzedni skok';
+
+  @override
+  String get pathMap_stepForward => 'Następny skok';
+
+  @override
+  String get pathMap_animationOn => 'Pokaż animację pakietu';
+
+  @override
+  String get pathMap_animationOff => 'Ukryj animację pakietu';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Skok $current z $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Obserwowane trasy: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Główna';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alt. $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skoku',
+      many: '$count skoków',
+      few: '$count skoki',
+      one: '1 skok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Wspólny segment';
+
+  @override
+  String get pathMap_legendEstimated => 'Szacunkowy segment';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Wykorzystywane przez $count ścieżek';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count skoku nie ma lokalizacji — pokazana ścieżka jest niekompletna',
+      many:
+          '$count skoków nie ma lokalizacji — pokazana ścieżka jest niekompletna',
+      few:
+          '$count skoki nie mają lokalizacji — pokazana ścieżka jest niekompletna',
+      one: '1 skok nie ma lokalizacji — pokazana ścieżka jest niekompletna',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Pokaż wszystkie';
+
+  @override
+  String get pathMap_hidePath => 'Ukryj ścieżkę';
+
+  @override
+  String get pathMap_showPath => 'Wyświetl trasę';
+
+  @override
+  String get pathMap_collapsePanel => 'Zwiń panel';
+
+  @override
+  String get pathMap_expandPanel => 'Rozwiń panel';
+
+  @override
+  String get pathMap_noLocation => 'Brak lokalizacji';
+
+  @override
+  String get pathMap_followPacket => 'Śledź pakiet';
+
+  @override
+  String get pathMap_unfollowPacket => 'Przestań śledzić pakiet';
 
   @override
   String get chat_canvas => 'Canvas';

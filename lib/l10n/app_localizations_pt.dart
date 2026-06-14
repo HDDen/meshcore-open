@@ -343,6 +343,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scanner_enableBluetooth => 'Ative o Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'A funcionalidade Bluetooth não está disponível no navegador. Conecte-se via USB em vez disso.';
+
+  @override
   String get device_quickSwitch => 'Mudar rapidamente';
 
   @override
@@ -1919,6 +1923,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get map_title => 'Mapa de Nós';
+
+  @override
+  String get map_searchHint => 'Pesquisar por nome ou ID do nó';
+
+  @override
+  String get map_activity => 'Atividade';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Recente';
+
+  @override
+  String get map_stale => 'Vencido';
+
+  @override
+  String get map_visible => 'Visível';
+
+  @override
+  String get map_hidden => 'Escondido';
+
+  @override
+  String get map_centerOnNode => 'Centralizar no nó';
+
+  @override
+  String get map_details => 'Detalhes';
+
+  @override
+  String get map_noGps => 'Sem GPS';
+
+  @override
+  String get map_noResults => 'Nenhum nó encontrado';
 
   @override
   String get map_lineOfSight => 'Linha de visão';
@@ -5062,6 +5099,113 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pathTrace_legendInferred => 'Posição inferida';
+
+  @override
+  String get pathMap_viewSingle => 'Único';
+
+  @override
+  String get pathMap_viewCombined => 'Combinado';
+
+  @override
+  String get pathMap_play => 'Reproduzir';
+
+  @override
+  String get pathMap_pause => 'Pausa';
+
+  @override
+  String get pathMap_replay => 'Repetir';
+
+  @override
+  String get pathMap_stepBack => 'Salto anterior';
+
+  @override
+  String get pathMap_stepForward => 'Próximo salto';
+
+  @override
+  String get pathMap_animationOn => 'Exibir animação do pacote';
+
+  @override
+  String get pathMap_animationOff => 'Ocultar a animação do pacote';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Salto $current de $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Caminhos observados: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primário';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alt $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saltos',
+      one: '1 salto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Segmento compartilhado';
+
+  @override
+  String get pathMap_legendEstimated => 'Segmento estimado';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Utilizado em $count caminhos';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saltos não têm localização — o caminho mostrado é parcial',
+      one: '1 salto não tem localização — o caminho mostrado é parcial',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Mostrar tudo';
+
+  @override
+  String get pathMap_hidePath => 'Esconder caminho';
+
+  @override
+  String get pathMap_showPath => 'Mostrar o caminho';
+
+  @override
+  String get pathMap_collapsePanel => 'Recolher painel';
+
+  @override
+  String get pathMap_expandPanel => 'Expandir painel';
+
+  @override
+  String get pathMap_noLocation => 'Sem localização';
+
+  @override
+  String get pathMap_followPacket => 'Fixar vista no pacote';
+
+  @override
+  String get pathMap_unfollowPacket => 'Liberar vista do pacote';
 
   @override
   String get chat_canvas => 'Canvas';

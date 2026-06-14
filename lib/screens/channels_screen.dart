@@ -1610,7 +1610,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.contacts_groupName,
+                          labelText: sheetContext.l10n.contacts_groupName,
                           border: const OutlineInputBorder(),
                         ),
                       ),
@@ -1628,7 +1628,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext
+                                      sheetContext
                                           .l10n
                                           .contacts_groupNameRequired,
                                     ),
@@ -1644,7 +1644,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext.l10n
+                                      sheetContext.l10n
                                           .contacts_groupAlreadyExists(name),
                                     ),
                                   );
@@ -1663,12 +1663,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                       ),
                                   ]);
                                 });
-                                if (dialogContext.mounted) {
-                                  Navigator.pop(dialogContext);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                 }
                                 unawaited(_saveChannelGroups());
                               },
-                              child: Text(dialogContext.l10n.common_create),
+                              child: Text(sheetContext.l10n.common_create),
                             ),
                           ),
                         ],
