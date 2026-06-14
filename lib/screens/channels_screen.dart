@@ -381,6 +381,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool showDragHandle = false,
     int? dragIndex,
     int listIndex = 0,
+    EdgeInsetsGeometry? margin,
   }) {
     final unreadCount = connector.getUnreadCountForChannel(channel);
     final widgetColorValue = connector.getChannelWidgetColor(channel.index);
@@ -454,7 +455,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       index: dragIndex ?? listIndex,
       child: MeshCard(
         key: ValueKey('channel_${channel.index}'),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         color: widgetColor,
         onTap: () {
@@ -905,6 +906,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             isMuted: mutedChannelNames.contains(channel.name),
             showDragHandle: true,
             dragIndex: index,
+            margin: const EdgeInsets.symmetric(vertical: 4),
           );
         },
       );
@@ -931,6 +933,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelMessageStore,
           channel,
           isMuted: mutedChannelNames.contains(channel.name),
+          margin: const EdgeInsets.symmetric(vertical: 4),
         ),
       ),
     );

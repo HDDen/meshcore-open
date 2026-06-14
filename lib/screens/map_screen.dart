@@ -75,6 +75,8 @@ class _MapScreenState extends State<MapScreen>
     with DisconnectNavigationMixin, RouteAware {
   // Zoom level at which node labels start to appear
   static const double _labelZoomThreshold = 14.0;
+  // Below this zoom, nearby nodes collapse into clusters.
+  static const double _clusterOffZoom = 12.5;
   // Guessed (estimated) locations only render at closer zooms to avoid a
   // carpet of approximate markers at city-wide scale.
   static const double _guessedZoomThreshold = 12.0;
@@ -2591,6 +2593,9 @@ class _MapScreenState extends State<MapScreen>
     bool wardriveHighlightActive = false,
     Set<String> wardriveAnsweredKeys = const <String>{},
   }) {
+    final wardriveAnsweredSignature = wardriveHighlightActive
+        ? Object.hashAllUnordered(wardriveAnsweredKeys)
+        : 0;
     final visibleContactsSignature = Object.hashAll(
       contacts.map(
         (contact) =>
@@ -2615,6 +2620,8 @@ class _MapScreenState extends State<MapScreen>
       showChatNodes: settings.mapShowChatNodes,
       showOtherNodes: settings.mapShowOtherNodes,
       isBuildingPathTrace: _isBuildingPathTrace,
+      wardriveHighlightActive: wardriveHighlightActive,
+      wardriveAnsweredSignature: wardriveAnsweredSignature,
     );
     if (key != _nodeMarkersCacheKey) {
       _nodeMarkersCacheKey = key;
@@ -2642,68 +2649,94 @@ class _MapScreenState extends State<MapScreen>
     final foregroundMarkers = <Marker>[];
     final filteredContacts = _filterContactsBySettings(contacts, settings);
     final overlapsMode = settings.mapShowOverlaps && !_isBuildingPathTrace;
-    for (final contact in filteredContacts) {
-      final opacity = _wardriveNodeOpacity(
-        contact,
-        active: wardriveHighlightActive,
-        answeredKeys: wardriveAnsweredKeys,
-      );
-      final marker = Marker(
-        point: LatLng(contact.latitude!, contact.longitude!),
-        width: 48,
-        height: 48,
-        child: GestureDetector(
-          onLongPress: () =>
-              _isBuildingPathTrace ? _showNodeInfo(context, contact) : null,
-          onTap: () => _isBuildingPathTrace
-              ? _addToPath(context, contact)
-              : _showNodeInfo(context, contact),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: overlapsMode
-                      ? Colors.red.withValues(alpha: opacity)
-                      : _getNodeColor(contact.type).withValues(alpha: opacity),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: opacity),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3 * opacity),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _getNodeIcon(contact.type),
-                  color: Colors.white.withValues(alpha: opacity),
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
 
+    final overlapPrefixes = <String>{};
+    if (overlapsMode) {
+      final hopWidth = context
+          .read<MeshCoreConnector>()
+          .pathHashByteWidth
+          .clamp(1, pubKeySize)
+          .toInt();
+      final counts = <String, int>{};
+      for (final contact in filteredContacts) {
+        if ((contact.type == advTypeRepeater || contact.type == advTypeRoom) &&
+            contact.publicKey.length >= hopWidth) {
+          final prefix = PathHelper.formatHopHex(
+            contact.publicKey.sublist(0, hopWidth),
+          );
+          counts[prefix] = (counts[prefix] ?? 0) + 1;
+        }
+      }
+      counts.forEach((prefix, count) {
+        if (count > 1) overlapPrefixes.add(prefix);
+      });
+    }
+
+    final overlapHopWidth = context
+        .read<MeshCoreConnector>()
+        .pathHashByteWidth
+        .clamp(1, pubKeySize)
+        .toInt();
+    bool isOverlap(Contact contact) =>
+        overlapsMode &&
+        (contact.type == advTypeRepeater || contact.type == advTypeRoom) &&
+        contact.publicKey.length >= overlapHopWidth &&
+        overlapPrefixes.contains(
+          PathHelper.formatHopHex(
+            contact.publicKey.sublist(0, overlapHopWidth),
+          ),
+        );
+
+    void addNode(Contact contact, {bool dot = false}) {
       final targetMarkers =
           _isWardriveAnswered(contact, answeredKeys: wardriveAnsweredKeys)
           ? foregroundMarkers
           : markers;
-      targetMarkers.add(marker);
+      final overlap = isOverlap(contact);
+      targetMarkers.add(
+        _nodeMarker(
+          contact,
+          overlapsMode: overlap,
+          dot: dot,
+          wardriveHighlightActive: wardriveHighlightActive,
+          wardriveAnsweredKeys: wardriveAnsweredKeys,
+        ),
+      );
       if (showLabels) {
         targetMarkers.add(
           _buildNodeLabelMarker(
             point: LatLng(contact.latitude!, contact.longitude!),
-            label: overlapsMode
+            label: overlap
                 ? "${contact.publicKeyHex.substring(0, 2)}:${contact.name}"
                 : contact.name,
           ),
         );
+      }
+    }
+
+    if (_zoom >= _clusterOffZoom ||
+        overlapsMode ||
+        _isBuildingPathTrace ||
+        wardriveHighlightActive) {
+      for (final contact in filteredContacts) {
+        addNode(contact);
+      }
+    } else {
+      // Grid clustering: bucket markers into roughly 64px screen cells at the
+      // current zoom; cells with 2+ nodes render as a numbered cluster.
+      final cellDeg = 360.0 / (256.0 * pow(2.0, _zoom)) * 64.0;
+      final cells = <String, List<Contact>>{};
+      for (final contact in filteredContacts) {
+        final key =
+            '${(contact.latitude! / cellDeg).floor()}:${(contact.longitude! / cellDeg).floor()}';
+        (cells[key] ??= []).add(contact);
+      }
+      for (final cell in cells.values) {
+        if (cell.length == 1) {
+          addNode(cell.first, dot: true);
+        } else {
+          markers.add(_clusterMarker(cell));
+        }
       }
     }
 
@@ -3042,6 +3075,224 @@ class _MapScreenState extends State<MapScreen>
     return LatLng(
       from.latitude + (to.latitude - from.latitude) * t,
       from.longitude + (to.longitude - from.longitude) * t,
+    );
+  }
+
+  Marker _nodeMarker(
+    Contact contact, {
+    bool overlapsMode = false,
+    bool dot = false,
+    bool selected = false,
+    bool wardriveHighlightActive = false,
+    Set<String> wardriveAnsweredKeys = const <String>{},
+  }) {
+    final age = _ageOf(contact);
+    final baseColor = overlapsMode
+        ? MapPalette.batteryLow
+        : _markerColor(contact);
+    final stale = age == _NodeAge.stale;
+    final online = age == _NodeAge.online;
+    final opacity = _wardriveNodeOpacity(
+      contact,
+      active: wardriveHighlightActive,
+      answeredKeys: wardriveAnsweredKeys,
+    );
+    final size = selected ? 46.0 : (dot ? 22.0 : 40.0);
+    return Marker(
+      point: LatLng(contact.latitude!, contact.longitude!),
+      width: size,
+      height: size,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: () =>
+            _isBuildingPathTrace ? _showNodeInfo(context, contact) : null,
+        onTap: () => _isBuildingPathTrace
+            ? _addToPath(context, contact)
+            : _showNodeInfo(context, contact),
+        child: Center(
+          child: dot && !selected
+              ? Container(
+                  width: 15,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: baseColor.withValues(alpha: opacity),
+                    border: Border.all(
+                      color: MapPalette.markerOutline.withValues(
+                        alpha: opacity,
+                      ),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: MapPalette.markerShadow.withValues(
+                          alpha: opacity,
+                        ),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                )
+              : Opacity(
+                  opacity: opacity,
+                  child: _buildNodeMarkerWidget(
+                    color: baseColor,
+                    icon: _getNodeIcon(contact.type),
+                    selected: selected,
+                    stale: stale,
+                    online: online,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Marker _clusterMarker(List<Contact> members) {
+    final count = members.length;
+    double lat = 0, lon = 0;
+    var online = 0;
+    for (final member in members) {
+      lat += member.latitude!;
+      lon += member.longitude!;
+      if (_ageOf(member) == _NodeAge.online) online++;
+    }
+    final center = LatLng(lat / count, lon / count);
+    final size = count >= 50
+        ? 54.0
+        : count >= 16
+        ? 50.0
+        : count >= 6
+        ? 46.0
+        : 42.0;
+    return Marker(
+      point: center,
+      width: size,
+      height: size,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _zoomToCluster(members),
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: MapPalette.cluster,
+            border: Border.all(color: MapPalette.markerOutline, width: 3),
+            boxShadow: const [
+              BoxShadow(
+                color: MapPalette.markerShadow,
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$count',
+                style: MeshTheme.mono(
+                  fontSize: count >= 100 ? 11.5 : 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              if (online > 0)
+                Container(
+                  width: 7,
+                  height: 7,
+                  margin: const EdgeInsets.only(top: 1),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: MapPalette.online,
+                    border: Border.all(color: Colors.white, width: 1),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _zoomToCluster(List<Contact> members) {
+    HapticFeedback.selectionClick();
+    var minLat = double.infinity, maxLat = -double.infinity;
+    var minLon = double.infinity, maxLon = -double.infinity;
+    for (final member in members) {
+      minLat = min(minLat, member.latitude!);
+      maxLat = max(maxLat, member.latitude!);
+      minLon = min(minLon, member.longitude!);
+      maxLon = max(maxLon, member.longitude!);
+    }
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: LatLngBounds(LatLng(minLat, minLon), LatLng(maxLat, maxLon)),
+        padding: const EdgeInsets.all(72),
+        maxZoom: 16,
+      ),
+    );
+  }
+
+  Widget _buildNodeMarkerWidget({
+    required Color color,
+    required IconData icon,
+    bool selected = false,
+    bool stale = false,
+    bool online = false,
+  }) {
+    final statusColor = online
+        ? MapPalette.online
+        : stale
+        ? MapPalette.offline
+        : MapPalette.stale;
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: selected ? 44 : 36,
+          height: selected ? 44 : 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected ? MapPalette.selected : color,
+            border: Border.all(
+              color: MapPalette.markerOutline,
+              width: selected ? 3 : 2.5,
+            ),
+            boxShadow: [
+              const BoxShadow(
+                color: MapPalette.markerShadow,
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+              if (selected)
+                BoxShadow(
+                  color: MapPalette.selected.withValues(alpha: 0.75),
+                  blurRadius: 14,
+                  spreadRadius: 3,
+                ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: Colors.white, size: selected ? 22 : 19),
+        ),
+        Positioned(
+          right: selected ? -1 : -2,
+          bottom: selected ? 0 : -2,
+          child: Container(
+            width: selected ? 13 : 12,
+            height: selected ? 13 : 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusColor,
+              border: Border.all(color: MapPalette.panelDark, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -5600,6 +5851,8 @@ class _NodeMarkersCacheKey {
   final bool showChatNodes;
   final bool showOtherNodes;
   final bool isBuildingPathTrace;
+  final bool wardriveHighlightActive;
+  final int wardriveAnsweredSignature;
 
   const _NodeMarkersCacheKey({
     required this.contactsSignature,
@@ -5619,6 +5872,8 @@ class _NodeMarkersCacheKey {
     required this.showChatNodes,
     required this.showOtherNodes,
     required this.isBuildingPathTrace,
+    required this.wardriveHighlightActive,
+    required this.wardriveAnsweredSignature,
   });
 
   @override
@@ -5640,11 +5895,13 @@ class _NodeMarkersCacheKey {
         showRepeaters == other.showRepeaters &&
         showChatNodes == other.showChatNodes &&
         showOtherNodes == other.showOtherNodes &&
-        isBuildingPathTrace == other.isBuildingPathTrace;
+        isBuildingPathTrace == other.isBuildingPathTrace &&
+        wardriveHighlightActive == other.wardriveHighlightActive &&
+        wardriveAnsweredSignature == other.wardriveAnsweredSignature;
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     contactsSignature,
     visibleContactsSignature,
     batterySignature,
@@ -5662,7 +5919,9 @@ class _NodeMarkersCacheKey {
     showChatNodes,
     showOtherNodes,
     isBuildingPathTrace,
-  );
+    wardriveHighlightActive,
+    wardriveAnsweredSignature,
+  ]);
 }
 
 class _GuessedLocation {
