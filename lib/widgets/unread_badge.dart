@@ -9,7 +9,7 @@ class UnreadBadge extends StatelessWidget {
   const UnreadBadge({
     super.key,
     required this.count,
-    this.color = MeshPalette.blue,
+    this.color = MeshPalette.alert,
   });
 
   @override
