@@ -5345,4 +5345,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_modSettingsMessaging => 'Обмен сообщениями';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
 }

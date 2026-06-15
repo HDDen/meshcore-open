@@ -3020,5 +3020,6 @@
   "settings_modSettings": "Modification Settings",
   "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
   "settings_modSettingsVisual": "Visual",
-  "settings_modSettingsMessaging": "Messaging"
+  "settings_modSettingsMessaging": "Messaging",
+  "settings_modSettingsHideChInd": "Hide channel index"
 }

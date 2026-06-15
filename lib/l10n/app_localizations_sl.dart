@@ -5318,4 +5318,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsMessaging => 'Messaging';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Hide channel index';
 }

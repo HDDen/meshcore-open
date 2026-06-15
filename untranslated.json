@@ -92,7 +92,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "de": [
@@ -175,7 +176,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "es": [
@@ -271,7 +273,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "fr": [
@@ -367,7 +370,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "hu": [
@@ -463,7 +467,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "it": [
@@ -639,7 +644,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "ja": [
@@ -735,7 +741,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "ko": [
@@ -831,7 +838,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "nl": [
@@ -1007,7 +1015,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "pl": [
@@ -1103,7 +1112,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "pt": [
@@ -1279,7 +1289,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "sk": [
@@ -1375,7 +1386,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "sl": [
@@ -1471,7 +1483,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "sv": [
@@ -1647,7 +1660,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "uk": [
@@ -1743,7 +1757,8 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ],
 
   "zh": [
@@ -1839,6 +1854,7 @@
     "settings_modSettings",
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
-    "settings_modSettingsMessaging"
+    "settings_modSettingsMessaging",
+    "settings_modSettingsHideChInd"
   ]
 }

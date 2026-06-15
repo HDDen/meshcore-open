@@ -9147,6 +9147,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messaging'**
   String get settings_modSettingsMessaging;
+
+  /// No description provided for @settings_modSettingsHideChInd.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide channel index'**
+  String get settings_modSettingsHideChInd;
 }
 
 class _AppLocalizationsDelegate

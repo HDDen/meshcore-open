@@ -2237,5 +2237,6 @@
   "settings_modSettings": "Настройки модификации",
   "settings_modSettingsSubtitle": "В разделе собраны опции, отсутствующие в оригинальном meshcore_open",
   "settings_modSettingsVisual": "Визуал",
-  "settings_modSettingsMessaging": "Обмен сообщениями"
+  "settings_modSettingsMessaging": "Обмен сообщениями",
+  "settings_modSettingsHideChInd": "Скрыть индекс канала"
 }
