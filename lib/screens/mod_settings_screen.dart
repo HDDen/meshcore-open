@@ -30,6 +30,11 @@ class ModSettingsScreen extends StatelessWidget {
                 MeshCard(
                   padding: EdgeInsets.zero,
                   child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.tag_outlined, size: 20),
                     title: Text(context.l10n.settings_modSettingsHideChInd),
                     value: settings.hideChannelIndexIndicator,
                     onChanged: settingsService.setHideChannelIndexIndicator,
