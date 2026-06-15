@@ -620,10 +620,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         const SizedBox(width: 4),
                       ],
                       if (unreadCount > 0)
-                        UnreadBadge(
-                          count: unreadCount,
-                          color: MeshPalette.alert,
-                        ),
+                        UnreadBadge(count: unreadCount),
                     ],
                   ),
                 ],
@@ -1016,10 +1013,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (unreadCount > 0) ...[
-                    UnreadBadge(
-                      count: unreadCount,
-                      color: MeshPalette.alert,
-                    ),
+                    UnreadBadge(count: unreadCount),
                     const SizedBox(width: 8),
                   ],
                   Icon(
