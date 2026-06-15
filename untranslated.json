@@ -86,7 +86,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "de": [
@@ -163,7 +167,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "es": [
@@ -253,7 +261,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "fr": [
@@ -343,7 +355,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "hu": [
@@ -433,7 +449,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "it": [
@@ -603,7 +623,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "ja": [
@@ -693,7 +717,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "ko": [
@@ -783,7 +811,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "nl": [
@@ -953,7 +985,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "pl": [
@@ -1043,7 +1079,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "pt": [
@@ -1213,7 +1253,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "sk": [
@@ -1303,7 +1347,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "sl": [
@@ -1393,7 +1441,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "sv": [
@@ -1563,7 +1615,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "uk": [
@@ -1653,7 +1709,11 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ],
 
   "zh": [
@@ -1743,6 +1803,10 @@
     "chat_canvasSendToEdit",
     "chat_canvasFormatNotSupported",
     "chat_canvasSaveBinary",
-    "chat_showHops"
+    "chat_showHops",
+    "settings_modSettings",
+    "settings_modSettingsSubtitle",
+    "settings_modSettingsVisual",
+    "settings_modSettingsMessaging"
   ]
 }

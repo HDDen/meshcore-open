@@ -18,6 +18,7 @@ import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
+import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
@@ -118,6 +119,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.settings_outlined,
                     title: l10n.settings_appSettings,
                     subtitle: l10n.settings_appSettingsSubtitle,
+                  ),
+                ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ModSettingsScreen(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.tune_outlined,
+                    title: l10n.settings_modSettings,
+                    subtitle: l10n.settings_modSettingsSubtitle,
                   ),
                 ),
 

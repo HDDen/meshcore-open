@@ -2231,5 +2231,9 @@
   "chat_canvasSendToEdit": "Отправить в холст",
   "chat_canvasFormatNotSupported": "Версия MCOimg: {received}, текущий кодек поддерживает до {current}",
   "chat_canvasSaveBinary": "Сохранить в бинарный файл",
-  "chat_showHops": "Отображать хопы"
+  "chat_showHops": "Отображать хопы",
+  "settings_modSettings": "Настройки модификации",
+  "settings_modSettingsSubtitle": "В разделе собраны опции, отсутствующие в оригинальном meshcore_open",
+  "settings_modSettingsVisual": "Визуал",
+  "settings_modSettingsMessaging": "Обмен сообщениями"
 }

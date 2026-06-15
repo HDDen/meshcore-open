@@ -3014,5 +3014,9 @@
     }
   },
   "chat_canvasSaveBinary": "Save fo binary file",
-  "chat_showHops": "Show hops"
+  "chat_showHops": "Show hops",
+  "settings_modSettings": "Modification Settings",
+  "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
+  "settings_modSettingsVisual": "Visual",
+  "settings_modSettingsMessaging": "Messaging"
 }

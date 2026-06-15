@@ -5326,4 +5326,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_showHops => 'Отображать хопы';
+
+  @override
+  String get settings_modSettings => 'Настройки модификации';
+
+  @override
+  String get settings_modSettingsSubtitle =>
+      'В разделе собраны опции, отсутствующие в оригинальном meshcore_open';
+
+  @override
+  String get settings_modSettingsVisual => 'Визуал';
+
+  @override
+  String get settings_modSettingsMessaging => 'Обмен сообщениями';
 }

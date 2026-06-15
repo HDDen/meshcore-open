@@ -9111,6 +9111,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show hops'**
   String get chat_showHops;
+
+  /// No description provided for @settings_modSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Modification Settings'**
+  String get settings_modSettings;
+
+  /// No description provided for @settings_modSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This section contains options that are brings by MCOa and not included in the original meshcore_open'**
+  String get settings_modSettingsSubtitle;
+
+  /// No description provided for @settings_modSettingsVisual.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual'**
+  String get settings_modSettingsVisual;
+
+  /// No description provided for @settings_modSettingsMessaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging'**
+  String get settings_modSettingsMessaging;
 }
 
 class _AppLocalizationsDelegate
