@@ -209,7 +209,7 @@ class MeshCoreApp extends StatelessWidget {
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {
           return MaterialApp(
-            title: 'MeshCore Open',
+            title: 'MeshCore Open (Advanced mod)',
             navigatorKey: _navigatorKey,
             navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
