@@ -129,6 +129,7 @@ class _MapScreenState extends State<MapScreen>
   // instead of the latest live discovery request.
   String? _selectedWardriveCoverageHash;
   int? _selectedWardriveCoveragePrecision;
+  final Set<String> _wardriveCoverageRepeaterKeys = {};
 
   @override
   void initState() {
@@ -620,6 +621,22 @@ class _MapScreenState extends State<MapScreen>
                 coveragePrecision: wardrive.coveragePrecision,
               )
             : const <Polygon>[];
+        final repeaterCoverageSamples = _wardriveRepeaterCoverageSamples(
+          wardrive,
+        );
+        final repeaterCoveragePolygons = repeaterCoverageSamples.isEmpty
+            ? const <Polygon>[]
+            : WardriveCoverageHelper.buildFixedColorPolygons(
+                repeaterCoverageSamples,
+                color: MapPalette.selected,
+                coveragePrecision: wardrive.coveragePrecision,
+              );
+        final repeaterCoveragePolylines = repeaterCoverageSamples.isEmpty
+            ? const <Polyline>[]
+            : _buildWardriveRepeaterCoveragePolylines(
+                repeaterCoverageSamples,
+                contactsWithLocation,
+              );
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
@@ -998,8 +1015,12 @@ class _MapScreenState extends State<MapScreen>
                       PolylineLayer(polylines: sharedMarkerPolylines),
                     if (wardriveCoveragePolygons.isNotEmpty)
                       PolygonLayer(polygons: wardriveCoveragePolygons),
+                    if (repeaterCoveragePolygons.isNotEmpty)
+                      PolygonLayer(polygons: repeaterCoveragePolygons),
                     if (wardriveDiscoveryPolylines.isNotEmpty)
                       PolylineLayer(polylines: wardriveDiscoveryPolylines),
+                    if (repeaterCoveragePolylines.isNotEmpty)
+                      PolylineLayer(polylines: repeaterCoveragePolylines),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -2823,6 +2844,92 @@ class _MapScreenState extends State<MapScreen>
     return sample.path ?? '';
   }
 
+  bool _isWardriveRepeaterCoverageVisible(Contact repeater) {
+    return _wardriveCoverageRepeaterKeys.any(
+      (key) => _publicKeysMatch(repeater.publicKeyHex, key),
+    );
+  }
+
+  void _toggleWardriveRepeaterCoverage(
+    Contact repeater,
+    WardriveService wardrive,
+  ) {
+    final key = repeater.publicKeyHex.toLowerCase();
+    var shouldShowWardrivePanel = false;
+    setState(() {
+      _clearSelectedWardriveCoverage();
+      if (_isWardriveRepeaterCoverageVisible(repeater)) {
+        _wardriveCoverageRepeaterKeys.removeWhere(
+          (selected) => _publicKeysMatch(selected, key),
+        );
+      } else {
+        _wardriveCoverageRepeaterKeys.add(key);
+        _wardrivePanelCollapsed = true;
+        shouldShowWardrivePanel = true;
+      }
+    });
+    if (shouldShowWardrivePanel) {
+      wardrive.showMapState();
+    }
+  }
+
+  List<WardriveSample> _wardriveRepeaterCoverageSamples(
+    WardriveService wardrive,
+  ) {
+    if (_wardriveCoverageRepeaterKeys.isEmpty) {
+      return const <WardriveSample>[];
+    }
+    return wardrive.recentSamples
+        .where((sample) {
+          if (sample.pingSuccess != true) return false;
+          final sampleKey = _wardriveResponderKeyFromSample(sample);
+          if (sampleKey.isEmpty) return false;
+          return _wardriveCoverageRepeaterKeys.any(
+            (selectedKey) => _publicKeysMatch(sampleKey, selectedKey),
+          );
+        })
+        .toList();
+  }
+
+  List<Polyline> _buildWardriveRepeaterCoveragePolylines(
+    List<WardriveSample> samples,
+    List<Contact> contacts,
+  ) {
+    final repeaters = contacts
+        .where(
+          (contact) =>
+              contact.type == advTypeRepeater &&
+              contact.hasLocation &&
+              _isWardriveRepeaterCoverageVisible(contact),
+        )
+        .toList();
+    if (repeaters.isEmpty) return const <Polyline>[];
+
+    final polylines = <Polyline>[];
+    for (final sample in samples) {
+      final sampleKey = _wardriveResponderKeyFromSample(sample);
+      if (sampleKey.isEmpty) continue;
+      final repeater = repeaters
+          .where(
+            (contact) => _publicKeysMatch(contact.publicKeyHex, sampleKey),
+          )
+          .firstOrNull;
+      if (repeater == null) continue;
+
+      polylines.add(
+        Polyline(
+          points: [
+            LatLng(repeater.latitude!, repeater.longitude!),
+            LatLng(sample.latitude, sample.longitude),
+          ],
+          strokeWidth: 2.5,
+          color: MapPalette.online.withValues(alpha: 0.9),
+        ),
+      );
+    }
+    return polylines;
+  }
+
   void _selectWardriveCoverageAt(WardriveService wardrive, LatLng point) {
     final block = _wardriveCoverageBlockAt(wardrive, point);
     if (block == null) {
@@ -4123,7 +4230,9 @@ class _MapScreenState extends State<MapScreen>
                 ],
               ),
               const SizedBox(height: 10),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   ..._selectedNodeActions(context, contact, connector),
                   TextButton(
@@ -4209,6 +4318,8 @@ class _MapScreenState extends State<MapScreen>
           }),
         ];
       case advTypeRepeater:
+        final wardrive = context.read<WardriveService>();
+        final coverageVisible = _isWardriveRepeaterCoverageVisible(contact);
         return [
           action(context.l10n.map_manageRepeater, Icons.cell_tower, () {
             if (!contact.isActive) {
@@ -4216,6 +4327,15 @@ class _MapScreenState extends State<MapScreen>
             }
             _showRepeaterLogin(context, contact);
           }),
+          action(
+            coverageVisible
+                ? context.l10n.map_wardriveHideRepeaterCoverage
+                : context.l10n.map_wardriveShowRepeaterCoverage,
+            coverageVisible
+                ? Icons.layers_clear_outlined
+                : Icons.layers_outlined,
+            () => _toggleWardriveRepeaterCoverage(contact, wardrive),
+          ),
         ];
       case advTypeRoom:
         return [
@@ -4434,6 +4554,7 @@ class _MapScreenState extends State<MapScreen>
     LatLng? guessedPosition,
   }) {
     final connector = context.read<MeshCoreConnector>();
+    final wardrive = context.read<WardriveService>();
     showMeshSheet(
       context,
       builder: (sheetContext) {
@@ -4464,6 +4585,7 @@ class _MapScreenState extends State<MapScreen>
           );
         }
         if (contact.type == advTypeRepeater) {
+          final coverageVisible = _isWardriveRepeaterCoverageVisible(contact);
           actions.add(
             FilledButton(
               onPressed: () {
@@ -4474,6 +4596,28 @@ class _MapScreenState extends State<MapScreen>
                 _showRepeaterLogin(context, contact);
               },
               child: Text(context.l10n.map_manageRepeater),
+            ),
+          );
+          actions.add(
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  _toggleWardriveRepeaterCoverage(contact, wardrive);
+                },
+                icon: Icon(
+                  coverageVisible
+                      ? Icons.layers_clear_outlined
+                      : Icons.layers_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  coverageVisible
+                      ? context.l10n.map_wardriveHideRepeaterCoverage
+                      : context.l10n.map_wardriveShowRepeaterCoverage,
+                ),
+              ),
             ),
           );
         }

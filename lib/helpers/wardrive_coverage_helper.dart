@@ -52,6 +52,31 @@ class WardriveCoverageHelper {
         .toList();
   }
 
+  static List<Polygon> buildFixedColorPolygons(
+    List<WardriveSample> samples, {
+    required Color color,
+    int coveragePrecision = defaultCoveragePrecision,
+  }) {
+    return _buildCells(samples, coveragePrecision: coveragePrecision)
+        .map((cell) {
+          final bounds = cell.bounds;
+          if (bounds == null) return null;
+          return Polygon(
+            points: [
+              LatLng(bounds.south, bounds.west),
+              LatLng(bounds.south, bounds.east),
+              LatLng(bounds.north, bounds.east),
+              LatLng(bounds.north, bounds.west),
+            ],
+            color: color.withValues(alpha: _coverageOpacity(cell)),
+            borderColor: color.withValues(alpha: 0.95),
+            borderStrokeWidth: 1,
+          );
+        })
+        .whereType<Polygon>()
+        .toList();
+  }
+
   static WardriveCoverageSummary buildSummary(
     List<WardriveSample> samples, {
     int coveragePrecision = defaultCoveragePrecision,

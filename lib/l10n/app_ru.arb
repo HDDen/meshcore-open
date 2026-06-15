@@ -2174,6 +2174,8 @@
   "map_wardriveDeleteBlock": "Удалить блок",
   "map_wardriveInBackground": "Работать в фоне",
   "map_wardriveContinuousGPS": "Непрерывный GPS-location",
+  "map_wardriveShowRepeaterCoverage": "Отобразить блоки покрытия",
+  "map_wardriveHideRepeaterCoverage": "Скрыть блоки покрытия",
   "settings_regionSettings": "Регионы",
   "settings_regionSettingsSubtitle": "Управление хранилищем регионов",
   "settings_regionManagement_screenTitle": "Управление регионами",

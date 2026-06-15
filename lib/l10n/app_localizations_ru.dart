@@ -2493,6 +2493,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveContinuousGPS => 'Непрерывный GPS-location';
 
   @override
+  String get map_wardriveShowRepeaterCoverage => 'Отобразить блоки покрытия';
+
+  @override
+  String get map_wardriveHideRepeaterCoverage => 'Скрыть блоки покрытия';
+
+  @override
   String get mapCache_title => 'Кэш офлайн-карты';
 
   @override

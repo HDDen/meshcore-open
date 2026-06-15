@@ -4474,6 +4474,18 @@ abstract class AppLocalizations {
   /// **'Continuous GPS location'**
   String get map_wardriveContinuousGPS;
 
+  /// No description provided for @map_wardriveShowRepeaterCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Show wardrive\'s coverage blocks'**
+  String get map_wardriveShowRepeaterCoverage;
+
+  /// No description provided for @map_wardriveHideRepeaterCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide wardrive\'s coverage blocks'**
+  String get map_wardriveHideRepeaterCoverage;
+
   /// No description provided for @mapCache_title.
   ///
   /// In en, this message translates to:

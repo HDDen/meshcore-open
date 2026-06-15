@@ -2485,6 +2485,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get map_wardriveContinuousGPS => 'Continuous GPS location';
 
   @override
+  String get map_wardriveShowRepeaterCoverage =>
+      'Show wardrive\'s coverage blocks';
+
+  @override
+  String get map_wardriveHideRepeaterCoverage =>
+      'Hide wardrive\'s coverage blocks';
+
+  @override
   String get mapCache_title => 'Cache mappa offline';
 
   @override
