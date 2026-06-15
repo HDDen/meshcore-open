@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../services/app_settings_service.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -18,12 +20,25 @@ class ModSettingsScreen extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
-          children: [
-            SectionHeader(context.l10n.settings_modSettingsVisual),
-            SectionHeader(context.l10n.settings_modSettingsMessaging),
-          ],
+        child: Consumer<AppSettingsService>(
+          builder: (context, settingsService, child) {
+            final settings = settingsService.settings;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+              children: [
+                SectionHeader(context.l10n.settings_modSettingsVisual),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    title: Text(context.l10n.settings_modSettingsHideChInd),
+                    value: settings.hideChannelIndexIndicator,
+                    onChanged: settingsService.setHideChannelIndexIndicator,
+                  ),
+                ),
+                SectionHeader(context.l10n.settings_modSettingsMessaging),
+              ],
+            );
+          },
         ),
       ),
     );

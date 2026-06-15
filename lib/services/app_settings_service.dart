@@ -148,6 +148,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(showHops: value));
   }
 
+  Future<void> setHideChannelIndexIndicator(bool value) async {
+    await updateSettings(
+      _settings.copyWith(hideChannelIndexIndicator: value),
+    );
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

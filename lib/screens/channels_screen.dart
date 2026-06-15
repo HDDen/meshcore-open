@@ -164,10 +164,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final viewState = context.watch<UiViewStateService>();
-    final mutedChannelNames = context
-        .watch<AppSettingsService>()
-        .settings
-        .mutedChannels;
+    final appSettings = context.watch<AppSettingsService>().settings;
+    final mutedChannelNames = appSettings.mutedChannels;
 
     if (connector.selfPublicKeyHex.isNotEmpty &&
         _loadedChannelGroupsForPublicKey != connector.selfPublicKeyHex &&
@@ -347,6 +345,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     viewState,
                     filteredChannels,
                     mutedChannelNames,
+                    hideChannelIndexIndicator:
+                        appSettings.hideChannelIndexIndicator,
                   ),
                 ),
               ],
@@ -378,6 +378,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     Channel channel, {
     required bool isMuted,
+    required bool hideChannelIndexIndicator,
     bool showDragHandle = false,
     int? dragIndex,
     int listIndex = 0,
@@ -528,7 +529,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ],
               ),
               const SizedBox(width: 12),
-              // Title + subtitle + ch chip
+              // Title + subtitle + optional channel index chip
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,12 +550,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        StatusChip(
-                          label: 'CH ${channel.index}',
-                          color: MeshPalette.blue,
-                          fontSize: 10,
-                        ),
+                        if (!hideChannelIndexIndicator) ...[
+                          const SizedBox(width: 6),
+                          StatusChip(
+                            label: 'CH ${channel.index}',
+                            color: MeshPalette.blue,
+                            fontSize: 10,
+                          ),
+                        ],
                       ],
                     ),
                     if (lastPreview.isNotEmpty) ...[
@@ -814,8 +817,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     UiViewStateService viewState,
     List<Channel> filteredChannels,
-    Set<String> mutedChannelNames,
-  ) {
+    Set<String> mutedChannelNames, {
+    required bool hideChannelIndexIndicator,
+  }) {
     final groupedChannelNames = _groupedChannelNames();
     final visibleGroups = _channelGroups.where((group) {
       if (viewState.channelsSearchText.isEmpty) return true;
@@ -897,6 +901,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 group,
                 filteredChannels,
                 mutedChannelNames: mutedChannelNames,
+                hideChannelIndexIndicator: hideChannelIndexIndicator,
                 showDragHandle: true,
                 dragIndex: index,
               ),
@@ -909,6 +914,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             channelMessageStore,
             channel,
             isMuted: mutedChannelNames.contains(channel.name),
+            hideChannelIndexIndicator: hideChannelIndexIndicator,
             showDragHandle: true,
             dragIndex: index,
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -926,6 +932,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           group,
           filteredChannels,
           mutedChannelNames: mutedChannelNames,
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
           forceExpanded: viewState.channelsSearchText.isNotEmpty,
         ),
     ];
@@ -938,6 +945,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelMessageStore,
           channel,
           isMuted: mutedChannelNames.contains(channel.name),
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
           margin: const EdgeInsets.symmetric(vertical: 4),
         ),
       ),
@@ -959,6 +967,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelGroup group,
     List<Channel> filteredChannels, {
     Set<String> mutedChannelNames = const {},
+    required bool hideChannelIndexIndicator,
     bool forceExpanded = false,
     bool showDragHandle = false,
     int? dragIndex,
@@ -1056,6 +1065,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   group,
                   channels,
                   mutedChannelNames: mutedChannelNames,
+                  hideChannelIndexIndicator: hideChannelIndexIndicator,
                   canReorder: showDragHandle && group.allowOrderingInGroup,
                   emptyTextColor: groupWidgetTextColor,
                 ),
@@ -1078,6 +1088,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelGroup group,
     List<Channel> channels, {
     Set<String> mutedChannelNames = const {},
+    required bool hideChannelIndexIndicator,
     required bool canReorder,
     Color? emptyTextColor,
   }) {
@@ -1104,6 +1115,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               channelMessageStore,
               channel,
               isMuted: mutedChannelNames.contains(channel.name),
+              hideChannelIndexIndicator: hideChannelIndexIndicator,
               margin: const EdgeInsets.symmetric(vertical: 4),
             ),
         ],
@@ -1126,6 +1138,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelMessageStore,
           channel,
           isMuted: mutedChannelNames.contains(channel.name),
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
           showDragHandle: true,
           dragIndex: index,
           margin: const EdgeInsets.symmetric(vertical: 4),
