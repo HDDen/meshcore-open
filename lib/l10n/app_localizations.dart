@@ -9153,6 +9153,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide channel index'**
   String get settings_modSettingsHideChInd;
+
+  /// No description provided for @settings_modSettingsIncomingQuoteAsMentions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show quotes in incoming messages as mentions'**
+  String get settings_modSettingsIncomingQuoteAsMentions;
 }
 
 class _AppLocalizationsDelegate

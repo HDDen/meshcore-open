@@ -162,6 +162,7 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+  final bool incomingQuoteAsMentions;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -404,6 +405,7 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
+    this.incomingQuoteAsMentions = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -491,6 +493,7 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -576,6 +579,8 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
+      incomingQuoteAsMentions:
+          json['incoming_quote_as_mentions'] as bool? ?? false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -712,6 +717,7 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? incomingQuoteAsMentions,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -779,6 +785,8 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      incomingQuoteAsMentions:
+          incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

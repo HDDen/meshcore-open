@@ -789,6 +789,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTracing = settingsService.settings.enableMessageTracing;
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
+    final incomingQuoteAsMentions =
+        settingsService.settings.incomingQuoteAsMentions;
     final isOutgoing = message.isOutgoing;
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
@@ -798,6 +800,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final isPlainTextMessage = poi == null && !isMediaMessage;
+    final hasReplyContext =
+        message.replyToSenderName != null || message.replyToText != null;
+    final replyMentionName = message.replyToSenderName?.trim();
+    final showIncomingReplyMention =
+        !isOutgoing &&
+        incomingQuoteAsMentions &&
+        hasReplyContext &&
+        replyMentionName != null &&
+        replyMentionName.isNotEmpty;
     final translatedDisplayText =
         message.translatedText != null &&
             message.translatedText!.trim().isNotEmpty
@@ -920,10 +932,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
                         ],
-                        if (message.replyToSenderName != null ||
-                            message.replyToText != null) ...[
+                        if (hasReplyContext &&
+                            !showIncomingReplyMention) ...[
                           _buildReplyPreview(message, textScale),
                           const SizedBox(height: 8),
+                        ],
+                        if (showIncomingReplyMention &&
+                            !isPlainTextMessage) ...[
+                          _buildReplyMentionChip(
+                            message,
+                            replyMentionName,
+                            textScale,
+                          ),
+                          const SizedBox(height: 6),
                         ],
                         if (poi != null)
                           _buildPoiMessage(
@@ -1033,10 +1054,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Flexible(
-                                child: TranslatedMessageContent(
+                                child: _buildMessageTextContent(
+                                  message: message,
                                   displayText: translatedDisplayText,
                                   originalText: originalDisplayText,
-                                  style: TextStyle(
+                                  textStyle: TextStyle(
                                     color: textColor,
                                     fontSize: bodyFontSize * textScale,
                                   ),
@@ -1045,6 +1067,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     fontStyle: FontStyle.italic,
                                     color: textColor.withValues(alpha: 0.72),
                                   ),
+                                  replyMentionName:
+                                      showIncomingReplyMention &&
+                                          isPlainTextMessage
+                                      ? replyMentionName
+                                      : null,
+                                  textScale: textScale,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
@@ -1276,6 +1304,107 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         fontSize: 12 * textScale,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
+  Widget _buildMessageTextContent({
+    required ChannelMessage message,
+    required String displayText,
+    required String? originalText,
+    required TextStyle textStyle,
+    required TextStyle originalStyle,
+    required String? replyMentionName,
+    required double textScale,
+  }) {
+    if (replyMentionName == null || replyMentionName.isEmpty) {
+      return TranslatedMessageContent(
+        displayText: displayText,
+        originalText: originalText,
+        style: textStyle,
+        originalStyle: originalStyle,
+      );
+    }
+
+    final trimmedDisplay = displayText.trim();
+    final trimmedOriginal = originalText?.trim();
+    final shouldShowOriginal =
+        trimmedOriginal != null &&
+        trimmedOriginal.isNotEmpty &&
+        trimmedOriginal != trimmedDisplay;
+
+    final display = _buildInlineReplyMentionText(
+      message: message,
+      senderName: replyMentionName,
+      text: trimmedDisplay,
+      style: textStyle,
+      textScale: textScale,
+    );
+
+    if (!shouldShowOriginal) return display;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        display,
+        const SizedBox(height: 6),
+        Text(
+          trimmedOriginal,
+          style: originalStyle,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineReplyMentionText({
+    required ChannelMessage message,
+    required String senderName,
+    required String text,
+    required TextStyle style,
+    required double textScale,
+  }) {
+    return RichText(
+      text: TextSpan(
+        style: style,
+        children: [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: _buildReplyMentionChip(message, senderName, textScale),
+          ),
+          if (text.isNotEmpty) ...[
+            const TextSpan(text: '  '),
+            TextSpan(text: text),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReplyMentionChip(
+    ChannelMessage message,
+    String senderName,
+    double textScale,
+  ) {
+    return GestureDetector(
+      onTap: () => _scrollToReplyTarget(message),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 160 * textScale),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          border: Border.all(color: MeshPalette.blue, width: 1),
+          borderRadius: BorderRadius.circular(MeshRadii.xs),
+        ),
+        child: Text(
+          '@$senderName',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: MeshTheme.mono(
+            fontSize: 12 * textScale,
+            fontWeight: FontWeight.w700,
+            color: MeshPalette.blue,
+          ),
+        ),
       ),
     );
   }

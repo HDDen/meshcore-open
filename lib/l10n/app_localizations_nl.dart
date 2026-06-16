@@ -5315,4 +5315,8 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Show quotes in incoming messages as mentions';
 }

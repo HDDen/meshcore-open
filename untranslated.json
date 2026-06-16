@@ -93,7 +93,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "de": [
@@ -177,7 +178,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "es": [
@@ -274,7 +276,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "fr": [
@@ -371,7 +374,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "hu": [
@@ -468,7 +472,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "it": [
@@ -645,7 +650,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "ja": [
@@ -742,7 +748,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "ko": [
@@ -839,7 +846,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "nl": [
@@ -1016,7 +1024,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "pl": [
@@ -1113,7 +1122,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "pt": [
@@ -1290,7 +1300,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "sk": [
@@ -1387,7 +1398,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "sl": [
@@ -1484,7 +1496,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "sv": [
@@ -1661,7 +1674,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "uk": [
@@ -1758,7 +1772,8 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ],
 
   "zh": [
@@ -1855,6 +1870,7 @@
     "settings_modSettingsSubtitle",
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
-    "settings_modSettingsHideChInd"
+    "settings_modSettingsHideChInd",
+    "settings_modSettingsIncomingQuoteAsMentions"
   ]
 }

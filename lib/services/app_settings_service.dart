@@ -154,6 +154,10 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setIncomingQuoteAsMentions(bool value) async {
+    await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

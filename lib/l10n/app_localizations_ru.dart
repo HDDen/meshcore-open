@@ -5348,4 +5348,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Отображать цитаты во входящих сообщениях как упоминания';
 }

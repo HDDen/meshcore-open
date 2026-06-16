@@ -41,6 +41,21 @@ class ModSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.alternate_email, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsIncomingQuoteAsMentions,
+                    ),
+                    value: settings.incomingQuoteAsMentions,
+                    onChanged: settingsService.setIncomingQuoteAsMentions,
+                  ),
+                ),
               ],
             );
           },
