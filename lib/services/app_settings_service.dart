@@ -149,9 +149,7 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   Future<void> setHideChannelIndexIndicator(bool value) async {
-    await updateSettings(
-      _settings.copyWith(hideChannelIndexIndicator: value),
-    );
+    await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
   Future<void> setIncomingQuoteAsMentions(bool value) async {

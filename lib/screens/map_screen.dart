@@ -2879,16 +2879,14 @@ class _MapScreenState extends State<MapScreen>
     if (_wardriveCoverageRepeaterKeys.isEmpty) {
       return const <WardriveSample>[];
     }
-    return wardrive.recentSamples
-        .where((sample) {
-          if (sample.pingSuccess != true) return false;
-          final sampleKey = _wardriveResponderKeyFromSample(sample);
-          if (sampleKey.isEmpty) return false;
-          return _wardriveCoverageRepeaterKeys.any(
-            (selectedKey) => _publicKeysMatch(sampleKey, selectedKey),
-          );
-        })
-        .toList();
+    return wardrive.recentSamples.where((sample) {
+      if (sample.pingSuccess != true) return false;
+      final sampleKey = _wardriveResponderKeyFromSample(sample);
+      if (sampleKey.isEmpty) return false;
+      return _wardriveCoverageRepeaterKeys.any(
+        (selectedKey) => _publicKeysMatch(sampleKey, selectedKey),
+      );
+    }).toList();
   }
 
   List<Polyline> _buildWardriveRepeaterCoveragePolylines(
@@ -2910,9 +2908,7 @@ class _MapScreenState extends State<MapScreen>
       final sampleKey = _wardriveResponderKeyFromSample(sample);
       if (sampleKey.isEmpty) continue;
       final repeater = repeaters
-          .where(
-            (contact) => _publicKeysMatch(contact.publicKeyHex, sampleKey),
-          )
+          .where((contact) => _publicKeysMatch(contact.publicKeyHex, sampleKey))
           .firstOrNull;
       if (repeater == null) continue;
 
