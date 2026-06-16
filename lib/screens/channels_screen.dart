@@ -619,8 +619,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         ),
                         const SizedBox(width: 4),
                       ],
-                      if (unreadCount > 0)
-                        UnreadBadge(count: unreadCount),
+                      if (unreadCount > 0) UnreadBadge(count: unreadCount),
                     ],
                   ),
                 ],

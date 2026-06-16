@@ -932,8 +932,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
                         ],
-                        if (hasReplyContext &&
-                            !showIncomingReplyMention) ...[
+                        if (hasReplyContext && !showIncomingReplyMention) ...[
                           _buildReplyPreview(message, textScale),
                           const SizedBox(height: 8),
                         ],
@@ -1349,10 +1348,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       children: [
         display,
         const SizedBox(height: 6),
-        Text(
-          trimmedOriginal,
-          style: originalStyle,
-        ),
+        Text(trimmedOriginal, style: originalStyle),
       ],
     );
   }
