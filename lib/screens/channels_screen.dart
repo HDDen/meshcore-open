@@ -290,6 +290,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               connector,
               viewState,
             );
+            final channelsListDisabled =
+                connector.isLoadingChannels || connector.isSyncingChannels;
 
             return Column(
               children: [
@@ -338,15 +340,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ),
                 ),
                 Expanded(
-                  child: _buildChannelsList(
-                    context,
-                    connector,
-                    channelMessageStore,
-                    viewState,
-                    filteredChannels,
-                    mutedChannelNames,
-                    hideChannelIndexIndicator:
-                        appSettings.hideChannelIndexIndicator,
+                  child: AnimatedOpacity(
+                    opacity: channelsListDisabled ? 0.45 : 1.0,
+                    duration: const Duration(milliseconds: 180),
+                    child: AbsorbPointer(
+                      absorbing: channelsListDisabled,
+                      child: _buildChannelsList(
+                        context,
+                        connector,
+                        channelMessageStore,
+                        viewState,
+                        filteredChannels,
+                        mutedChannelNames,
+                        hideChannelIndexIndicator:
+                            appSettings.hideChannelIndexIndicator,
+                      ),
+                    ),
                   ),
                 ),
               ],

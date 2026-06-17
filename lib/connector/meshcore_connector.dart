@@ -870,8 +870,14 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadCachedChannels() async {
-    _cachedChannels = await _channelStore.loadChannels();
+  Future<void> loadCachedChannels({String? publicKeyHex}) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
+    final store = publicKeyHex == null
+        ? _channelStore
+        : (ChannelStore()..setPublicKeyHex = publicKeyHex);
+    final cached = await store.loadChannels();
+    if (expectedPublicKeyHex != selfPublicKeyHex) return;
+    _cachedChannels = cached;
     _recalculateCachedChannelsUnreadTotal();
   }
 
@@ -1088,20 +1094,31 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadChannelOrder() async {
-    _channelOrder = await _channelOrderStore.loadChannelOrder();
+  Future<void> _loadChannelOrder({String? publicKeyHex}) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
+    final store = publicKeyHex == null
+        ? _channelOrderStore
+        : (ChannelOrderStore()..setPublicKeyHex = publicKeyHex);
+    final channelOrder = await store.loadChannelOrder();
+    if (expectedPublicKeyHex != selfPublicKeyHex) return;
+    _channelOrder = channelOrder;
     _applyChannelOrder();
     notifyListeners();
   }
 
   /// Load persisted channel messages for a specific channel
-  Future<void> _loadChannelMessages(
+  Future<bool> _loadChannelMessages(
     int channelIndex, {
     bool notify = true,
+    ChannelMessageStore? store,
+    String? expectedPublicKeyHex,
   }) async {
-    final allMessages = await _channelMessageStore.loadChannelMessages(
-      channelIndex,
-    );
+    final allMessages = await (store ?? _channelMessageStore)
+        .loadChannelMessages(channelIndex);
+    if (expectedPublicKeyHex != null &&
+        expectedPublicKeyHex != selfPublicKeyHex) {
+      return false;
+    }
     if (allMessages.isNotEmpty) {
       // Keep only the most recent N messages in memory to bound memory usage
       final windowedMessages = allMessages.length > _messageWindowSize
@@ -1110,6 +1127,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
       _channelMessages[channelIndex] = windowedMessages;
       if (notify) notifyListeners();
+      return true;
+    } else {
+      final removed = _channelMessages.remove(channelIndex) != null;
+      if (removed && notify) notifyListeners();
+      return removed;
     }
   }
 
@@ -1141,12 +1163,29 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   /// Load all persisted channel messages on startup
-  Future<void> loadAllChannelMessages({int? maxChannels}) async {
+  Future<void> loadAllChannelMessages({
+    int? maxChannels,
+    String? publicKeyHex,
+  }) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
+    final store = publicKeyHex == null
+        ? _channelMessageStore
+        : (ChannelMessageStore()..setPublicKeyHex = publicKeyHex);
     final channelCount = maxChannels ?? _maxChannels;
+    var changed = false;
     // Load messages for all known channels (0-7 by default)
     for (int i = 0; i < channelCount; i++) {
-      await _loadChannelMessages(i);
+      changed =
+          await _loadChannelMessages(
+            i,
+            notify: false,
+            store: store,
+            expectedPublicKeyHex: expectedPublicKeyHex,
+          ) ||
+          changed;
+      if (expectedPublicKeyHex != selfPublicKeyHex) return;
     }
+    if (changed) notifyListeners();
   }
 
   void initialize({
@@ -1248,7 +1287,17 @@ class MeshCoreConnector extends ChangeNotifier {
       ..addAll(cached);
   }
 
-  Future<void> loadChannelSettings({int? maxChannels}) async {
+  Future<void> loadChannelSettings({
+    int? maxChannels,
+    String? publicKeyHex,
+  }) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
+    final settingsStore = publicKeyHex == null
+        ? _channelSettingsStore
+        : (ChannelSettingsStore()..setPublicKeyHex = publicKeyHex);
+    final regionStore = publicKeyHex == null
+        ? _channelRegionStore
+        : (ChannelRegionStore()..setPublicKeyHex = publicKeyHex);
     _channelMcmpEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
@@ -1260,29 +1309,52 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelRegions.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
-      await _loadChannelSettingsForIndex(i);
+      await _loadChannelSettingsForIndex(
+        i,
+        settingsStore: settingsStore,
+        regionStore: regionStore,
+        expectedPublicKeyHex: expectedPublicKeyHex,
+      );
+      if (expectedPublicKeyHex != selfPublicKeyHex) return;
     }
   }
 
-  Future<void> _loadChannelSettingsForIndex(int channelIndex) async {
+  Future<void> _loadChannelSettingsForIndex(
+    int channelIndex, {
+    ChannelSettingsStore? settingsStore,
+    ChannelRegionStore? regionStore,
+    String? expectedPublicKeyHex,
+  }) async {
+    final channelSettingsStore = settingsStore ?? _channelSettingsStore;
+    final channelRegionStore = regionStore ?? _channelRegionStore;
     _channelCyr2LatProfileId.remove(channelIndex);
-    _channelMcmpEnabled[channelIndex] = await _channelSettingsStore
+    final mcmpEnabled = await channelSettingsStore
         .loadMcmpEnabled(channelIndex);
-    _channelSmazEnabled[channelIndex] = await _channelSettingsStore
+    final smazEnabled = await channelSettingsStore
         .loadSmazEnabled(channelIndex);
-    _channelCyr2LatEnabled[channelIndex] = await _channelSettingsStore
+    final cyr2LatEnabled = await channelSettingsStore
         .loadCyr2LatEnabled(channelIndex);
-    _channelSendingDelayEnabled[channelIndex] = await _channelSettingsStore
+    final sendingDelayEnabled = await channelSettingsStore
         .loadSendingDelayEnabled(channelIndex);
-    _channelQuickAnswerIds[channelIndex] = await _channelSettingsStore
+    final quickAnswerIds = await channelSettingsStore
         .loadQuickAnswerIds(channelIndex);
-    _channelWidgetColor[channelIndex] = await _channelSettingsStore
+    final widgetColor = await channelSettingsStore
         .loadWidgetColor(channelIndex);
-    _channelWidgetTextColor[channelIndex] = await _channelSettingsStore
+    final widgetTextColor = await channelSettingsStore
         .loadWidgetTextColor(channelIndex);
-    _channelRegions[channelIndex] = await _channelRegionStore.loadRegion(
-      channelIndex,
-    );
+    final region = await channelRegionStore.loadRegion(channelIndex);
+    if (expectedPublicKeyHex != null &&
+        expectedPublicKeyHex != selfPublicKeyHex) {
+      return;
+    }
+    _channelMcmpEnabled[channelIndex] = mcmpEnabled;
+    _channelSmazEnabled[channelIndex] = smazEnabled;
+    _channelCyr2LatEnabled[channelIndex] = cyr2LatEnabled;
+    _channelSendingDelayEnabled[channelIndex] = sendingDelayEnabled;
+    _channelQuickAnswerIds[channelIndex] = quickAnswerIds;
+    _channelWidgetColor[channelIndex] = widgetColor;
+    _channelWidgetTextColor[channelIndex] = widgetTextColor;
+    _channelRegions[channelIndex] = region;
   }
 
   /// After an incoming DM or channel message, wait before TX so we do not
@@ -4880,14 +4952,17 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelStore.setPublicKeyHex = selfPublicKeyHex;
     _unreadStore.setPublicKeyHex = selfPublicKeyHex;
 
-    // Now that we have self info, we can load all the persisted data for this node
-    _loadChannelOrder();
+    // Now that we have self info, we can load all the persisted data for this node.
+    // Pass the current public key into async loads so a quick reconnect to a
+    // different node cannot apply stale channel state to the new node.
+    final storagePublicKeyHex = selfPublicKeyHex;
+    _loadChannelOrder(publicKeyHex: storagePublicKeyHex);
     loadContactCache();
-    loadChannelSettings();
-    loadCachedChannels();
+    loadChannelSettings(publicKeyHex: storagePublicKeyHex);
+    loadCachedChannels(publicKeyHex: storagePublicKeyHex);
 
     // Load persisted channel messages
-    loadAllChannelMessages();
+    loadAllChannelMessages(publicKeyHex: storagePublicKeyHex);
     loadUnreadState();
     _loadDiscoveredContactCache();
 
@@ -4937,8 +5012,19 @@ class MeshCoreConnector extends ChangeNotifier {
       _maxContacts = nextMaxContacts;
       _maxChannels = nextMaxChannels;
       if (nextMaxChannels > previousMaxChannels) {
-        unawaited(loadChannelSettings(maxChannels: nextMaxChannels));
-        unawaited(loadAllChannelMessages(maxChannels: nextMaxChannels));
+        final storagePublicKeyHex = selfPublicKeyHex;
+        unawaited(
+          loadChannelSettings(
+            maxChannels: nextMaxChannels,
+            publicKeyHex: storagePublicKeyHex,
+          ),
+        );
+        unawaited(
+          loadAllChannelMessages(
+            maxChannels: nextMaxChannels,
+            publicKeyHex: storagePublicKeyHex,
+          ),
+        );
         if (isConnected &&
             _selfPublicKey != null &&
             !_pendingInitialChannelSync) {
