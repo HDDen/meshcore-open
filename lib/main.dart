@@ -275,9 +275,20 @@ class MeshCoreApp extends StatelessWidget {
     );
   }
 
-  Future<void> _handleNotificationTap(String payload) async {
+  Future<void> _handleNotificationTap(String payload) {
+    return _handleNotificationTapWithRetry(payload);
+  }
+
+  Future<void> _handleNotificationTapWithRetry(
+    String payload, {
+    int attempt = 0,
+  }) async {
     final navigator = _navigatorKey.currentState;
-    if (navigator == null || _navigatorKey.currentContext == null) return;
+    if (navigator == null || _navigatorKey.currentContext == null) {
+      if (attempt >= 20) return;
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      return _handleNotificationTapWithRetry(payload, attempt: attempt + 1);
+    }
     await WindowActivationService.restoreAndFocus();
 
     final separatorIndex = payload.indexOf(':');

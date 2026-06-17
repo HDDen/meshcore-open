@@ -111,8 +111,25 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
       _isInitialized = true;
+      await _handleLaunchNotificationTap();
     } catch (e) {
       debugPrint('Error initializing notifications: $e');
+    }
+  }
+
+  Future<void> _handleLaunchNotificationTap() async {
+    try {
+      final launchDetails = await _notifications
+          .getNotificationAppLaunchDetails();
+      final response = launchDetails?.notificationResponse;
+      final payload = response?.payload;
+      if (launchDetails?.didNotificationLaunchApp == true &&
+          payload != null &&
+          payload.isNotEmpty) {
+        _dispatchNotificationTapPayload(payload);
+      }
+    } catch (e) {
+      debugPrint('Failed to read launch notification payload: $e');
     }
   }
 
@@ -386,13 +403,17 @@ class NotificationService {
     final payload = response.payload;
     if (payload != null) {
       debugPrint('Notification tapped: $payload');
-      final handler = _tapHandler;
-      if (handler == null) {
-        _pendingTapPayload = payload;
-        return;
-      }
-      unawaited(Future<void>.sync(() => handler(payload)));
+      _dispatchNotificationTapPayload(payload);
     }
+  }
+
+  void _dispatchNotificationTapPayload(String payload) {
+    final handler = _tapHandler;
+    if (handler == null) {
+      _pendingTapPayload = payload;
+      return;
+    }
+    unawaited(Future<void>.sync(() => handler(payload)));
   }
 
   Future<void> cancelAll() async {
