@@ -612,23 +612,37 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (isMuted) ...[
-                        Icon(
-                          Icons.notifications_off,
-                          size: 14,
-                          color: widgetTextColor ?? scheme.onSurfaceVariant,
+                      if (unreadCount > 0) ...[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: isMuted || compressionLabels.isNotEmpty
+                                ? 4
+                                : 0,
+                          ),
+                          child: UnreadBadge(count: unreadCount),
                         ),
-                        const SizedBox(width: 4),
                       ],
-                      for (final label in compressionLabels) ...[
+                      if (isMuted)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Icon(
+                            Icons.notifications_off,
+                            size: 14,
+                            color:
+                                widgetTextColor ?? scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      for (
+                        var index = 0;
+                        index < compressionLabels.length;
+                        index++
+                      ) ...[
                         _buildChannelCompressionIndicator(
                           context,
-                          label,
+                          compressionLabels[index],
                           textColor: widgetTextColor,
                         ),
-                        const SizedBox(width: 4),
                       ],
-                      if (unreadCount > 0) UnreadBadge(count: unreadCount),
                     ],
                   ),
                 ],
@@ -672,9 +686,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     Color? textColor,
   }) {
     final color = textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
-    return Text(
-      label,
-      style: TextStyle(color: color, fontSize: 11, letterSpacing: 0),
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        label,
+        style: MeshTheme.mono(fontSize: 11, color: color),
+      ),
     );
   }
 
