@@ -2246,5 +2246,7 @@
   "settings_modSettingsSharedMsgHistoryDisabled": "Отключено",
   "settings_modSettingsSharedMsgHistoryChannels": "Только каналы",
   "settings_modSettingsSharedMsgHistoryContacts": "Только контакты",
-  "settings_modSettingsSharedMsgHistoryAll": "Все чаты"
+  "settings_modSettingsSharedMsgHistoryAll": "Все чаты",
+  "settings_modSettingsMessagingShowCompressionRatio": "Отображать степень сжатия",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "При подсчёте учитывать имя ноды"
 }

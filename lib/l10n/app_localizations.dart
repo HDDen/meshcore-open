@@ -9201,6 +9201,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All chats'**
   String get settings_modSettingsSharedMsgHistoryAll;
+
+  /// No description provided for @settings_modSettingsMessagingShowCompressionRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Show compression ratio'**
+  String get settings_modSettingsMessagingShowCompressionRatio;
+
+  /// No description provided for @settings_modSettingsMessagingCompressionRatioWithSendername.
+  ///
+  /// In en, this message translates to:
+  /// **'Also take into account senderName'**
+  String get settings_modSettingsMessagingCompressionRatioWithSendername;
 }
 
 class _AppLocalizationsDelegate

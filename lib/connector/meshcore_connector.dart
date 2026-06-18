@@ -14,6 +14,7 @@ import '../models/channel_message.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
+import '../models/message_compression.dart';
 import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
@@ -3548,15 +3549,20 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> sendMessage(
     Contact contact,
     String text, {
+    String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
   }) async {
     if (!isConnected || text.isEmpty) return;
 
-    final outboundBytes = utf8.encode(
-      prepareContactOutboundText(contact, text),
+    final outboundText = prepareContactOutboundText(contact, text);
+    final compression = _contactCompressionMetadata(
+      contact,
+      uncompressedText ?? text,
+      outboundText,
     );
+    final outboundBytes = utf8.encode(outboundText);
     if (outboundBytes.length > maxTextPayloadBytes) {
       debugPrint(
         'sendMessage: dropping overlong message '
@@ -3596,6 +3602,10 @@ class MeshCoreConnector extends ChangeNotifier {
       await _retryService!.sendMessageWithRetry(
         contact: contact,
         text: text,
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
@@ -3607,8 +3617,12 @@ class MeshCoreConnector extends ChangeNotifier {
         contact.publicKey,
         text,
         wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-          prepareContactOutboundText(contact, text),
+          outboundText,
         ),
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
         originalText: originalText,
@@ -3617,7 +3631,6 @@ class MeshCoreConnector extends ChangeNotifier {
       );
       _addMessage(contact.publicKeyHex, message);
       notifyListeners();
-      final outboundText = prepareContactOutboundText(contact, text);
       final sentByRadioAt = DateTime.now();
       final waitSeconds = sentByRadioAt.difference(message.timestamp).inSeconds;
       _updateMessage(
@@ -3951,6 +3964,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> sendChannelMessage(
     Channel channel,
     String text, {
+    String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
@@ -4003,10 +4017,6 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final outboundText = prepareChannelOutboundText(channel.index, text);
-    final binaryMcmpPayloadBytes =
-        isChannelMcmpEnabled(channel.index) && ChannelBinaryDataHelper.canSend
-        ? ChannelBinaryDataHelper.mcmpPayloadLength(text, _selfName ?? 'Me')
-        : null;
     final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
       text: text,
       senderName: _selfName ?? 'Me',
@@ -4015,14 +4025,28 @@ class MeshCoreConnector extends ChangeNotifier {
     final isBinaryTransport =
         binaryOutbound != null &&
         binaryOutbound.payload.length <= maxChannelDataLength;
+    final isBinaryMcmpTransport =
+        isBinaryTransport && binaryOutbound.kind == ChannelBinaryDataKind.mcmp;
+    final compression = _channelCompressionMetadata(
+      channel.index,
+      uncompressedText ?? text,
+      outboundText,
+      binaryPayloadBytes: isBinaryMcmpTransport
+          ? binaryOutbound.payload.length
+          : null,
+      senderName: _selfName ?? 'Me',
+    );
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
       channel.index,
       wasMcmpCompressed:
           MeshCompressor.instance.hasPrefix(outboundText) ||
-          (binaryMcmpPayloadBytes != null &&
-              binaryMcmpPayloadBytes <= maxChannelDataLength),
+          isBinaryMcmpTransport,
+      compressionType: compression?.type,
+      compressionSavingsPercent: compression?.savingsPercent,
+      compressionOriginalBytes: compression?.originalBytes,
+      compressionPayloadBytes: compression?.payloadBytes,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4160,6 +4184,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Contact contact,
     String text, {
     required String inputText,
+    String? uncompressedText,
     required int delaySeconds,
     String? originalText,
     String? translatedLanguageCode,
@@ -4167,12 +4192,22 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
     final resolved = resolvePathSelection(contact);
+    final outboundText = prepareContactOutboundText(contact, text);
+    final compression = _contactCompressionMetadata(
+      contact,
+      uncompressedText ?? text,
+      outboundText,
+    );
     final message = Message.outgoing(
       contact.publicKey,
       text,
       wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        prepareContactOutboundText(contact, text),
+        outboundText,
       ),
+      compressionType: compression?.type,
+      compressionSavingsPercent: compression?.savingsPercent,
+      compressionOriginalBytes: compression?.originalBytes,
+      compressionPayloadBytes: compression?.payloadBytes,
       pathLength: resolved.useFlood ? -1 : resolved.hopCount,
       pathBytes: Uint8List.fromList(resolved.pathBytes),
       originalText: originalText,
@@ -4184,6 +4219,7 @@ class MeshCoreConnector extends ChangeNotifier {
       message: message,
       text: text,
       inputText: inputText,
+      uncompressedText: uncompressedText ?? text,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4202,6 +4238,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Channel channel,
     String text, {
     required String inputText,
+    String? uncompressedText,
     required int delaySeconds,
     String? originalText,
     String? translatedLanguageCode,
@@ -4211,13 +4248,37 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
   }) {
     if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    final outboundText = prepareChannelOutboundText(channel.index, text);
+    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
+      text: text,
+      senderName: _selfName ?? 'Me',
+      mcmpEnabled: isChannelMcmpEnabled(channel.index),
+    );
+    final usesBinaryMcmp =
+        binaryOutbound != null &&
+        binaryOutbound.kind == ChannelBinaryDataKind.mcmp &&
+        binaryOutbound.payload.length <= maxChannelDataLength;
+    final compression = _channelCompressionMetadata(
+      channel.index,
+      uncompressedText ?? text,
+      outboundText,
+      binaryPayloadBytes: usesBinaryMcmp
+          ? binaryOutbound.payload.length
+          : null,
+      senderName: _selfName ?? 'Me',
+    );
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
       channel.index,
       wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        prepareChannelOutboundText(channel.index, text),
-      ),
+        outboundText,
+      ) || usesBinaryMcmp,
+      compressionType: compression?.type,
+      compressionSavingsPercent: compression?.savingsPercent,
+      compressionOriginalBytes: compression?.originalBytes,
+      compressionPayloadBytes: compression?.payloadBytes,
+      wasBinaryTransport: usesBinaryMcmp,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4230,6 +4291,7 @@ class MeshCoreConnector extends ChangeNotifier {
       message: message,
       text: text,
       inputText: inputText,
+      uncompressedText: uncompressedText ?? text,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4270,6 +4332,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await sendMessage(
       pending.contact,
       pending.text,
+      uncompressedText: pending.uncompressedText,
       originalText: pending.originalText,
       translatedLanguageCode: pending.translatedLanguageCode,
       translationModelId: pending.translationModelId,
@@ -4283,6 +4346,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await sendChannelMessage(
       pending.channel,
       pending.text,
+      uncompressedText: pending.uncompressedText,
       originalText: pending.originalText,
       translatedLanguageCode: pending.translatedLanguageCode,
       translationModelId: pending.translationModelId,
@@ -5995,6 +6059,12 @@ class MeshCoreConnector extends ChangeNotifier {
       final decodedText = isCli
           ? msgText
           : (MessageTextCodec.tryDecodeKnownCompression(msgText) ?? msgText);
+      final compression = isCli
+          ? null
+          : MessageCompressionMetadata.fromEncodedText(
+              encodedText: msgText,
+              decodedText: decodedText,
+            );
 
       final contact = _contacts.cast<Contact?>().firstWhere(
         (c) => c != null && _matchesPrefix(c.publicKey, senderPrefix),
@@ -6015,6 +6085,10 @@ class MeshCoreConnector extends ChangeNotifier {
         isCli: isCli,
         status: MessageStatus.delivered,
         wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         pathLength: pathLength == 0xFF ? -1 : (pathLength & 0x3F),
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: roomAuthorPrefix,
@@ -6293,6 +6367,112 @@ class MeshCoreConnector extends ChangeNotifier {
     return text;
   }
 
+  MessageCompressionMetadata? _contactCompressionMetadata(
+    Contact contact,
+    String originalText,
+    String outboundText,
+  ) {
+    final trimmed = originalText.trim();
+    if (trimmed.startsWith('g:') ||
+        trimmed.startsWith('m:') ||
+        trimmed.startsWith('V1|')) {
+      return null;
+    }
+    MessageCompressionType? type;
+    if (isContactMcmpEnabled(contact.publicKeyHex) &&
+        MeshCompressor.instance.hasPrefix(outboundText)) {
+      type = MessageCompressionType.mcmp;
+    } else if (isContactSmazEnabled(contact.publicKeyHex) &&
+        Smaz.hasPrefix(outboundText)) {
+      type = MessageCompressionType.smaz;
+    } else if (isContactCyr2LatEnabled(contact.publicKeyHex) &&
+        outboundText != originalText) {
+      type = MessageCompressionType.cyr2lat;
+    }
+    if (type == null) return null;
+    return MessageCompressionMetadata.fromText(
+      type: type,
+      originalText: originalText,
+      compressedText: outboundText,
+    );
+  }
+
+  MessageCompressionMetadata? _channelCompressionMetadata(
+    int channelIndex,
+    String originalText,
+    String outboundText, {
+    required String senderName,
+    int? binaryPayloadBytes,
+  }) {
+    final trimmed = originalText.trim();
+    if (trimmed.startsWith('g:') || trimmed.startsWith('m:')) return null;
+    if (binaryPayloadBytes != null) {
+      return MessageCompressionMetadata.fromByteLengths(
+        type: MessageCompressionType.mcmp,
+        originalBytes: ChannelBinaryDataHelper.uncompressedBinaryPayloadLength(
+          originalText,
+          senderName,
+        ),
+        compressedBytes: ChannelBinaryDataHelper.finalBinaryPayloadLength(
+          binaryPayloadBytes,
+        ),
+      );
+    }
+
+    MessageCompressionType? type;
+    if (isChannelMcmpEnabled(channelIndex) &&
+        MeshCompressor.instance.hasPrefix(outboundText)) {
+      type = MessageCompressionType.mcmp;
+    } else if (isChannelSmazEnabled(channelIndex) &&
+        Smaz.hasPrefix(outboundText)) {
+      type = MessageCompressionType.smaz;
+    } else if (isChannelCyr2LatEnabled(channelIndex) &&
+        outboundText != originalText) {
+      type = MessageCompressionType.cyr2lat;
+    }
+    if (type == null) return null;
+    return MessageCompressionMetadata.fromText(
+      type: type,
+      originalText: originalText,
+      compressedText: outboundText,
+      sharedPayloadBytes:
+          _appSettingsService?.settings.compressionRatioWithSenderName == true
+          ? utf8.encode('$senderName: ').length
+          : 0,
+    );
+  }
+
+  MessageCompressionMetadata? _incomingChannelTextCompression(
+    String encodedText,
+    String decodedText,
+    String senderName,
+  ) {
+    return MessageCompressionMetadata.fromEncodedText(
+      encodedText: encodedText,
+      decodedText: decodedText,
+      sharedPayloadBytes:
+          _appSettingsService?.settings.compressionRatioWithSenderName == true
+          ? utf8.encode('$senderName: ').length
+          : 0,
+    );
+  }
+
+  MessageCompressionMetadata? _incomingBinaryCompression(
+    ChannelBinaryDataInbound decoded,
+  ) {
+    if (!decoded.wasMcmpCompressed) return null;
+    return MessageCompressionMetadata.fromByteLengths(
+      type: MessageCompressionType.mcmp,
+      originalBytes: ChannelBinaryDataHelper.uncompressedBinaryPayloadLength(
+        decoded.text,
+        decoded.senderName,
+      ),
+      compressedBytes: ChannelBinaryDataHelper.finalBinaryPayloadLength(
+        decoded.payloadLength,
+      ),
+    );
+  }
+
   String _channelDisplayName(int channelIndex) {
     for (final channel in _channels) {
       if (channel.index != channelIndex) continue;
@@ -6352,7 +6532,11 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_isSyncingQueuedMessages) {
       _handleQueuedMessageReceived();
     }
-    final parsed = ChannelMessage.fromFrame(frame);
+    final parsed = ChannelMessage.fromFrame(
+      frame,
+      includeSenderNameInCompressionRatio:
+          _appSettingsService?.settings.compressionRatioWithSenderName == true,
+    );
     if (parsed != null && parsed.channelIndex != null) {
       final channelName = _channelDisplayName(parsed.channelIndex!);
       if (_shouldDropSelfChannelMessage(
@@ -6428,10 +6612,15 @@ class MeshCoreConnector extends ChangeNotifier {
       dataFrame.dataType,
       dataFrame.payload,
     );
+    final compression = _incomingBinaryCompression(decoded);
     final message = ChannelMessage(
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
+      compressionType: compression?.type,
+      compressionSavingsPercent: compression?.savingsPercent,
+      compressionOriginalBytes: compression?.originalBytes,
+      compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
       timestamp: decoded.timestamp,
       isOutgoing: false,
@@ -6545,6 +6734,11 @@ class MeshCoreConnector extends ChangeNotifier {
           final decodedText =
               MessageTextCodec.tryDecodeKnownCompression(parsed.text) ??
               parsed.text;
+          final compression = _incomingChannelTextCompression(
+            parsed.text,
+            decodedText,
+            parsed.senderName,
+          );
           final label = channel.name.isEmpty
               ? 'Channel ${channel.index}'
               : channel.name;
@@ -6566,6 +6760,10 @@ class MeshCoreConnector extends ChangeNotifier {
             senderName: parsed.senderName,
             text: decodedText,
             wasMcmpCompressed: MeshCompressor.instance.hasPrefix(parsed.text),
+            compressionType: compression?.type,
+            compressionSavingsPercent: compression?.savingsPercent,
+            compressionOriginalBytes: compression?.originalBytes,
+            compressionPayloadBytes: compression?.payloadBytes,
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
             isOutgoing: false,
             status: ChannelMessageStatus.sent,
@@ -6630,11 +6828,16 @@ class MeshCoreConnector extends ChangeNotifier {
     if (decoded == null) return null;
 
     final pktHash = _computePacketHash(packet.payloadType, packet.payload);
+    final compression = _incomingBinaryCompression(decoded);
     return ChannelMessage(
       senderKey: null,
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
+      compressionType: compression?.type,
+      compressionSavingsPercent: compression?.savingsPercent,
+      compressionOriginalBytes: compression?.originalBytes,
+      compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
       timestamp: decoded.timestamp,
       isOutgoing: false,
@@ -7426,6 +7629,10 @@ class MeshCoreConnector extends ChangeNotifier {
         translationStatus: message.translationStatus,
         translationModelId: message.translationModelId,
         wasMcmpCompressed: message.wasMcmpCompressed,
+        compressionType: message.compressionType,
+        compressionSavingsPercent: message.compressionSavingsPercent,
+        compressionOriginalBytes: message.compressionOriginalBytes,
+        compressionPayloadBytes: message.compressionPayloadBytes,
         wasBinaryTransport: message.wasBinaryTransport,
         timestamp: message.timestamp,
         sentByRadioAt: message.sentByRadioAt,
@@ -8500,6 +8707,7 @@ class _PendingContactSend {
   final Message message;
   final String text;
   final String inputText;
+  final String uncompressedText;
   final String? originalText;
   final String? translatedLanguageCode;
   final String? translationModelId;
@@ -8512,6 +8720,7 @@ class _PendingContactSend {
     required this.message,
     required this.text,
     required this.inputText,
+    required this.uncompressedText,
     required this.originalText,
     required this.translatedLanguageCode,
     required this.translationModelId,
@@ -8525,6 +8734,7 @@ class _PendingChannelSend {
   final ChannelMessage message;
   final String text;
   final String inputText;
+  final String uncompressedText;
   final String? originalText;
   final String? translatedLanguageCode;
   final String? translationModelId;
@@ -8540,6 +8750,7 @@ class _PendingChannelSend {
     required this.message,
     required this.text,
     required this.inputText,
+    required this.uncompressedText,
     required this.originalText,
     required this.translatedLanguageCode,
     required this.translationModelId,

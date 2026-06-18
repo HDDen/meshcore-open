@@ -294,6 +294,11 @@ class Smaz {
     }
   }
 
+  static bool hasPrefix(String text) {
+    final trimmedLeft = text.trimLeft();
+    return trimmedLeft.startsWith('s:') && trimmedLeft.length > 2;
+  }
+
   static Uint8List compressBytes(Uint8List input) {
     final out = BytesBuilder(copy: false);
     final verbatim = <int>[];

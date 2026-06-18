@@ -101,7 +101,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "de": [
@@ -193,7 +195,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "es": [
@@ -298,7 +302,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "fr": [
@@ -403,7 +409,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "hu": [
@@ -508,7 +516,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "it": [
@@ -693,7 +703,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "ja": [
@@ -798,7 +810,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "ko": [
@@ -903,7 +917,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "nl": [
@@ -1088,7 +1104,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "pl": [
@@ -1193,7 +1211,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "pt": [
@@ -1378,7 +1398,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "sk": [
@@ -1483,7 +1505,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "sl": [
@@ -1588,7 +1612,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "sv": [
@@ -1773,7 +1799,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "uk": [
@@ -1878,7 +1906,9 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ],
 
   "zh": [
@@ -1983,6 +2013,8 @@
     "settings_modSettingsSharedMsgHistoryDisabled",
     "settings_modSettingsSharedMsgHistoryChannels",
     "settings_modSettingsSharedMsgHistoryContacts",
-    "settings_modSettingsSharedMsgHistoryAll"
+    "settings_modSettingsSharedMsgHistoryAll",
+    "settings_modSettingsMessagingShowCompressionRatio",
+    "settings_modSettingsMessagingCompressionRatioWithSendername"
   ]
 }

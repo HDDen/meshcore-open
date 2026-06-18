@@ -187,6 +187,8 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+  final bool showCompressionRatio;
+  final bool compressionRatioWithSenderName;
   final bool incomingQuoteAsMentions;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
@@ -432,6 +434,8 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
+    this.showCompressionRatio = false,
+    this.compressionRatioWithSenderName = false,
     this.incomingQuoteAsMentions = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
@@ -522,6 +526,8 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'show_compression_ratio': showCompressionRatio,
+      'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
@@ -624,6 +630,10 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
+      showCompressionRatio:
+          json['show_compression_ratio'] as bool? ?? false,
+      compressionRatioWithSenderName:
+          json['compression_ratio_with_sender_name'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
@@ -766,6 +776,8 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? showCompressionRatio,
+    bool? compressionRatioWithSenderName,
     bool? incomingQuoteAsMentions,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
@@ -836,6 +848,10 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      showCompressionRatio:
+          showCompressionRatio ?? this.showCompressionRatio,
+      compressionRatioWithSenderName:
+          compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,

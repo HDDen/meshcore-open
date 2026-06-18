@@ -30,6 +30,7 @@ import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
+import '../models/message_compression.dart';
 import '../models/contact.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
@@ -787,12 +788,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final showCompressionRatio =
+        settingsService.settings.showCompressionRatio;
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final incomingQuoteAsMentions =
         settingsService.settings.incomingQuoteAsMentions;
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final isOutgoing = message.isOutgoing;
+    final compressionType =
+        message.compressionType ??
+        (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
+    final compressionRatioPrefix =
+        showCompressionRatio &&
+            message.compressionSavingsPercent != null
+        ? '${message.compressionSavingsPercent}% '
+        : '';
+    final compressionLabel = compressionType == null
+        ? null
+        : '$compressionRatioPrefix${compressionType.label}'
+              '${message.wasBinaryTransport ? ' bin' : ''}';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
@@ -1219,12 +1234,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   ),
                                 ],
                                 if (enableTracing &&
-                                    message.wasMcmpCompressed) ...[
+                                    compressionLabel != null) ...[
                                   const SizedBox(width: 6),
                                   Text(
-                                    message.wasBinaryTransport
-                                        ? 'mcmp bin'
-                                        : 'mcmp',
+                                    compressionLabel,
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,
@@ -2145,6 +2158,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (!skipReplyContext) {
       messageText = _applyReplyMention(messageText);
     }
+    final compressionSourceText = messageText;
 
     final outboundText = connector.prepareChannelOutboundText(
       widget.channel.index,
@@ -2191,6 +2205,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         widget.channel,
         messageText,
         inputText: text,
+        uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -2203,6 +2218,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       connector.sendChannelMessage(
         widget.channel,
         messageText,
+        uncompressedText: compressionSourceText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,

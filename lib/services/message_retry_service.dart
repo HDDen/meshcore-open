@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:crypto/crypto.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
+import '../models/message_compression.dart';
 import '../models/path_selection.dart';
 import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
@@ -153,6 +154,10 @@ class MessageRetryService extends ChangeNotifier {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    MessageCompressionType? compressionType,
+    int? compressionSavingsPercent,
+    int? compressionOriginalBytes,
+    int? compressionPayloadBytes,
     Uint8List? pathBytes,
     int? pathLength,
   }) async {
@@ -171,6 +176,10 @@ class MessageRetryService extends ChangeNotifier {
       wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
         _config?.prepareContactOutboundText?.call(contact, text) ?? text,
       ),
+      compressionType: compressionType,
+      compressionSavingsPercent: compressionSavingsPercent,
+      compressionOriginalBytes: compressionOriginalBytes,
+      compressionPayloadBytes: compressionPayloadBytes,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../models/channel_message.dart';
+import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
@@ -106,6 +107,10 @@ class ChannelMessageStore {
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
+      'compressionType': msg.compressionType?.name,
+      'compressionSavingsPercent': msg.compressionSavingsPercent,
+      'compressionOriginalBytes': msg.compressionOriginalBytes,
+      'compressionPayloadBytes': msg.compressionPayloadBytes,
       'wasBinaryTransport': msg.wasBinaryTransport,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
@@ -135,6 +140,10 @@ class ChannelMessageStore {
         MeshCompressor.instance.hasPrefix(rawText);
     final decodedText =
         MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+    final detectedCompression = MessageCompressionMetadata.fromEncodedText(
+      encodedText: rawText,
+      decodedText: decodedText,
+    );
 
     final rawPathLength = json['pathLength'] as int?;
     final rawPathBytes = json['pathBytes'] != null
@@ -181,6 +190,19 @@ class ChannelMessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType:
+          MessageCompressionTypeLabel.fromJson(json['compressionType']) ??
+          detectedCompression?.type ??
+          (wasMcmpCompressed ? MessageCompressionType.mcmp : null),
+      compressionSavingsPercent:
+          json['compressionSavingsPercent'] as int? ??
+          detectedCompression?.savingsPercent,
+      compressionOriginalBytes:
+          json['compressionOriginalBytes'] as int? ??
+          detectedCompression?.originalBytes,
+      compressionPayloadBytes:
+          json['compressionPayloadBytes'] as int? ??
+          detectedCompression?.payloadBytes,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       sentByRadioAt: json['sentByRadioAt'] is int

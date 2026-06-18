@@ -152,6 +152,16 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setShowCompressionRatio(bool value) async {
+    await updateSettings(_settings.copyWith(showCompressionRatio: value));
+  }
+
+  Future<void> setCompressionRatioWithSenderName(bool value) async {
+    await updateSettings(
+      _settings.copyWith(compressionRatioWithSenderName: value),
+    );
+  }
+
   Future<void> setIncomingQuoteAsMentions(bool value) async {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }

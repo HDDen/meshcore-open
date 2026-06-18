@@ -27,6 +27,7 @@ import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
+import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
@@ -800,6 +801,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
+    final compressionSourceText = outgoingText;
     final maxBytes = _maxContactInputBytes(connector);
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
@@ -839,6 +841,7 @@ class _ChatScreenState extends State<ChatScreen> {
         contact,
         outgoingText,
         inputText: text,
+        uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -848,6 +851,7 @@ class _ChatScreenState extends State<ChatScreen> {
       connector.sendMessage(
         contact,
         outgoingText,
+        uncompressedText: compressionSourceText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
@@ -1310,6 +1314,10 @@ class _ChatScreenState extends State<ChatScreen> {
       senderName: senderName,
       text: message.text,
       wasMcmpCompressed: message.wasMcmpCompressed,
+      compressionType: message.compressionType,
+      compressionSavingsPercent: message.compressionSavingsPercent,
+      compressionOriginalBytes: message.compressionOriginalBytes,
+      compressionPayloadBytes: message.compressionPayloadBytes,
       timestamp: message.timestamp,
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
@@ -1623,8 +1631,21 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final showCompressionRatio =
+        settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
+    final compressionType =
+        message.compressionType ??
+        (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
+    final compressionRatioPrefix =
+        showCompressionRatio &&
+            message.compressionSavingsPercent != null
+        ? '${message.compressionSavingsPercent}% '
+        : '';
+    final compressionLabel = compressionType == null
+        ? null
+        : '$compressionRatioPrefix${compressionType.label}';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
@@ -1972,10 +1993,10 @@ class _MessageBubble extends StatelessWidget {
                                   ),
                                 ],
                                 if (enableTracing &&
-                                    message.wasMcmpCompressed) ...[
+                                    compressionLabel != null) ...[
                                   const SizedBox(width: 4),
                                   Text(
-                                    'mcmp',
+                                    compressionLabel,
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,

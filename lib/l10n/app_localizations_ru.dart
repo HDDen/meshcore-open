@@ -5375,4 +5375,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_modSettingsSharedMsgHistoryAll => 'Все чаты';
+
+  @override
+  String get settings_modSettingsMessagingShowCompressionRatio =>
+      'Отображать степень сжатия';
+
+  @override
+  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
+      'При подсчёте учитывать имя ноды';
 }

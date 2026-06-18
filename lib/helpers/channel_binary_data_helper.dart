@@ -24,6 +24,7 @@ class ChannelBinaryDataInbound {
   final String text;
   final DateTime timestamp;
   final bool wasMcmpCompressed;
+  final int payloadLength;
   final ChannelBinaryDataKind kind;
 
   const ChannelBinaryDataInbound({
@@ -31,6 +32,7 @@ class ChannelBinaryDataInbound {
     required this.text,
     required this.timestamp,
     required this.wasMcmpCompressed,
+    required this.payloadLength,
     required this.kind,
   });
 }
@@ -45,6 +47,7 @@ class ChannelBinaryDataHelper {
   static bool sendEnabled = false;
   static const int mcoImageDataType = 0xFFF0;
   static const int mcmpDataType = 0xFFF1;
+  static const int channelDataHeaderLength = 3;
 
   static bool get isAvailable => enabled;
   static bool get canSend => isAvailable && sendEnabled;
@@ -124,6 +127,25 @@ class ChannelBinaryDataHelper {
     }
   }
 
+  static int uncompressedPayloadLength(String text, String senderName) {
+    return _envelopeLength(
+      bodyLength: utf8.encode(text).length,
+      senderName: senderName,
+    );
+  }
+
+  static int finalBinaryPayloadLength(int envelopeLength) {
+    return channelDataHeaderLength + envelopeLength;
+  }
+
+  static int uncompressedBinaryPayloadLength(
+    String text,
+    String senderName,
+  ) {
+    return channelDataHeaderLength +
+        uncompressedPayloadLength(text, senderName);
+  }
+
   static ChannelBinaryDataInbound? tryDecodeInbound({
     required int dataType,
     required Uint8List payload,
@@ -146,6 +168,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: false,
+          payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcoImage,
         );
       }
@@ -157,6 +180,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: true,
+          payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcmp,
         );
       }

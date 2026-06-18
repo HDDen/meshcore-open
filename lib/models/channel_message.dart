@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
+import 'message_compression.dart';
 import 'translation_support.dart';
 import '../utils/app_logger.dart';
 
@@ -37,6 +39,10 @@ class ChannelMessage {
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
   final bool wasMcmpCompressed;
+  final MessageCompressionType? compressionType;
+  final int? compressionSavingsPercent;
+  final int? compressionOriginalBytes;
+  final int? compressionPayloadBytes;
   final bool wasBinaryTransport;
   final DateTime timestamp;
   // Internal TX anchor; UI keeps using timestamp as the visible compose time.
@@ -69,6 +75,10 @@ class ChannelMessage {
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
     this.wasMcmpCompressed = false,
+    this.compressionType,
+    this.compressionSavingsPercent,
+    this.compressionOriginalBytes,
+    this.compressionPayloadBytes,
     this.wasBinaryTransport = false,
     required this.timestamp,
     this.sentByRadioAt,
@@ -121,6 +131,10 @@ class ChannelMessage {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    Object? compressionType = _unset,
+    Object? compressionSavingsPercent = _unset,
+    Object? compressionOriginalBytes = _unset,
+    Object? compressionPayloadBytes = _unset,
     bool? wasBinaryTransport,
     Object? sharedHistorySourceName = _unset,
     Object? sentByRadioAt = _unset,
@@ -145,6 +159,18 @@ class ChannelMessage {
           ? this.translationModelId
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
+      compressionType: compressionType == _unset
+          ? this.compressionType
+          : compressionType as MessageCompressionType?,
+      compressionSavingsPercent: compressionSavingsPercent == _unset
+          ? this.compressionSavingsPercent
+          : compressionSavingsPercent as int?,
+      compressionOriginalBytes: compressionOriginalBytes == _unset
+          ? this.compressionOriginalBytes
+          : compressionOriginalBytes as int?,
+      compressionPayloadBytes: compressionPayloadBytes == _unset
+          ? this.compressionPayloadBytes
+          : compressionPayloadBytes as int?,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
@@ -173,7 +199,10 @@ class ChannelMessage {
     );
   }
 
-  static ChannelMessage? fromFrame(Uint8List frame) {
+  static ChannelMessage? fromFrame(
+    Uint8List frame, {
+    bool includeSenderNameInCompressionRatio = false,
+  }) {
     // CHANNEL_MSG_RECV format varies by version:
     // V3: [0]=code [1]=SNR [2]=rsv1 [3]=rsv2 [4]=channel_idx [5]=path_len [path... optional] [txt_type] [timestamp x4] [text...]
     // Non-V3: [0]=code [1]=channel_idx [2]=path_len [3]=txt_type [4-7]=timestamp [8+]=text
@@ -240,12 +269,23 @@ class ChannelMessage {
 
       final decodedText =
           MessageTextCodec.tryDecodeKnownCompression(actualText) ?? actualText;
+      final compression = MessageCompressionMetadata.fromEncodedText(
+        encodedText: actualText,
+        decodedText: decodedText,
+        sharedPayloadBytes: includeSenderNameInCompressionRatio
+            ? utf8.encode('$senderName: ').length
+            : 0,
+      );
 
       return ChannelMessage(
         senderKey: null,
         senderName: senderName,
         text: decodedText,
         wasMcmpCompressed: MeshCompressor.instance.hasPrefix(actualText),
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,
@@ -272,6 +312,10 @@ class ChannelMessage {
     String? replyToSenderName,
     String? replyToText,
     bool wasMcmpCompressed = false,
+    MessageCompressionType? compressionType,
+    int? compressionSavingsPercent,
+    int? compressionOriginalBytes,
+    int? compressionPayloadBytes,
     bool wasBinaryTransport = false,
   }) {
     return ChannelMessage(
@@ -282,6 +326,10 @@ class ChannelMessage {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType: compressionType,
+      compressionSavingsPercent: compressionSavingsPercent,
+      compressionOriginalBytes: compressionOriginalBytes,
+      compressionPayloadBytes: compressionPayloadBytes,
       wasBinaryTransport: wasBinaryTransport,
       timestamp: DateTime.now(),
       isOutgoing: true,

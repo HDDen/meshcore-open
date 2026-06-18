@@ -3,6 +3,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
+import 'message_compression.dart';
 import 'translation_support.dart';
 
 enum MessageStatus { pending, sent, delivered, failed }
@@ -22,6 +23,10 @@ class Message {
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
   final bool wasMcmpCompressed;
+  final MessageCompressionType? compressionType;
+  final int? compressionSavingsPercent;
+  final int? compressionOriginalBytes;
+  final int? compressionPayloadBytes;
   final String? sharedHistorySourceName;
 
   // NEW: Retry logic fields
@@ -55,6 +60,10 @@ class Message {
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
     this.wasMcmpCompressed = false,
+    this.compressionType,
+    this.compressionSavingsPercent,
+    this.compressionOriginalBytes,
+    this.compressionPayloadBytes,
     this.sharedHistorySourceName,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
@@ -99,6 +108,10 @@ class Message {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    Object? compressionType = _unset,
+    Object? compressionSavingsPercent = _unset,
+    Object? compressionOriginalBytes = _unset,
+    Object? compressionPayloadBytes = _unset,
     Object? sharedHistorySourceName = _unset,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
@@ -126,6 +139,18 @@ class Message {
           ? this.translationModelId
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
+      compressionType: compressionType == _unset
+          ? this.compressionType
+          : compressionType as MessageCompressionType?,
+      compressionSavingsPercent: compressionSavingsPercent == _unset
+          ? this.compressionSavingsPercent
+          : compressionSavingsPercent as int?,
+      compressionOriginalBytes: compressionOriginalBytes == _unset
+          ? this.compressionOriginalBytes
+          : compressionOriginalBytes as int?,
+      compressionPayloadBytes: compressionPayloadBytes == _unset
+          ? this.compressionPayloadBytes
+          : compressionPayloadBytes as int?,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
@@ -167,6 +192,10 @@ class Message {
       final rawText = reader.readCString();
       final text =
           MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+      final compression = MessageCompressionMetadata.fromEncodedText(
+        encodedText: rawText,
+        decodedText: text,
+      );
 
       return Message(
         senderKey: senderKey,
@@ -176,6 +205,10 @@ class Message {
         isCli: false,
         status: MessageStatus.delivered,
         wasMcmpCompressed: MeshCompressor.instance.hasPrefix(rawText),
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         pathBytes: Uint8List(0),
       );
     } catch (e) {
@@ -190,6 +223,10 @@ class Message {
     String? translatedLanguageCode,
     String? translationModelId,
     bool wasMcmpCompressed = false,
+    MessageCompressionType? compressionType,
+    int? compressionSavingsPercent,
+    int? compressionOriginalBytes,
+    int? compressionPayloadBytes,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -200,6 +237,10 @@ class Message {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType: compressionType,
+      compressionSavingsPercent: compressionSavingsPercent,
+      compressionOriginalBytes: compressionOriginalBytes,
+      compressionPayloadBytes: compressionPayloadBytes,
       timestamp: DateTime.now(),
       isOutgoing: true,
       isCli: false,

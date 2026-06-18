@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import '../models/message.dart';
+import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
@@ -91,6 +92,10 @@ class MessageStore {
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
+      'compressionType': msg.compressionType?.name,
+      'compressionSavingsPercent': msg.compressionSavingsPercent,
+      'compressionOriginalBytes': msg.compressionOriginalBytes,
+      'compressionPayloadBytes': msg.compressionPayloadBytes,
       'retryCount': msg.retryCount,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
@@ -120,6 +125,12 @@ class MessageStore {
     final decodedText = isCli
         ? rawText
         : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
+    final detectedCompression = isCli
+        ? null
+        : MessageCompressionMetadata.fromEncodedText(
+            encodedText: rawText,
+            decodedText: decodedText,
+          );
 
     final rawPathLength = json['pathLength'] as int?;
     final rawPathBytes = json['pathBytes'] != null
@@ -165,6 +176,19 @@ class MessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType:
+          MessageCompressionTypeLabel.fromJson(json['compressionType']) ??
+          detectedCompression?.type ??
+          (wasMcmpCompressed ? MessageCompressionType.mcmp : null),
+      compressionSavingsPercent:
+          json['compressionSavingsPercent'] as int? ??
+          detectedCompression?.savingsPercent,
+      compressionOriginalBytes:
+          json['compressionOriginalBytes'] as int? ??
+          detectedCompression?.originalBytes,
+      compressionPayloadBytes:
+          json['compressionPayloadBytes'] as int? ??
+          detectedCompression?.payloadBytes,
       retryCount: json['retryCount'] as int? ?? 0,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,
