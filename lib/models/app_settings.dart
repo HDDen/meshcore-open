@@ -3,6 +3,8 @@ import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
 
+enum SharedMessageHistoryMode { disabled, channels, contacts, all }
+
 extension UnitSystemValue on UnitSystem {
   String get value {
     switch (this) {
@@ -12,6 +14,29 @@ extension UnitSystemValue on UnitSystem {
         return 'metric';
     }
   }
+}
+
+extension SharedMessageHistoryModeValue on SharedMessageHistoryMode {
+  String get value {
+    switch (this) {
+      case SharedMessageHistoryMode.channels:
+        return 'channels';
+      case SharedMessageHistoryMode.contacts:
+        return 'contacts';
+      case SharedMessageHistoryMode.all:
+        return 'all';
+      case SharedMessageHistoryMode.disabled:
+        return 'disabled';
+    }
+  }
+
+  bool get includesChannels =>
+      this == SharedMessageHistoryMode.channels ||
+      this == SharedMessageHistoryMode.all;
+
+  bool get includesContacts =>
+      this == SharedMessageHistoryMode.contacts ||
+      this == SharedMessageHistoryMode.all;
 }
 
 class Cyr2LatProfile {
@@ -163,6 +188,7 @@ class AppSettings {
   final bool showHops;
   final bool hideChannelIndexIndicator;
   final bool incomingQuoteAsMentions;
+  final SharedMessageHistoryMode sharedMessageHistoryMode;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -406,6 +432,7 @@ class AppSettings {
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
     this.incomingQuoteAsMentions = false,
+    this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -494,6 +521,7 @@ class AppSettings {
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
+      'shared_message_history_mode': sharedMessageHistoryMode.value,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -555,6 +583,20 @@ class AppSettings {
       return UnitSystem.metric;
     }
 
+    SharedMessageHistoryMode parseSharedMessageHistoryMode(dynamic value) {
+      if (value is String) {
+        switch (value.toLowerCase()) {
+          case 'channels':
+            return SharedMessageHistoryMode.channels;
+          case 'contacts':
+            return SharedMessageHistoryMode.contacts;
+          case 'all':
+            return SharedMessageHistoryMode.all;
+        }
+      }
+      return SharedMessageHistoryMode.disabled;
+    }
+
     return AppSettings(
       clearPathOnMaxRetry: json['clear_path_on_max_retry'] as bool? ?? false,
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
@@ -581,6 +623,9 @@ class AppSettings {
           json['hide_channel_index_indicator'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
+      sharedMessageHistoryMode: parseSharedMessageHistoryMode(
+        json['shared_message_history_mode'],
+      ),
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -718,6 +763,7 @@ class AppSettings {
     bool? showHops,
     bool? hideChannelIndexIndicator,
     bool? incomingQuoteAsMentions,
+    SharedMessageHistoryMode? sharedMessageHistoryMode,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -787,6 +833,8 @@ class AppSettings {
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
+      sharedMessageHistoryMode:
+          sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

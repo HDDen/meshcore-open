@@ -94,7 +94,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "de": [
@@ -179,7 +185,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "es": [
@@ -277,7 +289,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "fr": [
@@ -375,7 +393,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "hu": [
@@ -473,7 +497,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "it": [
@@ -651,7 +681,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "ja": [
@@ -749,7 +785,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "ko": [
@@ -847,7 +889,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "nl": [
@@ -1025,7 +1073,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "pl": [
@@ -1123,7 +1177,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "pt": [
@@ -1301,7 +1361,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "sk": [
@@ -1399,7 +1465,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "sl": [
@@ -1497,7 +1569,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "sv": [
@@ -1675,7 +1753,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "uk": [
@@ -1773,7 +1857,13 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ],
 
   "zh": [
@@ -1871,6 +1961,12 @@
     "settings_modSettingsVisual",
     "settings_modSettingsMessaging",
     "settings_modSettingsHideChInd",
-    "settings_modSettingsIncomingQuoteAsMentions"
+    "settings_modSettingsIncomingQuoteAsMentions",
+    "settings_modSettingsSharedMsgHistory",
+    "settings_modSettingsSharedMsgHistoryDscr",
+    "settings_modSettingsSharedMsgHistoryDisabled",
+    "settings_modSettingsSharedMsgHistoryChannels",
+    "settings_modSettingsSharedMsgHistoryContacts",
+    "settings_modSettingsSharedMsgHistoryAll"
   ]
 }

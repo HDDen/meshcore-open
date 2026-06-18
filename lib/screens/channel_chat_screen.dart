@@ -818,6 +818,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final originalDisplayText = message.isOutgoing
         ? message.originalText
         : (translatedDisplayText != message.text ? message.text : null);
+    final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final displayPath = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty
@@ -1091,6 +1092,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ],
                           ),
+                        if (sharedHistorySourceName != null &&
+                            sharedHistorySourceName.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          _buildSharedHistoryBadge(
+                            sharedHistorySourceName,
+                            metaColor,
+                            textScale,
+                          ),
+                        ],
                         if (enableTracing) ...[
                           if (showHops && displayPath.isNotEmpty) ...[
                             const SizedBox(height: 4),
@@ -1665,6 +1675,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSharedHistoryBadge(
+    String sourceName,
+    Color color,
+    double textScale,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+        color: color.withValues(alpha: 0.08),
+      ),
+      child: Text(
+        'sync $sourceName',
+        style: MeshTheme.mono(
+          fontSize: 9.5 * textScale,
+          color: color,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

@@ -5352,4 +5352,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
       'Отображать цитаты во входящих сообщениях как упоминания';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory => 'Общая история сообщений';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDscr =>
+      'Объединение истории сообщений, полученной от разных устройств; итоговая история хранится только в приложении';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Отключено';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Только каналы';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Только контакты';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryAll => 'Все чаты';
 }

@@ -9159,6 +9159,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show quotes in incoming messages as mentions'**
   String get settings_modSettingsIncomingQuoteAsMentions;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared messages history'**
+  String get settings_modSettingsSharedMsgHistory;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistoryDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Combining the history of messages received from different devices; the final history is stored only in the application'**
+  String get settings_modSettingsSharedMsgHistoryDscr;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistoryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get settings_modSettingsSharedMsgHistoryDisabled;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistoryChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Only channels'**
+  String get settings_modSettingsSharedMsgHistoryChannels;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistoryContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Only contacts'**
+  String get settings_modSettingsSharedMsgHistoryContacts;
+
+  /// No description provided for @settings_modSettingsSharedMsgHistoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All chats'**
+  String get settings_modSettingsSharedMsgHistoryAll;
 }
 
 class _AppLocalizationsDelegate

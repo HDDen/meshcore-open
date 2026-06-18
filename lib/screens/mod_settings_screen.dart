@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
@@ -54,6 +55,68 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                     value: settings.incomingQuoteAsMentions,
                     onChanged: settingsService.setIncomingQuoteAsMentions,
+                  ),
+                ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<SharedMessageHistoryMode>(
+                        initialValue: settings.sharedMessageHistoryMode,
+                        decoration: InputDecoration(
+                          labelText:
+                              context.l10n.settings_modSettingsSharedMsgHistory,
+                          prefixIcon: const Icon(Icons.history, size: 20),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: SharedMessageHistoryMode.disabled,
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsSharedMsgHistoryDisabled,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: SharedMessageHistoryMode.channels,
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsSharedMsgHistoryChannels,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: SharedMessageHistoryMode.contacts,
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsSharedMsgHistoryContacts,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: SharedMessageHistoryMode.all,
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsSharedMsgHistoryAll,
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          settingsService.setSharedMessageHistoryMode(value);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          context.l10n.settings_modSettingsSharedMsgHistoryDscr,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -57,6 +57,7 @@ class ChannelMessage {
   final String? replyToSenderName;
   final String? replyToText;
   final Map<String, int> reactions;
+  final String? sharedHistorySourceName;
 
   ChannelMessage({
     this.senderKey,
@@ -87,6 +88,7 @@ class ChannelMessage {
     this.replyToSenderName,
     this.replyToText,
     Map<String, int>? reactions,
+    this.sharedHistorySourceName,
   }) : messageId =
            messageId ??
            '${timestamp.millisecondsSinceEpoch}_${senderName.hashCode}_${text.hashCode}',
@@ -120,6 +122,7 @@ class ChannelMessage {
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
     bool? wasBinaryTransport,
+    Object? sharedHistorySourceName = _unset,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
     Map<String, int>? reactions,
@@ -143,6 +146,9 @@ class ChannelMessage {
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
+      sharedHistorySourceName: sharedHistorySourceName == _unset
+          ? this.sharedHistorySourceName
+          : sharedHistorySourceName as String?,
       timestamp: timestamp,
       sentByRadioAt: sentByRadioAt == _unset
           ? this.sentByRadioAt

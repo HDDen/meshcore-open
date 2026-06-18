@@ -156,6 +156,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }
 
+  Future<void> setSharedMessageHistoryMode(
+    SharedMessageHistoryMode value,
+  ) async {
+    await updateSettings(_settings.copyWith(sharedMessageHistoryMode: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

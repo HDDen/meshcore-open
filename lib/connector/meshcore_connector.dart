@@ -47,6 +47,8 @@ import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
 import '../storage/message_store.dart';
+import '../storage/node_identity_store.dart';
+import '../storage/shared_message_history_helper.dart';
 import '../storage/unread_store.dart';
 import '../utils/app_logger.dart';
 import '../utils/battery_utils.dart';
@@ -344,6 +346,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final ChannelMessageStore _channelMessageStore = ChannelMessageStore();
   final ChannelIdentityReconcileHelper _channelIdentityReconcileHelper =
       ChannelIdentityReconcileHelper();
+  final SharedMessageHistoryHelper _sharedMessageHistoryHelper =
+      SharedMessageHistoryHelper();
   final MessageStore _messageStore = MessageStore();
   final ChannelOrderStore _channelOrderStore = ChannelOrderStore();
   final ChannelSettingsStore _channelSettingsStore = ChannelSettingsStore();
@@ -352,6 +356,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final ContactStore _contactStore = ContactStore();
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
   final ChannelStore _channelStore = ChannelStore();
+  final NodeIdentityStore _nodeIdentityStore = NodeIdentityStore();
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
   final Map<int, bool> _channelMcmpEnabled = {};
@@ -369,6 +374,15 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, String?> _contactCyr2LatProfileId = {};
   final Map<String, bool> _contactSendingDelayEnabled = {};
   final Map<String, List<String>> _contactQuickAnswerIds = {};
+  final Map<int, List<ChannelMessage>> _sharedChannelSecondaryMessages = {};
+  final Map<int, String> _sharedChannelSecondaryIdentityKeys = {};
+  final Map<String, List<Message>> _sharedContactSecondaryMessages = {};
+  final Set<int> _loadingSharedChannelIndexes = {};
+  final Set<String> _loadingSharedContactKeys = {};
+  final Map<int, String> _hiddenSharedChannelIdentityKeys = {};
+  final Set<String> _hiddenSharedContactKeys = {};
+  SharedMessageHistoryMode _lastSharedMessageHistoryMode =
+      SharedMessageHistoryMode.disabled;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
   final Map<int, bool> _channelSendingDelayEnabled = {};
@@ -578,7 +592,15 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   List<Message> getMessages(Contact contact) {
-    return _conversations[contact.publicKeyHex] ?? [];
+    final primary = _conversations[contact.publicKeyHex] ?? [];
+    if (!_sharedContactsEnabled || contact.type == advTypeRoom) {
+      return primary;
+    }
+    _ensureSharedContactHistory(contact);
+    return _mergeContactMessages(
+      primary,
+      _sharedContactSecondaryMessages[contact.publicKeyHex] ?? const [],
+    );
   }
 
   Future<void> deleteMessage(Message message) async {
@@ -684,7 +706,127 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   List<ChannelMessage> getChannelMessages(Channel channel) {
-    return _channelMessages[channel.index] ?? [];
+    final primary = _channelMessages[channel.index] ?? [];
+    if (!_sharedChannelsEnabled) return primary;
+    _ensureSharedChannelHistory(channel);
+    return _mergeChannelMessages(
+      primary,
+      _sharedChannelSecondaryMessages[channel.index] ?? const [],
+    );
+  }
+
+  bool get _sharedChannelsEnabled =>
+      _appSettingsService?.settings.sharedMessageHistoryMode.includesChannels ??
+      false;
+
+  bool get _sharedContactsEnabled =>
+      _appSettingsService?.settings.sharedMessageHistoryMode.includesContacts ??
+      false;
+
+  void _ensureSharedChannelHistory(Channel channel) {
+    if (!_sharedChannelsEnabled) return;
+    final identityKey = _sharedChannelIdentityKey(channel);
+    if (_hiddenSharedChannelIdentityKeys[channel.index] == identityKey) return;
+    if (_hiddenSharedChannelIdentityKeys.containsKey(channel.index)) {
+      _hiddenSharedChannelIdentityKeys.remove(channel.index);
+    }
+    if (_loadingSharedChannelIndexes.contains(channel.index)) return;
+    if (_sharedChannelSecondaryMessages.containsKey(channel.index) &&
+        _sharedChannelSecondaryIdentityKeys[channel.index] == identityKey) {
+      return;
+    }
+    _sharedChannelSecondaryMessages.remove(channel.index);
+    _sharedChannelSecondaryIdentityKeys.remove(channel.index);
+    if (selfPublicKeyHex.isEmpty || channel.isEmpty) return;
+
+    final expectedPublicKeyHex = selfPublicKeyHex;
+    _loadingSharedChannelIndexes.add(channel.index);
+    unawaited(() async {
+      try {
+        final secondary = await _sharedMessageHistoryHelper
+            .loadSecondaryChannelMessages(
+              currentPublicKeyHex: expectedPublicKeyHex,
+              channel: channel,
+            );
+        if (expectedPublicKeyHex != selfPublicKeyHex) return;
+        _sharedChannelSecondaryMessages[channel.index] = secondary;
+        _sharedChannelSecondaryIdentityKeys[channel.index] = identityKey;
+        notifyListeners();
+      } finally {
+        _loadingSharedChannelIndexes.remove(channel.index);
+      }
+    }());
+  }
+
+  void _ensureSharedContactHistory(Contact contact) {
+    if (!_sharedContactsEnabled || contact.type == advTypeRoom) return;
+    final contactKeyHex = contact.publicKeyHex;
+    if (_hiddenSharedContactKeys.contains(contactKeyHex)) return;
+    if (_loadingSharedContactKeys.contains(contactKeyHex)) return;
+    if (_sharedContactSecondaryMessages.containsKey(contactKeyHex)) return;
+    if (selfPublicKeyHex.isEmpty || contactKeyHex.isEmpty) return;
+
+    final expectedPublicKeyHex = selfPublicKeyHex;
+    _loadingSharedContactKeys.add(contactKeyHex);
+    unawaited(() async {
+      try {
+        final secondary = await _sharedMessageHistoryHelper
+            .loadSecondaryContactMessages(
+              currentPublicKeyHex: expectedPublicKeyHex,
+              contactKeyHex: contactKeyHex,
+            );
+        if (expectedPublicKeyHex != selfPublicKeyHex) return;
+        _sharedContactSecondaryMessages[contactKeyHex] = secondary;
+        notifyListeners();
+      } finally {
+        _loadingSharedContactKeys.remove(contactKeyHex);
+      }
+    }());
+  }
+
+  List<ChannelMessage> _mergeChannelMessages(
+    List<ChannelMessage> primary,
+    List<ChannelMessage> secondary,
+  ) {
+    if (secondary.isEmpty) return primary;
+    final merged = <ChannelMessage>[...primary];
+    final knownKeys = primary.map(_sharedChannelMessageKey).toSet();
+    for (final message in secondary) {
+      final key = _sharedChannelMessageKey(message);
+      if (knownKeys.contains(key)) continue;
+      merged.add(message);
+      knownKeys.add(key);
+    }
+    merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return merged;
+  }
+
+  List<Message> _mergeContactMessages(
+    List<Message> primary,
+    List<Message> secondary,
+  ) {
+    if (secondary.isEmpty) return primary;
+    final merged = <Message>[...primary, ...secondary];
+    merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return merged;
+  }
+
+  String _sharedChannelMessageKey(ChannelMessage message) {
+    final timestamp = message.timestamp;
+    final hourKey =
+        '${timestamp.year.toString().padLeft(4, '0')}-'
+        '${timestamp.month.toString().padLeft(2, '0')}-'
+        '${timestamp.day.toString().padLeft(2, '0')}-'
+        '${timestamp.hour.toString().padLeft(2, '0')}';
+    return [
+      message.senderName.trim().toLowerCase(),
+      message.text,
+      hourKey,
+    ].join('\u001f');
+  }
+
+  String _sharedChannelIdentityKey(Channel channel) {
+    return '${channel.name.trim().toLowerCase()}|${channel.pskHex.toLowerCase()}';
   }
 
   Future<void> deleteChannelMessage(ChannelMessage message) async {
@@ -889,6 +1031,13 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _activeContactKey = contactKeyHex;
     if (contactKeyHex != null) {
+      final contact = _contacts.cast<Contact?>().firstWhere(
+        (entry) => entry?.publicKeyHex == contactKeyHex,
+        orElse: () => null,
+      );
+      if (contact != null) {
+        _ensureSharedContactHistory(contact);
+      }
       markContactRead(contactKeyHex);
     }
   }
@@ -896,6 +1045,10 @@ class MeshCoreConnector extends ChangeNotifier {
   void setActiveChannel(int? channelIndex) {
     _activeChannelIndex = channelIndex;
     if (channelIndex != null) {
+      final channel = _findChannelByIndex(channelIndex);
+      if (channel != null) {
+        _ensureSharedChannelHistory(channel);
+      }
       markChannelRead(channelIndex);
     }
   }
@@ -1200,7 +1353,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     _retryService = retryService;
     _pathHistoryService = pathHistoryService;
+    _appSettingsService?.removeListener(_handleAppSettingsChanged);
     _appSettingsService = appSettingsService;
+    _lastSharedMessageHistoryMode =
+        appSettingsService?.settings.sharedMessageHistoryMode ??
+        SharedMessageHistoryMode.disabled;
+    _appSettingsService?.addListener(_handleAppSettingsChanged);
     _translationService = translationService;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
@@ -1262,6 +1420,52 @@ class MeshCoreConnector extends ChangeNotifier {
     );
     final maxRetries = _appSettingsService?.settings.maxMessageRetries ?? 5;
     _retryService?.setMaxRetries(maxRetries);
+  }
+
+  void _handleAppSettingsChanged() {
+    final mode =
+        _appSettingsService?.settings.sharedMessageHistoryMode ??
+        SharedMessageHistoryMode.disabled;
+    if (mode == _lastSharedMessageHistoryMode) return;
+    _lastSharedMessageHistoryMode = mode;
+    _clearSharedMessageHistoryCache();
+    _refreshActiveSharedMessageHistory();
+    notifyListeners();
+  }
+
+  void _clearSharedMessageHistoryCache() {
+    _sharedChannelSecondaryMessages.clear();
+    _sharedChannelSecondaryIdentityKeys.clear();
+    _sharedContactSecondaryMessages.clear();
+    _loadingSharedChannelIndexes.clear();
+    _loadingSharedContactKeys.clear();
+  }
+
+  void _clearSharedMessageHistoryState() {
+    _clearSharedMessageHistoryCache();
+    _hiddenSharedChannelIdentityKeys.clear();
+    _hiddenSharedContactKeys.clear();
+  }
+
+  void _refreshActiveSharedMessageHistory() {
+    final activeChannelIndex = _activeChannelIndex;
+    if (activeChannelIndex != null) {
+      final channel = _findChannelByIndex(activeChannelIndex);
+      if (channel != null) {
+        _ensureSharedChannelHistory(channel);
+      }
+    }
+
+    final activeContactKey = _activeContactKey;
+    if (activeContactKey != null) {
+      final contact = _contacts.cast<Contact?>().firstWhere(
+        (entry) => entry?.publicKeyHex == activeContactKey,
+        orElse: () => null,
+      );
+      if (contact != null) {
+        _ensureSharedContactHistory(contact);
+      }
+    }
   }
 
   Future<void> loadContactCache() async {
@@ -2840,6 +3044,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfInfoRetryTimer = null;
     _hasReceivedDeviceInfo = false;
     _resetSyncProgressState();
+    _clearSharedMessageHistoryState();
     _bleInitialSyncStarted = false;
     _pathHashByteWidth = 1;
   }
@@ -3011,6 +3216,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
     _resetSyncProgressState();
+    _clearSharedMessageHistoryState();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
     _reactionSendQueueSequence = 0;
@@ -4897,6 +5103,7 @@ class MeshCoreConnector extends ChangeNotifier {
     // [57] = cr
     // [58+] = node_name
     final wasAwaitingSelfInfo = _awaitingSelfInfo;
+    final previousSelfPublicKeyHex = selfPublicKeyHex;
     final reader = BufferReader(frame);
     try {
       reader.skipBytes(2);
@@ -4941,6 +5148,10 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
+    if (previousSelfPublicKeyHex != selfPublicKeyHex) {
+      _clearSharedMessageHistoryState();
+    }
+
     //set all the stores' public key so they can load the correct data
     _channelMessageStore.setPublicKeyHex = selfPublicKeyHex;
     _messageStore.setPublicKeyHex = selfPublicKeyHex;
@@ -4950,7 +5161,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSettingsStore.setPublicKeyHex = selfPublicKeyHex;
     _contactStore.setPublicKeyHex = selfPublicKeyHex;
     _channelStore.setPublicKeyHex = selfPublicKeyHex;
+    _nodeIdentityStore.setPublicKeyHex = selfPublicKeyHex;
     _unreadStore.setPublicKeyHex = selfPublicKeyHex;
+    unawaited(_nodeIdentityStore.saveName(_selfName));
 
     // Now that we have self info, we can load all the persisted data for this node.
     // Pass the current public key into async loads so a quick reconnect to a
@@ -7615,6 +7828,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   @override
   void dispose() {
+    _appSettingsService?.removeListener(_handleAppSettingsChanged);
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();
@@ -8149,6 +8363,8 @@ class MeshCoreConnector extends ChangeNotifier {
     final messages = _conversations[contactKeyHex];
     if (messages == null) return;
     messages.clear();
+    _sharedContactSecondaryMessages.remove(contactKeyHex);
+    _hiddenSharedContactKeys.add(contactKeyHex);
     unawaited(_messageStore.saveMessages(contactKeyHex, messages));
     markContactRead(contactKeyHex);
     notifyListeners();
@@ -8158,6 +8374,14 @@ class MeshCoreConnector extends ChangeNotifier {
     final messages = _channelMessages[channelIndex];
     if (messages == null) return;
     messages.clear();
+    _sharedChannelSecondaryMessages.remove(channelIndex);
+    _sharedChannelSecondaryIdentityKeys.remove(channelIndex);
+    final channel = _findChannelByIndex(channelIndex);
+    if (channel != null) {
+      _hiddenSharedChannelIdentityKeys[channelIndex] = _sharedChannelIdentityKey(
+        channel,
+      );
+    }
     unawaited(_channelMessageStore.saveChannelMessages(channelIndex, messages));
     markChannelRead(channelIndex);
     notifyListeners();

@@ -1679,6 +1679,7 @@ class _MessageBubble extends StatelessWidget {
     final originalDisplayText = isOutgoing
         ? message.originalText
         : (translatedDisplayText != messageText ? messageText : null);
+    final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -1881,6 +1882,15 @@ class _MessageBubble extends StatelessWidget {
                               ],
                             ],
                           ),
+                        if (sharedHistorySourceName != null &&
+                            sharedHistorySourceName.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          _buildSharedHistoryBadge(
+                            sharedHistorySourceName,
+                            metaColor,
+                            textScale,
+                          ),
+                        ],
                         if (enableTracing) ...[
                           if (isOutgoing && message.retryCount > 0) ...[
                             const SizedBox(height: 4),
@@ -2177,6 +2187,29 @@ class _MessageBubble extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSharedHistoryBadge(
+    String sourceName,
+    Color color,
+    double textScale,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+        color: color.withValues(alpha: 0.08),
+      ),
+      child: Text(
+        'sync $sourceName',
+        style: MeshTheme.mono(
+          fontSize: 9.5 * textScale,
+          color: color,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

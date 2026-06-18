@@ -22,6 +22,7 @@ class Message {
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
   final bool wasMcmpCompressed;
+  final String? sharedHistorySourceName;
 
   // NEW: Retry logic fields
   final String messageId;
@@ -54,6 +55,7 @@ class Message {
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
     this.wasMcmpCompressed = false,
+    this.sharedHistorySourceName,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
     this.expectedAckHash,
@@ -97,6 +99,7 @@ class Message {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    Object? sharedHistorySourceName = _unset,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
@@ -123,6 +126,9 @@ class Message {
           ? this.translationModelId
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
+      sharedHistorySourceName: sharedHistorySourceName == _unset
+          ? this.sharedHistorySourceName
+          : sharedHistorySourceName as String?,
       retryCount: retryCount ?? this.retryCount,
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,
