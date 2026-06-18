@@ -43,6 +43,7 @@ import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
 import '../storage/channel_store.dart';
+import '../storage/connection_transport_preference_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
@@ -356,6 +357,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final ContactStore _contactStore = ContactStore();
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
   final ChannelStore _channelStore = ChannelStore();
+  final ConnectionTransportPreferenceStore _transportPreferenceStore =
+      ConnectionTransportPreferenceStore();
   final NodeIdentityStore _nodeIdentityStore = NodeIdentityStore();
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
@@ -5146,6 +5149,8 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
+
+    unawaited(_transportPreferenceStore.save(_activeTransport.name));
 
     if (previousSelfPublicKeyHex != selfPublicKeyHex) {
       _clearSharedMessageHistoryState();

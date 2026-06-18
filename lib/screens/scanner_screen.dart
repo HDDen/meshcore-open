@@ -8,8 +8,10 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../services/linux_ble_error_classifier.dart';
+import '../storage/connection_transport_preference_store.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/app_logger.dart';
+import '../utils/app_route_observer.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/device_tile.dart';
 import '../widgets/empty_state.dart';
@@ -27,13 +29,17 @@ class ScannerScreen extends StatefulWidget {
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
   bool _changedNavigation = false;
   String? _connectingDeviceId;
   late final MeshCoreConnector _connector;
   late final VoidCallback _connectionListener;
   BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
   late StreamSubscription<BluetoothAdapterState> _bluetoothStateSubscription;
+  bool _openedPreferredTransport = false;
+  bool _hadConnectedSession = false;
+  bool _reopenPreferredTransportOnReturn = false;
+  PageRoute<dynamic>? _observedRoute;
 
   @override
   void initState() {
@@ -42,7 +48,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     _connectionListener = () {
       final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+      if (_connector.state == MeshCoreConnectionState.connected) {
+        _hadConnectedSession = true;
+      }
       if (_connector.state == MeshCoreConnectionState.disconnected) {
+        if (_hadConnectedSession) {
+          _reopenPreferredTransportOnReturn = true;
+          _hadConnectedSession = false;
+        }
         _changedNavigation = false;
       } else if (_connector.state == MeshCoreConnectionState.connected &&
           _connector.activeTransport == MeshCoreTransportType.bluetooth &&
@@ -58,6 +71,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
     };
 
     _connector.addListener(_connectionListener);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openPreferredTransport();
+    });
 
     _bluetoothStateSubscription = FlutterBluePlus.adapterState.listen(
       (state) {
@@ -78,7 +95,52 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic> && _observedRoute != route) {
+      if (_observedRoute != null) {
+        appRouteObserver.unsubscribe(this);
+      }
+      _observedRoute = route;
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (!_reopenPreferredTransportOnReturn) return;
+    _reopenPreferredTransportOnReturn = false;
+    _openedPreferredTransport = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openPreferredTransport();
+    });
+  }
+
+  void _openPreferredTransport() {
+    if (!mounted || _openedPreferredTransport) return;
+    _openedPreferredTransport = true;
+    final transport = ConnectionTransportPreferenceStore().lastTransport;
+
+    if (transport == ConnectionTransportPreferenceStore.tcp &&
+        !PlatformInfo.isWeb) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const TcpScreen()));
+      return;
+    }
+
+    if (transport == ConnectionTransportPreferenceStore.usb &&
+        PlatformInfo.supportsUsbSerial) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const UsbScreen()));
+    }
+  }
+
+  @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _connector.removeListener(_connectionListener);
     unawaited(_bluetoothStateSubscription.cancel());
     if (!_changedNavigation) {
