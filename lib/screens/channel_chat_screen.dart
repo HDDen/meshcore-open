@@ -1092,15 +1092,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ],
                           ),
-                        if (sharedHistorySourceName != null &&
-                            sharedHistorySourceName.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          _buildSharedHistoryBadge(
-                            sharedHistorySourceName,
-                            metaColor,
-                            textScale,
-                          ),
-                        ],
                         if (enableTracing) ...[
                           if (showHops && displayPath.isNotEmpty) ...[
                             const SizedBox(height: 4),
@@ -1196,6 +1187,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             ChannelMessageStatus.failed
                                         ? Colors.red
                                         : metaColor,
+                                  ),
+                                ],
+                                if (sharedHistorySourceName != null &&
+                                    sharedHistorySourceName.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'sync $sharedHistorySourceName',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
                                   ),
                                 ],
                                 if (enableTracing &&
@@ -1675,29 +1677,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSharedHistoryBadge(
-    String sourceName,
-    Color color,
-    double textScale,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.55)),
-        color: color.withValues(alpha: 0.08),
-      ),
-      child: Text(
-        'sync $sourceName',
-        style: MeshTheme.mono(
-          fontSize: 9.5 * textScale,
-          color: color,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
