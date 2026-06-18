@@ -5229,8 +5229,6 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    unawaited(_transportPreferenceStore.save(_activeTransport.name));
-
     if (previousSelfPublicKeyHex != selfPublicKeyHex) {
       _clearSharedMessageHistoryState();
     }
@@ -8014,6 +8012,9 @@ class MeshCoreConnector extends ChangeNotifier {
   void _setState(MeshCoreConnectionState newState) {
     if (_state != newState) {
       _state = newState;
+      if (newState == MeshCoreConnectionState.connected) {
+        unawaited(_transportPreferenceStore.save(_activeTransport.name));
+      }
       notifyListeners();
     }
   }
