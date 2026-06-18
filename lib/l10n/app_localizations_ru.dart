@@ -5354,6 +5354,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отображать цитаты во входящих сообщениях как упоминания';
 
   @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Упрощённый стиль упоминаний в сообщениях';
+
+  @override
   String get settings_modSettingsSharedMsgHistory => 'Общая история сообщений';
 
   @override

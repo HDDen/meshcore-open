@@ -791,6 +791,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final incomingQuoteAsMentions =
         settingsService.settings.incomingQuoteAsMentions;
+    final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final isOutgoing = message.isOutgoing;
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
@@ -943,6 +944,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             message,
                             replyMentionName,
                             textScale,
+                            simplified: simplifiedMentions,
+                            textStyle: TextStyle(
+                              color: textColor,
+                              fontSize: bodyFontSize * textScale,
+                            ),
                           ),
                           const SizedBox(height: 6),
                         ],
@@ -1072,6 +1078,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           isPlainTextMessage
                                       ? replyMentionName
                                       : null,
+                                  simplifiedMention: simplifiedMentions,
                                   textScale: textScale,
                                 ),
                               ),
@@ -1337,6 +1344,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required TextStyle textStyle,
     required TextStyle originalStyle,
     required String? replyMentionName,
+    required bool simplifiedMention,
     required double textScale,
   }) {
     if (replyMentionName == null || replyMentionName.isEmpty) {
@@ -1361,6 +1369,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       text: trimmedDisplay,
       style: textStyle,
       textScale: textScale,
+      simplifiedMention: simplifiedMention,
     );
 
     if (!shouldShowOriginal) return display;
@@ -1382,17 +1391,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required String text,
     required TextStyle style,
     required double textScale,
+    required bool simplifiedMention,
   }) {
     return RichText(
       text: TextSpan(
         style: style,
         children: [
           WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: _buildReplyMentionChip(message, senderName, textScale),
+            alignment: simplifiedMention
+                ? PlaceholderAlignment.baseline
+                : PlaceholderAlignment.middle,
+            baseline: simplifiedMention ? TextBaseline.alphabetic : null,
+            child: _buildReplyMentionChip(
+              message,
+              senderName,
+              textScale,
+              simplified: simplifiedMention,
+              textStyle: style,
+            ),
           ),
           if (text.isNotEmpty) ...[
-            const TextSpan(text: '  '),
+            TextSpan(text: simplifiedMention ? ' ' : '  '),
             TextSpan(text: text),
           ],
         ],
@@ -1403,26 +1422,34 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildReplyMentionChip(
     ChannelMessage message,
     String senderName,
-    double textScale,
-  ) {
+    double textScale, {
+    required bool simplified,
+    required TextStyle textStyle,
+  }) {
     return GestureDetector(
       onTap: () => _scrollToReplyTarget(message),
       child: Container(
         constraints: BoxConstraints(maxWidth: 160 * textScale),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          border: Border.all(color: MeshPalette.blue, width: 1),
-          borderRadius: BorderRadius.circular(MeshRadii.xs),
-        ),
+        padding: simplified
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: simplified
+            ? null
+            : BoxDecoration(
+                border: Border.all(color: MeshPalette.blue, width: 1),
+                borderRadius: BorderRadius.circular(MeshRadii.xs),
+              ),
         child: Text(
           '@$senderName',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: MeshTheme.mono(
-            fontSize: 12 * textScale,
-            fontWeight: FontWeight.w700,
-            color: MeshPalette.blue,
-          ),
+          style: simplified
+              ? textStyle.copyWith(fontWeight: FontWeight.w700)
+              : MeshTheme.mono(
+                  fontSize: 12 * textScale,
+                  fontWeight: FontWeight.w700,
+                  color: MeshPalette.blue,
+                ),
         ),
       ),
     );

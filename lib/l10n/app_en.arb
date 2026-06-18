@@ -3023,6 +3023,7 @@
   "settings_modSettingsMessaging": "Messaging",
   "settings_modSettingsHideChInd": "Hide channel index",
   "settings_modSettingsIncomingQuoteAsMentions": "Show quotes in incoming messages as mentions",
+  "settings_modSettingsSimplifiedMentions": "Simplified style of mentions in messages visual",
   "settings_modSettingsSharedMsgHistory": "Shared messages history",
   "settings_modSettingsSharedMsgHistoryDscr": "Combining the history of messages received from different devices; the final history is stored only in the application",
   "settings_modSettingsSharedMsgHistoryDisabled": "Disabled",

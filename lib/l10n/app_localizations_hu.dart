@@ -5342,6 +5342,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Show quotes in incoming messages as mentions';
 
   @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Simplified style of mentions in messages visual';
+
+  @override
   String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
 
   @override

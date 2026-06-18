@@ -9160,6 +9160,12 @@ abstract class AppLocalizations {
   /// **'Show quotes in incoming messages as mentions'**
   String get settings_modSettingsIncomingQuoteAsMentions;
 
+  /// No description provided for @settings_modSettingsSimplifiedMentions.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplified style of mentions in messages visual'**
+  String get settings_modSettingsSimplifiedMentions;
+
   /// No description provided for @settings_modSettingsSharedMsgHistory.
   ///
   /// In en, this message translates to:

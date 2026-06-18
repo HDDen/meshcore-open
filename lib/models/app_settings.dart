@@ -188,6 +188,7 @@ class AppSettings {
   final bool showHops;
   final bool hideChannelIndexIndicator;
   final bool incomingQuoteAsMentions;
+  final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
@@ -432,6 +433,7 @@ class AppSettings {
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
     this.incomingQuoteAsMentions = false,
+    this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
@@ -521,6 +523,7 @@ class AppSettings {
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
+      'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
@@ -623,6 +626,7 @@ class AppSettings {
           json['hide_channel_index_indicator'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
+      simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
       ),
@@ -763,6 +767,7 @@ class AppSettings {
     bool? showHops,
     bool? hideChannelIndexIndicator,
     bool? incomingQuoteAsMentions,
+    bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
@@ -833,6 +838,7 @@ class AppSettings {
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
+      simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
       mapCacheBounds: mapCacheBounds == _unset

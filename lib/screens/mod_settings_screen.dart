@@ -58,6 +58,21 @@ class ModSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.text_fields, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsSimplifiedMentions,
+                    ),
+                    value: settings.simplifiedMentions,
+                    onChanged: settingsService.setSimplifiedMentions,
+                  ),
+                ),
+                MeshCard(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

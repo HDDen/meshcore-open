@@ -156,6 +156,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }
 
+  Future<void> setSimplifiedMentions(bool value) async {
+    await updateSettings(_settings.copyWith(simplifiedMentions: value));
+  }
+
   Future<void> setSharedMessageHistoryMode(
     SharedMessageHistoryMode value,
   ) async {
