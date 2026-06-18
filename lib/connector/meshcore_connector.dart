@@ -7553,7 +7553,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final isSelfEcho =
         existing.isOutgoing &&
         !incoming.isOutgoing &&
-        (incoming.senderName == selfName || existing.senderName == selfName);
+        (incoming.senderName == selfName && existing.senderName == selfName);
 
     // This repeat detector intentionally does not use
     // AppSettings.defaultChannelResendTimeoutSeconds: manual resend delay and
