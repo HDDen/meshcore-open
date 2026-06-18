@@ -792,16 +792,31 @@ class MeshCoreConnector extends ChangeNotifier {
     List<ChannelMessage> primary,
     List<ChannelMessage> secondary,
   ) {
+    return mergeChannelMessagesPreservingPrimaryOrder(primary, secondary);
+  }
+
+  @visibleForTesting
+  static List<ChannelMessage> mergeChannelMessagesPreservingPrimaryOrder(
+    List<ChannelMessage> primary,
+    List<ChannelMessage> secondary,
+  ) {
     if (secondary.isEmpty) return primary;
+    if (primary.isEmpty) return secondary;
     final merged = <ChannelMessage>[...primary];
     final knownKeys = primary.map(_sharedChannelMessageKey).toSet();
     for (final message in secondary) {
       final key = _sharedChannelMessageKey(message);
       if (knownKeys.contains(key)) continue;
-      merged.add(message);
+      final insertAt = merged.indexWhere(
+        (current) => current.timestamp.isAfter(message.timestamp),
+      );
+      if (insertAt < 0) {
+        merged.add(message);
+      } else {
+        merged.insert(insertAt, message);
+      }
       knownKeys.add(key);
     }
-    merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return merged;
   }
 
@@ -815,7 +830,7 @@ class MeshCoreConnector extends ChangeNotifier {
     return merged;
   }
 
-  String _sharedChannelMessageKey(ChannelMessage message) {
+  static String _sharedChannelMessageKey(ChannelMessage message) {
     final timestamp = message.timestamp;
     final hourKey =
         '${timestamp.year.toString().padLeft(4, '0')}-'
