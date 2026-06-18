@@ -376,7 +376,8 @@ class _MapScreenState extends State<MapScreen>
         ? Icons.add_location_alt_outlined
         : Icons.remove;
     final expandedButtonCount = hasSelf ? 5 : 4;
-    final expandedHeight = expandedButtonCount * 48.0;
+    const cardMargin = 4.0;
+    final expandedHeight = expandedButtonCount * 48.0 + cardMargin * 2;
     return Positioned(
       right: 12,
       bottom: 188,
@@ -385,7 +386,7 @@ class _MapScreenState extends State<MapScreen>
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Card(
-            margin: EdgeInsets.zero,
+            margin: const EdgeInsets.all(cardMargin),
             elevation: 4,
             child: AnimatedSize(
               duration: const Duration(milliseconds: 150),
