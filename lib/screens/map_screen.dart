@@ -385,6 +385,7 @@ class _MapScreenState extends State<MapScreen>
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Card(
+            margin: EdgeInsets.zero,
             elevation: 4,
             child: AnimatedSize(
               duration: const Duration(milliseconds: 150),
