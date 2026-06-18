@@ -374,69 +374,64 @@ class _MapScreenState extends State<MapScreen>
         connector.selfLatitude != null && connector.selfLongitude != null;
     final toggleIcon = _mapControlsCollapsed
         ? Icons.add_location_alt_outlined
-        : Icons.remove;
+        : Icons.close;
     final expandedButtonCount = hasSelf ? 5 : 4;
-    const cardMargin = 4.0;
-    final expandedHeight = expandedButtonCount * 48.0 + cardMargin * 2;
-    return Positioned(
-      right: 12,
-      bottom: 188,
-      child: SizedBox(
-        height: expandedHeight,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Card(
-            margin: const EdgeInsets.all(cardMargin),
-            elevation: 4,
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOut,
-              alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+    final expandedHeight = expandedButtonCount * 48.0;
+    return SizedBox(
+      height: expandedHeight,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 4,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(toggleIcon),
+                  tooltip: _mapControlsCollapsed
+                      ? context.l10n.pathMap_expandPanel
+                      : context.l10n.pathMap_collapsePanel,
+                  onPressed: () {
+                    setState(() {
+                      _mapControlsCollapsed = !_mapControlsCollapsed;
+                    });
+                  },
+                ),
+                if (!_mapControlsCollapsed) ...[
                   IconButton(
-                    icon: Icon(toggleIcon),
-                    tooltip: _mapControlsCollapsed
-                        ? context.l10n.pathMap_expandPanel
-                        : context.l10n.pathMap_collapsePanel,
-                    onPressed: () {
-                      setState(() {
-                        _mapControlsCollapsed = !_mapControlsCollapsed;
-                      });
-                    },
+                    icon: const Icon(Icons.add),
+                    tooltip: context.l10n.map_zoomIn,
+                    onPressed: () => _zoomMapBy(1),
                   ),
-                  if (!_mapControlsCollapsed) ...[
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    tooltip: context.l10n.map_zoomOut,
+                    onPressed: () => _zoomMapBy(-1),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.crop_free),
+                    tooltip: context.l10n.map_centerMap,
+                    onPressed: () => _mapController.move(center, zoom),
+                  ),
+                  if (hasSelf)
                     IconButton(
-                      icon: const Icon(Icons.add),
-                      tooltip: context.l10n.map_zoomIn,
-                      onPressed: () => _zoomMapBy(1),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      tooltip: context.l10n.map_zoomOut,
-                      onPressed: () => _zoomMapBy(-1),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.crop_free),
-                      tooltip: context.l10n.map_centerMap,
-                      onPressed: () => _mapController.move(center, zoom),
-                    ),
-                    if (hasSelf)
-                      IconButton(
-                        icon: const Icon(Icons.my_location),
-                        tooltip: context.l10n.map_setAsMyLocation,
-                        onPressed: () => _mapController.move(
-                          LatLng(
-                            connector.selfLatitude!,
-                            connector.selfLongitude!,
-                          ),
-                          max(_zoom, 14),
+                      icon: const Icon(Icons.my_location),
+                      tooltip: context.l10n.map_setAsMyLocation,
+                      onPressed: () => _mapController.move(
+                        LatLng(
+                          connector.selfLatitude!,
+                          connector.selfLongitude!,
                         ),
+                        max(_zoom, 14),
                       ),
-                  ],
+                    ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -1127,13 +1122,6 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
-                if (!settings.hideMapZoomControls)
-                  _buildMapControls(
-                    context,
-                    center: center,
-                    zoom: initialZoom,
-                    connector: connector,
-                  ),
                 if (!_isBuildingPathTrace && wardrive.hasMapState)
                   WardriveStatusPanel(
                     wardrive: wardrive,
@@ -1201,6 +1189,8 @@ class _MapScreenState extends State<MapScreen>
                 connector: connector,
                 settingsService: settingsService,
                 wardrive: wardrive,
+                center: center,
+                zoom: initialZoom,
               ),
             ),
           ),
@@ -1214,11 +1204,22 @@ class _MapScreenState extends State<MapScreen>
     required MeshCoreConnector connector,
     required AppSettingsService settingsService,
     required WardriveService wardrive,
+    required LatLng center,
+    required double zoom,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        if (!settingsService.settings.hideMapZoomControls) ...[
+          _buildMapControls(
+            context,
+            center: center,
+            zoom: zoom,
+            connector: connector,
+          ),
+          const SizedBox(height: 12),
+        ],
         FloatingActionButton.small(
           heroTag: 'wardrive_toggle',
           onPressed: () => _openWardrivePanel(wardrive),
