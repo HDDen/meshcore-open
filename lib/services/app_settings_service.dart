@@ -152,6 +152,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setHideMapZoomControls(bool value) async {
+    await updateSettings(_settings.copyWith(hideMapZoomControls: value));
+  }
+
   Future<void> setShowCompressionRatio(bool value) async {
     await updateSettings(_settings.copyWith(showCompressionRatio: value));
   }

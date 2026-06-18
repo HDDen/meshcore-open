@@ -187,6 +187,7 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+  final bool hideMapZoomControls;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool incomingQuoteAsMentions;
@@ -434,6 +435,7 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
+    this.hideMapZoomControls = false,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.incomingQuoteAsMentions = false,
@@ -526,6 +528,7 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'hide_map_zoom_controls': hideMapZoomControls,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
@@ -630,6 +633,8 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
+      hideMapZoomControls:
+          json['hide_map_zoom_controls'] as bool? ?? false,
       showCompressionRatio:
           json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
@@ -776,6 +781,7 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? hideMapZoomControls,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? incomingQuoteAsMentions,
@@ -848,6 +854,8 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      hideMapZoomControls:
+          hideMapZoomControls ?? this.hideMapZoomControls,
       showCompressionRatio:
           showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:

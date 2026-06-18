@@ -2248,5 +2248,6 @@
   "settings_modSettingsSharedMsgHistoryContacts": "Только контакты",
   "settings_modSettingsSharedMsgHistoryAll": "Все чаты",
   "settings_modSettingsMessagingShowCompressionRatio": "Отображать степень сжатия",
-  "settings_modSettingsMessagingCompressionRatioWithSendername": "При подсчёте учитывать имя ноды"
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "При подсчёте учитывать имя ноды",
+  "settings_modSettingsVisualHideMapZoomControls": "Скрыть на карте панель зума"
 }

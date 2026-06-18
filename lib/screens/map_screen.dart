@@ -364,7 +364,7 @@ class _MapScreenState extends State<MapScreen>
     _mapController.move(camera.center, nextZoom);
   }
 
-  Widget _buildDesktopMapControls(
+  Widget _buildMapControls(
     BuildContext context, {
     required LatLng center,
     required double zoom,
@@ -1125,8 +1125,8 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
-                if (isDesktop)
-                  _buildDesktopMapControls(
+                if (!settings.hideMapZoomControls)
+                  _buildMapControls(
                     context,
                     center: center,
                     zoom: initialZoom,

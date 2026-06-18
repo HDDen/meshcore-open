@@ -3031,5 +3031,6 @@
   "settings_modSettingsSharedMsgHistoryContacts": "Only contacts",
   "settings_modSettingsSharedMsgHistoryAll": "All chats",
   "settings_modSettingsMessagingShowCompressionRatio": "Show compression ratio",
-  "settings_modSettingsMessagingCompressionRatioWithSendername": "Also take into account senderName"
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "Also take into account senderName",
+  "settings_modSettingsVisualHideMapZoomControls": "Hide map zoom panel"
 }

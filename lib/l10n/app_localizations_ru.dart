@@ -5383,4 +5383,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsMessagingCompressionRatioWithSendername =>
       'При подсчёте учитывать имя ноды';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Скрыть на карте панель зума';
 }

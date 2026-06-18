@@ -48,6 +48,23 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
+                    secondary: const Icon(Icons.zoom_out_map, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsVisualHideMapZoomControls,
+                    ),
+                    value: settings.hideMapZoomControls,
+                    onChanged: settingsService.setHideMapZoomControls,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     secondary: const Icon(Icons.compress, size: 20),
                     title: Text(
                       context

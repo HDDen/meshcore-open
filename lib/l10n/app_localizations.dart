@@ -9213,6 +9213,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Also take into account senderName'**
   String get settings_modSettingsMessagingCompressionRatioWithSendername;
+
+  /// No description provided for @settings_modSettingsVisualHideMapZoomControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide map zoom panel'**
+  String get settings_modSettingsVisualHideMapZoomControls;
 }
 
 class _AppLocalizationsDelegate

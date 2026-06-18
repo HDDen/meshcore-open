@@ -5402,4 +5402,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_modSettingsMessagingCompressionRatioWithSendername =>
       'Also take into account senderName';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Hide map zoom panel';
 }

@@ -103,7 +103,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "de": [
@@ -197,7 +198,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "es": [
@@ -304,7 +306,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "fr": [
@@ -411,7 +414,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "hu": [
@@ -518,7 +522,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "it": [
@@ -705,7 +710,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "ja": [
@@ -812,7 +818,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "ko": [
@@ -919,7 +926,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "nl": [
@@ -1106,7 +1114,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "pl": [
@@ -1213,7 +1222,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "pt": [
@@ -1400,7 +1410,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "sk": [
@@ -1507,7 +1518,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "sl": [
@@ -1614,7 +1626,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "sv": [
@@ -1801,7 +1814,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "uk": [
@@ -1908,7 +1922,8 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ],
 
   "zh": [
@@ -2015,6 +2030,7 @@
     "settings_modSettingsSharedMsgHistoryContacts",
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
-    "settings_modSettingsMessagingCompressionRatioWithSendername"
+    "settings_modSettingsMessagingCompressionRatioWithSendername",
+    "settings_modSettingsVisualHideMapZoomControls"
   ]
 }
