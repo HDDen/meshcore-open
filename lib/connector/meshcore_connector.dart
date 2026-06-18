@@ -299,6 +299,8 @@ class MeshCoreConnector extends ChangeNotifier {
   int? _contactSyncTotal;
   int _contactSyncReceived = 0;
   bool _contactSyncUsesSinceFilter = false;
+  Timer? _contactSyncTimeout;
+  static const Duration _contactSyncIdleTimeout = Duration(seconds: 10);
   bool _isSyncingQueuedMessages = false;
   bool _deferQueuedContactMessagesUntilContacts = false;
   bool _isProcessingDeferredQueuedContactMessages = false;
@@ -3075,6 +3077,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSyncTotal = null;
     _contactSyncReceived = 0;
     _contactSyncUsesSinceFilter = false;
+    _contactSyncTimeout?.cancel();
+    _contactSyncTimeout = null;
     _isLoadingContacts = false;
     _hasLoadedContacts = false;
     _isLoadingChannels = false;
@@ -3539,6 +3543,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSyncTotal = null;
     _contactSyncReceived = 0;
     _contactSyncUsesSinceFilter = since != null;
+    _armContactSyncTimeout();
     if (!preserveExisting) {
       _hasLoadedContacts = false;
       _contacts.clear();
@@ -3546,6 +3551,40 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
 
     await sendFrame(buildGetContactsFrame(since: since));
+  }
+
+  void _armContactSyncTimeout() {
+    _contactSyncTimeout?.cancel();
+    // Contact sync has no request/response timeout and normally ends only with
+    // END_OF_CONTACTS. If BLE drops that final frame, the progress indicator
+    // otherwise remains active forever, so treat prolonged RX silence as end.
+    _contactSyncTimeout = Timer(_contactSyncIdleTimeout, () {
+      if (!_isLoadingContacts) return;
+      appLogger.warn(
+        'Contact sync timed out after receiving $_contactSyncReceived contacts',
+        tag: 'Connector',
+      );
+      _contactSyncTimeout = null;
+      _isLoadingContacts = false;
+      _hasLoadedContacts = true;
+      _preserveContactsOnRefresh = false;
+      _contactSyncUsesSinceFilter = false;
+      unawaited(updateKnownDiscovered());
+      notifyListeners();
+      unawaited(_persistContacts());
+      if (PlatformInfo.isWeb &&
+          _activeTransport == MeshCoreTransportType.bluetooth &&
+          _isSyncingChannels &&
+          !_channelSyncInFlight) {
+        unawaited(_requestNextChannel());
+      }
+      if (_deferQueuedContactMessagesUntilContacts) {
+        unawaited(_processDeferredQueuedContactMessages());
+      } else if (_pendingQueueSync) {
+        _pendingQueueSync = false;
+        unawaited(syncQueuedMessages(force: true));
+      }
+    });
   }
 
   Future<void> refreshContacts() async {
@@ -4995,6 +5034,7 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeContactsStart:
         debugPrint('Got CONTACTS_START');
+        _armContactSyncTimeout();
         if (!_preserveContactsOnRefresh) {
           _contacts.clear();
         }
@@ -5025,10 +5065,15 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeContact:
         debugPrint('Got CONTACT');
+        if (_isLoadingContacts) {
+          _armContactSyncTimeout();
+        }
         _handleContact(frame);
         break;
       case respCodeEndOfContacts:
         debugPrint('Got END_OF_CONTACTS');
+        _contactSyncTimeout?.cancel();
+        _contactSyncTimeout = null;
         _isLoadingContacts = false;
         _hasLoadedContacts = true;
         _preserveContactsOnRefresh = false;
