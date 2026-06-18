@@ -1200,6 +1200,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
+                                if (mcoImage != null &&
+                                    message.wasBinaryTransport) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'MCOimg bin',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
                                 if (enableTracing &&
                                     message.wasMcmpCompressed) ...[
                                   const SizedBox(width: 6),

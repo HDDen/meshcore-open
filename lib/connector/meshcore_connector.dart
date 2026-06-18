@@ -4009,9 +4009,8 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: _selfName ?? 'Me',
       mcmpEnabled: isChannelMcmpEnabled(channel.index),
     );
-    final isBinaryMcmpTransport =
+    final isBinaryTransport =
         binaryOutbound != null &&
-        binaryOutbound.kind == ChannelBinaryDataKind.mcmp &&
         binaryOutbound.payload.length <= maxChannelDataLength;
     final message = ChannelMessage.outgoing(
       text,
@@ -4024,7 +4023,7 @@ class MeshCoreConnector extends ChangeNotifier {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
-      wasBinaryTransport: isBinaryMcmpTransport,
+      wasBinaryTransport: isBinaryTransport,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
@@ -6428,7 +6427,7 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
-      wasBinaryTransport: decoded.kind == ChannelBinaryDataKind.mcmp,
+      wasBinaryTransport: true,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -6631,7 +6630,7 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: decoded.senderName,
       text: decoded.text,
       wasMcmpCompressed: decoded.wasMcmpCompressed,
-      wasBinaryTransport: decoded.kind == ChannelBinaryDataKind.mcmp,
+      wasBinaryTransport: true,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
