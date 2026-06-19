@@ -42,6 +42,7 @@ enum ExtendedImageMode {
   lzPixels,
   quadtree,
   bitplanes,
+  compactRowDelta,
 }
 
 enum ScanMode { h, v, s, sv }
@@ -742,6 +743,46 @@ class MCOImageCodec {
               best = bitplanesCandidate;
             }
           }
+
+          for (final directGrayscale in <bool>[
+            false,
+            if (_isGrayscaleProfile(image.paletteProfile)) true,
+          ]) {
+            final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
+              image,
+              linear,
+              scan,
+              referenceEncoding,
+              dataWidth: image.width,
+              dataHeight: image.height,
+              backgroundColor: bg,
+              directGrayscale: directGrayscale,
+            );
+            if (rowDeltaPayload == null) continue;
+            final rowDeltaCandidate = _candidateFromPayload(
+              rowDeltaPayload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: rowDeltaPayload.localPaletteSize,
+              usedBankCount: rowDeltaPayload.usedBankCount,
+              bitsPerLocalPixel: rowDeltaPayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: directGrayscale
+                  ? 'grayscale-row-delta'
+                  : 'compact-row-delta',
+            );
+            candidates.add(rowDeltaCandidate);
+            if (_isBetterCandidate(rowDeltaCandidate, best, outputTarget)) {
+              best = rowDeltaCandidate;
+            }
+          }
         }
 
         if (bounds.area < image.width * image.height) {
@@ -970,6 +1011,52 @@ class MCOImageCodec {
                 outputTarget,
               )) {
                 best = bitplanesCandidate;
+              }
+            }
+
+            for (final directGrayscale in <bool>[
+              false,
+              if (_isGrayscaleProfile(image.paletteProfile)) true,
+            ]) {
+              final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
+                image,
+                boundedLinear,
+                scan,
+                referenceEncoding,
+                dataWidth: bounds.width,
+                dataHeight: bounds.height,
+                backgroundColor: bg,
+                bounds: bounds,
+                directGrayscale: directGrayscale,
+              );
+              if (rowDeltaPayload == null) continue;
+              final rowDeltaCandidate = _candidateFromPayload(
+                rowDeltaPayload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: rowDeltaPayload.localPaletteSize,
+                usedBankCount: rowDeltaPayload.usedBankCount,
+                bitsPerLocalPixel: rowDeltaPayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: directGrayscale
+                    ? 'grayscale-row-delta-bounds'
+                    : 'compact-row-delta-bounds',
+              );
+              candidates.add(rowDeltaCandidate);
+              if (_isBetterCandidate(
+                rowDeltaCandidate,
+                best,
+                outputTarget,
+              )) {
+                best = rowDeltaCandidate;
               }
             }
           }
@@ -1849,6 +1936,131 @@ class MCOImageCodec {
       localPaletteSize: localPaletteSize,
       usedBankCount: usedBankCount,
       bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2CompactRowDeltaPayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    required bool directGrayscale,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight || linear.isEmpty) return null;
+    if (directGrayscale && !_isGrayscaleProfile(image.paletteProfile)) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(
+        ExtendedImageMode.compactRowDelta.index,
+        _extendedSubmodeBits,
+      )
+      ..writeBits(directGrayscale ? 1 : 0, 1);
+
+    final int valueBits;
+    int? localPaletteSize;
+    int? usedBankCount;
+    late final List<int> values;
+    if (directGrayscale) {
+      valueBits = _globalBits(image.paletteProfile);
+      values = linear;
+    } else if (image.paletteProfile.isDynamic) {
+      final profileColorIds = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final palette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (palette.isEmpty || palette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        palette,
+        referenceEncoding!,
+      );
+      localPaletteSize = palette.length;
+      valueBits = _localBits(palette.length);
+      final localIndex = {
+        for (var i = 0; i < palette.length; i++) palette[i]: i,
+      };
+      values = profileColorIds
+          .map((color) => localIndex[color]!)
+          .toList(growable: false);
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? palette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(
+        linear,
+        preferredFirstColor: backgroundColor,
+      );
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      valueBits = _localBits(local.colors.length);
+      final localIndex = _localIndexMap(local.colors);
+      values = linear
+          .map((color) => localIndex[color]!)
+          .toList(growable: false);
+    }
+
+    _writeCompactRowDeltaBody(
+      writer,
+      values,
+      _rowLengthForScan(scan, dataWidth, dataHeight),
+      valueBits,
+      directGrayscale: directGrayscale,
+    );
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: valueBits,
     );
   }
 
@@ -3112,6 +3324,16 @@ class MCOImageCodec {
           referenceEncoding,
         );
       }
+      if (submode == ExtendedImageMode.compactRowDelta.index) {
+        return _decodeV2CompactRowDelta(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+          rowLength,
+        );
+      }
       if (submode != ExtendedImageMode.wrappedBlock.index) {
         throw MCOImageInvalidPayloadException(
           'Unsupported extended image submode $submode',
@@ -3740,6 +3962,277 @@ class MCOImageCodec {
       }
       return palette[index];
     }).toList(growable: false);
+  }
+
+  List<int> _decodeV2CompactRowDelta(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+    int rowLength,
+  ) {
+    final directGrayscale = reader.readBits(1) != 0;
+    if (directGrayscale && !_isGrayscaleProfile(profile)) {
+      throw const MCOImageInvalidPayloadException(
+        'Direct row-delta levels require a grayscale palette',
+      );
+    }
+
+    List<int>? palette;
+    final int valueBits;
+    if (directGrayscale) {
+      valueBits = _globalBits(profile);
+    } else if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic compact row-delta is missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+      valueBits = _localBits(palette.length);
+    } else {
+      palette = _readV2LocalPalette(reader, profile);
+      valueBits = _localBits(palette.length);
+    }
+
+    final maxValue = directGrayscale
+        ? _paletteSize(profile) - 1
+        : palette!.length - 1;
+    final localValues = _readCompactRowDeltaBody(
+      reader,
+      width * height,
+      rowLength,
+      valueBits,
+      directGrayscale: directGrayscale,
+      maxValue: maxValue,
+    );
+    if (directGrayscale) return localValues;
+    return localValues.map((value) => palette![value]).toList(growable: false);
+  }
+
+  List<int> _readCompactRowDeltaBody(
+    _BitReader reader,
+    int count,
+    int rowLength,
+    int valueBits, {
+    required bool directGrayscale,
+    required int maxValue,
+  }) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid compact row-delta geometry',
+      );
+    }
+    final useVirtualBaseRow = reader.readBits(1) != 0;
+    final result = List<int>.filled(count, 0);
+    final rowCount = count ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    if (!useVirtualBaseRow) {
+      for (var x = 0; x < rowLength; x++) {
+        final value = reader.readBits(valueBits);
+        if (value > maxValue) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact row-delta value out of range',
+          );
+        }
+        result[x] = value;
+      }
+    }
+
+    while (row < rowCount) {
+      final op = reader.readBits(_compactRowDeltaOpBits);
+      if (op == _compactRowDeltaOpRepeat ||
+          op == _compactRowDeltaOpRepeatRun) {
+        final repeatCount = op == _compactRowDeltaOpRepeat
+            ? 1
+            : _readCompactUint(reader) + 2;
+        if (row + repeatCount > rowCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact row-delta repeat exceeds row count',
+          );
+        }
+        for (var i = 0; i < repeatCount; i++) {
+          _copyRowDeltaPredictedRow(
+            result,
+            row * rowLength,
+            row * rowLength - rowLength,
+            row,
+            rowLength,
+            useVirtualBaseRow: useVirtualBaseRow,
+            predictor: _rowDeltaPredictorSame,
+          );
+          row++;
+        }
+        continue;
+      }
+      if (op == _compactRowDeltaOpRaw) {
+        final rowStart = row * rowLength;
+        for (var x = 0; x < rowLength; x++) {
+          final value = reader.readBits(valueBits);
+          if (value > maxValue) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta raw value out of range',
+            );
+          }
+          result[rowStart + x] = value;
+        }
+        row++;
+        continue;
+      }
+
+      final predictor = _readCompactRowDeltaPredictor(reader);
+      if (row == 0 &&
+          useVirtualBaseRow &&
+          predictor != _rowDeltaPredictorSame) {
+        throw const MCOImageInvalidPayloadException(
+          'Shifted compact predictor cannot use virtual row',
+        );
+      }
+      final rowStart = row * rowLength;
+      _copyRowDeltaPredictedRow(
+        result,
+        rowStart,
+        rowStart - rowLength,
+        row,
+        rowLength,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
+      if (op == _compactRowDeltaOpPredicted) {
+        row++;
+        continue;
+      }
+      final useResidual = directGrayscale && reader.readBits(1) != 0;
+      final positions = <int>[];
+      if (op == _compactRowDeltaOpIndexed ||
+          op == _compactRowDeltaOpSameScalar) {
+        final changeCount = _readCompactUint(reader) + 1;
+        if (changeCount > rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact row-delta change count exceeds row length',
+          );
+        }
+        _readCompactChangePositions(reader, positions, changeCount, rowLength);
+      } else if (op == _compactRowDeltaOpSegments) {
+        final segmentCount = _readCompactUint(reader) + 1;
+        if (segmentCount > rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact row-delta segment count exceeds row length',
+          );
+        }
+        var previousEnd = 0;
+        for (var i = 0; i < segmentCount; i++) {
+          final gap = _readCompactUint(reader);
+          final start = (i == 0 ? 0 : previousEnd) + gap;
+          final length = _readCompactUint(reader) + 1;
+          if (start < previousEnd || start + length > rowLength) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid compact row-delta segment',
+            );
+          }
+          for (var x = start; x < start + length; x++) {
+            positions.add(x);
+          }
+          previousEnd = start + length;
+        }
+      } else if (op == _compactRowDeltaOpTrimmedMask) {
+        final start = _readCompactUint(reader);
+        final span = _readCompactUint(reader) + 1;
+        if (start + span > rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid compact row-delta mask bounds',
+          );
+        }
+        for (var offset = 0; offset < span; offset++) {
+          if (reader.readBits(1) != 0) positions.add(start + offset);
+        }
+        if (positions.isEmpty) {
+          throw const MCOImageInvalidPayloadException(
+            'Empty compact row-delta mask',
+          );
+        }
+      } else {
+        throw const MCOImageInvalidPayloadException(
+          'Unknown compact row-delta op',
+        );
+      }
+
+      if (op == _compactRowDeltaOpSameScalar) {
+        final encoded = useResidual
+            ? _readCompactUint(reader) + 1
+            : reader.readBits(valueBits);
+        for (final x in positions) {
+          result[rowStart + x] = _decodeCompactRowDeltaValue(
+            encoded,
+            result[rowStart + x],
+            useResidual: useResidual,
+            maxValue: maxValue,
+          );
+        }
+      } else {
+        for (final x in positions) {
+          final encoded = useResidual
+              ? _readCompactUint(reader) + 1
+              : reader.readBits(valueBits);
+          result[rowStart + x] = _decodeCompactRowDeltaValue(
+            encoded,
+            result[rowStart + x],
+            useResidual: useResidual,
+            maxValue: maxValue,
+          );
+        }
+      }
+      row++;
+    }
+    return result;
+  }
+
+  int _readCompactRowDeltaPredictor(_BitReader reader) {
+    if (reader.readBits(1) == 0) return _rowDeltaPredictorSame;
+    return reader.readBits(1) == 0
+        ? _rowDeltaPredictorLeft
+        : _rowDeltaPredictorRight;
+  }
+
+  void _readCompactChangePositions(
+    _BitReader reader,
+    List<int> positions,
+    int count,
+    int rowLength,
+  ) {
+    var previousX = -1;
+    for (var i = 0; i < count; i++) {
+      final x = previousX + 1 + _readCompactUint(reader);
+      if (x >= rowLength) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact row-delta position out of range',
+        );
+      }
+      positions.add(x);
+      previousX = x;
+    }
+  }
+
+  int _decodeCompactRowDeltaValue(
+    int encoded,
+    int predicted, {
+    required bool useResidual,
+    required int maxValue,
+  }) {
+    final value = useResidual
+        ? predicted + (encoded.isOdd ? (encoded + 1) ~/ 2 : -(encoded ~/ 2))
+        : encoded;
+    if (value < 0 || value > maxValue) {
+      throw const MCOImageInvalidPayloadException(
+        'Compact row-delta reconstructed value out of range',
+      );
+    }
+    return value;
   }
 
   List<int> _decodeV2DynamicBody(
@@ -6021,6 +6514,553 @@ class MCOImageCodec {
   static const int _rowDeltaPredictorSame = 0;
   static const int _rowDeltaPredictorLeft = 1;
   static const int _rowDeltaPredictorRight = 2;
+  static const int _compactRowDeltaOpBits = 3;
+  static const int _compactRowDeltaOpRepeat = 0;
+  static const int _compactRowDeltaOpRaw = 1;
+  static const int _compactRowDeltaOpIndexed = 2;
+  static const int _compactRowDeltaOpSameScalar = 3;
+  static const int _compactRowDeltaOpSegments = 4;
+  static const int _compactRowDeltaOpTrimmedMask = 5;
+  static const int _compactRowDeltaOpRepeatRun = 6;
+  static const int _compactRowDeltaOpPredicted = 7;
+
+  void _writeCompactRowDeltaBody(
+    _BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits, {
+    required bool directGrayscale,
+  }) {
+    final rawFirstCost = _compactRowDeltaBodyBitCost(
+      values,
+      rowLength,
+      valueBits,
+      directGrayscale: directGrayscale,
+      useVirtualBaseRow: false,
+    );
+    final virtualCost = _compactRowDeltaBodyBitCost(
+      values,
+      rowLength,
+      valueBits,
+      directGrayscale: directGrayscale,
+      useVirtualBaseRow: true,
+    );
+    final useVirtualBaseRow = virtualCost < rawFirstCost;
+    writer.writeBits(useVirtualBaseRow ? 1 : 0, 1);
+    if (!useVirtualBaseRow) {
+      for (var x = 0; x < rowLength; x++) {
+        writer.writeBits(values[x], valueBits);
+      }
+    }
+
+    final rowCount = values.length ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      final repeatCount = _compactRepeatedRowCount(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      if (repeatCount >= 2) {
+        writer.writeBits(
+          _compactRowDeltaOpRepeatRun,
+          _compactRowDeltaOpBits,
+        );
+        _writeCompactUint(writer, repeatCount - 2);
+        row += repeatCount;
+        continue;
+      }
+
+      final decision = _bestCompactRowDeltaDecision(
+        values,
+        rowLength,
+        valueBits,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        directGrayscale: directGrayscale,
+      );
+      _writeCompactRowDeltaDecision(
+        writer,
+        values,
+        rowLength,
+        valueBits,
+        row,
+        decision,
+        useVirtualBaseRow: useVirtualBaseRow,
+        directGrayscale: directGrayscale,
+      );
+      row++;
+    }
+  }
+
+  int _compactRowDeltaBodyBitCost(
+    List<int> values,
+    int rowLength,
+    int valueBits, {
+    required bool directGrayscale,
+    required bool useVirtualBaseRow,
+  }) {
+    var cost = useVirtualBaseRow ? 0 : rowLength * valueBits;
+    final rowCount = values.length ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      final repeatCount = _compactRepeatedRowCount(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      if (repeatCount >= 2) {
+        cost += _compactRowDeltaOpBits +
+            _compactUintBitLength(repeatCount - 2);
+        row += repeatCount;
+        continue;
+      }
+      cost += _bestCompactRowDeltaDecision(
+        values,
+        rowLength,
+        valueBits,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        directGrayscale: directGrayscale,
+      ).bitCost;
+      row++;
+    }
+    return cost;
+  }
+
+  int _compactRepeatedRowCount(
+    List<int> values,
+    int rowLength,
+    int startRow, {
+    required bool useVirtualBaseRow,
+  }) {
+    final rowCount = values.length ~/ rowLength;
+    var count = 0;
+    for (var row = startRow; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      var same = true;
+      for (var x = 0; x < rowLength; x++) {
+        final expected = row == 0 && useVirtualBaseRow
+            ? 0
+            : values[rowStart - rowLength + x];
+        if (values[rowStart + x] != expected) {
+          same = false;
+          break;
+        }
+      }
+      if (!same) break;
+      count++;
+    }
+    return count;
+  }
+
+  _CompactRowDeltaDecision _bestCompactRowDeltaDecision(
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row, {
+    required bool useVirtualBaseRow,
+    required bool directGrayscale,
+  }) {
+    _CompactRowDeltaDecision best = _CompactRowDeltaDecision(
+      op: _compactRowDeltaOpRaw,
+      predictor: _rowDeltaPredictorSame,
+      changes: const <_RowDeltaChange>[],
+      useResidual: false,
+      bitCost: _compactRowDeltaOpBits + rowLength * valueBits,
+    );
+    for (final predictor in _rowDeltaPredictorsForRow(
+      row,
+      useVirtualBaseRow: useVirtualBaseRow,
+      allowShiftPredictors: true,
+    )) {
+      final changes = _rowDeltaChanges(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
+      if (changes.isEmpty) {
+        final decision = _CompactRowDeltaDecision(
+          op: predictor == _rowDeltaPredictorSame
+              ? _compactRowDeltaOpRepeat
+              : _compactRowDeltaOpPredicted,
+          predictor: predictor,
+          changes: changes,
+          useResidual: false,
+          bitCost: _compactRowDeltaOpBits +
+              (predictor == _rowDeltaPredictorSame
+                  ? 0
+                  : _compactPredictorBitCost(predictor)),
+        );
+        if (decision.bitCost < best.bitCost) best = decision;
+        continue;
+      }
+
+      final predictorCost = _compactPredictorBitCost(predictor);
+      final positionCost = _compactChangePositionsBitCost(changes);
+      final valuesEncoding = _bestCompactValueEncoding(
+        values,
+        rowLength,
+        row,
+        changes,
+        valueBits,
+        predictor,
+        useVirtualBaseRow: useVirtualBaseRow,
+        directGrayscale: directGrayscale,
+      );
+      final indexed = _CompactRowDeltaDecision(
+        op: _compactRowDeltaOpIndexed,
+        predictor: predictor,
+        changes: changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: _compactRowDeltaOpBits +
+            predictorCost +
+            _compactUintBitLength(changes.length - 1) +
+            positionCost +
+            valuesEncoding.bitCost,
+      );
+      if (indexed.bitCost < best.bitCost) best = indexed;
+
+      final sameScalar = _bestCompactSameScalarEncoding(
+        values,
+        rowLength,
+        row,
+        changes,
+        valueBits,
+        predictor,
+        useVirtualBaseRow: useVirtualBaseRow,
+        directGrayscale: directGrayscale,
+      );
+      if (sameScalar != null) {
+        final decision = _CompactRowDeltaDecision(
+          op: _compactRowDeltaOpSameScalar,
+          predictor: predictor,
+          changes: changes,
+          useResidual: sameScalar.useResidual,
+          bitCost: _compactRowDeltaOpBits +
+              predictorCost +
+              _compactUintBitLength(changes.length - 1) +
+              positionCost +
+              sameScalar.bitCost,
+        );
+        if (decision.bitCost < best.bitCost) best = decision;
+      }
+
+      final segments = _rowDeltaSegments(changes);
+      var segmentGeometryCost = _compactUintBitLength(segments.length - 1);
+      var previousEnd = 0;
+      for (var i = 0; i < segments.length; i++) {
+        final segment = segments[i];
+        final gap = i == 0 ? segment.x : segment.x - previousEnd;
+        segmentGeometryCost += _compactUintBitLength(gap) +
+            _compactUintBitLength(segment.length - 1);
+        previousEnd = segment.x + segment.length;
+      }
+      final segmentDecision = _CompactRowDeltaDecision(
+        op: _compactRowDeltaOpSegments,
+        predictor: predictor,
+        changes: changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: _compactRowDeltaOpBits +
+            predictorCost +
+            segmentGeometryCost +
+            valuesEncoding.bitCost,
+      );
+      if (segmentDecision.bitCost < best.bitCost) best = segmentDecision;
+
+      final span = changes.last.x - changes.first.x + 1;
+      final maskDecision = _CompactRowDeltaDecision(
+        op: _compactRowDeltaOpTrimmedMask,
+        predictor: predictor,
+        changes: changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: _compactRowDeltaOpBits +
+            predictorCost +
+            _compactUintBitLength(changes.first.x) +
+            _compactUintBitLength(span - 1) +
+            span +
+            valuesEncoding.bitCost,
+      );
+      if (maskDecision.bitCost < best.bitCost) best = maskDecision;
+    }
+    return best;
+  }
+
+  int _compactPredictorBitCost(int predictor) {
+    return predictor == _rowDeltaPredictorSame ? 1 : 2;
+  }
+
+  int _compactChangePositionsBitCost(List<_RowDeltaChange> changes) {
+    var cost = 0;
+    var previousX = -1;
+    for (final change in changes) {
+      cost += _compactUintBitLength(change.x - previousX - 1);
+      previousX = change.x;
+    }
+    return cost;
+  }
+
+  _CompactValueEncoding _bestCompactValueEncoding(
+    List<int> values,
+    int rowLength,
+    int row,
+    List<_RowDeltaChange> changes,
+    int valueBits,
+    int predictor, {
+    required bool useVirtualBaseRow,
+    required bool directGrayscale,
+  }) {
+    final absoluteCost = changes.length * valueBits;
+    if (!directGrayscale) {
+      return _CompactValueEncoding(false, absoluteCost);
+    }
+    var residualCost = 0;
+    for (final change in changes) {
+      final delta = _compactGrayscaleDelta(
+        values,
+        rowLength,
+        row,
+        change,
+        predictor,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      residualCost += _compactUintBitLength(_grayscaleDeltaCode(delta) - 1);
+    }
+    return residualCost < absoluteCost
+        ? _CompactValueEncoding(true, 1 + residualCost)
+        : _CompactValueEncoding(false, 1 + absoluteCost);
+  }
+
+  _CompactValueEncoding? _bestCompactSameScalarEncoding(
+    List<int> values,
+    int rowLength,
+    int row,
+    List<_RowDeltaChange> changes,
+    int valueBits,
+    int predictor, {
+    required bool useVirtualBaseRow,
+    required bool directGrayscale,
+  }) {
+    final absoluteValue = _sameRowDeltaChangeValue(changes);
+    _CompactValueEncoding? best;
+    if (absoluteValue != null) {
+      best = _CompactValueEncoding(false, valueBits + (directGrayscale ? 1 : 0));
+    }
+    if (!directGrayscale) return best;
+    int? sharedDelta;
+    for (final change in changes) {
+      final delta = _compactGrayscaleDelta(
+        values,
+        rowLength,
+        row,
+        change,
+        predictor,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      if (sharedDelta != null && sharedDelta != delta) return best;
+      sharedDelta = delta;
+    }
+    final residual = _CompactValueEncoding(
+      true,
+      1 + _compactUintBitLength(_grayscaleDeltaCode(sharedDelta!) - 1),
+    );
+    return best == null || residual.bitCost < best.bitCost ? residual : best;
+  }
+
+  int _compactGrayscaleDelta(
+    List<int> values,
+    int rowLength,
+    int row,
+    _RowDeltaChange change,
+    int predictor, {
+    required bool useVirtualBaseRow,
+  }) {
+    final predicted = _rowDeltaPredictedValue(
+      values,
+      rowLength,
+      row,
+      change.x,
+      row * rowLength - rowLength,
+      useVirtualBaseRow: useVirtualBaseRow,
+      predictor: predictor,
+    );
+    return change.value - predicted;
+  }
+
+  static int _grayscaleDeltaCode(int delta) {
+    if (delta == 0) {
+      throw const MCOImageInvalidInputException('Zero grayscale delta');
+    }
+    return delta > 0 ? delta * 2 - 1 : -delta * 2;
+  }
+
+  void _writeCompactRowDeltaDecision(
+    _BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row,
+    _CompactRowDeltaDecision decision, {
+    required bool useVirtualBaseRow,
+    required bool directGrayscale,
+  }) {
+    writer.writeBits(decision.op, _compactRowDeltaOpBits);
+    if (decision.op == _compactRowDeltaOpRepeat) return;
+    if (decision.op == _compactRowDeltaOpRaw) {
+      final rowStart = row * rowLength;
+      for (var x = 0; x < rowLength; x++) {
+        writer.writeBits(values[rowStart + x], valueBits);
+      }
+      return;
+    }
+
+    _writeCompactRowDeltaPredictor(writer, decision.predictor);
+    if (decision.op == _compactRowDeltaOpPredicted) return;
+    if (directGrayscale) {
+      writer.writeBits(decision.useResidual ? 1 : 0, 1);
+    }
+    final changes = decision.changes;
+    switch (decision.op) {
+      case _compactRowDeltaOpIndexed:
+        _writeCompactUint(writer, changes.length - 1);
+        _writeCompactChangePositions(writer, changes);
+        _writeCompactChangedValues(
+          writer,
+          values,
+          rowLength,
+          valueBits,
+          row,
+          changes,
+          decision.predictor,
+          useVirtualBaseRow: useVirtualBaseRow,
+          useResidual: decision.useResidual,
+        );
+        break;
+      case _compactRowDeltaOpSameScalar:
+        _writeCompactUint(writer, changes.length - 1);
+        _writeCompactChangePositions(writer, changes);
+        if (decision.useResidual) {
+          final delta = _compactGrayscaleDelta(
+            values,
+            rowLength,
+            row,
+            changes.first,
+            decision.predictor,
+            useVirtualBaseRow: useVirtualBaseRow,
+          );
+          _writeCompactUint(writer, _grayscaleDeltaCode(delta) - 1);
+        } else {
+          writer.writeBits(changes.first.value, valueBits);
+        }
+        break;
+      case _compactRowDeltaOpSegments:
+        final segments = _rowDeltaSegments(changes);
+        _writeCompactUint(writer, segments.length - 1);
+        var previousEnd = 0;
+        for (var i = 0; i < segments.length; i++) {
+          final segment = segments[i];
+          _writeCompactUint(
+            writer,
+            i == 0 ? segment.x : segment.x - previousEnd,
+          );
+          _writeCompactUint(writer, segment.length - 1);
+          previousEnd = segment.x + segment.length;
+        }
+        _writeCompactChangedValues(
+          writer,
+          values,
+          rowLength,
+          valueBits,
+          row,
+          changes,
+          decision.predictor,
+          useVirtualBaseRow: useVirtualBaseRow,
+          useResidual: decision.useResidual,
+        );
+        break;
+      case _compactRowDeltaOpTrimmedMask:
+        final start = changes.first.x;
+        final span = changes.last.x - start + 1;
+        _writeCompactUint(writer, start);
+        _writeCompactUint(writer, span - 1);
+        var changeIndex = 0;
+        for (var offset = 0; offset < span; offset++) {
+          final changed = changeIndex < changes.length &&
+              changes[changeIndex].x == start + offset;
+          writer.writeBits(changed ? 1 : 0, 1);
+          if (changed) changeIndex++;
+        }
+        _writeCompactChangedValues(
+          writer,
+          values,
+          rowLength,
+          valueBits,
+          row,
+          changes,
+          decision.predictor,
+          useVirtualBaseRow: useVirtualBaseRow,
+          useResidual: decision.useResidual,
+        );
+        break;
+      default:
+        throw const MCOImageInvalidInputException(
+          'Invalid compact row-delta op',
+        );
+    }
+  }
+
+  void _writeCompactRowDeltaPredictor(_BitWriter writer, int predictor) {
+    if (predictor == _rowDeltaPredictorSame) {
+      writer.writeBits(0, 1);
+      return;
+    }
+    writer
+      ..writeBits(1, 1)
+      ..writeBits(predictor == _rowDeltaPredictorLeft ? 0 : 1, 1);
+  }
+
+  void _writeCompactChangePositions(
+    _BitWriter writer,
+    List<_RowDeltaChange> changes,
+  ) {
+    var previousX = -1;
+    for (final change in changes) {
+      _writeCompactUint(writer, change.x - previousX - 1);
+      previousX = change.x;
+    }
+  }
+
+  void _writeCompactChangedValues(
+    _BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row,
+    List<_RowDeltaChange> changes,
+    int predictor, {
+    required bool useVirtualBaseRow,
+    required bool useResidual,
+  }) {
+    for (final change in changes) {
+      if (useResidual) {
+        final delta = _compactGrayscaleDelta(
+          values,
+          rowLength,
+          row,
+          change,
+          predictor,
+          useVirtualBaseRow: useVirtualBaseRow,
+        );
+        _writeCompactUint(writer, _grayscaleDeltaCode(delta) - 1);
+      } else {
+        writer.writeBits(change.value, valueBits);
+      }
+    }
+  }
 
   void _writeRowRepeatBody(
     _BitWriter writer,
@@ -7306,6 +8346,12 @@ class MCOImageCodec {
     return (colorCount - 1).bitLength;
   }
 
+  static bool _isGrayscaleProfile(PaletteProfile profile) {
+    return profile == PaletteProfile.grayscale8 ||
+        profile == PaletteProfile.grayscale16 ||
+        profile == PaletteProfile.grayscale32;
+  }
+
   static int _bitsForChoiceCount(int count) {
     if (count <= 1) return 0;
     return (count - 1).bitLength;
@@ -7871,6 +8917,29 @@ class _RowDeltaDecision {
     required this.changes,
     required this.bitCost,
   });
+}
+
+class _CompactRowDeltaDecision {
+  final int op;
+  final int predictor;
+  final List<_RowDeltaChange> changes;
+  final bool useResidual;
+  final int bitCost;
+
+  const _CompactRowDeltaDecision({
+    required this.op,
+    required this.predictor,
+    required this.changes,
+    required this.useResidual,
+    required this.bitCost,
+  });
+}
+
+class _CompactValueEncoding {
+  final bool useResidual;
+  final int bitCost;
+
+  const _CompactValueEncoding(this.useResidual, this.bitCost);
 }
 
 class _RowDeltaChange {

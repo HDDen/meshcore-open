@@ -1654,6 +1654,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'quadtree-bounds' => 'Quadtree bounds',
       'bitplanes' => 'Bitplanes',
       'bitplanes-bounds' => 'Bitplanes bounds',
+      'compact-row-delta' => 'Compact row delta',
+      'compact-row-delta-bounds' => 'Compact row delta bounds',
+      'grayscale-row-delta' => 'Grayscale row delta',
+      'grayscale-row-delta-bounds' => 'Grayscale row delta bounds',
       _ => switch (candidate.mode) {
         ImageMode.rawGlobal => 'Raw global',
         ImageMode.rawLocal => 'Raw local',
