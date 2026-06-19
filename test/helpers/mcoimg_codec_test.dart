@@ -555,6 +555,75 @@ void main() {
       }
     });
 
+    test('legacy and adaptive bitplanes candidates coexist and roundtrip', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) => ((x ~/ 2) + (y ~/ 3)) % 8,
+        profile: PaletteProfile.master8,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final bitplanesCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container.contains('bitplanes'),
+      );
+
+      expect(
+        bitplanesCandidates.map((candidate) => candidate.container),
+        contains('bitplanes'),
+      );
+      expect(
+        bitplanesCandidates.map((candidate) => candidate.container),
+        contains('adaptive-bitplanes'),
+      );
+      for (final candidate in bitplanesCandidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('direct grayscale bitplanes candidate roundtrips', () {
+      final image = _image(
+        17,
+        13,
+        (x, y) => (x + y * 2) % 8,
+        profile: PaletteProfile.grayscale8,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidates = diagnostics.candidates.where(
+        (candidate) =>
+            candidate.container == 'direct-grayscale-bitplanes' ||
+            candidate.container == 'direct-grayscale-bitplanes-bounds',
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('dynamic adaptive bitplanes candidates roundtrip', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal8,
+      );
+      final image = _image(
+        15,
+        11,
+        (x, y) => colors[((x ~/ 3) + y) % colors.length],
+        profile: PaletteProfile.dynamicGlobal8,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors.first,
+      );
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.container.startsWith('adaptive-bitplanes'),
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
     test('debug diagnostics include decodable candidates for all palettes', () {
       for (final profile in _fixedProfiles) {
         final image = _image(

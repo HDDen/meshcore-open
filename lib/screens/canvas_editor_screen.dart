@@ -1654,6 +1654,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'quadtree-bounds' => 'Quadtree bounds',
       'bitplanes' => 'Bitplanes',
       'bitplanes-bounds' => 'Bitplanes bounds',
+      'adaptive-bitplanes' => 'Adaptive bitplanes',
+      'adaptive-bitplanes-bounds' => 'Adaptive bitplanes bounds',
+      'adaptive-bitplanes-optimized' => 'Adaptive bitplanes optimized',
+      'adaptive-bitplanes-optimized-bounds' =>
+        'Adaptive bitplanes optimized bounds',
+      'direct-grayscale-bitplanes' => 'Direct grayscale bitplanes',
+      'direct-grayscale-bitplanes-bounds' =>
+        'Direct grayscale bitplanes bounds',
       'compact-row-delta' => 'Compact row delta',
       'compact-row-delta-bounds' => 'Compact row delta bounds',
       'grayscale-row-delta' => 'Grayscale row delta',

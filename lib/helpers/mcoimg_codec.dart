@@ -744,6 +744,63 @@ class MCOImageCodec {
             }
           }
 
+          for (final adaptiveVariant in <({
+            bool directGrayscale,
+            bool optimizePaletteOrder,
+            String container,
+          })>[
+            (
+              directGrayscale: false,
+              optimizePaletteOrder: false,
+              container: 'adaptive-bitplanes',
+            ),
+            (
+              directGrayscale: false,
+              optimizePaletteOrder: true,
+              container: 'adaptive-bitplanes-optimized',
+            ),
+            if (_isGrayscaleProfile(image.paletteProfile))
+              (
+                directGrayscale: true,
+                optimizePaletteOrder: false,
+                container: 'direct-grayscale-bitplanes',
+              ),
+          ]) {
+            final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
+              image,
+              linear,
+              scan,
+              referenceEncoding,
+              dataWidth: image.width,
+              dataHeight: image.height,
+              backgroundColor: bg,
+              directGrayscale: adaptiveVariant.directGrayscale,
+              optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
+            );
+            if (adaptivePayload == null) continue;
+            final adaptiveCandidate = _candidateFromPayload(
+              adaptivePayload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: adaptivePayload.localPaletteSize,
+              usedBankCount: adaptivePayload.usedBankCount,
+              bitsPerLocalPixel: adaptivePayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: adaptiveVariant.container,
+            );
+            candidates.add(adaptiveCandidate);
+            if (_isBetterCandidate(adaptiveCandidate, best, outputTarget)) {
+              best = adaptiveCandidate;
+            }
+          }
+
           for (final directGrayscale in <bool>[
             false,
             if (_isGrayscaleProfile(image.paletteProfile)) true,
@@ -1011,6 +1068,65 @@ class MCOImageCodec {
                 outputTarget,
               )) {
                 best = bitplanesCandidate;
+              }
+            }
+
+            for (final adaptiveVariant in <({
+              bool directGrayscale,
+              bool optimizePaletteOrder,
+              String container,
+            })>[
+              (
+                directGrayscale: false,
+                optimizePaletteOrder: false,
+                container: 'adaptive-bitplanes-bounds',
+              ),
+              (
+                directGrayscale: false,
+                optimizePaletteOrder: true,
+                container: 'adaptive-bitplanes-optimized-bounds',
+              ),
+              if (_isGrayscaleProfile(image.paletteProfile))
+                (
+                  directGrayscale: true,
+                  optimizePaletteOrder: false,
+                  container: 'direct-grayscale-bitplanes-bounds',
+                ),
+            ]) {
+              final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
+                image,
+                boundedLinear,
+                scan,
+                referenceEncoding,
+                dataWidth: bounds.width,
+                dataHeight: bounds.height,
+                backgroundColor: bg,
+                bounds: bounds,
+                directGrayscale: adaptiveVariant.directGrayscale,
+                optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
+              );
+              if (adaptivePayload == null) continue;
+              final adaptiveCandidate = _candidateFromPayload(
+                adaptivePayload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: adaptivePayload.localPaletteSize,
+                usedBankCount: adaptivePayload.usedBankCount,
+                bitsPerLocalPixel: adaptivePayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: adaptiveVariant.container,
+              );
+              candidates.add(adaptiveCandidate);
+              if (_isBetterCandidate(adaptiveCandidate, best, outputTarget)) {
+                best = adaptiveCandidate;
               }
             }
 
@@ -1934,6 +2050,143 @@ class MCOImageCodec {
     return _V2Payload(
       writer.toBytes(),
       localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2AdaptiveBitplanesPayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    required bool directGrayscale,
+    required bool optimizePaletteOrder,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight || linear.isEmpty) return null;
+    if (directGrayscale && !_isGrayscaleProfile(image.paletteProfile)) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
+
+    if (directGrayscale) {
+      writer.writeBits(0xc0, 8);
+      _writeAdaptiveBitplanesBody(
+        writer,
+        linear,
+        _globalBits(image.paletteProfile),
+      );
+      return _V2Payload(
+        writer.toBytes(),
+        bitsPerLocalPixel: _globalBits(image.paletteProfile),
+      );
+    }
+
+    late final List<int> palette;
+    if (image.paletteProfile.isDynamic) {
+      final profileColorIds = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final profilePalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (profilePalette.isEmpty ||
+          profilePalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      palette = profilePalette
+          .map(
+            (color) => _globalIndexForProfileColorId(
+              image.paletteProfile,
+              color,
+            ),
+          )
+          .toList(growable: false);
+    } else {
+      palette = _buildLocalPalette(linear).colors;
+    }
+    final orderedPalette = optimizePaletteOrder
+        ? _optimizeBitplanesPaletteOrder(linear, palette)
+        : palette;
+    if (optimizePaletteOrder && _intListsEqual(orderedPalette, palette)) {
+      return null;
+    }
+
+    writer.writeBits(0x80 | (orderedPalette.length - 1), 8);
+    int? usedBankCount;
+    if (image.paletteProfile.isDynamic) {
+      final profilePalette = orderedPalette
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      _writeDynamicLocalPaletteBody(
+        writer,
+        image.paletteProfile,
+        profilePalette,
+        referenceEncoding!,
+      );
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? profilePalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      _writePalette(writer, orderedPalette, image.paletteProfile);
+    }
+    final localIndex = _localIndexMap(orderedPalette);
+    final localPixels = linear
+        .map((color) => localIndex[color]!)
+        .toList(growable: false);
+    final localBits = _localBits(orderedPalette.length);
+    _writeAdaptiveBitplanesBody(writer, localPixels, localBits);
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: orderedPalette.length,
       usedBankCount: usedBankCount,
       bitsPerLocalPixel: localBits,
     );
@@ -3907,22 +4160,66 @@ class MCOImageCodec {
     PaletteProfile profile,
     DynamicPaletteReferenceEncoding? referenceEncoding,
   ) {
-    final List<int> palette;
+    final paletteMarker = reader.readBits(8);
+    if (paletteMarker >= 1 && paletteMarker <= 64) {
+      final palette = _readBitplanesPaletteBody(
+        reader,
+        profile,
+        referenceEncoding,
+        paletteMarker,
+      );
+      return _decodeLegacyBitplanesBody(reader, width, height, palette);
+    }
+    if ((paletteMarker & 0xc0) == 0x80) {
+      final palette = _readBitplanesPaletteBody(
+        reader,
+        profile,
+        referenceEncoding,
+        (paletteMarker & 0x3f) + 1,
+      );
+      return _decodeAdaptiveBitplanesBody(reader, width, height, palette);
+    }
+    if (paletteMarker == 0xc0 && _isGrayscaleProfile(profile)) {
+      return _decodeAdaptiveBitplanesBody(
+        reader,
+        width,
+        height,
+        List<int>.generate(_paletteSize(profile), (index) => index),
+      );
+    }
+    throw const MCOImageInvalidPayloadException(
+      'Invalid Bitplanes palette marker',
+    );
+  }
+
+  List<int> _readBitplanesPaletteBody(
+    _BitReader reader,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+    int length,
+  ) {
     if (profile.isDynamic) {
       if (referenceEncoding == null) {
         throw const MCOImageInvalidPayloadException(
           'Dynamic bitplanes are missing reference encoding',
         );
       }
-      palette = _readDynamicLocalPalette(
+      return _readDynamicLocalPaletteBody(
         reader,
         profile,
         referenceEncoding,
+        length,
       ).globalColors;
-    } else {
-      palette = _readV2LocalPalette(reader, profile);
     }
+    return _readV2LocalPaletteBody(reader, profile, length);
+  }
 
+  List<int> _decodeLegacyBitplanesBody(
+    _BitReader reader,
+    int width,
+    int height,
+    List<int> palette,
+  ) {
     final pixelCount = width * height;
     final localBits = _localBits(palette.length);
     final localPixels = List<int>.filled(pixelCount, 0);
@@ -3962,6 +4259,149 @@ class MCOImageCodec {
       }
       return palette[index];
     }).toList(growable: false);
+  }
+
+  List<int> _decodeAdaptiveBitplanesBody(
+    _BitReader reader,
+    int width,
+    int height,
+    List<int> palette,
+  ) {
+    final pixelCount = width * height;
+    final localBits = _localBits(palette.length);
+    final localPixels = List<int>.filled(pixelCount, 0);
+    for (var bit = 0; bit < localBits; bit++) {
+      final firstPrefixBit = reader.readBits(1);
+      if (firstPrefixBit == 0) {
+        for (var i = 0; i < pixelCount; i++) {
+          localPixels[i] |= reader.readBits(1) << bit;
+        }
+        continue;
+      }
+
+      final secondPrefixBit = reader.readBits(1);
+      if (secondPrefixBit == 0) {
+        _readAdaptiveBitplaneRuns(
+          reader,
+          localPixels,
+          bit,
+          pixelCount,
+          shortLengths: false,
+        );
+        continue;
+      }
+
+      final thirdPrefixBit = reader.readBits(1);
+      if (thirdPrefixBit == 0) {
+        _readAdaptiveBitplaneRuns(
+          reader,
+          localPixels,
+          bit,
+          pixelCount,
+          shortLengths: true,
+        );
+        continue;
+      }
+
+      switch (reader.readBits(2)) {
+        case 0:
+          break;
+        case 1:
+          for (var i = 0; i < pixelCount; i++) {
+            localPixels[i] |= 1 << bit;
+          }
+          break;
+        case 2:
+          _readSparseBitplane(
+            reader,
+            localPixels,
+            bit,
+            pixelCount,
+            minorityBit: 1,
+          );
+          break;
+        case 3:
+          for (var i = 0; i < pixelCount; i++) {
+            localPixels[i] |= 1 << bit;
+          }
+          _readSparseBitplane(
+            reader,
+            localPixels,
+            bit,
+            pixelCount,
+            minorityBit: 0,
+          );
+          break;
+      }
+    }
+
+    return localPixels.map((index) {
+      if (index >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Adaptive bitplane color index out of range',
+        );
+      }
+      return palette[index];
+    }).toList(growable: false);
+  }
+
+  void _readAdaptiveBitplaneRuns(
+    _BitReader reader,
+    List<int> pixels,
+    int bit,
+    int pixelCount, {
+    required bool shortLengths,
+  }) {
+    var value = reader.readBits(1);
+    var position = 0;
+    while (position < pixelCount) {
+      final length = shortLengths
+          ? _readShortBitplaneRunLength(reader)
+          : _readCompactUint(reader) + 1;
+      if (length <= 0 || position + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Adaptive bitplane RLE exceeds pixel count',
+        );
+      }
+      if (value != 0) {
+        for (var i = 0; i < length; i++) {
+          pixels[position + i] |= 1 << bit;
+        }
+      }
+      position += length;
+      value ^= 1;
+    }
+  }
+
+  void _readSparseBitplane(
+    _BitReader reader,
+    List<int> pixels,
+    int bit,
+    int pixelCount, {
+    required int minorityBit,
+  }) {
+    final count = _readCompactUint(reader) + 1;
+    if (count > pixelCount) {
+      throw const MCOImageInvalidPayloadException(
+        'Sparse bitplane count exceeds pixel count',
+      );
+    }
+    var previous = -1;
+    for (var i = 0; i < count; i++) {
+      final gap = _readCompactUint(reader);
+      final position = previous + gap + 1;
+      if (position <= previous || position >= pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Sparse bitplane position out of range',
+        );
+      }
+      if (minorityBit == 0) {
+        pixels[position] &= ~(1 << bit);
+      } else {
+        pixels[position] |= 1 << bit;
+      }
+      previous = position;
+    }
   }
 
   List<int> _decodeV2CompactRowDelta(
@@ -6080,6 +6520,20 @@ class MCOImageCodec {
     int? excludedColor,
   }) {
     final k = reader.readBitVarUint();
+    return _readV2LocalPaletteBody(
+      reader,
+      profile,
+      k,
+      excludedColor: excludedColor,
+    );
+  }
+
+  List<int> _readV2LocalPaletteBody(
+    _BitReader reader,
+    PaletteProfile profile,
+    int k, {
+    int? excludedColor,
+  }) {
     final maxColors = _paletteSize(profile);
     if (k == 0 || k > maxColors) {
       throw const MCOImageInvalidPayloadException('Invalid local palette size');
@@ -6136,9 +6590,23 @@ class MCOImageCodec {
         'Invalid dynamic local palette size',
       );
     }
+    writer.writeBitVarUint(profileColorIds.length);
+    _writeDynamicLocalPaletteBody(
+      writer,
+      profile,
+      profileColorIds,
+      referenceEncoding,
+    );
+  }
+
+  void _writeDynamicLocalPaletteBody(
+    _BitWriter writer,
+    PaletteProfile profile,
+    List<int> profileColorIds,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+  ) {
     switch (referenceEncoding) {
       case DynamicPaletteReferenceEncoding.flat:
-        writer.writeBitVarUint(profileColorIds.length);
         final bits = _dynamicProfileColorBits(profile);
         for (final profileColorId in profileColorIds) {
           writer.writeBits(profileColorId, bits);
@@ -6150,7 +6618,6 @@ class MCOImageCodec {
             'Banked palette references require dynamicGlobal512',
           );
         }
-        writer.writeBitVarUint(profileColorIds.length);
         final banks =
             profileColorIds
                 .map((globalIndex) => globalIndex >> 6)
@@ -6177,15 +6644,34 @@ class MCOImageCodec {
     PaletteProfile profile,
     DynamicPaletteReferenceEncoding referenceEncoding,
   ) {
+    final length = reader.readBitVarUint();
+    return _readDynamicLocalPaletteBody(
+      reader,
+      profile,
+      referenceEncoding,
+      length,
+    );
+  }
+
+  _DynamicLocalPalette _readDynamicLocalPaletteBody(
+    _BitReader reader,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+    int length,
+  ) {
+    if (length <= 0 || length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic local palette size',
+      );
+    }
     final profileColorIds = switch (referenceEncoding) {
-      DynamicPaletteReferenceEncoding.flat => _readDynamicFlatPalette(
+      DynamicPaletteReferenceEncoding.flat => _readDynamicFlatPaletteBody(
         reader,
         profile,
+        length,
       ),
-      DynamicPaletteReferenceEncoding.banked8x64 => _readDynamicBankedPalette(
-        reader,
-        profile,
-      ),
+      DynamicPaletteReferenceEncoding.banked8x64 =>
+        _readDynamicBankedPaletteBody(reader, profile, length),
     };
     final globalColors = profileColorIds
         .map((profileColorId) {
@@ -6205,13 +6691,11 @@ class MCOImageCodec {
     return _DynamicLocalPalette(globalColors);
   }
 
-  List<int> _readDynamicFlatPalette(_BitReader reader, PaletteProfile profile) {
-    final length = reader.readBitVarUint();
-    if (length <= 0 || length > _maxDynamicLocalPalette) {
-      throw const MCOImageInvalidPayloadException(
-        'Invalid dynamic local palette size',
-      );
-    }
+  List<int> _readDynamicFlatPaletteBody(
+    _BitReader reader,
+    PaletteProfile profile,
+    int length,
+  ) {
     final bits = _dynamicProfileColorBits(profile);
     final maxProfileColorId = _dynamicProfileSize(profile) - 1;
     final seen = <int>{};
@@ -6228,19 +6712,14 @@ class MCOImageCodec {
     return colors;
   }
 
-  List<int> _readDynamicBankedPalette(
+  List<int> _readDynamicBankedPaletteBody(
     _BitReader reader,
     PaletteProfile profile,
+    int length,
   ) {
     if (profile != PaletteProfile.dynamicGlobal512) {
       throw const MCOImageInvalidPayloadException(
         'Banked palette references require dynamicGlobal512',
-      );
-    }
-    final length = reader.readBitVarUint();
-    if (length <= 0 || length > _maxDynamicLocalPalette) {
-      throw const MCOImageInvalidPayloadException(
-        'Invalid dynamic local palette size',
       );
     }
     final bankCount = reader.readBitVarUint();
@@ -8158,6 +8637,241 @@ class MCOImageCodec {
     return runs;
   }
 
+  void _writeAdaptiveBitplanesBody(
+    _BitWriter writer,
+    List<int> pixels,
+    int bitCount,
+  ) {
+    for (var bit = 0; bit < bitCount; bit++) {
+      final decision = _chooseAdaptiveBitplaneEncoding(pixels, bit);
+      switch (decision.mode) {
+        case _AdaptiveBitplaneMode.raw:
+          writer.writeBits(0, 1);
+          for (final pixel in pixels) {
+            writer.writeBits((pixel >> bit) & 1, 1);
+          }
+          break;
+        case _AdaptiveBitplaneMode.legacyRle:
+          writer
+            ..writeBits(1, 2)
+            ..writeBits(decision.startingBit, 1);
+          for (final length in decision.runs) {
+            _writeCompactUint(writer, length - 1);
+          }
+          break;
+        case _AdaptiveBitplaneMode.shortRle:
+          writer
+            ..writeBits(3, 3)
+            ..writeBits(decision.startingBit, 1);
+          for (final length in decision.runs) {
+            _writeShortBitplaneRunLength(writer, length);
+          }
+          break;
+        case _AdaptiveBitplaneMode.constantZero:
+          writer.writeBits(7, 5);
+          break;
+        case _AdaptiveBitplaneMode.constantOne:
+          writer.writeBits(15, 5);
+          break;
+        case _AdaptiveBitplaneMode.sparseOne:
+          writer.writeBits(23, 5);
+          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          break;
+        case _AdaptiveBitplaneMode.sparseZero:
+          writer.writeBits(31, 5);
+          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          break;
+      }
+    }
+  }
+
+  _AdaptiveBitplaneDecision _chooseAdaptiveBitplaneEncoding(
+    List<int> pixels,
+    int bit,
+  ) {
+    final runs = _buildBitplaneRuns(pixels, bit);
+    final startingBit = (pixels.first >> bit) & 1;
+    final onePositions = <int>[];
+    final zeroPositions = <int>[];
+    for (var i = 0; i < pixels.length; i++) {
+      (((pixels[i] >> bit) & 1) == 0 ? zeroPositions : onePositions).add(i);
+    }
+
+    final decisions = <_AdaptiveBitplaneDecision>[
+      _AdaptiveBitplaneDecision(
+        _AdaptiveBitplaneMode.raw,
+        1 + pixels.length,
+        startingBit: startingBit,
+        runs: runs,
+      ),
+      _AdaptiveBitplaneDecision(
+        _AdaptiveBitplaneMode.legacyRle,
+        3 +
+            runs.fold<int>(
+              0,
+              (sum, length) =>
+                  sum + _compactUintBitLength(length - 1),
+            ),
+        startingBit: startingBit,
+        runs: runs,
+      ),
+      _AdaptiveBitplaneDecision(
+        _AdaptiveBitplaneMode.shortRle,
+        4 +
+            runs.fold<int>(
+              0,
+              (sum, length) => sum + _shortBitplaneRunBitLength(length),
+            ),
+        startingBit: startingBit,
+        runs: runs,
+      ),
+    ];
+    if (onePositions.isEmpty || zeroPositions.isEmpty) {
+      decisions.add(
+        _AdaptiveBitplaneDecision(
+          onePositions.isEmpty
+              ? _AdaptiveBitplaneMode.constantZero
+              : _AdaptiveBitplaneMode.constantOne,
+          5,
+          startingBit: startingBit,
+          runs: runs,
+        ),
+      );
+    } else {
+      decisions
+        ..add(
+          _AdaptiveBitplaneDecision(
+            _AdaptiveBitplaneMode.sparseOne,
+            5 + _sparseBitplanePositionCost(onePositions),
+            startingBit: startingBit,
+            runs: runs,
+            minorityPositions: onePositions,
+          ),
+        )
+        ..add(
+          _AdaptiveBitplaneDecision(
+            _AdaptiveBitplaneMode.sparseZero,
+            5 + _sparseBitplanePositionCost(zeroPositions),
+            startingBit: startingBit,
+            runs: runs,
+            minorityPositions: zeroPositions,
+          ),
+        );
+    }
+    var best = decisions.first;
+    for (final decision in decisions.skip(1)) {
+      if (decision.bitCost < best.bitCost) best = decision;
+    }
+    return best;
+  }
+
+  List<int> _optimizeBitplanesPaletteOrder(
+    List<int> pixels,
+    List<int> palette,
+  ) {
+    if (palette.length < 2) return palette;
+
+    var bestPalette = List<int>.of(palette);
+    var bestCost = _adaptiveBitplanesCost(pixels, bestPalette);
+    final exhaustiveSwaps = palette.length <= 8;
+    final passCount = exhaustiveSwaps ? 2 : 1;
+    for (var pass = 0; pass < passCount; pass++) {
+      var improved = false;
+      var passPalette = bestPalette;
+      var passCost = bestCost;
+      for (var left = 0; left < bestPalette.length - 1; left++) {
+        final rightLimit = exhaustiveSwaps
+            ? bestPalette.length
+            : left + 2;
+        for (var right = left + 1; right < rightLimit; right++) {
+          final candidate = List<int>.of(bestPalette);
+          final value = candidate[left];
+          candidate[left] = candidate[right];
+          candidate[right] = value;
+          final cost = _adaptiveBitplanesCost(pixels, candidate);
+          if (cost < passCost) {
+            passPalette = candidate;
+            passCost = cost;
+            improved = true;
+          }
+        }
+      }
+      if (!improved) break;
+      bestPalette = passPalette;
+      bestCost = passCost;
+    }
+    return bestPalette;
+  }
+
+  int _adaptiveBitplanesCost(List<int> pixels, List<int> palette) {
+    final indexByColor = _localIndexMap(palette);
+    final localPixels = pixels
+        .map((color) => indexByColor[color]!)
+        .toList(growable: false);
+    var cost = 0;
+    for (var bit = 0; bit < _localBits(palette.length); bit++) {
+      cost += _chooseAdaptiveBitplaneEncoding(localPixels, bit).bitCost;
+    }
+    return cost;
+  }
+
+  static bool _intListsEqual(List<int> left, List<int> right) {
+    if (left.length != right.length) return false;
+    for (var i = 0; i < left.length; i++) {
+      if (left[i] != right[i]) return false;
+    }
+    return true;
+  }
+
+  static int _sparseBitplanePositionCost(List<int> positions) {
+    var cost = _compactUintBitLength(positions.length - 1);
+    var previous = -1;
+    for (final position in positions) {
+      cost += _compactUintBitLength(position - previous - 1);
+      previous = position;
+    }
+    return cost;
+  }
+
+  void _writeSparseBitplanePositions(
+    _BitWriter writer,
+    List<int> positions,
+  ) {
+    _writeCompactUint(writer, positions.length - 1);
+    var previous = -1;
+    for (final position in positions) {
+      _writeCompactUint(writer, position - previous - 1);
+      previous = position;
+    }
+  }
+
+  void _writeShortBitplaneRunLength(_BitWriter writer, int length) {
+    if (length <= 0) {
+      throw const MCOImageInvalidInputException('Invalid bitplane run');
+    }
+    if (length <= 3) {
+      writer.writeBits((1 << (length - 1)) - 1, length);
+      return;
+    }
+    writer.writeBits(7, 3);
+    _writeCompactUint(writer, length - 4);
+  }
+
+  int _readShortBitplaneRunLength(_BitReader reader) {
+    if (reader.readBits(1) == 0) return 1;
+    if (reader.readBits(1) == 0) return 2;
+    if (reader.readBits(1) == 0) return 3;
+    return _readCompactUint(reader) + 4;
+  }
+
+  static int _shortBitplaneRunBitLength(int length) {
+    if (length <= 0) {
+      throw const MCOImageInvalidInputException('Invalid bitplane run');
+    }
+    if (length <= 3) return length;
+    return 3 + _compactUintBitLength(length - 4);
+  }
+
   void _writeQuadtreeNode(
     _BitWriter writer,
     List<int> pixels,
@@ -9077,4 +9791,30 @@ class _DynamicLocalPalette {
   final List<int> globalColors;
 
   const _DynamicLocalPalette(this.globalColors);
+}
+
+enum _AdaptiveBitplaneMode {
+  raw,
+  legacyRle,
+  shortRle,
+  constantZero,
+  constantOne,
+  sparseOne,
+  sparseZero,
+}
+
+class _AdaptiveBitplaneDecision {
+  final _AdaptiveBitplaneMode mode;
+  final int bitCost;
+  final int startingBit;
+  final List<int> runs;
+  final List<int> minorityPositions;
+
+  const _AdaptiveBitplaneDecision(
+    this.mode,
+    this.bitCost, {
+    required this.startingBit,
+    required this.runs,
+    this.minorityPositions = const <int>[],
+  });
 }
