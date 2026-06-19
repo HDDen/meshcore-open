@@ -4108,12 +4108,6 @@ class MCOImageCodec {
         continue;
       }
       final useResidual = directGrayscale && reader.readBits(1) != 0;
-      final hasAdaptiveGeometry = op == _compactRowDeltaOpIndexed ||
-          op == _compactRowDeltaOpSameScalar ||
-          op == _compactRowDeltaOpSegments ||
-          op == _compactRowDeltaOpTrimmedMask;
-      final useCompactGeometry =
-          hasAdaptiveGeometry && reader.readBits(1) != 0;
       final positions = <int>[];
       if (op == _compactRowDeltaOpIndexed ||
           op == _compactRowDeltaOpSameScalar) {
@@ -4123,13 +4117,7 @@ class MCOImageCodec {
             'Compact row-delta change count exceeds row length',
           );
         }
-        _readCompactChangePositions(
-          reader,
-          positions,
-          changeCount,
-          rowLength,
-          useCompactGeometry: useCompactGeometry,
-        );
+        _readCompactChangePositions(reader, positions, changeCount, rowLength);
       } else if (op == _compactRowDeltaOpSegments) {
         final segmentCount = _readCompactUint(reader) + 1;
         if (segmentCount > rowLength) {
@@ -4138,14 +4126,10 @@ class MCOImageCodec {
           );
         }
         var previousEnd = 0;
-        final positionBits = _bitsForChoiceCount(rowLength);
         for (var i = 0; i < segmentCount; i++) {
-          final start = useCompactGeometry
-              ? (i == 0 ? 0 : previousEnd) + _readCompactUint(reader)
-              : reader.readBits(positionBits);
-          final length = useCompactGeometry
-              ? _readCompactUint(reader) + 1
-              : reader.readBits(positionBits) + 1;
+          final gap = _readCompactUint(reader);
+          final start = (i == 0 ? 0 : previousEnd) + gap;
+          final length = _readCompactUint(reader) + 1;
           if (start < previousEnd || start + length > rowLength) {
             throw const MCOImageInvalidPayloadException(
               'Invalid compact row-delta segment',
@@ -4157,13 +4141,8 @@ class MCOImageCodec {
           previousEnd = start + length;
         }
       } else if (op == _compactRowDeltaOpTrimmedMask) {
-        final positionBits = _bitsForChoiceCount(rowLength);
-        final start = useCompactGeometry
-            ? _readCompactUint(reader)
-            : reader.readBits(positionBits);
-        final span = useCompactGeometry
-            ? _readCompactUint(reader) + 1
-            : reader.readBits(positionBits) + 1;
+        final start = _readCompactUint(reader);
+        final span = _readCompactUint(reader) + 1;
         if (start + span > rowLength) {
           throw const MCOImageInvalidPayloadException(
             'Invalid compact row-delta mask bounds',
@@ -4224,24 +4203,8 @@ class MCOImageCodec {
     _BitReader reader,
     List<int> positions,
     int count,
-    int rowLength, {
-    required bool useCompactGeometry,
-  }) {
-    if (!useCompactGeometry) {
-      final positionBits = _bitsForChoiceCount(rowLength);
-      var previousX = -1;
-      for (var i = 0; i < count; i++) {
-        final x = reader.readBits(positionBits);
-        if (x >= rowLength || x <= previousX) {
-          throw const MCOImageInvalidPayloadException(
-            'Invalid fixed row-delta position',
-          );
-        }
-        positions.add(x);
-        previousX = x;
-      }
-      return;
-    }
+    int rowLength,
+  ) {
     var previousX = -1;
     for (var i = 0; i < count; i++) {
       final x = previousX + 1 + _readCompactUint(reader);
@@ -6706,7 +6669,6 @@ class MCOImageCodec {
       predictor: _rowDeltaPredictorSame,
       changes: const <_RowDeltaChange>[],
       useResidual: false,
-      useCompactGeometry: false,
       bitCost: _compactRowDeltaOpBits + rowLength * valueBits,
     );
     for (final predictor in _rowDeltaPredictorsForRow(
@@ -6729,7 +6691,6 @@ class MCOImageCodec {
           predictor: predictor,
           changes: changes,
           useResidual: false,
-          useCompactGeometry: false,
           bitCost: _compactRowDeltaOpBits +
               (predictor == _rowDeltaPredictorSame
                   ? 0
@@ -6740,12 +6701,7 @@ class MCOImageCodec {
       }
 
       final predictorCost = _compactPredictorBitCost(predictor);
-      final positionBits = _bitsForChoiceCount(rowLength);
-      final compactPositionCost = _compactChangePositionsBitCost(changes);
-      final fixedPositionCost = changes.length * positionBits;
-      final useCompactPositions = compactPositionCost < fixedPositionCost;
-      final positionCost = 1 +
-          (useCompactPositions ? compactPositionCost : fixedPositionCost);
+      final positionCost = _compactChangePositionsBitCost(changes);
       final valuesEncoding = _bestCompactValueEncoding(
         values,
         rowLength,
@@ -6761,7 +6717,6 @@ class MCOImageCodec {
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        useCompactGeometry: useCompactPositions,
         bitCost: _compactRowDeltaOpBits +
             predictorCost +
             _compactUintBitLength(changes.length - 1) +
@@ -6786,7 +6741,6 @@ class MCOImageCodec {
           predictor: predictor,
           changes: changes,
           useResidual: sameScalar.useResidual,
-          useCompactGeometry: useCompactPositions,
           bitCost: _compactRowDeltaOpBits +
               predictorCost +
               _compactUintBitLength(changes.length - 1) +
@@ -6797,28 +6751,20 @@ class MCOImageCodec {
       }
 
       final segments = _rowDeltaSegments(changes);
-      var compactSegmentCost = 0;
+      var segmentGeometryCost = _compactUintBitLength(segments.length - 1);
       var previousEnd = 0;
       for (var i = 0; i < segments.length; i++) {
         final segment = segments[i];
         final gap = i == 0 ? segment.x : segment.x - previousEnd;
-        compactSegmentCost += _compactUintBitLength(gap) +
+        segmentGeometryCost += _compactUintBitLength(gap) +
             _compactUintBitLength(segment.length - 1);
         previousEnd = segment.x + segment.length;
       }
-      final fixedSegmentCost =
-          segments.length * (positionBits + positionBits);
-      final useCompactSegments = compactSegmentCost < fixedSegmentCost;
-      final segmentGeometryCost =
-          _compactUintBitLength(segments.length - 1) +
-          1 +
-          (useCompactSegments ? compactSegmentCost : fixedSegmentCost);
       final segmentDecision = _CompactRowDeltaDecision(
         op: _compactRowDeltaOpSegments,
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        useCompactGeometry: useCompactSegments,
         bitCost: _compactRowDeltaOpBits +
             predictorCost +
             segmentGeometryCost +
@@ -6827,23 +6773,15 @@ class MCOImageCodec {
       if (segmentDecision.bitCost < best.bitCost) best = segmentDecision;
 
       final span = changes.last.x - changes.first.x + 1;
-      final compactMaskGeometryCost =
-          _compactUintBitLength(changes.first.x) +
-          _compactUintBitLength(span - 1);
-      final fixedMaskGeometryCost = positionBits * 2;
-      final useCompactMask = compactMaskGeometryCost < fixedMaskGeometryCost;
       final maskDecision = _CompactRowDeltaDecision(
         op: _compactRowDeltaOpTrimmedMask,
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        useCompactGeometry: useCompactMask,
         bitCost: _compactRowDeltaOpBits +
             predictorCost +
-            1 +
-            (useCompactMask
-                ? compactMaskGeometryCost
-                : fixedMaskGeometryCost) +
+            _compactUintBitLength(changes.first.x) +
+            _compactUintBitLength(span - 1) +
             span +
             valuesEncoding.bitCost,
       );
@@ -6988,14 +6926,8 @@ class MCOImageCodec {
     final changes = decision.changes;
     switch (decision.op) {
       case _compactRowDeltaOpIndexed:
-        writer.writeBits(decision.useCompactGeometry ? 1 : 0, 1);
         _writeCompactUint(writer, changes.length - 1);
-        _writeCompactChangePositions(
-          writer,
-          changes,
-          rowLength,
-          useCompactGeometry: decision.useCompactGeometry,
-        );
+        _writeCompactChangePositions(writer, changes);
         _writeCompactChangedValues(
           writer,
           values,
@@ -7009,14 +6941,8 @@ class MCOImageCodec {
         );
         break;
       case _compactRowDeltaOpSameScalar:
-        writer.writeBits(decision.useCompactGeometry ? 1 : 0, 1);
         _writeCompactUint(writer, changes.length - 1);
-        _writeCompactChangePositions(
-          writer,
-          changes,
-          rowLength,
-          useCompactGeometry: decision.useCompactGeometry,
-        );
+        _writeCompactChangePositions(writer, changes);
         if (decision.useResidual) {
           final delta = _compactGrayscaleDelta(
             values,
@@ -7033,23 +6959,15 @@ class MCOImageCodec {
         break;
       case _compactRowDeltaOpSegments:
         final segments = _rowDeltaSegments(changes);
-        writer.writeBits(decision.useCompactGeometry ? 1 : 0, 1);
         _writeCompactUint(writer, segments.length - 1);
         var previousEnd = 0;
         for (var i = 0; i < segments.length; i++) {
           final segment = segments[i];
-          if (decision.useCompactGeometry) {
-            _writeCompactUint(
-              writer,
-              i == 0 ? segment.x : segment.x - previousEnd,
-            );
-            _writeCompactUint(writer, segment.length - 1);
-          } else {
-            final positionBits = _bitsForChoiceCount(rowLength);
-            writer
-              ..writeBits(segment.x, positionBits)
-              ..writeBits(segment.length - 1, positionBits);
-          }
+          _writeCompactUint(
+            writer,
+            i == 0 ? segment.x : segment.x - previousEnd,
+          );
+          _writeCompactUint(writer, segment.length - 1);
           previousEnd = segment.x + segment.length;
         }
         _writeCompactChangedValues(
@@ -7067,16 +6985,8 @@ class MCOImageCodec {
       case _compactRowDeltaOpTrimmedMask:
         final start = changes.first.x;
         final span = changes.last.x - start + 1;
-        writer.writeBits(decision.useCompactGeometry ? 1 : 0, 1);
-        if (decision.useCompactGeometry) {
-          _writeCompactUint(writer, start);
-          _writeCompactUint(writer, span - 1);
-        } else {
-          final positionBits = _bitsForChoiceCount(rowLength);
-          writer
-            ..writeBits(start, positionBits)
-            ..writeBits(span - 1, positionBits);
-        }
+        _writeCompactUint(writer, start);
+        _writeCompactUint(writer, span - 1);
         var changeIndex = 0;
         for (var offset = 0; offset < span; offset++) {
           final changed = changeIndex < changes.length &&
@@ -7116,16 +7026,7 @@ class MCOImageCodec {
   void _writeCompactChangePositions(
     _BitWriter writer,
     List<_RowDeltaChange> changes,
-    int rowLength, {
-    required bool useCompactGeometry,
-  }) {
-    if (!useCompactGeometry) {
-      final positionBits = _bitsForChoiceCount(rowLength);
-      for (final change in changes) {
-        writer.writeBits(change.x, positionBits);
-      }
-      return;
-    }
+  ) {
     var previousX = -1;
     for (final change in changes) {
       _writeCompactUint(writer, change.x - previousX - 1);
@@ -9023,7 +8924,6 @@ class _CompactRowDeltaDecision {
   final int predictor;
   final List<_RowDeltaChange> changes;
   final bool useResidual;
-  final bool useCompactGeometry;
   final int bitCost;
 
   const _CompactRowDeltaDecision({
@@ -9031,7 +8931,6 @@ class _CompactRowDeltaDecision {
     required this.predictor,
     required this.changes,
     required this.useResidual,
-    required this.useCompactGeometry,
     required this.bitCost,
   });
 }
