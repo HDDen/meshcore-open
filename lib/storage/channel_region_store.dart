@@ -1,7 +1,8 @@
 import '../utils/app_logger.dart';
+import 'channel_name_keyed_store.dart';
 import 'prefs_manager.dart';
 
-class ChannelRegionStore {
+class ChannelRegionStore with ChannelNameKeyedStore {
   static const String _keyPrefix = 'channel_region_';
 
   String publicKeyHex = '';
@@ -18,8 +19,17 @@ class ChannelRegionStore {
       return '';
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return '';
     String? region = prefs.getString(key);
+    if (region == null && allowsLegacyIndexMigration) {
+      final legacyKey = '$keyFor$channelIndex';
+      region = prefs.getString(legacyKey);
+      if (region != null) {
+        await prefs.setString(key, region);
+        await prefs.remove(legacyKey);
+      }
+    }
     return region ?? '';
   }
 
@@ -32,8 +42,16 @@ class ChannelRegionStore {
     }
 
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return '';
     await prefs.setString(key, region);
     return region;
+  }
+
+  Future<void> clearRegion(int channelIndex) async {
+    final prefs = PrefsManager.instance;
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key != null) await prefs.remove(key);
+    await prefs.remove('$keyFor$channelIndex');
   }
 }

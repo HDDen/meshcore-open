@@ -61,7 +61,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   bool _isLoadingChannelGroups = false;
   Timer? _searchDebounce;
 
-  ChannelMessageStore get _channelMessageStore => ChannelMessageStore();
+  ChannelMessageStore get _channelMessageStore {
+    final connector = context.read<MeshCoreConnector>();
+    return ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..replaceChannels(connector.channels);
+  }
 
   @override
   void initState() {
@@ -179,6 +184,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
     final channelMessageStore = ChannelMessageStore();
     channelMessageStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    channelMessageStore.replaceChannels(connector.channels);
 
     // Auto-navigate back to scanner if disconnected
     if (!checkConnectionAndNavigate(connector)) {
@@ -760,7 +766,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   _confirmDeleteChannel(
                     parentContext,
                     connector,
-                    channelMessageStore,
                     channel,
                   );
                 }
@@ -1769,9 +1774,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   name,
                                   psk,
                                 );
-                                await channelMessageStore.clearChannelMessages(
-                                  nextIndex,
-                                );
                                 if (context.mounted) {
                                   showDismissibleSnackBar(
                                     context,
@@ -2642,7 +2644,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _confirmDeleteChannel(
     BuildContext context,
     MeshCoreConnector connector,
-    ChannelMessageStore channelMessageStore,
     Channel channel,
   ) {
     showDialog(
@@ -2662,8 +2663,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               Navigator.pop(dialogContext);
               try {
                 await connector.deleteChannel(channel.index);
-
-                await channelMessageStore.clearChannelMessages(channel.index);
                 await _removeChannelNamesFromGroups([
                   channelNameForGroup(channel),
                 ]);

@@ -41,7 +41,9 @@ class RegionStore {
     channelStore.setPublicKeyHex = publicKeyHex;
     channelRegionStore.setPublicKeyHex = publicKeyHex;
 
-    for (var channel in await channelStore.loadChannels()) {
+    final channels = await channelStore.loadChannels();
+    channelRegionStore.replaceChannels(channels);
+    for (var channel in channels) {
       var channelRegion = await channelRegionStore.loadRegion(channel.index);
       if (channelRegion == region) {
         channelRegionStore.saveRegion(channel.index, '');

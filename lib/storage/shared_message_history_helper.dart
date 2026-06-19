@@ -14,7 +14,7 @@ class SharedMessageHistoryHelper {
     r'^channels([0-9a-fA-F]{10})$',
   );
   static final RegExp _channelMessagesKeyPattern = RegExp(
-    r'^channel_messages_([0-9a-fA-F]{10})\d+$',
+    r'^channel_messages_([0-9a-fA-F]{10})(?:\d+|name_)',
   );
   static final RegExp _messagesKeyPattern = RegExp(
     r'^messages_([0-9a-fA-F]{10}).+',
@@ -41,6 +41,7 @@ class SharedMessageHistoryHelper {
       if (matchedIndex == null) continue;
 
       final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
+      messageStore.replaceChannels(channels);
       final messages = await messageStore.loadChannelMessages(matchedIndex);
       final sourceName = _sourceNameForScope(scope);
       result.addAll(

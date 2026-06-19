@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/path_history.dart';
@@ -12,6 +13,7 @@ import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
 import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
+import 'package:meshcore_open/storage/channel_settings_store.dart';
 import 'package:meshcore_open/storage/contact_discovery_store.dart';
 
 // Builds a valid contact frame with the given pathLen and optional overrides.
@@ -572,7 +574,14 @@ void main() {
     test(
       'ChannelMessageStore decodes and migrates legacy mode-encoded paths',
       () async {
-        final store = ChannelMessageStore()..publicKeyHex = '1234567890';
+        final channel = Channel.fromHex(
+          1,
+          'Test',
+          Channel.publicChannelPsk,
+        );
+        final store = ChannelMessageStore()
+          ..publicKeyHex = '1234567890'
+          ..replaceChannels([channel]);
         final channelIndex = 1;
 
         final rawPath = Uint8List(64)
@@ -605,8 +614,45 @@ void main() {
           equals(Uint8List.fromList([0xBB, 0xCC])),
         );
         expect(messages.first.pathHashWidth, equals(2));
+
+        final movedChannel = Channel.fromHex(
+          5,
+          'Test',
+          Channel.publicChannelPsk,
+        );
+        final movedStore = ChannelMessageStore()
+          ..publicKeyHex = '1234567890'
+          ..replaceChannels([movedChannel]);
+        final movedMessages = await movedStore.loadChannelMessages(5);
+
+        expect(movedMessages, hasLength(1));
+        expect(movedMessages.first.text, equals('Hello'));
+        expect(movedMessages.first.channelIndex, equals(5));
       },
     );
+
+    test('channel settings follow the channel name when its slot changes', () async {
+      final original = Channel.fromHex(
+        2,
+        'Named channel',
+        Channel.publicChannelPsk,
+      );
+      final originalStore = ChannelSettingsStore()
+        ..setPublicKeyHex = '1234567890'
+        ..replaceChannels([original]);
+      await originalStore.saveMcmpEnabled(2, true);
+
+      final moved = Channel.fromHex(
+        9,
+        'Named channel',
+        Channel.publicChannelPsk,
+      );
+      final movedStore = ChannelSettingsStore()
+        ..setPublicKeyHex = '1234567890'
+        ..replaceChannels([moved]);
+
+      expect(await movedStore.loadMcmpEnabled(9), isTrue);
+    });
 
     test(
       'ContactDiscoveryStore decodes and migrates legacy mode-encoded paths',

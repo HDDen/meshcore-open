@@ -7,9 +7,10 @@ import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
+import 'channel_name_keyed_store.dart';
 import 'prefs_manager.dart';
 
-class ChannelMessageStore {
+class ChannelMessageStore with ChannelNameKeyedStore {
   static const String _keyPrefix = 'channel_messages_';
 
   String publicKeyHex = '';
@@ -30,7 +31,13 @@ class ChannelMessageStore {
       return;
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) {
+      appLogger.warn(
+        'Channel name is not registered. Cannot save channel messages.',
+      );
+      return;
+    }
 
     // Convert messages to JSON
     final jsonList = messages.map((msg) => _messageToJson(msg)).toList();
@@ -48,31 +55,39 @@ class ChannelMessageStore {
       return [];
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return [];
+    final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
     String? jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(oldKey);
-      prefs.remove(oldKey);
+    if ((jsonString == null || jsonString.isEmpty) &&
+        allowsLegacyIndexMigration) {
+      // One-time migration from the old slot-based storage.
+      final legacyJsonString =
+          prefs.getString(scopedIndexKey) ?? prefs.getString(oldKey);
+      await prefs.remove(scopedIndexKey);
+      await prefs.remove(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         appLogger.info(
-          'Migrating channel messages from legacy key $oldKey to scoped key $key',
+          'Migrating channel messages to name-keyed storage $key',
         );
         await prefs.setString(key, legacyJsonString);
         jsonString = legacyJsonString;
       }
     }
     if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
-    }
-    if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
+      return jsonList
+          .map(
+            (json) => _messageFromJson(json).copyWith(
+              channelIndex: channelIndex,
+            ),
+          )
+          .toList();
     } catch (e) {
       // If parsing fails, return empty list
       return [];
@@ -82,8 +97,9 @@ class ChannelMessageStore {
   /// Clear messages for a specific channel
   Future<void> clearChannelMessages(int channelIndex) async {
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
-    await prefs.remove(key);
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key != null) await prefs.remove(key);
+    await prefs.remove('$keyFor$channelIndex');
   }
 
   /// Clear all channel messages
