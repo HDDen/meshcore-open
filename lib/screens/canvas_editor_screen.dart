@@ -152,6 +152,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _rectangleFirstIndex;
   int? _rectangleSecondIndex;
   int _currentPayloadChars = 0;
+  EncodedMCOImage? _currentEncodedCandidate;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
@@ -879,6 +880,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final isOverLimit = _currentPayloadChars > _effectivePayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
+    final currentEncodedCandidate = _currentEncodedCandidate;
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -888,42 +890,60 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         return Center(
           child: SizedBox(
             width: contentWidth,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (showLockButton) ...[
-                  IconButton.filled(
-                    onPressed: () {
-                      _finishDrawing();
-                      setState(() => _canvasInputLocked = !_canvasInputLocked);
-                    },
-                    style: IconButton.styleFrom(
-                      backgroundColor: _canvasInputLocked
-                          ? const Color(0xffb8f5b8)
-                          : colorScheme.surfaceContainerHighest,
-                      foregroundColor: _canvasInputLocked
-                          ? Colors.green.shade900
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                    icon: Icon(
-                      _canvasInputLocked
-                          ? Icons.lock_outline
-                          : Icons.lock_open_outlined,
+                if (currentEncodedCandidate != null) ...[
+                  Text(
+                    _encodingCandidateLabel(currentEncodedCandidate),
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(height: 2),
                 ],
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      context.l10n.chat_canvasCurrentPayload(
-                        _currentPayloadChars,
+                Row(
+                  children: [
+                    if (showLockButton) ...[
+                      IconButton.filled(
+                        onPressed: () {
+                          _finishDrawing();
+                          setState(
+                            () => _canvasInputLocked = !_canvasInputLocked,
+                          );
+                        },
+                        style: IconButton.styleFrom(
+                          backgroundColor: _canvasInputLocked
+                              ? const Color(0xffb8f5b8)
+                              : colorScheme.surfaceContainerHighest,
+                          foregroundColor: _canvasInputLocked
+                              ? Colors.green.shade900
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        icon: Icon(
+                          _canvasInputLocked
+                              ? Icons.lock_outline
+                              : Icons.lock_open_outlined,
+                        ),
                       ),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isOverLimit ? colorScheme.error : null,
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          context.l10n.chat_canvasCurrentPayload(
+                            _currentPayloadChars,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isOverLimit ? colorScheme.error : null,
+                              ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -1586,21 +1606,66 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   int _calculatePayloadChars() {
-    final encoded = _codec.encode(
-      MCOImage(
-        width: _width,
-        height: _height,
-        paletteProfile: _paletteProfile,
-        pixels: _pixels,
-        transparentColor: _supportsAlphaTransparency ? _transparentColor : null,
-        encodingVersion: _encodingVersion,
-      ),
-      backgroundColor: _supportsAlphaTransparency
-          ? (_transparentColor ?? _whiteIndex)
-          : _whiteIndex,
-      encodingVersion: _encodingVersion,
-    );
+    final encoded = _encodeCanvas();
+    _currentEncodedCandidate = encoded;
     return _payloadSizeForEncoded(encoded);
+  }
+
+  String _encodingCandidateLabel(EncodedMCOImage candidate) {
+    final parts = <String>[
+      'v${candidate.codecVersion}',
+      _encodingContainerLabel(candidate),
+      'scan ${switch (candidate.scan) {
+        ScanMode.h => 'H',
+        ScanMode.v => 'V',
+        ScanMode.s => 'serp H',
+        ScanMode.sv => 'serp V',
+      }}',
+    ];
+    if (candidate.boundsPresent) {
+      parts.add(
+        'bounds ${candidate.boundsWidth}x${candidate.boundsHeight} '
+        '@ ${candidate.boundsX},${candidate.boundsY}',
+      );
+    }
+    parts.add('codec ${candidate.byteLength} B / ${candidate.charLength} chars');
+    final localPaletteSize = candidate.localPaletteSize;
+    final bitsPerPixel = candidate.bitsPerLocalPixel;
+    if (localPaletteSize != null && bitsPerPixel != null) {
+      parts.add('local ${localPaletteSize}c/${bitsPerPixel}b');
+    }
+    final usedBankCount = candidate.usedBankCount;
+    if (usedBankCount != null) parts.add('$usedBankCount banks');
+    return parts.join(' | ');
+  }
+
+  String _encodingContainerLabel(EncodedMCOImage candidate) {
+    return switch (candidate.container) {
+      'regions' => 'Regions x${candidate.regionCount}',
+      'solid-rects' => 'Solid rectangles',
+      'compact-bounds' => 'Compact bounds',
+      'compact-rle' => 'Compact RLE',
+      'compact-rle-bounds' => 'Compact RLE bounds',
+      'compact-sparse' => 'Compact sparse',
+      'compact-sparse-bounds' => 'Compact sparse bounds',
+      'lz-pixels' => 'LZ pixels',
+      'lz-pixels-bounds' => 'LZ pixels bounds',
+      'quadtree' => 'Quadtree',
+      'quadtree-bounds' => 'Quadtree bounds',
+      'bitplanes' => 'Bitplanes',
+      'bitplanes-bounds' => 'Bitplanes bounds',
+      _ => switch (candidate.mode) {
+        ImageMode.rawGlobal => 'Raw global',
+        ImageMode.rawLocal => 'Raw local',
+        ImageMode.rleLocal => 'RLE local',
+        ImageMode.sparseBg => 'Sparse background',
+        ImageMode.regionsBg => 'Regions x${candidate.regionCount}',
+        ImageMode.biColorMask => 'Bi-color mask',
+        ImageMode.rowDelta => 'Row delta',
+        ImageMode.rowRepeat => 'Row repeat',
+        ImageMode.extended => 'Extended',
+      },
+    };
   }
 
   int _payloadSizeForEncoded(EncodedMCOImage encoded) {
@@ -2566,6 +2631,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _sendCanvas() {
     try {
       final encoded = _encodeCanvas();
+      _currentEncodedCandidate = encoded;
       final payloadSize = _payloadSizeForEncoded(encoded);
       _currentPayloadChars = payloadSize;
       final overflow = payloadSize - _effectivePayloadLimit;
@@ -2602,6 +2668,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           ? (_transparentColor ?? _whiteIndex)
           : _whiteIndex,
       encodingVersion: _encodingVersion,
+      outputTarget: widget.maxBinaryPayloadBytes != null
+          ? MCOImageOutputTarget.binary
+          : MCOImageOutputTarget.text,
     );
   }
 

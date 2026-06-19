@@ -139,10 +139,24 @@ void main() {
       expect(encoded.byteLength, lessThan(30));
     });
 
-    test('vertical stripes benefit from column scan RLE', () {
-      final encoded = codec.encode(_image(11, 11, (x, _) => x % 4));
-      expect(encoded.mode, ImageMode.rleLocal);
-      expect(encoded.scan, anyOf(ScanMode.v, ScanMode.sv));
+    test('vertical stripes encode no worse than column scan RLE', () {
+      final image = _image(11, 11, (x, _) => x % 4);
+      final diagnostics = codec.debugEncode(image);
+      final columnRleLength = diagnostics.candidates
+          .where(
+            (candidate) =>
+                candidate.mode == ImageMode.rleLocal &&
+                (candidate.scan == ScanMode.v ||
+                    candidate.scan == ScanMode.sv),
+          )
+          .map((candidate) => candidate.charLength)
+          .reduce(math.min);
+
+      expect(
+        diagnostics.result.charLength,
+        lessThanOrEqualTo(columnRleLength),
+      );
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
     });
 
     test('new payloads use format version 2 by default', () {
@@ -190,7 +204,7 @@ void main() {
       );
     });
 
-    test('bounds keep larger empty canvas close to small drawing size', () {
+    test('larger empty canvas stays close to small drawing size', () {
       final small = _image(
         11,
         11,
@@ -210,7 +224,6 @@ void main() {
       final largeEncoded = codec.encode(large, backgroundColor: 0);
       final decoded = codec.decode(largeEncoded.text);
 
-      expect(largeEncoded.boundsPresent, isTrue);
       expect(
         largeEncoded.charLength,
         lessThanOrEqualTo(smallEncoded.charLength + 20),
@@ -270,6 +283,48 @@ void main() {
       expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
     });
 
+    test('all frequent master8 colors are considered as backgrounds', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) => (x + y * 3) % 8,
+        profile: PaletteProfile.master8,
+      );
+      final diagnostics = codec.debugEncode(image);
+      final backgrounds = diagnostics.candidates
+          .map((candidate) => candidate.backgroundColor)
+          .toSet();
+
+      expect(backgrounds, containsAll(List<int>.generate(8, (index) => index)));
+    });
+
+    test('text output selects the shortest final Base91 text', () {
+      final image = _image(22, 22, (x, y) => (x * 3 + y * 5) % 8);
+      final diagnostics = codec.debugEncode(
+        image,
+        outputTarget: MCOImageOutputTarget.text,
+      );
+      final shortest = diagnostics.candidates
+          .map((candidate) => candidate.charLength)
+          .reduce(math.min);
+
+      expect(diagnostics.result.charLength, shortest);
+    });
+
+    test('binary output selects the shortest binary payload', () {
+      final image = _image(22, 22, (x, y) => (x * 3 + y * 5) % 8);
+      final diagnostics = codec.debugEncode(
+        image,
+        outputTarget: MCOImageOutputTarget.binary,
+      );
+      final shortest = diagnostics.candidates
+          .map((candidate) => candidate.byteLength)
+          .reduce(math.min);
+
+      expect(diagnostics.result.byteLength, shortest);
+      expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
     test('bounds are recomputed for each background candidate', () {
       final image = _image(10, 10, (x, y) {
         if (x == 4 && y == 4) return 1;
@@ -306,12 +361,19 @@ void main() {
         final encoded = codec.encode(image, backgroundColor: 0);
 
         expect(encoded.boundsPresent, isTrue);
-        expect(encoded.mode, anyOf(ImageMode.rawLocal, ImageMode.rleLocal));
+        expect(
+          encoded.mode,
+          anyOf(
+            ImageMode.rawLocal,
+            ImageMode.rleLocal,
+            ImageMode.extended,
+          ),
+        );
         expect(codec.decode(encoded.text).pixels, image.pixels);
       },
     );
 
-    test('separate compact regions can beat one large bounds rectangle', () {
+    test('separate compact regions remain competitive and roundtrip', () {
       final image = _image(40, 40, (x, y) {
         final first = x >= 2 && x <= 4 && y >= 2 && y <= 4;
         final second = x >= 31 && x <= 33 && y >= 31 && y <= 33;
@@ -324,8 +386,15 @@ void main() {
       );
 
       expect(regions, isNotEmpty);
+      expect(regions.length, greaterThan(1));
       expect(regions.first.regionCount, 2);
-      expect(diagnostics.result.mode, ImageMode.regionsBg);
+      final shortestRegionLength = regions
+          .map((candidate) => candidate.charLength)
+          .reduce(math.min);
+      expect(
+        diagnostics.result.charLength,
+        lessThanOrEqualTo(shortestRegionLength),
+      );
       expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
     });
 
@@ -386,6 +455,104 @@ void main() {
         lessThanOrEqualTo(smallEncoded.charLength + 10),
       );
       expect(codec.decode(largeEncoded.text).pixels, large.pixels);
+    });
+
+    test('v2 compact bounds candidates roundtrip', () {
+      final image = _image(24, 24, (x, y) {
+        final plus = (x == 12 && y >= 9 && y <= 15) ||
+            (y == 12 && x >= 9 && x <= 15);
+        return plus ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final compactCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'compact-bounds',
+      );
+
+      expect(compactCandidates, isNotEmpty);
+      for (final candidate in compactCandidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('v2 compact regions use extended mode and roundtrip', () {
+      final image = _image(24, 24, (x, y) {
+        final first = x >= 2 && x <= 4 && y >= 3 && y <= 5;
+        final second = x >= 18 && x <= 21 && y >= 17 && y <= 20;
+        return first || second ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final regionCandidate = diagnostics.candidates.firstWhere(
+        (candidate) {
+          if (candidate.mode != ImageMode.regionsBg) return false;
+          final bytes = _base91Decode(
+            candidate.text.substring(MCOImageCodec.prefix.length),
+          );
+          return ((bytes.first >> 3) & 0x07) == 7;
+        },
+      );
+      final bytes = _base91Decode(
+        regionCandidate.text.substring(MCOImageCodec.prefix.length),
+      );
+
+      expect((bytes.first >> 3) & 0x07, 7);
+      expect(codec.decode(regionCandidate.text).pixels, image.pixels);
+    });
+
+    test('solid rectangles candidate roundtrips and can win', () {
+      final image = _image(24, 24, (x, y) {
+        if (x >= 2 && x <= 10 && y >= 3 && y <= 12) return 1;
+        if (x >= 15 && x <= 21 && y >= 16 && y <= 21) return 2;
+        return 0;
+      }, profile: PaletteProfile.master8);
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final solidCandidate = diagnostics.candidates.firstWhere(
+        (candidate) => candidate.container == 'solid-rects',
+      );
+
+      expect(codec.decode(solidCandidate.text).pixels, image.pixels);
+      expect(diagnostics.result.byteLength, lessThanOrEqualTo(20));
+    });
+
+    test('compact RLE candidates roundtrip', () {
+      final image = _image(
+        24,
+        24,
+        (x, y) => ((x ~/ 3) + (y ~/ 4)) % 4,
+        profile: PaletteProfile.master8,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final compactCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container.startsWith('compact-rle'),
+      );
+
+      expect(compactCandidates, isNotEmpty);
+      for (final candidate in compactCandidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('compact sparse candidates roundtrip', () {
+      final image = _image(24, 24, (x, y) {
+        if (x < 7 || x > 16 || y < 6 || y > 17) return 0;
+        if ((x + y) % 5 == 0) return 1;
+        if ((x * 3 + y) % 11 == 0) return 4;
+        return 0;
+      }, profile: PaletteProfile.master8);
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final compactCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container.startsWith('compact-sparse'),
+      );
+
+      expect(compactCandidates, isNotEmpty);
+      expect(
+        compactCandidates.any(
+          (candidate) => candidate.container == 'compact-sparse-bounds',
+        ),
+        isTrue,
+      );
+      for (final candidate in compactCandidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
     });
 
     test('debug diagnostics include decodable candidates for all palettes', () {

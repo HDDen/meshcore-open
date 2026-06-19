@@ -31,6 +31,17 @@ enum ImageMode {
   biColorMask,
   rowDelta,
   rowRepeat,
+  extended,
+}
+
+enum ExtendedImageMode {
+  wrappedBlock,
+  solidRects,
+  compactRle,
+  compactSparse,
+  lzPixels,
+  quadtree,
+  bitplanes,
 }
 
 enum ScanMode { h, v, s, sv }
@@ -38,6 +49,8 @@ enum ScanMode { h, v, s, sv }
 enum DynamicPaletteReferenceEncoding { flat, banked8x64 }
 
 enum MCOImageEncodingVersion { v1Legacy, v2 }
+
+enum MCOImageOutputTarget { text, binary }
 
 extension PaletteProfileKind on PaletteProfile {
   bool get isDynamic {
@@ -176,6 +189,9 @@ class MCOImageCodec {
   static const int _defaultMaxRegions = 16;
   static const int _maxV2Regions = 32;
   static const int _maxDynamicLocalPalette = 64;
+  static const int _maxFrequentBackgroundCandidates = 8;
+  static const int _minLzMatchLength = 3;
+  static const int _maxLzMatchCandidates = 32;
   static const int _greedyTieLargestArea = 0;
   static const int _greedyTieWidest = 1;
   static const int _greedyTieTallest = 2;
@@ -207,6 +223,7 @@ class MCOImageCodec {
   ];
 
   static const List<ImageMode> _modeTieOrder = [
+    ImageMode.extended,
     ImageMode.biColorMask,
     ImageMode.sparseBg,
     ImageMode.rowRepeat,
@@ -217,18 +234,22 @@ class MCOImageCodec {
     ImageMode.regionsBg,
   ];
 
+  static const int _extendedSubmodeBits = 3;
+
   EncodedMCOImage encode(
     MCOImage image, {
     int? maxChars,
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
     MCOImageEncodingVersion encodingVersion = MCOImageEncodingVersion.v2,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
   }) {
     final diagnostics = debugEncode(
       image,
       backgroundColor: backgroundColor,
       maxRegions: maxRegions,
       encodingVersion: encodingVersion,
+      outputTarget: outputTarget,
     );
     final result = diagnostics.result;
     if (maxChars != null && result.charLength > maxChars) {
@@ -244,6 +265,7 @@ class MCOImageCodec {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
     MCOImageEncodingVersion encodingVersion = MCOImageEncodingVersion.v2,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
   }) {
     _validateImage(image);
     if (maxRegions < 0) {
@@ -276,6 +298,7 @@ class MCOImageCodec {
         image,
         backgroundColor: backgroundColor,
         maxRegions: maxRegions,
+        outputTarget: outputTarget,
       );
     }
 
@@ -286,6 +309,7 @@ class MCOImageCodec {
       image,
       backgroundColor: backgroundColor,
       maxRegions: effectiveMaxRegions,
+      outputTarget: outputTarget,
     );
   }
 
@@ -293,6 +317,7 @@ class MCOImageCodec {
     MCOImage image, {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
   }) {
     final effectiveMaxRegions = maxRegions > _defaultMaxRegions
         ? _defaultMaxRegions
@@ -328,7 +353,7 @@ class MCOImageCodec {
             backgroundRank: background.rank,
           );
           candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best)) {
+          if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
           }
         }
@@ -361,7 +386,7 @@ class MCOImageCodec {
               backgroundRank: background.rank,
             );
             candidates.add(candidate);
-            if (_isBetterCandidate(candidate, best)) {
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
               best = candidate;
             }
           }
@@ -383,7 +408,7 @@ class MCOImageCodec {
           regionCount: regionsPayload.regionCount,
         );
         candidates.add(candidate);
-        if (_isBetterCandidate(candidate, best)) {
+        if (_isBetterCandidate(candidate, best, outputTarget)) {
           best = candidate;
         }
       }
@@ -400,6 +425,7 @@ class MCOImageCodec {
     MCOImage image, {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
   }) {
     final preferredBackgroundColor = backgroundColor ?? image.transparentColor;
     final backgroundCandidates = image.paletteProfile.isDynamic
@@ -419,13 +445,13 @@ class MCOImageCodec {
       final bg = background.color;
       final bounds = _findBounds(image.pixels, image.width, image.height, bg);
       for (final referenceEncoding in referenceEncodings) {
-        final regionsPayload = _tryBuildV2RegionsPayload(
+        final regionsPayloads = _tryBuildV2RegionsPayloads(
           image,
           bg,
           referenceEncoding,
           maxRegions,
         );
-        if (regionsPayload != null) {
+        for (final regionsPayload in regionsPayloads) {
           final candidate = _candidateFromPayload(
             regionsPayload.payload,
             ImageMode.regionsBg,
@@ -443,7 +469,103 @@ class MCOImageCodec {
             container: 'regions',
           );
           candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best)) best = candidate;
+          if (_isBetterCandidate(candidate, best, outputTarget)) {
+            best = candidate;
+          }
+        }
+
+        final solidRectsPayload = _tryBuildV2SolidRectsPayload(
+          image,
+          bg,
+          referenceEncoding,
+        );
+        if (solidRectsPayload != null) {
+          final candidate = _candidateFromPayload(
+            solidRectsPayload.payload,
+            ImageMode.extended,
+            ScanMode.h,
+            backgroundColor: bg,
+            transparentColor: image.transparentColor,
+            backgroundRank: background.rank,
+            codecVersion: _v2EncodeVersion,
+            dynamicReferenceEncoding: referenceEncoding,
+            localPaletteSize: solidRectsPayload.localPaletteSize,
+            usedBankCount: solidRectsPayload.usedBankCount,
+            bitsPerLocalPixel: solidRectsPayload.bitsPerLocalPixel,
+            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+            container: 'solid-rects',
+          );
+          candidates.add(candidate);
+          if (_isBetterCandidate(candidate, best, outputTarget)) {
+            best = candidate;
+          }
+        }
+
+        final quadtreePayload = _tryBuildV2QuadtreePayload(
+          image,
+          image.pixels,
+          image.width,
+          image.height,
+          bg,
+          referenceEncoding,
+        );
+        if (quadtreePayload != null) {
+          final candidate = _candidateFromPayload(
+            quadtreePayload.payload,
+            ImageMode.extended,
+            ScanMode.h,
+            backgroundColor: bg,
+            transparentColor: image.transparentColor,
+            backgroundRank: background.rank,
+            codecVersion: _v2EncodeVersion,
+            dynamicReferenceEncoding: referenceEncoding,
+            localPaletteSize: quadtreePayload.localPaletteSize,
+            usedBankCount: quadtreePayload.usedBankCount,
+            bitsPerLocalPixel: quadtreePayload.bitsPerLocalPixel,
+            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+            container: 'quadtree',
+          );
+          candidates.add(candidate);
+          if (_isBetterCandidate(candidate, best, outputTarget)) {
+            best = candidate;
+          }
+        }
+
+        if (bounds.area < image.width * image.height) {
+          final cropped = _cropPixels(image.pixels, image.width, bounds);
+          final boundedQuadtreePayload = _tryBuildV2QuadtreePayload(
+            image,
+            cropped,
+            bounds.width,
+            bounds.height,
+            bg,
+            referenceEncoding,
+            bounds: bounds,
+          );
+          if (boundedQuadtreePayload != null) {
+            final candidate = _candidateFromPayload(
+              boundedQuadtreePayload.payload,
+              ImageMode.extended,
+              ScanMode.h,
+              bounds: bounds,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: boundedQuadtreePayload.localPaletteSize,
+              usedBankCount: boundedQuadtreePayload.usedBankCount,
+              bitsPerLocalPixel: boundedQuadtreePayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: 'quadtree-bounds',
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
         }
       }
       for (final scan in ScanMode.values) {
@@ -482,7 +604,143 @@ class MCOImageCodec {
               container: 'block',
             );
             candidates.add(candidate);
-            if (_isBetterCandidate(candidate, best)) best = candidate;
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
+        }
+
+        for (final referenceEncoding in referenceEncodings) {
+          final payload = _tryBuildV2CompactRlePayload(
+            image,
+            linear,
+            scan,
+            referenceEncoding,
+            dataWidth: image.width,
+            dataHeight: image.height,
+            backgroundColor: bg,
+          );
+          if (payload != null) {
+            final candidate = _candidateFromPayload(
+              payload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: payload.localPaletteSize,
+              usedBankCount: payload.usedBankCount,
+              bitsPerLocalPixel: payload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: 'compact-rle',
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
+
+          final sparsePayload = _tryBuildV2CompactSparsePayload(
+            image,
+            linear,
+            scan,
+            referenceEncoding,
+            dataWidth: image.width,
+            dataHeight: image.height,
+            backgroundColor: bg,
+          );
+          if (sparsePayload != null) {
+            final sparseCandidate = _candidateFromPayload(
+              sparsePayload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: sparsePayload.localPaletteSize,
+              usedBankCount: sparsePayload.usedBankCount,
+              bitsPerLocalPixel: sparsePayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: 'compact-sparse',
+            );
+            candidates.add(sparseCandidate);
+            if (_isBetterCandidate(sparseCandidate, best, outputTarget)) {
+              best = sparseCandidate;
+            }
+          }
+
+          final lzPayload = _tryBuildV2LzPixelsPayload(
+            image,
+            linear,
+            scan,
+            referenceEncoding,
+            dataWidth: image.width,
+            dataHeight: image.height,
+            backgroundColor: bg,
+          );
+          if (lzPayload != null) {
+            final lzCandidate = _candidateFromPayload(
+              lzPayload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: lzPayload.localPaletteSize,
+              usedBankCount: lzPayload.usedBankCount,
+              bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: 'lz-pixels',
+            );
+            candidates.add(lzCandidate);
+            if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
+              best = lzCandidate;
+            }
+          }
+
+          final bitplanesPayload = _tryBuildV2BitplanesPayload(
+            image,
+            linear,
+            scan,
+            referenceEncoding,
+            dataWidth: image.width,
+            dataHeight: image.height,
+            backgroundColor: bg,
+          );
+          if (bitplanesPayload != null) {
+            final bitplanesCandidate = _candidateFromPayload(
+              bitplanesPayload.payload,
+              ImageMode.extended,
+              scan,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: bitplanesPayload.localPaletteSize,
+              usedBankCount: bitplanesPayload.usedBankCount,
+              bitsPerLocalPixel: bitplanesPayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic
+                  ? 'dynamic'
+                  : 'fixed',
+              container: 'bitplanes',
+            );
+            candidates.add(bitplanesCandidate);
+            if (_isBetterCandidate(bitplanesCandidate, best, outputTarget)) {
+              best = bitplanesCandidate;
+            }
           }
         }
 
@@ -526,7 +784,193 @@ class MCOImageCodec {
                 container: 'block',
               );
               candidates.add(candidate);
-              if (_isBetterCandidate(candidate, best)) best = candidate;
+              if (_isBetterCandidate(candidate, best, outputTarget)) {
+                best = candidate;
+              }
+
+              final compactPayload = _tryBuildV2CompactBoundsPayload(
+                image,
+                boundedLinear,
+                mode,
+                scan,
+                referenceEncoding,
+                bounds: bounds,
+                backgroundColor: bg,
+              );
+              if (compactPayload != null) {
+                final compactCandidate = _candidateFromPayload(
+                  compactPayload.payload,
+                  ImageMode.extended,
+                  scan,
+                  bounds: bounds,
+                  backgroundColor: bg,
+                  transparentColor: image.transparentColor,
+                  backgroundRank: background.rank,
+                  codecVersion: _v2EncodeVersion,
+                  dynamicReferenceEncoding: referenceEncoding,
+                  localPaletteSize: compactPayload.localPaletteSize,
+                  usedBankCount: compactPayload.usedBankCount,
+                  bitsPerLocalPixel: compactPayload.bitsPerLocalPixel,
+                  paletteKind: image.paletteProfile.isDynamic
+                      ? 'dynamic'
+                      : 'fixed',
+                  container: 'compact-bounds',
+                );
+                candidates.add(compactCandidate);
+                if (_isBetterCandidate(
+                  compactCandidate,
+                  best,
+                  outputTarget,
+                )) {
+                  best = compactCandidate;
+                }
+              }
+            }
+          }
+
+          for (final referenceEncoding in referenceEncodings) {
+            final payload = _tryBuildV2CompactRlePayload(
+              image,
+              boundedLinear,
+              scan,
+              referenceEncoding,
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds: bounds,
+            );
+            if (payload != null) {
+              final candidate = _candidateFromPayload(
+                payload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: payload.localPaletteSize,
+                usedBankCount: payload.usedBankCount,
+                bitsPerLocalPixel: payload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: 'compact-rle-bounds',
+              );
+              candidates.add(candidate);
+              if (_isBetterCandidate(candidate, best, outputTarget)) {
+                best = candidate;
+              }
+            }
+
+            final sparsePayload = _tryBuildV2CompactSparsePayload(
+              image,
+              boundedLinear,
+              scan,
+              referenceEncoding,
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds: bounds,
+            );
+            if (sparsePayload != null) {
+              final sparseCandidate = _candidateFromPayload(
+                sparsePayload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: sparsePayload.localPaletteSize,
+                usedBankCount: sparsePayload.usedBankCount,
+                bitsPerLocalPixel: sparsePayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: 'compact-sparse-bounds',
+              );
+              candidates.add(sparseCandidate);
+              if (_isBetterCandidate(sparseCandidate, best, outputTarget)) {
+                best = sparseCandidate;
+              }
+            }
+
+            final lzPayload = _tryBuildV2LzPixelsPayload(
+              image,
+              boundedLinear,
+              scan,
+              referenceEncoding,
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds: bounds,
+            );
+            if (lzPayload != null) {
+              final lzCandidate = _candidateFromPayload(
+                lzPayload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: lzPayload.localPaletteSize,
+                usedBankCount: lzPayload.usedBankCount,
+                bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: 'lz-pixels-bounds',
+              );
+              candidates.add(lzCandidate);
+              if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
+                best = lzCandidate;
+              }
+            }
+
+            final bitplanesPayload = _tryBuildV2BitplanesPayload(
+              image,
+              boundedLinear,
+              scan,
+              referenceEncoding,
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds: bounds,
+            );
+            if (bitplanesPayload != null) {
+              final bitplanesCandidate = _candidateFromPayload(
+                bitplanesPayload.payload,
+                ImageMode.extended,
+                scan,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: bitplanesPayload.localPaletteSize,
+                usedBankCount: bitplanesPayload.usedBankCount,
+                bitsPerLocalPixel: bitplanesPayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: 'bitplanes-bounds',
+              );
+              candidates.add(bitplanesCandidate);
+              if (_isBetterCandidate(
+                bitplanesCandidate,
+                best,
+                outputTarget,
+              )) {
+                best = bitplanesCandidate;
+              }
             }
           }
         }
@@ -617,13 +1061,804 @@ class MCOImageCodec {
     );
   }
 
-  _V2Payload? _tryBuildV2RegionsPayload(
+  _V2Payload? _tryBuildV2CompactBoundsPayload(
+    MCOImage image,
+    List<int> linear,
+    ImageMode innerMode,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required _ImageBounds bounds,
+    required int backgroundColor,
+  }) {
+    if (bounds.area == 0 ||
+        innerMode == ImageMode.extended ||
+        innerMode == ImageMode.regionsBg) {
+      return null;
+    }
+    final block = _tryBuildV2BlockBody(
+      linear,
+      image.paletteProfile,
+      innerMode,
+      referenceEncoding,
+      rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
+      backgroundColor: backgroundColor,
+      writeSparseBackground: false,
+    );
+    if (block == null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: true,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.wrappedBlock.index, _extendedSubmodeBits)
+      ..writeBits(_modeBits(innerMode), 3)
+      ..writeAlignedBytes(block.payload);
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: block.localPaletteSize,
+      usedBankCount: block.usedBankCount,
+      bitsPerLocalPixel: block.bitsPerLocalPixel,
+    );
+  }
+
+  _V2Payload? _tryBuildV2SolidRectsPayload(
+    MCOImage image,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final variants = _solidRectVariants(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+      maxRects: 64,
+    );
+    _V2Payload? best;
+    for (final rects in variants) {
+      if (rects.isEmpty) continue;
+      final writer = _BitWriter();
+      _writeV2Header(
+        writer,
+        profile: image.paletteProfile,
+        container: _containerBlock,
+        mode: ImageMode.extended,
+        scan: ScanMode.h,
+        boundsPresent: false,
+        referenceEncoding: referenceEncoding,
+        width: image.width,
+        height: image.height,
+        hasTransparentColor: image.transparentColor != null,
+      );
+      if (image.transparentColor != null) {
+        _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+      }
+      writer.alignToByte();
+      writer.writeBits(
+        ExtendedImageMode.solidRects.index,
+        _extendedSubmodeBits,
+      );
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+
+      final rectColors = rects.map((rect) => rect.color).toList();
+      final int localPaletteSize;
+      final int localBits;
+      int? usedBankCount;
+      Map<int, int> localIndexByColor;
+      if (image.paletteProfile.isDynamic) {
+        final profileColorIds = rectColors
+            .map(
+              (color) => _profileColorIdForGlobalIndex(
+                image.paletteProfile,
+                color,
+              )!,
+            )
+            .toList();
+        final backgroundId = _profileColorIdForGlobalIndex(
+          image.paletteProfile,
+          backgroundColor,
+        )!;
+        final localPalette = _buildDynamicLocalPalette(
+          image.paletteProfile,
+          profileColorIds,
+          backgroundId,
+        );
+        if (localPalette.isEmpty ||
+            localPalette.length > _maxDynamicLocalPalette) {
+          continue;
+        }
+        _writeDynamicLocalPalette(
+          writer,
+          image.paletteProfile,
+          localPalette,
+          referenceEncoding!,
+        );
+        localPaletteSize = localPalette.length;
+        localBits = _localBits(localPalette.length);
+        localIndexByColor = {
+          for (var i = 0; i < localPalette.length; i++)
+            _globalIndexForProfileColorId(
+              image.paletteProfile,
+              localPalette[i],
+            ): i,
+        };
+        usedBankCount =
+            referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+            ? localPalette.map((color) => color >> 6).toSet().length
+            : null;
+      } else {
+        final local = _buildLocalPalette(rectColors);
+        if (local.colors.isEmpty) continue;
+        writer.writeBitVarUint(local.colors.length);
+        _writePalette(writer, local.colors, image.paletteProfile);
+        localPaletteSize = local.colors.length;
+        localBits = _localBits(local.colors.length);
+        localIndexByColor = _localIndexMap(local.colors);
+      }
+
+      writer.writeBitVarUint(rects.length);
+      for (final rect in rects) {
+        _writeV2CompactBounds(
+          writer,
+          rect.bounds,
+          image.width,
+          image.height,
+        );
+        writer.writeBits(localIndexByColor[rect.color]!, localBits);
+      }
+      final payload = _V2Payload(
+        writer.toBytes(),
+        localPaletteSize: localPaletteSize,
+        usedBankCount: usedBankCount,
+        bitsPerLocalPixel: localBits,
+      );
+      if (best == null || payload.payload.length < best.payload.length) {
+        best = payload;
+      }
+    }
+    return best;
+  }
+
+  _V2Payload? _tryBuildV2CompactRlePayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight) {
+      throw const MCOImageInvalidInputException(
+        'Invalid compact RLE pixel count',
+      );
+    }
+    if (linear.isEmpty) return null;
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(
+        writer,
+        bounds,
+        image.width,
+        image.height,
+      );
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.compactRle.index, _extendedSubmodeBits);
+
+    final int localPaletteSize;
+    final int localBits;
+    int? usedBankCount;
+    Map<int, int> localIndexByColor;
+    if (image.paletteProfile.isDynamic) {
+      final profileColorIds = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList();
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final localPalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (localPalette.isEmpty ||
+          localPalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        localPalette,
+        referenceEncoding!,
+      );
+      localPaletteSize = localPalette.length;
+      localBits = _localBits(localPalette.length);
+      localIndexByColor = {
+        for (var i = 0; i < localPalette.length; i++)
+          _globalIndexForProfileColorId(
+            image.paletteProfile,
+            localPalette[i],
+          ): i,
+      };
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? localPalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(linear);
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      localBits = _localBits(local.colors.length);
+      localIndexByColor = _localIndexMap(local.colors);
+    }
+
+    for (final run in _buildRuns(linear)) {
+      writer.writeBits(localIndexByColor[run.color]!, localBits);
+      _writeCompactUint(writer, run.length - 1);
+    }
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2CompactSparsePayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight) {
+      throw const MCOImageInvalidInputException(
+        'Invalid compact sparse pixel count',
+      );
+    }
+    if (linear.isEmpty || linear.every((pixel) => pixel == backgroundColor)) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final segments = _buildSparseSegments(linear, backgroundColor);
+    if (segments.isEmpty) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(
+        ExtendedImageMode.compactSparse.index,
+        _extendedSubmodeBits,
+      );
+    if (bounds == null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    }
+
+    final int localPaletteSize;
+    final int localBits;
+    int? usedBankCount;
+    Map<int, int> localIndexByColor;
+    if (image.paletteProfile.isDynamic) {
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final profileColorIds = linear
+          .where((color) => color != backgroundColor)
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final localPalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (localPalette.isEmpty ||
+          localPalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        localPalette,
+        referenceEncoding!,
+      );
+      localPaletteSize = localPalette.length;
+      localBits = _localBits(localPalette.length);
+      localIndexByColor = {
+        for (var i = 0; i < localPalette.length; i++)
+          _globalIndexForProfileColorId(
+            image.paletteProfile,
+            localPalette[i],
+          ): i,
+      };
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? localPalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(
+        linear.where((color) => color != backgroundColor).toList(),
+      );
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      localBits = _localBits(local.colors.length);
+      localIndexByColor = _localIndexMap(local.colors);
+    }
+
+    _writeCompactUint(writer, segments.length - 1);
+    var pos = 0;
+    for (final segment in segments) {
+      _writeCompactUint(writer, segment.start - pos);
+      writer.writeBits(localIndexByColor[segment.color]!, localBits);
+      _writeCompactUint(writer, segment.length - 1);
+      pos = segment.start + segment.length;
+    }
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2LzPixelsPayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight) {
+      throw const MCOImageInvalidInputException('Invalid LZ pixel count');
+    }
+    if (linear.isEmpty) return null;
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.lzPixels.index, _extendedSubmodeBits);
+
+    final int localPaletteSize;
+    final int localBits;
+    int? usedBankCount;
+    late final List<int> localPixels;
+    if (image.paletteProfile.isDynamic) {
+      final profileColorIds = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final localPalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (localPalette.isEmpty ||
+          localPalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        localPalette,
+        referenceEncoding!,
+      );
+      localPaletteSize = localPalette.length;
+      localBits = _localBits(localPalette.length);
+      final localIndexByProfileColorId = {
+        for (var i = 0; i < localPalette.length; i++) localPalette[i]: i,
+      };
+      localPixels = profileColorIds
+          .map((color) => localIndexByProfileColorId[color]!)
+          .toList(growable: false);
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? localPalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(linear);
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      localBits = _localBits(local.colors.length);
+      final localIndexByColor = _localIndexMap(local.colors);
+      localPixels = linear
+          .map((color) => localIndexByColor[color]!)
+          .toList(growable: false);
+    }
+
+    final tokens = _buildLzPixelTokens(localPixels, localBits);
+    for (final token in tokens) {
+      if (token.isMatch) {
+        writer.writeBits(1, 1);
+        _writeCompactUint(writer, token.distance - 1);
+        _writeCompactUint(writer, token.length - _minLzMatchLength);
+      } else {
+        writer.writeBits(0, 1);
+        _writeCompactUint(writer, token.literals.length - 1);
+        for (final color in token.literals) {
+          writer.writeBits(color, localBits);
+        }
+      }
+    }
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2QuadtreePayload(
+    MCOImage image,
+    List<int> pixels,
+    int dataWidth,
+    int dataHeight,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    _ImageBounds? bounds,
+  }) {
+    if (pixels.length != dataWidth * dataHeight || pixels.isEmpty) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: ScanMode.h,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.quadtree.index, _extendedSubmodeBits);
+
+    final int localPaletteSize;
+    final int localBits;
+    int? usedBankCount;
+    late final List<int> localPixels;
+    if (image.paletteProfile.isDynamic) {
+      final profileColorIds = pixels
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final localPalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (localPalette.isEmpty ||
+          localPalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        localPalette,
+        referenceEncoding!,
+      );
+      localPaletteSize = localPalette.length;
+      localBits = _localBits(localPalette.length);
+      final localIndexByProfileColorId = {
+        for (var i = 0; i < localPalette.length; i++) localPalette[i]: i,
+      };
+      localPixels = profileColorIds
+          .map((color) => localIndexByProfileColorId[color]!)
+          .toList(growable: false);
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? localPalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(pixels);
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      localBits = _localBits(local.colors.length);
+      final localIndexByColor = _localIndexMap(local.colors);
+      localPixels = pixels
+          .map((color) => localIndexByColor[color]!)
+          .toList(growable: false);
+    }
+
+    _writeQuadtreeNode(
+      writer,
+      localPixels,
+      dataWidth,
+      0,
+      0,
+      dataWidth,
+      dataHeight,
+      localBits,
+    );
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2Payload? _tryBuildV2BitplanesPayload(
+    MCOImage image,
+    List<int> linear,
+    ScanMode scan,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required int dataWidth,
+    required int dataHeight,
+    required int backgroundColor,
+    _ImageBounds? bounds,
+  }) {
+    if (linear.length != dataWidth * dataHeight || linear.isEmpty) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic && referenceEncoding == null) {
+      return null;
+    }
+    if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
+
+    final writer = _BitWriter();
+    _writeV2Header(
+      writer,
+      profile: image.paletteProfile,
+      container: _containerBlock,
+      mode: ImageMode.extended,
+      scan: scan,
+      boundsPresent: bounds != null,
+      referenceEncoding: referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    );
+    if (image.transparentColor != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    if (bounds != null) {
+      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer
+      ..alignToByte()
+      ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
+
+    final int localPaletteSize;
+    final int localBits;
+    int? usedBankCount;
+    late final List<int> localPixels;
+    if (image.paletteProfile.isDynamic) {
+      final profileColorIds = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final backgroundId = _profileColorIdForGlobalIndex(
+        image.paletteProfile,
+        backgroundColor,
+      )!;
+      final localPalette = _buildDynamicLocalPalette(
+        image.paletteProfile,
+        profileColorIds,
+        backgroundId,
+      );
+      if (localPalette.isEmpty ||
+          localPalette.length > _maxDynamicLocalPalette) {
+        return null;
+      }
+      _writeDynamicLocalPalette(
+        writer,
+        image.paletteProfile,
+        localPalette,
+        referenceEncoding!,
+      );
+      localPaletteSize = localPalette.length;
+      localBits = _localBits(localPalette.length);
+      final localIndexByProfileColorId = {
+        for (var i = 0; i < localPalette.length; i++) localPalette[i]: i,
+      };
+      localPixels = profileColorIds
+          .map((color) => localIndexByProfileColorId[color]!)
+          .toList(growable: false);
+      usedBankCount =
+          referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
+          ? localPalette.map((color) => color >> 6).toSet().length
+          : null;
+    } else {
+      final local = _buildLocalPalette(linear);
+      if (local.colors.isEmpty) return null;
+      writer.writeBitVarUint(local.colors.length);
+      _writePalette(writer, local.colors, image.paletteProfile);
+      localPaletteSize = local.colors.length;
+      localBits = _localBits(local.colors.length);
+      final localIndexByColor = _localIndexMap(local.colors);
+      localPixels = linear
+          .map((color) => localIndexByColor[color]!)
+          .toList(growable: false);
+    }
+
+    for (var bit = 0; bit < localBits; bit++) {
+      final runs = _buildBitplaneRuns(localPixels, bit);
+      final rleBits = 2 + runs.fold<int>(
+        0,
+        (sum, length) => sum + _compactUintBitLength(length - 1),
+      );
+      final rawBits = 1 + localPixels.length;
+      if (rleBits < rawBits) {
+        writer
+          ..writeBits(1, 1)
+          ..writeBits((localPixels.first >> bit) & 1, 1);
+        for (final length in runs) {
+          _writeCompactUint(writer, length - 1);
+        }
+      } else {
+        writer.writeBits(0, 1);
+        for (final pixel in localPixels) {
+          writer.writeBits((pixel >> bit) & 1, 1);
+        }
+      }
+    }
+    return _V2Payload(
+      writer.toBytes(),
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  List<_V2Payload> _tryBuildV2RegionsPayloads(
     MCOImage image,
     int backgroundColor,
     DynamicPaletteReferenceEncoding? referenceEncoding,
     int maxRegions,
   ) {
-    if (maxRegions == 0) return null;
+    if (maxRegions == 0) return const <_V2Payload>[];
     final connectedRegions = _findRegions(
       image.pixels,
       image.width,
@@ -653,31 +1888,37 @@ class MCOImageCodec {
       maxRegions,
     );
 
-    final variants = <List<_ImageBounds>>[
+    final rawVariants = <List<_ImageBounds>>[
       connectedRegions,
       if (splitRegions.isNotEmpty) splitRegions,
       if (sparseSplitRegions.isNotEmpty) sparseSplitRegions,
       ...greedyRegionVariants,
     ];
-
-    _V2Payload? best;
-    for (final regions in variants) {
-      final payload = _tryBuildV2RegionsPayloadFromRegions(
-        image,
-        backgroundColor,
-        referenceEncoding,
-        regions,
-        maxRegions,
-      );
-      if (payload == null) continue;
-      if (best == null ||
-          payload.payload.length < best.payload.length ||
-          (payload.payload.length == best.payload.length &&
-              payload.regionCount < best.regionCount)) {
-        best = payload;
+    final variants = <List<_ImageBounds>>[];
+    final seenVariants = <String>{};
+    for (final regions in rawVariants) {
+      if (regions.isEmpty) continue;
+      if (seenVariants.add(_regionListKey(regions))) {
+        variants.add(regions);
       }
     }
-    return best;
+
+    final payloads = <_V2Payload>[];
+    for (final regions in variants) {
+      for (final compactGeometry in const [false, true]) {
+        final payload = _tryBuildV2RegionsPayloadFromRegions(
+          image,
+          backgroundColor,
+          referenceEncoding,
+          regions,
+          maxRegions,
+          compactGeometry: compactGeometry,
+        );
+        if (payload == null) continue;
+        payloads.add(payload);
+      }
+    }
+    return payloads;
   }
 
   _V2Payload? _tryBuildV2RegionsPayloadFromRegions(
@@ -685,7 +1926,9 @@ class MCOImageCodec {
     int backgroundColor,
     DynamicPaletteReferenceEncoding? referenceEncoding,
     List<_ImageBounds> regions,
-    int maxRegions,
+    int maxRegions, {
+    required bool compactGeometry,
+  }
   ) {
     if (regions.isEmpty || regions.length > maxRegions) return null;
     if (image.paletteProfile.isDynamic && referenceEncoding == null) {
@@ -700,7 +1943,7 @@ class MCOImageCodec {
       writer,
       profile: image.paletteProfile,
       container: _containerRegions,
-      mode: ImageMode.rawGlobal,
+      mode: compactGeometry ? ImageMode.extended : ImageMode.rawGlobal,
       scan: ScanMode.h,
       boundsPresent: false,
       referenceEncoding: referenceEncoding,
@@ -777,7 +2020,14 @@ class MCOImageCodec {
           : null;
     }
 
-    writer.writeBitVarUint(regions.length);
+    if (compactGeometry) {
+      writer.writeBits(
+        regions.length - 1,
+        _bitsForChoiceCount(_maxV2Regions),
+      );
+    } else {
+      writer.writeBitVarUint(regions.length);
+    }
     for (final region in regions) {
       final regionPixels = _cropPixels(image.pixels, image.width, region);
       final block = image.paletteProfile.isDynamic
@@ -796,11 +2046,21 @@ class MCOImageCodec {
               image.paletteProfile,
               backgroundColor,
             );
+      if (compactGeometry) {
+        _writeV2CompactBounds(
+          writer,
+          region,
+          image.width,
+          image.height,
+        );
+      } else {
+        writer
+          ..writeBitVarUint(region.x)
+          ..writeBitVarUint(region.y)
+          ..writeBitVarUint(region.width)
+          ..writeBitVarUint(region.height);
+      }
       writer
-        ..writeBitVarUint(region.x)
-        ..writeBitVarUint(region.y)
-        ..writeBitVarUint(region.width)
-        ..writeBitVarUint(region.height)
         ..writeAlignedByte(
           (_modeBits(block.mode) << 5) | (_scanBits(block.scan) << 3),
         )
@@ -964,6 +2224,7 @@ class MCOImageCodec {
           localPaletteSize: 2,
           bitsPerLocalPixel: 1,
         );
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -1135,6 +2396,7 @@ class MCOImageCodec {
         _writeRowDeltaBody(writer, localPixels, rowLength, localBits);
         break;
       case ImageMode.rawGlobal:
+      case ImageMode.extended:
       case ImageMode.regionsBg:
       case ImageMode.biColorMask:
         return null;
@@ -1241,7 +2503,9 @@ class MCOImageCodec {
     required bool hasTransparentColor,
   }) {
     if (container == _containerRegions) {
-      if (boundsPresent || mode != ImageMode.rawGlobal || scan != ScanMode.h) {
+      if (boundsPresent ||
+          (mode != ImageMode.rawGlobal && mode != ImageMode.extended) ||
+          scan != ScanMode.h) {
         throw const MCOImageInvalidInputException('Invalid v2 regions header');
       }
     }
@@ -1318,6 +2582,52 @@ class MCOImageCodec {
       ..writeBitVarUint(bounds.y)
       ..writeBitVarUint(bounds.width)
       ..writeBitVarUint(bounds.height);
+  }
+
+  void _writeV2CompactBounds(
+    _BitWriter writer,
+    _ImageBounds bounds,
+    int fullWidth,
+    int fullHeight,
+  ) {
+    if (bounds.area <= 0 ||
+        bounds.x < 0 ||
+        bounds.y < 0 ||
+        bounds.x + bounds.width > fullWidth ||
+        bounds.y + bounds.height > fullHeight) {
+      throw const MCOImageInvalidInputException('Invalid compact bounds');
+    }
+    writer
+      ..writeBits(bounds.x, _bitsForChoiceCount(fullWidth))
+      ..writeBits(bounds.y, _bitsForChoiceCount(fullHeight))
+      ..writeBits(
+        bounds.width - 1,
+        _bitsForChoiceCount(fullWidth - bounds.x),
+      )
+      ..writeBits(
+        bounds.height - 1,
+        _bitsForChoiceCount(fullHeight - bounds.y),
+      );
+  }
+
+  _ImageBounds _readV2CompactBounds(
+    _BitReader reader,
+    int fullWidth,
+    int fullHeight,
+  ) {
+    final x = reader.readBits(_bitsForChoiceCount(fullWidth));
+    final y = reader.readBits(_bitsForChoiceCount(fullHeight));
+    if (x >= fullWidth || y >= fullHeight) {
+      throw const MCOImageInvalidPayloadException('Invalid compact bounds');
+    }
+    final width =
+        reader.readBits(_bitsForChoiceCount(fullWidth - x)) + 1;
+    final height =
+        reader.readBits(_bitsForChoiceCount(fullHeight - y)) + 1;
+    if (x + width > fullWidth || y + height > fullHeight) {
+      throw const MCOImageInvalidPayloadException('Invalid compact bounds');
+    }
+    return _ImageBounds(x: x, y: y, width: width, height: height);
   }
 
   _RegionPayload? _tryBuildRegionsPayload(
@@ -1591,7 +2901,10 @@ class MCOImageCodec {
       );
     }
     if (container == _containerRegions) {
-      if (boundsPresent || mode != ImageMode.rawGlobal || scan != ScanMode.h) {
+      final compactGeometry = mode == ImageMode.extended;
+      if (boundsPresent ||
+          (mode != ImageMode.rawGlobal && !compactGeometry) ||
+          scan != ScanMode.h) {
         throw const MCOImageInvalidPayloadException(
           'Invalid v2 regions header',
         );
@@ -1609,6 +2922,7 @@ class MCOImageCodec {
         height,
         profile,
         referenceEncoding,
+        compactGeometry: compactGeometry,
       );
       reader.finish();
       return MCOImage(
@@ -1631,7 +2945,9 @@ class MCOImageCodec {
 
     if (boundsPresent) {
       final background = _readV2ColorRef(reader, profile);
-      final bounds = _readV2Bounds(reader, width, height);
+      final bounds = mode == ImageMode.extended
+          ? _readV2CompactBounds(reader, width, height)
+          : _readV2Bounds(reader, width, height);
       if (bounds.area == 0) {
         reader.finish();
         return MCOImage(
@@ -1720,6 +3036,9 @@ class MCOImageCodec {
       ImageMode.rowRepeat => throw const MCOImageInvalidPayloadException(
         'ROW_REPEAT is not supported by legacy block bodies',
       ),
+      ImageMode.extended => throw const MCOImageInvalidPayloadException(
+        'EXTENDED is not supported by legacy block bodies',
+      ),
       ImageMode.regionsBg => throw const MCOImageInvalidPayloadException(
         'REGIONS_BG is not a block body mode',
       ),
@@ -1736,6 +3055,87 @@ class MCOImageCodec {
     required int rowLength,
     int? sparseBackgroundColor,
   }) {
+    if (mode == ImageMode.extended) {
+      final submode = reader.readBits(_extendedSubmodeBits);
+      if (submode == ExtendedImageMode.solidRects.index) {
+        return _decodeV2SolidRects(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+        );
+      }
+      if (submode == ExtendedImageMode.compactRle.index) {
+        return _decodeV2CompactRle(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+        );
+      }
+      if (submode == ExtendedImageMode.compactSparse.index) {
+        return _decodeV2CompactSparse(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+          backgroundColor: sparseBackgroundColor,
+        );
+      }
+      if (submode == ExtendedImageMode.lzPixels.index) {
+        return _decodeV2LzPixels(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+        );
+      }
+      if (submode == ExtendedImageMode.quadtree.index) {
+        return _decodeV2Quadtree(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+        );
+      }
+      if (submode == ExtendedImageMode.bitplanes.index) {
+        return _decodeV2Bitplanes(
+          reader,
+          width,
+          height,
+          profile,
+          referenceEncoding,
+        );
+      }
+      if (submode != ExtendedImageMode.wrappedBlock.index) {
+        throw MCOImageInvalidPayloadException(
+          'Unsupported extended image submode $submode',
+        );
+      }
+      final innerMode = _modeFromBits(reader.readBits(3));
+      if (innerMode == ImageMode.extended ||
+          innerMode == ImageMode.regionsBg) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid wrapped image mode',
+        );
+      }
+      reader.alignToByte();
+      return _decodeV2Body(
+        reader,
+        width,
+        height,
+        profile,
+        innerMode,
+        referenceEncoding,
+        rowLength: rowLength,
+        sparseBackgroundColor: sparseBackgroundColor,
+      );
+    }
     if (profile.isDynamic) {
       if (referenceEncoding == null) {
         throw const MCOImageInvalidPayloadException(
@@ -1870,11 +3270,476 @@ class MCOImageCodec {
           );
         }
         return _readBiColorMask(reader, count, background, foreground);
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
           'REGIONS_BG is not a block body mode',
         );
     }
+  }
+
+  List<int> _decodeV2SolidRects(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    final background = _readV2ColorRef(reader, profile);
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic solid rectangles are missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+      if (palette.contains(background)) {
+        throw const MCOImageInvalidPayloadException(
+          'Solid rectangle palette contains background',
+        );
+      }
+    } else {
+      palette = _readV2LocalPalette(
+        reader,
+        profile,
+        excludedColor: background,
+      );
+    }
+    final localBits = _localBits(palette.length);
+    final rectCount = reader.readBitVarUint();
+    if (rectCount <= 0 || rectCount > 64) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid solid rectangle count',
+      );
+    }
+    final result = List<int>.filled(width * height, background);
+    final occupied = List<bool>.filled(width * height, false);
+    for (var i = 0; i < rectCount; i++) {
+      final bounds = _readV2CompactBounds(reader, width, height);
+      final colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Solid rectangle color index out of range',
+        );
+      }
+      for (var y = bounds.y; y < bounds.y + bounds.height; y++) {
+        for (var x = bounds.x; x < bounds.x + bounds.width; x++) {
+          final pixelIndex = y * width + x;
+          if (occupied[pixelIndex]) {
+            throw const MCOImageInvalidPayloadException(
+              'Overlapping solid rectangles',
+            );
+          }
+          occupied[pixelIndex] = true;
+          result[pixelIndex] = palette[colorIndex];
+        }
+      }
+    }
+    return result;
+  }
+
+  List<int> _decodeV2CompactRle(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic compact RLE is missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+    } else {
+      palette = _readV2LocalPalette(reader, profile);
+    }
+    final localBits = _localBits(palette.length);
+    final pixelCount = width * height;
+    final result = <int>[];
+    while (result.length < pixelCount) {
+      final colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact RLE color index out of range',
+        );
+      }
+      final length = _readCompactUint(reader) + 1;
+      if (result.length + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact RLE exceeds pixel count',
+        );
+      }
+      result.addAll(List<int>.filled(length, palette[colorIndex]));
+    }
+    return result;
+  }
+
+  List<int> _decodeV2CompactSparse(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    int? backgroundColor,
+  }) {
+    final background =
+        backgroundColor ?? _readV2ColorRef(reader, profile);
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic compact sparse is missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+      if (palette.contains(background)) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact sparse palette contains background',
+        );
+      }
+    } else {
+      palette = _readV2LocalPalette(
+        reader,
+        profile,
+        excludedColor: background,
+      );
+    }
+
+    final pixelCount = width * height;
+    final segmentCount = _readCompactUint(reader) + 1;
+    if (segmentCount <= 0 || segmentCount > pixelCount) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid compact sparse segment count',
+      );
+    }
+    final localBits = _localBits(palette.length);
+    final result = List<int>.filled(pixelCount, background);
+    var pos = 0;
+    for (var i = 0; i < segmentCount; i++) {
+      final skip = _readCompactUint(reader);
+      pos += skip;
+      final colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact sparse color index out of range',
+        );
+      }
+      final length = _readCompactUint(reader) + 1;
+      if (pos >= pixelCount || pos + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid compact sparse segment',
+        );
+      }
+      for (var j = 0; j < length; j++) {
+        result[pos + j] = palette[colorIndex];
+      }
+      pos += length;
+    }
+    return result;
+  }
+
+  List<int> _decodeV2LzPixels(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic LZ pixels are missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+    } else {
+      palette = _readV2LocalPalette(reader, profile);
+    }
+
+    final pixelCount = width * height;
+    final localBits = _localBits(palette.length);
+    final result = <int>[];
+    while (result.length < pixelCount) {
+      final isMatch = reader.readBits(1) != 0;
+      if (isMatch) {
+        final distance = _readCompactUint(reader) + 1;
+        final length =
+            _readCompactUint(reader) + _minLzMatchLength;
+        if (distance <= 0 ||
+            distance > result.length ||
+            result.length + length > pixelCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid LZ pixel match',
+          );
+        }
+        for (var i = 0; i < length; i++) {
+          result.add(result[result.length - distance]);
+        }
+      } else {
+        final length = _readCompactUint(reader) + 1;
+        if (result.length + length > pixelCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid LZ pixel literal length',
+          );
+        }
+        for (var i = 0; i < length; i++) {
+          final colorIndex = reader.readBits(localBits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'LZ pixel color index out of range',
+            );
+          }
+          result.add(palette[colorIndex]);
+        }
+      }
+    }
+    return result;
+  }
+
+  List<int> _decodeV2Quadtree(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic quadtree is missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+    } else {
+      palette = _readV2LocalPalette(reader, profile);
+    }
+
+    final result = List<int>.filled(width * height, palette.first);
+    _readQuadtreeNode(
+      reader,
+      result,
+      width,
+      0,
+      0,
+      width,
+      height,
+      palette,
+      _localBits(palette.length),
+    );
+    return result;
+  }
+
+  void _readQuadtreeNode(
+    _BitReader reader,
+    List<int> pixels,
+    int stride,
+    int x,
+    int y,
+    int width,
+    int height,
+    List<int> palette,
+    int localBits,
+  ) {
+    final isSolid = reader.readBits(1) != 0;
+    if (isSolid) {
+      final colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Quadtree color index out of range',
+        );
+      }
+      for (var dy = 0; dy < height; dy++) {
+        final rowStart = (y + dy) * stride + x;
+        for (var dx = 0; dx < width; dx++) {
+          pixels[rowStart + dx] = palette[colorIndex];
+        }
+      }
+      return;
+    }
+    if (width == 1 && height == 1) {
+      throw const MCOImageInvalidPayloadException(
+        'Quadtree splits a single pixel',
+      );
+    }
+
+    if (width == 1) {
+      final topHeight = height ~/ 2;
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y,
+        width,
+        topHeight,
+        palette,
+        localBits,
+      );
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y + topHeight,
+        width,
+        height - topHeight,
+        palette,
+        localBits,
+      );
+      return;
+    }
+    if (height == 1) {
+      final leftWidth = width ~/ 2;
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y,
+        leftWidth,
+        height,
+        palette,
+        localBits,
+      );
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x + leftWidth,
+        y,
+        width - leftWidth,
+        height,
+        palette,
+        localBits,
+      );
+      return;
+    }
+
+    final leftWidth = width ~/ 2;
+    final topHeight = height ~/ 2;
+    for (final child in <_ImageBounds>[
+      _ImageBounds(x: x, y: y, width: leftWidth, height: topHeight),
+      _ImageBounds(
+        x: x + leftWidth,
+        y: y,
+        width: width - leftWidth,
+        height: topHeight,
+      ),
+      _ImageBounds(
+        x: x,
+        y: y + topHeight,
+        width: leftWidth,
+        height: height - topHeight,
+      ),
+      _ImageBounds(
+        x: x + leftWidth,
+        y: y + topHeight,
+        width: width - leftWidth,
+        height: height - topHeight,
+      ),
+    ]) {
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        child.x,
+        child.y,
+        child.width,
+        child.height,
+        palette,
+        localBits,
+      );
+    }
+  }
+
+  List<int> _decodeV2Bitplanes(
+    _BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    final List<int> palette;
+    if (profile.isDynamic) {
+      if (referenceEncoding == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic bitplanes are missing reference encoding',
+        );
+      }
+      palette = _readDynamicLocalPalette(
+        reader,
+        profile,
+        referenceEncoding,
+      ).globalColors;
+    } else {
+      palette = _readV2LocalPalette(reader, profile);
+    }
+
+    final pixelCount = width * height;
+    final localBits = _localBits(palette.length);
+    final localPixels = List<int>.filled(pixelCount, 0);
+    for (var bit = 0; bit < localBits; bit++) {
+      final isRle = reader.readBits(1) != 0;
+      if (!isRle) {
+        for (var i = 0; i < pixelCount; i++) {
+          localPixels[i] |= reader.readBits(1) << bit;
+        }
+        continue;
+      }
+
+      var value = reader.readBits(1);
+      var position = 0;
+      while (position < pixelCount) {
+        final length = _readCompactUint(reader) + 1;
+        if (position + length > pixelCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Bitplane RLE exceeds pixel count',
+          );
+        }
+        if (value != 0) {
+          for (var i = 0; i < length; i++) {
+            localPixels[position + i] |= 1 << bit;
+          }
+        }
+        position += length;
+        value ^= 1;
+      }
+    }
+
+    return localPixels.map((index) {
+      if (index >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Bitplane color index out of range',
+        );
+      }
+      return palette[index];
+    }).toList(growable: false);
   }
 
   List<int> _decodeV2DynamicBody(
@@ -2030,6 +3895,7 @@ class MCOImageCodec {
         }
         return _readBiColorMask(reader, count, background, foreground);
       case ImageMode.rawGlobal:
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
           'Unsupported dynamic block mode',
@@ -2157,6 +4023,7 @@ class MCOImageCodec {
         }
         return _readBiColorMask(reader, count, background, foreground);
       case ImageMode.rawGlobal:
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
           'Unsupported dynamic region block mode',
@@ -2234,7 +4101,9 @@ class MCOImageCodec {
     int width,
     int height,
     PaletteProfile profile,
-    DynamicPaletteReferenceEncoding? referenceEncoding,
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    required bool compactGeometry,
+  }
   ) {
     final background = _readV2ColorRef(reader, profile);
     _DynamicLocalPalette? sharedDynamicPalette;
@@ -2251,7 +4120,9 @@ class MCOImageCodec {
       );
     }
 
-    final regionCount = reader.readBitVarUint();
+    final regionCount = compactGeometry
+        ? reader.readBits(_bitsForChoiceCount(_maxV2Regions)) + 1
+        : reader.readBitVarUint();
     if (regionCount <= 0 || regionCount > _maxV2Regions) {
       throw const MCOImageInvalidPayloadException('Invalid v2 region count');
     }
@@ -2259,12 +4130,14 @@ class MCOImageCodec {
     final pixels = List<int>.filled(width * height, background);
     final occupied = List<bool>.filled(width * height, false);
     for (var i = 0; i < regionCount; i++) {
-      final region = _ImageBounds(
-        x: reader.readBitVarUint(),
-        y: reader.readBitVarUint(),
-        width: reader.readBitVarUint(),
-        height: reader.readBitVarUint(),
-      );
+      final region = compactGeometry
+          ? _readV2CompactBounds(reader, width, height)
+          : _ImageBounds(
+              x: reader.readBitVarUint(),
+              y: reader.readBitVarUint(),
+              width: reader.readBitVarUint(),
+              height: reader.readBitVarUint(),
+            );
       if (region.width <= 0 ||
           region.height <= 0 ||
           region.x + region.width > width ||
@@ -2432,6 +4305,7 @@ class MCOImageCodec {
         throw const MCOImageInvalidInputException(
           'ROW_REPEAT is not supported by legacy block mode',
         );
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'REGIONS_BG is not a block mode',
@@ -2565,6 +4439,7 @@ class MCOImageCodec {
         _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
         break;
       case ImageMode.rawGlobal:
+      case ImageMode.extended:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidInputException(
           'Unsupported dynamic shared block mode',
@@ -2687,6 +4562,108 @@ class MCOImageCodec {
     );
   }
 
+  List<List<_SolidRect>> _solidRectVariants(
+    List<int> pixels,
+    int width,
+    int height,
+    int background, {
+    required int maxRects,
+  }) {
+    final horizontal = <_SolidRect>[];
+    for (var y = 0; y < height; y++) {
+      var x = 0;
+      while (x < width) {
+        final color = pixels[y * width + x];
+        if (color == background) {
+          x++;
+          continue;
+        }
+        final start = x;
+        while (x < width && pixels[y * width + x] == color) {
+          x++;
+        }
+        horizontal.add(
+          _SolidRect(
+            _ImageBounds(x: start, y: y, width: x - start, height: 1),
+            color,
+          ),
+        );
+      }
+    }
+
+    final vertical = <_SolidRect>[];
+    for (var x = 0; x < width; x++) {
+      var y = 0;
+      while (y < height) {
+        final color = pixels[y * width + x];
+        if (color == background) {
+          y++;
+          continue;
+        }
+        final start = y;
+        while (y < height && pixels[y * width + x] == color) {
+          y++;
+        }
+        vertical.add(
+          _SolidRect(
+            _ImageBounds(x: x, y: start, width: 1, height: y - start),
+            color,
+          ),
+        );
+      }
+    }
+
+    final mergedHorizontal = _mergeSolidRuns(horizontal, vertical: false);
+    final mergedVertical = _mergeSolidRuns(vertical, vertical: true);
+
+    return <List<_SolidRect>>[
+      if (mergedHorizontal.isNotEmpty && mergedHorizontal.length <= maxRects)
+        mergedHorizontal,
+      if (mergedVertical.isNotEmpty && mergedVertical.length <= maxRects)
+        mergedVertical,
+    ];
+  }
+
+  List<_SolidRect> _mergeSolidRuns(
+    List<_SolidRect> runs, {
+    required bool vertical,
+  }) {
+    final merged = <_SolidRect>[];
+    final latestByShape = <String, int>{};
+    for (final run in runs) {
+      final bounds = run.bounds;
+      final key = vertical
+          ? '${bounds.y}:${bounds.height}:${run.color}'
+          : '${bounds.x}:${bounds.width}:${run.color}';
+      final previousIndex = latestByShape[key];
+      if (previousIndex != null) {
+        final previous = merged[previousIndex];
+        final touches = vertical
+            ? previous.bounds.x + previous.bounds.width == bounds.x
+            : previous.bounds.y + previous.bounds.height == bounds.y;
+        if (touches) {
+          merged[previousIndex] = _SolidRect(
+            _ImageBounds(
+              x: previous.bounds.x,
+              y: previous.bounds.y,
+              width: vertical
+                  ? previous.bounds.width + bounds.width
+                  : previous.bounds.width,
+              height: vertical
+                  ? previous.bounds.height
+                  : previous.bounds.height + bounds.height,
+            ),
+            run.color,
+          );
+          continue;
+        }
+      }
+      latestByShape[key] = merged.length;
+      merged.add(run);
+    }
+    return merged;
+  }
+
   static List<_BackgroundCandidate> _backgroundCandidates(
     MCOImage image,
     int? explicitBackground,
@@ -2712,7 +4689,11 @@ class MCOImageCodec {
         final byCount = counts[b]!.compareTo(counts[a]!);
         return byCount != 0 ? byCount : a.compareTo(b);
       });
-    for (var i = 0; i < math.min(3, colors.length); i++) {
+    for (
+      var i = 0;
+      i < math.min(_maxFrequentBackgroundCandidates, colors.length);
+      i++
+    ) {
       add(colors[i], 2 + i);
     }
     return result;
@@ -3831,7 +5812,11 @@ class MCOImageCodec {
         final byCount = counts[b]!.compareTo(counts[a]!);
         return byCount != 0 ? byCount : a.compareTo(b);
       });
-    for (var i = 0; i < math.min(3, colors.length); i++) {
+    for (
+      var i = 0;
+      i < math.min(_maxFrequentBackgroundCandidates, colors.length);
+      i++
+    ) {
       add(colors[i], 2 + i);
     }
     return result;
@@ -3840,10 +5825,17 @@ class MCOImageCodec {
   static bool _isBetterCandidate(
     EncodedMCOImage candidate,
     EncodedMCOImage? current,
+    MCOImageOutputTarget outputTarget,
   ) {
     if (current == null) return true;
-    if (candidate.charLength != current.charLength) {
-      return candidate.charLength < current.charLength;
+    final candidateLength = outputTarget == MCOImageOutputTarget.binary
+        ? candidate.byteLength
+        : candidate.charLength;
+    final currentLength = outputTarget == MCOImageOutputTarget.binary
+        ? current.byteLength
+        : current.charLength;
+    if (candidateLength != currentLength) {
+      return candidateLength < currentLength;
     }
     if (candidate.backgroundRank != current.backgroundRank) {
       return candidate.backgroundRank < current.backgroundRank;
@@ -4980,6 +6972,266 @@ class MCOImageCodec {
     return bits;
   }
 
+  void _writeCompactUint(_BitWriter writer, int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative compact uint');
+    }
+    if (value <= 3) {
+      writer
+        ..writeBits(0, 1)
+        ..writeBits(value, 2);
+    } else if (value <= 19) {
+      writer
+        ..writeBits(1, 2)
+        ..writeBits(value - 4, 4);
+    } else if (value <= 275) {
+      writer
+        ..writeBits(3, 3)
+        ..writeBits(value - 20, 8);
+    } else {
+      writer
+        ..writeBits(7, 3)
+        ..writeBitVarUint(value);
+    }
+  }
+
+  int _readCompactUint(_BitReader reader) {
+    if (reader.readBits(1) == 0) return reader.readBits(2);
+    if (reader.readBits(1) == 0) return reader.readBits(4) + 4;
+    if (reader.readBits(1) == 0) return reader.readBits(8) + 20;
+    return reader.readBitVarUint();
+  }
+
+  static int _compactUintBitLength(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative compact uint');
+    }
+    if (value <= 3) return 3;
+    if (value <= 19) return 6;
+    if (value <= 275) return 11;
+    return 3 + _bitVarUintBitLength(value);
+  }
+
+  List<_LzPixelToken> _buildLzPixelTokens(
+    List<int> pixels,
+    int localBits,
+  ) {
+    final tokens = <_LzPixelToken>[];
+    final pendingLiterals = <int>[];
+    final positionsByKey = <int, List<int>>{};
+
+    void flushLiterals() {
+      if (pendingLiterals.isEmpty) return;
+      tokens.add(_LzPixelToken.literal(List<int>.of(pendingLiterals)));
+      pendingLiterals.clear();
+    }
+
+    var position = 0;
+    while (position < pixels.length) {
+      var bestLength = 0;
+      var bestDistance = 0;
+      if (position + _minLzMatchLength <= pixels.length) {
+        final key = _lzPixelKey(pixels, position);
+        final candidates = positionsByKey[key];
+        if (candidates != null) {
+          for (var i = candidates.length - 1; i >= 0; i--) {
+            final previous = candidates[i];
+            final distance = position - previous;
+            var length = _minLzMatchLength;
+            while (position + length < pixels.length &&
+                pixels[previous + length] == pixels[position + length]) {
+              length++;
+            }
+            if (length > bestLength ||
+                (length == bestLength && distance < bestDistance)) {
+              bestLength = length;
+              bestDistance = distance;
+            }
+          }
+        }
+      }
+
+      final matchBits = bestLength >= _minLzMatchLength
+          ? 1 +
+                _compactUintBitLength(bestDistance - 1) +
+                _compactUintBitLength(bestLength - _minLzMatchLength)
+          : 0;
+      final literalBits = bestLength >= _minLzMatchLength
+          ? 1 +
+                _compactUintBitLength(bestLength - 1) +
+                bestLength * localBits
+          : 0;
+      if (bestLength >= _minLzMatchLength && matchBits < literalBits) {
+        flushLiterals();
+        tokens.add(_LzPixelToken.match(bestDistance, bestLength));
+        for (var i = 0; i < bestLength; i++) {
+          _addLzPixelPosition(positionsByKey, pixels, position + i);
+        }
+        position += bestLength;
+      } else {
+        pendingLiterals.add(pixels[position]);
+        _addLzPixelPosition(positionsByKey, pixels, position);
+        position++;
+      }
+    }
+    flushLiterals();
+    return tokens;
+  }
+
+  static int _lzPixelKey(List<int> pixels, int position) {
+    return (pixels[position] << 12) |
+        (pixels[position + 1] << 6) |
+        pixels[position + 2];
+  }
+
+  static void _addLzPixelPosition(
+    Map<int, List<int>> positionsByKey,
+    List<int> pixels,
+    int position,
+  ) {
+    if (position + _minLzMatchLength > pixels.length) return;
+    final positions = positionsByKey.putIfAbsent(
+      _lzPixelKey(pixels, position),
+      () => <int>[],
+    );
+    positions.add(position);
+    if (positions.length > _maxLzMatchCandidates) {
+      positions.removeAt(0);
+    }
+  }
+
+  static List<int> _buildBitplaneRuns(List<int> pixels, int bit) {
+    final runs = <int>[];
+    var current = (pixels.first >> bit) & 1;
+    var length = 0;
+    for (final pixel in pixels) {
+      final value = (pixel >> bit) & 1;
+      if (value == current) {
+        length++;
+      } else {
+        runs.add(length);
+        current = value;
+        length = 1;
+      }
+    }
+    runs.add(length);
+    return runs;
+  }
+
+  void _writeQuadtreeNode(
+    _BitWriter writer,
+    List<int> pixels,
+    int stride,
+    int x,
+    int y,
+    int width,
+    int height,
+    int localBits,
+  ) {
+    final firstColor = pixels[y * stride + x];
+    var isSolid = true;
+    for (var dy = 0; dy < height && isSolid; dy++) {
+      final rowStart = (y + dy) * stride + x;
+      for (var dx = 0; dx < width; dx++) {
+        if (pixels[rowStart + dx] != firstColor) {
+          isSolid = false;
+          break;
+        }
+      }
+    }
+    if (isSolid) {
+      writer
+        ..writeBits(1, 1)
+        ..writeBits(firstColor, localBits);
+      return;
+    }
+
+    writer.writeBits(0, 1);
+    if (width == 1) {
+      final topHeight = height ~/ 2;
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y,
+        width,
+        topHeight,
+        localBits,
+      );
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y + topHeight,
+        width,
+        height - topHeight,
+        localBits,
+      );
+      return;
+    }
+    if (height == 1) {
+      final leftWidth = width ~/ 2;
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y,
+        leftWidth,
+        height,
+        localBits,
+      );
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x + leftWidth,
+        y,
+        width - leftWidth,
+        height,
+        localBits,
+      );
+      return;
+    }
+
+    final leftWidth = width ~/ 2;
+    final topHeight = height ~/ 2;
+    for (final child in <_ImageBounds>[
+      _ImageBounds(x: x, y: y, width: leftWidth, height: topHeight),
+      _ImageBounds(
+        x: x + leftWidth,
+        y: y,
+        width: width - leftWidth,
+        height: topHeight,
+      ),
+      _ImageBounds(
+        x: x,
+        y: y + topHeight,
+        width: leftWidth,
+        height: height - topHeight,
+      ),
+      _ImageBounds(
+        x: x + leftWidth,
+        y: y + topHeight,
+        width: width - leftWidth,
+        height: height - topHeight,
+      ),
+    ]) {
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        child.x,
+        child.y,
+        child.width,
+        child.height,
+        localBits,
+      );
+    }
+  }
+
   static int _rowLengthForScan(ScanMode scan, int width, int height) {
     return switch (scan) {
       ScanMode.h || ScanMode.s => width,
@@ -5226,6 +7478,7 @@ class MCOImageCodec {
       ImageMode.biColorMask => 4,
       ImageMode.rowDelta => 5,
       ImageMode.rowRepeat => 6,
+      ImageMode.extended => 7,
       ImageMode.regionsBg => throw const MCOImageInvalidInputException(
         'REGIONS_BG has no block mode bits',
       ),
@@ -5244,6 +7497,7 @@ class MCOImageCodec {
       4 => ImageMode.biColorMask,
       5 => ImageMode.rowDelta,
       6 => ImageMode.rowRepeat,
+      7 => ImageMode.extended,
       _ => throw MCOImageInvalidPayloadException('Unknown image mode $value'),
     };
   }
@@ -5641,6 +7895,26 @@ class _SparseSegment {
   final int length;
 
   const _SparseSegment(this.start, this.color, this.length);
+}
+
+class _LzPixelToken {
+  final List<int> literals;
+  final int distance;
+  final int length;
+
+  const _LzPixelToken.literal(this.literals) : distance = 0, length = 0;
+
+  const _LzPixelToken.match(this.distance, this.length)
+    : literals = const <int>[];
+
+  bool get isMatch => distance > 0;
+}
+
+class _SolidRect {
+  final _ImageBounds bounds;
+  final int color;
+
+  const _SolidRect(this.bounds, this.color);
 }
 
 class _RegionPartition {
