@@ -199,6 +199,8 @@ class MeshCoreConnector extends ChangeNotifier {
   static const String _reactionSendQueuePrefix = '__reaction_send__';
   int _reactionSendQueueSequence = 0;
   final Set<String> _loadedConversationKeys = {};
+  final Map<String, Future<void>> _conversationLoadFutures = {};
+  int _conversationLoadGeneration = 0;
   final Map<int, Set<String>> _processedChannelReactions =
       {}; // channelIndex -> Set of "targetHash_emoji"
   final Map<String, Set<String>> _processedContactReactions =
@@ -246,6 +248,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final List<DirectRepeater> _directRepeaters = List.empty(growable: true);
   bool _isLoadingContacts = false;
   bool _hasLoadedContacts = false;
+  Map<String, int>? _contactSyncIndexes;
+  Map<String, int>? _discoveredContactSyncIndexes;
   bool _isLoadingChannels = false;
   bool _hasLoadedChannels = false;
   TimeoutPredictionService? _timeoutPredictionService;
@@ -631,9 +635,30 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> _loadMessagesForContact(String contactKeyHex) async {
     if (_loadedConversationKeys.contains(contactKeyHex)) return;
-    _loadedConversationKeys.add(contactKeyHex);
+    final pending = _conversationLoadFutures[contactKeyHex];
+    if (pending != null) return pending;
 
+    final generation = _conversationLoadGeneration;
+    final load = _loadMessagesForContactInternal(contactKeyHex, generation);
+    _conversationLoadFutures[contactKeyHex] = load;
+    try {
+      await load;
+      if (generation == _conversationLoadGeneration) {
+        _loadedConversationKeys.add(contactKeyHex);
+      }
+    } finally {
+      if (identical(_conversationLoadFutures[contactKeyHex], load)) {
+        _conversationLoadFutures.remove(contactKeyHex);
+      }
+    }
+  }
+
+  Future<void> _loadMessagesForContactInternal(
+    String contactKeyHex,
+    int generation,
+  ) async {
     final allMessages = await _messageStore.loadMessages(contactKeyHex);
+    if (generation != _conversationLoadGeneration) return;
     if (allMessages.isNotEmpty) {
       // Keep only the most recent N messages in memory to bound memory usage
       final windowedMessages = allMessages.length > _messageWindowSize
@@ -1099,6 +1124,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _activeContactKey = contactKeyHex;
     if (contactKeyHex != null) {
+      unawaited(_loadMessagesForContact(contactKeyHex));
       final contact = _contacts.cast<Contact?>().firstWhere(
         (entry) => entry?.publicKeyHex == contactKeyHex,
         orElse: () => null,
@@ -1549,12 +1575,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _contacts
       ..clear()
       ..addAll(cached);
-    for (final contact in cached) {
-      _ensureContactMcmpSettingLoaded(contact.publicKeyHex);
-      _ensureContactSmazSettingLoaded(contact.publicKeyHex);
-      _ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
-      _ensureContactQuickAnswerIdsLoaded(contact.publicKeyHex);
-    }
   }
 
   Future<void> _loadDiscoveredContactCache() async {
@@ -3141,6 +3161,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSyncTimeout = null;
     _isLoadingContacts = false;
     _hasLoadedContacts = false;
+    _contactSyncIndexes = null;
+    _discoveredContactSyncIndexes = null;
     _isLoadingChannels = false;
     _hasLoadedChannels = false;
     _isSyncingQueuedMessages = false;
@@ -3284,6 +3306,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _discoveredContacts.clear();
     _conversations.clear();
     _loadedConversationKeys.clear();
+    _conversationLoadGeneration++;
+    _conversationLoadFutures.clear();
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -3584,10 +3608,16 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Contact getFromDiscovered(Contact contact) {
-    final tmp = _discoveredContacts.firstWhere(
-      (c) => c.publicKeyHex == contact.publicKeyHex,
-      orElse: () => contact,
-    );
+    final indexedPosition =
+        _discoveredContactSyncIndexes?[contact.publicKeyHex];
+    final tmp = indexedPosition != null &&
+            indexedPosition >= 0 &&
+            indexedPosition < _discoveredContacts.length
+        ? _discoveredContacts[indexedPosition]
+        : _discoveredContacts.firstWhere(
+            (c) => c.publicKeyHex == contact.publicKeyHex,
+            orElse: () => contact,
+          );
     return contact.copyWith(
       rawPacket: tmp.rawPacket,
       latitude: tmp.latitude,
@@ -3629,6 +3659,11 @@ class MeshCoreConnector extends ChangeNotifier {
       _hasLoadedContacts = true;
       _preserveContactsOnRefresh = false;
       _contactSyncUsesSinceFilter = false;
+      _contactSyncIndexes = null;
+      _discoveredContactSyncIndexes = null;
+      _unreadStore.saveContactUnreadCount(
+        Map<String, int>.from(_contactUnreadCount),
+      );
       unawaited(updateKnownDiscovered());
       notifyListeners();
       unawaited(_persistContacts());
@@ -3669,6 +3704,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? translationModelId,
   }) async {
     if (!isConnected || text.isEmpty) return;
+    await _loadMessagesForContact(contact.publicKeyHex);
 
     final outboundText = prepareContactOutboundText(contact, text);
     final compression = _contactCompressionMetadata(
@@ -4511,6 +4547,7 @@ class MeshCoreConnector extends ChangeNotifier {
     unawaited(_persistContacts());
     _conversations.remove(contact.publicKeyHex);
     _loadedConversationKeys.remove(contact.publicKeyHex);
+    _conversationLoadFutures.remove(contact.publicKeyHex);
     final removedCount = _contactUnreadCount[contact.publicKeyHex] ?? 0;
     _cachedContactsUnreadTotal = (_cachedContactsUnreadTotal - removedCount)
         .clamp(0, _cachedContactsUnreadTotal);
@@ -5079,6 +5116,14 @@ class MeshCoreConnector extends ChangeNotifier {
           _contacts.clear();
         }
         _isLoadingContacts = true;
+        _contactSyncIndexes = {
+          for (var i = 0; i < _contacts.length; i++)
+            _contacts[i].publicKeyHex: i,
+        };
+        _discoveredContactSyncIndexes = {
+          for (var i = 0; i < _discoveredContacts.length; i++)
+            _discoveredContacts[i].publicKeyHex: i,
+        };
         _contactSyncReceived = 0;
         // Firmware v3+ includes total contacts after CONTACTS_START.
         // Incremental sync reports total contacts, not filtered result count.
@@ -5104,7 +5149,6 @@ class MeshCoreConnector extends ChangeNotifier {
         _handleContact(frame, isContact: false);
         break;
       case respCodeContact:
-        debugPrint('Got CONTACT');
         if (_isLoadingContacts) {
           _armContactSyncTimeout();
         }
@@ -5118,6 +5162,11 @@ class MeshCoreConnector extends ChangeNotifier {
         _hasLoadedContacts = true;
         _preserveContactsOnRefresh = false;
         _contactSyncUsesSinceFilter = false;
+        _contactSyncIndexes = null;
+        _discoveredContactSyncIndexes = null;
+        _unreadStore.saveContactUnreadCount(
+          Map<String, int>.from(_contactUnreadCount),
+        );
         unawaited(updateKnownDiscovered());
         notifyListeners();
         unawaited(_persistContacts());
@@ -5669,6 +5718,7 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleContact(Uint8List frame, {bool isContact = true}) {
     final contactTmp = Contact.fromFrame(frame);
     if (contactTmp != null) {
+      final isContactSync = isContact && _isLoadingContacts;
       if (isContact && _isLoadingContacts) {
         _contactSyncReceived++;
       }
@@ -5689,22 +5739,33 @@ class MeshCoreConnector extends ChangeNotifier {
         return;
       }
       final contact = getFromDiscovered(contactTmp);
-      _handleDiscovery(contact, frame, noNotify: true, addActive: true);
+      _handleDiscovery(
+        contact,
+        frame,
+        noNotify: true,
+        addActive: true,
+        persist: !isContactSync,
+        notifyChange: !isContactSync,
+      );
 
       if (contact.type == advTypeRepeater) {
         final removedCount = _contactUnreadCount[contact.publicKeyHex] ?? 0;
         _cachedContactsUnreadTotal = (_cachedContactsUnreadTotal - removedCount)
             .clamp(0, _cachedContactsUnreadTotal);
         _contactUnreadCount.remove(contact.publicKeyHex);
-        _unreadStore.saveContactUnreadCount(
-          Map<String, int>.from(_contactUnreadCount),
-        );
+        if (!isContactSync) {
+          _unreadStore.saveContactUnreadCount(
+            Map<String, int>.from(_contactUnreadCount),
+          );
+        }
       }
       // Check if this is a new contact
       final isNewContact = !_knownContactKeys.contains(contact.publicKeyHex);
-      final existingIndex = _contacts.indexWhere(
-        (c) => c.publicKeyHex == contact.publicKeyHex,
-      );
+      final existingIndex = isContactSync
+          ? (_contactSyncIndexes?[contact.publicKeyHex] ?? -1)
+          : _contacts.indexWhere(
+              (c) => c.publicKeyHex == contact.publicKeyHex,
+            );
 
       if (existingIndex >= 0) {
         final existing = _contacts[existingIndex];
@@ -5713,10 +5774,12 @@ class MeshCoreConnector extends ChangeNotifier {
             ? existing.lastMessageAt
             : contact.lastMessageAt;
 
-        appLogger.info(
-          'Refreshing contact ${contact.name}: devicePath=${contact.pathLength}, existingOverride=${existing.pathOverride}',
-          tag: 'Connector',
-        );
+        if (!isContactSync) {
+          appLogger.info(
+            'Refreshing contact ${contact.name}: devicePath=${contact.pathLength}, existingOverride=${existing.pathOverride}',
+            tag: 'Connector',
+          );
+        }
 
         // Preserve user-selected path settings and previously known GPS when
         // refreshed frames omit coordinates (lat/lon encoded as 0,0).
@@ -5728,10 +5791,12 @@ class MeshCoreConnector extends ChangeNotifier {
           longitude: contact.longitude ?? existing.longitude,
         );
 
-        appLogger.info(
-          'After merge: pathOverride=${_contacts[existingIndex].pathOverride}, devicePath=${_contacts[existingIndex].pathLength}',
-          tag: 'Connector',
-        );
+        if (!isContactSync) {
+          appLogger.info(
+            'After merge: pathOverride=${_contacts[existingIndex].pathOverride}, devicePath=${_contacts[existingIndex].pathLength}',
+            tag: 'Connector',
+          );
+        }
       } else {
         if ((_autoAddUsers && contact.type == advTypeChat) ||
             (_autoAddRepeaters && contact.type == advTypeRepeater) ||
@@ -5739,10 +5804,15 @@ class MeshCoreConnector extends ChangeNotifier {
             (_autoAddSensors && contact.type == advTypeSensor) ||
             isContact) {
           _contacts.add(contact);
-          appLogger.info(
-            'Added new contact ${contact.name}: pathLen=${contact.pathLength}',
-            tag: 'Connector',
-          );
+          if (isContactSync) {
+            _contactSyncIndexes?[contact.publicKeyHex] = _contacts.length - 1;
+          }
+          if (!isContactSync) {
+            appLogger.info(
+              'Added new contact ${contact.name}: pathLen=${contact.pathLength}',
+              tag: 'Connector',
+            );
+          }
         } else {
           appLogger.info(
             "Discovered contact ${contact.name} (type ${contact.typeLabelRaw}) not added due to auto-add settings",
@@ -5753,17 +5823,20 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
       _knownContactKeys.add(contact.publicKeyHex);
-      _loadMessagesForContact(contact.publicKeyHex);
 
       // Add path to history if we have a valid path
-      if (_pathHistoryService != null && contact.pathLength >= 0) {
+      if (!isContactSync &&
+          _pathHistoryService != null &&
+          contact.pathLength >= 0) {
         _pathHistoryService!.handlePathUpdated(contact);
       }
 
-      notifyListeners();
+      if (!isContactSync || _contactSyncReceived % 8 == 0) {
+        notifyListeners();
+      }
 
       // Show notification for new contact (advertisement)
-      if (isNewContact && _appSettingsService != null) {
+      if (!isContactSync && isNewContact && _appSettingsService != null) {
         final settings = _appSettingsService!.settings;
         if (settings.notificationsEnabled && settings.notifyOnNewAdvert) {
           _notificationService.showAdvertNotification(
@@ -6024,6 +6097,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (contact != null) {
         _updateContactLastMessageAt(contact.publicKeyHex, message.timestamp);
       }
+      await _loadMessagesForContact(message.senderKeyHex);
       if (!message.isOutgoing) {
         final existing = _conversations[message.senderKeyHex];
         final incomingTimestamp = message.timestamp.millisecondsSinceEpoch;
@@ -8589,12 +8663,22 @@ class MeshCoreConnector extends ChangeNotifier {
     Uint8List rawPacket, {
     bool noNotify = false,
     bool addActive = false,
+    bool persist = true,
+    bool notifyChange = true,
   }) {
-    appLogger.info('Discovered new contact: ${contact.name}', tag: 'Connector');
+    if (notifyChange || persist) {
+      appLogger.info(
+        'Discovered new contact: ${contact.name}',
+        tag: 'Connector',
+      );
+    }
 
-    final existingIndex = _discoveredContacts.indexWhere(
-      (c) => c.publicKeyHex == contact.publicKeyHex,
-    );
+    final isDeferredContactSyncUpdate = !persist && !notifyChange;
+    final existingIndex = isDeferredContactSyncUpdate
+        ? (_discoveredContactSyncIndexes?[contact.publicKeyHex] ?? -1)
+        : _discoveredContacts.indexWhere(
+            (c) => c.publicKeyHex == contact.publicKeyHex,
+          );
 
     // Update existing contact
     if (existingIndex >= 0) {
@@ -8611,8 +8695,8 @@ class MeshCoreConnector extends ChangeNotifier {
             flags: 0,
             isActive: addActive,
           );
-      notifyListeners();
-      unawaited(_persistDiscoveredContacts());
+      if (notifyChange) notifyListeners();
+      if (persist) unawaited(_persistDiscoveredContacts());
       return;
     }
 
@@ -8631,8 +8715,12 @@ class MeshCoreConnector extends ChangeNotifier {
       flags: 0,
     );
     _discoveredContacts.add(disContact);
+    if (isDeferredContactSyncUpdate) {
+      _discoveredContactSyncIndexes?[contact.publicKeyHex] =
+          _discoveredContacts.length - 1;
+    }
 
-    unawaited(_persistDiscoveredContacts());
+    if (persist) unawaited(_persistDiscoveredContacts());
 
     // Show notification for new contact (advertisement)
     if (_appSettingsService != null && !noNotify) {

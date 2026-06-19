@@ -344,6 +344,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
 
     final allowBack = !connector.isConnected;
+    final lockContactList =
+        connector.isLoadingContacts && connector.contacts.isNotEmpty;
     return PopScope(
       canPop: allowBack,
       child: Scaffold(
@@ -457,9 +459,18 @@ class _ContactsScreenState extends State<ContactsScreen>
             ),
           ],
         ),
-        body: _buildContactsBody(context, connector),
+        body: IgnorePointer(
+          ignoring: lockContactList,
+          child: AnimatedOpacity(
+            opacity: lockContactList ? 0.45 : 1,
+            duration: const Duration(milliseconds: 160),
+            child: _buildContactsBody(context, connector),
+          ),
+        ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _showAddContactSheet(context),
+          onPressed: connector.isLoadingContacts
+              ? null
+              : () => _showAddContactSheet(context),
           child: const Icon(Icons.person_add),
         ),
         bottomNavigationBar: SafeArea(
