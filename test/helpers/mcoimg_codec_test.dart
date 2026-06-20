@@ -662,6 +662,68 @@ void main() {
       }
     });
 
+    test('master palettes support adaptive bitplanes palette orders', () {
+      for (final profile in const [
+        PaletteProfile.master4,
+        PaletteProfile.master8,
+        PaletteProfile.master16,
+        PaletteProfile.master32,
+        PaletteProfile.master64,
+      ]) {
+        final paletteSize = MCOImagePalette.colorsFor(profile).length;
+        final image = _image(
+          18,
+          14,
+          (x, y) {
+            if (x < 2 || x >= 16 || y < 2 || y >= 12) return 0;
+            if (x == 2 || x == 15 || y == 2 || y == 11) return 1;
+            return paletteSize - 1;
+          },
+          profile: profile,
+        );
+        final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+        final adaptiveCandidates = diagnostics.candidates.where(
+          (candidate) =>
+              candidate.container.startsWith('adaptive-bitplanes-') &&
+              candidate.container.contains('-order'),
+        ).toList();
+        final rowDeltaCandidates = diagnostics.candidates.where(
+          (candidate) => candidate.container.startsWith(
+            'compact-row-delta-palette-optimized',
+          ),
+        ).toList();
+
+        for (final container in const [
+          'adaptive-bitplanes-profile-order',
+          'adaptive-bitplanes-rgb-order',
+          'adaptive-bitplanes-transition-order',
+        ]) {
+          expect(
+            adaptiveCandidates.any(
+              (candidate) => candidate.container == container,
+            ),
+            isTrue,
+            reason: '$profile has no $container candidate',
+          );
+        }
+        expect(
+          rowDeltaCandidates,
+          isNotEmpty,
+          reason: '$profile has no row delta order variant',
+        );
+        for (final candidate in [
+          ...adaptiveCandidates,
+          ...rowDeltaCandidates,
+        ]) {
+          expect(
+            codec.decode(candidate.text).pixels,
+            image.pixels,
+            reason: '$profile ${candidate.container}',
+          );
+        }
+      }
+    });
+
     test('direct dynamic bitplanes candidate roundtrips', () {
       final colors = MCOImageDynamicPalette.indicesFor(
         PaletteProfile.dynamicGlobal32,
