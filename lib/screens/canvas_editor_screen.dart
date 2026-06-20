@@ -940,7 +940,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     BuildContext context, {
     required bool showLockButton,
   }) {
-    final isOverLimit = _currentPayloadChars > _effectivePayloadLimit;
+    final isOverLimit =
+        _currentPayloadChars > _effectiveDisplayedPayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
     final currentEncodedCandidate = _currentEncodedCandidate;
@@ -1280,6 +1281,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   int get _effectivePayloadLimit =>
       widget.maxBinaryPayloadBytes ?? _textPayloadLimit;
+
+  int get _effectiveDisplayedPayloadLimit {
+    if (widget.maxBinaryPayloadBytes == null) return _effectivePayloadLimit;
+    return ChannelBinaryDataHelper.outgoingCommandFrameLength(
+      _effectivePayloadLimit,
+    );
+  }
 
   void _loadSavedCanvasSettings() {
     final prefs = PrefsManager.instance;
@@ -1692,7 +1700,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _calculatePayloadChars() {
     final encoded = _encodeCanvas();
     _currentEncodedCandidate = encoded;
-    return _payloadSizeForEncoded(encoded);
+    return _displayPayloadSizeForEncoded(encoded);
   }
 
   String _encodingCandidateLabel(EncodedMCOImage candidate) {
@@ -1820,6 +1828,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (payloadBytes != null) return payloadBytes;
     }
     return encoded.charLength;
+  }
+
+  int _displayPayloadSizeForEncoded(EncodedMCOImage encoded) {
+    final payloadSize = _payloadSizeForEncoded(encoded);
+    if (widget.maxBinaryPayloadBytes == null) return payloadSize;
+    return ChannelBinaryDataHelper.outgoingCommandFrameLength(payloadSize);
   }
 
   List<int> _boundedCanvasSizeForProfile(
@@ -2775,7 +2789,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final encoded = _encodeCanvas();
       _currentEncodedCandidate = encoded;
       final payloadSize = _payloadSizeForEncoded(encoded);
-      _currentPayloadChars = payloadSize;
+      _currentPayloadChars = _displayPayloadSizeForEncoded(encoded);
       final overflow = payloadSize - _effectivePayloadLimit;
       if (overflow > 0) {
         showDismissibleSnackBar(

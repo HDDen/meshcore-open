@@ -48,6 +48,8 @@ class ChannelBinaryDataHelper {
   static const int mcoImageDataType = 0xFFF0;
   static const int mcmpDataType = 0xFFF1;
   static const int channelDataHeaderLength = 3;
+  // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
+  static const int outgoingCommandHeaderLength = 5;
 
   static bool get isAvailable => enabled;
   static bool get canSend => isAvailable && sendEnabled;
@@ -136,6 +138,13 @@ class ChannelBinaryDataHelper {
 
   static int finalBinaryPayloadLength(int envelopeLength) {
     return channelDataHeaderLength + envelopeLength;
+  }
+
+  static int outgoingCommandFrameLength(
+    int envelopeLength, {
+    int pathLength = 0,
+  }) {
+    return outgoingCommandHeaderLength + pathLength + envelopeLength;
   }
 
   static int uncompressedBinaryPayloadLength(
