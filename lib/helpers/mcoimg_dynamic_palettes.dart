@@ -21,90 +21,100 @@ class DynamicPalettes {
   ///
   /// Semantic bank names below are comments only; the codec must not rely on them.
   static const List<Color> global512 = [
-    // Bank 0: grayscale, indices 0..63
+    // Bank 0: grayscale anchors plus natural-color ramps, indices 0..63.
+    // The anchors at 0,9,18,27,36,45,54,63 preserve dynamicGlobal64.
     Color.fromARGB(255, 255, 255, 255), // 000 bank 0 offset 00
-    Color.fromARGB(255, 251, 251, 251), // 001 bank 0 offset 01
-    Color.fromARGB(255, 247, 247, 247), // 002 bank 0 offset 02
-    Color.fromARGB(255, 242, 242, 242), // 003 bank 0 offset 03
-    Color.fromARGB(255, 238, 238, 238), // 004 bank 0 offset 04
-    Color.fromARGB(255, 234, 234, 234), // 005 bank 0 offset 05
-    Color.fromARGB(255, 230, 230, 230), // 006 bank 0 offset 06
-    Color.fromARGB(255, 225, 225, 225), // 007 bank 0 offset 07
-    Color.fromARGB(255, 221, 221, 221), // 008 bank 0 offset 08
+    // Brown
+    Color.fromARGB(255, 241, 211, 179), // 001 bank 0 offset 01
+    Color.fromARGB(255, 215, 174, 131), // 002 bank 0 offset 02
+    Color.fromARGB(255, 187, 135, 93), // 003 bank 0 offset 03
+    Color.fromARGB(255, 155, 99, 62), // 004 bank 0 offset 04
+    Color.fromARGB(255, 124, 73, 45), // 005 bank 0 offset 05
+    Color.fromARGB(255, 94, 51, 31), // 006 bank 0 offset 06
+    Color.fromARGB(255, 65, 33, 22), // 007 bank 0 offset 07
+    Color.fromARGB(255, 37, 17, 11), // 008 bank 0 offset 08
     Color.fromARGB(255, 217, 217, 217), // 009 bank 0 offset 09
-    Color.fromARGB(255, 213, 213, 213), // 010 bank 0 offset 10
-    Color.fromARGB(255, 209, 209, 209), // 011 bank 0 offset 11
-    Color.fromARGB(255, 204, 204, 204), // 012 bank 0 offset 12
-    Color.fromARGB(255, 200, 200, 200), // 013 bank 0 offset 13
-    Color.fromARGB(255, 196, 196, 196), // 014 bank 0 offset 14
-    Color.fromARGB(255, 192, 192, 192), // 015 bank 0 offset 15
-    Color.fromARGB(255, 187, 187, 187), // 016 bank 0 offset 16
-    Color.fromARGB(255, 183, 183, 183), // 017 bank 0 offset 17
+    // Light skin tones with cool, neutral, peach, and golden undertones
+    Color.fromARGB(255, 255, 237, 229), // 010 bank 0 offset 10
+    Color.fromARGB(255, 255, 229, 211), // 011 bank 0 offset 11
+    Color.fromARGB(255, 255, 216, 198), // 012 bank 0 offset 12
+    Color.fromARGB(255, 248, 204, 191), // 013 bank 0 offset 13
+    Color.fromARGB(255, 244, 191, 165), // 014 bank 0 offset 14
+    Color.fromARGB(255, 235, 184, 143), // 015 bank 0 offset 15
+    Color.fromARGB(255, 224, 169, 132), // 016 bank 0 offset 16
+    Color.fromARGB(255, 210, 151, 123), // 017 bank 0 offset 17
     Color.fromARGB(255, 179, 179, 179), // 018 bank 0 offset 18
-    Color.fromARGB(255, 174, 175, 174), // 019 bank 0 offset 19
-    Color.fromARGB(255, 170, 170, 170), // 020 bank 0 offset 20
-    Color.fromARGB(255, 164, 164, 164), // 021 bank 0 offset 21
-    Color.fromARGB(255, 161, 161, 161), // 022 bank 0 offset 22
-    Color.fromARGB(255, 156, 157, 156), // 023 bank 0 offset 23
-    Color.fromARGB(255, 152, 152, 152), // 024 bank 0 offset 24
-    Color.fromARGB(255, 147, 148, 147), // 025 bank 0 offset 25
-    Color.fromARGB(255, 141, 141, 141), // 026 bank 0 offset 26
+    // Pastel colors
+    Color.fromARGB(255, 255, 214, 224), // 019 bank 0 offset 19
+    Color.fromARGB(255, 255, 220, 200), // 020 bank 0 offset 20
+    Color.fromARGB(255, 255, 242, 184), // 021 bank 0 offset 21
+    Color.fromARGB(255, 205, 236, 207), // 022 bank 0 offset 22
+    Color.fromARGB(255, 201, 238, 240), // 023 bank 0 offset 23
+    Color.fromARGB(255, 206, 221, 250), // 024 bank 0 offset 24
+    Color.fromARGB(255, 224, 210, 244), // 025 bank 0 offset 25
+    Color.fromARGB(255, 234, 207, 227), // 026 bank 0 offset 26
     Color.fromARGB(255, 138, 139, 138), // 027 bank 0 offset 27
-    Color.fromARGB(255, 135, 136, 135), // 028 bank 0 offset 28
-    Color.fromARGB(255, 132, 133, 132), // 029 bank 0 offset 29
-    Color.fromARGB(255, 129, 130, 129), // 030 bank 0 offset 30
-    Color.fromARGB(255, 126, 127, 126), // 031 bank 0 offset 31
-    Color.fromARGB(255, 123, 123, 123), // 032 bank 0 offset 32
-    Color.fromARGB(255, 120, 120, 120), // 033 bank 0 offset 33
-    Color.fromARGB(255, 117, 117, 117), // 034 bank 0 offset 34
-    Color.fromARGB(255, 114, 114, 114), // 035 bank 0 offset 35
+    // Olive and khaki
+    Color.fromARGB(255, 228, 224, 174), // 028 bank 0 offset 28
+    Color.fromARGB(255, 202, 199, 131), // 029 bank 0 offset 29
+    Color.fromARGB(255, 170, 169, 95), // 030 bank 0 offset 30
+    Color.fromARGB(255, 137, 139, 67), // 031 bank 0 offset 31
+    Color.fromARGB(255, 109, 113, 52), // 032 bank 0 offset 32
+    Color.fromARGB(255, 83, 86, 41), // 033 bank 0 offset 33
+    Color.fromARGB(255, 58, 60, 30), // 034 bank 0 offset 34
+    Color.fromARGB(255, 35, 36, 22), // 035 bank 0 offset 35
     Color.fromARGB(255, 111, 111, 111), // 036 bank 0 offset 36
-    Color.fromARGB(255, 107, 107, 107), // 037 bank 0 offset 37
-    Color.fromARGB(255, 102, 102, 102), // 038 bank 0 offset 38
-    Color.fromARGB(255, 100, 100, 100), // 039 bank 0 offset 39
-    Color.fromARGB(255, 97, 97, 97), // 040 bank 0 offset 40
-    Color.fromARGB(255, 93, 93, 93), // 041 bank 0 offset 41
-    Color.fromARGB(255, 90, 90, 90), // 042 bank 0 offset 42
-    Color.fromARGB(255, 86, 86, 86), // 043 bank 0 offset 43
-    Color.fromARGB(255, 83, 83, 83), // 044 bank 0 offset 44
+    // Gold
+    Color.fromARGB(255, 255, 241, 184), // 037 bank 0 offset 37
+    Color.fromARGB(255, 255, 224, 138), // 038 bank 0 offset 38
+    Color.fromARGB(255, 244, 201, 93), // 039 bank 0 offset 39
+    Color.fromARGB(255, 221, 175, 55), // 040 bank 0 offset 40
+    Color.fromARGB(255, 196, 147, 36), // 041 bank 0 offset 41
+    Color.fromARGB(255, 157, 113, 24), // 042 bank 0 offset 42
+    Color.fromARGB(255, 116, 80, 15), // 043 bank 0 offset 43
+    Color.fromARGB(255, 73, 48, 8), // 044 bank 0 offset 44
     Color.fromARGB(255, 79, 79, 79), // 045 bank 0 offset 45
-    Color.fromARGB(255, 74, 74, 74), // 046 bank 0 offset 46
-    Color.fromARGB(255, 69, 69, 69), // 047 bank 0 offset 47
-    Color.fromARGB(255, 65, 65, 65), // 048 bank 0 offset 48
-    Color.fromARGB(255, 60, 60, 60), // 049 bank 0 offset 49
-    Color.fromARGB(255, 55, 55, 55), // 050 bank 0 offset 50
-    Color.fromARGB(255, 50, 50, 50), // 051 bank 0 offset 51
-    Color.fromARGB(255, 46, 46, 46), // 052 bank 0 offset 52
-    Color.fromARGB(255, 41, 41, 41), // 053 bank 0 offset 53
+    // Turquoise and teal
+    Color.fromARGB(255, 185, 243, 232), // 046 bank 0 offset 46
+    Color.fromARGB(255, 130, 221, 207), // 047 bank 0 offset 47
+    Color.fromARGB(255, 78, 195, 181), // 048 bank 0 offset 48
+    Color.fromARGB(255, 39, 164, 151), // 049 bank 0 offset 49
+    Color.fromARGB(255, 22, 132, 121), // 050 bank 0 offset 50
+    Color.fromARGB(255, 14, 99, 92), // 051 bank 0 offset 51
+    Color.fromARGB(255, 8, 68, 63), // 052 bank 0 offset 52
+    Color.fromARGB(255, 3, 38, 34), // 053 bank 0 offset 53
     Color.fromARGB(255, 36, 36, 36), // 054 bank 0 offset 54
-    Color.fromARGB(255, 32, 32, 32), // 055 bank 0 offset 55
-    Color.fromARGB(255, 28, 28, 28), // 056 bank 0 offset 56
-    Color.fromARGB(255, 24, 24, 24), // 057 bank 0 offset 57
-    Color.fromARGB(255, 20, 20, 20), // 058 bank 0 offset 58
-    Color.fromARGB(255, 16, 16, 16), // 059 bank 0 offset 59
-    Color.fromARGB(255, 12, 12, 12), // 060 bank 0 offset 60
-    Color.fromARGB(255, 8, 8, 8), // 061 bank 0 offset 61
-    Color.fromARGB(255, 4, 4, 4), // 062 bank 0 offset 62
+    // Terracotta
+    Color.fromARGB(255, 244, 192, 168), // 055 bank 0 offset 55
+    Color.fromARGB(255, 231, 155, 124), // 056 bank 0 offset 56
+    Color.fromARGB(255, 212, 118, 87), // 057 bank 0 offset 57
+    Color.fromARGB(255, 185, 86, 62), // 058 bank 0 offset 58
+    Color.fromARGB(255, 150, 61, 45), // 059 bank 0 offset 59
+    Color.fromARGB(255, 114, 43, 34), // 060 bank 0 offset 60
+    Color.fromARGB(255, 79, 28, 24), // 061 bank 0 offset 61
+    Color.fromARGB(255, 43, 14, 13), // 062 bank 0 offset 62
     Color.fromARGB(255, 0, 0, 0), // 063 bank 0 offset 63
-    // Bank 1: red, indices 64..127
+    // Bank 1: red with fabric-beige extension, indices 64..127
     Color.fromARGB(255, 255, 176, 163), // 064 bank 1 offset 00
-    Color.fromARGB(255, 255, 174, 160), // 065 bank 1 offset 01
-    Color.fromARGB(255, 255, 171, 157), // 066 bank 1 offset 02
-    Color.fromARGB(255, 255, 169, 154), // 067 bank 1 offset 03
-    Color.fromARGB(255, 255, 166, 151), // 068 bank 1 offset 04
-    Color.fromARGB(255, 255, 164, 149), // 069 bank 1 offset 05
-    Color.fromARGB(255, 255, 161, 146), // 070 bank 1 offset 06
-    Color.fromARGB(255, 255, 159, 143), // 071 bank 1 offset 07
-    Color.fromARGB(255, 255, 156, 140), // 072 bank 1 offset 08
+    // Fabric beige
+    Color.fromARGB(255, 250, 243, 232), // 065 bank 1 offset 01
+    Color.fromARGB(255, 239, 227, 210), // 066 bank 1 offset 02
+    Color.fromARGB(255, 226, 209, 185), // 067 bank 1 offset 03
+    Color.fromARGB(255, 211, 191, 162), // 068 bank 1 offset 04
+    Color.fromARGB(255, 194, 169, 135), // 069 bank 1 offset 05
+    Color.fromARGB(255, 170, 144, 111), // 070 bank 1 offset 06
+    Color.fromARGB(255, 141, 118, 92), // 071 bank 1 offset 07
+    Color.fromARGB(255, 111, 92, 73), // 072 bank 1 offset 08
     Color.fromARGB(255, 255, 154, 137), // 073 bank 1 offset 09
-    Color.fromARGB(255, 255, 146, 129), // 074 bank 1 offset 10
-    Color.fromARGB(255, 255, 139, 121), // 075 bank 1 offset 11
-    Color.fromARGB(255, 255, 131, 113), // 076 bank 1 offset 12
-    Color.fromARGB(255, 255, 123, 105), // 077 bank 1 offset 13
-    Color.fromARGB(255, 255, 116, 97), // 078 bank 1 offset 14
-    Color.fromARGB(255, 255, 108, 89), // 079 bank 1 offset 15
-    Color.fromARGB(255, 255, 100, 81), // 080 bank 1 offset 16
-    Color.fromARGB(255, 255, 93, 73), // 081 bank 1 offset 17
+    // Brown skin
+    Color.fromARGB(255, 255, 224, 194), // 074 bank 1 offset 10
+    Color.fromARGB(255, 244, 194, 159), // 075 bank 1 offset 11
+    Color.fromARGB(255, 223, 165, 126), // 076 bank 1 offset 12
+    Color.fromARGB(255, 200, 137, 98), // 077 bank 1 offset 13
+    Color.fromARGB(255, 170, 107, 73), // 078 bank 1 offset 14
+    Color.fromARGB(255, 130, 80, 58), // 079 bank 1 offset 15
+    Color.fromARGB(255, 91, 53, 42), // 080 bank 1 offset 16
+    Color.fromARGB(255, 53, 32, 27), // 081 bank 1 offset 17
     Color.fromARGB(255, 255, 85, 65), // 082 bank 1 offset 18
     Color.fromARGB(255, 255, 80, 58), // 083 bank 1 offset 19
     Color.fromARGB(255, 255, 74, 51), // 084 bank 1 offset 20
@@ -740,6 +750,7 @@ class DynamicPalettes {
     493,
     502,
     511,
+    // Brown
     1,
     2,
     3,
@@ -748,6 +759,7 @@ class DynamicPalettes {
     6,
     7,
     8,
+    // Light skin tones
     10,
     11,
     12,
@@ -756,6 +768,7 @@ class DynamicPalettes {
     15,
     16,
     17,
+    // Pastel colors
     19,
     20,
     21,
@@ -764,6 +777,7 @@ class DynamicPalettes {
     24,
     25,
     26,
+    // Olive and khaki
     28,
     29,
     30,
@@ -772,6 +786,7 @@ class DynamicPalettes {
     33,
     34,
     35,
+    // Gold
     37,
     38,
     39,
@@ -780,6 +795,7 @@ class DynamicPalettes {
     42,
     43,
     44,
+    // Turquoise and teal
     46,
     47,
     48,
@@ -788,6 +804,7 @@ class DynamicPalettes {
     51,
     52,
     53,
+    // Terracotta
     55,
     56,
     57,
@@ -796,6 +813,7 @@ class DynamicPalettes {
     60,
     61,
     62,
+    // Fabric beige
     65,
     66,
     67,
@@ -935,6 +953,7 @@ class DynamicPalettes {
     70,
     71,
     72,
+    // Brown skin
     74,
     75,
     76,
