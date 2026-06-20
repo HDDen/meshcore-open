@@ -624,6 +624,44 @@ void main() {
       }
     });
 
+    test('dynamic adaptive bitplanes palette orders roundtrip', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal32,
+      );
+      final sequence = [
+        colors[0],
+        colors[29],
+        colors[29],
+        colors[29],
+        colors[4],
+        colors[24],
+        colors[7],
+        colors[18],
+        colors[12],
+      ];
+      final image = _image(
+        18,
+        12,
+        (x, y) => sequence[(x + y * 5) % sequence.length],
+        profile: PaletteProfile.dynamicGlobal32,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors.first,
+      );
+
+      for (final container in const [
+        'adaptive-bitplanes-profile-order',
+        'adaptive-bitplanes-rgb-order',
+        'adaptive-bitplanes-transition-order',
+      ]) {
+        final candidate = diagnostics.candidates.firstWhere(
+          (candidate) => candidate.container == container,
+        );
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
     test('direct dynamic bitplanes candidate roundtrips', () {
       final colors = MCOImageDynamicPalette.indicesFor(
         PaletteProfile.dynamicGlobal32,

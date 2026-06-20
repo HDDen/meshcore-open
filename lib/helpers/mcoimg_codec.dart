@@ -60,6 +60,14 @@ enum MCOImageEncodingVersion { v1Legacy, v2 }
 
 enum MCOImageOutputTarget { text, binary }
 
+enum _AdaptivePaletteOrder {
+  frequency,
+  bitplaneOptimized,
+  profileId,
+  rgbProximity,
+  transitionFrequency,
+}
+
 extension PaletteProfileKind on PaletteProfile {
   bool get isDynamic {
     return switch (this) {
@@ -771,26 +779,53 @@ class MCOImageCodec {
           for (final adaptiveVariant in <({
             bool directGrayscale,
             bool directDynamicProfile,
-            bool optimizePaletteOrder,
+            _AdaptivePaletteOrder paletteOrder,
             String container,
           })>[
             (
               directGrayscale: false,
               directDynamicProfile: false,
-              optimizePaletteOrder: false,
+              paletteOrder: _AdaptivePaletteOrder.frequency,
               container: 'adaptive-bitplanes',
             ),
             (
               directGrayscale: false,
               directDynamicProfile: false,
-              optimizePaletteOrder: true,
+              paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
               container: 'adaptive-bitplanes-optimized',
             ),
+            if (image.paletteProfile.isDynamic &&
+                referenceEncoding != null &&
+                !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+              (
+                directGrayscale: false,
+                directDynamicProfile: false,
+                paletteOrder: _AdaptivePaletteOrder.profileId,
+                container: 'adaptive-bitplanes-profile-order',
+              ),
+            if (image.paletteProfile.isDynamic &&
+                referenceEncoding != null &&
+                !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+              (
+                directGrayscale: false,
+                directDynamicProfile: false,
+                paletteOrder: _AdaptivePaletteOrder.rgbProximity,
+                container: 'adaptive-bitplanes-rgb-order',
+              ),
+            if (image.paletteProfile.isDynamic &&
+                referenceEncoding != null &&
+                !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+              (
+                directGrayscale: false,
+                directDynamicProfile: false,
+                paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
+                container: 'adaptive-bitplanes-transition-order',
+              ),
             if (_isGrayscaleProfile(image.paletteProfile))
               (
                 directGrayscale: true,
                 directDynamicProfile: false,
-                optimizePaletteOrder: false,
+                paletteOrder: _AdaptivePaletteOrder.frequency,
                 container: 'direct-grayscale-bitplanes',
               ),
             if (image.paletteProfile.isDynamic &&
@@ -798,7 +833,7 @@ class MCOImageCodec {
               (
                 directGrayscale: false,
                 directDynamicProfile: true,
-                optimizePaletteOrder: false,
+                paletteOrder: _AdaptivePaletteOrder.frequency,
                 container: 'direct-dynamic-bitplanes',
               ),
           ]) {
@@ -812,7 +847,7 @@ class MCOImageCodec {
               backgroundColor: bg,
               directGrayscale: adaptiveVariant.directGrayscale,
               directDynamicProfile: adaptiveVariant.directDynamicProfile,
-              optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
+              paletteOrder: adaptiveVariant.paletteOrder,
             );
             if (adaptivePayload == null) continue;
             final adaptiveCandidate = _candidateFromPayload(
@@ -1131,26 +1166,53 @@ class MCOImageCodec {
             for (final adaptiveVariant in <({
               bool directGrayscale,
               bool directDynamicProfile,
-              bool optimizePaletteOrder,
+              _AdaptivePaletteOrder paletteOrder,
               String container,
             })>[
               (
                 directGrayscale: false,
                 directDynamicProfile: false,
-                optimizePaletteOrder: false,
+                paletteOrder: _AdaptivePaletteOrder.frequency,
                 container: 'adaptive-bitplanes-bounds',
               ),
               (
                 directGrayscale: false,
                 directDynamicProfile: false,
-                optimizePaletteOrder: true,
+                paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
                 container: 'adaptive-bitplanes-optimized-bounds',
               ),
+              if (image.paletteProfile.isDynamic &&
+                  referenceEncoding != null &&
+                  !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.profileId,
+                  container: 'adaptive-bitplanes-profile-order-bounds',
+                ),
+              if (image.paletteProfile.isDynamic &&
+                  referenceEncoding != null &&
+                  !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.rgbProximity,
+                  container: 'adaptive-bitplanes-rgb-order-bounds',
+                ),
+              if (image.paletteProfile.isDynamic &&
+                  referenceEncoding != null &&
+                  !_usesExtendedDynamicPaletteDescriptor(referenceEncoding))
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
+                  container: 'adaptive-bitplanes-transition-order-bounds',
+                ),
               if (_isGrayscaleProfile(image.paletteProfile))
                 (
                   directGrayscale: true,
                   directDynamicProfile: false,
-                  optimizePaletteOrder: false,
+                  paletteOrder: _AdaptivePaletteOrder.frequency,
                   container: 'direct-grayscale-bitplanes-bounds',
                 ),
               if (image.paletteProfile.isDynamic &&
@@ -1158,7 +1220,7 @@ class MCOImageCodec {
                 (
                   directGrayscale: false,
                   directDynamicProfile: true,
-                  optimizePaletteOrder: false,
+                  paletteOrder: _AdaptivePaletteOrder.frequency,
                   container: 'direct-dynamic-bitplanes-bounds',
                 ),
             ]) {
@@ -1173,7 +1235,7 @@ class MCOImageCodec {
                 bounds: bounds,
                 directGrayscale: adaptiveVariant.directGrayscale,
                 directDynamicProfile: adaptiveVariant.directDynamicProfile,
-                optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
+                paletteOrder: adaptiveVariant.paletteOrder,
               );
               if (adaptivePayload == null) continue;
               final adaptiveCandidate = _candidateFromPayload(
@@ -2193,7 +2255,7 @@ class MCOImageCodec {
     required int backgroundColor,
     required bool directGrayscale,
     required bool directDynamicProfile,
-    required bool optimizePaletteOrder,
+    required _AdaptivePaletteOrder paletteOrder,
     _ImageBounds? bounds,
   }) {
     if (linear.length != dataWidth * dataHeight || linear.isEmpty) return null;
@@ -2202,6 +2264,16 @@ class MCOImageCodec {
       return null;
     }
     if (directDynamicProfile && !image.paletteProfile.isDynamic) return null;
+    if ((directGrayscale || directDynamicProfile) &&
+        paletteOrder != _AdaptivePaletteOrder.frequency) {
+      return null;
+    }
+    if ((paletteOrder == _AdaptivePaletteOrder.profileId ||
+            paletteOrder == _AdaptivePaletteOrder.rgbProximity ||
+            paletteOrder == _AdaptivePaletteOrder.transitionFrequency) &&
+        !image.paletteProfile.isDynamic) {
+      return null;
+    }
     if (directDynamicProfile &&
         referenceEncoding != DynamicPaletteReferenceEncoding.flat) {
       return null;
@@ -2312,10 +2384,33 @@ class MCOImageCodec {
     } else {
       palette = _buildLocalPalette(linear).colors;
     }
-    final orderedPalette = optimizePaletteOrder
-        ? _optimizeBitplanesPaletteOrder(linear, palette)
-        : palette;
-    if (optimizePaletteOrder && _intListsEqual(orderedPalette, palette)) {
+    final orderedPalette = switch (paletteOrder) {
+      _AdaptivePaletteOrder.frequency => palette,
+      _AdaptivePaletteOrder.bitplaneOptimized =>
+        _optimizeBitplanesPaletteOrder(linear, palette),
+      _AdaptivePaletteOrder.profileId => List<int>.of(palette)
+        ..sort(
+          (left, right) => _profileColorIdForGlobalIndex(
+            image.paletteProfile,
+            left,
+          )!.compareTo(
+            _profileColorIdForGlobalIndex(image.paletteProfile, right)!,
+          ),
+        ),
+      _AdaptivePaletteOrder.rgbProximity => _orderDynamicPaletteByRgb(
+        linear,
+        palette,
+        backgroundColor,
+      ),
+      _AdaptivePaletteOrder.transitionFrequency =>
+        _optimizeDynamicTransitionPaletteOrder(
+          linear,
+          palette,
+          backgroundColor,
+        ),
+    };
+    if (paletteOrder != _AdaptivePaletteOrder.frequency &&
+        _intListsEqual(orderedPalette, palette)) {
       return null;
     }
 
@@ -9537,6 +9632,54 @@ class MCOImageCodec {
       });
     }
     return result;
+  }
+
+  List<int> _orderDynamicPaletteByRgb(
+    List<int> pixels,
+    List<int> palette,
+    int backgroundColor,
+  ) {
+    if (palette.length < 3) return palette;
+    final counts = <int, int>{};
+    for (final color in pixels) {
+      counts[color] = (counts[color] ?? 0) + 1;
+    }
+    final remaining = palette.toSet();
+    var current = remaining.contains(backgroundColor)
+        ? backgroundColor
+        : palette.reduce(
+            (left, right) =>
+                (counts[left] ?? 0) >= (counts[right] ?? 0) ? left : right,
+          );
+    final result = <int>[];
+    while (remaining.isNotEmpty) {
+      result.add(current);
+      remaining.remove(current);
+      if (remaining.isEmpty) break;
+      current = remaining.reduce((left, right) {
+        final leftDistance = _dynamicRgbDistanceSquared(current, left);
+        final rightDistance = _dynamicRgbDistanceSquared(current, right);
+        if (leftDistance != rightDistance) {
+          return leftDistance < rightDistance ? left : right;
+        }
+        final leftCount = counts[left] ?? 0;
+        final rightCount = counts[right] ?? 0;
+        if (leftCount != rightCount) {
+          return leftCount > rightCount ? left : right;
+        }
+        return left < right ? left : right;
+      });
+    }
+    return result;
+  }
+
+  static int _dynamicRgbDistanceSquared(int left, int right) {
+    final leftArgb = MCOImageDynamicPalette.global512[left].toARGB32();
+    final rightArgb = MCOImageDynamicPalette.global512[right].toARGB32();
+    final red = ((leftArgb >> 16) & 0xff) - ((rightArgb >> 16) & 0xff);
+    final green = ((leftArgb >> 8) & 0xff) - ((rightArgb >> 8) & 0xff);
+    final blue = (leftArgb & 0xff) - (rightArgb & 0xff);
+    return red * red + green * green + blue * blue;
   }
 
   int _adaptiveBitplanesCost(List<int> pixels, List<int> palette) {

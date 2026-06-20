@@ -1771,6 +1771,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'adaptive-bitplanes-optimized' => 'Adaptive bitplanes optimized',
       'adaptive-bitplanes-optimized-bounds' =>
         'Adaptive bitplanes optimized bounds',
+      'adaptive-bitplanes-profile-order' =>
+        'Adaptive bitplanes profile order',
+      'adaptive-bitplanes-profile-order-bounds' =>
+        'Adaptive bitplanes profile order bounds',
+      'adaptive-bitplanes-rgb-order' => 'Adaptive bitplanes RGB order',
+      'adaptive-bitplanes-rgb-order-bounds' =>
+        'Adaptive bitplanes RGB order bounds',
+      'adaptive-bitplanes-transition-order' =>
+        'Adaptive bitplanes transition order',
+      'adaptive-bitplanes-transition-order-bounds' =>
+        'Adaptive bitplanes transition order bounds',
       'direct-grayscale-bitplanes' => 'Direct grayscale bitplanes',
       'direct-grayscale-bitplanes-bounds' =>
         'Direct grayscale bitplanes bounds',
