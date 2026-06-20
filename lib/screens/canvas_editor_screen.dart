@@ -2277,16 +2277,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final file = await file_selector.openFile(
         acceptedTypeGroups: const [
           file_selector.XTypeGroup(
-            label: 'MCO image binary',
-            extensions: ['bin'],
-            mimeTypes: ['application/octet-stream'],
-            uniformTypeIdentifiers: ['public.data'],
-          ),
-          file_selector.XTypeGroup(
             label: 'Images',
             extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
             mimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/bmp'],
             uniformTypeIdentifiers: ['public.image'],
+          ),
+          file_selector.XTypeGroup(
+            label: 'MCO image binary',
+            extensions: ['bin'],
+            mimeTypes: ['application/octet-stream'],
+            uniformTypeIdentifiers: ['public.data'],
           ),
         ],
       );

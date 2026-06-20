@@ -1946,6 +1946,7 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                             child: Wrap(
                               spacing: 4,
+                              runSpacing: 2,
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(

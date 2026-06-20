@@ -1131,14 +1131,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               padding: isMediaMessage
                                   ? const EdgeInsets.symmetric(horizontal: 8)
                                   : EdgeInsets.zero,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                              child: Wrap(
+                                spacing: 4,
+                                runSpacing: 2,
+                                crossAxisAlignment:
+                                    WrapCrossAlignment.center,
                                 children: [
                                   RouteChip(
                                     isDirect: (message.pathLength ?? -1) >= 0,
                                     hops: displayHopCount,
                                   ),
-                                  const SizedBox(width: 4),
                                   Text(
                                     context.l10n.channels_via(
                                       _formatPathPrefixes(
@@ -1164,8 +1166,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     bottom: 4,
                                   )
                                 : EdgeInsets.zero,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            child: Wrap(
+                              runSpacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
                                   _formatTime(
@@ -2695,7 +2698,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return PathHelper.splitPathBytes(
       pathBytes,
       pathHashByteWidth,
-    ).map(PathHelper.formatHopHex).join(',');
+    ).map(PathHelper.formatHopHex).join(', ');
   }
 
   int _displayHopCount(
