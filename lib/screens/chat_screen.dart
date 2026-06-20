@@ -1651,6 +1651,15 @@ class _MessageBubble extends StatelessWidget {
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
+      metadata: mcoImageMetadata,
+      sourceText: message.text,
+      isBinary: false,
+      showResolution: settingsService.settings.showMcoImageResolution,
+      showFormat: settingsService.settings.showMcoImageFormat,
+      showAlgorithm: settingsService.settings.showMcoImageAlgorithm,
+      showBytes: settingsService.settings.showMcoImageBytes,
+    );
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
@@ -1982,10 +1991,10 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                 ],
-                                if (sharedHistorySourceName != null &&
-                                    sharedHistorySourceName.isNotEmpty) ...[
+                                if (mcoImageBadgeLabel != null) ...[
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'sync $sharedHistorySourceName',
+                                    mcoImageBadgeLabel,
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,
@@ -1997,6 +2006,17 @@ class _MessageBubble extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     compressionLabel,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (sharedHistorySourceName != null &&
+                                    sharedHistorySourceName.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'sync $sharedHistorySourceName',
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,

@@ -188,6 +188,10 @@ class AppSettings {
   final bool showHops;
   final bool hideChannelIndexIndicator;
   final bool hideMapZoomControls;
+  final bool showMcoImageResolution;
+  final bool showMcoImageFormat;
+  final bool showMcoImageAlgorithm;
+  final bool showMcoImageBytes;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool incomingQuoteAsMentions;
@@ -436,6 +440,10 @@ class AppSettings {
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
     this.hideMapZoomControls = false,
+    this.showMcoImageResolution = false,
+    this.showMcoImageFormat = true,
+    this.showMcoImageAlgorithm = true,
+    this.showMcoImageBytes = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.incomingQuoteAsMentions = false,
@@ -529,6 +537,10 @@ class AppSettings {
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'hide_map_zoom_controls': hideMapZoomControls,
+      'show_mco_image_resolution': showMcoImageResolution,
+      'show_mco_image_format': showMcoImageFormat,
+      'show_mco_image_algorithm': showMcoImageAlgorithm,
+      'show_mco_image_bytes': showMcoImageBytes,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
@@ -635,6 +647,12 @@ class AppSettings {
           json['hide_channel_index_indicator'] as bool? ?? false,
       hideMapZoomControls:
           json['hide_map_zoom_controls'] as bool? ?? false,
+      showMcoImageResolution:
+          json['show_mco_image_resolution'] as bool? ?? false,
+      showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
+      showMcoImageAlgorithm:
+          json['show_mco_image_algorithm'] as bool? ?? true,
+      showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
       showCompressionRatio:
           json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
@@ -782,6 +800,10 @@ class AppSettings {
     bool? showHops,
     bool? hideChannelIndexIndicator,
     bool? hideMapZoomControls,
+    bool? showMcoImageResolution,
+    bool? showMcoImageFormat,
+    bool? showMcoImageAlgorithm,
+    bool? showMcoImageBytes,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? incomingQuoteAsMentions,
@@ -856,6 +878,13 @@ class AppSettings {
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
       hideMapZoomControls:
           hideMapZoomControls ?? this.hideMapZoomControls,
+      showMcoImageResolution:
+          showMcoImageResolution ?? this.showMcoImageResolution,
+      showMcoImageFormat:
+          showMcoImageFormat ?? this.showMcoImageFormat,
+      showMcoImageAlgorithm:
+          showMcoImageAlgorithm ?? this.showMcoImageAlgorithm,
+      showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
       showCompressionRatio:
           showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:

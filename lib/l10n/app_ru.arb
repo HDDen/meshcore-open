@@ -2249,5 +2249,9 @@
   "settings_modSettingsSharedMsgHistoryAll": "Все чаты",
   "settings_modSettingsMessagingShowCompressionRatio": "Отображать степень сжатия",
   "settings_modSettingsMessagingCompressionRatioWithSendername": "При подсчёте учитывать имя ноды",
-  "settings_modSettingsVisualHideMapZoomControls": "Скрыть на карте панель зума"
+  "settings_modSettingsVisualHideMapZoomControls": "Скрыть на карте панель зума",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: отображать бейдж алгоритма кодирования",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: отображать информационный вес картинки (байт)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение"
 }

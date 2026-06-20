@@ -65,6 +65,68 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
+                    secondary: const Icon(Icons.aspect_ratio, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsVisualShowMCOimgResolution,
+                    ),
+                    value: settings.showMcoImageResolution,
+                    onChanged: settingsService.setShowMcoImageResolution,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.numbers, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgFormat,
+                    ),
+                    value: settings.showMcoImageFormat,
+                    onChanged: settingsService.setShowMcoImageFormat,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.account_tree_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgAlgo,
+                    ),
+                    value: settings.showMcoImageAlgorithm,
+                    onChanged: settingsService.setShowMcoImageAlgorithm,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.data_usage_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgBytes,
+                    ),
+                    value: settings.showMcoImageBytes,
+                    onChanged: settingsService.setShowMcoImageBytes,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     secondary: const Icon(Icons.compress, size: 20),
                     title: Text(
                       context

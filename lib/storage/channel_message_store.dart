@@ -128,6 +128,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'compressionOriginalBytes': msg.compressionOriginalBytes,
       'compressionPayloadBytes': msg.compressionPayloadBytes,
       'wasBinaryTransport': msg.wasBinaryTransport,
+      'binaryPacketBytes': msg.binaryPacketBytes,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
@@ -220,6 +221,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           json['compressionPayloadBytes'] as int? ??
           detectedCompression?.payloadBytes,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
+      binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       sentByRadioAt: json['sentByRadioAt'] is int
           ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)

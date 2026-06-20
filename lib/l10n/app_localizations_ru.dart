@@ -5387,4 +5387,20 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
       'Скрыть на карте панель зума';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: отображать бейдж версии формата';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: отображать бейдж алгоритма кодирования';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: отображать информационный вес картинки (байт)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: отображать разрешение';
 }

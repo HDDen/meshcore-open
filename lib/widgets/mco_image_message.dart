@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -10,11 +11,13 @@ class MCOImageDecodeMetadata {
   final MCOImage? image;
   final int? unsupportedVersion;
   final int currentMaxSupportedVersion;
+  final MCOImagePayloadInfo? payloadInfo;
 
   const MCOImageDecodeMetadata({
     required this.image,
     required this.unsupportedVersion,
     required this.currentMaxSupportedVersion,
+    required this.payloadInfo,
   });
 
   bool get isImage => image != null;
@@ -29,11 +32,13 @@ class MCOImageMessage extends StatelessWidget {
 
   static MCOImageDecodeMetadata decodeMetadata(String text) {
     final current = MCOImageCodec.maxSupportedVersion;
+    final payloadInfo = MCOImageCodec.inspectPayload(text);
     if (!text.startsWith(MCOImageCodec.prefix)) {
       return MCOImageDecodeMetadata(
         image: null,
         unsupportedVersion: null,
         currentMaxSupportedVersion: current,
+        payloadInfo: null,
       );
     }
 
@@ -43,6 +48,7 @@ class MCOImageMessage extends StatelessWidget {
         image: null,
         unsupportedVersion: received,
         currentMaxSupportedVersion: current,
+        payloadInfo: payloadInfo,
       );
     }
 
@@ -51,14 +57,46 @@ class MCOImageMessage extends StatelessWidget {
         image: MCOImageCodec().decode(text),
         unsupportedVersion: null,
         currentMaxSupportedVersion: current,
+        payloadInfo: payloadInfo,
       );
     } on MCOImageCodecException {
       return MCOImageDecodeMetadata(
         image: null,
         unsupportedVersion: null,
         currentMaxSupportedVersion: current,
+        payloadInfo: payloadInfo,
       );
     }
+  }
+
+  static String? buildBadgeLabel({
+    required MCOImageDecodeMetadata metadata,
+    required String sourceText,
+    required bool isBinary,
+    required bool showResolution,
+    required bool showFormat,
+    required bool showAlgorithm,
+    required bool showBytes,
+    int? binaryPacketBytes,
+  }) {
+    if (metadata.image == null) return null;
+    final parts = <String>['MCOimg${isBinary ? ' bin' : ''}'];
+    final image = metadata.image!;
+    if (showResolution) parts.add('${image.width}x${image.height}');
+    final payloadInfo = metadata.payloadInfo;
+    if (showFormat && payloadInfo != null) {
+      parts.add('v${payloadInfo.version}');
+    }
+    if (showAlgorithm && payloadInfo != null) {
+      parts.add(payloadInfo.algorithm);
+    }
+    if (showBytes) {
+      final byteLength = isBinary
+          ? binaryPacketBytes
+          : utf8.encode(sourceText).length;
+      if (byteLength != null) parts.add('${byteLength}bytes');
+    }
+    return parts.join(' ');
   }
 
   static MCOImage? tryDecode(String text) {

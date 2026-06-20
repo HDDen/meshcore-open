@@ -9219,6 +9219,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide map zoom panel'**
   String get settings_modSettingsVisualHideMapZoomControls;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show format version badge'**
+  String get settings_modSettingsVisualShowMCOimgFormat;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show coding algorythm badge'**
+  String get settings_modSettingsVisualShowMCOimgAlgo;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show image weight (bytes)'**
+  String get settings_modSettingsVisualShowMCOimgBytes;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show resolution'**
+  String get settings_modSettingsVisualShowMCOimgResolution;
 }
 
 class _AppLocalizationsDelegate

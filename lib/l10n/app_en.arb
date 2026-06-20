@@ -3032,5 +3032,9 @@
   "settings_modSettingsSharedMsgHistoryAll": "All chats",
   "settings_modSettingsMessagingShowCompressionRatio": "Show compression ratio",
   "settings_modSettingsMessagingCompressionRatioWithSendername": "Also take into account senderName",
-  "settings_modSettingsVisualHideMapZoomControls": "Hide map zoom panel"
+  "settings_modSettingsVisualHideMapZoomControls": "Hide map zoom panel",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: show coding algorythm badge",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: show image weight (bytes)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution"
 }

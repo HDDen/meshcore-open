@@ -88,6 +88,18 @@ class MCOImage {
   }) : pixels = List.unmodifiable(pixels);
 }
 
+class MCOImagePayloadInfo {
+  final int version;
+  final String algorithm;
+  final int binaryLength;
+
+  const MCOImagePayloadInfo({
+    required this.version,
+    required this.algorithm,
+    required this.binaryLength,
+  });
+}
+
 class EncodedMCOImage {
   final String text;
   final ImageMode mode;
@@ -3189,6 +3201,116 @@ class MCOImageCodec {
     } catch (_) {
       return null;
     }
+  }
+
+  static MCOImagePayloadInfo? inspectPayload(String text) {
+    if (!text.startsWith(prefix)) return null;
+    try {
+      final bytes = _Base91.decode(text.substring(prefix.length));
+      return MCOImageCodec()._inspectPayloadBytes(bytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  MCOImagePayloadInfo _inspectPayloadBytes(Uint8List bytes) {
+    if (bytes.length < 4) {
+      throw const MCOImageInvalidPayloadException('Payload too short');
+    }
+    final header = bytes[0];
+    final version = (header >> 6) & 0x03;
+    if (version < _minSupportedVersion || version > _maxSupportedVersion) {
+      throw MCOImageInvalidPayloadException('Unsupported version $version');
+    }
+
+    if (version != _v2EncodeVersion) {
+      final mode = _modeFromBits((header >> 4) & 0x03);
+      final container = bytes[1] & 0x0f;
+      return MCOImagePayloadInfo(
+        version: version,
+        algorithm: container == _containerRegions
+            ? 'Regions'
+            : _imageModeLabel(mode),
+        binaryLength: bytes.length,
+      );
+    }
+
+    final mode = _modeFromBits((header >> 3) & 0x07);
+    final boundsPresent = (header & 0x01) != 0;
+    final paletteHeader = bytes[1];
+    final container = ((paletteHeader >> 6) & 0x01) == 0
+        ? _containerBlock
+        : _containerRegions;
+    if (container == _containerRegions) {
+      return MCOImagePayloadInfo(
+        version: version,
+        algorithm: 'Regions',
+        binaryLength: bytes.length,
+      );
+    }
+    if (mode != ImageMode.extended) {
+      return MCOImagePayloadInfo(
+        version: version,
+        algorithm: _imageModeLabel(mode),
+        binaryLength: bytes.length,
+      );
+    }
+
+    final paletteKind = (paletteHeader >> 7) & 0x01;
+    final hasTransparentColor =
+        (paletteHeader & _v2TransparentProfileFlag) != 0;
+    final profileId = paletteHeader & _v2ProfileIdMask;
+    final profile = paletteKind == _paletteKindDynamic
+        ? _dynamicProfileFromId(profileId)
+        : _fixedProfileFromId(profileId);
+    final width = bytes[2] + 1;
+    final height = bytes[3] + 1;
+    final reader = _BitReader(bytes, byteIndex: 4);
+    if (hasTransparentColor) _readV2ColorRef(reader, profile);
+    if (boundsPresent) {
+      _readV2ColorRef(reader, profile);
+      _readV2CompactBounds(reader, width, height);
+    }
+    reader.alignToByte();
+    final submode = reader.readBits(_extendedSubmodeBits);
+    final algorithm = submode == ExtendedImageMode.wrappedBlock.index
+        ? _imageModeLabel(_modeFromBits(reader.readBits(3)))
+        : _extendedImageModeLabel(submode);
+    return MCOImagePayloadInfo(
+      version: version,
+      algorithm: algorithm,
+      binaryLength: bytes.length,
+    );
+  }
+
+  static String _imageModeLabel(ImageMode mode) {
+    return switch (mode) {
+      ImageMode.rawGlobal => 'Raw global',
+      ImageMode.rawLocal => 'Raw local',
+      ImageMode.rleLocal => 'RLE local',
+      ImageMode.sparseBg => 'Sparse background',
+      ImageMode.regionsBg => 'Regions',
+      ImageMode.biColorMask => 'Bi-color mask',
+      ImageMode.rowDelta => 'Row delta',
+      ImageMode.rowRepeat => 'Row repeat',
+      ImageMode.extended => 'Extended',
+    };
+  }
+
+  static String _extendedImageModeLabel(int submode) {
+    if (submode < 0 || submode >= ExtendedImageMode.values.length) {
+      return 'Extended';
+    }
+    return switch (ExtendedImageMode.values[submode]) {
+      ExtendedImageMode.wrappedBlock => 'Wrapped block',
+      ExtendedImageMode.solidRects => 'Solid rectangles',
+      ExtendedImageMode.compactRle => 'Compact RLE',
+      ExtendedImageMode.compactSparse => 'Compact sparse',
+      ExtendedImageMode.lzPixels => 'LZ pixels',
+      ExtendedImageMode.quadtree => 'Quadtree',
+      ExtendedImageMode.bitplanes => 'Bitplanes',
+      ExtendedImageMode.compactRowDelta => 'Compact row delta',
+    };
   }
 
   static Uint8List binaryPayloadFromText(String text) {

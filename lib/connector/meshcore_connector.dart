@@ -4172,17 +4172,22 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: _selfName ?? 'Me',
       mcmpEnabled: isChannelMcmpEnabled(channel.index),
     );
-    final isBinaryTransport =
-        binaryOutbound != null &&
-        binaryOutbound.payload.length <= maxChannelDataLength;
+    final binaryFrame = binaryOutbound == null
+        ? null
+        : buildSendChannelDataFrame(
+            channel.index,
+            binaryOutbound.dataType,
+            binaryOutbound.payload,
+          );
+    final isBinaryTransport = binaryFrame != null;
     final isBinaryMcmpTransport =
-        isBinaryTransport && binaryOutbound.kind == ChannelBinaryDataKind.mcmp;
+        binaryOutbound?.kind == ChannelBinaryDataKind.mcmp;
     final compression = _channelCompressionMetadata(
       channel.index,
       uncompressedText ?? text,
       outboundText,
       binaryPayloadBytes: isBinaryMcmpTransport
-          ? binaryOutbound.payload.length
+          ? binaryOutbound?.payload.length
           : null,
       senderName: _selfName ?? 'Me',
     );
@@ -4201,6 +4206,7 @@ class MeshCoreConnector extends ChangeNotifier {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
       wasBinaryTransport: isBinaryTransport,
+      binaryPacketBytes: binaryFrame?.length,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
@@ -4213,13 +4219,9 @@ class MeshCoreConnector extends ChangeNotifier {
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       final sentByRadioAt = DateTime.now();
       _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
-      if (binaryOutbound != null) {
+      if (binaryFrame != null) {
         await _sendFrameAndWaitForCommandAck(
-          buildSendChannelDataFrame(
-            channel.index,
-            binaryOutbound.dataType,
-            binaryOutbound.payload,
-          ),
+          binaryFrame,
           channelSendQueueId: message.messageId,
           expectsGenericAck: true,
         );
@@ -4404,16 +4406,21 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: _selfName ?? 'Me',
       mcmpEnabled: isChannelMcmpEnabled(channel.index),
     );
-    final usesBinaryMcmp =
-        binaryOutbound != null &&
-        binaryOutbound.kind == ChannelBinaryDataKind.mcmp &&
-        binaryOutbound.payload.length <= maxChannelDataLength;
+    final binaryFrame = binaryOutbound == null
+        ? null
+        : buildSendChannelDataFrame(
+            channel.index,
+            binaryOutbound.dataType,
+            binaryOutbound.payload,
+          );
+    final usesBinaryTransport = binaryFrame != null;
+    final usesBinaryMcmp = binaryOutbound?.kind == ChannelBinaryDataKind.mcmp;
     final compression = _channelCompressionMetadata(
       channel.index,
       uncompressedText ?? text,
       outboundText,
       binaryPayloadBytes: usesBinaryMcmp
-          ? binaryOutbound.payload.length
+          ? binaryOutbound?.payload.length
           : null,
       senderName: _selfName ?? 'Me',
     );
@@ -4428,7 +4435,8 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
-      wasBinaryTransport: usesBinaryMcmp,
+      wasBinaryTransport: usesBinaryTransport,
+      binaryPacketBytes: binaryFrame?.length,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -6795,6 +6803,7 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
+      binaryPacketBytes: frame.length,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -7012,6 +7021,7 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
+      binaryPacketBytes: packet.payload.length,
       timestamp: decoded.timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -7789,6 +7799,7 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionOriginalBytes: message.compressionOriginalBytes,
         compressionPayloadBytes: message.compressionPayloadBytes,
         wasBinaryTransport: message.wasBinaryTransport,
+        binaryPacketBytes: message.binaryPacketBytes,
         timestamp: message.timestamp,
         sentByRadioAt: message.sentByRadioAt,
         isOutgoing: message.isOutgoing,

@@ -156,6 +156,22 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideMapZoomControls: value));
   }
 
+  Future<void> setShowMcoImageResolution(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageResolution: value));
+  }
+
+  Future<void> setShowMcoImageFormat(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageFormat: value));
+  }
+
+  Future<void> setShowMcoImageAlgorithm(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageAlgorithm: value));
+  }
+
+  Future<void> setShowMcoImageBytes(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageBytes: value));
+  }
+
   Future<void> setShowCompressionRatio(bool value) async {
     await updateSettings(_settings.copyWith(showCompressionRatio: value));
   }

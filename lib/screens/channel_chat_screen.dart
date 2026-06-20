@@ -813,6 +813,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
+      metadata: mcoImageMetadata,
+      sourceText: message.text,
+      isBinary: message.wasBinaryTransport,
+      showResolution: settingsService.settings.showMcoImageResolution,
+      showFormat: settingsService.settings.showMcoImageFormat,
+      showAlgorithm: settingsService.settings.showMcoImageAlgorithm,
+      showBytes: settingsService.settings.showMcoImageBytes,
+      binaryPacketBytes: message.binaryPacketBytes,
+    );
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
@@ -1211,22 +1221,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                         : metaColor,
                                   ),
                                 ],
-                                if (sharedHistorySourceName != null &&
-                                    sharedHistorySourceName.isNotEmpty) ...[
+                                if (mcoImageBadgeLabel != null) ...[
                                   const SizedBox(width: 6),
                                   Text(
-                                    'sync $sharedHistorySourceName',
-                                    style: MeshTheme.mono(
-                                      fontSize: 10 * textScale,
-                                      color: metaColor,
-                                    ),
-                                  ),
-                                ],
-                                if (mcoImage != null &&
-                                    message.wasBinaryTransport) ...[
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'MCOimg bin',
+                                    mcoImageBadgeLabel,
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,
@@ -1238,6 +1236,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   const SizedBox(width: 6),
                                   Text(
                                     compressionLabel,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (sharedHistorySourceName != null &&
+                                    sharedHistorySourceName.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'sync $sharedHistorySourceName',
                                     style: MeshTheme.mono(
                                       fontSize: 10 * textScale,
                                       color: metaColor,

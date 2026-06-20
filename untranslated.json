@@ -104,7 +104,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "de": [
@@ -199,7 +203,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "es": [
@@ -307,7 +315,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "fr": [
@@ -415,7 +427,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "hu": [
@@ -523,7 +539,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "it": [
@@ -711,7 +731,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "ja": [
@@ -819,7 +843,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "ko": [
@@ -927,7 +955,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "nl": [
@@ -1115,7 +1147,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "pl": [
@@ -1223,7 +1259,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "pt": [
@@ -1411,7 +1451,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "sk": [
@@ -1519,7 +1563,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "sl": [
@@ -1627,7 +1675,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "sv": [
@@ -1815,7 +1867,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "uk": [
@@ -1923,7 +1979,11 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ],
 
   "zh": [
@@ -2031,6 +2091,10 @@
     "settings_modSettingsSharedMsgHistoryAll",
     "settings_modSettingsMessagingShowCompressionRatio",
     "settings_modSettingsMessagingCompressionRatioWithSendername",
-    "settings_modSettingsVisualHideMapZoomControls"
+    "settings_modSettingsVisualHideMapZoomControls",
+    "settings_modSettingsVisualShowMCOimgFormat",
+    "settings_modSettingsVisualShowMCOimgAlgo",
+    "settings_modSettingsVisualShowMCOimgBytes",
+    "settings_modSettingsVisualShowMCOimgResolution"
   ]
 }

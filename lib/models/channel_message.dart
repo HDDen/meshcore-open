@@ -44,6 +44,7 @@ class ChannelMessage {
   final int? compressionOriginalBytes;
   final int? compressionPayloadBytes;
   final bool wasBinaryTransport;
+  final int? binaryPacketBytes;
   final DateTime timestamp;
   // Internal TX anchor; UI keeps using timestamp as the visible compose time.
   final DateTime? sentByRadioAt;
@@ -80,6 +81,7 @@ class ChannelMessage {
     this.compressionOriginalBytes,
     this.compressionPayloadBytes,
     this.wasBinaryTransport = false,
+    this.binaryPacketBytes,
     required this.timestamp,
     this.sentByRadioAt,
     List<int>? sentByRadioWaitSeconds,
@@ -137,6 +139,7 @@ class ChannelMessage {
     Object? compressionOriginalBytes = _unset,
     Object? compressionPayloadBytes = _unset,
     bool? wasBinaryTransport,
+    Object? binaryPacketBytes = _unset,
     Object? sharedHistorySourceName = _unset,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
@@ -173,6 +176,9 @@ class ChannelMessage {
           ? this.compressionPayloadBytes
           : compressionPayloadBytes as int?,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
+      binaryPacketBytes: binaryPacketBytes == _unset
+          ? this.binaryPacketBytes
+          : binaryPacketBytes as int?,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
@@ -318,6 +324,7 @@ class ChannelMessage {
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
     bool wasBinaryTransport = false,
+    int? binaryPacketBytes,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -332,6 +339,7 @@ class ChannelMessage {
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
       wasBinaryTransport: wasBinaryTransport,
+      binaryPacketBytes: binaryPacketBytes,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: ChannelMessageStatus.pending,
