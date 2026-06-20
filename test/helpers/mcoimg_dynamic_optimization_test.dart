@@ -207,7 +207,9 @@ bool _isBaselineCandidate(EncodedMCOImage candidate) {
           reference == DynamicPaletteReferenceEncoding.banked8x64) &&
       !candidate.container.startsWith('direct-dynamic') &&
       !candidate.container.contains('palette-optimized') &&
-      !candidate.container.contains('-order');
+      !candidate.container.contains('-order') &&
+      !candidate.container.contains('multistart') &&
+      candidate.container != 'regions-beam';
 }
 
 EncodedMCOImage _shortestBy(

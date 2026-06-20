@@ -1762,6 +1762,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   String _encodingContainerLabel(EncodedMCOImage candidate) {
     return switch (candidate.container) {
       'regions' => 'Regions x${candidate.regionCount}',
+      'regions-beam' => 'Regions beam x${candidate.regionCount}',
       'solid-rects' => 'Solid rectangles',
       'compact-bounds' => 'Compact bounds',
       'compact-rle' => 'Compact RLE',
@@ -1770,6 +1771,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'compact-sparse-bounds' => 'Compact sparse bounds',
       'lz-pixels' => 'LZ pixels',
       'lz-pixels-bounds' => 'LZ pixels bounds',
+      'lz-pixels-optimal' => 'LZ pixels optimal',
+      'lz-pixels-optimal-bounds' => 'LZ pixels optimal bounds',
       'quadtree' => 'Quadtree',
       'quadtree-bounds' => 'Quadtree bounds',
       'bitplanes' => 'Bitplanes',
@@ -1790,6 +1793,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'Adaptive bitplanes transition order',
       'adaptive-bitplanes-transition-order-bounds' =>
         'Adaptive bitplanes transition order bounds',
+      'adaptive-bitplanes-multistart' =>
+        'Adaptive bitplanes multi-start',
+      'adaptive-bitplanes-multistart-bounds' =>
+        'Adaptive bitplanes multi-start bounds',
       'direct-grayscale-bitplanes' => 'Direct grayscale bitplanes',
       'direct-grayscale-bitplanes-bounds' =>
         'Direct grayscale bitplanes bounds',

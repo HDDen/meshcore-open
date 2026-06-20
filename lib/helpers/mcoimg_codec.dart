@@ -66,6 +66,7 @@ enum _AdaptivePaletteOrder {
   profileId,
   rgbProximity,
   transitionFrequency,
+  multiStartOptimized,
 }
 
 extension PaletteProfileKind on PaletteProfile {
@@ -225,6 +226,12 @@ class MCOImageCodec {
   static const int _maxFrequentBackgroundCandidates = 8;
   static const int _minLzMatchLength = 3;
   static const int _maxLzMatchCandidates = 32;
+  static const int _maxOptimalLzPixels = 1024;
+  static const int _maxMultiStartBitplanesPixels = 4096;
+  static const int _maxBeamRegionPixels = 4096;
+  static const int _regionBeamWidth = 3;
+  static const int _regionBeamDepth = 2;
+  static const int _regionBeamNeighbors = 8;
   static const int _greedyTieLargestArea = 0;
   static const int _greedyTieWidest = 1;
   static const int _greedyTieTallest = 2;
@@ -472,6 +479,7 @@ class MCOImageCodec {
         ? _dynamicBlockModes
         : _v2BlockModes;
     final candidates = <EncodedMCOImage>[];
+    final optimalLzCache = <String, List<_LzPixelToken>?>{};
     EncodedMCOImage? best;
 
     for (final background in backgroundCandidates) {
@@ -499,7 +507,7 @@ class MCOImageCodec {
             usedBankCount: regionsPayload.usedBankCount,
             bitsPerLocalPixel: regionsPayload.bitsPerLocalPixel,
             paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-            container: 'regions',
+            container: regionsPayload.diagnosticContainer ?? 'regions',
           );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
@@ -710,36 +718,43 @@ class MCOImageCodec {
             }
           }
 
-          final lzPayload = _tryBuildV2LzPixelsPayload(
-            image,
-            linear,
-            scan,
-            referenceEncoding,
-            dataWidth: image.width,
-            dataHeight: image.height,
-            backgroundColor: bg,
-          );
-          if (lzPayload != null) {
-            final lzCandidate = _candidateFromPayload(
-              lzPayload.payload,
-              ImageMode.extended,
+          for (final lzVariant in const [
+            (optimal: false, container: 'lz-pixels'),
+            (optimal: true, container: 'lz-pixels-optimal'),
+          ]) {
+            final lzPayload = _tryBuildV2LzPixelsPayload(
+              image,
+              linear,
               scan,
+              referenceEncoding,
+              dataWidth: image.width,
+              dataHeight: image.height,
               backgroundColor: bg,
-              transparentColor: image.transparentColor,
-              backgroundRank: background.rank,
-              codecVersion: _v2EncodeVersion,
-              dynamicReferenceEncoding: referenceEncoding,
-              localPaletteSize: lzPayload.localPaletteSize,
-              usedBankCount: lzPayload.usedBankCount,
-              bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
-              container: 'lz-pixels',
+              optimizeParsing: lzVariant.optimal,
+              optimalCache: optimalLzCache,
             );
-            candidates.add(lzCandidate);
-            if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
-              best = lzCandidate;
+            if (lzPayload != null) {
+              final lzCandidate = _candidateFromPayload(
+                lzPayload.payload,
+                ImageMode.extended,
+                scan,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: lzPayload.localPaletteSize,
+                usedBankCount: lzPayload.usedBankCount,
+                bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: lzVariant.container,
+              );
+              candidates.add(lzCandidate);
+              if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
+                best = lzCandidate;
+              }
             }
           }
 
@@ -823,6 +838,16 @@ class MCOImageCodec {
                 directDynamicProfile: false,
                 paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
                 container: 'adaptive-bitplanes-transition-order',
+              ),
+            if (_supportsAlternativeAdaptivePaletteOrders(
+              image.paletteProfile,
+              referenceEncoding,
+            ))
+              (
+                directGrayscale: false,
+                directDynamicProfile: false,
+                paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
+                container: 'adaptive-bitplanes-multistart',
               ),
             if (_isGrayscaleProfile(image.paletteProfile))
               (
@@ -1093,38 +1118,45 @@ class MCOImageCodec {
               }
             }
 
-            final lzPayload = _tryBuildV2LzPixelsPayload(
-              image,
-              boundedLinear,
-              scan,
-              referenceEncoding,
-              dataWidth: bounds.width,
-              dataHeight: bounds.height,
-              backgroundColor: bg,
-              bounds: bounds,
-            );
-            if (lzPayload != null) {
-              final lzCandidate = _candidateFromPayload(
-                lzPayload.payload,
-                ImageMode.extended,
+            for (final lzVariant in const [
+              (optimal: false, container: 'lz-pixels-bounds'),
+              (optimal: true, container: 'lz-pixels-optimal-bounds'),
+            ]) {
+              final lzPayload = _tryBuildV2LzPixelsPayload(
+                image,
+                boundedLinear,
                 scan,
-                bounds: bounds,
+                referenceEncoding,
+                dataWidth: bounds.width,
+                dataHeight: bounds.height,
                 backgroundColor: bg,
-                transparentColor: image.transparentColor,
-                backgroundRank: background.rank,
-                codecVersion: _v2EncodeVersion,
-                dynamicReferenceEncoding: referenceEncoding,
-                localPaletteSize: lzPayload.localPaletteSize,
-                usedBankCount: lzPayload.usedBankCount,
-                bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
-                paletteKind: image.paletteProfile.isDynamic
-                    ? 'dynamic'
-                    : 'fixed',
-                container: 'lz-pixels-bounds',
+                bounds: bounds,
+                optimizeParsing: lzVariant.optimal,
+                optimalCache: optimalLzCache,
               );
-              candidates.add(lzCandidate);
-              if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
-                best = lzCandidate;
+              if (lzPayload != null) {
+                final lzCandidate = _candidateFromPayload(
+                  lzPayload.payload,
+                  ImageMode.extended,
+                  scan,
+                  bounds: bounds,
+                  backgroundColor: bg,
+                  transparentColor: image.transparentColor,
+                  backgroundRank: background.rank,
+                  codecVersion: _v2EncodeVersion,
+                  dynamicReferenceEncoding: referenceEncoding,
+                  localPaletteSize: lzPayload.localPaletteSize,
+                  usedBankCount: lzPayload.usedBankCount,
+                  bitsPerLocalPixel: lzPayload.bitsPerLocalPixel,
+                  paletteKind: image.paletteProfile.isDynamic
+                      ? 'dynamic'
+                      : 'fixed',
+                  container: lzVariant.container,
+                );
+                candidates.add(lzCandidate);
+                if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
+                  best = lzCandidate;
+                }
               }
             }
 
@@ -1214,6 +1246,16 @@ class MCOImageCodec {
                   directDynamicProfile: false,
                   paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
                   container: 'adaptive-bitplanes-transition-order-bounds',
+                ),
+              if (_supportsAlternativeAdaptivePaletteOrders(
+                image.paletteProfile,
+                referenceEncoding,
+              ))
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
+                  container: 'adaptive-bitplanes-multistart-bounds',
                 ),
               if (_isGrayscaleProfile(image.paletteProfile))
                 (
@@ -1880,6 +1922,8 @@ class MCOImageCodec {
     required int dataWidth,
     required int dataHeight,
     required int backgroundColor,
+    required bool optimizeParsing,
+    required Map<String, List<_LzPixelToken>?> optimalCache,
     _ImageBounds? bounds,
   }) {
     if (linear.length != dataWidth * dataHeight) {
@@ -1977,7 +2021,27 @@ class MCOImageCodec {
           .toList(growable: false);
     }
 
-    final tokens = _buildLzPixelTokens(localPixels, localBits);
+    final greedyTokens = _buildGreedyLzPixelTokens(localPixels, localBits);
+    final List<_LzPixelToken> tokens;
+    if (optimizeParsing) {
+      if (localPixels.length > _maxOptimalLzPixels) return null;
+      final cacheKey = _lzOptimizationCacheKey(localPixels, localBits);
+      final optimalTokens = optimalCache.putIfAbsent(
+        cacheKey,
+        () => _buildOptimalLzPixelTokens(localPixels, localBits),
+      );
+      if (optimalTokens == null) return null;
+      final optimalCost = _lzPixelTokensBitCost(optimalTokens, localBits);
+      final greedyCost = _lzPixelTokensBitCost(greedyTokens, localBits);
+      if (optimalCost > greedyCost ||
+          (optimalCost == greedyCost &&
+              _lzPixelTokensEqual(optimalTokens, greedyTokens))) {
+        return null;
+      }
+      tokens = optimalTokens;
+    } else {
+      tokens = greedyTokens;
+    }
     for (final token in tokens) {
       if (token.isMatch) {
         writer.writeBits(1, 1);
@@ -2390,16 +2454,10 @@ class MCOImageCodec {
       _AdaptivePaletteOrder.frequency => palette,
       _AdaptivePaletteOrder.bitplaneOptimized =>
         _optimizeBitplanesPaletteOrder(linear, palette),
-      _AdaptivePaletteOrder.profileId => List<int>.of(palette)
-        ..sort((left, right) {
-          if (image.paletteProfile.isFixed) return left.compareTo(right);
-          return _profileColorIdForGlobalIndex(
-            image.paletteProfile,
-            left,
-          )!.compareTo(
-            _profileColorIdForGlobalIndex(image.paletteProfile, right)!,
-          );
-        }),
+      _AdaptivePaletteOrder.profileId => _orderPaletteByProfileId(
+        image.paletteProfile,
+        palette,
+      ),
       _AdaptivePaletteOrder.rgbProximity => _orderPaletteByRgb(
         image.paletteProfile,
         linear,
@@ -2408,6 +2466,13 @@ class MCOImageCodec {
       ),
       _AdaptivePaletteOrder.transitionFrequency =>
         _optimizeTransitionPaletteOrder(
+          linear,
+          palette,
+          backgroundColor,
+        ),
+      _AdaptivePaletteOrder.multiStartOptimized =>
+        _optimizeBitplanesPaletteOrderMultiStart(
+          image.paletteProfile,
           linear,
           palette,
           backgroundColor,
@@ -2661,9 +2726,30 @@ class MCOImageCodec {
         variants.add(regions);
       }
     }
+    final beamVariantCosts = <String, int>{};
+    if (image.pixels.length <= _maxBeamRegionPixels &&
+        (image.paletteProfile.isFixed ||
+            referenceEncoding == DynamicPaletteReferenceEncoding.flat)) {
+      final beamVariants = _findPayloadOptimizedRegionVariants(
+        image,
+        backgroundColor,
+        referenceEncoding,
+        variants,
+        maxRegions,
+      );
+      for (final state in beamVariants) {
+        final key = _regionListKey(state.regions);
+        if (seenVariants.add(key)) {
+          variants.add(state.regions);
+          beamVariantCosts[key] = state.cost;
+        }
+      }
+    }
 
     final payloads = <_V2Payload>[];
     for (final regions in variants) {
+      final regionKey = _regionListKey(regions);
+      final beamCost = beamVariantCosts[regionKey];
       for (final compactGeometry in const [false, true]) {
         final payload = _tryBuildV2RegionsPayloadFromRegions(
           image,
@@ -2672,12 +2758,283 @@ class MCOImageCodec {
           regions,
           maxRegions,
           compactGeometry: compactGeometry,
+          diagnosticContainer: beamCost == null ? null : 'regions-beam',
         );
         if (payload == null) continue;
+        if (beamCost != null && payload.payload.length != beamCost) continue;
         payloads.add(payload);
       }
     }
     return payloads;
+  }
+
+  List<_RegionBeamState> _findPayloadOptimizedRegionVariants(
+    MCOImage image,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+    List<List<_ImageBounds>> initialVariants,
+    int maxRegions,
+  ) {
+    final initialStates = <_RegionBeamState>[];
+    final seen = <String>{};
+    for (final regions in initialVariants) {
+      if (regions.isEmpty ||
+          regions.length > maxRegions ||
+          !_regionsDoNotOverlap(regions)) {
+        continue;
+      }
+      final normalized = _sortedRegions(regions);
+      final key = _regionListKey(normalized);
+      if (!seen.add(key)) continue;
+      final cost = _regionPayloadByteCost(
+        image,
+        backgroundColor,
+        referenceEncoding,
+        normalized,
+        maxRegions,
+      );
+      if (cost != null) initialStates.add(_RegionBeamState(normalized, cost));
+    }
+    if (initialStates.isEmpty) return const <_RegionBeamState>[];
+    initialStates.sort((left, right) => left.cost.compareTo(right.cost));
+    final bestExistingCost = initialStates.first.cost;
+    var beam = initialStates.take(_regionBeamWidth).toList();
+    final improved = <_RegionBeamState>[];
+
+    for (var depth = 0; depth < _regionBeamDepth; depth++) {
+      final next = <_RegionBeamState>[];
+      for (final state in beam) {
+        for (final regions in _regionBeamNeighborsFor(
+          image.pixels,
+          image.width,
+          backgroundColor,
+          state.regions,
+          maxRegions,
+        )) {
+          final key = _regionListKey(regions);
+          if (!seen.add(key)) continue;
+          final cost = _regionPayloadByteCost(
+            image,
+            backgroundColor,
+            referenceEncoding,
+            regions,
+            maxRegions,
+          );
+          if (cost == null) continue;
+          final candidate = _RegionBeamState(regions, cost);
+          next.add(candidate);
+          if (cost < bestExistingCost) improved.add(candidate);
+        }
+      }
+      if (next.isEmpty) break;
+      next.sort((left, right) => left.cost.compareTo(right.cost));
+      beam = next.take(_regionBeamWidth).toList();
+    }
+
+    improved.sort((left, right) => left.cost.compareTo(right.cost));
+    final result = <_RegionBeamState>[];
+    final resultKeys = <String>{};
+    for (final state in improved) {
+      if (resultKeys.add(_regionListKey(state.regions))) {
+        result.add(state);
+      }
+      if (result.length >= _regionBeamWidth) break;
+    }
+    return result;
+  }
+
+  int? _regionPayloadByteCost(
+    MCOImage image,
+    int backgroundColor,
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+    List<_ImageBounds> regions,
+    int maxRegions,
+  ) {
+    int? best;
+    for (final compactGeometry in const [false, true]) {
+      final payload = _tryBuildV2RegionsPayloadFromRegions(
+        image,
+        backgroundColor,
+        referenceEncoding,
+        regions,
+        maxRegions,
+        compactGeometry: compactGeometry,
+      );
+      if (payload != null && (best == null || payload.payload.length < best)) {
+        best = payload.payload.length;
+      }
+    }
+    return best;
+  }
+
+  List<List<_ImageBounds>> _regionBeamNeighborsFor(
+    List<int> pixels,
+    int fullWidth,
+    int backgroundColor,
+    List<_ImageBounds> regions,
+    int maxRegions,
+  ) {
+    final mergeNeighbors = <_RegionBeamNeighbor>[];
+    if (regions.length > 1) {
+      for (var left = 0; left < regions.length - 1; left++) {
+        for (var right = left + 1; right < regions.length; right++) {
+          final merged = _unionBounds(regions[left], regions[right]);
+          final candidate = <_ImageBounds>[
+            for (var i = 0; i < regions.length; i++)
+              if (i != left && i != right) regions[i],
+            merged,
+          ];
+          if (!_regionsDoNotOverlap(candidate)) continue;
+          final addedArea =
+              merged.area - regions[left].area - regions[right].area;
+          mergeNeighbors.add(
+            _RegionBeamNeighbor(_sortedRegions(candidate), addedArea),
+          );
+        }
+      }
+    }
+    mergeNeighbors.sort(
+      (left, right) => left.heuristic.compareTo(right.heuristic),
+    );
+
+    final splitNeighbors = <_RegionBeamNeighbor>[];
+    if (regions.length < maxRegions) {
+      for (var index = 0; index < regions.length; index++) {
+        final region = regions[index];
+        for (var cut = 1; cut < region.width; cut++) {
+          final parts = _tightSplitRegion(
+            pixels,
+            fullWidth,
+            backgroundColor,
+            region,
+            vertical: true,
+            cut: cut,
+          );
+          _addRegionSplitNeighbor(splitNeighbors, regions, index, region, parts);
+        }
+        for (var cut = 1; cut < region.height; cut++) {
+          final parts = _tightSplitRegion(
+            pixels,
+            fullWidth,
+            backgroundColor,
+            region,
+            vertical: false,
+            cut: cut,
+          );
+          _addRegionSplitNeighbor(splitNeighbors, regions, index, region, parts);
+        }
+      }
+    }
+    splitNeighbors.sort(
+      (left, right) => left.heuristic.compareTo(right.heuristic),
+    );
+
+    final result = <List<_ImageBounds>>[];
+    final seen = <String>{};
+    final perKindLimit = math.max(1, _regionBeamNeighbors ~/ 2);
+    for (final neighbor in [
+      ...mergeNeighbors.take(perKindLimit),
+      ...splitNeighbors.take(perKindLimit),
+    ]) {
+      if (seen.add(_regionListKey(neighbor.regions))) {
+        result.add(neighbor.regions);
+      }
+    }
+    return result;
+  }
+
+  void _addRegionSplitNeighbor(
+    List<_RegionBeamNeighbor> output,
+    List<_ImageBounds> regions,
+    int replacedIndex,
+    _ImageBounds original,
+    List<_ImageBounds> parts,
+  ) {
+    if (parts.length != 2) return;
+    final savedArea = original.area - parts[0].area - parts[1].area;
+    if (savedArea <= 0) return;
+    final candidate = <_ImageBounds>[
+      for (var i = 0; i < regions.length; i++)
+        if (i != replacedIndex) regions[i],
+      ...parts,
+    ];
+    if (!_regionsDoNotOverlap(candidate)) return;
+    output.add(_RegionBeamNeighbor(_sortedRegions(candidate), -savedArea));
+  }
+
+  List<_ImageBounds> _tightSplitRegion(
+    List<int> pixels,
+    int fullWidth,
+    int backgroundColor,
+    _ImageBounds region, {
+    required bool vertical,
+    required int cut,
+  }) {
+    final firstRect = vertical
+        ? _ImageBounds(
+            x: region.x,
+            y: region.y,
+            width: cut,
+            height: region.height,
+          )
+        : _ImageBounds(
+            x: region.x,
+            y: region.y,
+            width: region.width,
+            height: cut,
+          );
+    final secondRect = vertical
+        ? _ImageBounds(
+            x: region.x + cut,
+            y: region.y,
+            width: region.width - cut,
+            height: region.height,
+          )
+        : _ImageBounds(
+            x: region.x,
+            y: region.y + cut,
+            width: region.width,
+            height: region.height - cut,
+          );
+    return [
+      _tightBoundsInRect(pixels, fullWidth, backgroundColor, firstRect),
+      _tightBoundsInRect(pixels, fullWidth, backgroundColor, secondRect),
+    ].whereType<_ImageBounds>().toList(growable: false);
+  }
+
+  static _ImageBounds _unionBounds(_ImageBounds left, _ImageBounds right) {
+    final x = math.min(left.x, right.x);
+    final y = math.min(left.y, right.y);
+    final maxX = math.max(left.x + left.width, right.x + right.width);
+    final maxY = math.max(left.y + left.height, right.y + right.height);
+    return _ImageBounds(x: x, y: y, width: maxX - x, height: maxY - y);
+  }
+
+  static List<_ImageBounds> _sortedRegions(Iterable<_ImageBounds> regions) {
+    return List<_ImageBounds>.of(regions)..sort((left, right) {
+      final byY = left.y.compareTo(right.y);
+      if (byY != 0) return byY;
+      final byX = left.x.compareTo(right.x);
+      if (byX != 0) return byX;
+      final byHeight = left.height.compareTo(right.height);
+      return byHeight != 0 ? byHeight : left.width.compareTo(right.width);
+    });
+  }
+
+  static bool _regionsDoNotOverlap(List<_ImageBounds> regions) {
+    for (var left = 0; left < regions.length - 1; left++) {
+      final a = regions[left];
+      for (var right = left + 1; right < regions.length; right++) {
+        final b = regions[right];
+        final overlaps =
+            a.x < b.x + b.width &&
+            b.x < a.x + a.width &&
+            a.y < b.y + b.height &&
+            b.y < a.y + a.height;
+        if (overlaps) return false;
+      }
+    }
+    return true;
   }
 
   _V2Payload? _tryBuildV2RegionsPayloadFromRegions(
@@ -2687,9 +3044,13 @@ class MCOImageCodec {
     List<_ImageBounds> regions,
     int maxRegions, {
     required bool compactGeometry,
-  }
-  ) {
-    if (regions.isEmpty || regions.length > maxRegions) return null;
+    String? diagnosticContainer,
+  }) {
+    if (regions.isEmpty ||
+        regions.length > maxRegions ||
+        !_regionsDoNotOverlap(regions)) {
+      return null;
+    }
     if (image.paletteProfile.isDynamic && referenceEncoding == null) {
       throw const MCOImageInvalidInputException(
         'Dynamic v2 regions require reference encoding',
@@ -2838,6 +3199,7 @@ class MCOImageCodec {
       localPaletteSize: sharedDynamicPalette?.globalColors.length,
       usedBankCount: usedBankCount,
       bitsPerLocalPixel: bitsPerLocalPixel,
+      diagnosticContainer: diagnosticContainer,
     );
   }
 
@@ -9326,7 +9688,205 @@ class MCOImageCodec {
     return 3 + _bitVarUintBitLength(value);
   }
 
-  List<_LzPixelToken> _buildLzPixelTokens(
+  String _lzOptimizationCacheKey(List<int> pixels, int localBits) {
+    return '$localBits:${String.fromCharCodes(
+      pixels.map((pixel) => pixel + 1),
+    )}';
+  }
+
+  int _lzPixelTokensBitCost(List<_LzPixelToken> tokens, int localBits) {
+    var cost = 0;
+    for (final token in tokens) {
+      if (token.isMatch) {
+        cost +=
+            1 +
+            _compactUintBitLength(token.distance - 1) +
+            _compactUintBitLength(token.length - _minLzMatchLength);
+      } else {
+        cost +=
+            1 +
+            _compactUintBitLength(token.literals.length - 1) +
+            token.literals.length * localBits;
+      }
+    }
+    return cost;
+  }
+
+  static bool _lzPixelTokensEqual(
+    List<_LzPixelToken> left,
+    List<_LzPixelToken> right,
+  ) {
+    if (left.length != right.length) return false;
+    for (var i = 0; i < left.length; i++) {
+      final a = left[i];
+      final b = right[i];
+      if (a.distance != b.distance ||
+          a.length != b.length ||
+          !_intListsEqual(a.literals, b.literals)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  List<_LzPixelToken>? _buildOptimalLzPixelTokens(
+    List<int> pixels,
+    int localBits,
+  ) {
+    if (pixels.isEmpty) return const <_LzPixelToken>[];
+    final matches = _buildLzMatchOptions(pixels);
+    final pixelCount = pixels.length;
+    const infinity = 1 << 60;
+    final steps = List<_LzParseStep?>.filled(pixelCount, null);
+    final rawMin = _LzRangeMinimumTree(pixelCount + 1);
+    final literalMin = _LzRangeMinimumTree(pixelCount + 1);
+    rawMin.update(pixelCount, 0);
+    literalMin.update(pixelCount, pixelCount * localBits);
+
+    for (var position = pixelCount - 1; position >= 0; position--) {
+      var bestCost = infinity;
+      _LzParseStep? bestStep;
+      final remaining = pixelCount - position;
+
+      for (final range in _lzLengthCostRanges(1, remaining)) {
+        final result = literalMin.query(
+          position + range.minLength,
+          position + range.maxLength + 1,
+        );
+        if (result == null) continue;
+        final cost =
+            1 + range.bitCost + result.cost - position * localBits;
+        if (cost < bestCost ||
+            (cost == bestCost && result.index > (bestStep?.end ?? -1))) {
+          bestCost = cost;
+          bestStep = _LzParseStep.literal(result.index);
+        }
+      }
+
+      for (final match in matches[position]) {
+        for (
+          final range in _lzLengthCostRanges(
+            _minLzMatchLength,
+            match.maxLength,
+          )
+        ) {
+          final result = rawMin.query(
+            position + range.minLength,
+            position + range.maxLength + 1,
+          );
+          if (result == null) continue;
+          final cost = 1 + match.distanceBitCost + range.bitCost + result.cost;
+          if (cost < bestCost ||
+              (cost == bestCost && result.index > (bestStep?.end ?? -1))) {
+            bestCost = cost;
+            bestStep = _LzParseStep.match(result.index, match.distance);
+          }
+        }
+      }
+
+      if (bestStep == null) return null;
+      steps[position] = bestStep;
+      rawMin.update(position, bestCost);
+      literalMin.update(position, bestCost + position * localBits);
+    }
+
+    final tokens = <_LzPixelToken>[];
+    var position = 0;
+    while (position < pixelCount) {
+      final step = steps[position];
+      if (step == null || step.end <= position || step.end > pixelCount) {
+        return null;
+      }
+      final length = step.end - position;
+      if (step.distance == 0) {
+        tokens.add(
+          _LzPixelToken.literal(pixels.sublist(position, step.end)),
+        );
+      } else {
+        tokens.add(_LzPixelToken.match(step.distance, length));
+      }
+      position = step.end;
+    }
+    return tokens;
+  }
+
+  List<List<_LzMatchOption>> _buildLzMatchOptions(List<int> pixels) {
+    final result = List.generate(
+      pixels.length,
+      (_) => <_LzMatchOption>[],
+      growable: false,
+    );
+    final positionsByKey = <int, List<int>>{};
+    for (var position = 0; position < pixels.length; position++) {
+      if (position + _minLzMatchLength <= pixels.length) {
+        final candidates = positionsByKey[_lzPixelKey(pixels, position)];
+        if (candidates != null) {
+          final bestByDistanceCost = <int, _LzMatchOption>{};
+          final maxPossibleLength = pixels.length - position;
+          for (var i = candidates.length - 1; i >= 0; i--) {
+            final previous = candidates[i];
+            final distance = position - previous;
+            final distanceBitCost = _compactUintBitLength(distance - 1);
+            final existing = bestByDistanceCost[distanceBitCost];
+            if (existing?.maxLength == maxPossibleLength) continue;
+            final maxLength = _lzMatchLength(pixels, position, distance);
+            if (maxLength < _minLzMatchLength) continue;
+            if (existing == null || maxLength > existing.maxLength) {
+              bestByDistanceCost[distanceBitCost] = _LzMatchOption(
+                distance,
+                maxLength,
+                distanceBitCost,
+              );
+            }
+          }
+          result[position].addAll(bestByDistanceCost.values);
+        }
+      }
+      _addLzPixelPosition(positionsByKey, pixels, position);
+    }
+    return result;
+  }
+
+  static int _lzMatchLength(
+    List<int> pixels,
+    int position,
+    int distance,
+  ) {
+    var length = 0;
+    while (position + length < pixels.length &&
+        pixels[position + length] == pixels[position + length - distance]) {
+      length++;
+    }
+    return length;
+  }
+
+  Iterable<_LzLengthCostRange> _lzLengthCostRanges(
+    int valueOffset,
+    int maxLength,
+  ) sync* {
+    if (maxLength < valueOffset) return;
+    for (final valueRange in const [
+      (min: 0, max: 3),
+      (min: 4, max: 19),
+      (min: 20, max: 275),
+      (min: 276, max: 16383),
+      (min: 16384, max: 2097151),
+    ]) {
+      final minLength = valueRange.min + valueOffset;
+      if (minLength > maxLength) break;
+      final rangeMaxLength = math.min(
+        valueRange.max + valueOffset,
+        maxLength,
+      );
+      yield _LzLengthCostRange(
+        minLength,
+        rangeMaxLength,
+        _compactUintBitLength(valueRange.min),
+      );
+    }
+  }
+
+  List<_LzPixelToken> _buildGreedyLzPixelTokens(
     List<int> pixels,
     int localBits,
   ) {
@@ -9596,6 +10156,63 @@ class MCOImageCodec {
       bestCost = passCost;
     }
     return bestPalette;
+  }
+
+  List<int> _optimizeBitplanesPaletteOrderMultiStart(
+    PaletteProfile profile,
+    List<int> pixels,
+    List<int> palette,
+    int backgroundColor,
+  ) {
+    if (palette.length < 3 ||
+        pixels.length > _maxMultiStartBitplanesPixels) {
+      return palette;
+    }
+
+    final seeds = <List<int>>[
+      List<int>.of(palette),
+      _orderPaletteByProfileId(profile, palette),
+      _orderPaletteByRgb(profile, pixels, palette, backgroundColor),
+      _optimizeTransitionPaletteOrder(pixels, palette, backgroundColor),
+    ];
+    final uniqueSeeds = <List<int>>[];
+    final seenSeeds = <String>{};
+    for (final seed in seeds) {
+      if (seenSeeds.add(seed.join(','))) uniqueSeeds.add(seed);
+    }
+
+    final baselineOptimized = _optimizeBitplanesPaletteOrder(pixels, palette);
+    var bestExistingCost = _adaptiveBitplanesCost(pixels, palette);
+    for (final existing in [...uniqueSeeds, baselineOptimized]) {
+      bestExistingCost = math.min(
+        bestExistingCost,
+        _adaptiveBitplanesCost(pixels, existing),
+      );
+    }
+
+    List<int>? bestMultiStart;
+    var bestMultiStartCost = bestExistingCost;
+    for (final seed in uniqueSeeds.skip(1)) {
+      final optimized = _optimizeBitplanesPaletteOrder(pixels, seed);
+      final cost = _adaptiveBitplanesCost(pixels, optimized);
+      if (cost < bestMultiStartCost) {
+        bestMultiStart = optimized;
+        bestMultiStartCost = cost;
+      }
+    }
+    return bestMultiStart ?? palette;
+  }
+
+  List<int> _orderPaletteByProfileId(
+    PaletteProfile profile,
+    List<int> palette,
+  ) {
+    return List<int>.of(palette)..sort((left, right) {
+      if (profile.isFixed) return left.compareTo(right);
+      return _profileColorIdForGlobalIndex(profile, left)!.compareTo(
+        _profileColorIdForGlobalIndex(profile, right)!,
+      );
+    });
   }
 
   List<int> _optimizeTransitionPaletteOrder(
@@ -10655,6 +11272,134 @@ class _LzPixelToken {
   bool get isMatch => distance > 0;
 }
 
+class _LzMatchOption {
+  final int distance;
+  final int maxLength;
+  final int distanceBitCost;
+
+  const _LzMatchOption(
+    this.distance,
+    this.maxLength,
+    this.distanceBitCost,
+  );
+}
+
+class _LzParseStep {
+  final int end;
+  final int distance;
+
+  const _LzParseStep.literal(this.end) : distance = 0;
+
+  const _LzParseStep.match(this.end, this.distance);
+}
+
+class _LzLengthCostRange {
+  final int minLength;
+  final int maxLength;
+  final int bitCost;
+
+  const _LzLengthCostRange(this.minLength, this.maxLength, this.bitCost);
+}
+
+class _LzRangeMinimum {
+  final int cost;
+  final int index;
+
+  const _LzRangeMinimum(this.cost, this.index);
+}
+
+class _LzRangeMinimumTree {
+  static const int _infinity = 1 << 60;
+
+  final int _size;
+  final List<int> _costs;
+  final List<int> _indices;
+
+  factory _LzRangeMinimumTree(int length) {
+    var size = 1;
+    while (size < length) {
+      size <<= 1;
+    }
+    return _LzRangeMinimumTree._(
+      size,
+      List<int>.filled(size * 2, _infinity),
+      List<int>.filled(size * 2, -1),
+    );
+  }
+
+  _LzRangeMinimumTree._(this._size, this._costs, this._indices);
+
+  void update(int index, int cost) {
+    var node = _size + index;
+    _costs[node] = cost;
+    _indices[node] = index;
+    node >>= 1;
+    while (node > 0) {
+      _pull(node);
+      node >>= 1;
+    }
+  }
+
+  _LzRangeMinimum? query(int start, int end) {
+    if (start >= end) return null;
+    var left = start + _size;
+    var right = end + _size;
+    var bestCost = _infinity;
+    var bestIndex = -1;
+    while (left < right) {
+      if (left.isOdd) {
+        final candidate = _better(
+          bestCost,
+          bestIndex,
+          _costs[left],
+          _indices[left],
+        );
+        bestCost = candidate.$1;
+        bestIndex = candidate.$2;
+        left++;
+      }
+      if (right.isOdd) {
+        right--;
+        final candidate = _better(
+          bestCost,
+          bestIndex,
+          _costs[right],
+          _indices[right],
+        );
+        bestCost = candidate.$1;
+        bestIndex = candidate.$2;
+      }
+      left >>= 1;
+      right >>= 1;
+    }
+    return bestIndex < 0 ? null : _LzRangeMinimum(bestCost, bestIndex);
+  }
+
+  void _pull(int node) {
+    final best = _better(
+      _costs[node * 2],
+      _indices[node * 2],
+      _costs[node * 2 + 1],
+      _indices[node * 2 + 1],
+    );
+    _costs[node] = best.$1;
+    _indices[node] = best.$2;
+  }
+
+  static (int, int) _better(
+    int leftCost,
+    int leftIndex,
+    int rightCost,
+    int rightIndex,
+  ) {
+    if (rightCost < leftCost ||
+        (rightCost == leftCost && rightIndex > leftIndex)) {
+      return (rightCost, rightIndex);
+    }
+    return (leftCost, leftIndex);
+  }
+}
+
 class _SolidRect {
   final _ImageBounds bounds;
   final int color;
@@ -10667,6 +11412,20 @@ class _RegionPartition {
   final int savedArea;
 
   const _RegionPartition(this.parts, this.savedArea);
+}
+
+class _RegionBeamState {
+  final List<_ImageBounds> regions;
+  final int cost;
+
+  const _RegionBeamState(this.regions, this.cost);
+}
+
+class _RegionBeamNeighbor {
+  final List<_ImageBounds> regions;
+  final int heuristic;
+
+  const _RegionBeamNeighbor(this.regions, this.heuristic);
 }
 
 class _GreedyRectStrategy {
@@ -10725,6 +11484,7 @@ class _V2Payload {
   final int? localPaletteSize;
   final int? usedBankCount;
   final int? bitsPerLocalPixel;
+  final String? diagnosticContainer;
 
   const _V2Payload(
     this.payload, {
@@ -10732,6 +11492,7 @@ class _V2Payload {
     this.localPaletteSize,
     this.usedBankCount,
     this.bitsPerLocalPixel,
+    this.diagnosticContainer,
   });
 }
 

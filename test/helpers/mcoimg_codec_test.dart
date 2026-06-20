@@ -398,6 +398,56 @@ void main() {
       expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
     });
 
+    test('beam regions merge nearby components when payload is smaller', () {
+      final image = _image(16, 16, (x, y) {
+        final selected =
+            (x == 5 || x == 7) &&
+            (y == 5 || y == 7);
+        return selected ? 1 : 0;
+      }, profile: PaletteProfile.mono);
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final beamCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'regions-beam',
+      );
+      final existingRegions = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'regions',
+      );
+
+      expect(beamCandidates, isNotEmpty);
+      expect(existingRegions, isNotEmpty);
+      final shortestExisting = existingRegions
+          .map((candidate) => candidate.byteLength)
+          .reduce(math.min);
+      for (final candidate in beamCandidates) {
+        expect(candidate.byteLength, lessThan(shortestExisting));
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('beam regions support dynamic palettes', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal32,
+      );
+      final image = _image(16, 16, (x, y) {
+        final selected =
+            (x == 5 || x == 7) &&
+            (y == 5 || y == 7);
+        return selected ? colors[3] : colors[0];
+      }, profile: PaletteProfile.dynamicGlobal32);
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors[0],
+      );
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'regions-beam',
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
     test('single compact drawing prefers bounds over regions', () {
       final image = _image(40, 40, (x, y) {
         return x >= 18 && x <= 21 && y >= 18 && y <= 21 ? 1 : 0;
@@ -600,6 +650,91 @@ void main() {
       }
     });
 
+    test('optimal LZ parsing beats greedy tokenization when useful', () {
+      final image = MCOImage(
+        width: 10,
+        height: 1,
+        paletteProfile: PaletteProfile.master4,
+        pixels: const [0, 1, 2, 3, 1, 2, 3, 0, 2, 0],
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final optimalCandidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'lz-pixels-optimal',
+      );
+
+      expect(optimalCandidates, isNotEmpty);
+      for (final optimal in optimalCandidates) {
+        final greedy = diagnostics.candidates.firstWhere(
+          (candidate) =>
+              candidate.container == 'lz-pixels' &&
+              candidate.scan == optimal.scan &&
+              candidate.backgroundColor == optimal.backgroundColor &&
+              candidate.dynamicReferenceEncoding ==
+                  optimal.dynamicReferenceEncoding,
+        );
+        expect(optimal.byteLength, lessThanOrEqualTo(greedy.byteLength));
+        expect(codec.decode(optimal.text).pixels, image.pixels);
+      }
+    });
+
+    test('optimal LZ bounds candidates roundtrip', () {
+      const sequence = [0, 1, 2, 3, 1, 2, 3, 0, 2, 0];
+      final image = _image(
+        14,
+        3,
+        (x, y) {
+          if (y != 1 || x < 2 || x >= 12) return 0;
+          return sequence[x - 2];
+        },
+        profile: PaletteProfile.master4,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'lz-pixels-optimal-bounds',
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('optimal LZ parsing supports dynamic palettes', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final pattern = [
+        colors[0],
+        colors[1],
+        colors[2],
+        colors[3],
+        colors[1],
+        colors[2],
+        colors[3],
+        colors[0],
+        colors[2],
+        colors[0],
+      ];
+      final image = MCOImage(
+        width: pattern.length,
+        height: 1,
+        paletteProfile: PaletteProfile.dynamicGlobal128,
+        pixels: pattern,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors.first,
+      );
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.container == 'lz-pixels-optimal',
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
     test('dynamic adaptive bitplanes candidates roundtrip', () {
       final colors = MCOImageDynamicPalette.indicesFor(
         PaletteProfile.dynamicGlobal8,
@@ -722,6 +857,63 @@ void main() {
           );
         }
       }
+    });
+
+    test('multi-start adaptive bitplanes improve a structured corpus', () {
+      final images = <MCOImage>[
+        _image(
+          24,
+          20,
+          (x, y) => (x * 3 + y * 5 + (x * y) % 7) % 12,
+          profile: PaletteProfile.master16,
+        ),
+        _image(
+          24,
+          20,
+          (x, y) => ((x ~/ 3) * 5 + (y ~/ 2) * 7 + y) % 14,
+          profile: PaletteProfile.master16,
+        ),
+        _image(
+          24,
+          20,
+          (x, y) => ((x + y) % 5 == 0 ? x + y * 3 : x ~/ 2 + y) % 16,
+          profile: PaletteProfile.master16,
+        ),
+      ];
+      final multiStartCandidates = <EncodedMCOImage>[];
+
+      for (final image in images) {
+        final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+        final candidates = diagnostics.candidates.where(
+          (candidate) => candidate.container.startsWith(
+            'adaptive-bitplanes-multistart',
+          ),
+        );
+        for (final candidate in candidates) {
+          multiStartCandidates.add(candidate);
+          final existing = diagnostics.candidates.where(
+            (other) =>
+                other.container.startsWith('adaptive-bitplanes') &&
+                !other.container.contains('multistart') &&
+                other.scan == candidate.scan &&
+                other.boundsPresent == candidate.boundsPresent &&
+                other.boundsX == candidate.boundsX &&
+                other.boundsY == candidate.boundsY &&
+                other.boundsWidth == candidate.boundsWidth &&
+                other.boundsHeight == candidate.boundsHeight &&
+                other.backgroundColor == candidate.backgroundColor &&
+                other.dynamicReferenceEncoding ==
+                    candidate.dynamicReferenceEncoding,
+          );
+          final shortestExisting = existing
+              .map((other) => other.byteLength)
+              .reduce(math.min);
+          expect(candidate.byteLength, lessThanOrEqualTo(shortestExisting));
+          expect(codec.decode(candidate.text).pixels, image.pixels);
+        }
+      }
+
+      expect(multiStartCandidates, isNotEmpty);
     });
 
     test('direct dynamic bitplanes candidate roundtrips', () {
