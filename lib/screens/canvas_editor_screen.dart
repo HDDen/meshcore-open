@@ -1716,10 +1716,38 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final localPaletteSize = candidate.localPaletteSize;
     final bitsPerPixel = candidate.bitsPerLocalPixel;
     if (localPaletteSize != null && bitsPerPixel != null) {
-      parts.add('local ${localPaletteSize}c/${bitsPerPixel}b');
+      final paletteLabel = candidate.container.startsWith('direct-dynamic')
+          ? 'profile'
+          : 'local';
+      parts.add('$paletteLabel ${localPaletteSize}c/${bitsPerPixel}b');
     }
     final usedBankCount = candidate.usedBankCount;
     if (usedBankCount != null) parts.add('$usedBankCount banks');
+    if (candidate.paletteKind == 'dynamic' &&
+        candidate.backgroundColor ==
+            MCOImageDynamicPalette.whiteGlobalIndexFor(
+              _paletteProfile,
+            )) {
+      parts.add('implicit white bg');
+    }
+    switch (candidate.dynamicReferenceEncoding) {
+      case DynamicPaletteReferenceEncoding.sortedDelta:
+        parts.add('palette delta');
+        break;
+      case DynamicPaletteReferenceEncoding.rangeRuns:
+        parts.add('palette ranges');
+        break;
+      case DynamicPaletteReferenceEncoding.profileBitmap:
+        parts.add('palette bitmap');
+        break;
+      case DynamicPaletteReferenceEncoding.bankBitmaps:
+        parts.add('palette bank bitmaps');
+        break;
+      case DynamicPaletteReferenceEncoding.flat:
+      case DynamicPaletteReferenceEncoding.banked8x64:
+      case null:
+        break;
+    }
     return parts.join(' | ');
   }
 
@@ -1746,8 +1774,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'direct-grayscale-bitplanes' => 'Direct grayscale bitplanes',
       'direct-grayscale-bitplanes-bounds' =>
         'Direct grayscale bitplanes bounds',
+      'direct-dynamic-bitplanes' => 'Direct dynamic bitplanes',
+      'direct-dynamic-bitplanes-bounds' =>
+        'Direct dynamic bitplanes bounds',
       'compact-row-delta' => 'Compact row delta',
       'compact-row-delta-bounds' => 'Compact row delta bounds',
+      'compact-row-delta-palette-optimized' =>
+        'Compact row delta optimized palette',
+      'compact-row-delta-palette-optimized-bounds' =>
+        'Compact row delta optimized palette bounds',
       'grayscale-row-delta' => 'Grayscale row delta',
       'grayscale-row-delta-bounds' => 'Grayscale row delta bounds',
       _ => switch (candidate.mode) {

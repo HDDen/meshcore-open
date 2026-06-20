@@ -624,6 +624,58 @@ void main() {
       }
     });
 
+    test('direct dynamic bitplanes candidate roundtrips', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal32,
+      );
+      final image = _image(
+        16,
+        12,
+        (x, y) => colors[(x * 3 + y * 5) % colors.length],
+        profile: PaletteProfile.dynamicGlobal32,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors.first,
+      );
+      final candidates = diagnostics.candidates.where(
+        (candidate) =>
+            candidate.container == 'direct-dynamic-bitplanes' ||
+            candidate.container == 'direct-dynamic-bitplanes-bounds',
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        final decoded = codec.decode(candidate.text);
+        expect(decoded.paletteProfile, image.paletteProfile);
+        expect(decoded.pixels, image.pixels);
+      }
+    });
+
+    test('direct dynamic bitplanes supports more than 64 used colors', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final image = _image(
+        16,
+        8,
+        (x, y) => colors[y * 16 + x],
+        profile: PaletteProfile.dynamicGlobal128,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: colors.first,
+      );
+      final decoded = codec.decode(diagnostics.result.text);
+
+      expect(
+        diagnostics.result.container,
+        startsWith('direct-dynamic-bitplanes'),
+      );
+      expect(decoded.paletteProfile, image.paletteProfile);
+      expect(decoded.pixels, image.pixels);
+    });
+
     test('debug diagnostics include decodable candidates for all palettes', () {
       for (final profile in _fixedProfiles) {
         final image = _image(
@@ -680,6 +732,199 @@ void main() {
         contains(DynamicPaletteReferenceEncoding.banked8x64),
       );
       expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
+    });
+
+    test('compact dynamic palette descriptors roundtrip', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final selected = colors.sublist(64, 72);
+      final image = _image(
+        16,
+        12,
+        (x, y) => selected[(x + y * 3) % selected.length],
+        profile: PaletteProfile.dynamicGlobal128,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: selected.first,
+      );
+
+      for (final encoding in const [
+        DynamicPaletteReferenceEncoding.sortedDelta,
+        DynamicPaletteReferenceEncoding.rangeRuns,
+        DynamicPaletteReferenceEncoding.profileBitmap,
+      ]) {
+        final candidates = diagnostics.candidates.where(
+          (candidate) => candidate.dynamicReferenceEncoding == encoding,
+        );
+        expect(candidates, isNotEmpty);
+        final representatives = <String, EncodedMCOImage>{};
+        for (final candidate in candidates) {
+          representatives.putIfAbsent(candidate.container, () => candidate);
+        }
+        for (final candidate in representatives.values) {
+          expect(codec.decode(candidate.text).pixels, image.pixels);
+        }
+      }
+    });
+
+    test('range descriptor shrinks a contiguous dynamic palette', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final selected = colors.sublist(64, 72);
+      final image = _image(
+        16,
+        8,
+        (x, y) => selected[(x + y) % selected.length],
+        profile: PaletteProfile.dynamicGlobal128,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: selected.first,
+      );
+
+      EncodedMCOImage candidateFor(
+        DynamicPaletteReferenceEncoding encoding,
+      ) => diagnostics.candidates.firstWhere(
+        (candidate) =>
+            candidate.container == 'compact-rle' &&
+            candidate.scan == ScanMode.h &&
+            candidate.backgroundColor == selected.first &&
+            candidate.dynamicReferenceEncoding == encoding,
+      );
+
+      final flat = candidateFor(DynamicPaletteReferenceEncoding.flat);
+      final ranges = candidateFor(
+        DynamicPaletteReferenceEncoding.rangeRuns,
+      );
+      expect(ranges.byteLength, lessThan(flat.byteLength));
+      expect(codec.decode(ranges.text).pixels, image.pixels);
+    });
+
+    test('profile bitmap shrinks a dense scattered dynamic palette', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final selected = List<int>.generate(64, (index) => colors[index * 2]);
+      final image = _image(
+        16,
+        8,
+        (x, y) => selected[(x + y * 5) % selected.length],
+        profile: PaletteProfile.dynamicGlobal128,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: selected.first,
+      );
+
+      EncodedMCOImage candidateFor(
+        DynamicPaletteReferenceEncoding encoding,
+      ) => diagnostics.candidates.firstWhere(
+        (candidate) =>
+            candidate.container == 'compact-rle' &&
+            candidate.scan == ScanMode.h &&
+            candidate.backgroundColor == selected.first &&
+            candidate.dynamicReferenceEncoding == encoding,
+      );
+
+      final flat = candidateFor(DynamicPaletteReferenceEncoding.flat);
+      final bitmap = candidateFor(
+        DynamicPaletteReferenceEncoding.profileBitmap,
+      );
+      expect(bitmap.byteLength, lessThan(flat.byteLength));
+      expect(codec.decode(bitmap.text).pixels, image.pixels);
+    });
+
+    test('bank bitmaps shrink a dense dynamicGlobal512 bank', () {
+      final selected = List<int>.generate(32, (index) => 64 + index);
+      final image = _image(
+        16,
+        8,
+        (x, y) => selected[(x + y * 3) % selected.length],
+        profile: PaletteProfile.dynamicGlobal512,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: selected.first,
+      );
+
+      EncodedMCOImage candidateFor(
+        DynamicPaletteReferenceEncoding encoding,
+      ) => diagnostics.candidates.firstWhere(
+        (candidate) =>
+            candidate.container == 'compact-rle' &&
+            candidate.scan == ScanMode.h &&
+            candidate.backgroundColor == selected.first &&
+            candidate.dynamicReferenceEncoding == encoding,
+      );
+
+      final banked = candidateFor(
+        DynamicPaletteReferenceEncoding.banked8x64,
+      );
+      final bitmaps = candidateFor(
+        DynamicPaletteReferenceEncoding.bankBitmaps,
+      );
+      expect(bitmaps.byteLength, lessThan(banked.byteLength));
+      expect(codec.decode(bitmaps.text).pixels, image.pixels);
+    });
+
+    test('dynamic white background is implicit and roundtrips', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final white = MCOImageDynamicPalette.whiteGlobalIndexFor(
+        PaletteProfile.dynamicGlobal128,
+      );
+      final image = _image(20, 20, (x, y) {
+        final inside = x >= 7 && x <= 12 && y >= 7 && y <= 12;
+        return inside ? colors[70] : white;
+      }, profile: PaletteProfile.dynamicGlobal128);
+      final diagnostics = codec.debugEncode(image, backgroundColor: white);
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.backgroundColor == white,
+      );
+
+      expect(candidates, isNotEmpty);
+      final representatives = <String, EncodedMCOImage>{};
+      for (final candidate in candidates) {
+        representatives.putIfAbsent(candidate.container, () => candidate);
+      }
+      for (final candidate in representatives.values) {
+        final bytes = _base91Decode(
+          candidate.text.substring(MCOImageCodec.prefix.length),
+        );
+        expect(bytes[1] & 0x08, isNot(0));
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('transition-optimized dynamic row delta roundtrips', () {
+      final colors = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal32,
+      );
+      final sequence = [colors[0], colors[3], colors[1], colors[2]];
+      final image = _image(
+        16,
+        12,
+        (x, y) => sequence[(x + y) % sequence.length],
+        profile: PaletteProfile.dynamicGlobal32,
+      );
+      final diagnostics = codec.debugEncode(
+        image,
+        backgroundColor: sequence.first,
+      );
+      final candidates = diagnostics.candidates.where(
+        (candidate) => candidate.container.startsWith(
+          'compact-row-delta-palette-optimized',
+        ),
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
     });
 
     test('dynamic profiles support regions candidates', () {

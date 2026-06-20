@@ -94,7 +94,7 @@ class DynamicPalettes {
     Color.fromARGB(255, 79, 28, 24), // 061 bank 0 offset 61
     Color.fromARGB(255, 43, 14, 13), // 062 bank 0 offset 62
     Color.fromARGB(255, 0, 0, 0), // 063 bank 0 offset 63
-    // Bank 1: red with fabric-beige extension, indices 64..127
+    // Bank 1: red with fabric-beige, skin, and compact grayscale anchors.
     Color.fromARGB(255, 255, 176, 163), // 064 bank 1 offset 00
     // Fabric beige
     Color.fromARGB(255, 250, 243, 232), // 065 bank 1 offset 01
@@ -116,9 +116,10 @@ class DynamicPalettes {
     Color.fromARGB(255, 91, 53, 42), // 080 bank 1 offset 16
     Color.fromARGB(255, 53, 32, 27), // 081 bank 1 offset 17
     Color.fromARGB(255, 255, 85, 65), // 082 bank 1 offset 18
-    Color.fromARGB(255, 255, 80, 58), // 083 bank 1 offset 19
-    Color.fromARGB(255, 255, 74, 51), // 084 bank 1 offset 20
-    Color.fromARGB(255, 255, 69, 43), // 085 bank 1 offset 21
+    // Compact-profile grayscale anchors displaced by natural-color ramps.
+    Color.fromARGB(255, 141, 141, 141), // 083 bank 1 offset 19
+    Color.fromARGB(255, 164, 164, 164), // 084 bank 1 offset 20
+    Color.fromARGB(255, 102, 102, 102), // 085 bank 1 offset 21
     Color.fromARGB(255, 255, 63, 36), // 086 bank 1 offset 22
     Color.fromARGB(255, 254, 58, 29), // 087 bank 1 offset 23
     Color.fromARGB(255, 254, 52, 22), // 088 bank 1 offset 24
@@ -555,7 +556,7 @@ class DynamicPalettes {
 
   static const List<int> dynamicGlobal8Indices = [
     0,
-    26,
+    83,
     63,
     91,
     210,
@@ -566,7 +567,7 @@ class DynamicPalettes {
 
   static const List<int> dynamicGlobal16Indices = [
     0,
-    21,
+    84,
     63,
     100,
     118,
@@ -586,7 +587,7 @@ class DynamicPalettes {
   static const List<int> dynamicGlobal32Indices = [
     0,
     18,
-    38,
+    85,
     63,
     64,
     82,

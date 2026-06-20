@@ -47,7 +47,14 @@ enum ExtendedImageMode {
 
 enum ScanMode { h, v, s, sv }
 
-enum DynamicPaletteReferenceEncoding { flat, banked8x64 }
+enum DynamicPaletteReferenceEncoding {
+  flat,
+  banked8x64,
+  sortedDelta,
+  rangeRuns,
+  profileBitmap,
+  bankBitmaps,
+}
 
 enum MCOImageEncodingVersion { v1Legacy, v2 }
 
@@ -202,6 +209,11 @@ class MCOImageCodec {
   static const int _defaultMaxRegions = 16;
   static const int _maxV2Regions = 32;
   static const int _maxDynamicLocalPalette = 64;
+  static const int _dynamicPaletteDescriptorBits = 2;
+  static const int _dynamicPaletteDescriptorSortedDelta = 0;
+  static const int _dynamicPaletteDescriptorRangeRuns = 1;
+  static const int _dynamicPaletteDescriptorProfileBitmap = 2;
+  static const int _dynamicPaletteDescriptorBankBitmaps = 3;
   static const int _maxFrequentBackgroundCandidates = 8;
   static const int _minLzMatchLength = 3;
   static const int _maxLzMatchCandidates = 32;
@@ -758,24 +770,36 @@ class MCOImageCodec {
 
           for (final adaptiveVariant in <({
             bool directGrayscale,
+            bool directDynamicProfile,
             bool optimizePaletteOrder,
             String container,
           })>[
             (
               directGrayscale: false,
+              directDynamicProfile: false,
               optimizePaletteOrder: false,
               container: 'adaptive-bitplanes',
             ),
             (
               directGrayscale: false,
+              directDynamicProfile: false,
               optimizePaletteOrder: true,
               container: 'adaptive-bitplanes-optimized',
             ),
             if (_isGrayscaleProfile(image.paletteProfile))
               (
                 directGrayscale: true,
+                directDynamicProfile: false,
                 optimizePaletteOrder: false,
                 container: 'direct-grayscale-bitplanes',
+              ),
+            if (image.paletteProfile.isDynamic &&
+                referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+              (
+                directGrayscale: false,
+                directDynamicProfile: true,
+                optimizePaletteOrder: false,
+                container: 'direct-dynamic-bitplanes',
               ),
           ]) {
             final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
@@ -787,6 +811,7 @@ class MCOImageCodec {
               dataHeight: image.height,
               backgroundColor: bg,
               directGrayscale: adaptiveVariant.directGrayscale,
+              directDynamicProfile: adaptiveVariant.directDynamicProfile,
               optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
             );
             if (adaptivePayload == null) continue;
@@ -813,9 +838,29 @@ class MCOImageCodec {
             }
           }
 
-          for (final directGrayscale in <bool>[
-            false,
-            if (_isGrayscaleProfile(image.paletteProfile)) true,
+          for (final rowDeltaVariant in <({
+            bool directGrayscale,
+            bool optimizeDynamicPaletteOrder,
+            String container,
+          })>[
+            (
+              directGrayscale: false,
+              optimizeDynamicPaletteOrder: false,
+              container: 'compact-row-delta',
+            ),
+            if (image.paletteProfile.isDynamic &&
+                referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+              (
+                directGrayscale: false,
+                optimizeDynamicPaletteOrder: true,
+                container: 'compact-row-delta-palette-optimized',
+              ),
+            if (_isGrayscaleProfile(image.paletteProfile))
+              (
+                directGrayscale: true,
+                optimizeDynamicPaletteOrder: false,
+                container: 'grayscale-row-delta',
+              ),
           ]) {
             final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
               image,
@@ -825,7 +870,9 @@ class MCOImageCodec {
               dataWidth: image.width,
               dataHeight: image.height,
               backgroundColor: bg,
-              directGrayscale: directGrayscale,
+              directGrayscale: rowDeltaVariant.directGrayscale,
+              optimizeDynamicPaletteOrder:
+                  rowDeltaVariant.optimizeDynamicPaletteOrder,
             );
             if (rowDeltaPayload == null) continue;
             final rowDeltaCandidate = _candidateFromPayload(
@@ -843,9 +890,7 @@ class MCOImageCodec {
               paletteKind: image.paletteProfile.isDynamic
                   ? 'dynamic'
                   : 'fixed',
-              container: directGrayscale
-                  ? 'grayscale-row-delta'
-                  : 'compact-row-delta',
+              container: rowDeltaVariant.container,
             );
             candidates.add(rowDeltaCandidate);
             if (_isBetterCandidate(rowDeltaCandidate, best, outputTarget)) {
@@ -1085,24 +1130,36 @@ class MCOImageCodec {
 
             for (final adaptiveVariant in <({
               bool directGrayscale,
+              bool directDynamicProfile,
               bool optimizePaletteOrder,
               String container,
             })>[
               (
                 directGrayscale: false,
+                directDynamicProfile: false,
                 optimizePaletteOrder: false,
                 container: 'adaptive-bitplanes-bounds',
               ),
               (
                 directGrayscale: false,
+                directDynamicProfile: false,
                 optimizePaletteOrder: true,
                 container: 'adaptive-bitplanes-optimized-bounds',
               ),
               if (_isGrayscaleProfile(image.paletteProfile))
                 (
                   directGrayscale: true,
+                  directDynamicProfile: false,
                   optimizePaletteOrder: false,
                   container: 'direct-grayscale-bitplanes-bounds',
+                ),
+              if (image.paletteProfile.isDynamic &&
+                  referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: true,
+                  optimizePaletteOrder: false,
+                  container: 'direct-dynamic-bitplanes-bounds',
                 ),
             ]) {
               final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
@@ -1115,6 +1172,7 @@ class MCOImageCodec {
                 backgroundColor: bg,
                 bounds: bounds,
                 directGrayscale: adaptiveVariant.directGrayscale,
+                directDynamicProfile: adaptiveVariant.directDynamicProfile,
                 optimizePaletteOrder: adaptiveVariant.optimizePaletteOrder,
               );
               if (adaptivePayload == null) continue;
@@ -1142,9 +1200,29 @@ class MCOImageCodec {
               }
             }
 
-            for (final directGrayscale in <bool>[
-              false,
-              if (_isGrayscaleProfile(image.paletteProfile)) true,
+            for (final rowDeltaVariant in <({
+              bool directGrayscale,
+              bool optimizeDynamicPaletteOrder,
+              String container,
+            })>[
+              (
+                directGrayscale: false,
+                optimizeDynamicPaletteOrder: false,
+                container: 'compact-row-delta-bounds',
+              ),
+              if (image.paletteProfile.isDynamic &&
+                  referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+                (
+                  directGrayscale: false,
+                  optimizeDynamicPaletteOrder: true,
+                  container: 'compact-row-delta-palette-optimized-bounds',
+                ),
+              if (_isGrayscaleProfile(image.paletteProfile))
+                (
+                  directGrayscale: true,
+                  optimizeDynamicPaletteOrder: false,
+                  container: 'grayscale-row-delta-bounds',
+                ),
             ]) {
               final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
                 image,
@@ -1155,7 +1233,9 @@ class MCOImageCodec {
                 dataHeight: bounds.height,
                 backgroundColor: bg,
                 bounds: bounds,
-                directGrayscale: directGrayscale,
+                directGrayscale: rowDeltaVariant.directGrayscale,
+                optimizeDynamicPaletteOrder:
+                    rowDeltaVariant.optimizeDynamicPaletteOrder,
               );
               if (rowDeltaPayload == null) continue;
               final rowDeltaCandidate = _candidateFromPayload(
@@ -1174,9 +1254,7 @@ class MCOImageCodec {
                 paletteKind: image.paletteProfile.isDynamic
                     ? 'dynamic'
                     : 'fixed',
-                container: directGrayscale
-                    ? 'grayscale-row-delta-bounds'
-                    : 'compact-row-delta-bounds',
+                container: rowDeltaVariant.container,
               );
               candidates.add(rowDeltaCandidate);
               if (_isBetterCandidate(
@@ -1247,6 +1325,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1256,7 +1338,7 @@ class MCOImageCodec {
     }
 
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2Bounds(writer, bounds);
       if (bounds.area == 0) {
         return _V2Payload(
@@ -1310,6 +1392,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: true,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1317,7 +1403,7 @@ class MCOImageCodec {
     if (image.transparentColor != null) {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
-    _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
     _writeV2CompactBounds(writer, bounds, image.width, image.height);
     writer
       ..alignToByte()
@@ -1361,6 +1447,10 @@ class MCOImageCodec {
         scan: ScanMode.h,
         boundsPresent: false,
         referenceEncoding: referenceEncoding,
+        implicitWhiteBackground: _isImplicitWhiteBackground(
+          image.paletteProfile,
+          backgroundColor,
+        ),
         width: image.width,
         height: image.height,
         hasTransparentColor: image.transparentColor != null,
@@ -1373,7 +1463,7 @@ class MCOImageCodec {
         ExtendedImageMode.solidRects.index,
         _extendedSubmodeBits,
       );
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
 
       final rectColors = rects.map((rect) => rect.color).toList();
       final int localPaletteSize;
@@ -1397,6 +1487,7 @@ class MCOImageCodec {
           image.paletteProfile,
           profileColorIds,
           backgroundId,
+          referenceEncoding!,
         );
         if (localPalette.isEmpty ||
             localPalette.length > _maxDynamicLocalPalette) {
@@ -1406,7 +1497,7 @@ class MCOImageCodec {
           writer,
           image.paletteProfile,
           localPalette,
-          referenceEncoding!,
+          referenceEncoding,
         );
         localPaletteSize = localPalette.length;
         localBits = _localBits(localPalette.length);
@@ -1484,6 +1575,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1492,7 +1587,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(
         writer,
         bounds,
@@ -1525,6 +1620,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -1534,7 +1630,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = localPalette.length;
       localBits = _localBits(localPalette.length);
@@ -1606,6 +1702,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1614,7 +1714,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -1624,7 +1724,7 @@ class MCOImageCodec {
         _extendedSubmodeBits,
       );
     if (bounds == null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
     }
 
     final int localPaletteSize;
@@ -1649,6 +1749,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -1658,7 +1759,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = localPalette.length;
       localBits = _localBits(localPalette.length);
@@ -1729,6 +1830,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1737,7 +1842,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -1765,6 +1870,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -1774,7 +1880,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = localPalette.length;
       localBits = _localBits(localPalette.length);
@@ -1849,6 +1955,10 @@ class MCOImageCodec {
       scan: ScanMode.h,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1857,7 +1967,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -1885,6 +1995,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -1894,7 +2005,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = localPalette.length;
       localBits = _localBits(localPalette.length);
@@ -1966,6 +2077,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1974,7 +2089,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -2002,6 +2117,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -2011,7 +2127,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = localPalette.length;
       localBits = _localBits(localPalette.length);
@@ -2076,11 +2192,23 @@ class MCOImageCodec {
     required int dataHeight,
     required int backgroundColor,
     required bool directGrayscale,
+    required bool directDynamicProfile,
     required bool optimizePaletteOrder,
     _ImageBounds? bounds,
   }) {
     if (linear.length != dataWidth * dataHeight || linear.isEmpty) return null;
+    if (directGrayscale && directDynamicProfile) return null;
     if (directGrayscale && !_isGrayscaleProfile(image.paletteProfile)) {
+      return null;
+    }
+    if (directDynamicProfile && !image.paletteProfile.isDynamic) return null;
+    if (directDynamicProfile &&
+        referenceEncoding != DynamicPaletteReferenceEncoding.flat) {
+      return null;
+    }
+    if (image.paletteProfile.isDynamic &&
+        referenceEncoding != null &&
+        _usesExtendedDynamicPaletteDescriptor(referenceEncoding)) {
       return null;
     }
     if (image.paletteProfile.isDynamic && referenceEncoding == null) {
@@ -2097,6 +2225,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -2105,7 +2237,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -2122,6 +2254,26 @@ class MCOImageCodec {
       return _V2Payload(
         writer.toBytes(),
         bitsPerLocalPixel: _globalBits(image.paletteProfile),
+      );
+    }
+
+    if (directDynamicProfile) {
+      final profilePixels = linear
+          .map(
+            (color) => _profileColorIdForGlobalIndex(
+              image.paletteProfile,
+              color,
+            )!,
+          )
+          .toList(growable: false);
+      final profileSize = _dynamicProfileSize(image.paletteProfile);
+      final profileBits = _dynamicProfileColorBits(image.paletteProfile);
+      writer.writeBits(0xc0, 8);
+      _writeAdaptiveBitplanesBody(writer, profilePixels, profileBits);
+      return _V2Payload(
+        writer.toBytes(),
+        localPaletteSize: profileSize,
+        bitsPerLocalPixel: profileBits,
       );
     }
 
@@ -2143,6 +2295,7 @@ class MCOImageCodec {
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
       if (profilePalette.isEmpty ||
           profilePalette.length > _maxDynamicLocalPalette) {
@@ -2213,10 +2366,16 @@ class MCOImageCodec {
     required int dataHeight,
     required int backgroundColor,
     required bool directGrayscale,
+    required bool optimizeDynamicPaletteOrder,
     _ImageBounds? bounds,
   }) {
     if (linear.length != dataWidth * dataHeight || linear.isEmpty) return null;
     if (directGrayscale && !_isGrayscaleProfile(image.paletteProfile)) {
+      return null;
+    }
+    if (optimizeDynamicPaletteOrder &&
+        (!image.paletteProfile.isDynamic ||
+            referenceEncoding != DynamicPaletteReferenceEncoding.flat)) {
       return null;
     }
     if (image.paletteProfile.isDynamic && referenceEncoding == null) {
@@ -2233,6 +2392,10 @@ class MCOImageCodec {
       scan: scan,
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -2241,7 +2404,7 @@ class MCOImageCodec {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     if (bounds != null) {
-      _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
       _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     writer
@@ -2272,11 +2435,21 @@ class MCOImageCodec {
         image.paletteProfile,
         backgroundColor,
       )!;
-      final palette = _buildDynamicLocalPalette(
+      var palette = _buildDynamicLocalPalette(
         image.paletteProfile,
         profileColorIds,
         backgroundId,
+        referenceEncoding!,
       );
+      if (optimizeDynamicPaletteOrder) {
+        final optimized = _optimizeDynamicTransitionPaletteOrder(
+          profileColorIds,
+          palette,
+          backgroundId,
+        );
+        if (_intListsEqual(optimized, palette)) return null;
+        palette = optimized;
+      }
       if (palette.isEmpty || palette.length > _maxDynamicLocalPalette) {
         return null;
       }
@@ -2284,7 +2457,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         palette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       localPaletteSize = palette.length;
       valueBits = _localBits(palette.length);
@@ -2424,6 +2597,10 @@ class MCOImageCodec {
       scan: ScanMode.h,
       boundsPresent: false,
       referenceEncoding: referenceEncoding,
+      implicitWhiteBackground: _isImplicitWhiteBackground(
+        image.paletteProfile,
+        backgroundColor,
+      ),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -2431,7 +2608,7 @@ class MCOImageCodec {
     if (image.transparentColor != null) {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
-    _writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
 
     _DynamicLocalPalette? sharedDynamicPalette;
     Map<int, int>? localIndexByProfileColorId;
@@ -2463,6 +2640,7 @@ class MCOImageCodec {
         image.paletteProfile,
         allRegionProfileColorIds,
         backgroundProfileColorId,
+        referenceEncoding!,
       );
       if (localPalette.isEmpty ||
           localPalette.length > _maxDynamicLocalPalette) {
@@ -2472,7 +2650,7 @@ class MCOImageCodec {
         writer,
         image.paletteProfile,
         localPalette,
-        referenceEncoding!,
+        referenceEncoding,
       );
       sharedDynamicPalette = _DynamicLocalPalette(
         localPalette
@@ -2632,7 +2810,7 @@ class MCOImageCodec {
         final localBits = _localBits(local.colors.length);
         final segments = _buildSparseSegments(linear, backgroundColor);
         if (writeSparseBackground) {
-          _writeV2ColorRef(writer, profile, backgroundColor);
+          _writeV2BackgroundRef(writer, profile, backgroundColor);
         }
         writer.writeBitVarUint(local.colors.length);
         _writePalette(writer, local.colors, profile);
@@ -2692,7 +2870,7 @@ class MCOImageCodec {
         final foregroundColor = _biColorForeground(linear, backgroundColor);
         if (foregroundColor == null) return null;
         if (writeSparseBackground) {
-          _writeV2ColorRef(writer, profile, backgroundColor);
+          _writeV2BackgroundRef(writer, profile, backgroundColor);
         }
         _writeV2ColorRef(writer, profile, foregroundColor);
         _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
@@ -2724,6 +2902,9 @@ class MCOImageCodec {
     }
 
     if (mode == ImageMode.biColorMask) {
+      if (_usesExtendedDynamicPaletteDescriptor(referenceEncoding)) {
+        return null;
+      }
       final foregroundColor = _biColorForeground(linear, backgroundColor);
       if (foregroundColor == null) return null;
       final foregroundProfileColorId = _profileColorIdForGlobalIndex(
@@ -2742,7 +2923,7 @@ class MCOImageCodec {
       }
       final writer = _BitWriter();
       if (writeSparseBackground) {
-        _writeV2ColorRef(writer, profile, backgroundColor);
+        _writeV2BackgroundRef(writer, profile, backgroundColor);
       }
       _writeV2ColorRef(writer, profile, foregroundColor);
       _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
@@ -2792,6 +2973,7 @@ class MCOImageCodec {
       profile,
       profileColorIds,
       backgroundProfileColorId,
+      referenceEncoding,
     );
     if (localPalette.length > _maxDynamicLocalPalette) return null;
     final localIndexByProfileColorId = {
@@ -2800,7 +2982,7 @@ class MCOImageCodec {
     final localBits = _localBits(localPalette.length);
     final writer = _BitWriter();
     if (mode == ImageMode.sparseBg && writeSparseBackground) {
-      _writeV2ColorRef(writer, profile, backgroundColor);
+      _writeV2BackgroundRef(writer, profile, backgroundColor);
     }
     _writeDynamicLocalPalette(writer, profile, localPalette, referenceEncoding);
 
@@ -2975,6 +3157,7 @@ class MCOImageCodec {
     required ScanMode scan,
     required bool boundsPresent,
     required DynamicPaletteReferenceEncoding? referenceEncoding,
+    required bool implicitWhiteBackground,
     required int width,
     required int height,
     required bool hasTransparentColor,
@@ -2992,6 +3175,11 @@ class MCOImageCodec {
     if (profile.isFixed && referenceEncoding != null) {
       throw const MCOImageInvalidInputException(
         'Fixed palette cannot use dynamic reference encoding',
+      );
+    }
+    if (implicitWhiteBackground && !profile.isDynamic) {
+      throw const MCOImageInvalidInputException(
+        'Implicit white background requires a dynamic palette',
       );
     }
     if (referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64 &&
@@ -3016,7 +3204,8 @@ class MCOImageCodec {
                 5) |
             (hasTransparentColor ? _v2TransparentProfileFlag : 0) |
             (profile.isDynamic
-                ? _dynamicProfileId(profile)
+                ? (_dynamicProfileId(profile) |
+                      (implicitWhiteBackground ? 0x08 : 0))
                 : _fixedProfileId(profile)),
       )
       ..writeAlignedByte(width - 1)
@@ -3037,6 +3226,33 @@ class MCOImageCodec {
     _validateColor(color, profile, 'color');
     writer.writeBits(color, _globalBits(profile));
   }
+
+  void _writeV2BackgroundRef(
+    _BitWriter writer,
+    PaletteProfile profile,
+    int color,
+  ) {
+    if (_isImplicitWhiteBackground(profile, color)) return;
+    _writeV2ColorRef(writer, profile, color);
+  }
+
+  int _readV2BackgroundRef(
+    _BitReader reader,
+    PaletteProfile profile, {
+    required bool implicitWhiteBackground,
+  }) {
+    if (implicitWhiteBackground) {
+      return MCOImageDynamicPalette.whiteGlobalIndexFor(profile);
+    }
+    return _readV2ColorRef(reader, profile);
+  }
+
+  static bool _isImplicitWhiteBackground(
+    PaletteProfile profile,
+    int color,
+  ) =>
+      profile.isDynamic &&
+      color == MCOImageDynamicPalette.whiteGlobalIndexFor(profile);
 
   int _readV2ColorRef(_BitReader reader, PaletteProfile profile) {
     if (profile.isDynamic) {
@@ -3259,7 +3475,12 @@ class MCOImageCodec {
     final paletteKind = (paletteHeader >> 7) & 0x01;
     final hasTransparentColor =
         (paletteHeader & _v2TransparentProfileFlag) != 0;
-    final profileId = paletteHeader & _v2ProfileIdMask;
+    final encodedProfileId = paletteHeader & _v2ProfileIdMask;
+    final implicitWhiteBackground =
+        paletteKind == _paletteKindDynamic && (encodedProfileId & 0x08) != 0;
+    final profileId = paletteKind == _paletteKindDynamic
+        ? encodedProfileId & 0x07
+        : encodedProfileId;
     final profile = paletteKind == _paletteKindDynamic
         ? _dynamicProfileFromId(profileId)
         : _fixedProfileFromId(profileId);
@@ -3268,7 +3489,11 @@ class MCOImageCodec {
     final reader = _BitReader(bytes, byteIndex: 4);
     if (hasTransparentColor) _readV2ColorRef(reader, profile);
     if (boundsPresent) {
-      _readV2ColorRef(reader, profile);
+      _readV2BackgroundRef(
+        reader,
+        profile,
+        implicitWhiteBackground: implicitWhiteBackground,
+      );
       _readV2CompactBounds(reader, width, height);
     }
     reader.alignToByte();
@@ -3456,7 +3681,12 @@ class MCOImageCodec {
     final referenceEncodingValue = (paletteHeader >> 5) & 0x01;
     final hasTransparentColor =
         (paletteHeader & _v2TransparentProfileFlag) != 0;
-    final profileId = paletteHeader & _v2ProfileIdMask;
+    final encodedProfileId = paletteHeader & _v2ProfileIdMask;
+    final implicitWhiteBackground =
+        paletteKind == _paletteKindDynamic && (encodedProfileId & 0x08) != 0;
+    final profileId = paletteKind == _paletteKindDynamic
+        ? encodedProfileId & 0x07
+        : encodedProfileId;
     if (paletteKind != _paletteKindFixed &&
         paletteKind != _paletteKindDynamic) {
       throw const MCOImageInvalidPayloadException(
@@ -3510,6 +3740,7 @@ class MCOImageCodec {
         profile,
         referenceEncoding,
         compactGeometry: compactGeometry,
+        implicitWhiteBackground: implicitWhiteBackground,
       );
       reader.finish();
       return MCOImage(
@@ -3531,7 +3762,11 @@ class MCOImageCodec {
         : null;
 
     if (boundsPresent) {
-      final background = _readV2ColorRef(reader, profile);
+      final background = _readV2BackgroundRef(
+        reader,
+        profile,
+        implicitWhiteBackground: implicitWhiteBackground,
+      );
       final bounds = mode == ImageMode.extended
           ? _readV2CompactBounds(reader, width, height)
           : _readV2Bounds(reader, width, height);
@@ -3574,6 +3809,9 @@ class MCOImageCodec {
       );
     }
 
+    final implicitBackground = implicitWhiteBackground
+        ? MCOImageDynamicPalette.whiteGlobalIndexFor(profile)
+        : null;
     reader.alignToByte();
     final linear = _decodeV2Body(
       reader,
@@ -3583,6 +3821,7 @@ class MCOImageCodec {
       mode,
       referenceEncoding,
       rowLength: _rowLengthForScan(scan, width, height),
+      sparseBackgroundColor: implicitBackground,
     );
     reader.finish();
     return MCOImage(
@@ -3651,6 +3890,7 @@ class MCOImageCodec {
           height,
           profile,
           referenceEncoding,
+          backgroundColor: sparseBackgroundColor,
         );
       }
       if (submode == ExtendedImageMode.compactRle.index) {
@@ -3880,9 +4120,10 @@ class MCOImageCodec {
     int width,
     int height,
     PaletteProfile profile,
-    DynamicPaletteReferenceEncoding? referenceEncoding,
-  ) {
-    final background = _readV2ColorRef(reader, profile);
+    DynamicPaletteReferenceEncoding? referenceEncoding, {
+    int? backgroundColor,
+  }) {
+    final background = backgroundColor ?? _readV2ColorRef(reader, profile);
     final List<int> palette;
     if (profile.isDynamic) {
       if (referenceEncoding == null) {
@@ -4283,6 +4524,13 @@ class MCOImageCodec {
     DynamicPaletteReferenceEncoding? referenceEncoding,
   ) {
     final paletteMarker = reader.readBits(8);
+    if (paletteMarker == 0 && profile.isDynamic) {
+      final palette = _readExtendedDynamicLocalPalette(
+        reader,
+        profile,
+      ).globalColors;
+      return _decodeLegacyBitplanesBody(reader, width, height, palette);
+    }
     if (paletteMarker >= 1 && paletteMarker <= 64) {
       final palette = _readBitplanesPaletteBody(
         reader,
@@ -4301,13 +4549,23 @@ class MCOImageCodec {
       );
       return _decodeAdaptiveBitplanesBody(reader, width, height, palette);
     }
-    if (paletteMarker == 0xc0 && _isGrayscaleProfile(profile)) {
-      return _decodeAdaptiveBitplanesBody(
-        reader,
-        width,
-        height,
-        List<int>.generate(_paletteSize(profile), (index) => index),
-      );
+    if (paletteMarker == 0xc0) {
+      if (_isGrayscaleProfile(profile)) {
+        return _decodeAdaptiveBitplanesBody(
+          reader,
+          width,
+          height,
+          List<int>.generate(_paletteSize(profile), (index) => index),
+        );
+      }
+      if (profile.isDynamic) {
+        return _decodeAdaptiveBitplanesBody(
+          reader,
+          width,
+          height,
+          MCOImageDynamicPalette.indicesFor(profile),
+        );
+      }
     }
     throw const MCOImageInvalidPayloadException(
       'Invalid Bitplanes palette marker',
@@ -5158,9 +5416,13 @@ class MCOImageCodec {
     PaletteProfile profile,
     DynamicPaletteReferenceEncoding? referenceEncoding, {
     required bool compactGeometry,
-  }
-  ) {
-    final background = _readV2ColorRef(reader, profile);
+    required bool implicitWhiteBackground,
+  }) {
+    final background = _readV2BackgroundRef(
+      reader,
+      profile,
+      implicitWhiteBackground: implicitWhiteBackground,
+    );
     _DynamicLocalPalette? sharedDynamicPalette;
     if (profile.isDynamic) {
       if (referenceEncoding == null) {
@@ -6678,25 +6940,30 @@ class MCOImageCodec {
     PaletteProfile profile,
     List<int> profileColorIds,
     int backgroundProfileColorId,
+    DynamicPaletteReferenceEncoding referenceEncoding,
   ) {
     final counts = <int, int>{};
     for (final profileColorId in profileColorIds) {
       counts[profileColorId] = (counts[profileColorId] ?? 0) + 1;
     }
-    final colors = counts.keys.toList()
-      ..sort((a, b) {
-        if (a == backgroundProfileColorId && b != backgroundProfileColorId) {
-          return -1;
-        }
-        if (b == backgroundProfileColorId && a != backgroundProfileColorId) {
-          return 1;
-        }
-        final byFrequency = counts[b]!.compareTo(counts[a]!);
-        if (byFrequency != 0) return byFrequency;
-        final aGlobal = _globalIndexForProfileColorId(profile, a);
-        final bGlobal = _globalIndexForProfileColorId(profile, b);
-        return aGlobal.compareTo(bGlobal);
-      });
+    final colors = counts.keys.toList();
+    if (_usesSortedDynamicPalette(referenceEncoding)) {
+      colors.sort();
+      return colors;
+    }
+    colors.sort((a, b) {
+      if (a == backgroundProfileColorId && b != backgroundProfileColorId) {
+        return -1;
+      }
+      if (b == backgroundProfileColorId && a != backgroundProfileColorId) {
+        return 1;
+      }
+      final byFrequency = counts[b]!.compareTo(counts[a]!);
+      if (byFrequency != 0) return byFrequency;
+      final aGlobal = _globalIndexForProfileColorId(profile, a);
+      final bGlobal = _globalIndexForProfileColorId(profile, b);
+      return aGlobal.compareTo(bGlobal);
+    });
     return colors;
   }
 
@@ -6711,6 +6978,16 @@ class MCOImageCodec {
       throw const MCOImageInvalidInputException(
         'Invalid dynamic local palette size',
       );
+    }
+    if (_usesExtendedDynamicPaletteDescriptor(referenceEncoding)) {
+      writer.writeBitVarUint(0);
+      _writeExtendedDynamicLocalPalette(
+        writer,
+        profile,
+        profileColorIds,
+        referenceEncoding,
+      );
+      return;
     }
     writer.writeBitVarUint(profileColorIds.length);
     _writeDynamicLocalPaletteBody(
@@ -6758,7 +7035,143 @@ class MCOImageCodec {
           writer.writeBits(offset, 6);
         }
         break;
+      case DynamicPaletteReferenceEncoding.sortedDelta:
+      case DynamicPaletteReferenceEncoding.rangeRuns:
+      case DynamicPaletteReferenceEncoding.profileBitmap:
+      case DynamicPaletteReferenceEncoding.bankBitmaps:
+        throw const MCOImageInvalidInputException(
+          'Extended dynamic palette descriptor requires a zero marker',
+        );
     }
+  }
+
+  void _writeExtendedDynamicLocalPalette(
+    _BitWriter writer,
+    PaletteProfile profile,
+    List<int> profileColorIds,
+    DynamicPaletteReferenceEncoding referenceEncoding,
+  ) {
+    _validateSortedDynamicPalette(profile, profileColorIds);
+    switch (referenceEncoding) {
+      case DynamicPaletteReferenceEncoding.sortedDelta:
+        writer
+          ..writeBits(
+            _dynamicPaletteDescriptorSortedDelta,
+            _dynamicPaletteDescriptorBits,
+          )
+          ..writeBits(profileColorIds.length - 1, 6)
+          ..writeBits(
+            profileColorIds.first,
+            _dynamicProfileColorBits(profile),
+          );
+        for (var i = 1; i < profileColorIds.length; i++) {
+          _writeCompactUint(
+            writer,
+            profileColorIds[i] - profileColorIds[i - 1] - 1,
+          );
+        }
+        break;
+      case DynamicPaletteReferenceEncoding.rangeRuns:
+        final runs = _dynamicPaletteRuns(profileColorIds);
+        writer.writeBits(
+          _dynamicPaletteDescriptorRangeRuns,
+          _dynamicPaletteDescriptorBits,
+        );
+        _writeCompactUint(writer, runs.length - 1);
+        var previousEnd = -1;
+        for (var i = 0; i < runs.length; i++) {
+          final run = runs[i];
+          if (i == 0) {
+            writer.writeBits(run.start, _dynamicProfileColorBits(profile));
+          } else {
+            _writeCompactUint(writer, run.start - previousEnd - 1);
+          }
+          _writeCompactUint(writer, run.length - 1);
+          previousEnd = run.start + run.length - 1;
+        }
+        break;
+      case DynamicPaletteReferenceEncoding.profileBitmap:
+        writer.writeBits(
+          _dynamicPaletteDescriptorProfileBitmap,
+          _dynamicPaletteDescriptorBits,
+        );
+        final colorSet = profileColorIds.toSet();
+        for (var id = 0; id < _dynamicProfileSize(profile); id++) {
+          writer.writeBits(colorSet.contains(id) ? 1 : 0, 1);
+        }
+        break;
+      case DynamicPaletteReferenceEncoding.bankBitmaps:
+        if (profile != PaletteProfile.dynamicGlobal512) {
+          throw const MCOImageInvalidInputException(
+            'Bank bitmaps require dynamicGlobal512',
+          );
+        }
+        writer.writeBits(
+          _dynamicPaletteDescriptorBankBitmaps,
+          _dynamicPaletteDescriptorBits,
+        );
+        final colorSet = profileColorIds.toSet();
+        final bankMask = profileColorIds.fold<int>(
+          0,
+          (mask, id) => mask | (1 << (id >> 6)),
+        );
+        writer.writeBits(bankMask, 8);
+        for (var bank = 0; bank < 8; bank++) {
+          if ((bankMask & (1 << bank)) == 0) continue;
+          for (var offset = 0; offset < 64; offset++) {
+            writer.writeBits(
+              colorSet.contains((bank << 6) | offset) ? 1 : 0,
+              1,
+            );
+          }
+        }
+        break;
+      case DynamicPaletteReferenceEncoding.flat:
+      case DynamicPaletteReferenceEncoding.banked8x64:
+        throw const MCOImageInvalidInputException(
+          'Legacy dynamic palette encoding is not an extended descriptor',
+        );
+    }
+  }
+
+  void _validateSortedDynamicPalette(
+    PaletteProfile profile,
+    List<int> profileColorIds,
+  ) {
+    if (profileColorIds.isEmpty ||
+        profileColorIds.length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidInputException(
+        'Invalid dynamic local palette size',
+      );
+    }
+    final maxId = _dynamicProfileSize(profile) - 1;
+    var previous = -1;
+    for (final id in profileColorIds) {
+      if (id <= previous || id > maxId) {
+        throw const MCOImageInvalidInputException(
+          'Extended dynamic palette must be sorted and unique',
+        );
+      }
+      previous = id;
+    }
+  }
+
+  List<({int start, int length})> _dynamicPaletteRuns(List<int> colors) {
+    final runs = <({int start, int length})>[];
+    var start = colors.first;
+    var previous = start;
+    for (var i = 1; i < colors.length; i++) {
+      final color = colors[i];
+      if (color == previous + 1) {
+        previous = color;
+        continue;
+      }
+      runs.add((start: start, length: previous - start + 1));
+      start = color;
+      previous = color;
+    }
+    runs.add((start: start, length: previous - start + 1));
+    return runs;
   }
 
   _DynamicLocalPalette _readDynamicLocalPalette(
@@ -6767,6 +7180,9 @@ class MCOImageCodec {
     DynamicPaletteReferenceEncoding referenceEncoding,
   ) {
     final length = reader.readBitVarUint();
+    if (length == 0) {
+      return _readExtendedDynamicLocalPalette(reader, profile);
+    }
     return _readDynamicLocalPaletteBody(
       reader,
       profile,
@@ -6794,6 +7210,13 @@ class MCOImageCodec {
       ),
       DynamicPaletteReferenceEncoding.banked8x64 =>
         _readDynamicBankedPaletteBody(reader, profile, length),
+      DynamicPaletteReferenceEncoding.sortedDelta ||
+      DynamicPaletteReferenceEncoding.rangeRuns ||
+      DynamicPaletteReferenceEncoding.profileBitmap ||
+      DynamicPaletteReferenceEncoding.bankBitmaps =>
+        throw const MCOImageInvalidPayloadException(
+          'Extended dynamic palette requires a zero marker',
+        ),
     };
     final globalColors = profileColorIds
         .map((profileColorId) {
@@ -6811,6 +7234,147 @@ class MCOImageCodec {
         })
         .toList(growable: false);
     return _DynamicLocalPalette(globalColors);
+  }
+
+  _DynamicLocalPalette _readExtendedDynamicLocalPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    final descriptor = reader.readBits(_dynamicPaletteDescriptorBits);
+    final profileColorIds = switch (descriptor) {
+      _dynamicPaletteDescriptorSortedDelta =>
+        _readDynamicSortedDeltaPalette(reader, profile),
+      _dynamicPaletteDescriptorRangeRuns =>
+        _readDynamicRangePalette(reader, profile),
+      _dynamicPaletteDescriptorProfileBitmap =>
+        _readDynamicProfileBitmapPalette(reader, profile),
+      _dynamicPaletteDescriptorBankBitmaps =>
+        _readDynamicBankBitmapsPalette(reader, profile),
+      _ => throw const MCOImageInvalidPayloadException(
+        'Unknown dynamic palette descriptor',
+      ),
+    };
+    final globalColors = profileColorIds
+        .map((id) => _globalIndexForProfileColorId(profile, id))
+        .toList(growable: false);
+    return _DynamicLocalPalette(globalColors);
+  }
+
+  List<int> _readDynamicSortedDeltaPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    final length = reader.readBits(6) + 1;
+    final maxId = _dynamicProfileSize(profile) - 1;
+    final colors = <int>[
+      reader.readBits(_dynamicProfileColorBits(profile)),
+    ];
+    if (colors.first > maxId) {
+      throw const MCOImageInvalidPayloadException(
+        'Dynamic palette color id is out of range',
+      );
+    }
+    while (colors.length < length) {
+      final next = colors.last + _readCompactUint(reader) + 1;
+      if (next > maxId) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic palette delta is out of range',
+        );
+      }
+      colors.add(next);
+    }
+    return colors;
+  }
+
+  List<int> _readDynamicRangePalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    final runCount = _readCompactUint(reader) + 1;
+    if (runCount <= 0 || runCount > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic palette range count',
+      );
+    }
+    final maxId = _dynamicProfileSize(profile) - 1;
+    final colors = <int>[];
+    var previousEnd = -1;
+    for (var i = 0; i < runCount; i++) {
+      final start = i == 0
+          ? reader.readBits(_dynamicProfileColorBits(profile))
+          : previousEnd + _readCompactUint(reader) + 1;
+      final length = _readCompactUint(reader) + 1;
+      final end = start + length - 1;
+      if (start <= previousEnd || end > maxId) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic palette range is out of bounds',
+        );
+      }
+      if (colors.length + length > _maxDynamicLocalPalette) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic palette has too many colors',
+        );
+      }
+      for (var color = start; color <= end; color++) {
+        colors.add(color);
+      }
+      previousEnd = end;
+    }
+    return colors;
+  }
+
+  List<int> _readDynamicProfileBitmapPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    final colors = <int>[];
+    for (var id = 0; id < _dynamicProfileSize(profile); id++) {
+      if (reader.readBits(1) != 0) colors.add(id);
+    }
+    _validateDecodedDynamicPaletteSize(colors);
+    return colors;
+  }
+
+  List<int> _readDynamicBankBitmapsPalette(
+    _BitReader reader,
+    PaletteProfile profile,
+  ) {
+    if (profile != PaletteProfile.dynamicGlobal512) {
+      throw const MCOImageInvalidPayloadException(
+        'Bank bitmaps require dynamicGlobal512',
+      );
+    }
+    final bankMask = reader.readBits(8);
+    if (bankMask == 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Dynamic bank bitmap is empty',
+      );
+    }
+    final colors = <int>[];
+    for (var bank = 0; bank < 8; bank++) {
+      if ((bankMask & (1 << bank)) == 0) continue;
+      final beforeBank = colors.length;
+      for (var offset = 0; offset < 64; offset++) {
+        if (reader.readBits(1) != 0) {
+          colors.add((bank << 6) | offset);
+        }
+      }
+      if (colors.length == beforeBank) {
+        throw const MCOImageInvalidPayloadException(
+          'Dynamic bank bitmap contains an empty bank',
+        );
+      }
+    }
+    _validateDecodedDynamicPaletteSize(colors);
+    return colors;
+  }
+
+  void _validateDecodedDynamicPaletteSize(List<int> colors) {
+    if (colors.isEmpty || colors.length > _maxDynamicLocalPalette) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid dynamic local palette size',
+      );
+    }
   }
 
   List<int> _readDynamicFlatPaletteBody(
@@ -8925,6 +9489,56 @@ class MCOImageCodec {
     return bestPalette;
   }
 
+  List<int> _optimizeDynamicTransitionPaletteOrder(
+    List<int> pixels,
+    List<int> palette,
+    int backgroundColor,
+  ) {
+    if (palette.length < 3) return palette;
+    final counts = <int, int>{};
+    final transitions = <int, Map<int, int>>{};
+    for (final color in pixels) {
+      counts[color] = (counts[color] ?? 0) + 1;
+    }
+    for (var i = 1; i < pixels.length; i++) {
+      final left = pixels[i - 1];
+      final right = pixels[i];
+      if (left == right) continue;
+      final leftEdges = transitions.putIfAbsent(left, () => <int, int>{});
+      final rightEdges = transitions.putIfAbsent(right, () => <int, int>{});
+      leftEdges[right] = (leftEdges[right] ?? 0) + 1;
+      rightEdges[left] = (rightEdges[left] ?? 0) + 1;
+    }
+
+    final remaining = palette.toSet();
+    var current = remaining.contains(backgroundColor)
+        ? backgroundColor
+        : palette.reduce(
+            (left, right) =>
+                (counts[left] ?? 0) >= (counts[right] ?? 0) ? left : right,
+          );
+    final result = <int>[];
+    while (remaining.isNotEmpty) {
+      result.add(current);
+      remaining.remove(current);
+      if (remaining.isEmpty) break;
+      current = remaining.reduce((left, right) {
+        final leftWeight = transitions[current]?[left] ?? 0;
+        final rightWeight = transitions[current]?[right] ?? 0;
+        if (leftWeight != rightWeight) {
+          return leftWeight > rightWeight ? left : right;
+        }
+        final leftCount = counts[left] ?? 0;
+        final rightCount = counts[right] ?? 0;
+        if (leftCount != rightCount) {
+          return leftCount > rightCount ? left : right;
+        }
+        return left < right ? left : right;
+      });
+    }
+    return result;
+  }
+
   int _adaptiveBitplanesCost(List<int> pixels, List<int> palette) {
     final indexByColor = _localIndexMap(palette);
     final localPixels = pixels
@@ -9314,10 +9928,31 @@ class MCOImageCodec {
       return const [
         DynamicPaletteReferenceEncoding.flat,
         DynamicPaletteReferenceEncoding.banked8x64,
+        DynamicPaletteReferenceEncoding.sortedDelta,
+        DynamicPaletteReferenceEncoding.rangeRuns,
+        DynamicPaletteReferenceEncoding.profileBitmap,
+        DynamicPaletteReferenceEncoding.bankBitmaps,
       ];
     }
-    return const [DynamicPaletteReferenceEncoding.flat];
+    return const [
+      DynamicPaletteReferenceEncoding.flat,
+      DynamicPaletteReferenceEncoding.sortedDelta,
+      DynamicPaletteReferenceEncoding.rangeRuns,
+      DynamicPaletteReferenceEncoding.profileBitmap,
+    ];
   }
+
+  static bool _usesExtendedDynamicPaletteDescriptor(
+    DynamicPaletteReferenceEncoding encoding,
+  ) =>
+      encoding == DynamicPaletteReferenceEncoding.sortedDelta ||
+      encoding == DynamicPaletteReferenceEncoding.rangeRuns ||
+      encoding == DynamicPaletteReferenceEncoding.profileBitmap ||
+      encoding == DynamicPaletteReferenceEncoding.bankBitmaps;
+
+  static bool _usesSortedDynamicPalette(
+    DynamicPaletteReferenceEncoding encoding,
+  ) => _usesExtendedDynamicPaletteDescriptor(encoding);
 
   static DynamicPaletteReferenceEncoding _dynamicReferenceEncodingFromBits(
     int value,
