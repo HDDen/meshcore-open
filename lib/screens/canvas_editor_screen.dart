@@ -96,6 +96,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsHeightKey = 'canvas_editor_height';
   static const String _prefsPaletteKey = 'canvas_editor_palette';
   static const String _prefsUnlockSizeKey = 'canvas_editor_unlock_size';
+  static const String _prefsShowGridKey = 'canvas_editor_show_grid';
+  static const String _prefsShowRulerKey = 'canvas_editor_show_ruler';
   static const List<PaletteProfile> _paletteProfileOptions = [
     PaletteProfile.mono,
     PaletteProfile.grayscale8,
@@ -134,6 +136,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   int? _transparentColor;
   bool _isPickingTransparentColor = false;
+  bool _paletteExpanded = true;
   _CanvasTool _selectedTool = _CanvasTool.pencil;
   bool _showGrid = true;
   bool _showRuler = false;
@@ -236,17 +239,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(context.l10n.chat_canvasGridShow),
                 value: _showGrid,
-                onChanged: (value) {
-                  setState(() => _showGrid = value ?? true);
-                },
+                onChanged: _setCanvasGridShown,
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(context.l10n.chat_canvasRulerShow),
                 value: _showRuler,
-                onChanged: (value) {
-                  setState(() => _showRuler = value ?? false);
-                },
+                onChanged: _setCanvasRulerShown,
               ),
               const SizedBox(height: 16),
               Text(
@@ -320,6 +319,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 _buildDynamicPaletteControls()
               else
                 _buildPalette(palette),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.chat_canvasPaletteDynamicUsed,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              _buildUsedPalette(),
               if (_supportsAlphaTransparency) ...[
                 const SizedBox(height: 12),
                 _buildPaletteAlphaControl(),
@@ -497,28 +503,91 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     List<Color> palette, {
     PaletteProfile? profile,
     void Function(int colorValue)? onColorSelected,
+    bool collapsible = true,
   }) {
     final paletteProfile = profile ?? _paletteProfile;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        for (var index = 0; index < palette.length; index++)
-          () {
-            final colorValue = _paletteColorValueAtIndex(paletteProfile, index);
-            return _PaletteSwatch(
-              color: palette[index],
-              selected: colorValue == _selectedColor,
-              onTap: () {
-                if (onColorSelected != null) {
-                  onColorSelected(colorValue);
-                  return;
-                }
-                _handlePaletteColorTap(colorValue);
-              },
-            );
-          }(),
-      ],
+    Widget swatchAt(int index) {
+      final colorValue = _paletteColorValueAtIndex(paletteProfile, index);
+      return _PaletteSwatch(
+        color: palette[index],
+        selected: colorValue == _selectedColor,
+        onTap: () {
+          if (onColorSelected != null) {
+            onColorSelected(colorValue);
+            return;
+          }
+          _handlePaletteColorTap(colorValue);
+        },
+      );
+    }
+
+    if (!collapsible) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (var index = 0; index < palette.length; index++) swatchAt(index),
+        ],
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const itemExtent = 28.0;
+        const spacing = 6.0;
+        final itemsPerRow = constraints.maxWidth.isFinite
+            ? ((constraints.maxWidth + spacing) / (itemExtent + spacing))
+                  .floor()
+                  .clamp(1, palette.length)
+                  .toInt()
+            : palette.length;
+        final canCollapse = palette.length > itemsPerRow;
+        var visibleIndices = List<int>.generate(
+          !canCollapse || _paletteExpanded
+              ? palette.length
+              : (itemsPerRow - 1).clamp(1, palette.length).toInt(),
+          (index) => index,
+        );
+        if (canCollapse && !_paletteExpanded) {
+          int? selectedIndex;
+          for (var index = 0; index < palette.length; index++) {
+            if (_paletteColorValueAtIndex(paletteProfile, index) ==
+                _selectedColor) {
+              selectedIndex = index;
+              break;
+            }
+          }
+          if (selectedIndex != null && !visibleIndices.contains(selectedIndex)) {
+            visibleIndices = List<int>.of(visibleIndices)
+              ..[visibleIndices.length - 1] = selectedIndex;
+          }
+        }
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            for (final index in visibleIndices) swatchAt(index),
+            if (canCollapse)
+              IconButton(
+                onPressed: () {
+                  setState(() => _paletteExpanded = !_paletteExpanded);
+                },
+                tooltip: _paletteExpanded
+                    ? context.l10n.pathMap_collapsePanel
+                    : context.l10n.pathMap_expandPanel,
+                icon: Icon(_paletteExpanded ? Icons.remove : Icons.add),
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: itemExtent,
+                  height: itemExtent,
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -611,18 +680,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             onPressed: _showDynamicPaletteDialog,
             child: Text(context.l10n.chat_canvasPaletteShow),
           ),
-        const SizedBox(height: 16),
-        Text(
-          context.l10n.chat_canvasPaletteDynamicUsed,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        _buildUsedDynamicPalette(),
       ],
     );
   }
 
-  Widget _buildUsedDynamicPalette() {
+  Widget _buildUsedPalette() {
     final colorValues = _usedColorValuesForProfile(_paletteProfile);
     return Wrap(
       spacing: 6,
@@ -650,6 +712,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             child: _buildPalette(
               palette,
               profile: profile,
+              collapsible: false,
               onColorSelected: (colorValue) {
                 _handlePaletteColorTap(colorValue);
                 Navigator.of(dialogContext).pop();
@@ -1228,6 +1291,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final requestedWidth = prefs.getInt(_prefsWidthKey) ?? _defaultSize;
     final requestedHeight = prefs.getInt(_prefsHeightKey) ?? _defaultSize;
     final unlockCanvasSize = prefs.getBool(_prefsUnlockSizeKey) ?? false;
+    final showGrid = prefs.getBool(_prefsShowGridKey) ?? true;
+    final showRuler = prefs.getBool(_prefsShowRulerKey) ?? false;
     final bounded = _boundedCanvasSizeForProfile(
       requestedWidth,
       requestedHeight,
@@ -1239,6 +1304,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     _paletteProfile = profile;
     _unlockCanvasSize = unlockCanvasSize;
+    _showGrid = showGrid;
+    _showRuler = showRuler;
     if (profile.isDynamic) {
       _dynamicPaletteProfile = profile;
     }
@@ -1257,6 +1324,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     // exact canvas dimensions instead of applying the user's last editor preset.
     _unlockCanvasSize =
         PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
+    _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
+    _showRuler =
+        PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
     _encodingVersion = image.encodingVersion;
     _paletteProfile = image.paletteProfile;
     if (image.paletteProfile.isDynamic) {
@@ -1285,6 +1355,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _saveCanvasSizeUnlocked(bool value) async {
     await PrefsManager.instance.setBool(_prefsUnlockSizeKey, value);
+  }
+
+  void _setCanvasGridShown(bool? value) {
+    final showGrid = value ?? true;
+    if (showGrid == _showGrid) return;
+    setState(() => _showGrid = showGrid);
+    unawaited(PrefsManager.instance.setBool(_prefsShowGridKey, showGrid));
+  }
+
+  void _setCanvasRulerShown(bool? value) {
+    final showRuler = value ?? false;
+    if (showRuler == _showRuler) return;
+    setState(() => _showRuler = showRuler);
+    unawaited(PrefsManager.instance.setBool(_prefsShowRulerKey, showRuler));
   }
 
   bool get _supportsDynamicPalettes =>

@@ -23,6 +23,7 @@ import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
+import '../widgets/mco_image_message.dart';
 import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
@@ -460,6 +461,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final messages = connector.getChannelMessages(channel);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
     final lastPreview = lastMessage?.text ?? '';
+    final lastPreviewImage = lastMessage == null
+        ? null
+        : MCOImageMessage.tryDecode(lastMessage.text);
     final lastTime = lastMessage?.timestamp;
 
     final channelLabel = channel.name.isEmpty
@@ -575,7 +579,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         ],
                       ],
                     ),
-                    if (lastPreview.isNotEmpty) ...[
+                    if (lastPreviewImage != null) ...[
+                      const SizedBox(height: 2),
+                      MCOImageMessage(
+                        image: lastPreviewImage,
+                        maxSize: max(
+                          lastPreviewImage.width,
+                          lastPreviewImage.height,
+                        ).toDouble(),
+                      ),
+                    ] else if (lastPreview.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         lastPreview,
