@@ -91,7 +91,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   // allow a larger editor grid and still validate the exact encoded payload.
   static const double _master64CellBudgetMultiplier = 4.0;
   static const int _master64BitsPerCell = 6;
-  static const Duration _payloadRefreshThrottle = Duration(seconds: 1);
+  static const Duration _payloadRefreshDebounce = Duration(
+    milliseconds: 1500,
+  );
   static const String _prefsWidthKey = 'canvas_editor_width';
   static const String _prefsHeightKey = 'canvas_editor_height';
   static const String _prefsPaletteKey = 'canvas_editor_palette';
@@ -144,7 +146,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v2;
   late List<int> _pixels;
   Timer? _payloadRefreshTimer;
-  DateTime? _lastPayloadRefreshAt;
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
   bool _isDrawing = false;
@@ -168,7 +169,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _loadInitialImage(initialImage);
     } else {
       _currentPayloadChars = _calculatePayloadChars();
-      _lastPayloadRefreshAt = DateTime.now();
       _loadSavedCanvasSettings();
     }
   }
@@ -941,6 +941,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     required bool showLockButton,
   }) {
     final isOverLimit =
+        !_payloadRefreshInProgress &&
         _currentPayloadChars > _effectiveDisplayedPayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
@@ -997,9 +998,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          context.l10n.chat_canvasCurrentPayload(
-                            _currentPayloadChars,
-                          ),
+                          _payloadRefreshInProgress
+                              ? _payloadCalculatingLabel(context)
+                              : context.l10n.chat_canvasCurrentPayload(
+                                  _currentPayloadChars,
+                                ),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: isOverLimit ? colorScheme.error : null,
@@ -1321,7 +1324,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, height);
     _pixels = List.filled(width * height, _whiteIndex);
     _currentPayloadChars = _calculatePayloadChars();
-    _lastPayloadRefreshAt = DateTime.now();
   }
 
   void _loadInitialImage(MCOImage image) {
@@ -1345,7 +1347,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.of(image.pixels);
     _currentPayloadChars = _calculatePayloadChars();
-    _lastPayloadRefreshAt = DateTime.now();
   }
 
   Future<void> _saveCanvasPalette(PaletteProfile profile) async {
@@ -1653,18 +1654,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _schedulePayloadRefresh() {
-    if (!mounted || (_payloadRefreshTimer?.isActive ?? false)) return;
-
-    final now = DateTime.now();
-    final lastRefresh = _lastPayloadRefreshAt;
-    final elapsed = lastRefresh == null
-        ? _payloadRefreshThrottle
-        : now.difference(lastRefresh);
-    final delay = elapsed >= _payloadRefreshThrottle
-        ? Duration.zero
-        : _payloadRefreshThrottle - elapsed;
-
-    _payloadRefreshTimer = Timer(delay, _refreshPayloadIfIdle);
+    if (!mounted) return;
+    _payloadRefreshTimer?.cancel();
+    _payloadRefreshTimer = Timer(
+      _payloadRefreshDebounce,
+      _refreshPayloadIfIdle,
+    );
   }
 
   void _refreshPayloadIfIdle() {
@@ -1674,24 +1669,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     // While the user is actively drawing, keep the canvas responsive and refresh
     // payload size after the gesture settles.
     if (_isDrawing || _payloadRefreshInProgress) {
-      _payloadRefreshTimer = Timer(
-        _payloadRefreshThrottle,
-        _refreshPayloadIfIdle,
-      );
+      _schedulePayloadRefresh();
       return;
     }
 
     _payloadRefreshPending = false;
-    _payloadRefreshInProgress = true;
-    final payloadChars = _calculatePayloadChars();
-    _lastPayloadRefreshAt = DateTime.now();
-    _payloadRefreshInProgress = false;
+    setState(() => _payloadRefreshInProgress = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final payloadChars = _calculatePayloadChars();
+      if (!mounted) return;
+      setState(() {
+        _currentPayloadChars = payloadChars;
+        _payloadRefreshInProgress = false;
+      });
+      if (_payloadRefreshPending) _schedulePayloadRefresh();
+    });
+  }
 
-    if (!mounted) return;
-    setState(() => _currentPayloadChars = payloadChars);
-    if (_payloadRefreshPending) {
-      _schedulePayloadRefresh();
-    }
+  String _payloadCalculatingLabel(BuildContext context) {
+    const placeholder = -987654321;
+    return context.l10n
+        .chat_canvasCurrentPayload(placeholder)
+        .replaceFirst('$placeholder', '...');
   }
 
   int _calculatePayloadChars() {
