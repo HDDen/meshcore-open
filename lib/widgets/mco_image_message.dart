@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 
@@ -77,6 +78,7 @@ class MCOImageMessage extends StatelessWidget {
     required bool showFormat,
     required bool showAlgorithm,
     required bool showBytes,
+    String? senderName,
     int? binaryPacketBytes,
   }) {
     if (metadata.image == null) return null;
@@ -92,7 +94,12 @@ class MCOImageMessage extends StatelessWidget {
     }
     if (showBytes) {
       final byteLength = isBinary
-          ? binaryPacketBytes
+          ? payloadInfo != null && senderName != null
+                ? ChannelBinaryDataHelper.binaryEnvelopeLength(
+                    bodyLength: payloadInfo.binaryLength,
+                    senderName: senderName,
+                  )
+                : binaryPacketBytes
           : utf8.encode(sourceText).length;
       if (byteLength != null) parts.add('${byteLength}bytes');
     }

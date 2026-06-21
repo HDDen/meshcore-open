@@ -140,6 +140,16 @@ class ChannelBinaryDataHelper {
     return channelDataHeaderLength + envelopeLength;
   }
 
+  static int binaryEnvelopeLength({
+    required int bodyLength,
+    required String senderName,
+  }) {
+    return _envelopeLength(
+      bodyLength: bodyLength,
+      senderName: senderName,
+    );
+  }
+
   static int outgoingCommandFrameLength(
     int envelopeLength, {
     int pathLength = 0,

@@ -73,6 +73,13 @@ void main() {
         11,
       );
       expect(ChannelBinaryDataHelper.finalBinaryPayloadLength(7), 10);
+      expect(
+        ChannelBinaryDataHelper.binaryEnvelopeLength(
+          bodyLength: 78,
+          senderName: 'botQRC',
+        ),
+        85,
+      );
     });
   });
 

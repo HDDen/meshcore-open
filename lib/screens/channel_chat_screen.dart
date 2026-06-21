@@ -821,6 +821,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       showFormat: settingsService.settings.showMcoImageFormat,
       showAlgorithm: settingsService.settings.showMcoImageAlgorithm,
       showBytes: settingsService.settings.showMcoImageBytes,
+      senderName: message.senderName,
       binaryPacketBytes: message.binaryPacketBytes,
     );
     final isMediaMessage =

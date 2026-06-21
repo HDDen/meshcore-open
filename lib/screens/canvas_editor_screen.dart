@@ -1283,10 +1283,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       widget.maxBinaryPayloadBytes ?? _textPayloadLimit;
 
   int get _effectiveDisplayedPayloadLimit {
-    if (widget.maxBinaryPayloadBytes == null) return _effectivePayloadLimit;
-    return ChannelBinaryDataHelper.outgoingCommandFrameLength(
-      _effectivePayloadLimit,
-    );
+    return _effectivePayloadLimit;
   }
 
   void _loadSavedCanvasSettings() {
@@ -1843,9 +1840,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   int _displayPayloadSizeForEncoded(EncodedMCOImage encoded) {
-    final payloadSize = _payloadSizeForEncoded(encoded);
-    if (widget.maxBinaryPayloadBytes == null) return payloadSize;
-    return ChannelBinaryDataHelper.outgoingCommandFrameLength(payloadSize);
+    return _payloadSizeForEncoded(encoded);
   }
 
   List<int> _boundedCanvasSizeForProfile(
