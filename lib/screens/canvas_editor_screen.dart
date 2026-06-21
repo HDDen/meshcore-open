@@ -92,7 +92,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const double _master64CellBudgetMultiplier = 4.0;
   static const int _master64BitsPerCell = 6;
   static const Duration _payloadRefreshDebounce = Duration(
-    milliseconds: 1500,
+    milliseconds: 1200,
   );
   static const String _prefsWidthKey = 'canvas_editor_width';
   static const String _prefsHeightKey = 'canvas_editor_height';
@@ -941,6 +941,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     required bool showLockButton,
   }) {
     final isOverLimit =
+        !_payloadRefreshPending &&
         !_payloadRefreshInProgress &&
         _currentPayloadChars > _effectiveDisplayedPayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
@@ -998,7 +999,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          _payloadRefreshInProgress
+                          _payloadRefreshPending || _payloadRefreshInProgress
                               ? _payloadCalculatingLabel(context)
                               : context.l10n.chat_canvasCurrentPayload(
                                   _currentPayloadChars,
@@ -1649,7 +1650,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _markPayloadDirty() {
-    _payloadRefreshPending = true;
+    if (!_payloadRefreshPending && mounted) {
+      setState(() => _payloadRefreshPending = true);
+    } else {
+      _payloadRefreshPending = true;
+    }
     _schedulePayloadRefresh();
   }
 
