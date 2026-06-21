@@ -984,7 +984,14 @@ void main() {
           expect(decoded.width, image.width);
           expect(decoded.height, image.height);
           expect(decoded.paletteProfile, image.paletteProfile);
-          expect(decoded.pixels, image.pixels);
+          expect(
+            decoded.pixels,
+            image.pixels,
+            reason:
+                'profile=${profile.name}, container=${candidate.container}, '
+                'mode=${candidate.mode.name}, scan=${candidate.scan.name}, '
+                'bounds=${candidate.boundsPresent}',
+          );
         }
       }
     });

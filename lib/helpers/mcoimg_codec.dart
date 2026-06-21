@@ -1471,7 +1471,10 @@ class MCOImageCodec {
       boundsPresent: bounds != null,
       referenceEncoding: referenceEncoding,
       implicitWhiteBackground:
-          (bounds != null || mode == ImageMode.sparseBg) &&
+          (image.paletteProfile.isDynamic ||
+              bounds != null ||
+              mode == ImageMode.sparseBg ||
+              mode == ImageMode.biColorMask) &&
           _isImplicitWhiteBackground(
             image.paletteProfile,
             backgroundColor,
@@ -1516,19 +1519,22 @@ class MCOImageCodec {
     }
     if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
 
+    final implicitWhite = _isImplicitWhiteBackground(
+      image.paletteProfile,
+      backgroundColor,
+    );
     final writer = _BitWriter();
     _writeV2Header(
       writer,
       profile: image.paletteProfile,
       container: _containerBlock,
       mode: ImageMode.rawGlobal,
-      scan: ScanMode.h,
+      scan: image.paletteProfile.isFixed && implicitWhite
+          ? ScanMode.v
+          : ScanMode.h,
       boundsPresent: false,
       referenceEncoding: referenceEncoding,
-      implicitWhiteBackground: _isImplicitWhiteBackground(
-        image.paletteProfile,
-        backgroundColor,
-      ),
+      implicitWhiteBackground: implicitWhite,
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -1587,22 +1593,17 @@ class MCOImageCodec {
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
-      unalignedExtendedBody: image.paletteProfile.isFixed,
     );
     if (image.transparentColor != null) {
       _writeV2ColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
     _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
     _writeV2CompactBounds(writer, bounds, image.width, image.height);
-    if (image.paletteProfile.isDynamic) writer.alignToByte();
     writer
+      ..alignToByte()
       ..writeBits(ExtendedImageMode.wrappedBlock.index, _extendedSubmodeBits)
-      ..writeBits(_modeBits(innerMode), 3);
-    if (image.paletteProfile.isDynamic) {
-      writer.writeAlignedBytes(block.payload);
-    } else {
-      writer.writeUnalignedBytes(block.payload);
-    }
+      ..writeBits(_modeBits(innerMode), 3)
+      ..writeAlignedBytes(block.payload);
     return _V2Payload(
       writer.toBytes(),
       localPaletteSize: block.localPaletteSize,
@@ -3861,7 +3862,7 @@ class MCOImageCodec {
         (container != _containerBlock ||
             mode != ImageMode.rawGlobal ||
             boundsPresent ||
-            scan != ScanMode.h)) {
+            (scan != ScanMode.h && scan != ScanMode.v))) {
       throw const MCOImageInvalidInputException('Invalid v2 solid mode');
     }
     if (profile.isFixed && referenceEncoding != null) {
@@ -4179,6 +4180,7 @@ class MCOImageCodec {
     }
 
     final mode = _modeFromBits((header >> 3) & 0x07);
+    final scan = _scanFromBits((header >> 1) & 0x03);
     final boundsPresent = (header & 0x01) != 0;
     final paletteHeader = bytes[1];
     final container = ((paletteHeader >> 6) & 0x01) == 0
@@ -4222,6 +4224,7 @@ class MCOImageCodec {
         (paletteKind == _paletteKindFixed &&
             container == _containerBlock &&
             mode == ImageMode.rawGlobal &&
+            scan == ScanMode.v &&
             referenceEncodingValue != 0);
     final fixedBlockExtension =
         paletteKind == _paletteKindFixed &&
@@ -4447,6 +4450,7 @@ class MCOImageCodec {
         (paletteKind == _paletteKindFixed &&
             container == _containerBlock &&
             mode == ImageMode.rawGlobal &&
+            scan == ScanMode.v &&
             referenceEncodingValue != 0);
     final fixedBlockExtension =
         paletteKind == _paletteKindFixed &&
@@ -5335,6 +5339,10 @@ class MCOImageCodec {
     DynamicPaletteReferenceEncoding? referenceEncoding,
   ) {
     final paletteMarker = reader.readBits(8);
+    if (paletteMarker == 0 && profile.isFixed) {
+      final palette = _readV2FixedPaletteDescriptor(reader, profile);
+      return _decodeLegacyBitplanesBody(reader, width, height, palette);
+    }
     if (paletteMarker == 0 && profile.isDynamic) {
       final palette = _readExtendedDynamicLocalPalette(
         reader,
@@ -11539,12 +11547,6 @@ class _BitWriter {
   void writeAlignedBytes(Uint8List values) {
     alignToByte();
     _bytes.addAll(values);
-  }
-
-  void writeUnalignedBytes(Uint8List values) {
-    for (final value in values) {
-      writeBits(value, 8);
-    }
   }
 
   void writeBits(int value, int bitCount) {
