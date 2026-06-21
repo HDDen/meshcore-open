@@ -1347,7 +1347,17 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     }
 
     function modeNameForBits(modeBits) {
-      return ImageModeName?.[modeBits] || `mode ${modeBits}`;
+      const wireModes = [
+        'rawGlobal',
+        'rawLocal',
+        'rleLocal',
+        'sparseBg',
+        'biColorMask',
+        'rowDelta',
+        'rowRepeat',
+        'extended',
+      ];
+      return wireModes[modeBits] || `mode ${modeBits}`;
     }
 
     function scanNameForBits(scanBits) {
@@ -1411,6 +1421,19 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         details.push(`${paletteKind === 1 ? 'dynamic' : 'fixed'} palette`);
         if (paletteKind === 1) details.push(referenceNameForBits(referenceEncoding));
         if (hasTransparentColor) details.push('transparent color');
+
+        const payloadInfo = MCOImageCodec.inspectPayload(encodedTextValue);
+        if (payloadInfo?.algorithm) details.push(payloadInfo.algorithm);
+        if (container === 1 || modeNameForBits(modeBits) === 'extended' ||
+            (modeNameForBits(modeBits) === 'rawGlobal' &&
+              (paletteKind === 1 || referenceEncoding !== 0))) {
+          addSegment(4, bytes.length, 'Payload body', 'hex-body', payloadInfo?.algorithm || 'Current v2 payload body');
+          return {
+            segments,
+            details,
+            summary: `${bytes.length} decoded bytes; ${details.join(', ')}`,
+          };
+        }
 
         const reader = new InspectorBitReader(bytes, 4);
 
@@ -2125,10 +2148,11 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
           encodingVersion: selectedEncodingVersion(),
         });
         encodedText.value = encoded.text;
+        const payloadInfo = MCOImageCodec.inspectPayload(encoded.text);
         encodedMeta.textContent =
           `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
           `v${encoded.codecVersion || selectedEncodingVersion()} ` +
-          `${encoded.modeName}/${encoded.scanName}` +
+          `${payloadInfo?.algorithm || encoded.modeName}/${encoded.scanName}` +
           (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
           (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
         drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });

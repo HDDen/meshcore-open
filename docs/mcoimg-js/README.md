@@ -4,7 +4,7 @@ This folder contains a dependency-free vanilla JS port of the Flutter
 `MCOImageCodec`.
 
 - `mcoimg-codec.global.js` is the browser-global build for plain `<script>` usage.
-- `demo.html` is a browser demo with drawing tools, image import, PNG export,
+- `index.html` is a browser demo with drawing tools, image import, PNG export,
   encoding, decoding, and rendering.
 - The JS port is intended to stay byte-compatible with the Dart/Flutter codec
   for both legacy v1 payloads and the current v2 payloads.
@@ -35,6 +35,14 @@ console.log(encoded.text); // im:...
 
 const decoded = codec.decode(encoded.text);
 drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
+
+// Binary transport selects the best candidate by byteLength, not Base91 size.
+const binary = codec.encodeBytes({
+  width: 11,
+  height: 11,
+  paletteProfile: PaletteProfile.master8,
+  pixels: new Array(11 * 11).fill(0),
+});
 </script>
 ```
 
@@ -54,7 +62,8 @@ The codec supports two public format families:
 - **v1 legacy**: fixed palettes only, no explicit transparency, up to `85×85`.
   It is retained for compatibility with older clients.
 - **v2 current**: fixed and dynamic palettes, 3-bit mode ids, optional explicit
-  transparent color, larger canvases up to `256×256`, row-delta and region
+  transparent color, larger canvases up to `256×256`, compact bounds/regions,
+  palette descriptors, SOLID_BG, LZ, Quadtree, Bitplanes, and row-delta
   optimizations.
 
 Encoding defaults to v2. To force legacy output, pass:
@@ -116,11 +125,14 @@ console.table(diagnostics.candidates.map((candidate) => ({
   scan: candidate.scanName,
   palette: candidate.paletteKind,
 })));
+
+console.log(MCOImageCodec.inspectPayload(diagnostics.result.text));
+// { version: 2, algorithm: 'LZ pixels', binaryLength: ... }
 ```
 
 ## Demo
 
-Open `demo.html` in a browser. The demo uses the browser-global build, so it can
+Open `index.html` in a browser. The demo uses the browser-global build, so it can
 be opened directly from `file://` without ES module import restrictions.
 
 The demo includes:

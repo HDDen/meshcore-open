@@ -88,6 +88,7 @@
     biColorMask: 5,
     rowDelta: 6,
     rowRepeat: 7,
+    extended: 8,
   });
 
   const ImageModeName = Object.freeze([
@@ -99,6 +100,29 @@
     'biColorMask',
     'rowDelta',
     'rowRepeat',
+    'extended',
+  ]);
+
+  const ExtendedImageMode = Object.freeze({
+    wrappedBlock: 0,
+    solidRects: 1,
+    compactRle: 2,
+    compactSparse: 3,
+    lzPixels: 4,
+    quadtree: 5,
+    bitplanes: 6,
+    compactRowDelta: 7,
+  });
+
+  const ExtendedImageModeName = Object.freeze([
+    'wrappedBlock',
+    'solidRects',
+    'compactRle',
+    'compactSparse',
+    'lzPixels',
+    'quadtree',
+    'bitplanes',
+    'compactRowDelta',
   ]);
 
   const ScanMode = Object.freeze({
@@ -179,16 +203,29 @@
   const DynamicPaletteReferenceEncoding = Object.freeze({
     flat: 0,
     banked8x64: 1,
+    sortedDelta: 2,
+    rangeRuns: 3,
+    profileBitmap: 4,
+    bankBitmaps: 5,
   });
 
   const DynamicPaletteReferenceEncodingName = Object.freeze([
     'flat',
     'banked8x64',
+    'sortedDelta',
+    'rangeRuns',
+    'profileBitmap',
+    'bankBitmaps',
   ]);
 
   const MCOImageEncodingVersion = Object.freeze({
     v1Legacy: 1,
     v2: 2,
+  });
+
+  const MCOImageOutputTarget = Object.freeze({
+    text: 'text',
+    binary: 'binary',
   });
 
   const DynamicGlobal512 = Object.freeze([4294967295, 4294704123, 4294440951, 4294111986, 4293848814, 4293585642, 4293322470, 4292993505, 4292730333, 4292467161, 4292203989, 4291940817, 4291611852, 4291348680, 4291085508, 4290822336, 4290493371, 4290230199, 4289967027, 4289638318, 4289374890, 4288980132, 4288782753, 4288454044, 4288190616, 4287861907, 4287466893, 4287269770, 4287072391, 4286875012, 4286677633, 4286480254, 4286282619, 4286085240, 4285887861, 4285690482, 4285493103, 4285229931, 4284900966, 4284769380, 4284572001, 4284308829, 4284111450, 4283848278, 4283650899, 4283387727, 4283058762, 4282729797, 4282466625, 4282137660, 4281808695, 4281479730, 4281216558, 4280887593, 4280558628, 4280295456, 4280032284, 4279769112, 4279505940, 4279242768, 4278979596, 4278716424, 4278453252, 4278190080, 4294946979, 4294946464, 4294945693, 4294945178, 4294944407, 4294943893, 4294943122, 4294942607, 4294941836, 4294941321, 4294939265, 4294937465, 4294935409, 4294933353, 4294931553, 4294929497, 4294927441, 4294925641, 4294923585, 4294922298, 4294920755, 4294919467, 4294917924, 4294851101, 4294849558, 4294848270, 4294846727, 4294845440, 4294517504, 4294189824, 4293861888, 4293533952, 4293206273, 4292878337, 4292550401, 4292222721, 4291894785, 4291435777, 4290976769, 4290517761, 4290058753, 4289534208, 4289075200, 4288616192, 4288157184, 4287698176, 4287370240, 4287042304, 4286649088, 4286321152, 4285993217, 4285665281, 4285272065, 4284944129, 4284616193, 4284419585, 4284222721, 4283960577, 4283763713, 4283567104, 4283370240, 4283108096, 4282911232, 4282714624, 4294947683, 4294947425, 4294947168, 4294946654, 4294946397, 4294946139, 4294945882, 4294945368, 4294945111, 4294944853, 4294944337, 4294943565, 4294943050, 4294942534, 4294941762, 4294941246, 4294940731, 4294939959, 4294939443, 4294938925, 4294938664, 4294938146, 4294937628, 4294937367, 4294936849, 4294936331, 4294936070, 4294935552, 4294738432, 4294541568, 4294344448, 4294147584, 4293950465, 4293753601, 4293556481, 4293359617, 4293162497, 4292965377, 4292702721, 4292505857, 4292243201, 4292046081, 4291783425, 4291586561, 4291323905, 4291126785, 4290732801, 4290338817, 4289944577, 4289550593, 4289091072, 4288697088, 4288302848, 4287908864, 4287514880, 4287383552, 4287252224, 4287120896, 4286989568, 4286792704, 4286661376, 4286530048, 4286398720, 4286267392, 4294436210, 4294435951, 4294435693, 4294370154, 4294369896, 4294369637, 4294369379, 4294303840, 4294303582, 4294303323, 4294303057, 4294236999, 4294236733, 4294170675, 4294170408, 4294104350, 4294104084, 4294038026, 4294037760, 4293906176, 4293774592, 4293643265, 4293511681, 4293380097, 4293248513, 4293117186, 4292985602, 4292854018, 4292722434, 4292590850, 4292393986, 4292262402, 4292130817, 4291999233, 4291802369, 4291670785, 4291539201, 4291407617, 4291210497, 4291078657, 4290881537, 4290749954, 4290552834, 4290420994, 4290223874, 4290092290, 4289829122, 4289566210, 4289303042, 4289039874, 4288711426, 4288448258, 4288185090, 4287922178, 4287659010, 4287461890, 4287330306, 4287133186, 4286936066, 4286804226, 4286607106, 4286409986, 4286278402, 4286081282, 4290242203, 4289979799, 4289717139, 4289520271, 4289257867, 4288995206, 4288732802, 4288535934, 4288273274, 4288010870, 4287748465, 4287420268, 4287157864, 4286829667, 4286567262, 4286239065, 4285976661, 4285648464, 4285386059, 4285123651, 4284860986, 4284533042, 4284270378, 4284007969, 4283745305, 4283417361, 4283154696, 4282892288, 4282826240, 4282825728, 4282759936, 4282693888, 4282693376, 4282627328, 4282561536, 4282561024, 4282494976, 4282428672, 4282362368, 4282230528, 4282164224, 4282097665, 4282031361, 4281899521, 4281833217, 4281766913, 4281634817, 4281568257, 4281435905, 4281369345, 4281237248, 4281170688, 4281038336, 4280971776, 4280839680, 4280773376, 4280706816, 4280574976, 4280508416, 4280442112, 4280375552, 4280243712, 4280177152, 4280110848, 4291097087, 4290900223, 4290703359, 4290572031, 4290375167, 4290178559, 4289981695, 4289850367, 4289653503, 4289456639, 4289128703, 4288800511, 4288472575, 4288144383, 4287881983, 4287553791, 4287225855, 4286897663, 4286569727, 4285651455, 4284733183, 4283815167, 4282896895, 4281978623, 4281060351, 4280142335, 4279224063, 4278305791, 4278305533, 4278305019, 4278304761, 4278304247, 4278238454, 4278237940, 4278237682, 4278237168, 4278236910, 4278236652, 4278236139, 4278235881, 4278235623, 4278300646, 4278300388, 4278300130, 4278299617, 4278299359, 4278298587, 4278297814, 4278362322, 4278361550, 4278360777, 4278360005, 4278424513, 4278423740, 4278422968, 4278421939, 4278421167, 4278354602, 4278353830, 4278352801, 4278352029, 4278285464, 4278284692, 4278283663, 4287736575, 4287539455, 4287342335, 4287144959, 4286947839, 4286685183, 4286488063, 4286290687, 4286093567, 4285896447, 4285501695, 4285041663, 4284646911, 4284186879, 4283792127, 4283332095, 4282937343, 4282214911, 4282082559, 4281622527, 4281228287, 4280768255, 4280373759, 4279913983, 4279519487, 4279059455, 4278665215, 4278205183, 4278204924, 4278204664, 4278270197, 4278269938, 4278269678, 4278269419, 4278334952, 4278334692, 4278334433, 4278334174, 4278334172, 4278333913, 4278333911, 4278333652, 4278333650, 4278333391, 4278333389, 4278333130, 4278332871, 4278332868, 4278332609, 4278332350, 4278266812, 4278266553, 4278266294, 4278266291, 4278266032, 4278265773, 4278265770, 4278265511, 4278265252, 4278199714, 4278199455, 4278199196, 4278199193, 4278198934, 4292326143, 4292062719, 4291799295, 4291536127, 4291272703, 4290943743, 4290680319, 4290417151, 4290153727, 4289890303, 4289692671, 4289560575, 4289363199, 4289165567, 4289033471, 4288835839, 4288638463, 4288506367, 4288308735, 4288176639, 4287978751, 4287846655, 4287714303, 4287516671, 4287384319, 4287252223, 4287054335, 4286922239, 4286854911, 4286722047, 4286654975, 4286587647, 4286454783, 4286387455, 4286320383, 4286187519, 4286120191, 4285989115, 4285858039, 4285792756, 4285661680, 4285530604, 4285399528, 4285334245, 4285137123, 4285072093, 4284941016, 4284744403, 4284613326, 4284416713, 4284285379, 4284088766, 4283957689, 4283761076, 4283629999, 4283367847, 4283105694, 4282843542, 4282581390, 4282318981, 4282056829, 4281794677, 4281532524, 4281270372]);
@@ -201,6 +238,20 @@
     [PaletteProfile.dynamicGlobal256]: Object.freeze([0, 9, 18, 27, 36, 45, 54, 63, 64, 73, 82, 91, 100, 109, 118, 127, 128, 137, 146, 155, 164, 173, 182, 191, 192, 201, 210, 219, 228, 237, 246, 255, 256, 265, 274, 283, 292, 301, 310, 319, 320, 329, 338, 347, 356, 365, 374, 383, 384, 393, 402, 411, 420, 429, 438, 447, 448, 457, 466, 475, 484, 493, 502, 511, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 65, 66, 67, 68, 69, 70, 71, 72, 74, 75, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 87, 88, 89, 90, 92, 93, 94, 95, 96, 97, 98, 99, 101, 102, 103, 104, 105, 106, 107, 108, 110, 111, 112, 113, 114, 115, 116, 117, 119, 120, 121, 122, 123, 124, 125, 126, 129, 130, 131, 132, 133, 134, 135, 136, 138, 139, 140, 141, 142, 143, 144, 145, 147, 148, 149, 150, 151, 152, 153, 154, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 183, 184, 185, 186, 187, 188, 189, 190, 193, 194, 195, 196, 197, 198, 199, 200, 202, 203, 204, 205, 206, 207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218]),
     [PaletteProfile.dynamicGlobal512]: Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511]),
   });
+
+  // Generated from lib/helpers/mcoimg_dynamic_palettes.dart. Keep this table in
+  // lockstep with the Dart codec; palette IDs are part of the wire format.
+  const DynamicGlobal512Current = Object.freeze([4294967295, 4294038451, 4292324995, 4290479965, 4288373566, 4286335277, 4284363551, 4282458390, 4280619275, 4292467161, 4294962661, 4294960595, 4294957254, 4294495423, 4294229925, 4293638287, 4292913540, 4291991419, 4289967027, 4294956768, 4294958280, 4294963896, 4291685583, 4291423984, 4291747322, 4292924148, 4293578723, 4287269770, 4293189806, 4291479427, 4289374559, 4287204163, 4285362484, 4283651625, 4282006558, 4280493078, 4285493103, 4294963640, 4294959242, 4294232413, 4292718391, 4291072804, 4288508184, 4285812751, 4282986504, 4283387727, 4290376680, 4286766543, 4283351989, 4280788119, 4279665785, 4279133020, 4278731839, 4278396450, 4280558628, 4294230184, 4293368700, 4292114007, 4290336318, 4288036141, 4285672226, 4283374616, 4281011725, 4278190080, 4294946979, 4294636520, 4293911506, 4293054905, 4292067234, 4290947463, 4289368175, 4287460956, 4285488201, 4294941321, 4294959298, 4294230687, 4292846974, 4291332450, 4289358665, 4286730298, 4284167466, 4281671707, 4294923585, 4287466893, 4288980132, 4284900966, 4294917924, 4294851101, 4294849558, 4294848270, 4294846727, 4294845440, 4294517504, 4294189824, 4293861888, 4293533952, 4293206273, 4292878337, 4292550401, 4292222721, 4291894785, 4291435777, 4290976769, 4290517761, 4290058753, 4289534208, 4289075200, 4288616192, 4288157184, 4287698176, 4287370240, 4287042304, 4286649088, 4286321152, 4285993217, 4285665281, 4285272065, 4284944129, 4284616193, 4284419585, 4284222721, 4283960577, 4283763713, 4283567104, 4283370240, 4283108096, 4282911232, 4282714624, 4294947683, 4294947425, 4294947168, 4294946654, 4294946397, 4294946139, 4294945882, 4294945368, 4294945111, 4294944853, 4294944337, 4294943565, 4294943050, 4294942534, 4294941762, 4294941246, 4294940731, 4294939959, 4294939443, 4294938925, 4294938664, 4294938146, 4294937628, 4294937367, 4294936849, 4294936331, 4294936070, 4294935552, 4294738432, 4294541568, 4294344448, 4294147584, 4293950465, 4293753601, 4293556481, 4293359617, 4293162497, 4292965377, 4292702721, 4292505857, 4292243201, 4292046081, 4291783425, 4291586561, 4291323905, 4291126785, 4290732801, 4290338817, 4289944577, 4289550593, 4289091072, 4288697088, 4288302848, 4287908864, 4287514880, 4287383552, 4287252224, 4287120896, 4286989568, 4286792704, 4286661376, 4286530048, 4286398720, 4286267392, 4294436210, 4294435951, 4294435693, 4294370154, 4294369896, 4294369637, 4294369379, 4294303840, 4294303582, 4294303323, 4294303057, 4294236999, 4294236733, 4294170675, 4294170408, 4294104350, 4294104084, 4294038026, 4294037760, 4293906176, 4293774592, 4293643265, 4293511681, 4293380097, 4293248513, 4293117186, 4292985602, 4292854018, 4292722434, 4292590850, 4292393986, 4292262402, 4292130817, 4291999233, 4291802369, 4291670785, 4291539201, 4291407617, 4291210497, 4291078657, 4290881537, 4290749954, 4290552834, 4290420994, 4290223874, 4290092290, 4289829122, 4289566210, 4289303042, 4289039874, 4288711426, 4288448258, 4288185090, 4287922178, 4287659010, 4287461890, 4287330306, 4287133186, 4286936066, 4286804226, 4286607106, 4286409986, 4286278402, 4286081282, 4290242203, 4289979799, 4289717139, 4289520271, 4289257867, 4288995206, 4288732802, 4288535934, 4288273274, 4288010870, 4287748465, 4287420268, 4287157864, 4286829667, 4286567262, 4286239065, 4285976661, 4285648464, 4285386059, 4285123651, 4284860986, 4284533042, 4284270378, 4284007969, 4283745305, 4283417361, 4283154696, 4282892288, 4282826240, 4282825728, 4282759936, 4282693888, 4282693376, 4282627328, 4282561536, 4282561024, 4282494976, 4282428672, 4282362368, 4282230528, 4282164224, 4282097665, 4282031361, 4281899521, 4281833217, 4281766913, 4281634817, 4281568257, 4281435905, 4281369345, 4281237248, 4281170688, 4281038336, 4280971776, 4280839680, 4280773376, 4280706816, 4280574976, 4280508416, 4280442112, 4280375552, 4280243712, 4280177152, 4280110848, 4291097087, 4290900223, 4290703359, 4290572031, 4290375167, 4290178559, 4289981695, 4289850367, 4289653503, 4289456639, 4289128703, 4288800511, 4288472575, 4288144383, 4287881983, 4287553791, 4287225855, 4286897663, 4286569727, 4285651455, 4284733183, 4283815167, 4282896895, 4281978623, 4281060351, 4280142335, 4279224063, 4278305791, 4278305533, 4278305019, 4278304761, 4278304247, 4278238454, 4278237940, 4278237682, 4278237168, 4278236910, 4278236652, 4278236139, 4278235881, 4278235623, 4278300646, 4278300388, 4278300130, 4278299617, 4278299359, 4278298587, 4278297814, 4278362322, 4278361550, 4278360777, 4278360005, 4278424513, 4278423740, 4278422968, 4278421939, 4278421167, 4278354602, 4278353830, 4278352801, 4278352029, 4278285464, 4278284692, 4278283663, 4287736575, 4287539455, 4287342335, 4287144959, 4286947839, 4286685183, 4286488063, 4286290687, 4286093567, 4285896447, 4285501695, 4285041663, 4284646911, 4284186879, 4283792127, 4283332095, 4282937343, 4282214911, 4282082559, 4281622527, 4281228287, 4280768255, 4280373759, 4279913983, 4279519487, 4279059455, 4278665215, 4278205183, 4278204924, 4278204664, 4278270197, 4278269938, 4278269678, 4278269419, 4278334952, 4278334692, 4278334433, 4278334174, 4278334172, 4278333913, 4278333911, 4278333652, 4278333650, 4278333391, 4278333389, 4278333130, 4278332871, 4278332868, 4278332609, 4278332350, 4278266812, 4278266553, 4278266294, 4278266291, 4278266032, 4278265773, 4278265770, 4278265511, 4278265252, 4278199714, 4278199455, 4278199196, 4278199193, 4278198934, 4292326143, 4292062719, 4291799295, 4291536127, 4291272703, 4290943743, 4290680319, 4290417151, 4290153727, 4289890303, 4289692671, 4289560575, 4289363199, 4289165567, 4289033471, 4288835839, 4288638463, 4288506367, 4288308735, 4288176639, 4287978751, 4287846655, 4287714303, 4287516671, 4287384319, 4287252223, 4287054335, 4286922239, 4286854911, 4286722047, 4286654975, 4286587647, 4286454783, 4286387455, 4286320383, 4286187519, 4286120191, 4285989115, 4285858039, 4285792756, 4285661680, 4285530604, 4285399528, 4285334245, 4285137123, 4285072093, 4284941016, 4284744403, 4284613326, 4284416713, 4284285379, 4284088766, 4283957689, 4283761076, 4283629999, 4283367847, 4283105694, 4282843542, 4282581390, 4282318981, 4282056829, 4281794677, 4281532524, 4281270372]);
+  const DynamicGlobalIndicesCurrent = Object.freeze({
+    [PaletteProfile.dynamicGlobal8]: Object.freeze([0, 83, 63, 91, 210, 283, 401, 484]),
+    [PaletteProfile.dynamicGlobal16]: Object.freeze([0, 84, 63, 100, 118, 155, 191, 210, 246, 292, 310, 338, 411, 447, 492, 511]),
+    [PaletteProfile.dynamicGlobal32]: Object.freeze([0, 18, 85, 63, 64, 82, 91, 118, 128, 155, 173, 182, 201, 210, 237, 255, 265, 283, 310, 319, 320, 347, 374, 383, 393, 411, 429, 447, 448, 457, 475, 511]),
+    [PaletteProfile.dynamicGlobal64]: Object.freeze([0, 9, 18, 27, 36, 45, 54, 63, 64, 73, 82, 91, 100, 109, 118, 127, 128, 137, 146, 155, 164, 173, 182, 191, 192, 201, 210, 219, 228, 237, 246, 255, 256, 265, 274, 283, 292, 301, 310, 319, 320, 329, 338, 347, 356, 365, 374, 383, 384, 393, 402, 411, 420, 429, 438, 447, 448, 457, 466, 475, 484, 493, 502, 511]),
+    [PaletteProfile.dynamicGlobal128]: Object.freeze([0, 9, 18, 27, 36, 45, 54, 63, 64, 73, 82, 91, 100, 109, 118, 127, 128, 137, 146, 155, 164, 173, 182, 191, 192, 201, 210, 219, 228, 237, 246, 255, 256, 265, 274, 283, 292, 301, 310, 319, 320, 329, 338, 347, 356, 365, 374, 383, 384, 393, 402, 411, 420, 429, 438, 447, 448, 457, 466, 475, 484, 493, 502, 511, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 65, 66, 67, 68, 69, 70, 71, 72]),
+    [PaletteProfile.dynamicGlobal256]: Object.freeze([0, 9, 18, 27, 36, 45, 54, 63, 64, 73, 82, 91, 100, 109, 118, 127, 128, 137, 146, 155, 164, 173, 182, 191, 192, 201, 210, 219, 228, 237, 246, 255, 256, 265, 274, 283, 292, 301, 310, 319, 320, 329, 338, 347, 356, 365, 374, 383, 384, 393, 402, 411, 420, 429, 438, 447, 448, 457, 466, 475, 484, 493, 502, 511, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 65, 66, 67, 68, 69, 70, 71, 72, 74, 75, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 87, 88, 89, 90, 92, 93, 94, 95, 96, 97, 98, 99, 101, 102, 103, 104, 105, 106, 107, 108, 110, 111, 112, 113, 114, 115, 116, 117, 119, 120, 121, 122, 123, 124, 125, 126, 129, 130, 131, 132, 133, 134, 135, 136, 138, 139, 140, 141, 142, 143, 144, 145, 147, 148, 149, 150, 151, 152, 153, 154, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 183, 184, 185, 186, 187, 188, 189, 190, 193, 194, 195, 196, 197, 198, 199, 200, 202, 203, 204, 205, 206, 207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218]),
+    [PaletteProfile.dynamicGlobal512]: Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511]),
+  });
+
 
   class MCOImageCodecError extends Error {}
   class MCOImageInvalidInputError extends MCOImageCodecError {}
@@ -1007,10 +1058,16 @@
     return pixels;
   }
 
-  function isBetterCandidate(candidate, current) {
+  function isBetterCandidate(candidate, current, outputTarget = MCOImageOutputTarget.text) {
     if (current == null) return true;
-    if (candidate.charLength !== current.charLength) {
-      return candidate.charLength < current.charLength;
+    const candidateLength = outputTarget === MCOImageOutputTarget.binary
+      ? candidate.byteLength
+      : candidate.charLength;
+    const currentLength = outputTarget === MCOImageOutputTarget.binary
+      ? current.byteLength
+      : current.charLength;
+    if (candidateLength !== currentLength) {
+      return candidateLength < currentLength;
     }
     if (candidate.backgroundRank !== current.backgroundRank) {
       return candidate.backgroundRank < current.backgroundRank;
@@ -1223,7 +1280,9 @@
       case ImageMode.biColorMask: return 4;
       case ImageMode.rowDelta: return 5;
       case ImageMode.rowRepeat: return 6;
-      case ImageMode.regionsBg: return 7;
+      case ImageMode.extended: return 7;
+      case ImageMode.regionsBg:
+        throw new MCOImageInvalidInputError('REGIONS_BG has no block mode bits');
       default: throw new MCOImageInvalidInputError('Unknown image mode');
     }
   }
@@ -1245,7 +1304,7 @@
       case 4: return ImageMode.biColorMask;
       case 5: return ImageMode.rowDelta;
       case 6: return ImageMode.rowRepeat;
-      case 7: return ImageMode.regionsBg;
+      case 7: return ImageMode.extended;
       default: throw new MCOImageInvalidPayloadError('Unknown image mode');
     }
   }
@@ -1604,6 +1663,7 @@
     ImageMode.rowDelta,
   ]);
   MCOImageCodec.modeTieOrder = Object.freeze([
+    ImageMode.extended,
     ImageMode.biColorMask,
     ImageMode.sparseBg,
     ImageMode.rowRepeat,
@@ -1639,7 +1699,7 @@
 
   function dynamicIndicesFor(profile) {
     const normalized = normalizePaletteProfile(profile);
-    const indices = DynamicGlobalIndices[normalized];
+    const indices = DynamicGlobalIndicesCurrent[normalized];
     if (!indices) throw new MCOImageInvalidInputError('Not a dynamic palette profile');
     return indices;
   }
@@ -1661,7 +1721,7 @@
   }
 
   function dynamicPaletteFor(profile) {
-    return Object.freeze(dynamicIndicesFor(profile).map((globalIndex) => DynamicGlobal512[globalIndex]));
+    return Object.freeze(dynamicIndicesFor(profile).map((globalIndex) => DynamicGlobal512Current[globalIndex]));
   }
 
   function dynamicWhiteIndexFor(profile) {
@@ -1758,7 +1818,7 @@
   function validateColorAny(color, profile, label, payload = false) {
     const normalized = normalizePaletteProfile(profile);
     if (isDynamicProfile(normalized)) {
-      if (!Number.isInteger(color) || color < 0 || color >= DynamicGlobal512.length || profileColorIdForGlobalIndex(normalized, color) == null) {
+      if (!Number.isInteger(color) || color < 0 || color >= DynamicGlobal512Current.length || profileColorIdForGlobalIndex(normalized, color) == null) {
         throw new (payload ? MCOImageInvalidPayloadError : MCOImageInvalidInputError)(
           `${label} is outside selected dynamic palette`,
         );
@@ -1850,7 +1910,28 @@
     return (scan === ScanMode.h || scan === ScanMode.s) ? width : height;
   }
 
-  function writeV2Header(writer, { profile, container, mode, scan, boundsPresent, referenceEncoding, width, height, hasTransparentColor }) {
+  function writeV2Header(writer, {
+    profile,
+    container,
+    mode,
+    scan,
+    boundsPresent,
+    referenceEncoding,
+    width,
+    height,
+    hasTransparentColor,
+    implicitWhiteBackground = false,
+    sharedFixedRegionsPalette = false,
+    unalignedExtendedBody = false,
+  }) {
+    const dynamic = isDynamicProfile(profile);
+    const fixedBlockExtension = !dynamic &&
+      container === MCOImageCodec.containerBlock &&
+      mode !== ImageMode.rawGlobal &&
+      (implicitWhiteBackground || unalignedExtendedBody);
+    const contextBit = sharedFixedRegionsPalette ||
+      fixedBlockExtension ||
+      referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64;
     writer.writeAlignedByte(
       (MCOImageCodec.v2EncodeVersion << 6) |
       (modeBits(mode) << 3) |
@@ -1858,20 +1939,32 @@
       (boundsPresent ? 1 : 0)
     );
     writer.writeAlignedByte(
-      (isDynamicProfile(profile) ? 0x80 : 0) |
+      (dynamic ? 0x80 : 0) |
       (container << 6) |
-      ((referenceEncoding ?? DynamicPaletteReferenceEncoding.flat) << 5) |
+      (contextBit ? 0x20 : 0) |
       (hasTransparentColor ? MCOImageCodec.v2TransparentProfileFlag : 0) |
-      (isDynamicProfile(profile) ? dynamicProfileId(profile) : fixedProfileId(profile))
+      (dynamic
+        ? dynamicProfileId(profile) | (implicitWhiteBackground ? 0x08 : 0)
+        : fixedProfileId(profile))
     );
     writer.writeAlignedByte(width - 1);
     writer.writeAlignedByte(height - 1);
+    if (fixedBlockExtension) {
+      writer.writeBits(
+        (implicitWhiteBackground ? 1 : 0) |
+        (unalignedExtendedBody ? 2 : 0),
+        2,
+      );
+    }
   }
 
   function readV2LocalPalette(reader, profile, options = {}) {
     const excludedColor = options.excludedColor;
     const allowEmpty = options.allowEmpty === true;
     const k = readBitVarUint(reader);
+    if (k === 0 && !allowEmpty) {
+      return readV2FixedPaletteDescriptor(reader, profile, excludedColor);
+    }
     const maxColors = paletteSizeV2Aware(profile);
     if ((!allowEmpty && k === 0) || k > maxColors) {
       throw new MCOImageInvalidPayloadError('Invalid local palette size');
@@ -1910,13 +2003,65 @@
     if (profileColorIds.length === 0 || profileColorIds.length > MCOImageCodec.maxDynamicLocalPalette) {
       throw new MCOImageInvalidInputError('Invalid dynamic local palette size');
     }
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.sortedDelta) {
+      writeBitVarUint(writer, 0);
+      writer.writeBits(0, 2);
+      writer.writeBits(profileColorIds.length - 1, 6);
+      writer.writeBits(profileColorIds[0], dynamicProfileColorBits(profile));
+      for (let i = 1; i < profileColorIds.length; i++) {
+        writeCompactUint(writer, profileColorIds[i] - profileColorIds[i - 1] - 1);
+      }
+      return;
+    }
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.rangeRuns) {
+      writeBitVarUint(writer, 0);
+      writer.writeBits(1, 2);
+      const runs = [];
+      let start = profileColorIds[0], previous = start;
+      for (let i = 1; i < profileColorIds.length; i++) {
+        if (profileColorIds[i] === previous + 1) previous = profileColorIds[i];
+        else { runs.push({ start, length: previous - start + 1 }); start = previous = profileColorIds[i]; }
+      }
+      runs.push({ start, length: previous - start + 1 });
+      writeCompactUint(writer, runs.length - 1);
+      let previousEnd = -1;
+      for (let i = 0; i < runs.length; i++) {
+        const run = runs[i];
+        if (i === 0) writer.writeBits(run.start, dynamicProfileColorBits(profile));
+        else writeCompactUint(writer, run.start - previousEnd - 1);
+        writeCompactUint(writer, run.length - 1);
+        previousEnd = run.start + run.length - 1;
+      }
+      return;
+    }
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.profileBitmap) {
+      writeBitVarUint(writer, 0);
+      writer.writeBits(2, 2);
+      const selected = new Set(profileColorIds);
+      for (let id = 0; id < dynamicProfileSize(profile); id++) writer.writeBits(selected.has(id) ? 1 : 0, 1);
+      return;
+    }
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.bankBitmaps) {
+      if (profile !== PaletteProfile.dynamicGlobal512) return;
+      writeBitVarUint(writer, 0);
+      writer.writeBits(3, 2);
+      const selected = new Set(profileColorIds);
+      let bankMask = 0;
+      for (const id of profileColorIds) bankMask |= 1 << (id >> 6);
+      writer.writeBits(bankMask, 8);
+      for (let bank = 0; bank < 8; bank++) {
+        if ((bankMask & (1 << bank)) === 0) continue;
+        for (let offset = 0; offset < 64; offset++) writer.writeBits(selected.has((bank << 6) | offset) ? 1 : 0, 1);
+      }
+      return;
+    }
     if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) {
       if (profile !== PaletteProfile.dynamicGlobal512) throw new MCOImageInvalidInputError('Banked palette requires dynamicGlobal512');
       writeBitVarUint(writer, profileColorIds.length);
       const banks = Array.from(new Set(profileColorIds.map((id) => id >> 6))).sort((a, b) => a - b);
       writeBitVarUint(writer, banks.length);
       for (const bank of banks) writer.writeBits(bank, 3);
-      const bankBits = bitsForLocalPalette(banks.length);
+      const bankBits = bitsForChoiceCount(banks.length);
       for (const id of profileColorIds) {
         writer.writeBits(banks.indexOf(id >> 6), bankBits);
         writer.writeBits(id & 0x3f, 6);
@@ -1980,11 +2125,11 @@
   }
 
   function readDynamicLocalPalette(reader, profile, referenceEncoding) {
-    const ids = referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64
-      ? readDynamicBankedPalette(reader, profile)
-      : readDynamicFlatPalette(reader, profile);
-    const globalColors = ids.map((id) => globalIndexForProfileColorId(profile, id));
-    return { profileColorIds: ids, globalColors };
+    const globalColors = readDynamicLocalPaletteCurrent(reader, profile, referenceEncoding);
+    return {
+      profileColorIds: globalColors.map((color) => profileColorIdForGlobalIndex(profile, color)),
+      globalColors,
+    };
   }
 
   function buildSparseSegmentsGeneric(pixels, background) {
@@ -2201,6 +2346,9 @@
       if (bgId == null) throw new MCOImageInvalidInputError('Background is not available in dynamic profile');
       if (ids.length === 0) return null;
       const localIds = buildDynamicLocalPalette(profile, ids, bgId);
+      if (referenceEncoding >= DynamicPaletteReferenceEncoding.sortedDelta) {
+        localIds.sort((a, b) => a - b);
+      }
       if (localIds.length > MCOImageCodec.maxDynamicLocalPalette) return null;
       const idToLocal = new Map(localIds.map((id, i) => [id, i]));
       const localBits = bitsForLocalPalette(localIds.length);
@@ -2265,10 +2413,14 @@
   }
 
   function tryBuildV2Payload(image, linear, mode, scan, referenceEncoding, { dataWidth, dataHeight, backgroundColor, bounds }) {
+    const backgroundCanBeImplicit = isImplicitWhite(image.paletteProfile, backgroundColor) &&
+      (isDynamicProfile(image.paletteProfile) || __legacyGlobalBits(image.paletteProfile) > 2);
+    const implicitWhiteBackground = backgroundCanBeImplicit &&
+      (bounds != null || mode === ImageMode.sparseBg || mode === ImageMode.biColorMask);
     const block = tryBuildV2BlockBody(linear, image.paletteProfile, mode, referenceEncoding, {
       rowLength: rowLengthForScan(scan, dataWidth, dataHeight),
       backgroundColor,
-      writeSparseBackground: bounds == null,
+      writeSparseBackground: bounds == null && !implicitWhiteBackground,
     });
     if (block == null && !(bounds != null && bounds.area === 0)) return null;
     const writer = new BitWriter();
@@ -2282,10 +2434,11 @@
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
+      implicitWhiteBackground,
     });
     if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
     if (bounds != null) {
-      writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      if (!implicitWhiteBackground) writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
       writeV2Bounds(writer, bounds);
       if (bounds.area === 0) {
         return { payload: writer.toBytes(), localPaletteSize: 0, bitsPerLocalPixel: 0 };
@@ -2335,17 +2488,59 @@
     const bgs = backgroundCandidates(image, preferred);
     const refs = isDynamicProfile(image.paletteProfile)
       ? (image.paletteProfile === PaletteProfile.dynamicGlobal512
-          ? [DynamicPaletteReferenceEncoding.flat, DynamicPaletteReferenceEncoding.banked8x64]
-          : [DynamicPaletteReferenceEncoding.flat])
+          ? [
+              DynamicPaletteReferenceEncoding.flat,
+              DynamicPaletteReferenceEncoding.banked8x64,
+              DynamicPaletteReferenceEncoding.sortedDelta,
+              DynamicPaletteReferenceEncoding.rangeRuns,
+              DynamicPaletteReferenceEncoding.profileBitmap,
+              DynamicPaletteReferenceEncoding.bankBitmaps,
+            ]
+          : [
+              DynamicPaletteReferenceEncoding.flat,
+              DynamicPaletteReferenceEncoding.sortedDelta,
+              DynamicPaletteReferenceEncoding.rangeRuns,
+              DynamicPaletteReferenceEncoding.profileBitmap,
+            ])
       : [null];
     const modes = isDynamicProfile(image.paletteProfile) ? MCOImageCodec.dynamicBlockModes : MCOImageCodec.v2BlockModes;
     const candidates = [];
     let best = null;
+    const outputTarget = options.outputTarget ?? MCOImageOutputTarget.text;
     for (const bgInfo of bgs) {
       const bg = bgInfo.color;
       const bounds = findBounds(image.pixels, image.width, image.height, bg);
       for (const scan of Object.values(ScanMode)) {
         const linear = toScanOrder(image.pixels, image.width, image.height, scan);
+        for (const ref of refs) {
+          for (const submode of [
+            ExtendedImageMode.compactRle,
+            ExtendedImageMode.compactSparse,
+            ExtendedImageMode.lzPixels,
+            ExtendedImageMode.quadtree,
+            ExtendedImageMode.bitplanes,
+          ]) {
+            const payload = tryBuildExtendedPayload(image, linear, scan, ref, {
+              dataWidth: image.width,
+              dataHeight: image.height,
+              backgroundColor: bg,
+              submode,
+            });
+            if (!payload) continue;
+            const candidate = candidateFromV2Payload(payload.payload, ImageMode.extended, scan, {
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: bgInfo.rank,
+              dynamicReferenceEncoding: ref,
+              localPaletteSize: payload.localPaletteSize,
+              bitsPerLocalPixel: payload.bitsPerLocalPixel,
+              paletteProfile: image.paletteProfile,
+              container: ExtendedImageModeName[submode],
+            });
+            candidates.push(candidate);
+            if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
+          }
+        }
         for (const mode of modes) {
           for (const ref of refs) {
             const payload = tryBuildV2Payload(image, linear, mode, scan, ref, {
@@ -2370,6 +2565,37 @@
         if (bounds.area < image.width * image.height) {
           const cropped = cropPixels(image.pixels, image.width, bounds);
           const boundedLinear = toScanOrder(cropped, bounds.width, bounds.height, scan);
+          for (const ref of refs) {
+            for (const submode of [
+              ExtendedImageMode.compactRle,
+              ExtendedImageMode.compactSparse,
+              ExtendedImageMode.lzPixels,
+              ExtendedImageMode.quadtree,
+              ExtendedImageMode.bitplanes,
+            ]) {
+              const payload = tryBuildExtendedPayload(image, boundedLinear, scan, ref, {
+                dataWidth: bounds.width,
+                dataHeight: bounds.height,
+                backgroundColor: bg,
+                bounds,
+                submode,
+              });
+              if (!payload) continue;
+              const candidate = candidateFromV2Payload(payload.payload, ImageMode.extended, scan, {
+                bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: bgInfo.rank,
+                dynamicReferenceEncoding: ref,
+                localPaletteSize: payload.localPaletteSize,
+                bitsPerLocalPixel: payload.bitsPerLocalPixel,
+                paletteProfile: image.paletteProfile,
+                container: `${ExtendedImageModeName[submode]}-bounds`,
+              });
+              candidates.push(candidate);
+              if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
+            }
+          }
           for (const mode of modes) {
             for (const ref of refs) {
               const payload = tryBuildV2Payload(image, boundedLinear, mode, scan, ref, {
@@ -2400,18 +2626,615 @@
     return { result: best, candidates: Object.freeze(candidates.slice()) };
   }
 
-  function decodeV2Body(reader, width, height, profile, mode, referenceEncoding, { rowLength, sparseBackgroundColor } = {}) {
+  function bitsForChoiceCount(count) {
+    if (count <= 1) return 0;
+    return Math.ceil(Math.log2(count));
+  }
+
+  function readCompactUint(reader) {
+    if (reader.readBits(1) === 0) return reader.readBits(2);
+    if (reader.readBits(1) === 0) return reader.readBits(4) + 4;
+    if (reader.readBits(1) === 0) return reader.readBits(8) + 20;
+    return readBitVarUint(reader);
+  }
+
+  function readV2CompactBounds(reader, fullWidth, fullHeight) {
+    const x = reader.readBits(bitsForChoiceCount(fullWidth));
+    const y = reader.readBits(bitsForChoiceCount(fullHeight));
+    if (x >= fullWidth || y >= fullHeight) {
+      throw new MCOImageInvalidPayloadError('Invalid compact bounds');
+    }
+    const width = reader.readBits(bitsForChoiceCount(fullWidth - x)) + 1;
+    const height = reader.readBits(bitsForChoiceCount(fullHeight - y)) + 1;
+    if (x + width > fullWidth || y + height > fullHeight) {
+      throw new MCOImageInvalidPayloadError('Invalid compact bounds');
+    }
+    return { x, y, width, height, area: width * height };
+  }
+
+  function readV2FixedPaletteDescriptor(reader, profile, excludedColor) {
+    const descriptor = reader.readBits(2);
+    const colors = [];
+    if (descriptor === 0) {
+      for (let color = 0; color < paletteSizeV2Aware(profile); color++) {
+        if (reader.readBits(1) !== 0) colors.push(color);
+      }
+    } else if (descriptor === 1) {
+      const count = readBitVarUint(reader);
+      if (count <= 0 || count > paletteSizeV2Aware(profile)) {
+        throw new MCOImageInvalidPayloadError('Invalid fixed delta palette size');
+      }
+      colors.push(reader.readBits(__legacyGlobalBits(profile)));
+      while (colors.length < count) colors.push(colors[colors.length - 1] + readCompactUint(reader) + 1);
+    } else if (descriptor === 2) {
+      const runCount = readCompactUint(reader) + 1;
+      if (runCount > paletteSizeV2Aware(profile)) {
+        throw new MCOImageInvalidPayloadError('Invalid fixed palette range count');
+      }
+      for (let i = 0; i < runCount; i++) {
+        const start = reader.readBits(__legacyGlobalBits(profile));
+        const length = readCompactUint(reader) + 1;
+        if (start + length > paletteSizeV2Aware(profile) ||
+            colors.length + length > paletteSizeV2Aware(profile)) {
+          throw new MCOImageInvalidPayloadError('Invalid fixed palette range');
+        }
+        for (let offset = 0; offset < length; offset++) colors.push(start + offset);
+      }
+    } else {
+      throw new MCOImageInvalidPayloadError('Unsupported fixed palette descriptor');
+    }
+    const seen = new Set();
+    if (colors.length === 0 || colors.length > paletteSizeV2Aware(profile)) {
+      throw new MCOImageInvalidPayloadError('Invalid compact fixed palette size');
+    }
+    for (const color of colors) {
+      validateColor(color, profile, 'localPalette', true);
+      if (color === excludedColor || seen.has(color)) {
+        throw new MCOImageInvalidPayloadError('Invalid local palette');
+      }
+      seen.add(color);
+    }
+    return colors;
+  }
+
+  function readV2LocalPaletteCurrent(reader, profile, excludedColor) {
+    const length = readBitVarUint(reader);
+    if (length === 0) return readV2FixedPaletteDescriptor(reader, profile, excludedColor);
+    if (length > paletteSizeV2Aware(profile)) {
+      throw new MCOImageInvalidPayloadError('Invalid local palette size');
+    }
+    const colors = [];
+    const seen = new Set();
+    for (let i = 0; i < length; i++) {
+      const color = reader.readBits(__legacyGlobalBits(profile));
+      validateColor(color, profile, 'localPalette', true);
+      if (color === excludedColor || seen.has(color)) {
+        throw new MCOImageInvalidPayloadError('Invalid local palette');
+      }
+      seen.add(color);
+      colors.push(color);
+    }
+    return colors;
+  }
+
+  function readDynamicLocalPaletteBodyCurrent(reader, profile, referenceEncoding, length) {
+    if (length <= 0 || length > MCOImageCodec.maxDynamicLocalPalette) {
+      throw new MCOImageInvalidPayloadError('Invalid dynamic local palette size');
+    }
+    let ids;
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.flat) {
+      ids = [];
+      const seen = new Set();
+      for (let i = 0; i < length; i++) {
+        const id = reader.readBits(dynamicProfileColorBits(profile));
+        if (id >= dynamicProfileSize(profile) || seen.has(id)) {
+          throw new MCOImageInvalidPayloadError('Invalid dynamic local palette');
+        }
+        seen.add(id);
+        ids.push(id);
+      }
+    } else if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) {
+      if (profile !== PaletteProfile.dynamicGlobal512) {
+        throw new MCOImageInvalidPayloadError('Banked references require dynamicGlobal512');
+      }
+      const bankCount = readBitVarUint(reader);
+      if (bankCount <= 0 || bankCount > 8) throw new MCOImageInvalidPayloadError('Invalid bank count');
+      const banks = [];
+      const seenBanks = new Set();
+      for (let i = 0; i < bankCount; i++) {
+        const bank = reader.readBits(3);
+        if (seenBanks.has(bank)) throw new MCOImageInvalidPayloadError('Duplicate bank index');
+        seenBanks.add(bank);
+        banks.push(bank);
+      }
+      const bankBits = bitsForChoiceCount(bankCount);
+      ids = [];
+      const seen = new Set();
+      for (let i = 0; i < length; i++) {
+        const bankIndex = reader.readBits(bankBits);
+        if (bankIndex >= banks.length) throw new MCOImageInvalidPayloadError('Bank index out of range');
+        const id = (banks[bankIndex] << 6) | reader.readBits(6);
+        if (seen.has(id)) throw new MCOImageInvalidPayloadError('Duplicate dynamic color');
+        seen.add(id);
+        ids.push(id);
+      }
+    } else {
+      throw new MCOImageInvalidPayloadError('Extended dynamic palette requires a zero marker');
+    }
+    return ids.map((id) => globalIndexForProfileColorId(profile, id));
+  }
+
+  function readExtendedDynamicPaletteCurrent(reader, profile) {
+    const descriptor = reader.readBits(2);
+    let ids = [];
+    if (descriptor === 0) {
+      const length = reader.readBits(6) + 1;
+      ids.push(reader.readBits(dynamicProfileColorBits(profile)));
+      while (ids.length < length) ids.push(ids[ids.length - 1] + readCompactUint(reader) + 1);
+    } else if (descriptor === 1) {
+      const runCount = readCompactUint(reader) + 1;
+      let previousEnd = -1;
+      for (let i = 0; i < runCount; i++) {
+        const start = i === 0
+          ? reader.readBits(dynamicProfileColorBits(profile))
+          : previousEnd + readCompactUint(reader) + 1;
+        const length = readCompactUint(reader) + 1;
+        const end = start + length - 1;
+        if (start <= previousEnd || end >= dynamicProfileSize(profile)) {
+          throw new MCOImageInvalidPayloadError('Dynamic palette range is out of bounds');
+        }
+        for (let id = start; id <= end; id++) ids.push(id);
+        previousEnd = end;
+      }
+    } else if (descriptor === 2) {
+      for (let id = 0; id < dynamicProfileSize(profile); id++) {
+        if (reader.readBits(1) !== 0) ids.push(id);
+      }
+    } else {
+      if (profile !== PaletteProfile.dynamicGlobal512) {
+        throw new MCOImageInvalidPayloadError('Bank bitmaps require dynamicGlobal512');
+      }
+      const bankMask = reader.readBits(8);
+      if (bankMask === 0) throw new MCOImageInvalidPayloadError('Dynamic bank bitmap is empty');
+      for (let bank = 0; bank < 8; bank++) {
+        if ((bankMask & (1 << bank)) === 0) continue;
+        const before = ids.length;
+        for (let offset = 0; offset < 64; offset++) {
+          if (reader.readBits(1) !== 0) ids.push((bank << 6) | offset);
+        }
+        if (ids.length === before) throw new MCOImageInvalidPayloadError('Dynamic bank bitmap has an empty bank');
+      }
+    }
+    if (ids.length === 0 || ids.length > MCOImageCodec.maxDynamicLocalPalette ||
+        ids.some((id) => id < 0 || id >= dynamicProfileSize(profile))) {
+      throw new MCOImageInvalidPayloadError('Invalid dynamic local palette size');
+    }
+    return ids.map((id) => globalIndexForProfileColorId(profile, id));
+  }
+
+  function readDynamicLocalPaletteCurrent(reader, profile, referenceEncoding) {
+    const length = readBitVarUint(reader);
+    return length === 0
+      ? readExtendedDynamicPaletteCurrent(reader, profile)
+      : readDynamicLocalPaletteBodyCurrent(reader, profile, referenceEncoding, length);
+  }
+
+  function readCurrentLocalPalette(reader, profile, referenceEncoding, excludedColor) {
+    return isDynamicProfile(profile)
+      ? readDynamicLocalPaletteCurrent(reader, profile, referenceEncoding)
+      : readV2LocalPaletteCurrent(reader, profile, excludedColor);
+  }
+
+  function decodeExtendedSolidRects(reader, width, height, profile, referenceEncoding, backgroundColor) {
+    const background = backgroundColor ?? readV2ColorRef(reader, profile);
+    const palette = readCurrentLocalPalette(reader, profile, referenceEncoding, background);
+    if (palette.includes(background)) throw new MCOImageInvalidPayloadError('Rectangle palette contains background');
+    const localBits = bitsForLocalPalette(palette.length);
+    const rectCount = readBitVarUint(reader);
+    if (rectCount <= 0 || rectCount > 64) throw new MCOImageInvalidPayloadError('Invalid rectangle count');
+    const result = new Array(width * height).fill(background);
+    const occupied = new Array(width * height).fill(false);
+    for (let i = 0; i < rectCount; i++) {
+      const bounds = readV2CompactBounds(reader, width, height);
+      const colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) throw new MCOImageInvalidPayloadError('Rectangle color out of range');
+      for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
+        for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
+          const index = y * width + x;
+          if (occupied[index]) throw new MCOImageInvalidPayloadError('Overlapping rectangles');
+          occupied[index] = true;
+          result[index] = palette[colorIndex];
+        }
+      }
+    }
+    return result;
+  }
+
+  function decodeExtendedCompactRle(reader, width, height, profile, referenceEncoding) {
+    const palette = readCurrentLocalPalette(reader, profile, referenceEncoding);
+    const localBits = bitsForLocalPalette(palette.length);
+    const count = width * height;
+    const result = [];
+    while (result.length < count) {
+      const index = reader.readBits(localBits);
+      const length = readCompactUint(reader) + 1;
+      if (index >= palette.length || result.length + length > count) {
+        throw new MCOImageInvalidPayloadError('Invalid compact RLE');
+      }
+      for (let i = 0; i < length; i++) result.push(palette[index]);
+    }
+    return result;
+  }
+
+  function decodeExtendedCompactSparse(reader, width, height, profile, referenceEncoding, backgroundColor) {
+    const background = backgroundColor ?? readV2ColorRef(reader, profile);
+    const palette = readCurrentLocalPalette(reader, profile, referenceEncoding, background);
+    if (palette.includes(background)) throw new MCOImageInvalidPayloadError('Sparse palette contains background');
+    const count = width * height;
+    const segmentCount = readCompactUint(reader) + 1;
+    if (segmentCount <= 0 || segmentCount > count) throw new MCOImageInvalidPayloadError('Invalid sparse segments');
+    const localBits = bitsForLocalPalette(palette.length);
+    const result = new Array(count).fill(background);
+    let pos = 0;
+    for (let i = 0; i < segmentCount; i++) {
+      pos += readCompactUint(reader);
+      const index = reader.readBits(localBits);
+      const length = readCompactUint(reader) + 1;
+      if (index >= palette.length || pos >= count || pos + length > count) {
+        throw new MCOImageInvalidPayloadError('Invalid compact sparse segment');
+      }
+      for (let j = 0; j < length; j++) result[pos + j] = palette[index];
+      pos += length;
+    }
+    return result;
+  }
+
+  function decodeExtendedLz(reader, width, height, profile, referenceEncoding) {
+    const palette = readCurrentLocalPalette(reader, profile, referenceEncoding);
+    const localBits = bitsForLocalPalette(palette.length);
+    const count = width * height;
+    const result = [];
+    while (result.length < count) {
+      if (reader.readBits(1) !== 0) {
+        const distance = readCompactUint(reader) + 1;
+        const length = readCompactUint(reader) + 3;
+        if (distance > result.length || result.length + length > count) {
+          throw new MCOImageInvalidPayloadError('Invalid LZ match');
+        }
+        for (let i = 0; i < length; i++) result.push(result[result.length - distance]);
+      } else {
+        const length = readCompactUint(reader) + 1;
+        if (result.length + length > count) throw new MCOImageInvalidPayloadError('Invalid LZ literal');
+        for (let i = 0; i < length; i++) {
+          const index = reader.readBits(localBits);
+          if (index >= palette.length) throw new MCOImageInvalidPayloadError('LZ color out of range');
+          result.push(palette[index]);
+        }
+      }
+    }
+    return result;
+  }
+
+  function decodeExtendedQuadtree(reader, width, height, profile, referenceEncoding) {
+    const palette = readCurrentLocalPalette(reader, profile, referenceEncoding);
+    const localBits = bitsForLocalPalette(palette.length);
+    const result = new Array(width * height).fill(palette[0]);
+    function node(x, y, w, h) {
+      if (reader.readBits(1) !== 0) {
+        const index = reader.readBits(localBits);
+        if (index >= palette.length) throw new MCOImageInvalidPayloadError('Quadtree color out of range');
+        for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) result[(y + dy) * width + x + dx] = palette[index];
+        return;
+      }
+      if (w === 1 && h === 1) throw new MCOImageInvalidPayloadError('Quadtree splits one pixel');
+      if (w === 1) {
+        const top = Math.floor(h / 2);
+        node(x, y, w, top); node(x, y + top, w, h - top); return;
+      }
+      if (h === 1) {
+        const left = Math.floor(w / 2);
+        node(x, y, left, h); node(x + left, y, w - left, h); return;
+      }
+      const left = Math.floor(w / 2), top = Math.floor(h / 2);
+      node(x, y, left, top);
+      node(x + left, y, w - left, top);
+      node(x, y + top, left, h - top);
+      node(x + left, y + top, w - left, h - top);
+    }
+    node(0, 0, width, height);
+    return result;
+  }
+
+  function readFixedPaletteBody(reader, profile, length) {
+    if (length <= 0 || length > paletteSizeV2Aware(profile)) {
+      throw new MCOImageInvalidPayloadError('Invalid fixed palette size');
+    }
+    const result = [], seen = new Set();
+    for (let i = 0; i < length; i++) {
+      const color = reader.readBits(__legacyGlobalBits(profile));
+      validateColor(color, profile, 'localPalette', true);
+      if (seen.has(color)) throw new MCOImageInvalidPayloadError('Duplicate fixed palette color');
+      seen.add(color);
+      result.push(color);
+    }
+    return result;
+  }
+
+  function decodeLegacyBitplanesBody(reader, width, height, palette) {
+    const count = width * height;
+    const localBits = bitsForLocalPalette(palette.length);
+    const localPixels = new Array(count).fill(0);
+    for (let bit = 0; bit < localBits; bit++) {
+      if (reader.readBits(1) === 0) {
+        for (let i = 0; i < count; i++) localPixels[i] |= reader.readBits(1) << bit;
+        continue;
+      }
+      let value = reader.readBits(1), position = 0;
+      while (position < count) {
+        const length = readCompactUint(reader) + 1;
+        if (position + length > count) throw new MCOImageInvalidPayloadError('Bitplane RLE exceeds pixels');
+        if (value !== 0) for (let i = 0; i < length; i++) localPixels[position + i] |= 1 << bit;
+        position += length;
+        value ^= 1;
+      }
+    }
+    return localPixels.map((index) => {
+      if (index >= palette.length) throw new MCOImageInvalidPayloadError('Bitplane color out of range');
+      return palette[index];
+    });
+  }
+
+  function readShortBitplaneRun(reader) {
+    if (reader.readBits(1) === 0) return 1;
+    if (reader.readBits(1) === 0) return 2;
+    if (reader.readBits(1) === 0) return 3;
+    return readCompactUint(reader) + 4;
+  }
+
+  function decodeAdaptiveBitplanesBody(reader, width, height, palette) {
+    const count = width * height;
+    const localBits = bitsForLocalPalette(palette.length);
+    const localPixels = new Array(count).fill(0);
+    function runs(bit, shortLengths) {
+      let value = reader.readBits(1), position = 0;
+      while (position < count) {
+        const length = shortLengths ? readShortBitplaneRun(reader) : readCompactUint(reader) + 1;
+        if (length <= 0 || position + length > count) throw new MCOImageInvalidPayloadError('Adaptive bitplane RLE exceeds pixels');
+        if (value !== 0) for (let i = 0; i < length; i++) localPixels[position + i] |= 1 << bit;
+        position += length;
+        value ^= 1;
+      }
+    }
+    function sparse(bit, minorityBit) {
+      const minorityCount = readCompactUint(reader) + 1;
+      if (minorityCount > count) throw new MCOImageInvalidPayloadError('Sparse bitplane count exceeds pixels');
+      let previous = -1;
+      for (let i = 0; i < minorityCount; i++) {
+        const position = previous + readCompactUint(reader) + 1;
+        if (position <= previous || position >= count) throw new MCOImageInvalidPayloadError('Sparse bit position out of range');
+        if (minorityBit === 0) localPixels[position] &= ~(1 << bit);
+        else localPixels[position] |= 1 << bit;
+        previous = position;
+      }
+    }
+    for (let bit = 0; bit < localBits; bit++) {
+      if (reader.readBits(1) === 0) {
+        for (let i = 0; i < count; i++) localPixels[i] |= reader.readBits(1) << bit;
+        continue;
+      }
+      if (reader.readBits(1) === 0) { runs(bit, false); continue; }
+      if (reader.readBits(1) === 0) { runs(bit, true); continue; }
+      const op = reader.readBits(2);
+      if (op === 1 || op === 3) for (let i = 0; i < count; i++) localPixels[i] |= 1 << bit;
+      if (op === 2) sparse(bit, 1);
+      if (op === 3) sparse(bit, 0);
+    }
+    return localPixels.map((index) => {
+      if (index >= palette.length) throw new MCOImageInvalidPayloadError('Adaptive bitplane color out of range');
+      return palette[index];
+    });
+  }
+
+  function decodeExtendedBitplanes(reader, width, height, profile, referenceEncoding) {
+    const marker = reader.readBits(8);
+    let palette;
+    if (marker === 0) {
+      palette = isDynamicProfile(profile)
+        ? readExtendedDynamicPaletteCurrent(reader, profile)
+        : readV2FixedPaletteDescriptor(reader, profile);
+      return decodeLegacyBitplanesBody(reader, width, height, palette);
+    }
+    if (marker >= 1 && marker <= 64) {
+      palette = isDynamicProfile(profile)
+        ? readDynamicLocalPaletteBodyCurrent(reader, profile, referenceEncoding, marker)
+        : readFixedPaletteBody(reader, profile, marker);
+      return decodeLegacyBitplanesBody(reader, width, height, palette);
+    }
+    if ((marker & 0xc0) === 0x80) {
+      const length = (marker & 0x3f) + 1;
+      palette = isDynamicProfile(profile)
+        ? readDynamicLocalPaletteBodyCurrent(reader, profile, referenceEncoding, length)
+        : readFixedPaletteBody(reader, profile, length);
+      return decodeAdaptiveBitplanesBody(reader, width, height, palette);
+    }
+    if (marker === 0xc0) {
+      if ([PaletteProfile.grayscale8, PaletteProfile.grayscale16, PaletteProfile.grayscale32].includes(profile)) {
+        palette = Array.from({ length: paletteSizeV2Aware(profile) }, (_, i) => i);
+        return decodeAdaptiveBitplanesBody(reader, width, height, palette);
+      }
+      if (isDynamicProfile(profile)) {
+        return decodeAdaptiveBitplanesBody(reader, width, height, dynamicIndicesFor(profile).slice());
+      }
+    }
+    throw new MCOImageInvalidPayloadError('Invalid Bitplanes palette marker');
+  }
+
+  function decodeExtendedCompactRowDelta(reader, width, height, profile, referenceEncoding, rowLength) {
+    const directGrayscale = reader.readBits(1) !== 0;
+    const grayscale = [PaletteProfile.grayscale8, PaletteProfile.grayscale16, PaletteProfile.grayscale32].includes(profile);
+    if (directGrayscale && !grayscale) throw new MCOImageInvalidPayloadError('Direct row delta requires grayscale');
+    let palette = null, valueBits, maxValue;
+    if (directGrayscale) {
+      valueBits = __legacyGlobalBits(profile);
+      maxValue = paletteSizeV2Aware(profile) - 1;
+    } else {
+      palette = readCurrentLocalPalette(reader, profile, referenceEncoding);
+      valueBits = bitsForLocalPalette(palette.length);
+      maxValue = palette.length - 1;
+    }
+    const count = width * height;
+    if (rowLength <= 0 || count % rowLength !== 0) throw new MCOImageInvalidPayloadError('Invalid compact row geometry');
+    const virtualBase = reader.readBits(1) !== 0;
+    const values = new Array(count).fill(0);
+    const rows = count / rowLength;
+    let row = virtualBase ? 0 : 1;
+    if (!virtualBase) {
+      for (let x = 0; x < rowLength; x++) {
+        const value = reader.readBits(valueBits);
+        if (value > maxValue) throw new MCOImageInvalidPayloadError('Row delta value out of range');
+        values[x] = value;
+      }
+    }
+    function predictorValue(rowIndex, x, predictor) {
+      if (rowIndex === 0 && virtualBase) return 0;
+      const sourceX = predictor === 0 ? x : predictor === 1 ? x + 1 : x - 1;
+      if (sourceX < 0 || sourceX >= rowLength) return 0;
+      return values[(rowIndex - 1) * rowLength + sourceX];
+    }
+    function copyPredicted(rowIndex, predictor) {
+      const start = rowIndex * rowLength;
+      for (let x = 0; x < rowLength; x++) values[start + x] = predictorValue(rowIndex, x, predictor);
+    }
+    function readPredictor() {
+      if (reader.readBits(1) === 0) return 0;
+      return reader.readBits(1) === 0 ? 1 : 2;
+    }
+    function decodeValue(encoded, predicted, residual) {
+      const value = residual
+        ? predicted + ((encoded & 1) !== 0 ? Math.floor((encoded + 1) / 2) : -Math.floor(encoded / 2))
+        : encoded;
+      if (value < 0 || value > maxValue) throw new MCOImageInvalidPayloadError('Row delta reconstructed value out of range');
+      return value;
+    }
+    while (row < rows) {
+      const op = reader.readBits(3);
+      if (op === 0 || op === 6) {
+        const repeat = op === 0 ? 1 : readCompactUint(reader) + 2;
+        if (row + repeat > rows) throw new MCOImageInvalidPayloadError('Row repeat exceeds row count');
+        for (let i = 0; i < repeat; i++, row++) copyPredicted(row, 0);
+        continue;
+      }
+      if (op === 1) {
+        const start = row * rowLength;
+        for (let x = 0; x < rowLength; x++) {
+          const value = reader.readBits(valueBits);
+          if (value > maxValue) throw new MCOImageInvalidPayloadError('Raw row value out of range');
+          values[start + x] = value;
+        }
+        row++;
+        continue;
+      }
+      const predictor = readPredictor();
+      if (row === 0 && virtualBase && predictor !== 0) throw new MCOImageInvalidPayloadError('Shifted virtual predictor');
+      copyPredicted(row, predictor);
+      if (op === 7) { row++; continue; }
+      const residual = directGrayscale && reader.readBits(1) !== 0;
+      const positions = [];
+      if (op === 2 || op === 3) {
+        const changes = readCompactUint(reader) + 1;
+        if (changes > rowLength) throw new MCOImageInvalidPayloadError('Too many row changes');
+        let previous = -1;
+        for (let i = 0; i < changes; i++) {
+          const x = previous + readCompactUint(reader) + 1;
+          if (x >= rowLength) throw new MCOImageInvalidPayloadError('Row change out of range');
+          positions.push(x); previous = x;
+        }
+      } else if (op === 4) {
+        const segments = readCompactUint(reader) + 1;
+        let previousEnd = 0;
+        for (let i = 0; i < segments; i++) {
+          const start = (i === 0 ? 0 : previousEnd) + readCompactUint(reader);
+          const length = readCompactUint(reader) + 1;
+          if (start < previousEnd || start + length > rowLength) throw new MCOImageInvalidPayloadError('Invalid row segment');
+          for (let x = start; x < start + length; x++) positions.push(x);
+          previousEnd = start + length;
+        }
+      } else if (op === 5) {
+        const start = readCompactUint(reader);
+        const span = readCompactUint(reader) + 1;
+        if (start + span > rowLength) throw new MCOImageInvalidPayloadError('Invalid row mask');
+        for (let offset = 0; offset < span; offset++) if (reader.readBits(1) !== 0) positions.push(start + offset);
+        if (positions.length === 0) throw new MCOImageInvalidPayloadError('Empty row mask');
+      } else {
+        throw new MCOImageInvalidPayloadError('Unknown compact row delta op');
+      }
+      const start = row * rowLength;
+      if (op === 3) {
+        const encoded = residual ? readCompactUint(reader) + 1 : reader.readBits(valueBits);
+        for (const x of positions) values[start + x] = decodeValue(encoded, values[start + x], residual);
+      } else {
+        for (const x of positions) {
+          const encoded = residual ? readCompactUint(reader) + 1 : reader.readBits(valueBits);
+          values[start + x] = decodeValue(encoded, values[start + x], residual);
+        }
+      }
+      row++;
+    }
+    return directGrayscale ? values : values.map((value) => palette[value]);
+  }
+
+  function decodeV2Body(reader, width, height, profile, mode, referenceEncoding, { rowLength, sparseBackgroundColor, unalignedExtendedBody = false } = {}) {
+    if (mode === ImageMode.extended) {
+      const submode = reader.readBits(3);
+      if (submode === ExtendedImageMode.solidRects) {
+        return decodeExtendedSolidRects(reader, width, height, profile, referenceEncoding, sparseBackgroundColor);
+      }
+      if (submode === ExtendedImageMode.compactRle) {
+        return decodeExtendedCompactRle(reader, width, height, profile, referenceEncoding);
+      }
+      if (submode === ExtendedImageMode.compactSparse) {
+        return decodeExtendedCompactSparse(reader, width, height, profile, referenceEncoding, sparseBackgroundColor);
+      }
+      if (submode === ExtendedImageMode.lzPixels) {
+        return decodeExtendedLz(reader, width, height, profile, referenceEncoding);
+      }
+      if (submode === ExtendedImageMode.quadtree) {
+        return decodeExtendedQuadtree(reader, width, height, profile, referenceEncoding);
+      }
+      if (submode === ExtendedImageMode.bitplanes) {
+        return decodeExtendedBitplanes(reader, width, height, profile, referenceEncoding);
+      }
+      if (submode === ExtendedImageMode.compactRowDelta) {
+        return decodeExtendedCompactRowDelta(reader, width, height, profile, referenceEncoding, rowLength);
+      }
+      if (submode !== ExtendedImageMode.wrappedBlock) {
+        throw new MCOImageInvalidPayloadError(`Unsupported extended image submode ${submode}`);
+      }
+      const innerMode = modeFromBits(reader.readBits(3));
+      if (innerMode === ImageMode.extended || innerMode === ImageMode.regionsBg) {
+        throw new MCOImageInvalidPayloadError('Invalid wrapped image mode');
+      }
+      if (!unalignedExtendedBody) reader.alignToByte();
+      return decodeV2Body(reader, width, height, profile, innerMode, referenceEncoding, {
+        rowLength,
+        sparseBackgroundColor,
+        unalignedExtendedBody,
+      });
+    }
     const dynamic = isDynamicProfile(profile);
     const count = width * height;
-    let palette, localBits;
+    let palette, localBits, dynamicSparseBackground;
     if (dynamic) {
       if (referenceEncoding == null) throw new MCOImageInvalidPayloadError('Dynamic v2 block is missing reference encoding');
       switch (mode) {
         case ImageMode.rawLocal:
         case ImageMode.rleLocal:
-        case ImageMode.sparseBg:
         case ImageMode.rowRepeat:
         case ImageMode.rowDelta:
+          palette = readDynamicLocalPalette(reader, profile, referenceEncoding).globalColors;
+          break;
+        case ImageMode.sparseBg:
+          dynamicSparseBackground = sparseBackgroundColor ?? readV2ColorRef(reader, profile);
           palette = readDynamicLocalPalette(reader, profile, referenceEncoding).globalColors;
           break;
         case ImageMode.biColorMask: {
@@ -2485,7 +3308,7 @@
       return result;
     }
     if (mode === ImageMode.sparseBg && dynamic) {
-      const bg = sparseBackgroundColor ?? readV2ColorRef(reader, profile);
+      const bg = dynamicSparseBackground;
       if (palette.includes(bg)) throw new MCOImageInvalidPayloadError('Invalid dynamic sparse local palette');
       const segmentCount = readBitVarUint(reader);
       const result = new Array(count).fill(bg);
@@ -2603,6 +3426,212 @@
     throw new MCOImageInvalidPayloadError('Unsupported dynamic region block mode');
   }
 
+  function readV2BackgroundCurrent(reader, profile, implicitWhite) {
+    if (implicitWhite) return isDynamicProfile(profile)
+      ? globalIndexForProfileColorId(profile, 0)
+      : 0;
+    return readV2ColorRef(reader, profile);
+  }
+
+  function isImplicitWhite(profile, color) {
+    return isDynamicProfile(profile)
+      ? color === globalIndexForProfileColorId(profile, 0)
+      : color === 0;
+  }
+
+  function decodeV2RegionsCurrent(reader, width, height, profile, referenceEncoding, {
+    compactGeometry,
+    implicitWhiteBackground,
+    sharedFixedPalette,
+  }) {
+    const effectiveImplicitWhite = sharedFixedPalette
+      ? reader.readBits(1) !== 0
+      : implicitWhiteBackground;
+    const background = readV2BackgroundCurrent(reader, profile, effectiveImplicitWhite);
+    let sharedPalette = null;
+    if (isDynamicProfile(profile)) {
+      sharedPalette = readDynamicLocalPaletteCurrent(reader, profile, referenceEncoding);
+    } else if (sharedFixedPalette) {
+      sharedPalette = readV2LocalPaletteCurrent(reader, profile);
+    }
+    const regionCount = compactGeometry
+      ? reader.readBits(bitsForChoiceCount(MCOImageCodec.maxV2Regions)) + 1
+      : readBitVarUint(reader);
+    if (regionCount <= 0 || regionCount > MCOImageCodec.maxV2Regions) {
+      throw new MCOImageInvalidPayloadError('Invalid v2 region count');
+    }
+    const pixels = new Array(width * height).fill(background);
+    const occupied = new Array(width * height).fill(false);
+    for (let i = 0; i < regionCount; i++) {
+      const region = compactGeometry
+        ? readV2CompactBounds(reader, width, height)
+        : {
+            x: readBitVarUint(reader),
+            y: readBitVarUint(reader),
+            width: readBitVarUint(reader),
+            height: readBitVarUint(reader),
+          };
+      if (region.width <= 0 || region.height <= 0 ||
+          region.x + region.width > width || region.y + region.height > height) {
+        throw new MCOImageInvalidPayloadError('Invalid v2 image region');
+      }
+      const modeAndScan = reader.readAlignedByte();
+      if ((modeAndScan & 0x07) !== 0) throw new MCOImageInvalidPayloadError('Reserved region bits are set');
+      const regionMode = modeFromBits((modeAndScan >> 5) & 0x07);
+      const regionScan = scanFromBits((modeAndScan >> 3) & 0x03);
+      if (isDynamicProfile(profile) && regionMode === ImageMode.rawGlobal) {
+        throw new MCOImageInvalidPayloadError('Dynamic region rawGlobal is reserved');
+      }
+      const payloadLength = readBitVarUint(reader);
+      const payload = reader.readAlignedBytes(payloadLength);
+      const regionReader = new BitReader(payload);
+      const linear = sharedPalette
+        ? decodeV2DynamicRegionBody(
+            regionReader,
+            region.width,
+            region.height,
+            sharedPalette,
+            background,
+            regionMode,
+            { rowLength: rowLengthForScan(regionScan, region.width, region.height) },
+          )
+        : decodeV2Body(
+            regionReader,
+            region.width,
+            region.height,
+            profile,
+            regionMode,
+            null,
+            {
+              rowLength: rowLengthForScan(regionScan, region.width, region.height),
+              sparseBackgroundColor: background,
+            },
+          );
+      regionReader.finish();
+      const regionPixels = fromScanOrder(linear, region.width, region.height, regionScan);
+      for (let y = 0; y < region.height; y++) {
+        for (let x = 0; x < region.width; x++) {
+          const target = (region.y + y) * width + region.x + x;
+          if (occupied[target]) throw new MCOImageInvalidPayloadError('Overlapping v2 regions');
+          occupied[target] = true;
+          pixels[target] = regionPixels[y * region.width + x];
+        }
+      }
+    }
+    return pixels;
+  }
+
+  function decodeV2Current(bytes, header) {
+    if (bytes.length < 4) throw new MCOImageInvalidPayloadError('Payload too short');
+    const mode = modeFromBits((header >> 3) & 0x07);
+    const scan = scanFromBits((header >> 1) & 0x03);
+    const boundsPresent = (header & 1) !== 0;
+    const paletteHeader = bytes[1];
+    const dynamic = ((paletteHeader >> 7) & 1) !== 0;
+    const regions = ((paletteHeader >> 6) & 1) !== 0;
+    const contextBit = (paletteHeader >> 5) & 1;
+    const hasTransparentColor = (paletteHeader & MCOImageCodec.v2TransparentProfileFlag) !== 0;
+    const encodedProfileId = paletteHeader & MCOImageCodec.v2ProfileIdMask;
+    const headerImplicitWhite = (dynamic && (encodedProfileId & 0x08) !== 0) ||
+      (!dynamic && !regions && mode === ImageMode.rawGlobal && scan === ScanMode.v && contextBit !== 0);
+    const fixedBlockExtension = !dynamic && !regions && mode !== ImageMode.rawGlobal && contextBit !== 0;
+    const profileId = dynamic ? encodedProfileId & 0x07 : encodedProfileId;
+    const profile = dynamic ? dynamicProfileFromId(profileId) : fixedProfileFromId(profileId);
+    const referenceEncoding = dynamic
+      ? (contextBit === 0 ? DynamicPaletteReferenceEncoding.flat : DynamicPaletteReferenceEncoding.banked8x64)
+      : null;
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64 &&
+        profile !== PaletteProfile.dynamicGlobal512) {
+      throw new MCOImageInvalidPayloadError('Banked references require Dynamic Global 512');
+    }
+    const sharedFixedPalette = !dynamic && regions && contextBit !== 0;
+    const solidBackground = !regions && mode === ImageMode.rawGlobal && (dynamic || contextBit !== 0);
+    const width = bytes[2] + 1, height = bytes[3] + 1;
+    validateDimensionsAny(width, height, true);
+    const reader = new BitReader(bytes, 4);
+
+    if (regions) {
+      const compactGeometry = mode === ImageMode.extended;
+      if (boundsPresent || (mode !== ImageMode.rawGlobal && !compactGeometry) || scan !== ScanMode.h) {
+        throw new MCOImageInvalidPayloadError('Invalid v2 regions header');
+      }
+      const transparentColor = hasTransparentColor ? readV2ColorRef(reader, profile) : null;
+      const pixels = decodeV2RegionsCurrent(reader, width, height, profile, referenceEncoding, {
+        compactGeometry,
+        implicitWhiteBackground: headerImplicitWhite,
+        sharedFixedPalette,
+      });
+      reader.finish();
+      return new MCOImage({
+        width, height, paletteProfile: profile, pixels, transparentColor,
+        encodingVersion: MCOImageEncodingVersion.v2,
+      });
+    }
+
+    let implicitWhite = headerImplicitWhite;
+    let unalignedExtendedBody = false;
+    if (fixedBlockExtension) {
+      const flags = reader.readBits(2);
+      implicitWhite = (flags & 1) !== 0;
+      unalignedExtendedBody = (flags & 2) !== 0;
+      if (unalignedExtendedBody && mode !== ImageMode.extended) {
+        throw new MCOImageInvalidPayloadError('Unaligned body requires extended mode');
+      }
+    }
+    const transparentColor = hasTransparentColor ? readV2ColorRef(reader, profile) : null;
+    if (solidBackground) {
+      const background = readV2BackgroundCurrent(reader, profile, implicitWhite);
+      reader.finish();
+      return new MCOImage({
+        width, height, paletteProfile: profile,
+        pixels: new Array(width * height).fill(background),
+        transparentColor, encodingVersion: MCOImageEncodingVersion.v2,
+      });
+    }
+    if (boundsPresent) {
+      const background = readV2BackgroundCurrent(reader, profile, implicitWhite);
+      const bounds = mode === ImageMode.extended
+        ? readV2CompactBounds(reader, width, height)
+        : readV2Bounds(reader, width, height);
+      if (bounds.area === 0) {
+        reader.finish();
+        return new MCOImage({
+          width, height, paletteProfile: profile,
+          pixels: new Array(width * height).fill(background),
+          transparentColor, encodingVersion: MCOImageEncodingVersion.v2,
+        });
+      }
+      if (!unalignedExtendedBody) reader.alignToByte();
+      const linear = decodeV2Body(reader, bounds.width, bounds.height, profile, mode, referenceEncoding, {
+        rowLength: rowLengthForScan(scan, bounds.width, bounds.height),
+        sparseBackgroundColor: background,
+        unalignedExtendedBody,
+      });
+      reader.finish();
+      const cropped = fromScanOrder(linear, bounds.width, bounds.height, scan);
+      return new MCOImage({
+        width, height, paletteProfile: profile,
+        pixels: insertBounds(width, height, background, cropped, bounds),
+        transparentColor, encodingVersion: MCOImageEncodingVersion.v2,
+      });
+    }
+    const implicitBackground = implicitWhite
+      ? (dynamic ? globalIndexForProfileColorId(profile, 0) : 0)
+      : undefined;
+    if (!unalignedExtendedBody) reader.alignToByte();
+    const linear = decodeV2Body(reader, width, height, profile, mode, referenceEncoding, {
+      rowLength: rowLengthForScan(scan, width, height),
+      sparseBackgroundColor: implicitBackground,
+      unalignedExtendedBody,
+    });
+    reader.finish();
+    return new MCOImage({
+      width, height, paletteProfile: profile,
+      pixels: fromScanOrder(linear, width, height, scan),
+      transparentColor, encodingVersion: MCOImageEncodingVersion.v2,
+    });
+  }
+
   function decodeV2(bytes, header) {
     const mode = modeFromBits((header >> 3) & 0x07);
     const scan = scanFromBits((header >> 1) & 0x03);
@@ -2662,6 +3691,103 @@
     }
   };
 
+  MCOImageCodec.binaryPayloadFromText = function(text) {
+    if (!text.startsWith(MCOImageCodec.prefix)) {
+      throw new MCOImageInvalidPayloadError('Missing im: prefix');
+    }
+    return base91Decode(text.slice(MCOImageCodec.prefix.length));
+  };
+
+  MCOImageCodec.textFromBinaryPayload = function(bytes) {
+    const payload = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    return MCOImageCodec.prefix + base91Encode(payload);
+  };
+
+  const imageModeLabels = Object.freeze({
+    [ImageMode.rawGlobal]: 'Raw global',
+    [ImageMode.rawLocal]: 'Raw local',
+    [ImageMode.rleLocal]: 'RLE local',
+    [ImageMode.sparseBg]: 'Sparse background',
+    [ImageMode.regionsBg]: 'Regions',
+    [ImageMode.biColorMask]: 'Bi-color mask',
+    [ImageMode.rowDelta]: 'Row delta',
+    [ImageMode.rowRepeat]: 'Row repeat',
+    [ImageMode.extended]: 'Extended',
+  });
+  const extendedModeLabels = Object.freeze([
+    'Wrapped block',
+    'Solid rectangles',
+    'Compact RLE',
+    'Compact sparse',
+    'LZ pixels',
+    'Quadtree',
+    'Bitplanes',
+    'Compact row delta',
+  ]);
+
+  MCOImageCodec.inspectPayloadBytes = function(bytesLike) {
+    const bytes = bytesLike instanceof Uint8Array ? bytesLike : new Uint8Array(bytesLike);
+    if (bytes.length < 4) throw new MCOImageInvalidPayloadError('Payload too short');
+    const header = bytes[0];
+    const version = (header >> 6) & 0x03;
+    if (version !== MCOImageCodec.v2EncodeVersion) {
+      const mode = modeFromBits((header >> 4) & 0x03);
+      return {
+        version,
+        algorithm: (bytes[1] & 0x0f) === MCOImageCodec.containerRegions
+          ? 'Regions'
+          : imageModeLabels[mode],
+        binaryLength: bytes.length,
+      };
+    }
+    const mode = modeFromBits((header >> 3) & 0x07);
+    const scan = scanFromBits((header >> 1) & 0x03);
+    const boundsPresent = (header & 1) !== 0;
+    const paletteHeader = bytes[1];
+    const dynamic = ((paletteHeader >> 7) & 1) !== 0;
+    const regions = ((paletteHeader >> 6) & 1) !== 0;
+    const contextBit = (paletteHeader >> 5) & 1;
+    if (regions) return { version, algorithm: 'Regions', binaryLength: bytes.length };
+    if (mode === ImageMode.rawGlobal && (dynamic || contextBit !== 0)) {
+      return { version, algorithm: 'Solid background', binaryLength: bytes.length };
+    }
+    if (mode !== ImageMode.extended) {
+      return { version, algorithm: imageModeLabels[mode], binaryLength: bytes.length };
+    }
+    const encodedProfileId = paletteHeader & MCOImageCodec.v2ProfileIdMask;
+    const profile = dynamic
+      ? dynamicProfileFromId(encodedProfileId & 0x07)
+      : fixedProfileFromId(encodedProfileId);
+    const fixedExtension = !dynamic && contextBit !== 0;
+    const reader = new BitReader(bytes, 4);
+    let implicitWhite = dynamic && (encodedProfileId & 0x08) !== 0;
+    let unaligned = false;
+    if (fixedExtension) {
+      const flags = reader.readBits(2);
+      implicitWhite = (flags & 1) !== 0;
+      unaligned = (flags & 2) !== 0;
+    }
+    if ((paletteHeader & MCOImageCodec.v2TransparentProfileFlag) !== 0) readV2ColorRef(reader, profile);
+    if (boundsPresent) {
+      readV2BackgroundCurrent(reader, profile, implicitWhite);
+      readV2CompactBounds(reader, bytes[2] + 1, bytes[3] + 1);
+    }
+    if (!unaligned) reader.alignToByte();
+    const submode = reader.readBits(3);
+    const algorithm = submode === ExtendedImageMode.wrappedBlock
+      ? imageModeLabels[modeFromBits(reader.readBits(3))]
+      : (extendedModeLabels[submode] || 'Extended');
+    return { version, algorithm, binaryLength: bytes.length };
+  };
+
+  MCOImageCodec.inspectPayload = function(text) {
+    try {
+      return MCOImageCodec.inspectPayloadBytes(MCOImageCodec.binaryPayloadFromText(text));
+    } catch (_) {
+      return null;
+    }
+  };
+
   MCOImageCodec.prototype.debugEncode = function(imageLike, options = {}) {
     const image = imageLike instanceof MCOImage ? imageLike : new MCOImage(imageLike);
     const version = normalizeEncodingVersion(options.encodingVersion ?? image.encodingVersion);
@@ -2683,7 +3809,10 @@
   };
 
   MCOImageCodec.prototype.encodeBytes = function(imageLike, options = {}) {
-    const encoded = this.encode(imageLike, options);
+    const encoded = this.encode(imageLike, {
+      ...options,
+      outputTarget: MCOImageOutputTarget.binary,
+    });
     return new Uint8Array(encoded.payload || base91Decode(encoded.text.slice(MCOImageCodec.prefix.length)));
   };
 
@@ -2696,7 +3825,7 @@
     if (version < MCOImageCodec.minSupportedVersion || version > MCOImageCodec.maxSupportedVersion) {
       throw new MCOImageInvalidPayloadError(`Unsupported version ${version}`);
     }
-    if (version === MCOImageCodec.v2EncodeVersion) return decodeV2(bytes, header);
+    if (version === MCOImageCodec.v2EncodeVersion) return decodeV2Current(bytes, header);
     const image = __legacyDecode.call(this, text);
     image.encodingVersion = MCOImageEncodingVersion.v1Legacy;
     image.transparentColor = null;
@@ -2719,7 +3848,7 @@
   };
   blackIndexFor = function(profile) {
     const normalized = normalizePaletteProfile(profile);
-    if (isDynamicProfile(normalized)) return DynamicGlobal512.indexOf(0xff000000);
+    if (isDynamicProfile(normalized)) return DynamicGlobal512Current.indexOf(0xff000000);
     return __legacyBlackIndexFor(normalized);
   };
 
@@ -3475,6 +4604,9 @@
         allRegionProfileColorIds,
         backgroundProfileColorId,
       );
+      if (referenceEncoding >= DynamicPaletteReferenceEncoding.sortedDelta) {
+        localPalette.sort((a, b) => a - b);
+      }
       if (localPalette.length === 0 || localPalette.length > MCOImageCodec.maxDynamicLocalPalette) return null;
       writeDynamicLocalPalette(writer, image.paletteProfile, localPalette, referenceEncoding);
       localIndexByProfileColorId = new Map(localPalette.map((id, i) => [id, i]));
@@ -3565,6 +4697,339 @@
     return best;
   }
 
+  function writeCompactUint(writer, value) {
+    if (value < 0) throw new MCOImageInvalidInputError('Negative compact uint');
+    if (value <= 3) {
+      writer.writeBits(0, 1); writer.writeBits(value, 2);
+    } else if (value <= 19) {
+      writer.writeBits(1, 2); writer.writeBits(value - 4, 4);
+    } else if (value <= 275) {
+      writer.writeBits(3, 3); writer.writeBits(value - 20, 8);
+    } else {
+      writer.writeBits(7, 3); writeBitVarUint(writer, value);
+    }
+  }
+
+  function writeV2CompactBounds(writer, bounds, fullWidth, fullHeight) {
+    writer.writeBits(bounds.x, bitsForChoiceCount(fullWidth));
+    writer.writeBits(bounds.y, bitsForChoiceCount(fullHeight));
+    writer.writeBits(bounds.width - 1, bitsForChoiceCount(fullWidth - bounds.x));
+    writer.writeBits(bounds.height - 1, bitsForChoiceCount(fullHeight - bounds.y));
+  }
+
+  function writeCurrentLocalPalette(writer, profile, colors, referenceEncoding) {
+    if (colors.length === 0 || colors.length > 64) return null;
+    if (isDynamicProfile(profile)) {
+      const ids = colors.map((color) => profileColorIdForGlobalIndex(profile, color));
+      if (ids.some((id) => id == null)) return null;
+      writeDynamicLocalPalette(writer, profile, ids, referenceEncoding);
+      return ids;
+    }
+    const globalBitsCount = __legacyGlobalBits(profile);
+    const compactBitLength = (value) => {
+      if (value <= 3) return 3;
+      if (value <= 19) return 6;
+      if (value <= 275) return 11;
+      return 3 + bitVarUintBitLength(value);
+    };
+    const runs = [];
+    let start = colors[0], previous = start;
+    for (let i = 1; i < colors.length; i++) {
+      if (colors[i] === previous + 1) previous = colors[i];
+      else { runs.push({ start, length: previous - start + 1 }); start = previous = colors[i]; }
+    }
+    runs.push({ start, length: previous - start + 1 });
+    const costs = [
+      { type: 'regular', bits: bitVarUintBitLength(colors.length) + colors.length * globalBitsCount },
+      { type: 'bitmap', bits: 8 + 2 + paletteSizeV2Aware(profile) },
+      {
+        type: 'delta',
+        bits: 8 + 2 + bitVarUintBitLength(colors.length) + globalBitsCount +
+          colors.slice(1).reduce((sum, color, index) =>
+            sum + compactBitLength(color - colors[index] - 1), 0),
+      },
+      {
+        type: 'ranges',
+        bits: 8 + 2 + compactBitLength(runs.length - 1) +
+          runs.reduce((sum, run) => sum + globalBitsCount + compactBitLength(run.length - 1), 0),
+      },
+    ].sort((a, b) => a.bits - b.bits);
+    const best = costs[0].type;
+    if (best === 'regular') {
+      writeV2LocalPalette(writer, colors, profile);
+    } else {
+      writeBitVarUint(writer, 0);
+      if (best === 'bitmap') {
+        writer.writeBits(0, 2);
+        const selected = new Set(colors);
+        for (let color = 0; color < paletteSizeV2Aware(profile); color++) {
+          writer.writeBits(selected.has(color) ? 1 : 0, 1);
+        }
+      } else if (best === 'delta') {
+        writer.writeBits(1, 2);
+        writeBitVarUint(writer, colors.length);
+        writer.writeBits(colors[0], globalBitsCount);
+        for (let i = 1; i < colors.length; i++) writeCompactUint(writer, colors[i] - colors[i - 1] - 1);
+      } else {
+        writer.writeBits(2, 2);
+        writeCompactUint(writer, runs.length - 1);
+        for (const run of runs) {
+          writer.writeBits(run.start, globalBitsCount);
+          writeCompactUint(writer, run.length - 1);
+        }
+      }
+    }
+    return colors;
+  }
+
+  function buildLzTokens(localPixels) {
+    const tokens = [];
+    let position = 0;
+    while (position < localPixels.length) {
+      let bestDistance = 0, bestLength = 0;
+      const maxDistance = Math.min(position, 255);
+      for (let distance = 1; distance <= maxDistance; distance++) {
+        let length = 0;
+        while (position + length < localPixels.length &&
+               localPixels[position + length] === localPixels[position + length - distance]) {
+          length++;
+        }
+        if (length >= 3 && length > bestLength) {
+          bestDistance = distance;
+          bestLength = length;
+        }
+      }
+      if (bestLength >= 3) {
+        tokens.push({ match: true, distance: bestDistance, length: bestLength });
+        position += bestLength;
+        continue;
+      }
+      const literals = [localPixels[position++]];
+      while (position < localPixels.length && literals.length < 64) {
+        let hasMatch = false;
+        const maxLookback = Math.min(position, 255);
+        for (let distance = 1; distance <= maxLookback && !hasMatch; distance++) {
+          let length = 0;
+          while (position + length < localPixels.length &&
+                 localPixels[position + length] === localPixels[position + length - distance] &&
+                 length < 3) length++;
+          hasMatch = length >= 3;
+        }
+        if (hasMatch) break;
+        literals.push(localPixels[position++]);
+      }
+      tokens.push({ match: false, literals });
+    }
+    return tokens;
+  }
+
+  function writeQuadtreeBody(writer, localPixels, width, height, localBits) {
+    function node(x, y, w, h) {
+      const first = localPixels[y * width + x];
+      let solid = true;
+      for (let dy = 0; dy < h && solid; dy++) {
+        for (let dx = 0; dx < w; dx++) {
+          if (localPixels[(y + dy) * width + x + dx] !== first) { solid = false; break; }
+        }
+      }
+      if (solid) {
+        writer.writeBits(1, 1); writer.writeBits(first, localBits); return;
+      }
+      writer.writeBits(0, 1);
+      if (w === 1) {
+        const top = Math.floor(h / 2);
+        node(x, y, w, top); node(x, y + top, w, h - top); return;
+      }
+      if (h === 1) {
+        const left = Math.floor(w / 2);
+        node(x, y, left, h); node(x + left, y, w - left, h); return;
+      }
+      const left = Math.floor(w / 2), top = Math.floor(h / 2);
+      node(x, y, left, top);
+      node(x + left, y, w - left, top);
+      node(x, y + top, left, h - top);
+      node(x + left, y + top, w - left, h - top);
+    }
+    node(0, 0, width, height);
+  }
+
+  function writeLegacyBitplanesBody(writer, localPixels, localBits) {
+    for (let bit = 0; bit < localBits; bit++) {
+      const plane = localPixels.map((value) => (value >> bit) & 1);
+      const runs = [];
+      let value = plane[0], length = 1;
+      for (let i = 1; i < plane.length; i++) {
+        if (plane[i] === value) length++;
+        else { runs.push({ value, length }); value = plane[i]; length = 1; }
+      }
+      runs.push({ value, length });
+      const rleBits = 2 + runs.reduce((sum, run) => sum + (run.length <= 3 ? 3 : run.length <= 19 ? 6 : run.length <= 275 ? 11 : 19), 0);
+      if (rleBits >= 1 + plane.length) {
+        writer.writeBits(0, 1);
+        for (const pixel of plane) writer.writeBits(pixel, 1);
+      } else {
+        writer.writeBits(1, 1);
+        writer.writeBits(runs[0].value, 1);
+        for (const run of runs) writeCompactUint(writer, run.length - 1);
+      }
+    }
+  }
+
+  function buildExtendedBody(linear, width, height, profile, referenceEncoding, submode, backgroundColor, backgroundProvided) {
+    if (submode === ExtendedImageMode.lzPixels && linear.length > 4096) {
+      return null;
+    }
+    const writer = new BitWriter();
+    writer.writeBits(submode, 3);
+    let palette;
+    if (submode === ExtendedImageMode.compactSparse) {
+      if (!backgroundProvided) writeV2ColorRef(writer, profile, backgroundColor);
+      palette = buildLocalPalette(linear.filter((color) => color !== backgroundColor));
+    } else {
+      palette = buildLocalPalette(linear);
+    }
+    if (palette.length === 0 || palette.length > 64) return null;
+    if (isDynamicProfile(profile) &&
+        referenceEncoding >= DynamicPaletteReferenceEncoding.sortedDelta) {
+      palette.sort((a, b) =>
+        profileColorIdForGlobalIndex(profile, a) - profileColorIdForGlobalIndex(profile, b));
+    } else if (!isDynamicProfile(profile)) {
+      palette.sort((a, b) => a - b);
+    }
+    const paletteIds = submode === ExtendedImageMode.bitplanes
+      ? (isDynamicProfile(profile)
+          ? palette.map((color) => profileColorIdForGlobalIndex(profile, color))
+          : palette.slice())
+      : writeCurrentLocalPalette(writer, profile, palette, referenceEncoding);
+    if (!paletteIds || paletteIds.some((id) => id == null)) return null;
+    const localByColor = new Map(palette.map((color, index) => [color, index]));
+    const local = linear.map((color) => localByColor.get(color));
+    const localBits = bitsForLocalPalette(palette.length);
+
+    if (submode === ExtendedImageMode.compactRle) {
+      for (const run of buildRuns(local)) {
+        writer.writeBits(run.color, localBits);
+        writeCompactUint(writer, run.length - 1);
+      }
+    } else if (submode === ExtendedImageMode.compactSparse) {
+      const segments = buildSparseSegmentsGeneric(linear, backgroundColor);
+      if (segments.length === 0) return null;
+      writeCompactUint(writer, segments.length - 1);
+      let pos = 0;
+      for (const segment of segments) {
+        writeCompactUint(writer, segment.start - pos);
+        writer.writeBits(localByColor.get(segment.color), localBits);
+        writeCompactUint(writer, segment.length - 1);
+        pos = segment.start + segment.length;
+      }
+    } else if (submode === ExtendedImageMode.lzPixels) {
+      for (const token of buildLzTokens(local)) {
+        writer.writeBits(token.match ? 1 : 0, 1);
+        if (token.match) {
+          writeCompactUint(writer, token.distance - 1);
+          writeCompactUint(writer, token.length - 3);
+        } else {
+          writeCompactUint(writer, token.literals.length - 1);
+          for (const value of token.literals) writer.writeBits(value, localBits);
+        }
+      }
+    } else if (submode === ExtendedImageMode.quadtree) {
+      writeQuadtreeBody(writer, local, width, height, localBits);
+    } else if (submode === ExtendedImageMode.bitplanes) {
+      writer.writeBits(palette.length, 8);
+      // Bitplanes stores its palette body without the usual length prefix.
+      if (isDynamicProfile(profile)) {
+        if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) {
+          const banks = Array.from(new Set(paletteIds.map((id) => id >> 6))).sort((a, b) => a - b);
+          writeBitVarUint(writer, banks.length);
+          for (const bank of banks) writer.writeBits(bank, 3);
+          const bankBits = bitsForChoiceCount(banks.length);
+          for (const id of paletteIds) {
+            writer.writeBits(banks.indexOf(id >> 6), bankBits);
+            writer.writeBits(id & 0x3f, 6);
+          }
+        } else {
+          for (const id of paletteIds) writer.writeBits(id, dynamicProfileColorBits(profile));
+        }
+      } else {
+        for (const color of palette) writer.writeBits(color, __legacyGlobalBits(profile));
+      }
+      writeLegacyBitplanesBody(writer, local, localBits);
+    } else {
+      return null;
+    }
+    return { payload: writer.toBytes(), localPaletteSize: palette.length, bitsPerLocalPixel: localBits };
+  }
+
+  function tryBuildExtendedPayload(image, linear, scan, referenceEncoding, {
+    dataWidth,
+    dataHeight,
+    backgroundColor,
+    bounds,
+    submode,
+  }) {
+    const backgroundCanBeImplicit = isImplicitWhite(image.paletteProfile, backgroundColor) &&
+      (isDynamicProfile(image.paletteProfile) || __legacyGlobalBits(image.paletteProfile) > 2);
+    const implicitWhiteBackground = backgroundCanBeImplicit &&
+      (bounds != null || submode === ExtendedImageMode.compactSparse);
+    const body = buildExtendedBody(
+      linear, dataWidth, dataHeight, image.paletteProfile, referenceEncoding,
+      submode, backgroundColor, bounds != null || implicitWhiteBackground,
+    );
+    if (!body) return null;
+    const writer = new BitWriter();
+    writeV2Header(writer, {
+      profile: image.paletteProfile,
+      container: MCOImageCodec.containerBlock,
+      mode: ImageMode.extended,
+      scan,
+      boundsPresent: bounds != null,
+      referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+      implicitWhiteBackground,
+    });
+    if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    if (bounds != null) {
+      if (!implicitWhiteBackground) writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    writer.writeAlignedBytes(body.payload);
+    return {
+      ...body,
+      payload: writer.toBytes(),
+    };
+  }
+
+  function tryBuildSolidBackgroundPayload(image, backgroundColor, referenceEncoding) {
+    if (!image.pixels.every((pixel) => pixel === backgroundColor)) return null;
+    const dynamic = isDynamicProfile(image.paletteProfile);
+    const white = dynamic
+      ? backgroundColor === globalIndexForProfileColorId(image.paletteProfile, 0)
+      : backgroundColor === 0;
+    const scan = !dynamic && white ? ScanMode.v : ScanMode.h;
+    const writer = new BitWriter();
+    writer.writeAlignedByte(
+      (MCOImageCodec.v2EncodeVersion << 6) |
+      (modeBits(ImageMode.rawGlobal) << 3) |
+      (scanBits(scan) << 1),
+    );
+    writer.writeAlignedByte(
+      (dynamic ? 0x80 : 0) |
+      ((!dynamic || referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) ? 0x20 : 0) |
+      (image.transparentColor != null ? MCOImageCodec.v2TransparentProfileFlag : 0) |
+      (dynamic
+        ? dynamicProfileId(image.paletteProfile) | (white ? 0x08 : 0)
+        : fixedProfileId(image.paletteProfile)),
+    );
+    writer.writeAlignedByte(image.width - 1);
+    writer.writeAlignedByte(image.height - 1);
+    if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    if (!white) writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    return { payload: writer.toBytes(), scan };
+  }
+
   function debugEncodeV2Full(image, options = {}) {
     validateImageAny(image);
     let maxRegions = options.maxRegions ?? MCOImageCodec.defaultMaxRegions;
@@ -3579,18 +5044,79 @@
     const bgs = backgroundCandidates(image, preferred);
     const refs = isDynamicProfile(image.paletteProfile)
       ? (image.paletteProfile === PaletteProfile.dynamicGlobal512
-          ? [DynamicPaletteReferenceEncoding.flat, DynamicPaletteReferenceEncoding.banked8x64]
-          : [DynamicPaletteReferenceEncoding.flat])
+          ? [
+              DynamicPaletteReferenceEncoding.flat,
+              DynamicPaletteReferenceEncoding.banked8x64,
+              DynamicPaletteReferenceEncoding.sortedDelta,
+              DynamicPaletteReferenceEncoding.rangeRuns,
+              DynamicPaletteReferenceEncoding.profileBitmap,
+              DynamicPaletteReferenceEncoding.bankBitmaps,
+            ]
+          : [
+              DynamicPaletteReferenceEncoding.flat,
+              DynamicPaletteReferenceEncoding.sortedDelta,
+              DynamicPaletteReferenceEncoding.rangeRuns,
+              DynamicPaletteReferenceEncoding.profileBitmap,
+            ])
       : [null];
     const modes = isDynamicProfile(image.paletteProfile) ? MCOImageCodec.dynamicBlockModes : MCOImageCodec.v2BlockModes;
     const candidates = [];
     let best = null;
+    const outputTarget = options.outputTarget ?? MCOImageOutputTarget.text;
+    function addExtendedCandidates(linear, scan, bg, bgInfo, dataWidth, dataHeight, bounds, refs) {
+      for (const ref of refs) {
+        for (const submode of [
+          ExtendedImageMode.compactRle,
+          ExtendedImageMode.compactSparse,
+          ExtendedImageMode.lzPixels,
+          ExtendedImageMode.quadtree,
+          ExtendedImageMode.bitplanes,
+        ]) {
+          const built = tryBuildExtendedPayload(image, linear, scan, ref, {
+            dataWidth,
+            dataHeight,
+            backgroundColor: bg,
+            bounds,
+            submode,
+          });
+          if (!built) continue;
+          const candidate = candidateFromV2Payload(built.payload, ImageMode.extended, scan, {
+            bounds,
+            backgroundColor: bg,
+            transparentColor: image.transparentColor,
+            backgroundRank: bgInfo.rank,
+            dynamicReferenceEncoding: ref,
+            localPaletteSize: built.localPaletteSize,
+            bitsPerLocalPixel: built.bitsPerLocalPixel,
+            paletteProfile: image.paletteProfile,
+            container: `${ExtendedImageModeName[submode]}${bounds ? '-bounds' : ''}`,
+          });
+          candidates.push(candidate);
+          if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
+        }
+      }
+    }
 
     for (const bgInfo of bgs) {
       const bg = bgInfo.color;
       const bounds = findBounds(image.pixels, image.width, image.height, bg);
 
       for (const ref of refs) {
+        const solidPayload = tryBuildSolidBackgroundPayload(image, bg, ref);
+        if (solidPayload) {
+          const solidCandidate = candidateFromV2Payload(solidPayload.payload, ImageMode.rawGlobal, solidPayload.scan, {
+            backgroundColor: bg,
+            transparentColor: image.transparentColor,
+            backgroundRank: bgInfo.rank,
+            dynamicReferenceEncoding: ref,
+            localPaletteSize: 1,
+            bitsPerLocalPixel: 0,
+            paletteProfile: image.paletteProfile,
+            container: 'solid-bg',
+          });
+          candidates.push(solidCandidate);
+          if (isBetterCandidate(solidCandidate, best, outputTarget)) best = solidCandidate;
+        }
         const regionsPayload = tryBuildV2RegionsPayload(image, bg, ref, effectiveMaxRegions);
         if (regionsPayload) {
           const candidate = candidateFromV2Payload(
@@ -3611,12 +5137,22 @@
             },
           );
           candidates.push(candidate);
-          if (isBetterCandidate(candidate, best)) best = candidate;
+          if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
         }
       }
 
       for (const scan of Object.values(ScanMode)) {
         const linear = toScanOrder(image.pixels, image.width, image.height, scan);
+        addExtendedCandidates(
+          linear,
+          scan,
+          bg,
+          bgInfo,
+          image.width,
+          image.height,
+          null,
+          refs,
+        );
         for (const mode of modes) {
           for (const ref of refs) {
             const payload = tryBuildV2Payload(image, linear, mode, scan, ref, {
@@ -3636,13 +5172,23 @@
               container: 'block',
             });
             candidates.push(candidate);
-            if (isBetterCandidate(candidate, best)) best = candidate;
+            if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
           }
         }
 
         if (bounds.area < image.width * image.height) {
           const cropped = cropPixels(image.pixels, image.width, bounds);
           const boundedLinear = toScanOrder(cropped, bounds.width, bounds.height, scan);
+          addExtendedCandidates(
+            boundedLinear,
+            scan,
+            bg,
+            bgInfo,
+            bounds.width,
+            bounds.height,
+            bounds,
+            refs,
+          );
           for (const mode of modes) {
             for (const ref of refs) {
               const payload = tryBuildV2Payload(image, boundedLinear, mode, scan, ref, {
@@ -3664,7 +5210,7 @@
                 container: 'block',
               });
               candidates.push(candidate);
-              if (isBetterCandidate(candidate, best)) best = candidate;
+              if (isBetterCandidate(candidate, best, outputTarget)) best = candidate;
             }
           }
         }
@@ -3694,13 +5240,16 @@
     PaletteDisplayName,
     ImageMode,
     ImageModeName,
+    ExtendedImageMode,
+    ExtendedImageModeName,
     ScanMode,
     ScanModeName,
     DynamicPaletteReferenceEncoding,
     DynamicPaletteReferenceEncodingName,
     MCOImageEncodingVersion,
-    DynamicGlobal512,
-    DynamicGlobalIndices,
+    MCOImageOutputTarget,
+    DynamicGlobal512: DynamicGlobal512Current,
+    DynamicGlobalIndices: DynamicGlobalIndicesCurrent,
     MCOImagePalettes,
     MCOImageCodecError,
     MCOImageInvalidInputError,
