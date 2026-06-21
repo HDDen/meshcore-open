@@ -1763,6 +1763,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return switch (candidate.container) {
       'regions' => 'Regions x${candidate.regionCount}',
       'regions-beam' => 'Regions beam x${candidate.regionCount}',
+      'regions-shared-fixed' =>
+        'Regions shared palette x${candidate.regionCount}',
+      'regions-beam-shared-fixed' =>
+        'Regions beam shared palette x${candidate.regionCount}',
+      'solid-bg' => 'Solid background',
       'solid-rects' => 'Solid rectangles',
       'compact-bounds' => 'Compact bounds',
       'compact-rle' => 'Compact RLE',

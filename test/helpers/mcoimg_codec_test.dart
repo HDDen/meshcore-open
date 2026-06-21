@@ -1278,6 +1278,94 @@ void main() {
         MCOImagePalette.master64,
       );
     });
+
+    test('fixed local palettes can use compact descriptors', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) => (x + y * 3) % 16,
+        profile: PaletteProfile.master64,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidate = diagnostics.candidates.firstWhere(
+        (item) =>
+            item.mode == ImageMode.rawLocal &&
+            item.scan == ScanMode.h &&
+            !item.boundsPresent,
+      );
+      final bytes = _base91Decode(
+        candidate.text.substring(MCOImageCodec.prefix.length),
+      );
+
+      expect(bytes[4], 0);
+      expect(codec.decode(candidate.text).pixels, image.pixels);
+    });
+
+    test('fixed regions can share one local palette', () {
+      final image = _image(
+        24,
+        24,
+        (x, y) {
+          final first = x >= 2 && x <= 5 && y >= 2 && y <= 5;
+          final second = x >= 18 && x <= 21 && y >= 18 && y <= 21;
+          if (first) return 8 + ((x + y) & 3);
+          if (second) return 8 + ((x * 3 + y) & 3);
+          return 0;
+        },
+        profile: PaletteProfile.master32,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidates = diagnostics.candidates.where(
+        (item) => item.container.contains('regions-shared-fixed'),
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        final bytes = _base91Decode(
+          candidate.text.substring(MCOImageCodec.prefix.length),
+        );
+        expect(bytes[1] & 0x20, isNot(0));
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('fixed extended blocks can start without byte alignment', () {
+      final image = _image(
+        13,
+        11,
+        (x, y) => (x ~/ 2 + y) % 8,
+        profile: PaletteProfile.master16,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidates = diagnostics.candidates.where(
+        (item) => item.mode == ImageMode.extended,
+      );
+
+      expect(candidates, isNotEmpty);
+      for (final candidate in candidates) {
+        final bytes = _base91Decode(
+          candidate.text.substring(MCOImageCodec.prefix.length),
+        );
+        expect(bytes[1] & 0x20, isNot(0));
+        expect(codec.decode(candidate.text).pixels, image.pixels);
+      }
+    });
+
+    test('empty fixed canvas uses the short solid background grammar', () {
+      final image = _solid(
+        30,
+        30,
+        0,
+        profile: PaletteProfile.master64,
+      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: 0);
+      final candidate = diagnostics.candidates.firstWhere(
+        (item) => item.container == 'solid-bg',
+      );
+
+      expect(candidate.byteLength, 4);
+      expect(codec.decode(candidate.text).pixels, image.pixels);
+    });
   });
 
   group('MCOImageCodec errors', () {
