@@ -411,6 +411,35 @@
       flex: 0 0 auto;
     }
 
+    .usage-section {
+      margin-top: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .usage-section h2,
+    .usage-section h3 {
+      margin: 0;
+    }
+
+    .usage-section h3 {
+      margin-top: 8px;
+      font-size: 16px;
+    }
+
+    .usage-section p {
+      margin: 0;
+    }
+
+    .usage-note {
+      border-left: 4px solid var(--accent);
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--accent) 9%, transparent);
+      padding: 10px 12px;
+      color: CanvasText;
+      font-size: 14px;
+    }
+
     pre {
       overflow: auto;
       margin: 0;
@@ -564,32 +593,231 @@
       </section>
     </div>
 
-    <h2 class="section-title" style="margin-top: 24px;">Usage</h2>
-    <pre><code>&lt;script src="./mcoimg-codec.global.js"&gt;&lt;/script&gt;
-&lt;script&gt;
+    <section class="usage-section">
+      <h2 class="section-title">Universal codec helpers</h2>
+      <p>
+        Ниже — три базовых сценария использования. Основные преобразования
+        выполняет сам кодек. Browser-helper в примерах нужен только там, где
+        надо показать PNG на HTML canvas.
+      </p>
+
+      <pre><code>&lt;script src=&quot;./mcoimg-codec.global.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./mcoimg-browser.global.js&quot;&gt;&lt;/script&gt;</code></pre>
+
+      <h3>1. Canvas → RGBA → im: text или binary</h3>
+      <p>
+        Полный путь: берём готовое растровое изображение с canvas, читаем из него
+        RGBA-массив, затем передаём эти данные в универсальный helper кодека.
+      </p>
+      <pre><code>// Берём API кодека.
 const {
   MCOImageCodec,
   PaletteProfile,
-  drawMCOImage,
+  MCOImageRgbaOutputFormat,
+} = window.MCOImg;
+
+// Создаём экземпляр кодека.
+const codec = new MCOImageCodec();
+
+// Берём canvas, в котором уже находится итоговая картинка.
+// Важно: кодируется реальный backing size canvas: canvas.width × canvas.height.
+// CSS-масштаб на кодирование не влияет.
+const sourceCanvas = document.querySelector('#source');
+
+// Получаем 2D-контекст и читаем RGBA-данные из canvas.
+// imageData.data — это плоский массив вида:
+// [R, G, B, A, R, G, B, A, ...]
+const sourceContext = sourceCanvas.getContext('2d');
+const imageData = sourceContext.getImageData(
+  0,
+  0,
+  sourceCanvas.width,
+  sourceCanvas.height,
+);
+
+// Готовим вход для helper-функции кодека.
+// Сам массив imageData.data не содержит размеры, поэтому
+// width и height нужно передать явно.
+const rgbaInput = {
+  width: imageData.width,
+  height: imageData.height,
+  data: imageData.data,
+};
+
+// Вариант A: кодируем сразу в обычную строку формата "im:...".
+const imText = codec.encodeRgbaPixels(
+  rgbaInput,                         // RGBA + width/height
+  PaletteProfile.master8,           // профиль палитры
+  null,                             // transparentColor; null = без прозрачности
+  MCOImageRgbaOutputFormat.text,    // хотим результат как строку "im:..."
+);
+console.log(imText);
+
+// Вариант B: кодируем те же RGBA-данные сразу в binary payload.
+// Результат — Uint8Array без "im:" и без base91.
+const binaryPayload = codec.encodeRgbaPixels(
+  rgbaInput,
+  PaletteProfile.master8,
+  null,
+  MCOImageRgbaOutputFormat.binary,  // хотим получить binary
+);
+console.log(binaryPayload);
+</code></pre>
+
+      <h3>2. im: text → PNG bytes → вывод PNG в canvas</h3>
+      <p>
+        Полный путь: декодируем строку <code>im:...</code> в PNG натурального
+        размера, а затем показываем этот PNG в canvas.
+      </p>
+      <pre><code>// Берём кодек и browser-helper.
+const { MCOImageCodec, MCOImageTextOutputFormat } = window.MCOImg;
+const { drawPngBytesToCanvas } = window.MCOImgBrowser;
+
+// Создаём экземпляр кодека.
+const codec = new MCOImageCodec();
+
+// Это входная строка MCOimg, полученная откуда угодно:
+// из сети, из базы, из текстового поля и т.д.
+const textPayload = 'im:...';
+
+// Шаг 1. Конвертируем "im:..." в PNG-байты.
+// Результат — Uint8Array с валидным PNG-файлом.
+// PNG создаётся в исходном размере изображения, без апскейла.
+const pngBytes = codec.convertTextPayload(
+  textPayload,
+  MCOImageTextOutputFormat.png,
+);
+console.log(pngBytes);
+
+// Шаг 2. Показываем полученный PNG в canvas.
+// Helper создаст Blob из PNG-байтов, декодирует его средствами браузера
+// и нарисует в targetCanvas.
+const previewCanvas = document.querySelector('#previewFromText');
+await drawPngBytesToCanvas(pngBytes, previewCanvas);
+
+// После этого в previewCanvas будет видна картинка
+// с исходными width/height из MCOimg.
+</code></pre>
+
+      <h3>3. Binary payload → PNG bytes → вывод PNG в canvas</h3>
+      <p>
+        Полный путь: берём бинарный payload MCOimg, конвертируем его в PNG,
+        а затем выводим этот PNG на canvas.
+      </p>
+      <pre><code>// Берём кодек и browser-helper.
+const { MCOImageCodec, MCOImageBinaryOutputFormat } = window.MCOImg;
+const { drawPngBytesToCanvas } = window.MCOImgBrowser;
+
+// Создаём экземпляр кодека.
+const codec = new MCOImageCodec();
+
+// Это входной binary payload MCOimg.
+// Обычно это Uint8Array, полученный из файла, из сокета,
+// из бинарного сообщения и т.д.
+const binaryPayload = new Uint8Array([
+  /* ... байты MCOimg ... */
+]);
+
+// Шаг 1. Конвертируем binary MCOimg в PNG-байты.
+const pngBytes = codec.convertBinaryPayload(
+  binaryPayload,
+  MCOImageBinaryOutputFormat.png,
+);
+console.log(pngBytes);
+
+// Шаг 2. Рисуем полученный PNG в canvas.
+// PNG сохраняет натуральный размер изображения.
+const previewCanvas = document.querySelector('#previewFromBinary');
+await drawPngBytesToCanvas(pngBytes, previewCanvas);
+
+// Шаг 3. Сохраняем тот же PNG как обычный файл.
+// downloadBytes создаёт Blob и запускает браузерное скачивание.
+window.MCOImgBrowser.downloadBytes(
+  pngBytes,
+  'mcoimg-from-binary.png',
+  'image/png',
+);
+</code></pre>
+
+      <h3>4. Полный channel binary packet → чистый MCOimg binary payload</h3>
+      <p>
+        Channel packet содержит транспортный заголовок, имя отправителя и только
+        затем бинарное тело MCOimg. Перед вызовом
+        <code>codec.convertBinaryPayload()</code> нужно выделить именно это тело.
+      </p>
+      <pre><code>// Берём функцию извлечения из browser-helper.
+const {
+  extractMcoImagePayload,
+  inspectMcoImageChannelPacket,
+  drawPngBytesToCanvas,
+  downloadBytes,
+} = window.MCOImgBrowser;
+
+const {
+  MCOImageCodec,
+  MCOImageBinaryOutputFormat,
 } = window.MCOImg;
 
 const codec = new MCOImageCodec();
 
-const encoded = codec.encode({
-  width: 11,
-  height: 11,
-  paletteProfile: PaletteProfile.master8,
-  pixels: new Array(11 * 11).fill(0), // palette indexes, not ARGB colors
-});
+// fullPacket — полный Uint8Array, полученный из channel binary transport.
+// Helper поддерживает:
+//   1) channelData:
+//      [channel_idx][data_type u16][sender_len varuint][sender UTF-8][MCOimg]
+//   2) outgoingCommand:
+//      [cmd][channel_idx][path_len][path...][data_type u16]
+//      [sender_len varuint][sender UTF-8][MCOimg]
+//   3) только envelope:
+//      [sender_len varuint][sender UTF-8][MCOimg]
+const fullPacket = new Uint8Array([
+  /* ... полный пакет ... */
+]);
 
-console.log(encoded.text); // im:...
+// Вариант A: получить только чистый MCOimg payload.
+// По умолчанию layout и byte order определяются автоматически.
+// data_type должен быть равен 0xFFF0.
+const mcoBinary = extractMcoImagePayload(fullPacket);
 
-const decoded = codec.decode(encoded.text);
-drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
-&lt;/script&gt;</code></pre>
+// Теперь этот результат можно напрямую передать в основной кодек.
+const pngBytes = codec.convertBinaryPayload(
+  mcoBinary,
+  MCOImageBinaryOutputFormat.png,
+);
+
+// Показываем PNG натурального размера.
+await drawPngBytesToCanvas(
+  pngBytes,
+  document.querySelector('#previewFromChannelPacket'),
+);
+
+// При необходимости сохраняем PNG на диск.
+downloadBytes(
+  pngBytes,
+  'mcoimg-from-channel-packet.png',
+  'image/png',
+);
+
+// Вариант B: получить не только payload, но и метаданные пакета.
+const packetInfo = inspectMcoImageChannelPacket(fullPacket);
+
+console.log(packetInfo.layout);       // channelData / outgoingCommand / envelope
+console.log(packetInfo.dataType);     // 0xFFF0
+console.log(packetInfo.channelIndex); // индекс канала, если есть
+console.log(packetInfo.senderName);   // имя из envelope
+console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
+</code></pre>
+
+      <div class="usage-note">
+        В первых трёх сценариях browser-helper отвечает только за браузерные
+        операции: canvas, Blob и скачивание. В четвёртом сценарии он также
+        разбирает channel binary envelope, потому что это транспортная оболочка,
+        а не часть формата MCOimg.
+      </div>
+    </section>
   </main>
 
   <script src="./mcoimg-codec.global.js"></script>
+  <script src="./mcoimg-browser.global.js"></script>
   <script>
     const {
       MCOImageCodec,
@@ -597,6 +825,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
       PaletteDisplayOrder,
       PaletteDisplayName,
       MCOImageEncodingVersion,
+      MCOImageTextOutputFormat,
       DynamicGlobalIndices,
       getPalette,
       whiteIndexFor,
@@ -1618,56 +1847,35 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
     }
 
     function savePng() {
-      const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = state.width;
-      exportCanvas.height = state.height;
-      const ctx = exportCanvas.getContext('2d');
-      const imageData = ctx.createImageData(state.width, state.height);
-      const palette = getPalette(state.paletteProfile);
-
-      for (let i = 0; i < state.pixels.length; i++) {
-        const pixel = state.pixels[i];
-        const outIndex = i * 4;
-
-        if (
-          state.encodingVersion === MCOImageEncodingVersion.v2 &&
-          state.transparentColor !== null &&
-          pixel === state.transparentColor
-        ) {
-          imageData.data[outIndex] = 0;
-          imageData.data[outIndex + 1] = 0;
-          imageData.data[outIndex + 2] = 0;
-          imageData.data[outIndex + 3] = 0;
-          continue;
-        }
-
-        const paletteIndex = profileColorIdForPaletteValue(state.paletteProfile, pixel);
-        const color = palette[paletteIndex < 0 ? 0 : paletteIndex];
-        const rgba = argbToRgbaComponents(color);
-        imageData.data[outIndex] = rgba.r;
-        imageData.data[outIndex + 1] = rgba.g;
-        imageData.data[outIndex + 2] = rgba.b;
-        imageData.data[outIndex + 3] = rgba.a;
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-
-      exportCanvas.toBlob((blob) => {
-        if (!blob) {
-          encodedMeta.textContent = 'PNG export failed';
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+      try {
+        const encoded = codec.encode({
+          width: state.width,
+          height: state.height,
+          paletteProfile: state.paletteProfile,
+          pixels: state.pixels,
+          transparentColor:
+            selectedEncodingVersion() === MCOImageEncodingVersion.v2
+              ? state.transparentColor
+              : null,
+          encodingVersion: selectedEncodingVersion(),
+        }, {
+          encodingVersion: selectedEncodingVersion(),
+        });
+        const pngBytes = codec.convertTextPayload(
+          encoded.text,
+          MCOImageTextOutputFormat.png,
+        );
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        link.href = url;
-        link.download = `mcoimg-canvas-${timestamp}.png`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        encodedMeta.textContent = `Saved PNG ${state.width}×${state.height}`;
-      }, 'image/png');
+        window.MCOImgBrowser.downloadBytes(
+          pngBytes,
+          `mcoimg-canvas-${timestamp}.png`,
+          'image/png',
+        );
+        encodedMeta.textContent =
+          `Saved PNG ${state.width}×${state.height}, ${pngBytes.length} bytes`;
+      } catch (error) {
+        encodedMeta.textContent = `PNG export failed: ${error.message}`;
+      }
     }
 
     function saveBinary() {
@@ -1835,6 +2043,7 @@ drawMCOImage(document.querySelector('canvas'), decoded, { scale: 12 });
         );
       });
     }
+
 
     function nearestDynamicImportedColorFromCandidates(
       profile,

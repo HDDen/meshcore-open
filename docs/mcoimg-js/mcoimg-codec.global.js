@@ -5233,6 +5233,489 @@
   };
   // ---- End Dart-parity v2 encoder extension -------------------------------
 
+
+  // ---- Universal RGBA / text / binary conversion helpers -----------------
+  // These helpers are deliberately DOM-free. PNG output is returned as a
+  // Uint8Array at the original image dimensions. The browser adapter can wrap
+  // it in a Blob, save it, or draw it to a canvas.
+  const MCOImageRgbaOutputFormat = Object.freeze({
+    text: 0,
+    binary: 1,
+  });
+
+  const MCOImageTextOutputFormat = Object.freeze({
+    png: 0,
+    binary: 1,
+  });
+
+  const MCOImageBinaryOutputFormat = Object.freeze({
+    png: 0,
+    text: 1,
+  });
+
+  function helperUint8Array(value, name = 'bytes') {
+    if (value instanceof Uint8Array) return new Uint8Array(value);
+    if (value instanceof ArrayBuffer) return new Uint8Array(value.slice(0));
+    if (ArrayBuffer.isView(value)) {
+      return new Uint8Array(
+        value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength),
+      );
+    }
+    if (Array.isArray(value)) return Uint8Array.from(value);
+    throw new MCOImageInvalidInputError(`${name} must be binary data`);
+  }
+
+  function helperIntegerFormat(value, allowed, name) {
+    const format = Number(value);
+    if (!Number.isInteger(format) || !allowed.includes(format)) {
+      throw new MCOImageInvalidInputError(
+        `${name} must be one of: ${allowed.join(', ')}`,
+      );
+    }
+    return format;
+  }
+
+  function helperRgbaInput(input, options = {}) {
+    let width;
+    let height;
+    let data;
+
+    if (input && typeof input === 'object' && 'data' in input) {
+      width = Number(input.width ?? options.width);
+      height = Number(input.height ?? options.height);
+      data = input.data;
+    } else {
+      width = Number(options.width);
+      height = Number(options.height);
+      data = input;
+    }
+
+    if (!Number.isInteger(width) || width <= 0) {
+      throw new MCOImageInvalidInputError(
+        'RGBA input width must be a positive integer',
+      );
+    }
+    if (!Number.isInteger(height) || height <= 0) {
+      throw new MCOImageInvalidInputError(
+        'RGBA input height must be a positive integer',
+      );
+    }
+    if (data == null || typeof data.length !== 'number') {
+      throw new MCOImageInvalidInputError(
+        'RGBA input must provide an array-like data field',
+      );
+    }
+
+    const expectedLength = width * height * 4;
+    if (data.length !== expectedLength) {
+      throw new MCOImageInvalidInputError(
+        `RGBA input has ${data.length} values, expected ${expectedLength}`,
+      );
+    }
+
+    return { width, height, data };
+  }
+
+  function helperMatte(options = {}) {
+    const matte = options.matte ?? [255, 255, 255];
+    if (!matte || typeof matte.length !== 'number' || matte.length < 3) {
+      throw new MCOImageInvalidInputError(
+        'matte must contain red, green, and blue values',
+      );
+    }
+    return [0, 1, 2].map((index) =>
+      Math.max(0, Math.min(255, Math.round(Number(matte[index])))),
+    );
+  }
+
+  function helperDynamicColorDistance(a, b) {
+    const colorA = DynamicGlobal512Current[a] ?? 0xff000000;
+    const colorB = DynamicGlobal512Current[b] ?? 0xff000000;
+    const dr = ((colorA >>> 16) & 0xff) - ((colorB >>> 16) & 0xff);
+    const dg = ((colorA >>> 8) & 0xff) - ((colorB >>> 8) & 0xff);
+    const db = (colorA & 0xff) - (colorB & 0xff);
+    return dr * dr + dg * dg + db * db;
+  }
+
+  function helperLimitDynamicColors(pixels, profile, maxColors) {
+    if (!isDynamicProfile(profile) || pixels.length === 0) {
+      return Array.from(pixels);
+    }
+
+    const limit = Math.max(
+      1,
+      Math.min(
+        Number(maxColors ?? MCOImageCodec.maxDynamicLocalPalette),
+        dynamicProfileSize(profile),
+        MCOImageCodec.maxDynamicLocalPalette,
+      ),
+    );
+    const counts = new Map();
+    for (const pixel of pixels) {
+      counts.set(pixel, (counts.get(pixel) ?? 0) + 1);
+    }
+    if (counts.size <= limit) return Array.from(pixels);
+
+    const kept = Array.from(counts.entries())
+      .sort((a, b) => {
+        const byFrequency = b[1] - a[1];
+        if (byFrequency !== 0) return byFrequency;
+        return (
+          profileColorIdForGlobalIndex(profile, a[0]) -
+          profileColorIdForGlobalIndex(profile, b[0])
+        );
+      })
+      .slice(0, limit)
+      .map(([color]) => color);
+    const keptSet = new Set(kept);
+
+    return Array.from(pixels, (pixel) => {
+      if (keptSet.has(pixel)) return pixel;
+      let best = kept[0];
+      let bestDistance = helperDynamicColorDistance(pixel, best);
+      for (let i = 1; i < kept.length; i++) {
+        const candidate = kept[i];
+        const distance = helperDynamicColorDistance(pixel, candidate);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = candidate;
+        }
+      }
+      return best;
+    });
+  }
+
+  function rgbaPixelsToMCOImage(
+    rgbaInput,
+    paletteProfile,
+    transparentColor = null,
+    options = {},
+  ) {
+    const input = helperRgbaInput(rgbaInput, options);
+    const profile = normalizePaletteProfile(paletteProfile);
+    const encodingVersion = normalizeEncodingVersion(
+      options.encodingVersion ?? MCOImageEncodingVersion.v2,
+    );
+    const maxSize = encodingVersion === MCOImageEncodingVersion.v2
+      ? MCOImageCodec.maxSizeV2
+      : MCOImageCodec.maxSizeV1;
+    if (input.width > maxSize || input.height > maxSize) {
+      throw new MCOImageInvalidInputError(
+        `RGBA image ${input.width}×${input.height} exceeds ` +
+        `the selected format limit ${maxSize}×${maxSize}`,
+      );
+    }
+    if (
+      encodingVersion === MCOImageEncodingVersion.v1Legacy &&
+      transparentColor != null
+    ) {
+      throw new MCOImageInvalidInputError(
+        'Legacy v1 encoding does not support transparency',
+      );
+    }
+
+    const alphaThreshold = Math.max(
+      0,
+      Math.min(255, Math.round(Number(options.alphaThreshold ?? 0))),
+    );
+    const matte = helperMatte(options);
+    const pixels = new Array(input.width * input.height);
+
+    for (let index = 0; index < pixels.length; index++) {
+      const offset = index * 4;
+      const alphaByte = Number(input.data[offset + 3]);
+      if (transparentColor != null && alphaByte <= alphaThreshold) {
+        pixels[index] = Number(transparentColor);
+        continue;
+      }
+
+      const alpha = alphaByte / 255;
+      const red = Math.round(
+        Number(input.data[offset]) * alpha + matte[0] * (1 - alpha),
+      );
+      const green = Math.round(
+        Number(input.data[offset + 1]) * alpha + matte[1] * (1 - alpha),
+      );
+      const blue = Math.round(
+        Number(input.data[offset + 2]) * alpha + matte[2] * (1 - alpha),
+      );
+      pixels[index] = nearestPaletteIndex(profile, red, green, blue);
+    }
+
+    const limitedPixels = helperLimitDynamicColors(
+      pixels,
+      profile,
+      options.maxDynamicColors,
+    );
+    const image = new MCOImage({
+      width: input.width,
+      height: input.height,
+      paletteProfile: profile,
+      pixels: limitedPixels,
+      transparentColor,
+      encodingVersion,
+    });
+    validateImage(image);
+    return image;
+  }
+
+  function mcoImageToRgba(imageLike) {
+    const image = imageLike instanceof MCOImage
+      ? imageLike
+      : new MCOImage(imageLike);
+    validateImage(image);
+
+    const rgba = new Uint8Array(image.width * image.height * 4);
+    const dynamic = isDynamicProfile(image.paletteProfile);
+    const fixedPalette = dynamic ? null : getPalette(image.paletteProfile);
+
+    for (let index = 0; index < image.pixels.length; index++) {
+      const pixel = image.pixels[index];
+      const color = dynamic
+        ? (DynamicGlobal512Current[pixel] ?? 0xff000000)
+        : (fixedPalette[pixel] ?? 0xff000000);
+      const offset = index * 4;
+      rgba[offset] = (color >>> 16) & 0xff;
+      rgba[offset + 1] = (color >>> 8) & 0xff;
+      rgba[offset + 2] = color & 0xff;
+      rgba[offset + 3] =
+        image.transparentColor != null && pixel === image.transparentColor
+          ? 0
+          : ((color >>> 24) & 0xff);
+    }
+
+    return {
+      width: image.width,
+      height: image.height,
+      data: rgba,
+    };
+  }
+
+  function helperConcatBytes(parts) {
+    const length = parts.reduce((sum, part) => sum + part.length, 0);
+    const output = new Uint8Array(length);
+    let offset = 0;
+    for (const part of parts) {
+      output.set(part, offset);
+      offset += part.length;
+    }
+    return output;
+  }
+
+  function helperWriteUint32BE(target, offset, value) {
+    const unsigned = Number(value) >>> 0;
+    target[offset] = (unsigned >>> 24) & 0xff;
+    target[offset + 1] = (unsigned >>> 16) & 0xff;
+    target[offset + 2] = (unsigned >>> 8) & 0xff;
+    target[offset + 3] = unsigned & 0xff;
+  }
+
+  let helperPngCrcTable = null;
+  function helperCrc32(bytes) {
+    if (helperPngCrcTable == null) {
+      helperPngCrcTable = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let value = n;
+        for (let bit = 0; bit < 8; bit++) {
+          value = (value & 1) !== 0
+            ? (0xedb88320 ^ (value >>> 1))
+            : (value >>> 1);
+        }
+        helperPngCrcTable[n] = value >>> 0;
+      }
+    }
+
+    let crc = 0xffffffff;
+    for (const byte of bytes) {
+      crc = helperPngCrcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function helperAdler32(bytes) {
+    const modulus = 65521;
+    let a = 1;
+    let b = 0;
+    for (const byte of bytes) {
+      a = (a + byte) % modulus;
+      b = (b + a) % modulus;
+    }
+    return (((b << 16) | a) >>> 0);
+  }
+
+  function helperZlibStored(bytes) {
+    const blockCount = Math.max(1, Math.ceil(bytes.length / 65535));
+    const output = new Uint8Array(2 + bytes.length + blockCount * 5 + 4);
+    let outputOffset = 0;
+    output[outputOffset++] = 0x78;
+    output[outputOffset++] = 0x01;
+
+    let inputOffset = 0;
+    for (let block = 0; block < blockCount; block++) {
+      const remaining = bytes.length - inputOffset;
+      const length = Math.max(0, Math.min(65535, remaining));
+      const finalBlock = block === blockCount - 1;
+      output[outputOffset++] = finalBlock ? 0x01 : 0x00;
+      output[outputOffset++] = length & 0xff;
+      output[outputOffset++] = (length >>> 8) & 0xff;
+      const inverseLength = (~length) & 0xffff;
+      output[outputOffset++] = inverseLength & 0xff;
+      output[outputOffset++] = (inverseLength >>> 8) & 0xff;
+      if (length > 0) {
+        output.set(bytes.subarray(inputOffset, inputOffset + length), outputOffset);
+        inputOffset += length;
+        outputOffset += length;
+      }
+    }
+
+    helperWriteUint32BE(output, outputOffset, helperAdler32(bytes));
+    return output;
+  }
+
+  function helperPngChunk(type, data) {
+    const typeBytes = Uint8Array.from(type, (character) =>
+      character.charCodeAt(0),
+    );
+    const result = new Uint8Array(12 + data.length);
+    helperWriteUint32BE(result, 0, data.length);
+    result.set(typeBytes, 4);
+    result.set(data, 8);
+    helperWriteUint32BE(
+      result,
+      8 + data.length,
+      helperCrc32(helperConcatBytes([typeBytes, data])),
+    );
+    return result;
+  }
+
+  function rgbaToPngBytes(width, height, rgbaLike) {
+    if (!Number.isInteger(width) || width <= 0 ||
+        !Number.isInteger(height) || height <= 0) {
+      throw new MCOImageInvalidInputError(
+        'PNG width and height must be positive integers',
+      );
+    }
+    const rgba = helperUint8Array(rgbaLike, 'rgba');
+    if (rgba.length !== width * height * 4) {
+      throw new MCOImageInvalidInputError(
+        `RGBA data has ${rgba.length} bytes, expected ${width * height * 4}`,
+      );
+    }
+
+    const scanlines = new Uint8Array(height * (1 + width * 4));
+    let sourceOffset = 0;
+    let targetOffset = 0;
+    for (let y = 0; y < height; y++) {
+      scanlines[targetOffset++] = 0;
+      const rowLength = width * 4;
+      scanlines.set(
+        rgba.subarray(sourceOffset, sourceOffset + rowLength),
+        targetOffset,
+      );
+      sourceOffset += rowLength;
+      targetOffset += rowLength;
+    }
+
+    const ihdr = new Uint8Array(13);
+    helperWriteUint32BE(ihdr, 0, width);
+    helperWriteUint32BE(ihdr, 4, height);
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    ihdr[10] = 0;
+    ihdr[11] = 0;
+    ihdr[12] = 0;
+
+    return helperConcatBytes([
+      Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      helperPngChunk('IHDR', ihdr),
+      helperPngChunk('IDAT', helperZlibStored(scanlines)),
+      helperPngChunk('IEND', new Uint8Array(0)),
+    ]);
+  }
+
+  function mcoImageToPngBytes(imageLike) {
+    const rgba = mcoImageToRgba(imageLike);
+    return rgbaToPngBytes(rgba.width, rgba.height, rgba.data);
+  }
+
+  function helperCodecOptions(image, options = {}) {
+    const result = { encodingVersion: image.encodingVersion };
+    for (const key of ['backgroundColor', 'maxRegions', 'maxChars']) {
+      if (options[key] !== undefined) result[key] = options[key];
+    }
+    return result;
+  }
+
+  MCOImageCodec.prototype.encodeRgbaPixels = function(
+    rgbaInput,
+    paletteProfile,
+    transparentColor = null,
+    outputFormat = MCOImageRgbaOutputFormat.text,
+    options = {},
+  ) {
+    const format = helperIntegerFormat(
+      outputFormat,
+      [MCOImageRgbaOutputFormat.text, MCOImageRgbaOutputFormat.binary],
+      'RGBA output format',
+    );
+    const image = rgbaPixelsToMCOImage(
+      rgbaInput,
+      paletteProfile,
+      transparentColor,
+      options,
+    );
+    const encodeOptions = helperCodecOptions(image, options);
+    if (format === MCOImageRgbaOutputFormat.binary) {
+      return this.encodeBytes(image, encodeOptions);
+    }
+    return this.encode(image, encodeOptions).text;
+  };
+
+  MCOImageCodec.prototype.convertTextPayload = function(
+    text,
+    outputFormat = MCOImageTextOutputFormat.png,
+  ) {
+    const format = helperIntegerFormat(
+      outputFormat,
+      [MCOImageTextOutputFormat.png, MCOImageTextOutputFormat.binary],
+      'Text payload output format',
+    );
+    const normalizedText = String(text);
+    if (format === MCOImageTextOutputFormat.binary) {
+      return new Uint8Array(MCOImageCodec.binaryPayloadFromText(normalizedText));
+    }
+    return mcoImageToPngBytes(this.decode(normalizedText));
+  };
+
+  MCOImageCodec.prototype.convertBinaryPayload = function(
+    bytesLike,
+    outputFormat = MCOImageBinaryOutputFormat.png,
+  ) {
+    const format = helperIntegerFormat(
+      outputFormat,
+      [MCOImageBinaryOutputFormat.png, MCOImageBinaryOutputFormat.text],
+      'Binary payload output format',
+    );
+    const bytes = helperUint8Array(bytesLike, 'binary payload');
+    if (format === MCOImageBinaryOutputFormat.text) {
+      return MCOImageCodec.textFromBinaryPayload(bytes);
+    }
+    return mcoImageToPngBytes(this.decodeBytes(bytes));
+  };
+
+  MCOImageCodec.encodeRgbaPixels = function(...args) {
+    return new MCOImageCodec().encodeRgbaPixels(...args);
+  };
+
+  MCOImageCodec.convertTextPayload = function(...args) {
+    return new MCOImageCodec().convertTextPayload(...args);
+  };
+
+  MCOImageCodec.convertBinaryPayload = function(...args) {
+    return new MCOImageCodec().convertBinaryPayload(...args);
+  };
+  // ---- End universal conversion helpers ----------------------------------
+
   global.MCOImg = Object.freeze({
     PaletteProfile,
     PaletteProfileName,
@@ -5248,6 +5731,9 @@
     DynamicPaletteReferenceEncodingName,
     MCOImageEncodingVersion,
     MCOImageOutputTarget,
+    MCOImageRgbaOutputFormat,
+    MCOImageTextOutputFormat,
+    MCOImageBinaryOutputFormat,
     DynamicGlobal512: DynamicGlobal512Current,
     DynamicGlobalIndices: DynamicGlobalIndicesCurrent,
     MCOImagePalettes,
@@ -5268,5 +5754,9 @@
     argbToCss,
     drawMCOImage,
     nearestPaletteIndex,
+    rgbaPixelsToMCOImage,
+    mcoImageToRgba,
+    rgbaToPngBytes,
+    mcoImageToPngBytes,
   });
 })(typeof window !== 'undefined' ? window : globalThis);
