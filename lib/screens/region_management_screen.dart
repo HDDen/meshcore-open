@@ -30,8 +30,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   static final RegExp _validFetchedRegion = RegExp(r'^[a-z0-9-]{1,30}$');
 
   final RegionStore _regionStore = RegionStore();
+  final TextEditingController _defaultScopeController =
+      TextEditingController();
   List<Region> _regions = [];
   bool _isFetchingRegions = false;
+  bool _isDefaultScopeBusy = false;
 
   String region = '';
 
@@ -41,6 +44,13 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     final connector = context.read<MeshCoreConnector>();
     _regionStore.setPublicKeyHex = connector.selfPublicKeyHex;
     _loadRegions();
+    unawaited(_loadDefaultRegionScope());
+  }
+
+  @override
+  void dispose() {
+    _defaultScopeController.dispose();
+    super.dispose();
   }
 
   void _loadRegions() {
@@ -80,14 +90,161 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
+      body: ListView(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
-        itemCount: _regions.length,
-        itemBuilder: (context, index) {
-          final region = _regions[index];
-          return _buildRegionTile(context, region);
-        },
+        children: [
+          for (final region in _regions) _buildRegionTile(context, region),
+          const SizedBox(height: 16),
+          _buildDefaultRegionScopeSection(context),
+        ],
       ),
+    );
+  }
+
+  Future<void> _loadDefaultRegionScope() async {
+    if (!mounted) return;
+    setState(() {
+      _isDefaultScopeBusy = true;
+    });
+
+    try {
+      final scope = await context
+          .read<MeshCoreConnector>()
+          .getDefaultRegionScope();
+      if (!mounted) return;
+      _defaultScopeController.text = scope ?? '';
+    } catch (_) {
+      if (!mounted) return;
+      _defaultScopeController.text = '';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDefaultScopeBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveDefaultRegionScope({required bool reset}) async {
+    if (_isDefaultScopeBusy) return;
+    final l10n = context.l10n;
+    final connector = context.read<MeshCoreConnector>();
+    final value = reset ? '' : _defaultScopeController.text.trim();
+    if (reset) {
+      _defaultScopeController.clear();
+    }
+
+    setState(() {
+      _isDefaultScopeBusy = true;
+    });
+
+    try {
+      await connector.setDefaultRegionScope(value.isEmpty ? null : value);
+      if (!mounted) return;
+      _defaultScopeController.text = value.startsWith('#')
+          ? value.substring(1)
+          : value;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_defaultRegionScopeChanged)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_defaultRegionScopeChangeFailed)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDefaultScopeBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _setDefaultRegionScopeFromRegion(Region region) async {
+    if (_isDefaultScopeBusy) return;
+    _defaultScopeController.text = region;
+    await _saveDefaultRegionScope(reset: false);
+  }
+
+  Widget _buildDefaultRegionScopeSection(BuildContext context) {
+    final l10n = context.l10n;
+    final enabled = !_isDefaultScopeBusy;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  l10n.settings_defaultRegionScope,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              if (_isDefaultScopeBusy) ...[
+                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Opacity(
+          opacity: enabled ? 1 : 0.55,
+          child: TextField(
+            controller: _defaultScopeController,
+            enabled: enabled,
+            decoration: InputDecoration(
+              hintText: l10n.settings_defaultRegionScopeEmpty,
+              border: const OutlineInputBorder(),
+            ),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp("[#a-z0-9-]")),
+            ],
+            maxLength: 30,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+              child: TextButton(
+                onPressed: enabled
+                    ? () => _saveDefaultRegionScope(reset: true)
+                    : null,
+                child: Text(
+                  l10n.common_reset,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: FilledButton(
+                onPressed: enabled
+                    ? () => _saveDefaultRegionScope(reset: false)
+                    : null,
+                child: Text(
+                  l10n.common_save,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -453,9 +610,23 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       child: ListTile(
         dense: false,
         title: Text(region),
-        trailing: IconButton(
-          icon: Icon(Icons.delete_outline),
-          onPressed: () => _confirmDelete(context, region),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.l10n.settings_defaultRegionScope,
+              icon: const Icon(Icons.public),
+              onPressed: _isDefaultScopeBusy
+                  ? null
+                  : () => _setDefaultRegionScopeFromRegion(region),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _isDefaultScopeBusy
+                  ? null
+                  : () => _confirmDelete(context, region),
+            ),
+          ],
         ),
       ),
     );

@@ -214,6 +214,8 @@ const int cmdSetAutoAddConfig = 58;
 const int cmdGetAutoAddConfig = 59;
 const int cmdSetPathHashMode = 61;
 const int cmdSendChannelData = 62;
+const int cmdSetDefaultFloodScope = 63;
+const int cmdGetDefaultFloodScope = 64;
 const int cmdSetFloodScope = 54;
 
 // Text message types
@@ -288,6 +290,7 @@ const int respCodeChannelInfo = 18;
 const int respCodeCustomVars = 21;
 const int respCodeAutoAddConfig = 25;
 const int respCodeChannelDataRecv = 27;
+const int respCodeDefaultFloodScope = 28;
 const int respCodeStats = 24;
 
 const int statsTypeCore = 0;
@@ -1124,4 +1127,45 @@ Uint8List buildSetFloodScopeFrame(String region) {
   final scope = Uint8List.fromList(hash.sublist(0, 16));
 
   return Uint8List.fromList([cmdSetFloodScope, 0, ...scope]);
+}
+
+Uint8List buildGetDefaultFloodScopeFrame() {
+  return Uint8List.fromList([cmdGetDefaultFloodScope]);
+}
+
+Uint8List buildSetDefaultFloodScopeFrame(String? region) {
+  final normalized = region?.trim() ?? '';
+  if (normalized.isEmpty) {
+    return Uint8List.fromList([cmdSetDefaultFloodScope]);
+  }
+
+  final displayName = normalized.startsWith('#')
+      ? normalized.substring(1)
+      : normalized;
+  if (utf8.encode(displayName).length > 30) {
+    throw ArgumentError.value(
+      displayName,
+      'region',
+      'Default flood scope name must fit into 30 UTF-8 bytes',
+    );
+  }
+  final scopedName = '#$displayName';
+  final hash = crypto.sha256.convert(utf8.encode(scopedName)).bytes;
+  final scope = Uint8List.fromList(hash.sublist(0, 16));
+  final writer = BufferWriter();
+  writer.writeByte(cmdSetDefaultFloodScope);
+  writer.writeCString(displayName, 31);
+  writer.writeBytes(scope);
+  return writer.toBytes();
+}
+
+String? parseDefaultFloodScopeFrame(Uint8List frame) {
+  if (frame.isEmpty || frame[0] != respCodeDefaultFloodScope) return null;
+  if (frame.length < 1 + 31 + 16) return '';
+
+  final reader = BufferReader(frame);
+  reader.skipBytes(1);
+  final name = reader.readCStringGreedy(31).trim();
+  if (name.isEmpty) return '';
+  return name.startsWith('#') ? name.substring(1) : name;
 }

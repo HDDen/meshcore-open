@@ -3046,6 +3046,7 @@
       }
     }
   },
+  "channels_messageRegionUnknown": "unknown",
   "settings_defaultRegionScope": "Default region scope",
   "settings_defaultRegionScopeChanged": "Default region scope changed",
   "settings_defaultRegionScopeChangeFailed": "Change default region scope failed",

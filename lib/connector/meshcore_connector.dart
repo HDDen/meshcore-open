@@ -1341,6 +1341,51 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> getDefaultRegionScope() async {
+    if (!isConnected) return null;
+
+    final completer = Completer<String?>();
+    late final StreamSubscription<Uint8List> subscription;
+    late final Timer timeout;
+
+    void complete(String? region) {
+      if (!completer.isCompleted) completer.complete(region);
+    }
+
+    void completeError(Object error) {
+      if (!completer.isCompleted) completer.completeError(error);
+    }
+
+    subscription = receivedFrames.listen((frame) {
+      if (frame.isEmpty) return;
+      if (frame[0] == respCodeDefaultFloodScope) {
+        complete(parseDefaultFloodScopeFrame(frame));
+      } else if (frame[0] == respCodeErr) {
+        final errCode = frame.length > 1 ? frame[1] : -1;
+        completeError(Exception('Command failed with error code $errCode'));
+      }
+    });
+
+    timeout = Timer(_commandAckTimeout, () {
+      completeError(TimeoutException('Default region scope request timed out'));
+    });
+
+    try {
+      await sendFrame(buildGetDefaultFloodScopeFrame());
+      return await completer.future;
+    } finally {
+      timeout.cancel();
+      await subscription.cancel();
+    }
+  }
+
+  Future<void> setDefaultRegionScope(String? region) async {
+    await sendFrame(
+      buildSetDefaultFloodScopeFrame(region),
+      waitForGenericAck: true,
+    );
+  }
+
   Future<void> _loadChannelOrder({String? publicKeyHex}) async {
     final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
     final store = publicKeyHex == null
@@ -5210,6 +5255,9 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeChannelDataRecv:
         _handleIncomingChannelData(frame);
+        break;
+      case respCodeDefaultFloodScope:
+        // Feature-specific callers listen to receivedFrames for this response.
         break;
       case respCodeSent:
         _handleMessageSent(frame);

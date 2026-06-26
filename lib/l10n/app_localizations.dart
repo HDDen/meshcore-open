@@ -9256,6 +9256,12 @@ abstract class AppLocalizations {
   /// **'Region: {region}'**
   String channels_messageRegion(String region);
 
+  /// No description provided for @channels_messageRegionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get channels_messageRegionUnknown;
+
   /// No description provided for @settings_defaultRegionScope.
   ///
   /// In en, this message translates to:

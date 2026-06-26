@@ -5385,6 +5385,9 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get channels_messageRegionUnknown => 'unknown';
+
+  @override
   String get settings_defaultRegionScope => 'Default region scope';
 
   @override

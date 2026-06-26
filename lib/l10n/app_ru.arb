@@ -2256,6 +2256,7 @@
   "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение",
   "settings_modSettingsVisualShowMsgRegion": "Отображать регион сообщения",
   "channels_messageRegion": "Регион: {region}",
+  "channels_messageRegionUnknown": "неизвестно",
   "settings_defaultRegionScope": "Регион ноды по умолчанию",
   "settings_defaultRegionScopeChanged": "Регион по умолчанию изменён",
   "settings_defaultRegionScopeChangeFailed": "Не удалось изменить регион",

@@ -1160,9 +1160,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ),
                             ),
                           ],
-                          if (showMessageRegion &&
-                              packetRegion != null &&
-                              packetRegion.isNotEmpty) ...[
+                          if (showMessageRegion) ...[
                             const SizedBox(height: 3),
                             Padding(
                               padding: isMediaMessage
@@ -1170,7 +1168,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   : EdgeInsets.zero,
                               child: Text(
                                 context.l10n.channels_messageRegion(
-                                  packetRegion,
+                                  packetRegion != null &&
+                                          packetRegion.isNotEmpty
+                                      ? packetRegion
+                                      : context
+                                            .l10n
+                                            .channels_messageRegionUnknown,
                                 ),
                                 style: MeshTheme.mono(
                                   fontSize: 10 * textScale,
