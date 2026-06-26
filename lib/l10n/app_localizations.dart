@@ -9243,6 +9243,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MCOimg: show resolution'**
   String get settings_modSettingsVisualShowMCOimgResolution;
+
+  /// No description provided for @settings_modSettingsVisualShowMsgRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Show message region'**
+  String get settings_modSettingsVisualShowMsgRegion;
+
+  /// No description provided for @channels_messageRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Region: {region}'**
+  String channels_messageRegion(String region);
+
+  /// No description provided for @settings_defaultRegionScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Default region scope'**
+  String get settings_defaultRegionScope;
+
+  /// No description provided for @settings_defaultRegionScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Default region scope changed'**
+  String get settings_defaultRegionScopeChanged;
+
+  /// No description provided for @settings_defaultRegionScopeChangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Change default region scope failed'**
+  String get settings_defaultRegionScopeChangeFailed;
+
+  /// No description provided for @settings_defaultRegionScopeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unset'**
+  String get settings_defaultRegionScopeEmpty;
+
+  /// No description provided for @common_reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get common_reset;
 }
 
 class _AppLocalizationsDelegate

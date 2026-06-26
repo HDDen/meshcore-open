@@ -108,7 +108,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "de": [
@@ -207,7 +214,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "es": [
@@ -319,7 +333,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "fr": [
@@ -431,7 +452,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "hu": [
@@ -543,7 +571,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "it": [
@@ -735,7 +770,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "ja": [
@@ -847,7 +889,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "ko": [
@@ -959,7 +1008,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "nl": [
@@ -1151,7 +1207,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "pl": [
@@ -1263,7 +1326,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "pt": [
@@ -1455,7 +1525,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "sk": [
@@ -1567,7 +1644,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "sl": [
@@ -1679,7 +1763,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "sv": [
@@ -1871,7 +1962,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "uk": [
@@ -1983,7 +2081,14 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ],
 
   "zh": [
@@ -2095,6 +2200,13 @@
     "settings_modSettingsVisualShowMCOimgFormat",
     "settings_modSettingsVisualShowMCOimgAlgo",
     "settings_modSettingsVisualShowMCOimgBytes",
-    "settings_modSettingsVisualShowMCOimgResolution"
+    "settings_modSettingsVisualShowMCOimgResolution",
+    "settings_modSettingsVisualShowMsgRegion",
+    "channels_messageRegion",
+    "settings_defaultRegionScope",
+    "settings_defaultRegionScopeChanged",
+    "settings_defaultRegionScopeChangeFailed",
+    "settings_defaultRegionScopeEmpty",
+    "common_reset"
   ]
 }

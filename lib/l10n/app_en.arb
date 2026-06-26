@@ -3036,5 +3036,19 @@
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",
   "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: show coding algorythm badge",
   "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: show image weight (bytes)",
-  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution"
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution",
+  "settings_modSettingsVisualShowMsgRegion": "Show message region",
+  "channels_messageRegion": "Region: {region}",
+  "@channels_messageRegion": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_defaultRegionScope": "Default region scope",
+  "settings_defaultRegionScopeChanged": "Default region scope changed",
+  "settings_defaultRegionScopeChangeFailed": "Change default region scope failed",
+  "settings_defaultRegionScopeEmpty": "Currently unset",
+  "common_reset": "Reset"
 }

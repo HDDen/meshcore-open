@@ -194,6 +194,7 @@ class AppSettings {
   final bool showMcoImageBytes;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
+  final bool showMessageRegion;
   final bool incomingQuoteAsMentions;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
@@ -446,6 +447,7 @@ class AppSettings {
     this.showMcoImageBytes = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
+    this.showMessageRegion = false,
     this.incomingQuoteAsMentions = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
@@ -543,6 +545,7 @@ class AppSettings {
       'show_mco_image_bytes': showMcoImageBytes,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
+      'show_message_region': showMessageRegion,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
@@ -657,6 +660,7 @@ class AppSettings {
           json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
+      showMessageRegion: json['show_message_region'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
@@ -806,6 +810,7 @@ class AppSettings {
     bool? showMcoImageBytes,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
+    bool? showMessageRegion,
     bool? incomingQuoteAsMentions,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
@@ -889,6 +894,7 @@ class AppSettings {
           showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
+      showMessageRegion: showMessageRegion ?? this.showMessageRegion,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,

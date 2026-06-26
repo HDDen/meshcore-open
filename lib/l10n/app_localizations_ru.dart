@@ -5403,4 +5403,30 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsVisualShowMCOimgResolution =>
       'MCOimg: отображать разрешение';
+
+  @override
+  String get settings_modSettingsVisualShowMsgRegion =>
+      'Отображать регион сообщения';
+
+  @override
+  String channels_messageRegion(String region) {
+    return 'Регион: $region';
+  }
+
+  @override
+  String get settings_defaultRegionScope => 'Регион ноды по умолчанию';
+
+  @override
+  String get settings_defaultRegionScopeChanged =>
+      'Регион по умолчанию изменён';
+
+  @override
+  String get settings_defaultRegionScopeChangeFailed =>
+      'Не удалось изменить регион';
+
+  @override
+  String get settings_defaultRegionScopeEmpty => 'Не задано';
+
+  @override
+  String get common_reset => 'Сбросить';
 }

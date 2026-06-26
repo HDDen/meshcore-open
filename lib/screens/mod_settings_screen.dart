@@ -155,6 +155,21 @@ class ModSettingsScreen extends StatelessWidget {
                         settingsService.setCompressionRatioWithSenderName,
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.public, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMsgRegion,
+                    ),
+                    value: settings.showMessageRegion,
+                    onChanged: settingsService.setShowMessageRegion,
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
                 MeshCard(
                   padding: EdgeInsets.zero,

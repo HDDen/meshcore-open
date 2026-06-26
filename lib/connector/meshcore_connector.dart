@@ -4191,6 +4191,7 @@ class MeshCoreConnector extends ChangeNotifier {
           : null,
       senderName: _selfName ?? 'Me',
     );
+    final packetRegion = _displayPacketRegion(getChannelRegion(channel.index));
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
@@ -4207,6 +4208,7 @@ class MeshCoreConnector extends ChangeNotifier {
       translationModelId: translationModelId,
       wasBinaryTransport: isBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
+      packetRegion: packetRegion,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
@@ -4424,6 +4426,7 @@ class MeshCoreConnector extends ChangeNotifier {
           : null,
       senderName: _selfName ?? 'Me',
     );
+    final packetRegion = _displayPacketRegion(getChannelRegion(channel.index));
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
@@ -4437,6 +4440,7 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: usesBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
+      packetRegion: packetRegion,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -6871,6 +6875,7 @@ class MeshCoreConnector extends ChangeNotifier {
               packet,
               channel.index,
               decryptedBytes,
+              packetRegion: _resolvePacketRegion(packet),
             );
             if (message == null) return;
 
@@ -6953,6 +6958,7 @@ class MeshCoreConnector extends ChangeNotifier {
             pathHashWidth: packet.pathHashWidth,
             pathBytes: packet.pathBytes,
             channelIndex: channel.index,
+            packetRegion: _resolvePacketRegion(packet),
             packetHash: pktHash,
           );
 
@@ -6995,8 +7001,9 @@ class MeshCoreConnector extends ChangeNotifier {
   ChannelMessage? _parseLogRxChannelData(
     _RawPacket packet,
     int channelIndex,
-    Uint8List decryptedBytes,
-  ) {
+    Uint8List decryptedBytes, {
+    String? packetRegion,
+  }) {
     if (decryptedBytes.length < 3) return null;
     final decrypted = BufferReader(decryptedBytes);
     final dataType = decrypted.readByte() | (decrypted.readByte() << 8);
@@ -7029,6 +7036,7 @@ class MeshCoreConnector extends ChangeNotifier {
       pathHashWidth: packet.pathHashWidth,
       pathBytes: packet.pathBytes,
       channelIndex: channelIndex,
+      packetRegion: packetRegion,
       packetHash: pktHash,
     );
   }
@@ -7610,9 +7618,10 @@ class MeshCoreConnector extends ChangeNotifier {
       final hasTransport =
           routeType == _routeTransportFlood ||
           routeType == _routeTransportDirect;
+      int? transportCode1;
       if (hasTransport) {
-        // Skip reserved bytes in transport header made up of two u16 fields
-        reader.skipBytes(4);
+        transportCode1 = reader.readUInt16LE();
+        reader.skipBytes(2); // transport_code_2 is reserved for now.
       }
       final pathLenRaw = reader.readByte();
       final pathByteLen = _decodePathByteLen(pathLenRaw);
@@ -7624,6 +7633,7 @@ class MeshCoreConnector extends ChangeNotifier {
         routeType: routeType,
         payloadType: (header >> _phTypeShift) & _phTypeMask,
         payloadVer: (header >> _phVerShift) & _phVerMask,
+        transportCode1: transportCode1,
         pathLenRaw: pathLenRaw,
         pathBytes: pathBytes,
         payload: payload,
@@ -7649,6 +7659,54 @@ class MeshCoreConnector extends ChangeNotifier {
         .sublist(0, 8)
         .map((b) => b.toRadixString(16).padLeft(2, '0'))
         .join();
+  }
+
+  String? _resolvePacketRegion(_RawPacket packet) {
+    final transportCode = packet.transportCode1;
+    if (transportCode == null || transportCode == 0) return null;
+
+    for (final region in RegionStore().loadRegions()) {
+      final normalized = region.trim();
+      if (normalized.isEmpty || normalized.startsWith(r'$')) continue;
+      final regionTransportCode = _computeRegionTransportCode(
+        normalized,
+        packet.payloadType,
+        packet.payload,
+      );
+      if (regionTransportCode == transportCode) {
+        return _displayPacketRegion(normalized);
+      }
+    }
+    return null;
+  }
+
+  String? _displayPacketRegion(String region) {
+    final normalized = region.trim();
+    if (normalized.isEmpty) return null;
+    return normalized.startsWith('#') ? normalized.substring(1) : normalized;
+  }
+
+  int _computeRegionTransportCode(
+    String region,
+    int payloadType,
+    Uint8List payload,
+  ) {
+    final name = region.startsWith('#') ? region : '#$region';
+    final regionKey = crypto.sha256
+        .convert(utf8.encode(name))
+        .bytes
+        .sublist(0, 16);
+    final input = Uint8List(1 + payload.length);
+    input[0] = payloadType;
+    input.setRange(1, input.length, payload);
+    final digest = crypto.Hmac(crypto.sha256, regionKey).convert(input).bytes;
+    var code = digest[0] | (digest[1] << 8);
+    if (code == 0) {
+      code = 1;
+    } else if (code == 0xFFFF) {
+      code = 0xFFFE;
+    }
+    return code;
   }
 
   /// Content-based dedup hash for sync queue messages (no raw payload available).
@@ -7811,6 +7869,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathBytes: message.pathBytes,
         pathVariants: message.pathVariants,
         channelIndex: message.channelIndex,
+        packetRegion: message.packetRegion,
         messageId: message.messageId,
         packetHash: message.packetHash,
         replyToMessageId: replyToMessageId,
@@ -7848,6 +7907,8 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
         pathBytes: mergedPathBytes,
         pathVariants: mergedPathVariants,
+        packetRegion:
+            existing.packetRegion ?? processedMessage.packetRegion,
         packetHash: existing.packetHash ?? processedMessage.packetHash,
         // Mark as sent when first repeat is heard
         status: promotedFromPending
@@ -8844,6 +8905,7 @@ class _RawPacket {
   final int routeType;
   final int payloadType;
   final int payloadVer;
+  final int? transportCode1;
   final int pathLenRaw;
   final Uint8List pathBytes;
   final Uint8List payload;
@@ -8853,6 +8915,7 @@ class _RawPacket {
     required this.routeType,
     required this.payloadType,
     required this.payloadVer,
+    this.transportCode1,
     required this.pathLenRaw,
     required this.pathBytes,
     required this.payload,

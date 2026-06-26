@@ -795,6 +795,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final incomingQuoteAsMentions =
         settingsService.settings.incomingQuoteAsMentions;
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
+    final showMessageRegion = settingsService.settings.showMessageRegion;
     final isOutgoing = message.isOutgoing;
     final compressionType =
         message.compressionType ??
@@ -846,6 +847,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ? message.originalText
         : (translatedDisplayText != message.text ? message.text : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
+    final packetRegion = message.packetRegion?.trim();
     final displayPath = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty
@@ -1155,6 +1157,25 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ],
+                          if (showMessageRegion &&
+                              packetRegion != null &&
+                              packetRegion.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Padding(
+                              padding: isMediaMessage
+                                  ? const EdgeInsets.symmetric(horizontal: 8)
+                                  : EdgeInsets.zero,
+                              child: Text(
+                                context.l10n.channels_messageRegion(
+                                  packetRegion,
+                                ),
+                                style: MeshTheme.mono(
+                                  fontSize: 10 * textScale,
+                                  color: metaColor,
+                                ),
                               ),
                             ),
                           ],

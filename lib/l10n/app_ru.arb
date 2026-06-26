@@ -2253,5 +2253,12 @@
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",
   "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: отображать бейдж алгоритма кодирования",
   "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: отображать информационный вес картинки (байт)",
-  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение"
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение",
+  "settings_modSettingsVisualShowMsgRegion": "Отображать регион сообщения",
+  "channels_messageRegion": "Регион: {region}",
+  "settings_defaultRegionScope": "Регион ноды по умолчанию",
+  "settings_defaultRegionScopeChanged": "Регион по умолчанию изменён",
+  "settings_defaultRegionScopeChangeFailed": "Не удалось изменить регион",
+  "settings_defaultRegionScopeEmpty": "Не задано",
+  "common_reset": "Сбросить"
 }

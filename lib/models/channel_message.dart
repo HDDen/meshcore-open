@@ -58,6 +58,7 @@ class ChannelMessage {
   final Uint8List pathBytes;
   final List<Uint8List> pathVariants;
   final int? channelIndex;
+  final String? packetRegion;
   final String messageId;
   final String? packetHash;
   final String? replyToMessageId;
@@ -94,6 +95,7 @@ class ChannelMessage {
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
     this.channelIndex,
+    this.packetRegion,
     String? messageId,
     this.packetHash,
     this.replyToMessageId,
@@ -124,6 +126,7 @@ class ChannelMessage {
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
     int? channelIndex,
+    Object? packetRegion = _unset,
     String? packetHash,
     String? replyToMessageId,
     String? replyToSenderName,
@@ -197,6 +200,9 @@ class ChannelMessage {
       pathBytes: pathBytes ?? this.pathBytes,
       pathVariants: pathVariants ?? this.pathVariants,
       channelIndex: channelIndex ?? this.channelIndex,
+      packetRegion: packetRegion == _unset
+          ? this.packetRegion
+          : packetRegion as String?,
       messageId: messageId,
       packetHash: packetHash ?? this.packetHash,
       replyToMessageId: replyToMessageId ?? this.replyToMessageId,
@@ -325,6 +331,7 @@ class ChannelMessage {
     int? compressionPayloadBytes,
     bool wasBinaryTransport = false,
     int? binaryPacketBytes,
+    String? packetRegion,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -347,6 +354,7 @@ class ChannelMessage {
       pathBytes: Uint8List(0),
       pathVariants: const [],
       channelIndex: channelIndex,
+      packetRegion: packetRegion,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,

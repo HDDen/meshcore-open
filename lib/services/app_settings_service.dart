@@ -182,6 +182,10 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setShowMessageRegion(bool value) async {
+    await updateSettings(_settings.copyWith(showMessageRegion: value));
+  }
+
   Future<void> setIncomingQuoteAsMentions(bool value) async {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }
