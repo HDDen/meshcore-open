@@ -3067,7 +3067,7 @@
   "settings_defaultRegionScopeEmpty": "Currently unset",
   "common_reset": "Reset",
   "connection_autoconnect": "Autoconnect",
-  "settings_modSettingsNoRetraInfo": "No retranslations heard for {time} seconds. The message may not have been sent successfully. Please try shortening the text or resending.",
+  "settings_modSettingsNoRetraInfo": "No retranslations heard for {time} seconds.",
   "@settings_modSettingsNoRetraInfo": {
     "placeholders": {
       "time": {

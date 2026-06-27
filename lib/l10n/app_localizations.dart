@@ -9343,7 +9343,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_modSettingsNoRetraInfo.
   ///
   /// In en, this message translates to:
-  /// **'No retranslations heard for {time} seconds. The message may not have been sent successfully. Please try shortening the text or resending.'**
+  /// **'No retranslations heard for {time} seconds.'**
   String settings_modSettingsNoRetraInfo(int time);
 
   /// No description provided for @settings_modSettingsNoRetraHeading.

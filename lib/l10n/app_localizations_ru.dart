@@ -5462,7 +5462,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'Не услышано ретрансляций за $time сек. Возможно, отправка была неуспешной. Попробуйте сократить текст или переотправить.';
+    return 'Не услышано ретрансляций за $time сек.';
   }
 
   @override

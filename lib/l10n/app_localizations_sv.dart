@@ -5398,7 +5398,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'No retranslations heard for $time seconds. The message may not have been sent successfully. Please try shortening the text or resending.';
+    return 'No retranslations heard for $time seconds.';
   }
 
   @override
