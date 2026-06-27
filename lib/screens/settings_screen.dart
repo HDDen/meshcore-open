@@ -9,6 +9,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
+import '../models/contact.dart';
 import '../models/radio_settings.dart';
 import '../services/app_debug_log_service.dart';
 import '../theme/mesh_theme.dart';
@@ -22,6 +23,7 @@ import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
+import 'telemetry_screen.dart';
 
 /// Convert device coding-rate value (1-4 on some firmware, 5-8 on others)
 /// to the UI enum range (always 5-8).
@@ -324,7 +326,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 )
               : const SizedBox.shrink(),
         ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.sensors_outlined,
+          title: l10n.settings_selfTelemetryShow,
+          subtitle: l10n.repeater_telemetrySubtitle,
+          onTap: connector.isConnected && connector.selfPublicKey != null
+              ? () => _showSelfTelemetry(context, connector)
+              : null,
+        ),
       ],
+    );
+  }
+
+  void _showSelfTelemetry(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey == null) return;
+
+    final contact = Contact(
+      publicKey: selfPublicKey,
+      name: connector.selfName ?? connector.deviceDisplayName,
+      type: advTypeChat,
+      pathLength: 0,
+      path: Uint8List(0),
+      latitude: connector.selfLatitude,
+      longitude: connector.selfLongitude,
+      lastSeen: DateTime.now(),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelemetryScreen(contact: contact, isSelf: true),
+      ),
     );
   }
 

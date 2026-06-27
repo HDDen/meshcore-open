@@ -5079,4 +5079,7 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_modSettingsNoRetraDscr =>
       'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+
+  @override
+  String get settings_selfTelemetryShow => 'Check sensors';
 }

@@ -51,7 +51,7 @@ class SharedMessageHistoryHelper {
       );
     }
 
-    result.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    result.sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
     return result;
   }
 

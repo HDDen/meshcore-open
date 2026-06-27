@@ -121,7 +121,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "de": [
@@ -233,7 +234,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "es": [
@@ -358,7 +360,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "fr": [
@@ -483,7 +486,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "hu": [
@@ -608,7 +612,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "it": [
@@ -813,7 +818,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "ja": [
@@ -938,7 +944,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "ko": [
@@ -1063,7 +1070,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "nl": [
@@ -1268,7 +1276,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "pl": [
@@ -1393,7 +1402,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "pt": [
@@ -1598,7 +1608,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "sk": [
@@ -1723,7 +1734,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "sl": [
@@ -1848,7 +1860,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "sv": [
@@ -2053,7 +2066,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "uk": [
@@ -2178,7 +2192,8 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ],
 
   "zh": [
@@ -2303,6 +2318,7 @@
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
-    "settings_modSettingsNoRetraDscr"
+    "settings_modSettingsNoRetraDscr",
+    "settings_selfTelemetryShow"
   ]
 }

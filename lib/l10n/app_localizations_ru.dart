@@ -5451,4 +5451,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsNoRetraDscr =>
       'Внимание! Из-за механизма в прошивке ноды, сообщения для каналов весом более ~133 байт физически не могут получать подтверждения, и они всегда будут отмечены, как сбойные! Используйте эту опцию совместно с ограничением payload в настройках приложения!';
+
+  @override
+  String get settings_selfTelemetryShow => 'Просмотр датчиков';
 }

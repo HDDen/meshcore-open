@@ -46,6 +46,7 @@ class ChannelMessage {
   final bool wasBinaryTransport;
   final int? binaryPacketBytes;
   final DateTime timestamp;
+  final DateTime receivedAt;
   // Internal TX anchor; UI keeps using timestamp as the visible compose time.
   final DateTime? sentByRadioAt;
   final List<int> sentByRadioWaitSeconds;
@@ -86,6 +87,7 @@ class ChannelMessage {
     this.wasBinaryTransport = false,
     this.binaryPacketBytes,
     required this.timestamp,
+    DateTime? receivedAt,
     this.sentByRadioAt,
     List<int>? sentByRadioWaitSeconds,
     required this.isOutgoing,
@@ -107,7 +109,8 @@ class ChannelMessage {
     this.replyToText,
     Map<String, int>? reactions,
     this.sharedHistorySourceName,
-  }) : messageId =
+  }) : receivedAt = receivedAt ?? DateTime.now(),
+       messageId =
            messageId ??
            '${timestamp.millisecondsSinceEpoch}_${senderName.hashCode}_${text.hashCode}',
        sentByRadioWaitSeconds = sentByRadioWaitSeconds ?? const [],
@@ -150,6 +153,7 @@ class ChannelMessage {
     bool? wasBinaryTransport,
     Object? binaryPacketBytes = _unset,
     Object? sharedHistorySourceName = _unset,
+    DateTime? receivedAt,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
     Map<String, int>? reactions,
@@ -192,6 +196,7 @@ class ChannelMessage {
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
       timestamp: timestamp,
+      receivedAt: receivedAt ?? this.receivedAt,
       sentByRadioAt: sentByRadioAt == _unset
           ? this.sentByRadioAt
           : sentByRadioAt as DateTime?,

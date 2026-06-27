@@ -100,8 +100,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     if (messages.length < 2) return messages;
     final ordered = List<ChannelMessage>.of(messages);
     ordered.sort((a, b) {
-      final timestampCompare = a.timestamp.compareTo(b.timestamp);
-      if (timestampCompare != 0) return timestampCompare;
+      final receivedCompare = a.receivedAt.compareTo(b.receivedAt);
+      if (receivedCompare != 0) return receivedCompare;
       return a.messageId.compareTo(b.messageId);
     });
     return ordered;
@@ -143,6 +143,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'wasBinaryTransport': msg.wasBinaryTransport,
       'binaryPacketBytes': msg.binaryPacketBytes,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'receivedAt': msg.receivedAt.millisecondsSinceEpoch,
       'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'status': msg.status.index,
@@ -239,6 +240,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      receivedAt: DateTime.fromMillisecondsSinceEpoch(
+        (json['receivedAt'] as int?) ?? (json['timestamp'] as int),
+      ),
       sentByRadioAt: json['sentByRadioAt'] is int
           ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
           : null,

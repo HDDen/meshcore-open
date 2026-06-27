@@ -853,7 +853,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final key = _sharedChannelMessageKey(message);
       if (knownKeys.contains(key)) continue;
       final insertAt = merged.indexWhere(
-        (current) => current.timestamp.isAfter(message.timestamp),
+        (current) => current.receivedAt.isAfter(message.receivedAt),
       );
       if (insertAt < 0) {
         merged.add(message);
@@ -885,8 +885,8 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   int _compareChannelMessages(ChannelMessage a, ChannelMessage b) {
-    final timestampCompare = a.timestamp.compareTo(b.timestamp);
-    if (timestampCompare != 0) return timestampCompare;
+    final receivedCompare = a.receivedAt.compareTo(b.receivedAt);
+    if (receivedCompare != 0) return receivedCompare;
     return a.messageId.compareTo(b.messageId);
   }
 
@@ -8031,6 +8031,7 @@ class MeshCoreConnector extends ChangeNotifier {
         wasBinaryTransport: message.wasBinaryTransport,
         binaryPacketBytes: message.binaryPacketBytes,
         timestamp: message.timestamp,
+        receivedAt: message.receivedAt,
         sentByRadioAt: message.sentByRadioAt,
         isOutgoing: message.isOutgoing,
         status: message.status,

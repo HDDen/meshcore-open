@@ -7,12 +7,14 @@ ChannelMessage _message({
   required String sender,
   required String text,
   required DateTime timestamp,
+  DateTime? receivedAt,
   required bool outgoing,
 }) {
   return ChannelMessage(
     senderName: sender,
     text: text,
     timestamp: timestamp,
+    receivedAt: receivedAt,
     isOutgoing: outgoing,
     status: ChannelMessageStatus.sent,
     channelIndex: 0,
@@ -27,6 +29,7 @@ void main() {
       sender: 'Me',
       text: 'Question',
       timestamp: DateTime.utc(2026, 1, 1, 12),
+      receivedAt: DateTime.utc(2026, 1, 1, 12, 0, 1),
       outgoing: true,
     );
     final reply = _message(
@@ -35,6 +38,7 @@ void main() {
       text: 'Answer',
       // Alice's clock is behind, but the reply was received after `sent`.
       timestamp: DateTime.utc(2026, 1, 1, 11, 59),
+      receivedAt: DateTime.utc(2026, 1, 1, 12, 0, 2),
       outgoing: false,
     );
     final secondary = _message(
@@ -42,6 +46,7 @@ void main() {
       sender: 'Bob',
       text: 'Older shared message',
       timestamp: DateTime.utc(2026, 1, 1, 10),
+      receivedAt: DateTime.utc(2026, 1, 1, 12, 0, 0),
       outgoing: false,
     );
 

@@ -24,8 +24,13 @@ import '../widgets/mesh_ui.dart';
 
 class TelemetryScreen extends StatefulWidget {
   final Contact contact;
+  final bool isSelf;
 
-  const TelemetryScreen({super.key, required this.contact});
+  const TelemetryScreen({
+    super.key,
+    required this.contact,
+    this.isSelf = false,
+  });
 
   @override
   State<TelemetryScreen> createState() => _TelemetryScreenState();
@@ -107,31 +112,14 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           _tripTime = reader.readUInt32LE();
           _statusTimeout?.cancel();
           final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
-          _statusTimeout = Timer(Duration(milliseconds: _tripTime), () {
-            if (!mounted) return;
-            setState(() {
-              _isLoading = false;
-              _isLoaded = false;
-              if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
-                _autoRefreshLastAttemptFailed = true;
-              }
-            });
-            if (!isAutoRefreshRequest) {
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.telemetry_requestTimeout),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              );
-            }
-            if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
-              _scheduleNextAutoRefreshAttempt();
-            }
-            _recordTelemetryResult(false);
-          });
+          _statusTimeout = Timer(
+            Duration(milliseconds: _tripTime),
+            () => _handleTelemetryTimeout(isAutoRefreshRequest),
+          );
         }
 
         // Check if it's a binary response
-        if (cmd == pushCodeBinaryResponse) {
+        if (!widget.isSelf && cmd == pushCodeBinaryResponse) {
           if (!mounted) return;
           reader.skipBytes(1); // Skip the reserved byte
           if (reader.readUInt32LE() != _tagData) return;
@@ -194,6 +182,28 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     }
   }
 
+  void _handleTelemetryTimeout(bool isAutoRefreshRequest) {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _isLoaded = false;
+      if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
+        _autoRefreshLastAttemptFailed = true;
+      }
+    });
+    if (!isAutoRefreshRequest) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.telemetry_requestTimeout),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+    if (isAutoRefreshRequest && _isAutoRefreshEnabled) {
+      _scheduleNextAutoRefreshAttempt();
+    }
+    _recordTelemetryResult(false);
+  }
+
   Future<void> _loadTelemetry({bool isAutoRefresh = false}) async {
     if (_commandService == null) return;
 
@@ -204,21 +214,33 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     });
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-      final selection = await connector.preparePathForContactSend(
-        _resolveContact(connector),
-      );
-      _pendingStatusSelection = selection;
       Uint8List frame;
-      if (widget.contact.type != advTypeChat) {
-        frame = buildSendBinaryReq(
-          widget.contact.publicKey,
-          payload: buildTelemetryBinaryPayload(),
-        );
+      if (widget.isSelf) {
+        frame = buildSendTelemetryReq(null);
       } else {
-        frame = buildSendTelemetryReq(widget.contact.publicKey);
+        final selection = await connector.preparePathForContactSend(
+          _resolveContact(connector),
+        );
+        _pendingStatusSelection = selection;
+        if (widget.contact.type != advTypeChat) {
+          frame = buildSendBinaryReq(
+            widget.contact.publicKey,
+            payload: buildTelemetryBinaryPayload(),
+          );
+        } else {
+          frame = buildSendTelemetryReq(widget.contact.publicKey);
+        }
+      }
+      if (widget.isSelf) {
+        _statusTimeout?.cancel();
+        _statusTimeout = Timer(
+          const Duration(seconds: 15),
+          () => _handleTelemetryTimeout(isAutoRefresh),
+        );
       }
       await connector.sendFrame(frame);
     } catch (e) {
+      _statusTimeout?.cancel();
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -353,12 +375,13 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         centerTitle: false,
         bottom: const SyncProgressAppBarBottom(),
         actions: [
-          IconButton(
-            icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-            tooltip: l10n.repeater_routingMode,
-            onPressed: () =>
-                ContactRoutingSheet.show(context, contact: widget.contact),
-          ),
+          if (!widget.isSelf)
+            IconButton(
+              icon: Icon(isFloodMode ? Icons.waves : Icons.route),
+              tooltip: l10n.repeater_routingMode,
+              onPressed: () =>
+                  ContactRoutingSheet.show(context, contact: widget.contact),
+            ),
           IconButton(
             icon: _isLoading
                 ? const SizedBox(
