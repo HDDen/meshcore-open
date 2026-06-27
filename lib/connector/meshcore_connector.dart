@@ -676,6 +676,7 @@ class MeshCoreConnector extends ChangeNotifier {
   ) async {
     final allMessages = await _messageStore.loadMessages(contactKeyHex);
     if (generation != _conversationLoadGeneration) return;
+    _applyContactMessageSummaryFromMessages(contactKeyHex, allMessages);
     if (allMessages.isNotEmpty) {
       // Keep only the most recent N messages in memory to bound memory usage
       final windowedMessages = allMessages.length > _messageWindowSize
@@ -724,6 +725,130 @@ class MeshCoreConnector extends ChangeNotifier {
       return 'id:$messageId';
     }
     return 'fallback:${message.senderKeyHex}:${message.isOutgoing}:${message.isCli}:${message.timestamp.millisecondsSinceEpoch}:${message.text}';
+  }
+
+  Future<void> _refreshContactMessageSummaries() async {
+    if (_contacts.isEmpty && _discoveredContacts.isEmpty) return;
+    final contactKeys = <String>{
+      for (final contact in _contacts)
+        if (_supportsContactMessageSummary(contact)) contact.publicKeyHex,
+      for (final contact in _discoveredContacts)
+        if (_supportsContactMessageSummary(contact)) contact.publicKeyHex,
+    }.toList();
+    var changed = false;
+    for (var i = 0; i < contactKeys.length; i++) {
+      if (i > 0 && i % 8 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      final contactKeyHex = contactKeys[i];
+      final knownLatest = _knownContactMessageSummaryAt(contactKeyHex);
+      if (knownLatest != null) {
+        changed =
+            _applyContactMessageSummary(contactKeyHex, knownLatest) || changed;
+        continue;
+      }
+      final summary = await _messageStore.loadMessageSummary(
+        contactKeyHex,
+      );
+      if (summary == null) continue;
+      changed =
+          _applyContactMessageSummary(
+            contactKeyHex,
+            summary.latestMessageAt,
+          ) ||
+          changed;
+    }
+    if (!changed) return;
+    unawaited(_persistContacts());
+    unawaited(_persistDiscoveredContacts());
+    notifyListeners();
+  }
+
+  void _applyContactMessageSummaryFromMessages(
+    String contactKeyHex,
+    List<Message> messages,
+  ) {
+    DateTime? latestMessageAt;
+    for (final message in messages) {
+      if (message.isCli) continue;
+      final timestamp = message.timestamp;
+      if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
+        latestMessageAt = timestamp;
+      }
+    }
+    if (latestMessageAt == null) return;
+    if (_applyContactMessageSummary(contactKeyHex, latestMessageAt)) {
+      unawaited(_persistContacts());
+      unawaited(_persistDiscoveredContacts());
+      notifyListeners();
+    }
+  }
+
+  DateTime? _knownContactMessageSummaryAt(String contactKeyHex) {
+    DateTime? latestMessageAt;
+    for (final contact in _contacts) {
+      if (contact.publicKeyHex == contactKeyHex &&
+          _supportsContactMessageSummary(contact) &&
+          contact.hasMessages) {
+        if (latestMessageAt == null ||
+            contact.lastMessageAt.isAfter(latestMessageAt)) {
+          latestMessageAt = contact.lastMessageAt;
+        }
+      }
+    }
+    for (final contact in _discoveredContacts) {
+      if (contact.publicKeyHex == contactKeyHex &&
+          _supportsContactMessageSummary(contact) &&
+          contact.hasMessages) {
+        if (latestMessageAt == null ||
+            contact.lastMessageAt.isAfter(latestMessageAt)) {
+          latestMessageAt = contact.lastMessageAt;
+        }
+      }
+    }
+    return latestMessageAt;
+  }
+
+  bool _applyContactMessageSummary(
+    String contactKeyHex,
+    DateTime latestMessageAt,
+  ) {
+    var changed = false;
+    for (var i = 0; i < _contacts.length; i++) {
+      final contact = _contacts[i];
+      if (contact.publicKeyHex != contactKeyHex ||
+          !_supportsContactMessageSummary(contact)) {
+        continue;
+      }
+      if (!contact.hasMessages ||
+          latestMessageAt.isAfter(contact.lastMessageAt)) {
+        _contacts[i] = contact.copyWith(
+          hasMessages: true,
+          lastMessageAt: latestMessageAt,
+        );
+        changed = true;
+      }
+    }
+    for (var i = 0; i < _discoveredContacts.length; i++) {
+      final contact = _discoveredContacts[i];
+      if (contact.publicKeyHex != contactKeyHex ||
+          !_supportsContactMessageSummary(contact)) {
+        continue;
+      }
+      if (!contact.hasMessages ||
+          latestMessageAt.isAfter(contact.lastMessageAt)) {
+        _discoveredContacts[i] = contact.copyWith(
+          hasMessages: true,
+          lastMessageAt: latestMessageAt,
+        );
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  bool _supportsContactMessageSummary(Contact contact) {
+    return contact.type == advTypeChat || contact.type == advTypeRoom;
   }
 
   /// Load older messages for a contact (pagination)
@@ -1673,6 +1798,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _contacts
       ..clear()
       ..addAll(cached);
+    unawaited(_refreshContactMessageSummaries());
   }
 
   Future<void> _loadDiscoveredContactCache() async {
@@ -1680,6 +1806,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _discoveredContacts
       ..clear()
       ..addAll(cached);
+    unawaited(_refreshContactMessageSummaries());
   }
 
   Future<void> loadChannelSettings({
@@ -7657,6 +7784,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _addMessage(String pubKeyHex, Message message) {
+    if (!message.isCli) {
+      _updateContactLastMessageAt(
+        pubKeyHex,
+        message.isOutgoing ? message.timestamp : DateTime.now(),
+      );
+    }
     _conversations.putIfAbsent(pubKeyHex, () => []);
     final messages = _conversations[pubKeyHex]!;
 
@@ -8950,8 +9083,12 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Update existing contact
     if (existingIndex >= 0) {
-      _discoveredContacts[existingIndex] = _discoveredContacts[existingIndex]
-          .copyWith(
+      final existing = _discoveredContacts[existingIndex];
+      final mergedHasMessages = existing.hasMessages || contact.hasMessages;
+      final mergedLastMessageAt = existing.hasMessages
+          ? existing.lastMessageAt
+          : contact.lastMessageAt;
+      _discoveredContacts[existingIndex] = existing.copyWith(
             rawPacket: rawPacket,
             name: contact.name,
             type: contact.type,
@@ -8960,9 +9097,8 @@ class MeshCoreConnector extends ChangeNotifier {
             latitude: contact.latitude,
             longitude: contact.longitude,
             lastSeen: contact.lastSeen,
-            hasMessages:
-                _discoveredContacts[existingIndex].hasMessages ||
-                contact.hasMessages,
+            lastMessageAt: mergedLastMessageAt,
+            hasMessages: mergedHasMessages,
             flags: 0,
             isActive: addActive,
           );

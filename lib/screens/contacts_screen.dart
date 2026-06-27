@@ -1005,16 +1005,22 @@ class _ContactsScreenState extends State<ContactsScreen>
           );
           if (unreadCompare != 0) return unreadCompare;
 
+          final aHasMessages = _hasMessageHistoryForSort(connector, a);
+          final bHasMessages = _hasMessageHistoryForSort(connector, b);
           final hasMessagesCompare = _sortBoolDesc(
-            a.hasMessages,
-            b.hasMessages,
+            aHasMessages,
+            bHasMessages,
           );
           if (hasMessagesCompare != 0) return hasMessagesCompare;
 
-          final messageTimeCompare = b.lastMessageAt.compareTo(
-            a.lastMessageAt,
-          );
-          if (messageTimeCompare != 0) return messageTimeCompare;
+          if (aHasMessages && bHasMessages) {
+            final aLastMessageAt = _lastMessageAtForSort(connector, a);
+            final bLastMessageAt = _lastMessageAtForSort(connector, b);
+            final messageTimeCompare = bLastMessageAt.compareTo(
+              aLastMessageAt,
+            );
+            if (messageTimeCompare != 0) return messageTimeCompare;
+          }
 
           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
         });
@@ -1030,7 +1036,41 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   bool _hasUnreadContact(MeshCoreConnector connector, Contact contact) {
+    if (!_canHaveContactMessages(contact)) return false;
     return connector.getUnreadCountForContact(contact) > 0;
+  }
+
+  bool _hasMessageHistoryForSort(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) {
+    if (!_canHaveContactMessages(contact)) return false;
+    if (contact.hasMessages) return true;
+    return connector
+        .getLoadedMessages(contact)
+        .any((message) => !message.isCli);
+  }
+
+  DateTime _lastMessageAtForSort(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) {
+    if (!_canHaveContactMessages(contact)) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+    if (contact.hasMessages) return contact.lastMessageAt;
+    DateTime? latest;
+    for (final message in connector.getLoadedMessages(contact)) {
+      if (message.isCli) continue;
+      if (latest == null || message.timestamp.isAfter(latest)) {
+        latest = message.timestamp;
+      }
+    }
+    return latest ?? DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  bool _canHaveContactMessages(Contact contact) {
+    return contact.type == advTypeChat || contact.type == advTypeRoom;
   }
 
   int _sortBoolDesc(bool a, bool b) {

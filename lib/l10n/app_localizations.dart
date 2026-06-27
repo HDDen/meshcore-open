@@ -9109,7 +9109,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSendToGallery.
   ///
   /// In en, this message translates to:
-  /// **'Send to gallery'**
+  /// **'Save to gallery'**
   String get chat_canvasSendToGallery;
 
   /// No description provided for @chat_canvasGalleryShowPNG.
@@ -9130,6 +9130,12 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get chat_canvasGalleryRemove;
 
+  /// No description provided for @chat_canvasGalleryRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image from gallery?'**
+  String get chat_canvasGalleryRemoveConfirm;
+
   /// No description provided for @chat_canvasFormatNotSupported.
   ///
   /// In en, this message translates to:
@@ -9141,6 +9147,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save fo binary file'**
   String get chat_canvasSaveBinary;
+
+  /// No description provided for @chat_canvasCannotSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.'**
+  String chat_canvasCannotSend(int count);
 
   /// No description provided for @chat_showHops.
   ///

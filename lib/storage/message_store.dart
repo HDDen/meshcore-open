@@ -67,6 +67,50 @@ class MessageStore {
     }
   }
 
+  Future<MessageStoreSummary?> loadMessageSummary(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot load messages.');
+      return null;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyFor$contactKeyHex';
+    final oldKey = '$_keyPrefix$contactKeyHex';
+    var jsonString = prefs.getString(key);
+    if (jsonString == null || jsonString.isEmpty) {
+      final legacyJsonString = prefs.getString(oldKey);
+      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
+        jsonString = legacyJsonString;
+      }
+    }
+    if (jsonString == null || jsonString.isEmpty) {
+      return null;
+    }
+
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      DateTime? latestMessageAt;
+      var messageCount = 0;
+      for (final entry in jsonList) {
+        if (entry is! Map<String, dynamic>) continue;
+        if (entry['isCli'] as bool? ?? false) continue;
+        final timestampMs = entry['timestamp'] as int?;
+        if (timestampMs == null) continue;
+        messageCount++;
+        final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+        if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
+          latestMessageAt = timestamp;
+        }
+      }
+      if (messageCount == 0 || latestMessageAt == null) return null;
+      return MessageStoreSummary(
+        messageCount: messageCount,
+        latestMessageAt: latestMessageAt,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> clearMessages(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot clear messages.');
@@ -224,4 +268,14 @@ class MessageStore {
           : null,
     );
   }
+}
+
+class MessageStoreSummary {
+  const MessageStoreSummary({
+    required this.messageCount,
+    required this.latestMessageAt,
+  });
+
+  final int messageCount;
+  final DateTime latestMessageAt;
 }

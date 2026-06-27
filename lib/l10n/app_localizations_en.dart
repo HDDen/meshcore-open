@@ -5229,7 +5229,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_canvasSendToEdit => 'Send to canvas';
 
   @override
-  String get chat_canvasSendToGallery => 'Send to gallery';
+  String get chat_canvasSendToGallery => 'Save to gallery';
 
   @override
   String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
@@ -5241,12 +5241,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_canvasGalleryRemove => 'Remove';
 
   @override
+  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+
+  @override
   String chat_canvasFormatNotSupported(int received, int current) {
     return 'MCOimg format version: $received, current codec supports up to $current';
   }
 
   @override
   String get chat_canvasSaveBinary => 'Save fo binary file';
+
+  @override
+  String chat_canvasCannotSend(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+  }
 
   @override
   String get chat_showHops => 'Show hops';

@@ -3004,10 +3004,11 @@
   "chat_canvasActive": "Show canvas",
   "chat_canvasShowLockBtn": "Show canvas block button",
   "chat_canvasSendToEdit": "Send to canvas",
-  "chat_canvasSendToGallery": "Send to gallery",
+  "chat_canvasSendToGallery": "Save to gallery",
   "chat_canvasGalleryShowPNG": "Show source (PNG)",
   "chat_canvasGalleryShowBIN": "Show as Bin",
   "chat_canvasGalleryRemove": "Remove",
+  "chat_canvasGalleryRemoveConfirm": "Remove image from gallery?",
   "chat_canvasFormatNotSupported": "MCOimg format version: {received}, current codec supports up to {current}",
   "@chat_canvasFormatNotSupported": {
     "placeholders": {
@@ -3020,6 +3021,14 @@
     }
   },
   "chat_canvasSaveBinary": "Save fo binary file",
+  "chat_canvasCannotSend": "Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.",
+  "@chat_canvasCannotSend": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chat_showHops": "Show hops",
   "settings_modSettings": "Modification Settings",
   "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
