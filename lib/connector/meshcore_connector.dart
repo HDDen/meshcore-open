@@ -376,6 +376,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, int?> _channelWidgetTextColor = {};
   final Map<int, Region> _channelRegions = {};
   String? _defaultRegionScope;
+  bool _hasLoadedDefaultRegionScope = false;
+  Future<void>? _defaultRegionScopeRefreshFuture;
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactMcmpEnabled = {};
@@ -1148,15 +1150,41 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> _refreshDefaultRegionScope() async {
-    try {
-      await getDefaultRegionScope();
-    } catch (error) {
-      _setDefaultRegionScopeCache(null);
-      _appDebugLogService?.warn(
-        'Failed to refresh default region scope: $error',
-        tag: 'Regions',
-      );
+    final existing = _defaultRegionScopeRefreshFuture;
+    if (existing != null) {
+      await existing;
+      return;
     }
+
+    late final Future<void> refresh;
+    refresh = () async {
+      try {
+        await getDefaultRegionScope();
+      } catch (error) {
+        _appDebugLogService?.warn(
+          'Failed to refresh default region scope: $error',
+          tag: 'Regions',
+        );
+      } finally {
+        if (isConnected) {
+          _hasLoadedDefaultRegionScope = true;
+        }
+        if (identical(_defaultRegionScopeRefreshFuture, refresh)) {
+          _defaultRegionScopeRefreshFuture = null;
+        }
+      }
+    }();
+    _defaultRegionScopeRefreshFuture = refresh;
+    await refresh;
+  }
+
+  Future<Region> _outgoingChannelRegionForMessage(int channelIndex) async {
+    final channelRegion = getChannelRegion(channelIndex).trim();
+    if (channelRegion.isNotEmpty) return channelRegion;
+    if (!_hasLoadedDefaultRegionScope && isConnected) {
+      await _refreshDefaultRegionScope();
+    }
+    return _outgoingChannelRegion(channelIndex);
   }
 
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
@@ -1547,9 +1575,6 @@ class MeshCoreConnector extends ChangeNotifier {
       if (frame.isEmpty) return;
       if (frame[0] == respCodeDefaultFloodScope) {
         complete(parseDefaultFloodScopeFrame(frame));
-      } else if (frame[0] == respCodeErr) {
-        final errCode = frame.length > 1 ? frame[1] : -1;
-        completeError(Exception('Command failed with error code $errCode'));
       }
     });
 
@@ -1561,6 +1586,7 @@ class MeshCoreConnector extends ChangeNotifier {
       await sendFrame(buildGetDefaultFloodScopeFrame());
       final region = await completer.future;
       _setDefaultRegionScopeCache(region);
+      _hasLoadedDefaultRegionScope = true;
       return region;
     } finally {
       timeout.cancel();
@@ -1574,6 +1600,7 @@ class MeshCoreConnector extends ChangeNotifier {
       waitForGenericAck: true,
     );
     _setDefaultRegionScopeCache(region);
+    _hasLoadedDefaultRegionScope = true;
   }
 
   Future<void> _loadChannelOrder({String? publicKeyHex}) async {
@@ -3396,6 +3423,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfLatitude = null;
     _selfLongitude = null;
     _setDefaultRegionScopeCache(null);
+    _hasLoadedDefaultRegionScope = false;
+    _defaultRegionScopeRefreshFuture = null;
     _awaitingSelfInfo = false;
     _webInitialHandshakeRequestSent = false;
     _selfInfoRetryTimer?.cancel();
@@ -3574,6 +3603,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfLatitude = null;
     _selfLongitude = null;
     _setDefaultRegionScopeCache(null);
+    _hasLoadedDefaultRegionScope = false;
+    _defaultRegionScopeRefreshFuture = null;
     _clientRepeat = null;
     _rememberedNonRepeatRadioState = null;
     _firmwareVerCode = null;
@@ -4429,6 +4460,11 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
+    final outgoingRegion = await _outgoingChannelRegionForMessage(
+      channel.index,
+    );
+    if (!isConnected) return;
+
     final outboundText = prepareChannelOutboundText(channel.index, text);
     final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
       text: text,
@@ -4455,7 +4491,7 @@ class MeshCoreConnector extends ChangeNotifier {
       senderName: _selfName ?? 'Me',
     );
     final packetRegion = _displayPacketRegion(
-      _outgoingChannelRegion(channel.index),
+      outgoingRegion,
     );
     final message = ChannelMessage.outgoing(
       text,
