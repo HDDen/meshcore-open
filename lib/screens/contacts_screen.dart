@@ -999,7 +999,24 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
       case ContactSortOption.recentMessages:
         filtered.sort((a, b) {
-          return b.lastMessageAt.compareTo(a.lastMessageAt);
+          final unreadCompare = _sortBoolDesc(
+            _hasUnreadContact(connector, a),
+            _hasUnreadContact(connector, b),
+          );
+          if (unreadCompare != 0) return unreadCompare;
+
+          final hasMessagesCompare = _sortBoolDesc(
+            a.hasMessages,
+            b.hasMessages,
+          );
+          if (hasMessagesCompare != 0) return hasMessagesCompare;
+
+          final messageTimeCompare = b.lastMessageAt.compareTo(
+            a.lastMessageAt,
+          );
+          if (messageTimeCompare != 0) return messageTimeCompare;
+
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
         });
         break;
       case ContactSortOption.name:
@@ -1010,6 +1027,15 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
 
     return filtered;
+  }
+
+  bool _hasUnreadContact(MeshCoreConnector connector, Contact contact) {
+    return connector.getUnreadCountForContact(contact) > 0;
+  }
+
+  int _sortBoolDesc(bool a, bool b) {
+    if (a == b) return 0;
+    return a ? -1 : 1;
   }
 
   bool _matchesTypeFilter(Contact contact, ContactTypeFilter typeFilter) {

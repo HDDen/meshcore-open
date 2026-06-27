@@ -5947,8 +5947,8 @@ class MeshCoreConnector extends ChangeNotifier {
 
       if (existingIndex >= 0) {
         final existing = _contacts[existingIndex];
-        final mergedLastMessageAt =
-            existing.lastMessageAt.isAfter(contact.lastMessageAt)
+        final mergedHasMessages = existing.hasMessages || contact.hasMessages;
+        final mergedLastMessageAt = existing.hasMessages
             ? existing.lastMessageAt
             : contact.lastMessageAt;
 
@@ -5963,6 +5963,7 @@ class MeshCoreConnector extends ChangeNotifier {
         // refreshed frames omit coordinates (lat/lon encoded as 0,0).
         _contacts[existingIndex] = contact.copyWith(
           lastMessageAt: mergedLastMessageAt,
+          hasMessages: mergedHasMessages,
           pathOverride: existing.pathOverride, // Preserve user's path choice
           pathOverrideBytes: existing.pathOverrideBytes,
           latitude: contact.latitude ?? existing.latitude,
@@ -6053,8 +6054,8 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (existingIndex >= 0) {
       final existing = _contacts[existingIndex];
-      final mergedLastMessageAt =
-          existing.lastMessageAt.isAfter(contact.lastMessageAt)
+      final mergedHasMessages = existing.hasMessages || contact.hasMessages;
+      final mergedLastMessageAt = existing.hasMessages
           ? existing.lastMessageAt
           : contact.lastMessageAt;
 
@@ -6066,6 +6067,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // CRITICAL: Preserve user's path override when contact is refreshed from device
       _contacts[existingIndex] = contact.copyWith(
         lastMessageAt: mergedLastMessageAt,
+        hasMessages: mergedHasMessages,
         pathOverride: existing.pathOverride, // Preserve user's path choice
         pathOverrideBytes: existing.pathOverrideBytes,
       );
@@ -6133,8 +6135,13 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _setContactLastMessageAt(int index, DateTime timestamp) {
     final contact = _contacts[index];
     if (contact.type != advTypeChat) return false;
-    if (!timestamp.isAfter(contact.lastMessageAt)) return false;
-    _contacts[index] = contact.copyWith(lastMessageAt: timestamp);
+    if (contact.hasMessages && !timestamp.isAfter(contact.lastMessageAt)) {
+      return false;
+    }
+    _contacts[index] = contact.copyWith(
+      lastMessageAt: timestamp,
+      hasMessages: true,
+    );
     return true;
   }
 
@@ -6250,8 +6257,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     if (message != null) {
+      final receivedAt = DateTime.now();
       if (!message.isOutgoing) {
-        _lastContactMsgRxTime = DateTime.now();
+        _lastContactMsgRxTime = receivedAt;
       }
       // Ignore messages from self (device hearing its own broadcast)
       // BUT allow repeated messages (pathLength indicates it went through repeater)
@@ -6273,7 +6281,7 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
       if (contact != null) {
-        _updateContactLastMessageAt(contact.publicKeyHex, message.timestamp);
+        _updateContactLastMessageAt(contact.publicKeyHex, receivedAt);
       }
       await _loadMessagesForContact(message.senderKeyHex);
       if (!message.isOutgoing) {
@@ -6897,7 +6905,7 @@ class MeshCoreConnector extends ChangeNotifier {
       )) {
         return;
       }
-      _lastChannelMsgRxTime = DateTime.now();
+      _lastChannelMsgRxTime = parsed.receivedAt;
       final contentHash = _computeContentHash(
         parsed.channelIndex!,
         parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
@@ -6906,7 +6914,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = parsed.copyWith(packetHash: contentHash);
       _updateContactLastMessageAtByName(
         message.senderName,
-        message.timestamp,
+        message.receivedAt,
         pathBytes: message.pathBytes,
         pathHashWidth: message.pathHashWidth,
       );
@@ -6957,7 +6965,8 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    _lastChannelMsgRxTime = DateTime.now();
+    final receivedAt = DateTime.now();
+    _lastChannelMsgRxTime = receivedAt;
     final contentHash = _computeChannelDataHash(
       dataFrame.channelIndex,
       dataFrame.dataType,
@@ -6975,6 +6984,7 @@ class MeshCoreConnector extends ChangeNotifier {
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
       timestamp: decoded.timestamp,
+      receivedAt: receivedAt,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
@@ -6984,7 +6994,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     _updateContactLastMessageAtByName(
       message.senderName,
-      message.timestamp,
+      message.receivedAt,
       pathHashWidth: message.pathHashWidth,
     );
     final isNew = _addChannelMessage(dataFrame.channelIndex, message);
@@ -7048,7 +7058,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
             _updateContactLastMessageAtByName(
               message.senderName,
-              message.timestamp,
+              message.receivedAt,
               pathBytes: message.pathBytes,
               pathHashWidth: message.pathHashWidth,
             );
@@ -7132,7 +7142,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
           _updateContactLastMessageAtByName(
             parsed.senderName,
-            message.timestamp,
+            message.receivedAt,
             pathBytes: message.pathBytes,
             pathHashWidth: message.pathHashWidth,
           );
@@ -8950,6 +8960,9 @@ class MeshCoreConnector extends ChangeNotifier {
             latitude: contact.latitude,
             longitude: contact.longitude,
             lastSeen: contact.lastSeen,
+            hasMessages:
+                _discoveredContacts[existingIndex].hasMessages ||
+                contact.hasMessages,
             flags: 0,
             isActive: addActive,
           );
@@ -8969,6 +8982,7 @@ class MeshCoreConnector extends ChangeNotifier {
       longitude: contact.longitude,
       lastSeen: contact.lastSeen,
       lastMessageAt: contact.lastMessageAt,
+      hasMessages: contact.hasMessages,
       isActive: addActive,
       flags: 0,
     );

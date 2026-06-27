@@ -9106,6 +9106,30 @@ abstract class AppLocalizations {
   /// **'Send to canvas'**
   String get chat_canvasSendToEdit;
 
+  /// No description provided for @chat_canvasSendToGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to gallery'**
+  String get chat_canvasSendToGallery;
+
+  /// No description provided for @chat_canvasGalleryShowPNG.
+  ///
+  /// In en, this message translates to:
+  /// **'Show source (PNG)'**
+  String get chat_canvasGalleryShowPNG;
+
+  /// No description provided for @chat_canvasGalleryShowBIN.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as Bin'**
+  String get chat_canvasGalleryShowBIN;
+
+  /// No description provided for @chat_canvasGalleryRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get chat_canvasGalleryRemove;
+
   /// No description provided for @chat_canvasFormatNotSupported.
   ///
   /// In en, this message translates to:

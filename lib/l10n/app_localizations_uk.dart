@@ -5330,6 +5330,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_canvasSendToEdit => 'Send to canvas';
 
   @override
+  String get chat_canvasSendToGallery => 'Send to gallery';
+
+  @override
+  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+
+  @override
+  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+
+  @override
+  String get chat_canvasGalleryRemove => 'Remove';
+
+  @override
   String chat_canvasFormatNotSupported(int received, int current) {
     return 'MCOimg format version: $received, current codec supports up to $current';
   }

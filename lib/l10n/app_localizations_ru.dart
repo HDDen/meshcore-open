@@ -5323,6 +5323,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasSendToEdit => 'Отправить в холст';
 
   @override
+  String get chat_canvasSendToGallery => 'Отправить в галерею';
+
+  @override
+  String get chat_canvasGalleryShowPNG => 'Показать исходник (PNG)';
+
+  @override
+  String get chat_canvasGalleryShowBIN => 'Показать Bin';
+
+  @override
+  String get chat_canvasGalleryRemove => 'Удалить';
+
+  @override
   String chat_canvasFormatNotSupported(int received, int current) {
     return 'Версия MCOimg: $received, текущий кодек поддерживает до $current';
   }

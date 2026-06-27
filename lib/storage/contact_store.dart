@@ -77,6 +77,7 @@ class ContactStore {
       'lastSeen': contact.lastSeen.millisecondsSinceEpoch,
       'lastModified': contact.lastModified?.millisecondsSinceEpoch,
       'lastMessageAt': contact.lastMessageAt.millisecondsSinceEpoch,
+      'hasMessages': contact.hasMessages,
       'isActive': contact.isActive,
       'rawPacket': contact.rawPacket != null
           ? base64Encode(contact.rawPacket!)
@@ -137,6 +138,9 @@ class ContactStore {
       lastMessageAt: DateTime.fromMillisecondsSinceEpoch(
         lastMessageMs ?? lastSeenMs,
       ),
+      hasMessages:
+          json['hasMessages'] as bool? ??
+          (lastMessageMs != null && lastMessageMs != lastSeenMs),
       isActive: json['isActive'] as bool? ?? true,
       rawPacket: json['rawPacket'] != null
           ? Uint8List.fromList(base64Decode(json['rawPacket'] as String))

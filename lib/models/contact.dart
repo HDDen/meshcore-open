@@ -17,6 +17,7 @@ class Contact {
   final double? longitude;
   final DateTime lastSeen;
   final DateTime lastMessageAt;
+  final bool hasMessages;
   final DateTime? lastModified;
   final bool isActive;
   final bool wasPulled;
@@ -36,6 +37,7 @@ class Contact {
     required this.lastSeen,
     this.lastModified,
     DateTime? lastMessageAt,
+    this.hasMessages = false,
     this.isActive = true,
     this.wasPulled = false,
     this.rawPacket,
@@ -88,6 +90,7 @@ class Contact {
     double? longitude,
     DateTime? lastSeen,
     DateTime? lastMessageAt,
+    bool? hasMessages,
     DateTime? lastModified,
     bool? isActive,
     Uint8List? rawPacket,
@@ -109,6 +112,7 @@ class Contact {
       longitude: longitude ?? this.longitude,
       lastSeen: lastSeen ?? this.lastSeen,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      hasMessages: hasMessages ?? this.hasMessages,
       lastModified: lastModified ?? this.lastModified,
       isActive: isActive ?? this.isActive,
       rawPacket: rawPacket ?? this.rawPacket,
