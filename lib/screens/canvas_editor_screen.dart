@@ -67,6 +67,10 @@ class CanvasEditorScreen extends StatefulWidget {
   final int? maxBinaryPayloadBytes;
   final String? binarySenderName;
   final MCOImage? initialImage;
+  final Uint8List? initialImageBytes;
+  final int? initialImageWidth;
+  final int? initialImageHeight;
+  final PaletteProfile? initialPaletteProfile;
 
   const CanvasEditorScreen({
     super.key,
@@ -74,6 +78,10 @@ class CanvasEditorScreen extends StatefulWidget {
     this.maxBinaryPayloadBytes,
     this.binarySenderName,
     this.initialImage,
+    this.initialImageBytes,
+    this.initialImageWidth,
+    this.initialImageHeight,
+    this.initialPaletteProfile,
   });
 
   @override
@@ -167,6 +175,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final initialImage = widget.initialImage;
     if (initialImage != null) {
       _loadInitialImage(initialImage);
+    } else if (widget.initialImageBytes != null) {
+      _loadInitialImageBytes(
+        widget.initialImageBytes!,
+        width: widget.initialImageWidth,
+        height: widget.initialImageHeight,
+        paletteProfile: widget.initialPaletteProfile,
+      );
     } else {
       _currentPayloadChars = _calculatePayloadChars();
       _loadSavedCanvasSettings();
@@ -1348,6 +1363,48 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.of(image.pixels);
     _currentPayloadChars = _calculatePayloadChars();
+  }
+
+  Future<void> _loadInitialImageBytes(
+    Uint8List bytes, {
+    int? width,
+    int? height,
+    PaletteProfile? paletteProfile,
+  }) async {
+    _unlockCanvasSize =
+        PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
+    _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
+    _showRuler =
+        PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    if (paletteProfile != null) {
+      _paletteProfile = paletteProfile;
+      if (paletteProfile.isDynamic) {
+        _dynamicPaletteProfile = paletteProfile;
+      }
+      _selectedColor = MCOImagePalette.blackIndexFor(paletteProfile);
+    }
+    if (width != null && height != null) {
+      _width = width.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+      _height = height.clamp(_minCanvasSize, _maxCanvasSize).toInt();
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List.filled(_width * _height, _whiteIndex);
+    }
+    try {
+      final importedImage = await _imageBytesToCanvasPixels(bytes);
+      if (!mounted) return;
+      setState(() {
+        _width = importedImage.width;
+        _height = importedImage.height;
+        _setControllerValue(_widthController, _width);
+        _setControllerValue(_heightController, _height);
+        _pixels = importedImage.pixels;
+        _currentEncodedCandidate = null;
+        _currentPayloadChars = _calculatePayloadChars();
+      });
+    } on MCOImageCodecException {
+      _currentPayloadChars = _calculatePayloadChars();
+    }
   }
 
   Future<void> _saveCanvasPalette(PaletteProfile profile) async {

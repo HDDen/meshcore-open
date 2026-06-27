@@ -11,6 +11,10 @@ import 'mcoimg_palette.dart';
 class MCOImageFileSaver {
   static Future<bool> savePng(MCOImage image) async {
     final bytes = await _renderOriginalPngBytes(image);
+    return savePngBytes(bytes);
+  }
+
+  static Future<bool> savePngBytes(Uint8List bytes) async {
     final fileName = _fileName();
     try {
       final location = await file_selector.getSaveLocation(

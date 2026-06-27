@@ -28,6 +28,7 @@ import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
+import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
@@ -48,6 +49,8 @@ import '../widgets/message_translation_button.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../storage/mco_image_gallery_store.dart';
+import 'mco_image_gallery_screen.dart';
 import '../widgets/routing_sheet.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -551,11 +554,21 @@ class _ChatScreenState extends State<ChatScreen> {
               tooltip: context.l10n.chat_sendGif,
             ),
             if (settings.canvasActive)
-              IconButton(
-                icon: const Icon(Icons.brush_outlined),
-                onPressed: () => _showCanvasEditor(connector, maxBytes),
-                tooltip: context.l10n.chat_canvas,
+              GestureDetector(
+                onLongPress: () => _showMcoImageGallery(connector, maxBytes),
+                child: IconButton(
+                  icon: const Icon(Icons.brush_outlined),
+                  onPressed: () => _showCanvasEditor(connector, maxBytes),
+                  tooltip: context.l10n.chat_canvas,
+                ),
               ),
+            /*
+            IconButton(
+              icon: const Icon(Icons.photo_library_outlined),
+              onPressed: () => _showMcoImageGallery(connector, maxBytes),
+              tooltip: 'MCOimg',
+            ),
+            */
             if (settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
@@ -696,6 +709,10 @@ class _ChatScreenState extends State<ChatScreen> {
     MeshCoreConnector connector,
     int maxTextChars, {
     MCOImage? initialImage,
+    Uint8List? initialImageBytes,
+    int? initialImageWidth,
+    int? initialImageHeight,
+    PaletteProfile? initialPaletteProfile,
   }) async {
     final encodedText = await Navigator.push<String>(
       context,
@@ -703,6 +720,10 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context) => CanvasEditorScreen(
           maxTextChars: maxTextChars,
           initialImage: initialImage,
+          initialImageBytes: initialImageBytes,
+          initialImageWidth: initialImageWidth,
+          initialImageHeight: initialImageHeight,
+          initialPaletteProfile: initialPaletteProfile,
         ),
       ),
     );
@@ -712,6 +733,66 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.selection = TextSelection.collapsed(
       offset: encodedText.length,
     );
+    await _sendMessage(connector, skipTranslation: true);
+  }
+
+  Future<void> _showMcoImageGallery(
+    MeshCoreConnector connector,
+    int maxTextChars,
+  ) async {
+    final result = await showModalBottomSheet<MCOImageGalleryResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const MCOImageGalleryScreen(),
+    );
+    if (result == null || !mounted) return;
+    if (result.action == MCOImageGalleryAction.edit) {
+      await _openGalleryItemInCanvas(connector, maxTextChars, result.item);
+      return;
+    }
+    await _sendGalleryItem(connector, result.item);
+  }
+
+  Future<void> _openGalleryItemInCanvas(
+    MeshCoreConnector connector,
+    int maxTextChars,
+    MCOImageGalleryItem item,
+  ) async {
+    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    await _showCanvasEditor(
+      connector,
+      maxTextChars,
+      initialImage: image,
+      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageWidth: item.width,
+      initialImageHeight: item.height,
+      initialPaletteProfile: item.paletteProfile,
+    );
+  }
+
+  Future<void> _sendGalleryItem(
+    MeshCoreConnector connector,
+    MCOImageGalleryItem item,
+  ) async {
+    final text = item.textPayload;
+    final outboundText = connector.prepareContactOutboundText(
+      _resolveContact(connector),
+      text,
+    );
+    final payloadBytes = utf8.encode(outboundText).length;
+    final maxBytes = _maxContactInputBytes(connector);
+    if (payloadBytes > maxBytes) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_canvasCannotSend(
+          payloadBytes - maxBytes,
+        )),
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+      );
+      return;
+    }
+    _textController.text = text;
+    _textController.selection = TextSelection.collapsed(offset: text.length);
     await _sendMessage(connector, skipTranslation: true);
   }
 
@@ -1416,6 +1497,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 if (mcoImage != null)
                   ListTile(
+                    leading: const Icon(Icons.photo_library_outlined),
+                    title: Text(context.l10n.chat_canvasSendToGallery),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageToGallery(message.text));
+                    },
+                  ),
+                if (mcoImage != null)
+                  ListTile(
                     leading: const Icon(Icons.save_alt_outlined),
                     title: Text(context.l10n.chat_canvasSave),
                     onTap: () {
@@ -1531,6 +1621,24 @@ class _ChatScreenState extends State<ChatScreen> {
       showDismissibleSnackBar(
         context,
         content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _saveMcoImageToGallery(String text) async {
+    try {
+      await MCOImageGalleryStore().addFromText(text);
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_canvasSendToGallery),
+      );
+    } on MCOImageCodecException catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.message),
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
