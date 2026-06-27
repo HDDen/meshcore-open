@@ -999,30 +999,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
       case ContactSortOption.recentMessages:
         filtered.sort((a, b) {
-          final unreadCompare = _sortBoolDesc(
-            _hasUnreadContact(connector, a),
-            _hasUnreadContact(connector, b),
-          );
-          if (unreadCompare != 0) return unreadCompare;
-
-          final aHasMessages = _hasMessageHistoryForSort(connector, a);
-          final bHasMessages = _hasMessageHistoryForSort(connector, b);
-          final hasMessagesCompare = _sortBoolDesc(
-            aHasMessages,
-            bHasMessages,
-          );
-          if (hasMessagesCompare != 0) return hasMessagesCompare;
-
-          if (aHasMessages && bHasMessages) {
-            final aLastMessageAt = _lastMessageAtForSort(connector, a);
-            final bLastMessageAt = _lastMessageAtForSort(connector, b);
-            final messageTimeCompare = bLastMessageAt.compareTo(
-              aLastMessageAt,
-            );
-            if (messageTimeCompare != 0) return messageTimeCompare;
-          }
-
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          return b.lastMessageAt.compareTo(a.lastMessageAt);
         });
         break;
       case ContactSortOption.name:
@@ -1033,49 +1010,6 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
 
     return filtered;
-  }
-
-  bool _hasUnreadContact(MeshCoreConnector connector, Contact contact) {
-    if (!_canHaveContactMessages(contact)) return false;
-    return connector.getUnreadCountForContact(contact) > 0;
-  }
-
-  bool _hasMessageHistoryForSort(
-    MeshCoreConnector connector,
-    Contact contact,
-  ) {
-    if (!_canHaveContactMessages(contact)) return false;
-    if (contact.hasMessages) return true;
-    return connector
-        .getLoadedMessages(contact)
-        .any((message) => !message.isCli);
-  }
-
-  DateTime _lastMessageAtForSort(
-    MeshCoreConnector connector,
-    Contact contact,
-  ) {
-    if (!_canHaveContactMessages(contact)) {
-      return DateTime.fromMillisecondsSinceEpoch(0);
-    }
-    if (contact.hasMessages) return contact.lastMessageAt;
-    DateTime? latest;
-    for (final message in connector.getLoadedMessages(contact)) {
-      if (message.isCli) continue;
-      if (latest == null || message.timestamp.isAfter(latest)) {
-        latest = message.timestamp;
-      }
-    }
-    return latest ?? DateTime.fromMillisecondsSinceEpoch(0);
-  }
-
-  bool _canHaveContactMessages(Contact contact) {
-    return contact.type == advTypeChat || contact.type == advTypeRoom;
-  }
-
-  int _sortBoolDesc(bool a, bool b) {
-    if (a == b) return 0;
-    return a ? -1 : 1;
   }
 
   bool _matchesTypeFilter(Contact contact, ContactTypeFilter typeFilter) {
