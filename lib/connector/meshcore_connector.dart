@@ -399,6 +399,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
+  final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
+  bool _isFlushingDeferredChannelMessageSends = false;
   final Map<int, bool> _channelSendingDelayEnabled = {};
   final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
@@ -3620,6 +3622,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
+    _clearDeferredChannelMessageSends(markFailed: true);
     _reactionSendQueueSequence = 0;
 
     _activeTransport = MeshCoreTransportType.bluetooth;
@@ -3961,6 +3964,7 @@ class MeshCoreConnector extends ChangeNotifier {
       unawaited(updateKnownDiscovered());
       notifyListeners();
       unawaited(_persistContacts());
+      unawaited(_flushDeferredChannelMessageSends());
       if (PlatformInfo.isWeb &&
           _activeTransport == MeshCoreTransportType.bluetooth &&
           _isSyncingChannels &&
@@ -4417,6 +4421,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
   }) async {
     if (!isConnected || text.isEmpty) return;
+    final shouldDeferForSync = _shouldDeferChannelSendForSync;
 
     // Check if this is a reaction - if so, process it immediately instead of adding as a message
     final reactionInfo = ReactionHelper.parseReaction(text);
@@ -4460,9 +4465,9 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    final outgoingRegion = await _outgoingChannelRegionForMessage(
-      channel.index,
-    );
+    final outgoingRegion = shouldDeferForSync
+        ? _outgoingChannelRegion(channel.index)
+        : await _outgoingChannelRegionForMessage(channel.index);
     if (!isConnected) return;
 
     final outboundText = prepareChannelOutboundText(channel.index, text);
@@ -4516,6 +4521,22 @@ class MeshCoreConnector extends ChangeNotifier {
       replyToText: replyToText,
     );
     _addChannelMessage(channel.index, message);
+    if (shouldDeferForSync) {
+      _deferChannelMessageSend(
+        channel,
+        message.messageId,
+        text,
+        uncompressedText: uncompressedText,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
+      );
+      notifyListeners();
+      return;
+    }
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
@@ -4537,6 +4558,142 @@ class MeshCoreConnector extends ChangeNotifier {
         expectsGenericAck: true,
       );
     }, region: getChannelRegion(channel.index));
+  }
+
+  bool get _shouldDeferChannelSendForSync =>
+      _isLoadingContacts || _isSyncingChannels || _channelSyncInFlight;
+
+  void _deferChannelMessageSend(
+    Channel channel,
+    String messageId,
+    String text, {
+    String? uncompressedText,
+    String? originalText,
+    String? translatedLanguageCode,
+    String? translationModelId,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
+  }) {
+    _deferredChannelMessageSends.add(
+      _DeferredChannelMessageSend(
+        channel: channel,
+        messageId: messageId,
+        text: text,
+        uncompressedText: uncompressedText,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
+      ),
+    );
+  }
+
+  void _clearDeferredChannelMessageSends({required bool markFailed}) {
+    if (markFailed) {
+      for (final pending in _deferredChannelMessageSends) {
+        _markPendingChannelMessageFailedById(pending.messageId);
+      }
+    }
+    _deferredChannelMessageSends.clear();
+  }
+
+  Future<void> _flushDeferredChannelMessageSends() async {
+    if (_isFlushingDeferredChannelMessageSends ||
+        _deferredChannelMessageSends.isEmpty ||
+        !isConnected ||
+        _shouldDeferChannelSendForSync) {
+      return;
+    }
+
+    _isFlushingDeferredChannelMessageSends = true;
+    try {
+      while (_deferredChannelMessageSends.isNotEmpty &&
+          isConnected &&
+          !_shouldDeferChannelSendForSync) {
+        final pending = _deferredChannelMessageSends.removeAt(0);
+        await _sendDeferredChannelMessage(pending);
+      }
+    } finally {
+      _isFlushingDeferredChannelMessageSends = false;
+    }
+  }
+
+  Future<void> _sendDeferredChannelMessage(
+    _DeferredChannelMessageSend pending,
+  ) async {
+    final outgoingRegion = await _outgoingChannelRegionForMessage(
+      pending.channel.index,
+    );
+    if (!isConnected) return;
+    _updatePendingChannelMessageRegion(
+      pending.messageId,
+      _displayPacketRegion(outgoingRegion),
+    );
+
+    final outboundText = prepareChannelOutboundText(
+      pending.channel.index,
+      pending.text,
+    );
+    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
+      text: pending.text,
+      senderName: _selfName ?? 'Me',
+      mcmpEnabled: isChannelMcmpEnabled(pending.channel.index),
+    );
+    final binaryFrame = binaryOutbound == null
+        ? null
+        : buildSendChannelDataFrame(
+            pending.channel.index,
+            binaryOutbound.dataType,
+            binaryOutbound.payload,
+          );
+
+    _pendingChannelSentQueue.add(pending.messageId);
+    notifyListeners();
+
+    await _runScopedChannelSend(() async {
+      await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+      final sentByRadioAt = DateTime.now();
+      _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
+      if (binaryFrame != null) {
+        await _sendFrameAndWaitForCommandAck(
+          binaryFrame,
+          channelSendQueueId: pending.messageId,
+          expectsGenericAck: true,
+        );
+        return;
+      }
+      await _sendFrameAndWaitForCommandAck(
+        buildSendChannelTextMsgFrame(pending.channel.index, outboundText),
+        channelSendQueueId: pending.messageId,
+        expectsGenericAck: true,
+      );
+    }, region: getChannelRegion(pending.channel.index));
+  }
+
+  void _updatePendingChannelMessageRegion(String messageId, String? region) {
+    for (final entry in _channelMessages.entries) {
+      final channelMessages = entry.value;
+      final index = channelMessages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (index < 0) continue;
+
+      final message = channelMessages[index];
+      if (!message.isOutgoing || message.packetRegion == region) return;
+
+      channelMessages[index] = message.copyWith(
+        packetRegion: region,
+        packetRegionInfoAvailable: true,
+      );
+      unawaited(
+        _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
+      );
+      notifyListeners();
+      return;
+    }
   }
 
   Future<void> _runScopedChannelSend(
@@ -5397,6 +5554,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (isConnected) {
       _startPostChannelInitialQueuedMessageSync();
     }
+    unawaited(_flushDeferredChannelMessageSends());
 
     // Keep cache on failure/disconnection for future attempts
     if (!completed) {
@@ -5546,6 +5704,7 @@ class MeshCoreConnector extends ChangeNotifier {
         unawaited(updateKnownDiscovered());
         notifyListeners();
         unawaited(_persistContacts());
+        unawaited(_flushDeferredChannelMessageSends());
         if (PlatformInfo.isWeb &&
             _activeTransport == MeshCoreTransportType.bluetooth &&
             _isSyncingChannels &&
@@ -8539,6 +8698,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
+    _clearDeferredChannelMessageSends(markFailed: true);
     _reactionSendQueueSequence = 0;
 
     _setState(MeshCoreConnectionState.disconnected);
@@ -9424,6 +9584,32 @@ class _PendingChannelSend {
     required this.replyToText,
     required this.delaySeconds,
     required this.sendAt,
+  });
+}
+
+class _DeferredChannelMessageSend {
+  final Channel channel;
+  final String messageId;
+  final String text;
+  final String? uncompressedText;
+  final String? originalText;
+  final String? translatedLanguageCode;
+  final String? translationModelId;
+  final String? replyToMessageId;
+  final String? replyToSenderName;
+  final String? replyToText;
+
+  _DeferredChannelMessageSend({
+    required this.channel,
+    required this.messageId,
+    required this.text,
+    required this.uncompressedText,
+    required this.originalText,
+    required this.translatedLanguageCode,
+    required this.translationModelId,
+    required this.replyToMessageId,
+    required this.replyToSenderName,
+    required this.replyToText,
   });
 }
 
