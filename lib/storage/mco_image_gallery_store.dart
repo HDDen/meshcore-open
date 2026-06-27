@@ -38,6 +38,9 @@ class MCOImageGalleryStore {
     final image = MCOImageCodec().decode(
       MCOImageCodec.textFromBinaryPayload(binaryPayload),
     );
+    final payloadInfo = MCOImageCodec.inspectPayload(
+      MCOImageCodec.textFromBinaryPayload(binaryPayload),
+    );
     final pngBytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
     final now = DateTime.now();
     return MCOImageGalleryItem(
@@ -49,6 +52,7 @@ class MCOImageGalleryStore {
       height: image.height,
       byteLength: binaryPayload.length,
       usedColorCount: image.pixels.toSet().length,
+      codecVersion: payloadInfo?.version ?? _codecVersionForImage(image),
       paletteProfile: image.paletteProfile,
     );
   }
@@ -79,6 +83,7 @@ class MCOImageGalleryStore {
       'height': item.height,
       'byteLength': item.byteLength,
       'usedColorCount': item.usedColorCount,
+      'codecVersion': item.codecVersion,
       'paletteProfile': item.paletteProfile.name,
       'showPngFallback': item.showPngFallback,
     };
@@ -97,6 +102,12 @@ class MCOImageGalleryStore {
       final pngBytes = Uint8List.fromList(
         base64Decode(json['pngBytes'] as String),
       );
+      final codecVersion =
+          json['codecVersion'] as int? ??
+          MCOImageCodec.inspectPayload(
+            MCOImageCodec.textFromBinaryPayload(binaryPayload),
+          )?.version ??
+          1;
       return MCOImageGalleryItem(
         id: json['id'] as String? ?? '${json['createdAt'] ?? 0}',
         createdAt: DateTime.fromMillisecondsSinceEpoch(
@@ -108,6 +119,7 @@ class MCOImageGalleryStore {
         height: json['height'] as int? ?? 0,
         byteLength: json['byteLength'] as int? ?? binaryPayload.length,
         usedColorCount: json['usedColorCount'] as int? ?? 0,
+        codecVersion: codecVersion,
         paletteProfile: profile,
         showPngFallback: json['showPngFallback'] as bool? ?? false,
       );
@@ -122,5 +134,9 @@ class MCOImageGalleryStore {
       if (left[i] != right[i]) return false;
     }
     return true;
+  }
+
+  int _codecVersionForImage(MCOImage image) {
+    return image.encodingVersion == MCOImageEncodingVersion.v1Legacy ? 1 : 2;
   }
 }

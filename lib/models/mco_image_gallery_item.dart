@@ -11,6 +11,7 @@ class MCOImageGalleryItem {
   final int height;
   final int byteLength;
   final int usedColorCount;
+  final int codecVersion;
   final PaletteProfile paletteProfile;
   final bool showPngFallback;
 
@@ -23,6 +24,7 @@ class MCOImageGalleryItem {
     required this.height,
     required this.byteLength,
     required this.usedColorCount,
+    required this.codecVersion,
     required this.paletteProfile,
     this.showPngFallback = false,
   });
@@ -39,6 +41,7 @@ class MCOImageGalleryItem {
       height: height,
       byteLength: byteLength,
       usedColorCount: usedColorCount,
+      codecVersion: codecVersion,
       paletteProfile: paletteProfile,
       showPngFallback: showPngFallback ?? this.showPngFallback,
     );

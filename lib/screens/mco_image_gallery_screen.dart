@@ -250,14 +250,15 @@ class _GalleryTile extends StatelessWidget {
     final showPng = item.showPngFallback || image == null;
     final scheme = Theme.of(context).colorScheme;
 
-    return Card(
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(8),
           child: Column(
             children: [
               Expanded(
@@ -267,7 +268,7 @@ class _GalleryTile extends StatelessWidget {
                       : MCOImageMessage(image: image, maxSize: 96),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 4,
@@ -275,6 +276,7 @@ class _GalleryTile extends StatelessWidget {
                 children: [
                   _Badge('${item.byteLength} B', color: scheme.primary),
                   _Badge('${item.width}x${item.height}', color: scheme.primary),
+                  _Badge('v${item.codecVersion}', color: scheme.primary),
                 ],
               ),
             ],
