@@ -195,6 +195,7 @@ class AppSettings {
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool showMessageRegion;
+  final bool channelsUnreadSorting;
   final bool incomingQuoteAsMentions;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
@@ -471,6 +472,7 @@ class AppSettings {
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.showMessageRegion = false,
+    this.channelsUnreadSorting = false,
     this.incomingQuoteAsMentions = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
@@ -574,6 +576,7 @@ class AppSettings {
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'show_message_region': showMessageRegion,
+      'channels_unread_sorting': channelsUnreadSorting,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
@@ -690,6 +693,8 @@ class AppSettings {
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
       showMessageRegion: json['show_message_region'] as bool? ?? false,
+      channelsUnreadSorting:
+          json['channels_unread_sorting'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
@@ -842,6 +847,7 @@ class AppSettings {
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? showMessageRegion,
+    bool? channelsUnreadSorting,
     bool? incomingQuoteAsMentions,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
@@ -927,6 +933,8 @@ class AppSettings {
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
       showMessageRegion: showMessageRegion ?? this.showMessageRegion,
+      channelsUnreadSorting:
+          channelsUnreadSorting ?? this.channelsUnreadSorting,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,

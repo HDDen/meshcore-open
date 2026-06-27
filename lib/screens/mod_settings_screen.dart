@@ -170,6 +170,23 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setShowMessageRegion,
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.mark_email_unread, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsVisualChannelsUnreadSorting,
+                    ),
+                    value: settings.channelsUnreadSorting,
+                    onChanged: settingsService.setChannelsUnreadSorting,
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
                 MeshCard(
                   padding: EdgeInsets.zero,

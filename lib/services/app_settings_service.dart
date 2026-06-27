@@ -186,6 +186,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(showMessageRegion: value));
   }
 
+  Future<void> setChannelsUnreadSorting(bool value) async {
+    await updateSettings(_settings.copyWith(channelsUnreadSorting: value));
+  }
+
   Future<void> setIncomingQuoteAsMentions(bool value) async {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }

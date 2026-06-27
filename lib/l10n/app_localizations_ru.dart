@@ -5466,4 +5466,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_selfTelemetryShow => 'Просмотр датчиков';
+
+  @override
+  String get settings_modSettingsVisualChannelsUnreadSorting =>
+      'Сортировка каналов по непрочитанным сообщениям';
 }

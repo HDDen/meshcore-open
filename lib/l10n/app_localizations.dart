@@ -9351,6 +9351,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check sensors'**
   String get settings_selfTelemetryShow;
+
+  /// No description provided for @settings_modSettingsVisualChannelsUnreadSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels sorting by unread messages'**
+  String get settings_modSettingsVisualChannelsUnreadSorting;
 }
 
 class _AppLocalizationsDelegate

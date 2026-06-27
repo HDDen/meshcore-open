@@ -5484,4 +5484,8 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_selfTelemetryShow => 'Check sensors';
+
+  @override
+  String get settings_modSettingsVisualChannelsUnreadSorting =>
+      'Channels sorting by unread messages';
 }

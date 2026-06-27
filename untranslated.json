@@ -126,7 +126,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "de": [
@@ -243,7 +244,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "es": [
@@ -373,7 +375,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "fr": [
@@ -503,7 +506,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "hu": [
@@ -633,7 +637,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "it": [
@@ -843,7 +848,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "ja": [
@@ -973,7 +979,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "ko": [
@@ -1103,7 +1110,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "nl": [
@@ -1313,7 +1321,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "pl": [
@@ -1443,7 +1452,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "pt": [
@@ -1653,7 +1663,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "sk": [
@@ -1783,7 +1794,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "sl": [
@@ -1913,7 +1925,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "sv": [
@@ -2123,7 +2136,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "uk": [
@@ -2253,7 +2267,8 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ],
 
   "zh": [
@@ -2383,6 +2398,7 @@
     "settings_modSettingsNoRetraInfo",
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
-    "settings_selfTelemetryShow"
+    "settings_selfTelemetryShow",
+    "settings_modSettingsVisualChannelsUnreadSorting"
   ]
 }

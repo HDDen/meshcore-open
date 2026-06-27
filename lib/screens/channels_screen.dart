@@ -297,6 +297,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               connector,
               viewState,
             );
+            final sortUnreadFirst = appSettings.channelsUnreadSorting;
             final channelsListDisabled =
                 connector.isLoadingChannels || connector.isSyncingChannels;
 
@@ -361,6 +362,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         mutedChannelNames,
                         hideChannelIndexIndicator:
                             appSettings.hideChannelIndexIndicator,
+                        sortUnreadFirst: sortUnreadFirst,
                       ),
                     ),
                   ),
@@ -859,6 +861,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<Channel> filteredChannels,
     Set<String> mutedChannelNames, {
     required bool hideChannelIndexIndicator,
+    required bool sortUnreadFirst,
   }) {
     final groupedChannelNames = _groupedChannelNames();
     final visibleGroups = _channelGroups.where((group) {
@@ -867,13 +870,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       return group.name.toLowerCase().contains(query) ||
           channelsForGroup(group, filteredChannels).isNotEmpty;
     }).toList();
-    final ungroupedChannels = filteredChannels
-        .where(
-          (channel) => !groupedChannelNames.contains(
-            channelNameForGroup(channel).toLowerCase(),
-          ),
-        )
-        .toList();
+    final ungroupedChannels = _sortUnreadChannelsForDisplay(
+      filteredChannels
+          .where(
+            (channel) => !groupedChannelNames.contains(
+              channelNameForGroup(channel).toLowerCase(),
+            ),
+          )
+          .toList(),
+      connector,
+      enabled: sortUnreadFirst,
+    );
     final hasVisibleContent =
         visibleGroups.isNotEmpty || ungroupedChannels.isNotEmpty;
 
@@ -904,10 +911,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         viewState.channelsSortOption == ChannelSortOption.manual &&
         viewState.channelsSearchText.isEmpty;
     if (canReorder) {
-      final entries = buildManualChannelEntries(
+      final baseEntries = buildManualChannelEntries(
         filteredChannels,
         _channelGroups,
       );
+      final entries = sortUnreadFirst
+          ? _sortManualEntriesUnreadFirst(baseEntries, connector)
+          : baseEntries;
       return ReorderableListView.builder(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         buildDefaultDragHandles: false,
@@ -916,10 +926,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           final reordered = List<ChannelGroupListEntry>.from(entries);
           final item = reordered.removeAt(oldIndex);
           reordered.insert(newIndex, item);
-          final reorderedGroups = channelGroupsFromManualEntries(reordered);
+          final persistedEntries = sortUnreadFirst
+              ? _restoreUnreadManualEntryPositions(
+                  baseEntries,
+                  reordered,
+                  connector,
+                )
+              : reordered;
+          final reorderedGroups = channelGroupsFromManualEntries(
+            persistedEntries,
+          );
           final orderedChannelIndexes =
               manualChannelOrderFromEntriesWithChannels(
-                reordered,
+                persistedEntries,
                 filteredChannels,
               );
           setState(() {
@@ -942,12 +961,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 filteredChannels,
                 mutedChannelNames: mutedChannelNames,
                 hideChannelIndexIndicator: hideChannelIndexIndicator,
+                sortUnreadFirst: sortUnreadFirst,
                 showDragHandle: true,
                 dragIndex: index,
               ),
             );
           }
           final channel = entry.channel!;
+          final showDragHandle = !_isUnreadSortedChannel(
+            connector,
+            channel,
+            sortUnreadFirst,
+          );
           return _buildChannelTile(
             context,
             connector,
@@ -955,7 +980,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             channel,
             isMuted: mutedChannelNames.contains(channel.name),
             hideChannelIndexIndicator: hideChannelIndexIndicator,
-            showDragHandle: true,
+            showDragHandle: showDragHandle,
             dragIndex: index,
             margin: const EdgeInsets.symmetric(vertical: 4),
           );
@@ -973,6 +998,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           filteredChannels,
           mutedChannelNames: mutedChannelNames,
           hideChannelIndexIndicator: hideChannelIndexIndicator,
+          sortUnreadFirst: sortUnreadFirst,
           forceExpanded: viewState.channelsSearchText.isNotEmpty,
         ),
     ];
@@ -1008,16 +1034,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<Channel> filteredChannels, {
     Set<String> mutedChannelNames = const {},
     required bool hideChannelIndexIndicator,
+    required bool sortUnreadFirst,
     bool forceExpanded = false,
     bool showDragHandle = false,
     int? dragIndex,
   }) {
     final isExpanded =
         forceExpanded || _expandedChannelGroups.contains(group.name);
-    final channels = channelsForGroup(group, filteredChannels);
+    final baseChannels = channelsForGroup(group, filteredChannels);
     if (!group.allowOrderingInGroup) {
-      channels.sort(_compareChannelsByName);
+      baseChannels.sort(_compareChannelsByName);
     }
+    final channels = _sortUnreadChannelsForDisplay(
+      baseChannels,
+      connector,
+      enabled: sortUnreadFirst,
+    );
     final groupWidgetColor = group.widgetColor == null
         ? null
         : Color(group.widgetColor!);
@@ -1104,6 +1136,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   mutedChannelNames: mutedChannelNames,
                   hideChannelIndexIndicator: hideChannelIndexIndicator,
                   canReorder: showDragHandle && group.allowOrderingInGroup,
+                  sortUnreadFirst: sortUnreadFirst,
                   emptyTextColor: groupWidgetTextColor,
                 ),
               ),
@@ -1127,6 +1160,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     Set<String> mutedChannelNames = const {},
     required bool hideChannelIndexIndicator,
     required bool canReorder,
+    required bool sortUnreadFirst,
     Color? emptyTextColor,
   }) {
     if (channels.isEmpty) {
@@ -1165,10 +1199,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       buildDefaultDragHandles: false,
       itemCount: channels.length,
       onReorderItem: (oldIndex, newIndex) {
-        _reorderChannelsInGroup(connector, group, oldIndex, newIndex);
+        _reorderChannelsInGroup(
+          connector,
+          group,
+          channels,
+          oldIndex,
+          newIndex,
+          sortUnreadFirst: sortUnreadFirst,
+        );
       },
       itemBuilder: (context, index) {
         final channel = channels[index];
+        final showDragHandle = !_isUnreadSortedChannel(
+          connector,
+          channel,
+          sortUnreadFirst,
+        );
         return _buildChannelTile(
           context,
           connector,
@@ -1176,7 +1222,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channel,
           isMuted: mutedChannelNames.contains(channel.name),
           hideChannelIndexIndicator: hideChannelIndexIndicator,
-          showDragHandle: true,
+          showDragHandle: showDragHandle,
           dragIndex: index,
           margin: const EdgeInsets.symmetric(vertical: 4),
         );
@@ -1187,14 +1233,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _reorderChannelsInGroup(
     MeshCoreConnector connector,
     ChannelGroup group,
+    List<Channel> displayChannels,
     int oldIndex,
-    int newIndex,
-  ) {
-    final reorderedNames = reorderedChannelNamesInGroup(
-      group,
-      oldIndex,
-      newIndex,
-    );
+    int newIndex, {
+    required bool sortUnreadFirst,
+  }) {
+    final reorderedChannels = List<Channel>.from(displayChannels);
+    if (oldIndex < 0 || oldIndex >= reorderedChannels.length) return;
+    final channel = reorderedChannels.removeAt(oldIndex);
+    final insertIndex = max(0, min(newIndex, reorderedChannels.length));
+    reorderedChannels.insert(insertIndex, channel);
+    final persistedChannels = sortUnreadFirst
+        ? _restoreUnreadChannelPositions(
+            channelsForGroup(group, connector.channels),
+            reorderedChannels,
+            connector,
+          )
+        : reorderedChannels;
+    final reorderedNames = [
+      for (final channel in persistedChannels) channelNameForGroup(channel),
+    ];
     final updatedGroups = [
       for (final item in _channelGroups)
         if (item.name == group.name)
@@ -1540,6 +1598,102 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     return filtered;
+  }
+
+  List<ChannelGroupListEntry> _sortManualEntriesUnreadFirst(
+    List<ChannelGroupListEntry> entries,
+    MeshCoreConnector connector,
+  ) {
+    final unreadChannels = <ChannelGroupListEntry>[];
+    final rest = <ChannelGroupListEntry>[];
+    for (final entry in entries) {
+      final channel = entry.channel;
+      if (channel != null &&
+          connector.getUnreadCountForChannelIndex(channel.index) > 0) {
+        unreadChannels.add(entry);
+      } else {
+        rest.add(entry);
+      }
+    }
+    return [...unreadChannels, ...rest];
+  }
+
+  List<ChannelGroupListEntry> _restoreUnreadManualEntryPositions(
+    List<ChannelGroupListEntry> baseEntries,
+    List<ChannelGroupListEntry> displayEntries,
+    MeshCoreConnector connector,
+  ) {
+    final movableEntries = displayEntries
+        .where((entry) => !_isUnreadManualEntry(connector, entry))
+        .toList();
+    var movableIndex = 0;
+    return [
+      for (final baseEntry in baseEntries)
+        if (_isUnreadManualEntry(connector, baseEntry))
+          baseEntry
+        else if (movableIndex < movableEntries.length)
+          movableEntries[movableIndex++]
+        else
+          baseEntry,
+    ];
+  }
+
+  List<Channel> _restoreUnreadChannelPositions(
+    List<Channel> baseChannels,
+    List<Channel> displayChannels,
+    MeshCoreConnector connector,
+  ) {
+    final movableChannels = displayChannels
+        .where((channel) => !_isUnreadChannel(connector, channel))
+        .toList();
+    var movableIndex = 0;
+    return [
+      for (final baseChannel in baseChannels)
+        if (_isUnreadChannel(connector, baseChannel))
+          baseChannel
+        else if (movableIndex < movableChannels.length)
+          movableChannels[movableIndex++]
+        else
+          baseChannel,
+    ];
+  }
+
+  bool _isUnreadManualEntry(
+    MeshCoreConnector connector,
+    ChannelGroupListEntry entry,
+  ) {
+    final channel = entry.channel;
+    return channel != null && _isUnreadChannel(connector, channel);
+  }
+
+  List<Channel> _sortUnreadChannelsForDisplay(
+    List<Channel> channels,
+    MeshCoreConnector connector, {
+    required bool enabled,
+  }) {
+    if (!enabled || channels.length < 2) return channels;
+    final unread = <Channel>[];
+    final read = <Channel>[];
+    for (final channel in channels) {
+      if (connector.getUnreadCountForChannelIndex(channel.index) > 0) {
+        unread.add(channel);
+      } else {
+        read.add(channel);
+      }
+    }
+    return [...unread, ...read];
+  }
+
+  bool _isUnreadSortedChannel(
+    MeshCoreConnector connector,
+    Channel channel,
+    bool sortUnreadFirst,
+  ) {
+    return sortUnreadFirst && _isUnreadChannel(connector, channel);
+  }
+
+  bool _isUnreadChannel(MeshCoreConnector connector, Channel channel) {
+    return connector.getUnreadCountForChannelIndex(channel.index) > 0;
   }
 
   int _compareChannelsByName(Channel a, Channel b) {
