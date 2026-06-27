@@ -4370,7 +4370,7 @@ class _MapScreenState extends State<MapScreen>
     }
 
     for (final contact in connector.contacts) {
-      final messages = connector.getMessages(contact);
+      final messages = connector.getLoadedMessages(contact);
       for (final message in messages) {
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
@@ -4402,7 +4402,7 @@ class _MapScreenState extends State<MapScreen>
 
     for (final channel in connector.channels.where((c) => !c.isEmpty)) {
       final isPublic = _isPublicChannel(channel);
-      final messages = connector.getChannelMessages(channel);
+      final messages = connector.getLoadedChannelMessages(channel);
       for (final message in messages) {
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
@@ -5662,7 +5662,7 @@ class _MapConnectorSnapshot {
     for (final contact in connector.contacts) {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);
-      for (final message in connector.getMessages(contact)) {
+      for (final message in connector.getLoadedMessages(contact)) {
         if (!message.text.trimLeft().startsWith('m:')) continue;
         markerParts.add(
           Object.hash(
@@ -5683,7 +5683,7 @@ class _MapConnectorSnapshot {
           channel.isEmpty,
         ),
       );
-      for (final message in connector.getChannelMessages(channel)) {
+      for (final message in connector.getLoadedChannelMessages(channel)) {
         if (!message.text.trimLeft().startsWith('m:')) continue;
         markerParts.add(
           Object.hash(

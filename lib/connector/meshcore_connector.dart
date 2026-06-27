@@ -614,6 +614,18 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  List<Message> getLoadedMessages(Contact contact) {
+    // Side-effect-free read for aggregate screens; getMessages() may trigger
+    // shared-history loading and should only be used for a focused chat.
+    return _conversations[contact.publicKeyHex] ?? const [];
+  }
+
+  List<ChannelMessage> getLoadedChannelMessages(Channel channel) {
+    // Side-effect-free read for aggregate screens; getChannelMessages() may
+    // trigger shared-history loading and should only be used for a focused chat.
+    return _channelMessages[channel.index] ?? const [];
+  }
+
   Future<void> deleteMessage(Message message) async {
     final contactKeyHex = message.senderKeyHex;
     final messages = _conversations[contactKeyHex];

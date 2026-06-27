@@ -999,15 +999,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
       case ContactSortOption.recentMessages:
         filtered.sort((a, b) {
-          final aMessages = connector.getMessages(a);
-          final bMessages = connector.getMessages(b);
-          final aLastMsg = aMessages.isEmpty
-              ? DateTime(1970)
-              : aMessages.last.timestamp;
-          final bLastMsg = bMessages.isEmpty
-              ? DateTime(1970)
-              : bMessages.last.timestamp;
-          return bLastMsg.compareTo(aLastMsg);
+          return b.lastMessageAt.compareTo(a.lastMessageAt);
         });
         break;
       case ContactSortOption.name:
