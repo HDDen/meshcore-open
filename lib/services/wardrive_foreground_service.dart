@@ -44,7 +44,29 @@ class WardriveForegroundService {
         'Allow all the time location is required for background wardrive',
       );
     }
+
+    final batteryOptimizationIgnored =
+        await _isIgnoringBatteryOptimizations();
+    if (!batteryOptimizationIgnored) {
+      await _openAppBackgroundSettings();
+      throw StateError(
+        'Allow background activity and disable battery optimization for background wardrive',
+      );
+    }
     return true;
+  }
+
+  Future<bool> _isIgnoringBatteryOptimizations() async {
+    if (!PlatformInfo.isAndroid) return true;
+    return await _channel.invokeMethod<bool>(
+          'isIgnoringBatteryOptimizations',
+        ) ??
+        false;
+  }
+
+  Future<void> _openAppBackgroundSettings() async {
+    if (!PlatformInfo.isAndroid) return;
+    await _channel.invokeMethod<void>('openAppBackgroundSettings');
   }
 
   Future<void> start() async {
