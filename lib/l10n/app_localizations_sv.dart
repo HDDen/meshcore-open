@@ -5354,6 +5354,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_messageRegionUnknown => 'unknown';
 
   @override
+  String get channels_messageRegionEmpty => 'unset';
+
+  @override
   String get settings_defaultRegionScope => 'Default region scope';
 
   @override
@@ -5369,4 +5372,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get common_reset => 'Reset';
+
+  @override
+  String get connection_autoconnect => 'Autoconnect';
 }

@@ -8,6 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import '../storage/connection_transport_preference_store.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
@@ -23,17 +24,23 @@ class TcpScreen extends StatefulWidget {
   State<TcpScreen> createState() => _TcpScreenState();
 }
 
-class _TcpScreenState extends State<TcpScreen> {
+class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
+  final ConnectionTransportPreferenceStore _transportPreferenceStore =
+      ConnectionTransportPreferenceStore();
   late final TextEditingController _hostController;
   late final TextEditingController _portController;
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
   late final VoidCallback _connectionListener;
   bool _navigatedToChannels = false;
+  bool _autoconnectEnabled = false;
+  bool _startupAutoconnectAttempted = false;
+  bool _isAutoconnecting = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _settingsService = context.read<AppSettingsService>();
     _hostController = TextEditingController(
       text: _settingsService.settings.tcpServerAddress,
@@ -52,10 +59,17 @@ class _TcpScreenState extends State<TcpScreen> {
       }
     };
     _connector.addListener(_connectionListener);
+    _autoconnectEnabled = _transportPreferenceStore.isAutoconnectEnabled(
+      ConnectionTransportPreferenceStore.tcp,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_maybeAutoconnect(startup: true));
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
@@ -67,6 +81,13 @@ class _TcpScreenState extends State<TcpScreen> {
       });
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_maybeAutoconnect());
+    }
   }
 
   Future<void> _handleSuccessfulTcpConnection() async {
@@ -148,6 +169,26 @@ class _TcpScreenState extends State<TcpScreen> {
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 8),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(context.l10n.connection_autoconnect),
+                        value: _autoconnectEnabled,
+                        onChanged: isConnecting
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _autoconnectEnabled = value;
+                                });
+                                unawaited(
+                                  _transportPreferenceStore
+                                      .setAutoconnectEnabled(
+                                        ConnectionTransportPreferenceStore.tcp,
+                                        value,
+                                      ),
+                                );
+                              },
                       ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
@@ -570,7 +611,38 @@ class _TcpScreenState extends State<TcpScreen> {
     return '$day-$month-${value.year} $hour:$minute:$second';
   }
 
-  Future<void> _connectTcp() async {
+  Future<void> _maybeAutoconnect({bool startup = false}) async {
+    if (!mounted || !_autoconnectEnabled || _isAutoconnecting) return;
+    if (startup) {
+      if (_startupAutoconnectAttempted) return;
+      _startupAutoconnectAttempted = true;
+    }
+    if (_connector.state != MeshCoreConnectionState.disconnected) return;
+    if (_connector.shouldSuppressAutoconnect(MeshCoreTransportType.tcp)) {
+      return;
+    }
+
+    final host = _hostController.text.trim();
+    final parsedPort = int.tryParse(_portController.text.trim());
+    if (host.isEmpty || parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
+      return;
+    }
+
+    setState(() {
+      _isAutoconnecting = true;
+    });
+    try {
+      await _connectTcp(showErrors: false);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAutoconnecting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _connectTcp({bool showErrors = true}) async {
     if (_connector.state == MeshCoreConnectionState.connecting ||
         _connector.state == MeshCoreConnectionState.connected ||
         _connector.state == MeshCoreConnectionState.disconnecting) {
@@ -580,11 +652,11 @@ class _TcpScreenState extends State<TcpScreen> {
     final host = _hostController.text.trim();
     final parsedPort = int.tryParse(_portController.text.trim());
     if (host.isEmpty) {
-      _showError(context.l10n.tcpErrorHostRequired);
+      if (showErrors) _showError(context.l10n.tcpErrorHostRequired);
       return;
     }
     if (parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
-      _showError(context.l10n.tcpErrorPortInvalid);
+      if (showErrors) _showError(context.l10n.tcpErrorPortInvalid);
       return;
     }
 
@@ -598,7 +670,7 @@ class _TcpScreenState extends State<TcpScreen> {
       await _handleSuccessfulTcpConnection();
     } catch (error) {
       if (!mounted) return;
-      _showError(_friendlyErrorMessage(error));
+      if (showErrors) _showError(_friendlyErrorMessage(error));
     }
   }
 

@@ -848,6 +848,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : (translatedDisplayText != message.text ? message.text : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final packetRegion = message.packetRegion?.trim();
+    final packetRegionLabel = packetRegion != null && packetRegion.isNotEmpty
+        ? packetRegion
+        : (message.packetRegionInfoAvailable
+              ? context.l10n.channels_messageRegionEmpty
+              : context.l10n.channels_messageRegionUnknown);
     final displayPath = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty
@@ -1168,12 +1173,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   : EdgeInsets.zero,
                               child: Text(
                                 context.l10n.channels_messageRegion(
-                                  packetRegion != null &&
-                                          packetRegion.isNotEmpty
-                                      ? packetRegion
-                                      : context
-                                            .l10n
-                                            .channels_messageRegionUnknown,
+                                  packetRegionLabel,
                                 ),
                                 style: MeshTheme.mono(
                                   fontSize: 10 * textScale,

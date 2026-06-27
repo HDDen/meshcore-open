@@ -5417,6 +5417,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_messageRegionUnknown => 'неизвестно';
 
   @override
+  String get channels_messageRegionEmpty => 'отсутствует';
+
+  @override
   String get settings_defaultRegionScope => 'Регион ноды по умолчанию';
 
   @override
@@ -5432,4 +5435,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get common_reset => 'Сбросить';
+
+  @override
+  String get connection_autoconnect => 'Автоподключение';
 }

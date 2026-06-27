@@ -180,6 +180,7 @@ class MeshCoreConnector extends ChangeNotifier {
   String? _lastDeviceId;
   String? _lastDeviceDisplayName;
   bool _manualDisconnect = false;
+  MeshCoreTransportType? _lastManualDisconnectTransport;
   final MeshCoreUsbManager _usbManager = MeshCoreUsbManager();
   final LinuxBlePairingService _linuxBlePairingService =
       LinuxBlePairingService();
@@ -441,6 +442,8 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get isTcpTransportConnected =>
       _state == MeshCoreConnectionState.connected &&
       _activeTransport == MeshCoreTransportType.tcp;
+  bool shouldSuppressAutoconnect(MeshCoreTransportType transport) =>
+      _manualDisconnect && _lastManualDisconnectTransport == transport;
 
   String get deviceDisplayName {
     if (_selfName != null && _selfName!.isNotEmpty) {
@@ -2396,6 +2399,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await stopScan();
     _cancelReconnectTimer();
     _manualDisconnect = false;
+    _lastManualDisconnectTransport = null;
     _resetConnectionHandshakeState();
     _activeTransport = MeshCoreTransportType.tcp;
     _setState(MeshCoreConnectionState.connecting);
@@ -3299,10 +3303,12 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (manual) {
       _manualDisconnect = true;
+      _lastManualDisconnectTransport = transportAtDisconnect;
       _cancelReconnectTimer();
       unawaited(_backgroundService?.stop());
     } else {
       _manualDisconnect = false;
+      _lastManualDisconnectTransport = null;
     }
     _setState(MeshCoreConnectionState.disconnecting);
     _stopBatteryPolling();
@@ -4254,6 +4260,7 @@ class MeshCoreConnector extends ChangeNotifier {
       wasBinaryTransport: isBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
       packetRegion: packetRegion,
+      packetRegionInfoAvailable: true,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
@@ -4486,6 +4493,7 @@ class MeshCoreConnector extends ChangeNotifier {
       wasBinaryTransport: usesBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
       packetRegion: packetRegion,
+      packetRegionInfoAvailable: true,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -6924,6 +6932,7 @@ class MeshCoreConnector extends ChangeNotifier {
               channel.index,
               decryptedBytes,
               packetRegion: _resolvePacketRegion(packet),
+              packetRegionInfoAvailable: true,
             );
             if (message == null) return;
 
@@ -7007,6 +7016,7 @@ class MeshCoreConnector extends ChangeNotifier {
             pathBytes: packet.pathBytes,
             channelIndex: channel.index,
             packetRegion: _resolvePacketRegion(packet),
+            packetRegionInfoAvailable: true,
             packetHash: pktHash,
           );
 
@@ -7051,6 +7061,7 @@ class MeshCoreConnector extends ChangeNotifier {
     int channelIndex,
     Uint8List decryptedBytes, {
     String? packetRegion,
+    bool packetRegionInfoAvailable = false,
   }) {
     if (decryptedBytes.length < 3) return null;
     final decrypted = BufferReader(decryptedBytes);
@@ -7085,6 +7096,7 @@ class MeshCoreConnector extends ChangeNotifier {
       pathBytes: packet.pathBytes,
       channelIndex: channelIndex,
       packetRegion: packetRegion,
+      packetRegionInfoAvailable: packetRegionInfoAvailable,
       packetHash: pktHash,
     );
   }
@@ -7918,6 +7930,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathVariants: message.pathVariants,
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
+        packetRegionInfoAvailable: message.packetRegionInfoAvailable,
         messageId: message.messageId,
         packetHash: message.packetHash,
         replyToMessageId: replyToMessageId,
@@ -7957,6 +7970,9 @@ class MeshCoreConnector extends ChangeNotifier {
         pathVariants: mergedPathVariants,
         packetRegion:
             existing.packetRegion ?? processedMessage.packetRegion,
+        packetRegionInfoAvailable:
+            existing.packetRegionInfoAvailable ||
+            processedMessage.packetRegionInfoAvailable,
         packetHash: existing.packetHash ?? processedMessage.packetHash,
         // Mark as sent when first repeat is heard
         status: promotedFromPending

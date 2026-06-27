@@ -112,11 +112,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "de": [
@@ -219,11 +221,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "es": [
@@ -339,11 +343,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "fr": [
@@ -459,11 +465,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "hu": [
@@ -579,11 +587,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "it": [
@@ -779,11 +789,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "ja": [
@@ -899,11 +911,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "ko": [
@@ -1019,11 +1033,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "nl": [
@@ -1219,11 +1235,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "pl": [
@@ -1339,11 +1357,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "pt": [
@@ -1539,11 +1559,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "sk": [
@@ -1659,11 +1681,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "sl": [
@@ -1779,11 +1803,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "sv": [
@@ -1979,11 +2005,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "uk": [
@@ -2099,11 +2127,13 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ],
 
   "zh": [
@@ -2219,10 +2249,12 @@
     "settings_modSettingsVisualShowMsgRegion",
     "channels_messageRegion",
     "channels_messageRegionUnknown",
+    "channels_messageRegionEmpty",
     "settings_defaultRegionScope",
     "settings_defaultRegionScopeChanged",
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
-    "common_reset"
+    "common_reset",
+    "connection_autoconnect"
   ]
 }

@@ -2257,9 +2257,11 @@
   "settings_modSettingsVisualShowMsgRegion": "Отображать регион сообщения",
   "channels_messageRegion": "Регион: {region}",
   "channels_messageRegionUnknown": "неизвестно",
+  "channels_messageRegionEmpty": "отсутствует",
   "settings_defaultRegionScope": "Регион ноды по умолчанию",
   "settings_defaultRegionScopeChanged": "Регион по умолчанию изменён",
   "settings_defaultRegionScopeChangeFailed": "Не удалось изменить регион",
   "settings_defaultRegionScopeEmpty": "Не задано",
-  "common_reset": "Сбросить"
+  "common_reset": "Сбросить",
+  "connection_autoconnect": "Автоподключение"
 }

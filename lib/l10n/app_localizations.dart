@@ -9262,6 +9262,12 @@ abstract class AppLocalizations {
   /// **'unknown'**
   String get channels_messageRegionUnknown;
 
+  /// No description provided for @channels_messageRegionEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'unset'**
+  String get channels_messageRegionEmpty;
+
   /// No description provided for @settings_defaultRegionScope.
   ///
   /// In en, this message translates to:
@@ -9291,6 +9297,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get common_reset;
+
+  /// No description provided for @connection_autoconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Autoconnect'**
+  String get connection_autoconnect;
 }
 
 class _AppLocalizationsDelegate

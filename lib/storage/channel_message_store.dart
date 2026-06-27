@@ -140,6 +140,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'pathBytes': base64Encode(msg.pathBytes),
       'pathVariants': msg.pathVariants.map(base64Encode).toList(),
       'packetRegion': msg.packetRegion,
+      'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
       'repeats': msg.repeats.map(_repeatToJson).toList(),
       'messageId': msg.messageId,
       'packetHash': msg.packetHash,
@@ -237,6 +238,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           ?.map((entry) => Uint8List.fromList(base64Decode(entry as String)))
           .toList(),
       packetRegion: json['packetRegion'] as String?,
+      packetRegionInfoAvailable:
+          json['packetRegionInfoAvailable'] as bool? ?? false,
       repeats:
           (json['repeats'] as List<dynamic>?)
               ?.map((entry) => _repeatFromJson(entry as Map<String, dynamic>))
