@@ -600,6 +600,8 @@ class _MapScreenState extends State<MapScreen>
                   .toSet();
         final wardriveHighlightActive =
             hasSelectedCoverage || wardrive.lastDiscoveryRequestAt != null;
+        final wardriveDisableClustering =
+            hasSelectedCoverage || wardrive.hasMapState;
         final selfDisplayPosition = _selfDisplayPosition(connector, wardrive);
         final wardriveDiscoveryPolylines = hasSelectedCoverage
             ? _buildWardriveCoveragePolylines(
@@ -1076,6 +1078,8 @@ class _MapScreenState extends State<MapScreen>
                           ),
                           showLabels: _showNodeLabels,
                           wardriveHighlightActive: wardriveHighlightActive,
+                          wardriveDisableClustering:
+                              wardriveDisableClustering,
                           wardriveAnsweredKeys: wardriveAnsweredKeys,
                         ),
                         ...sharedMarkers.map(_buildSharedMarker),
@@ -1234,10 +1238,16 @@ class _MapScreenState extends State<MapScreen>
               : null,
           tooltip: context.l10n.map_wardriveZeroHopDiscovery,
           child: wardrive.isSendingDiscovery
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+              ? const Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(Icons.radar),
+                    SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ],
                 )
               : const Icon(Icons.radar),
         ),
@@ -2631,6 +2641,7 @@ class _MapScreenState extends State<MapScreen>
     int batteryChemistrySignature, {
     required bool showLabels,
     bool wardriveHighlightActive = false,
+    bool wardriveDisableClustering = false,
     Set<String> wardriveAnsweredKeys = const <String>{},
   }) {
     final wardriveAnsweredSignature = wardriveHighlightActive
@@ -2661,6 +2672,7 @@ class _MapScreenState extends State<MapScreen>
       showOtherNodes: settings.mapShowOtherNodes,
       isBuildingPathTrace: _isBuildingPathTrace,
       wardriveHighlightActive: wardriveHighlightActive,
+      wardriveDisableClustering: wardriveDisableClustering,
       wardriveAnsweredSignature: wardriveAnsweredSignature,
     );
     if (key != _nodeMarkersCacheKey) {
@@ -2671,6 +2683,7 @@ class _MapScreenState extends State<MapScreen>
           settings,
           showLabels: showLabels,
           wardriveHighlightActive: wardriveHighlightActive,
+          wardriveDisableClustering: wardriveDisableClustering,
           wardriveAnsweredKeys: wardriveAnsweredKeys,
         ),
       );
@@ -2683,6 +2696,7 @@ class _MapScreenState extends State<MapScreen>
     settings, {
     required bool showLabels,
     bool wardriveHighlightActive = false,
+    bool wardriveDisableClustering = false,
     Set<String> wardriveAnsweredKeys = const <String>{},
   }) {
     final markers = <Marker>[];
@@ -2757,7 +2771,8 @@ class _MapScreenState extends State<MapScreen>
     if (_zoom >= _clusterOffZoom ||
         overlapsMode ||
         _isBuildingPathTrace ||
-        wardriveHighlightActive) {
+        wardriveHighlightActive ||
+        wardriveDisableClustering) {
       for (final contact in filteredContacts) {
         addNode(contact);
       }
@@ -5752,6 +5767,7 @@ class _NodeMarkersCacheKey {
   final bool showOtherNodes;
   final bool isBuildingPathTrace;
   final bool wardriveHighlightActive;
+  final bool wardriveDisableClustering;
   final int wardriveAnsweredSignature;
 
   const _NodeMarkersCacheKey({
@@ -5773,6 +5789,7 @@ class _NodeMarkersCacheKey {
     required this.showOtherNodes,
     required this.isBuildingPathTrace,
     required this.wardriveHighlightActive,
+    required this.wardriveDisableClustering,
     required this.wardriveAnsweredSignature,
   });
 
@@ -5797,6 +5814,7 @@ class _NodeMarkersCacheKey {
         showOtherNodes == other.showOtherNodes &&
         isBuildingPathTrace == other.isBuildingPathTrace &&
         wardriveHighlightActive == other.wardriveHighlightActive &&
+        wardriveDisableClustering == other.wardriveDisableClustering &&
         wardriveAnsweredSignature == other.wardriveAnsweredSignature;
   }
 
@@ -5820,6 +5838,7 @@ class _NodeMarkersCacheKey {
     showOtherNodes,
     isBuildingPathTrace,
     wardriveHighlightActive,
+    wardriveDisableClustering,
     wardriveAnsweredSignature,
   ]);
 }
