@@ -287,6 +287,14 @@ class ModSettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32),
+                        child: Text(
+                          context.l10n.settings_modSettingsNoRetraDscr,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
                       Slider(
                         value: settings.noRetransmissionWarningSeconds <= 0
                             ? 4.0
