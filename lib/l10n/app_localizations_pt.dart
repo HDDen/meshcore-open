@@ -5419,4 +5419,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get connection_autoconnect => 'Autoconnect';
+
+  @override
+  String settings_modSettingsNoRetraInfo(int time) {
+    return 'No retranslations heard for $time seconds. The message may not have been sent successfully. Please try shortening the text or resending.';
+  }
+
+  @override
+  String get settings_modSettingsNoRetraHeading =>
+      'Display messages as unsent if no retranslations heard within seconds:';
 }

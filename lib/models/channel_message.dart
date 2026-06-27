@@ -60,6 +60,7 @@ class ChannelMessage {
   final int? channelIndex;
   final String? packetRegion;
   final bool packetRegionInfoAvailable;
+  final int? noRetransmissionWarningSeconds;
   final String messageId;
   final String? packetHash;
   final String? replyToMessageId;
@@ -98,6 +99,7 @@ class ChannelMessage {
     this.channelIndex,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
+    this.noRetransmissionWarningSeconds,
     String? messageId,
     this.packetHash,
     this.replyToMessageId,
@@ -130,6 +132,7 @@ class ChannelMessage {
     int? channelIndex,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
+    Object? noRetransmissionWarningSeconds = _unset,
     String? packetHash,
     String? replyToMessageId,
     String? replyToSenderName,
@@ -208,6 +211,10 @@ class ChannelMessage {
           : packetRegion as String?,
       packetRegionInfoAvailable:
           packetRegionInfoAvailable ?? this.packetRegionInfoAvailable,
+      noRetransmissionWarningSeconds:
+          noRetransmissionWarningSeconds == _unset
+          ? this.noRetransmissionWarningSeconds
+          : noRetransmissionWarningSeconds as int?,
       messageId: messageId,
       packetHash: packetHash ?? this.packetHash,
       replyToMessageId: replyToMessageId ?? this.replyToMessageId,

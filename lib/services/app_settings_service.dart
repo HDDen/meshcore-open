@@ -200,6 +200,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(sharedMessageHistoryMode: value));
   }
 
+  Future<void> setNoRetransmissionWarningSeconds(int value) async {
+    await updateSettings(
+      _settings.copyWith(noRetransmissionWarningSeconds: value),
+    );
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

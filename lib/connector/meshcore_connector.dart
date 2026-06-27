@@ -392,8 +392,10 @@ class MeshCoreConnector extends ChangeNotifier {
   final Set<String> _hiddenSharedContactKeys = {};
   SharedMessageHistoryMode _lastSharedMessageHistoryMode =
       SharedMessageHistoryMode.disabled;
+  int _lastNoRetransmissionWarningSeconds = 0;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final Map<int, bool> _channelSendingDelayEnabled = {};
   final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
@@ -623,7 +625,7 @@ class MeshCoreConnector extends ChangeNotifier {
   List<ChannelMessage> getLoadedChannelMessages(Channel channel) {
     // Side-effect-free read for aggregate screens; getChannelMessages() may
     // trigger shared-history loading and should only be used for a focused chat.
-    return _channelMessages[channel.index] ?? const [];
+    return _orderedChannelMessages(_channelMessages[channel.index] ?? const []);
   }
 
   Future<void> deleteMessage(Message message) async {
@@ -751,7 +753,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<ChannelMessage> getChannelMessages(Channel channel) {
     final primary = _channelMessages[channel.index] ?? [];
-    if (!_sharedChannelsEnabled) return primary;
+    if (!_sharedChannelsEnabled) return _orderedChannelMessages(primary);
     _ensureSharedChannelHistory(channel);
     return _mergeChannelMessages(
       primary,
@@ -832,7 +834,10 @@ class MeshCoreConnector extends ChangeNotifier {
     List<ChannelMessage> primary,
     List<ChannelMessage> secondary,
   ) {
-    return mergeChannelMessagesPreservingPrimaryOrder(primary, secondary);
+    return mergeChannelMessagesPreservingPrimaryOrder(
+      _orderedChannelMessages(primary),
+      _orderedChannelMessages(secondary),
+    );
   }
 
   @visibleForTesting
@@ -870,6 +875,21 @@ class MeshCoreConnector extends ChangeNotifier {
     return merged;
   }
 
+  List<ChannelMessage> _orderedChannelMessages(
+    List<ChannelMessage> messages,
+  ) {
+    if (messages.length < 2) return messages;
+    final ordered = List<ChannelMessage>.of(messages);
+    ordered.sort(_compareChannelMessages);
+    return ordered;
+  }
+
+  int _compareChannelMessages(ChannelMessage a, ChannelMessage b) {
+    final timestampCompare = a.timestamp.compareTo(b.timestamp);
+    if (timestampCompare != 0) return timestampCompare;
+    return a.messageId.compareTo(b.messageId);
+  }
+
   static String _sharedChannelMessageKey(ChannelMessage message) {
     final timestamp = message.timestamp;
     final hourKey =
@@ -895,6 +915,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (messages == null) return;
     final removed = messages.remove(message);
     if (!removed) return;
+    _cancelChannelNoRetransmissionWarning(message.messageId);
     await _channelMessageStore.saveChannelMessages(channelIndex, messages);
     notifyListeners();
   }
@@ -1428,9 +1449,10 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     if (allMessages.isNotEmpty) {
       // Keep only the most recent N messages in memory to bound memory usage
-      final windowedMessages = allMessages.length > _messageWindowSize
-          ? allMessages.sublist(allMessages.length - _messageWindowSize)
-          : allMessages;
+      final orderedMessages = _orderedChannelMessages(allMessages);
+      final windowedMessages = orderedMessages.length > _messageWindowSize
+          ? orderedMessages.sublist(orderedMessages.length - _messageWindowSize)
+          : orderedMessages;
 
       _channelMessages[channelIndex] = windowedMessages;
       if (notify) notifyListeners();
@@ -1447,8 +1469,10 @@ class MeshCoreConnector extends ChangeNotifier {
     int channelIndex, {
     int count = 50,
   }) async {
-    final allMessages = await _channelMessageStore.loadChannelMessages(
-      channelIndex,
+    final allMessages = _orderedChannelMessages(
+      await _channelMessageStore.loadChannelMessages(
+        channelIndex,
+      ),
     );
     final currentMessages = _channelMessages[channelIndex] ?? [];
 
@@ -1463,7 +1487,10 @@ class MeshCoreConnector extends ChangeNotifier {
     final olderMessages = allMessages.sublist(startIndex, currentOffset);
 
     // Prepend to current conversation
-    _channelMessages[channelIndex] = [...olderMessages, ...currentMessages];
+    _channelMessages[channelIndex] = _orderedChannelMessages([
+      ...olderMessages,
+      ...currentMessages,
+    ]);
     notifyListeners();
 
     return olderMessages;
@@ -1517,6 +1544,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastSharedMessageHistoryMode =
         appSettingsService?.settings.sharedMessageHistoryMode ??
         SharedMessageHistoryMode.disabled;
+    _lastNoRetransmissionWarningSeconds =
+        appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
     _translationService = translationService;
     _bleDebugLogService = bleDebugLogService;
@@ -1582,9 +1611,18 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _handleAppSettingsChanged() {
+    final settings = _appSettingsService?.settings;
+    final noRetransmissionWarningSeconds =
+        settings?.noRetransmissionWarningSeconds ?? 0;
+    if (noRetransmissionWarningSeconds !=
+        _lastNoRetransmissionWarningSeconds) {
+      _lastNoRetransmissionWarningSeconds = noRetransmissionWarningSeconds;
+      if (noRetransmissionWarningSeconds <= 0) {
+        _cancelAllChannelNoRetransmissionTimers();
+      }
+    }
     final mode =
-        _appSettingsService?.settings.sharedMessageHistoryMode ??
-        SharedMessageHistoryMode.disabled;
+        settings?.sharedMessageHistoryMode ?? SharedMessageHistoryMode.disabled;
     if (mode == _lastSharedMessageHistoryMode) return;
     _lastSharedMessageHistoryMode = mode;
     _clearSharedMessageHistoryCache();
@@ -3387,6 +3425,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _maxChannels = _defaultMaxChannels;
     _resetSyncProgressState();
     _clearSharedMessageHistoryState();
+    _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
     _reactionSendQueueSequence = 0;
@@ -4600,6 +4639,65 @@ class MeshCoreConnector extends ChangeNotifier {
       // Keep the visible message timestamp unchanged; sentByRadioAt is only
       // for matching late log-rx repeats after radio backoff/quiet waits.
       channelMessages[index] = message.copyWith(sentByRadioAt: sentByRadioAt);
+      _scheduleChannelNoRetransmissionWarning(messageId);
+      unawaited(
+        _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
+      );
+      notifyListeners();
+      return;
+    }
+  }
+
+  void _scheduleChannelNoRetransmissionWarning(String messageId) {
+    _cancelChannelNoRetransmissionWarning(messageId);
+    final seconds =
+        _appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
+    if (seconds <= 0) return;
+
+    _channelNoRetransmissionTimers[messageId] = Timer(
+      Duration(seconds: seconds),
+      () {
+        _channelNoRetransmissionTimers.remove(messageId);
+        _markChannelMessageNoRetransmission(messageId, seconds);
+      },
+    );
+  }
+
+  void _cancelChannelNoRetransmissionWarning(String messageId) {
+    _channelNoRetransmissionTimers.remove(messageId)?.cancel();
+  }
+
+  void _cancelAllChannelNoRetransmissionTimers() {
+    for (final timer in _channelNoRetransmissionTimers.values) {
+      timer.cancel();
+    }
+    _channelNoRetransmissionTimers.clear();
+  }
+
+  void _markChannelMessageNoRetransmission(String messageId, int seconds) {
+    if ((_appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0) <=
+        0) {
+      return;
+    }
+
+    for (final entry in _channelMessages.entries) {
+      final channelMessages = entry.value;
+      final index = channelMessages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (index < 0) continue;
+
+      final message = channelMessages[index];
+      if (!message.isOutgoing ||
+          message.sentByRadioAt == null ||
+          message.repeatCount > 0 ||
+          message.status == ChannelMessageStatus.failed) {
+        return;
+      }
+
+      channelMessages[index] = message.copyWith(
+        noRetransmissionWarningSeconds: seconds,
+      );
       unawaited(
         _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
       );
@@ -7214,8 +7312,10 @@ class MeshCoreConnector extends ChangeNotifier {
             message.status != ChannelMessageStatus.pending) {
           return;
         }
+        _cancelChannelNoRetransmissionWarning(messageId);
         channelMessages[i] = message.copyWith(
           status: ChannelMessageStatus.failed,
+          noRetransmissionWarningSeconds: null,
         );
         unawaited(
           _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
@@ -7943,6 +8043,8 @@ class MeshCoreConnector extends ChangeNotifier {
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
         packetRegionInfoAvailable: message.packetRegionInfoAvailable,
+        noRetransmissionWarningSeconds:
+            message.noRetransmissionWarningSeconds,
         messageId: message.messageId,
         packetHash: message.packetHash,
         replyToMessageId: replyToMessageId,
@@ -7974,6 +8076,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final promotedFromPending =
           newRepeatCount == 1 &&
           existing.status == ChannelMessageStatus.pending;
+      _cancelChannelNoRetransmissionWarning(existing.messageId);
       messages[existingIndex] = existing.copyWith(
         repeatCount: newRepeatCount,
         pathLength: mergedPathLength,
@@ -7990,6 +8093,7 @@ class MeshCoreConnector extends ChangeNotifier {
         status: promotedFromPending
             ? ChannelMessageStatus.sent
             : existing.status,
+        noRetransmissionWarningSeconds: null,
       );
       if (promotedFromPending) {
         _pendingChannelSentQueue.remove(existing.messageId);
@@ -7997,6 +8101,8 @@ class MeshCoreConnector extends ChangeNotifier {
     } else {
       messages.add(processedMessage);
     }
+
+    messages.sort(_compareChannelMessages);
 
     // Save to persistent storage
     _channelMessageStore.saveChannelMessages(channelIndex, messages);
@@ -8205,6 +8311,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
     _resetSyncProgressState();
+    _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
     _reactionSendQueueSequence = 0;
@@ -8363,6 +8470,7 @@ class MeshCoreConnector extends ChangeNotifier {
     for (final pending in _pendingChannelSends.values) {
       pending.timer?.cancel();
     }
+    _cancelAllChannelNoRetransmissionTimers();
     radioStatsNotifier.dispose();
     _receivedFramesController.close();
     _usbManager.dispose();

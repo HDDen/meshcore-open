@@ -39,8 +39,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       return;
     }
 
-    // Convert messages to JSON
-    final jsonList = messages.map((msg) => _messageToJson(msg)).toList();
+    final orderedMessages = _orderedMessages(messages);
+    final jsonList = orderedMessages.map((msg) => _messageToJson(msg)).toList();
     final jsonString = jsonEncode(jsonList);
 
     await prefs.setString(key, jsonString);
@@ -81,17 +81,30 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     }
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList
+      return _orderedMessages(
+        jsonList
           .map(
             (json) => _messageFromJson(json).copyWith(
               channelIndex: channelIndex,
             ),
           )
-          .toList();
+          .toList(),
+      );
     } catch (e) {
       // If parsing fails, return empty list
       return [];
     }
+  }
+
+  List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {
+    if (messages.length < 2) return messages;
+    final ordered = List<ChannelMessage>.of(messages);
+    ordered.sort((a, b) {
+      final timestampCompare = a.timestamp.compareTo(b.timestamp);
+      if (timestampCompare != 0) return timestampCompare;
+      return a.messageId.compareTo(b.messageId);
+    });
+    return ordered;
   }
 
   /// Clear messages for a specific channel
@@ -141,6 +154,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'pathVariants': msg.pathVariants.map(base64Encode).toList(),
       'packetRegion': msg.packetRegion,
       'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
+      'noRetransmissionWarningSeconds': msg.noRetransmissionWarningSeconds,
       'repeats': msg.repeats.map(_repeatToJson).toList(),
       'messageId': msg.messageId,
       'packetHash': msg.packetHash,
@@ -240,6 +254,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       packetRegion: json['packetRegion'] as String?,
       packetRegionInfoAvailable:
           json['packetRegionInfoAvailable'] as bool? ?? false,
+      noRetransmissionWarningSeconds:
+          json['noRetransmissionWarningSeconds'] as int?,
       repeats:
           (json['repeats'] as List<dynamic>?)
               ?.map((entry) => _repeatFromJson(entry as Map<String, dynamic>))

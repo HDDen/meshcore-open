@@ -118,7 +118,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "de": [
@@ -227,7 +229,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "es": [
@@ -349,7 +353,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "fr": [
@@ -471,7 +477,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "hu": [
@@ -593,7 +601,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "it": [
@@ -795,7 +805,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "ja": [
@@ -917,7 +929,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "ko": [
@@ -1039,7 +1053,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "nl": [
@@ -1241,7 +1257,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "pl": [
@@ -1363,7 +1381,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "pt": [
@@ -1565,7 +1585,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "sk": [
@@ -1687,7 +1709,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "sl": [
@@ -1809,7 +1833,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "sv": [
@@ -2011,7 +2037,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "uk": [
@@ -2133,7 +2161,9 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ],
 
   "zh": [
@@ -2255,6 +2285,8 @@
     "settings_defaultRegionScopeChangeFailed",
     "settings_defaultRegionScopeEmpty",
     "common_reset",
-    "connection_autoconnect"
+    "connection_autoconnect",
+    "settings_modSettingsNoRetraInfo",
+    "settings_modSettingsNoRetraHeading"
   ]
 }

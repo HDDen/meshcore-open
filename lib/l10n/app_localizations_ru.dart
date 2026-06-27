@@ -5438,4 +5438,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get connection_autoconnect => 'Автоподключение';
+
+  @override
+  String settings_modSettingsNoRetraInfo(int time) {
+    return 'Не услышано ретрансляций за $time сек. Возможно, отправка была неуспешной. Попробуйте сократить текст или переотправить.';
+  }
+
+  @override
+  String get settings_modSettingsNoRetraHeading =>
+      'Отмечать сообщения неотправленными, если не услышано ретрансляций за секунд:';
 }

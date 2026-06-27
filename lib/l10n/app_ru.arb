@@ -2263,5 +2263,7 @@
   "settings_defaultRegionScopeChangeFailed": "Не удалось изменить регион",
   "settings_defaultRegionScopeEmpty": "Не задано",
   "common_reset": "Сбросить",
-  "connection_autoconnect": "Автоподключение"
+  "connection_autoconnect": "Автоподключение",
+  "settings_modSettingsNoRetraInfo": "Не услышано ретрансляций за {time} сек. Возможно, отправка была неуспешной. Попробуйте сократить текст или переотправить.",
+  "settings_modSettingsNoRetraHeading": "Отмечать сообщения неотправленными, если не услышано ретрансляций за секунд:"
 }

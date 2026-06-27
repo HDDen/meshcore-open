@@ -9303,6 +9303,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Autoconnect'**
   String get connection_autoconnect;
+
+  /// No description provided for @settings_modSettingsNoRetraInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'No retranslations heard for {time} seconds. The message may not have been sent successfully. Please try shortening the text or resending.'**
+  String settings_modSettingsNoRetraInfo(int time);
+
+  /// No description provided for @settings_modSettingsNoRetraHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Display messages as unsent if no retranslations heard within seconds:'**
+  String get settings_modSettingsNoRetraHeading;
 }
 
 class _AppLocalizationsDelegate

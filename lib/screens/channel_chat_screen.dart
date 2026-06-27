@@ -788,6 +788,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final noRetransmissionWarningsEnabled =
+        settingsService.settings.noRetransmissionWarningSeconds > 0;
     final showCompressionRatio =
         settingsService.settings.showCompressionRatio;
     final showHops = settingsService.settings.showHops;
@@ -871,15 +873,32 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       displayPathHashWidth,
       message.pathLength,
     );
+    final noRetransmissionWarningSeconds = noRetransmissionWarningsEnabled
+        ? message.noRetransmissionWarningSeconds
+        : null;
+    final hasNoRetransmissionWarning =
+        noRetransmissionWarningSeconds != null &&
+        noRetransmissionWarningSeconds > 0;
+    final showFailureVisual =
+        message.status == ChannelMessageStatus.failed ||
+        hasNoRetransmissionWarning;
 
     final isHighlighted = _highlightedMessageId == message.messageId;
-    final bubbleColor = isOutgoing
+    final bubbleColor = showFailureVisual
+        ? scheme.errorContainer
+        : isOutgoing
         ? MeshPalette.me
         : scheme.surfaceContainerLow;
-    final bubbleBorder = isOutgoing
+    final bubbleBorder = showFailureVisual
+        ? scheme.error
+        : isOutgoing
         ? MeshPalette.meBorder
         : scheme.outlineVariant;
-    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
+    final textColor = showFailureVisual
+        ? scheme.onErrorContainer
+        : isOutgoing
+        ? MeshPalette.meInk
+        : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
     final borderRadius = isOutgoing
         ? const BorderRadius.only(
@@ -1000,9 +1019,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           message.status ==
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
-                                      isFailed:
-                                          message.status ==
-                                          ChannelMessageStatus.failed,
+                                      isFailed: showFailureVisual,
                                     ),
                                   )
                                 : null,
@@ -1046,9 +1063,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           message.status ==
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
-                                      isFailed:
-                                          message.status ==
-                                          ChannelMessageStatus.failed,
+                                      isFailed: showFailureVisual,
                                     ),
                                   ),
                                 ),
@@ -1079,9 +1094,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           message.status ==
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
-                                      isFailed:
-                                          message.status ==
-                                          ChannelMessageStatus.failed,
+                                      isFailed: showFailureVisual,
                                     ),
                                   ),
                                 ),
@@ -1124,9 +1137,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                         message.status ==
                                             ChannelMessageStatus.sent &&
                                         displayPath.isNotEmpty,
-                                    isFailed:
-                                        message.status ==
-                                        ChannelMessageStatus.failed,
+                                    isFailed: showFailureVisual,
                                   ),
                                 ),
                               ],
@@ -1235,16 +1246,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 4),
                                   Icon(
-                                    message.status == ChannelMessageStatus.sent
+                                    showFailureVisual
+                                        ? Icons.error_outline
+                                        : message.status ==
+                                              ChannelMessageStatus.sent
                                         ? Icons.check
                                         : message.status ==
                                               ChannelMessageStatus.pending
                                         ? Icons.schedule
                                         : Icons.error_outline,
                                     size: 12 * textScale,
-                                    color:
-                                        message.status ==
-                                            ChannelMessageStatus.failed
+                                    color: showFailureVisual
                                         ? Colors.red
                                         : metaColor,
                                   ),
@@ -1282,6 +1294,23 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   ),
                                 ],
                               ],
+                            ),
+                          ),
+                        ],
+                        if (hasNoRetransmissionWarning) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: Text(
+                              context.l10n.settings_modSettingsNoRetraInfo(
+                                noRetransmissionWarningSeconds,
+                              ),
+                              style: MeshTheme.mono(
+                                fontSize: 10 * textScale,
+                                color: metaColor,
+                              ),
                             ),
                           ),
                         ],

@@ -263,6 +263,55 @@ class ModSettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.cell_tower, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsNoRetraHeading,
+                            ),
+                          ),
+                          Text(
+                            settings.noRetransmissionWarningSeconds <= 0
+                                ? 'Off'
+                                : '${settings.noRetransmissionWarningSeconds}s',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: settings.noRetransmissionWarningSeconds <= 0
+                            ? 4.0
+                            : settings.noRetransmissionWarningSeconds
+                                  .toDouble(),
+                        min: 4,
+                        max: AppSettings.maxNoRetransmissionWarningSeconds
+                            .toDouble(),
+                        divisions:
+                            AppSettings.maxNoRetransmissionWarningSeconds - 4,
+                        label: settings.noRetransmissionWarningSeconds <= 0
+                            ? 'Off'
+                            : '${settings.noRetransmissionWarningSeconds}s',
+                        onChanged: (value) {
+                          final rounded = value.round();
+                          settingsService.setNoRetransmissionWarningSeconds(
+                            rounded < AppSettings.minNoRetransmissionWarningSeconds
+                                ? 0
+                                : rounded,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ],
             );
           },

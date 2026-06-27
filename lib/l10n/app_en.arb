@@ -3053,5 +3053,14 @@
   "settings_defaultRegionScopeChangeFailed": "Change default region scope failed",
   "settings_defaultRegionScopeEmpty": "Currently unset",
   "common_reset": "Reset",
-  "connection_autoconnect": "Autoconnect"
+  "connection_autoconnect": "Autoconnect",
+  "settings_modSettingsNoRetraInfo": "No retranslations heard for {time} seconds. The message may not have been sent successfully. Please try shortening the text or resending.",
+  "@settings_modSettingsNoRetraInfo": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_modSettingsNoRetraHeading": "Display messages as unsent if no retranslations heard within seconds:"
 }

@@ -198,6 +198,7 @@ class AppSettings {
   final bool incomingQuoteAsMentions;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
+  final int noRetransmissionWarningSeconds;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -250,6 +251,9 @@ class AppSettings {
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
+  static const int defaultNoRetransmissionWarningSeconds = 7;
+  static const int minNoRetransmissionWarningSeconds = 5;
+  static const int maxNoRetransmissionWarningSeconds = 15;
   final int sendingDelayForCancellationSeconds;
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
@@ -413,6 +417,25 @@ class AppSettings {
         .toInt();
   }
 
+  static int normalizeNoRetransmissionWarningSeconds(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    if (parsed == null) return defaultNoRetransmissionWarningSeconds;
+    if (parsed <= 0) return 0;
+    return parsed
+        .clamp(
+          minNoRetransmissionWarningSeconds,
+          maxNoRetransmissionWarningSeconds,
+        )
+        .toInt();
+  }
+
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
       (p) => p.id == selectedCyr2latProfileId,
@@ -451,6 +474,7 @@ class AppSettings {
     this.incomingQuoteAsMentions = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
+    int? noRetransmissionWarningSeconds,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -511,6 +535,10 @@ class AppSettings {
        copyMsgPathFinalTemplate = normalizeCopyMsgPathFinalTemplate(
          copyMsgPathFinalTemplate,
        ),
+       noRetransmissionWarningSeconds =
+           normalizeNoRetransmissionWarningSeconds(
+             noRetransmissionWarningSeconds,
+           ),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -549,6 +577,7 @@ class AppSettings {
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
+      'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -667,6 +696,8 @@ class AppSettings {
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
       ),
+      noRetransmissionWarningSeconds:
+          json['no_retransmission_warning_seconds'],
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -814,6 +845,7 @@ class AppSettings {
     bool? incomingQuoteAsMentions,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
+    int? noRetransmissionWarningSeconds,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -900,6 +932,9 @@ class AppSettings {
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
+      noRetransmissionWarningSeconds:
+          noRetransmissionWarningSeconds ??
+          this.noRetransmissionWarningSeconds,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
