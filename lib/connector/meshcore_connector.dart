@@ -625,7 +625,7 @@ class MeshCoreConnector extends ChangeNotifier {
   List<ChannelMessage> getLoadedChannelMessages(Channel channel) {
     // Side-effect-free read for aggregate screens; getChannelMessages() may
     // trigger shared-history loading and should only be used for a focused chat.
-    return _orderedChannelMessages(_channelMessages[channel.index] ?? const []);
+    return _channelMessages[channel.index] ?? const [];
   }
 
   Future<void> deleteMessage(Message message) async {
@@ -878,7 +878,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<ChannelMessage> getChannelMessages(Channel channel) {
     final primary = _channelMessages[channel.index] ?? [];
-    if (!_sharedChannelsEnabled) return _orderedChannelMessages(primary);
+    if (!_sharedChannelsEnabled) return primary;
     _ensureSharedChannelHistory(channel);
     return _mergeChannelMessages(
       primary,
@@ -960,8 +960,8 @@ class MeshCoreConnector extends ChangeNotifier {
     List<ChannelMessage> secondary,
   ) {
     return mergeChannelMessagesPreservingPrimaryOrder(
-      _orderedChannelMessages(primary),
-      _orderedChannelMessages(secondary),
+      primary,
+      secondary,
     );
   }
 
@@ -8246,10 +8246,17 @@ class MeshCoreConnector extends ChangeNotifier {
       messages.add(processedMessage);
     }
 
-    messages.sort(_compareChannelMessages);
+    final orderMessages = _isSyncingQueuedMessages;
+    if (orderMessages) {
+      messages.sort(_compareChannelMessages);
+    }
 
     // Save to persistent storage
-    _channelMessageStore.saveChannelMessages(channelIndex, messages);
+    _channelMessageStore.saveChannelMessages(
+      channelIndex,
+      messages,
+      orderMessages: orderMessages,
+    );
     return isNew;
   }
 

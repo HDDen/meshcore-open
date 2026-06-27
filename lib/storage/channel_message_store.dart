@@ -22,8 +22,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   /// Save messages for a specific channel
   Future<void> saveChannelMessages(
     int channelIndex,
-    List<ChannelMessage> messages,
-  ) async {
+    List<ChannelMessage> messages, {
+    bool orderMessages = true,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot save channel messages.',
@@ -39,7 +40,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       return;
     }
 
-    final orderedMessages = _orderedMessages(messages);
+    final orderedMessages = orderMessages
+        ? _orderedMessages(messages)
+        : messages;
     final jsonList = orderedMessages.map((msg) => _messageToJson(msg)).toList();
     final jsonString = jsonEncode(jsonList);
 
