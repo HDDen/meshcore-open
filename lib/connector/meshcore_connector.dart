@@ -8048,6 +8048,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   bool _isChannelRepeat(ChannelMessage existing, ChannelMessage incoming) {
     if (existing.text != incoming.text) return false;
+    if (existing.isOutgoing && incoming.isOutgoing) return false; // manual resend workaround
 
     // Self-echo: an outgoing message coming back via a repeater. The send is
     // delayed by _waitForRadioQuiet (often 10s+) and propagation can add more,
