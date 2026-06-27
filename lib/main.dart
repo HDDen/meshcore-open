@@ -80,6 +80,20 @@ void main() async {
   // Initialize notification service
   final notificationService = NotificationService();
   await notificationService.initialize();
+  if (PlatformInfo.isAndroid &&
+      appSettingsService.settings.notificationsEnabled &&
+      (appSettingsService.settings.notifyOnNewMessage ||
+          appSettingsService.settings.notifyOnNewChannelMessage)) {
+    try {
+      final notificationsGranted = await notificationService
+          .areNotificationsEnabled();
+      if (!notificationsGranted) {
+        await notificationService.openAppNotificationSettings();
+      }
+    } catch (error) {
+      debugPrint('Failed to open notification settings: $error');
+    }
+  }
   await backgroundService.initialize();
   backgroundService.setLanguageOverrideProvider(
     () => appSettingsService.settings.languageOverride,

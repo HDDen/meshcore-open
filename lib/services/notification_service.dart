@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
@@ -15,6 +16,10 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  static const MethodChannel _settingsChannel = MethodChannel(
+    'mco_advanced/notification_settings',
+  );
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -177,6 +182,28 @@ class NotificationService {
 
     // iOS/macOS request permission during initialize(); desktop has no gate.
     return _canNotify = true;
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    if (!await _ensureInitialized()) return false;
+    if (kIsWeb) return false;
+
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      _canNotify = enabled ?? false;
+      return _canNotify!;
+    }
+
+    return true;
+  }
+
+  Future<void> openAppNotificationSettings() async {
+    if (!PlatformInfo.isAndroid) return;
+    await _settingsChannel.invokeMethod<void>('openNotificationSettings');
   }
 
   Future<bool> requestPermissions() async {

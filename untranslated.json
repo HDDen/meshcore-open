@@ -120,7 +120,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "de": [
@@ -231,7 +232,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "es": [
@@ -355,7 +357,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "fr": [
@@ -479,7 +482,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "hu": [
@@ -603,7 +607,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "it": [
@@ -807,7 +812,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "ja": [
@@ -931,7 +937,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "ko": [
@@ -1055,7 +1062,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "nl": [
@@ -1259,7 +1267,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "pl": [
@@ -1383,7 +1392,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "pt": [
@@ -1587,7 +1597,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "sk": [
@@ -1711,7 +1722,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "sl": [
@@ -1835,7 +1847,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "sv": [
@@ -2039,7 +2052,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "uk": [
@@ -2163,7 +2177,8 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ],
 
   "zh": [
@@ -2287,6 +2302,7 @@
     "common_reset",
     "connection_autoconnect",
     "settings_modSettingsNoRetraInfo",
-    "settings_modSettingsNoRetraHeading"
+    "settings_modSettingsNoRetraHeading",
+    "settings_modSettingsNoRetraDscr"
   ]
 }

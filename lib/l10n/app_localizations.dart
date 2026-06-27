@@ -9315,6 +9315,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Display messages as unsent if no retranslations heard within seconds:'**
   String get settings_modSettingsNoRetraHeading;
+
+  /// No description provided for @settings_modSettingsNoRetraDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!'**
+  String get settings_modSettingsNoRetraDscr;
 }
 
 class _AppLocalizationsDelegate
