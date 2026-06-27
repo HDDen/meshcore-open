@@ -375,6 +375,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, int?> _channelWidgetColor = {};
   final Map<int, int?> _channelWidgetTextColor = {};
   final Map<int, Region> _channelRegions = {};
+  String? _defaultRegionScope;
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactMcmpEnabled = {};
@@ -1133,6 +1134,31 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelRegions[channelIndex] ?? '';
   }
 
+  Region _outgoingChannelRegion(int channelIndex) {
+    final channelRegion = getChannelRegion(channelIndex).trim();
+    if (channelRegion.isNotEmpty) return channelRegion;
+    return _defaultRegionScope?.trim() ?? '';
+  }
+
+  void _setDefaultRegionScopeCache(String? region) {
+    final normalized = region?.trim();
+    _defaultRegionScope = normalized == null || normalized.isEmpty
+        ? null
+        : normalized;
+  }
+
+  Future<void> _refreshDefaultRegionScope() async {
+    try {
+      await getDefaultRegionScope();
+    } catch (error) {
+      _setDefaultRegionScopeCache(null);
+      _appDebugLogService?.warn(
+        'Failed to refresh default region scope: $error',
+        tag: 'Regions',
+      );
+    }
+  }
+
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
     _ensureContactSmazSettingLoaded(contactKeyHex);
   }
@@ -1533,7 +1559,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
     try {
       await sendFrame(buildGetDefaultFloodScopeFrame());
-      return await completer.future;
+      final region = await completer.future;
+      _setDefaultRegionScopeCache(region);
+      return region;
     } finally {
       timeout.cancel();
       await subscription.cancel();
@@ -1545,6 +1573,7 @@ class MeshCoreConnector extends ChangeNotifier {
       buildSetDefaultFloodScopeFrame(region),
       waitForGenericAck: true,
     );
+    _setDefaultRegionScopeCache(region);
   }
 
   Future<void> _loadChannelOrder({String? publicKeyHex}) async {
@@ -2553,6 +2582,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
       _appDebugLogService?.info('connectUsb: syncing time…', tag: 'USB');
       await syncTime();
+      unawaited(_refreshDefaultRegionScope());
       _appDebugLogService?.info('connectUsb: complete', tag: 'USB');
     } catch (error) {
       _appDebugLogService?.error('USB connection error: $error', tag: 'USB');
@@ -2658,6 +2688,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
 
       await syncTime();
+      unawaited(_refreshDefaultRegionScope());
     } catch (error) {
       _appDebugLogService?.error('TCP connection error: $error', tag: 'TCP');
       final tcpConnectCancelledBeforeHandshake =
@@ -3355,6 +3386,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     await syncTime();
+    unawaited(_refreshDefaultRegionScope());
     _maybeStartInitialChannelSync();
   }
 
@@ -3363,6 +3395,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfName = null;
     _selfLatitude = null;
     _selfLongitude = null;
+    _setDefaultRegionScopeCache(null);
     _awaitingSelfInfo = false;
     _webInitialHandshakeRequestSent = false;
     _selfInfoRetryTimer?.cancel();
@@ -3540,6 +3573,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfName = null;
     _selfLatitude = null;
     _selfLongitude = null;
+    _setDefaultRegionScopeCache(null);
     _clientRepeat = null;
     _rememberedNonRepeatRadioState = null;
     _firmwareVerCode = null;
@@ -4420,7 +4454,9 @@ class MeshCoreConnector extends ChangeNotifier {
           : null,
       senderName: _selfName ?? 'Me',
     );
-    final packetRegion = _displayPacketRegion(getChannelRegion(channel.index));
+    final packetRegion = _displayPacketRegion(
+      _outgoingChannelRegion(channel.index),
+    );
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
@@ -4656,7 +4692,9 @@ class MeshCoreConnector extends ChangeNotifier {
           : null,
       senderName: _selfName ?? 'Me',
     );
-    final packetRegion = _displayPacketRegion(getChannelRegion(channel.index));
+    final packetRegion = _displayPacketRegion(
+      _outgoingChannelRegion(channel.index),
+    );
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
