@@ -1867,6 +1867,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return switch (candidate.container) {
       'regions' => 'Regions x${candidate.regionCount}',
       'regions-beam' => 'Regions beam x${candidate.regionCount}',
+      'regions-extended' => 'Regions extended x${candidate.regionCount}',
+      'regions-beam-extended' =>
+        'Regions beam extended x${candidate.regionCount}',
       'regions-shared-fixed' =>
         'Regions shared palette x${candidate.regionCount}',
       'regions-beam-shared-fixed' =>
