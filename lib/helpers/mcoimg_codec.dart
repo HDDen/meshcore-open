@@ -1,4 +1,4 @@
-import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -197,6 +197,20 @@ class MCOImageEncodeDiagnostics {
   });
 }
 
+class _MCOImageCandidateDebugEntry {
+  final String label;
+  final Duration elapsed;
+  final EncodedMCOImage candidate;
+  final bool wasBest;
+
+  const _MCOImageCandidateDebugEntry({
+    required this.label,
+    required this.elapsed,
+    required this.candidate,
+    required this.wasBest,
+  });
+}
+
 class MCOImageCodecException implements Exception {
   final String message;
 
@@ -219,6 +233,9 @@ class MCOImageTooLargeException extends MCOImageCodecException {
 }
 
 class MCOImageCodec {
+  final List<_MCOImageCandidateDebugEntry> _candidateDebugEntries =
+      <_MCOImageCandidateDebugEntry>[];
+
   static const String prefix = 'im:';
   static const int _encodeVersion = 1;
   static const int _v2EncodeVersion = 2;
@@ -266,17 +283,18 @@ class MCOImageCodec {
 
   // Extreme region search used to scale its width/depth/neighbour count from
   // maxRegions (32 -> 64/64/128), which made the number of evaluated layouts
-  // explode. Keep the search bounded and predictable instead.
-  static const int _maxExtremeRegionPixels = 1024;
-  static const int _maxExtremeRegionComponents = 16;
-  static const int _maxExtremeRegionBackgroundRank = 3;
-  static const int _maxExtremeRegionSearchRegions = 16;
-  static const int _extremeRegionBeamWidth = 8;
-  static const int _extremeRegionBeamDepth = 6;
-  static const int _extremeRegionNeighbors = 24;
-  static const int _extremeRegionResultLimit = 6;
-  static const int _extremeRegionEvaluationBudget = 768;
-  static const int _extremeRegionDeepFixedVariantLimit = 2;
+  // explode. These balanced limits search noticeably deeper than High while
+  // keeping the amount of work bounded and predictable.
+  static const int _maxExtremeRegionPixels = 1536;
+  static const int _maxExtremeRegionComponents = 20;
+  static const int _maxExtremeRegionBackgroundRank = 5;
+  static const int _maxExtremeRegionSearchRegions = 20;
+  static const int _extremeRegionBeamWidth = 10;
+  static const int _extremeRegionBeamDepth = 8;
+  static const int _extremeRegionNeighbors = 32;
+  static const int _extremeRegionResultLimit = 10;
+  static const int _extremeRegionEvaluationBudget = 1536;
+  static const int _extremeRegionDeepFixedVariantLimit = 4;
 
   // Factorial palette search is useful for small local palettes, but grows
   // from 720 permutations at six colors to 5040 at seven.
@@ -368,6 +386,7 @@ class MCOImageCodec {
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
     int compressionLevel = defaultCompressionLevel,
   }) {
+    _candidateDebugEntries.clear();
     _validateImage(image);
     final effectiveCompressionLevel = _normalizeCompressionLevel(
       compressionLevel,
@@ -407,13 +426,30 @@ class MCOImageCodec {
           'Legacy v1 encoding supports fixed palettes only',
         );
       }
-      return _debugEncodeLegacyV1(
+      final timer = Stopwatch()..start();
+      final diagnostics = _debugEncodeLegacyV1(
         image,
         backgroundColor: backgroundColor,
         maxRegions: maxRegions,
         outputTarget: outputTarget,
         compressionLevel: effectiveCompressionLevel,
       );
+      timer.stop();
+      _flushCandidateDebugLog(effectiveCompressionLevel);
+      debugPrint(
+        '[MCOimg][${_compressionLevelLabel(effectiveCompressionLevel)}] '
+        '${diagnostics.candidates.length}/${diagnostics.candidates.length} '
+        '(100.0%); '
+        'bytes=${diagnostics.result.byteLength}; '
+        'chars=${diagnostics.result.charLength}; '
+        '${timer.elapsed.inMilliseconds} ms; '
+        'COMPLETE; '
+        'version=v1; '
+        'size=${image.width}x${image.height}; '
+        'container=${diagnostics.result.container}; '
+        'mode=${diagnostics.result.mode.name}; '
+        'scan=${diagnostics.result.scan.name};');
+      return diagnostics;
     }
 
     final useHighCompressionExtras =
@@ -421,7 +457,8 @@ class MCOImageCodec {
     final effectiveMaxRegions = useHighCompressionExtras
         ? (maxRegions == _defaultMaxRegions ? _maxV2Regions : maxRegions)
         : math.min(maxRegions, _defaultMaxRegions);
-    return _debugEncodeV2(
+    final timer = Stopwatch()..start();
+    final diagnostics = _debugEncodeV2(
       image,
       backgroundColor: backgroundColor,
       backgroundCandidates: backgroundCandidates,
@@ -431,6 +468,22 @@ class MCOImageCodec {
       outputTarget: outputTarget,
       compressionLevel: effectiveCompressionLevel,
     );
+    timer.stop();
+    _flushCandidateDebugLog(effectiveCompressionLevel);
+    debugPrint(
+      '[MCOimg][${_compressionLevelLabel(effectiveCompressionLevel)}] '
+      '${diagnostics.candidates.length}/${diagnostics.candidates.length} '
+      '(100.0%); '
+      'bytes=${diagnostics.result.byteLength}; '
+      'chars=${diagnostics.result.charLength}; '
+      '${timer.elapsed.inMilliseconds} ms; '
+      'COMPLETE; '
+      'version=v2; '
+      'size=${image.width}x${image.height}; '
+      'container=${diagnostics.result.container}; '
+      'mode=${diagnostics.result.mode.name}; '
+      'scan=${diagnostics.result.scan.name};');
+    return diagnostics;
   }
 
   static int _normalizeCompressionLevel(int compressionLevel) {
@@ -439,6 +492,63 @@ class MCOImageCodec {
       compressionLevelExtreme => compressionLevelExtreme,
       _ => compressionLevelHigh,
     };
+  }
+
+  static String _compressionLevelLabel(int compressionLevel) {
+    return switch (_normalizeCompressionLevel(compressionLevel)) {
+      compressionLevelNormal => 'Normal',
+      compressionLevelExtreme => 'Extreme',
+      _ => 'High',
+    };
+  }
+
+  static String _referenceEncodingLabel(
+    DynamicPaletteReferenceEncoding? referenceEncoding,
+  ) {
+    return referenceEncoding?.name ?? 'none';
+  }
+
+  void _logCandidateDebug({
+    required int compressionLevel,
+    required String label,
+    required Duration elapsed,
+    required EncodedMCOImage candidate,
+    required MCOImageOutputTarget outputTarget,
+    required EncodedMCOImage? currentBest,
+  }) {
+    _candidateDebugEntries.add(
+      _MCOImageCandidateDebugEntry(
+        label: label,
+        elapsed: elapsed,
+        candidate: candidate,
+        wasBest: _isBetterCandidate(candidate, currentBest, outputTarget),
+      ),
+    );
+  }
+
+  void _flushCandidateDebugLog(int compressionLevel) {
+    final total = _candidateDebugEntries.length;
+    for (var index = 0; index < total; index++) {
+      final entry = _candidateDebugEntries[index];
+      final candidate = entry.candidate;
+      final completed = index + 1;
+      final percentage = total == 0 ? 100.0 : completed * 100 / total;
+      debugPrint(
+        '[MCOimg][${_compressionLevelLabel(compressionLevel)}] '
+        '$completed/$total (${percentage.toStringAsFixed(1)}%); '
+        'bytes=${candidate.byteLength}; '
+        'chars=${candidate.charLength}; '
+        '${entry.elapsed.inMilliseconds} ms; '
+        '${entry.wasBest ? 'BEST' : 'not-best'}; '
+        '${entry.label}; '
+        'container=${candidate.container}; '
+        'mode=${candidate.mode.name}; '
+        'scan=${candidate.scan.name}; '
+        'bg=${candidate.backgroundColor ?? -1}; '
+        'bgRank=${candidate.backgroundRank}; '
+        'bounds=${candidate.boundsPresent};');
+    }
+    _candidateDebugEntries.clear();
   }
 
   static List<MCOImageBackgroundCandidate> backgroundCandidatesFor(
@@ -519,6 +629,7 @@ class MCOImageCodec {
           scan,
         );
         for (final mode in _blockModes) {
+          final candidateTimer = Stopwatch()..start();
           final payload = _buildPayload(
             image,
             linear,
@@ -535,6 +646,15 @@ class MCOImageCodec {
             backgroundColor: bg,
             backgroundRank: background.rank,
           );
+          candidateTimer.stop();
+          _logCandidateDebug(
+            compressionLevel: compressionLevel,
+            label: 'v1 block scan=${scan.name} mode=${mode.name}',
+            elapsed: candidateTimer.elapsed,
+            candidate: candidate,
+            outputTarget: outputTarget,
+            currentBest: best,
+          );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
@@ -550,6 +670,7 @@ class MCOImageCodec {
             scan,
           );
           for (final mode in _blockModes) {
+            final candidateTimer = Stopwatch()..start();
             final payload = _buildPayload(
               image,
               boundedLinear,
@@ -568,6 +689,15 @@ class MCOImageCodec {
               backgroundColor: bg,
               backgroundRank: background.rank,
             );
+            candidateTimer.stop();
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label: 'v1 block-bounds scan=${scan.name} mode=${mode.name}',
+              elapsed: candidateTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(candidate);
             if (_isBetterCandidate(candidate, best, outputTarget)) {
               best = candidate;
@@ -576,11 +706,13 @@ class MCOImageCodec {
         }
       }
 
+      final regionsTimer = Stopwatch()..start();
       final regionsPayload = _tryBuildRegionsPayload(
         image,
         bg,
         effectiveMaxRegions,
       );
+      regionsTimer.stop();
       if (regionsPayload != null) {
         final candidate = _candidateFromPayload(
           regionsPayload.payload,
@@ -589,6 +721,14 @@ class MCOImageCodec {
           backgroundColor: bg,
           backgroundRank: background.rank,
           regionCount: regionsPayload.regionCount,
+        );
+        _logCandidateDebug(
+          compressionLevel: compressionLevel,
+          label: 'v1 regions',
+          elapsed: regionsTimer.elapsed,
+          candidate: candidate,
+          outputTarget: outputTarget,
+          currentBest: best,
         );
         candidates.add(candidate);
         if (_isBetterCandidate(candidate, best, outputTarget)) {
@@ -650,11 +790,13 @@ class MCOImageCodec {
       final bounds = _findBounds(image.pixels, image.width, image.height, bg);
       if (includeNonScanCandidates) {
         for (final referenceEncoding in referenceEncodings) {
+        final solidBgTimer = Stopwatch()..start();
         final solidBackgroundPayload = _tryBuildV2SolidBackgroundPayload(
           image,
           bg,
           referenceEncoding,
         );
+        solidBgTimer.stop();
         if (solidBackgroundPayload != null) {
           final candidate = _candidateFromPayload(
             solidBackgroundPayload.payload,
@@ -672,11 +814,20 @@ class MCOImageCodec {
                 : 'fixed',
             container: 'solid-bg',
           );
+          _logCandidateDebug(
+            compressionLevel: compressionLevel,
+            label: 'v2 solid-bg ref=${_referenceEncodingLabel(referenceEncoding)}',
+            elapsed: solidBgTimer.elapsed,
+            candidate: candidate,
+            outputTarget: outputTarget,
+            currentBest: best,
+          );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
           }
         }
+        final regionsTimer = Stopwatch()..start();
         final regionsPayloads = _tryBuildV2RegionsPayloads(
           image,
           bg,
@@ -687,6 +838,7 @@ class MCOImageCodec {
               useExtremeCompressionExtras &&
               background.rank <= _maxExtremeRegionBackgroundRank,
         );
+        regionsTimer.stop();
         for (final regionsPayload in regionsPayloads) {
           final candidate = _candidateFromPayload(
             regionsPayload.payload,
@@ -704,17 +856,30 @@ class MCOImageCodec {
             paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
             container: regionsPayload.diagnosticContainer ?? 'regions',
           );
+          _logCandidateDebug(
+            compressionLevel: compressionLevel,
+            label:
+                "v2 regions ref=${_referenceEncodingLabel(referenceEncoding)} "
+                "variant=${regionsPayload.diagnosticContainer ?? 'regions'} "
+                "regions=${regionsPayload.regionCount}",
+            elapsed: regionsTimer.elapsed,
+            candidate: candidate,
+            outputTarget: outputTarget,
+            currentBest: best,
+          );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
           }
         }
 
+        final solidRectsTimer = Stopwatch()..start();
         final solidRectsPayload = _tryBuildV2SolidRectsPayload(
           image,
           bg,
           referenceEncoding,
         );
+        solidRectsTimer.stop();
         if (solidRectsPayload != null) {
           final candidate = _candidateFromPayload(
             solidRectsPayload.payload,
@@ -731,12 +896,22 @@ class MCOImageCodec {
             paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
             container: 'solid-rects',
           );
+          _logCandidateDebug(
+            compressionLevel: compressionLevel,
+            label:
+                'v2 solid-rects ref=${_referenceEncodingLabel(referenceEncoding)}',
+            elapsed: solidRectsTimer.elapsed,
+            candidate: candidate,
+            outputTarget: outputTarget,
+            currentBest: best,
+          );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
           }
         }
 
+        final quadtreeTimer = Stopwatch()..start();
         final quadtreePayload = _tryBuildV2QuadtreePayload(
           image,
           image.pixels,
@@ -745,6 +920,7 @@ class MCOImageCodec {
           bg,
           referenceEncoding,
         );
+        quadtreeTimer.stop();
         if (quadtreePayload != null) {
           final candidate = _candidateFromPayload(
             quadtreePayload.payload,
@@ -761,6 +937,14 @@ class MCOImageCodec {
             paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
             container: 'quadtree',
           );
+          _logCandidateDebug(
+            compressionLevel: compressionLevel,
+            label: 'v2 quadtree ref=${_referenceEncodingLabel(referenceEncoding)}',
+            elapsed: quadtreeTimer.elapsed,
+            candidate: candidate,
+            outputTarget: outputTarget,
+            currentBest: best,
+          );
           candidates.add(candidate);
           if (_isBetterCandidate(candidate, best, outputTarget)) {
             best = candidate;
@@ -769,6 +953,7 @@ class MCOImageCodec {
 
         if (bounds.area < image.width * image.height) {
           final cropped = _cropPixels(image.pixels, image.width, bounds);
+          final boundedQuadtreeTimer = Stopwatch()..start();
           final boundedQuadtreePayload = _tryBuildV2QuadtreePayload(
             image,
             cropped,
@@ -778,6 +963,7 @@ class MCOImageCodec {
             referenceEncoding,
             bounds: bounds,
           );
+          boundedQuadtreeTimer.stop();
           if (boundedQuadtreePayload != null) {
             final candidate = _candidateFromPayload(
               boundedQuadtreePayload.payload,
@@ -797,6 +983,15 @@ class MCOImageCodec {
                   : 'fixed',
               container: 'quadtree-bounds',
             );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 quadtree-bounds ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: boundedQuadtreeTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(candidate);
             if (_isBetterCandidate(candidate, best, outputTarget)) {
               best = candidate;
@@ -814,6 +1009,7 @@ class MCOImageCodec {
         );
         for (final mode in blockModes) {
           for (final referenceEncoding in referenceEncodings) {
+            final blockTimer = Stopwatch()..start();
             final payload = _tryBuildV2Payload(
               image,
               linear,
@@ -824,6 +1020,7 @@ class MCOImageCodec {
               dataHeight: image.height,
               backgroundColor: bg,
             );
+            blockTimer.stop();
             if (payload == null) continue;
             final candidate = _candidateFromPayload(
               payload.payload,
@@ -840,6 +1037,16 @@ class MCOImageCodec {
               paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: 'block',
             );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 block scan=${scan.name} mode=${mode.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: blockTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(candidate);
             if (_isBetterCandidate(candidate, best, outputTarget)) {
               best = candidate;
@@ -848,6 +1055,7 @@ class MCOImageCodec {
         }
 
         for (final referenceEncoding in referenceEncodings) {
+          final compactRleTimer = Stopwatch()..start();
           final payload = _tryBuildV2CompactRlePayload(
             image,
             linear,
@@ -857,6 +1065,7 @@ class MCOImageCodec {
             dataHeight: image.height,
             backgroundColor: bg,
           );
+          compactRleTimer.stop();
           if (payload != null) {
             final candidate = _candidateFromPayload(
               payload.payload,
@@ -875,12 +1084,23 @@ class MCOImageCodec {
                   : 'fixed',
               container: 'compact-rle',
             );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 compact-rle scan=${scan.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: compactRleTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(candidate);
             if (_isBetterCandidate(candidate, best, outputTarget)) {
               best = candidate;
             }
           }
 
+          final sparseTimer = Stopwatch()..start();
           final sparsePayload = _tryBuildV2CompactSparsePayload(
             image,
             linear,
@@ -890,6 +1110,7 @@ class MCOImageCodec {
             dataHeight: image.height,
             backgroundColor: bg,
           );
+          sparseTimer.stop();
           if (sparsePayload != null) {
             final sparseCandidate = _candidateFromPayload(
               sparsePayload.payload,
@@ -908,6 +1129,16 @@ class MCOImageCodec {
                   : 'fixed',
               container: 'compact-sparse',
             );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 compact-sparse scan=${scan.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: sparseTimer.elapsed,
+              candidate: sparseCandidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(sparseCandidate);
             if (_isBetterCandidate(sparseCandidate, best, outputTarget)) {
               best = sparseCandidate;
@@ -918,6 +1149,7 @@ class MCOImageCodec {
             (optimal: false, container: 'lz-pixels'),
             (optimal: true, container: 'lz-pixels-optimal'),
           ]) {
+            final lzTimer = Stopwatch()..start();
             final lzPayload = _tryBuildV2LzPixelsPayload(
               image,
               linear,
@@ -929,6 +1161,7 @@ class MCOImageCodec {
               optimizeParsing: lzVariant.optimal,
               optimalCache: optimalLzCache,
             );
+            lzTimer.stop();
             if (lzPayload != null) {
               final lzCandidate = _candidateFromPayload(
                 lzPayload.payload,
@@ -947,6 +1180,16 @@ class MCOImageCodec {
                     : 'fixed',
                 container: lzVariant.container,
               );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 ${lzVariant.container} scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: lzTimer.elapsed,
+                candidate: lzCandidate,
+                outputTarget: outputTarget,
+                currentBest: best,
+              );
               candidates.add(lzCandidate);
               if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
                 best = lzCandidate;
@@ -954,6 +1197,7 @@ class MCOImageCodec {
             }
           }
 
+          final bitplanesTimer = Stopwatch()..start();
           final bitplanesPayload = _tryBuildV2BitplanesPayload(
             image,
             linear,
@@ -963,6 +1207,7 @@ class MCOImageCodec {
             dataHeight: image.height,
             backgroundColor: bg,
           );
+          bitplanesTimer.stop();
           if (bitplanesPayload != null) {
             final bitplanesCandidate = _candidateFromPayload(
               bitplanesPayload.payload,
@@ -980,6 +1225,16 @@ class MCOImageCodec {
                   ? 'dynamic'
                   : 'fixed',
               container: 'bitplanes',
+            );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 bitplanes scan=${scan.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: bitplanesTimer.elapsed,
+              candidate: bitplanesCandidate,
+              outputTarget: outputTarget,
+              currentBest: best,
             );
             candidates.add(bitplanesCandidate);
             if (_isBetterCandidate(bitplanesCandidate, best, outputTarget)) {
@@ -1061,6 +1316,7 @@ class MCOImageCodec {
                 container: 'direct-dynamic-bitplanes',
               ),
           ]) {
+            final adaptiveTimer = Stopwatch()..start();
             final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
               image,
               linear,
@@ -1074,6 +1330,7 @@ class MCOImageCodec {
               paletteOrder: adaptiveVariant.paletteOrder,
               useExtremePaletteSearch: useExtremeCompressionExtras,
             );
+            adaptiveTimer.stop();
             if (adaptivePayload == null) continue;
             final adaptiveCandidate = _candidateFromPayload(
               adaptivePayload.payload,
@@ -1091,6 +1348,17 @@ class MCOImageCodec {
                   ? 'dynamic'
                   : 'fixed',
               container: adaptiveVariant.container,
+            );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 ${adaptiveVariant.container} scan=${scan.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)} '
+                  'order=${adaptiveVariant.paletteOrder.name}',
+              elapsed: adaptiveTimer.elapsed,
+              candidate: adaptiveCandidate,
+              outputTarget: outputTarget,
+              currentBest: best,
             );
             candidates.add(adaptiveCandidate);
             if (_isBetterCandidate(adaptiveCandidate, best, outputTarget)) {
@@ -1134,6 +1402,7 @@ class MCOImageCodec {
                 container: 'grayscale-row-delta',
               ),
           ]) {
+            final rowDeltaTimer = Stopwatch()..start();
             final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
               image,
               linear,
@@ -1145,6 +1414,7 @@ class MCOImageCodec {
               directGrayscale: rowDeltaVariant.directGrayscale,
               paletteOrder: rowDeltaVariant.paletteOrder,
             );
+            rowDeltaTimer.stop();
             if (rowDeltaPayload == null) continue;
             final rowDeltaCandidate = _candidateFromPayload(
               rowDeltaPayload.payload,
@@ -1163,6 +1433,17 @@ class MCOImageCodec {
                   : 'fixed',
               container: rowDeltaVariant.container,
             );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 ${rowDeltaVariant.container} scan=${scan.name} '
+                  'ref=${_referenceEncodingLabel(referenceEncoding)} '
+                  'order=${rowDeltaVariant.paletteOrder.name}',
+              elapsed: rowDeltaTimer.elapsed,
+              candidate: rowDeltaCandidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
             candidates.add(rowDeltaCandidate);
             if (_isBetterCandidate(rowDeltaCandidate, best, outputTarget)) {
               best = rowDeltaCandidate;
@@ -1180,6 +1461,7 @@ class MCOImageCodec {
           );
           for (final mode in blockModes) {
             for (final referenceEncoding in referenceEncodings) {
+              final boundedBlockTimer = Stopwatch()..start();
               final payload = _tryBuildV2Payload(
                 image,
                 boundedLinear,
@@ -1191,6 +1473,7 @@ class MCOImageCodec {
                 backgroundColor: bg,
                 bounds: bounds,
               );
+              boundedBlockTimer.stop();
               if (payload == null) continue;
               final candidate = _candidateFromPayload(
                 payload.payload,
@@ -1209,11 +1492,22 @@ class MCOImageCodec {
                     : 'fixed',
                 container: 'block',
               );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 block-bounds scan=${scan.name} mode=${mode.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: boundedBlockTimer.elapsed,
+                candidate: candidate,
+                outputTarget: outputTarget,
+                currentBest: best,
+              );
               candidates.add(candidate);
               if (_isBetterCandidate(candidate, best, outputTarget)) {
                 best = candidate;
               }
 
+              final compactBoundsTimer = Stopwatch()..start();
               final compactPayload = _tryBuildV2CompactBoundsPayload(
                 image,
                 boundedLinear,
@@ -1223,6 +1517,7 @@ class MCOImageCodec {
                 bounds: bounds,
                 backgroundColor: bg,
               );
+              compactBoundsTimer.stop();
               if (compactPayload != null) {
                 final compactCandidate = _candidateFromPayload(
                   compactPayload.payload,
@@ -1242,6 +1537,16 @@ class MCOImageCodec {
                       : 'fixed',
                   container: 'compact-bounds',
                 );
+                _logCandidateDebug(
+                  compressionLevel: compressionLevel,
+                  label:
+                      'v2 compact-bounds scan=${scan.name} mode=${mode.name} '
+                      'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                  elapsed: compactBoundsTimer.elapsed,
+                  candidate: compactCandidate,
+                  outputTarget: outputTarget,
+                  currentBest: best,
+                );
                 candidates.add(compactCandidate);
                 if (_isBetterCandidate(
                   compactCandidate,
@@ -1255,6 +1560,7 @@ class MCOImageCodec {
           }
 
           for (final referenceEncoding in referenceEncodings) {
+            final boundedRleTimer = Stopwatch()..start();
             final payload = _tryBuildV2CompactRlePayload(
               image,
               boundedLinear,
@@ -1265,6 +1571,7 @@ class MCOImageCodec {
               backgroundColor: bg,
               bounds: bounds,
             );
+            boundedRleTimer.stop();
             if (payload != null) {
               final candidate = _candidateFromPayload(
                 payload.payload,
@@ -1284,12 +1591,23 @@ class MCOImageCodec {
                     : 'fixed',
                 container: 'compact-rle-bounds',
               );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 compact-rle-bounds scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: boundedRleTimer.elapsed,
+                candidate: candidate,
+                outputTarget: outputTarget,
+                currentBest: best,
+              );
               candidates.add(candidate);
               if (_isBetterCandidate(candidate, best, outputTarget)) {
                 best = candidate;
               }
             }
 
+            final boundedSparseTimer = Stopwatch()..start();
             final sparsePayload = _tryBuildV2CompactSparsePayload(
               image,
               boundedLinear,
@@ -1300,6 +1618,7 @@ class MCOImageCodec {
               backgroundColor: bg,
               bounds: bounds,
             );
+            boundedSparseTimer.stop();
             if (sparsePayload != null) {
               final sparseCandidate = _candidateFromPayload(
                 sparsePayload.payload,
@@ -1319,6 +1638,16 @@ class MCOImageCodec {
                     : 'fixed',
                 container: 'compact-sparse-bounds',
               );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 compact-sparse-bounds scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: boundedSparseTimer.elapsed,
+                candidate: sparseCandidate,
+                outputTarget: outputTarget,
+                currentBest: best,
+              );
               candidates.add(sparseCandidate);
               if (_isBetterCandidate(sparseCandidate, best, outputTarget)) {
                 best = sparseCandidate;
@@ -1329,6 +1658,7 @@ class MCOImageCodec {
               (optimal: false, container: 'lz-pixels-bounds'),
               (optimal: true, container: 'lz-pixels-optimal-bounds'),
             ]) {
+              final boundedLzTimer = Stopwatch()..start();
               final lzPayload = _tryBuildV2LzPixelsPayload(
                 image,
                 boundedLinear,
@@ -1341,6 +1671,7 @@ class MCOImageCodec {
                 optimizeParsing: lzVariant.optimal,
                 optimalCache: optimalLzCache,
               );
+              boundedLzTimer.stop();
               if (lzPayload != null) {
                 final lzCandidate = _candidateFromPayload(
                   lzPayload.payload,
@@ -1360,6 +1691,16 @@ class MCOImageCodec {
                       : 'fixed',
                   container: lzVariant.container,
                 );
+                _logCandidateDebug(
+                  compressionLevel: compressionLevel,
+                  label:
+                      'v2 ${lzVariant.container} scan=${scan.name} '
+                      'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                  elapsed: boundedLzTimer.elapsed,
+                  candidate: lzCandidate,
+                  outputTarget: outputTarget,
+                  currentBest: best,
+                );
                 candidates.add(lzCandidate);
                 if (_isBetterCandidate(lzCandidate, best, outputTarget)) {
                   best = lzCandidate;
@@ -1367,6 +1708,7 @@ class MCOImageCodec {
               }
             }
 
+            final boundedBitplanesTimer = Stopwatch()..start();
             final bitplanesPayload = _tryBuildV2BitplanesPayload(
               image,
               boundedLinear,
@@ -1377,6 +1719,7 @@ class MCOImageCodec {
               backgroundColor: bg,
               bounds: bounds,
             );
+            boundedBitplanesTimer.stop();
             if (bitplanesPayload != null) {
               final bitplanesCandidate = _candidateFromPayload(
                 bitplanesPayload.payload,
@@ -1395,6 +1738,16 @@ class MCOImageCodec {
                     ? 'dynamic'
                     : 'fixed',
                 container: 'bitplanes-bounds',
+              );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 bitplanes-bounds scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: boundedBitplanesTimer.elapsed,
+                candidate: bitplanesCandidate,
+                outputTarget: outputTarget,
+                currentBest: best,
               );
               candidates.add(bitplanesCandidate);
               if (_isBetterCandidate(
@@ -1480,6 +1833,7 @@ class MCOImageCodec {
                   container: 'direct-dynamic-bitplanes-bounds',
                 ),
             ]) {
+              final boundedAdaptiveTimer = Stopwatch()..start();
               final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
                 image,
                 boundedLinear,
@@ -1494,6 +1848,7 @@ class MCOImageCodec {
                 paletteOrder: adaptiveVariant.paletteOrder,
                 useExtremePaletteSearch: useExtremeCompressionExtras,
               );
+              boundedAdaptiveTimer.stop();
               if (adaptivePayload == null) continue;
               final adaptiveCandidate = _candidateFromPayload(
                 adaptivePayload.payload,
@@ -1512,6 +1867,17 @@ class MCOImageCodec {
                     ? 'dynamic'
                     : 'fixed',
                 container: adaptiveVariant.container,
+              );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 ${adaptiveVariant.container} scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)} '
+                    'order=${adaptiveVariant.paletteOrder.name}',
+                elapsed: boundedAdaptiveTimer.elapsed,
+                candidate: adaptiveCandidate,
+                outputTarget: outputTarget,
+                currentBest: best,
               );
               candidates.add(adaptiveCandidate);
               if (_isBetterCandidate(adaptiveCandidate, best, outputTarget)) {
@@ -1556,6 +1922,7 @@ class MCOImageCodec {
                   container: 'grayscale-row-delta-bounds',
                 ),
             ]) {
+              final boundedRowDeltaTimer = Stopwatch()..start();
               final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
                 image,
                 boundedLinear,
@@ -1568,6 +1935,7 @@ class MCOImageCodec {
                 directGrayscale: rowDeltaVariant.directGrayscale,
                 paletteOrder: rowDeltaVariant.paletteOrder,
               );
+              boundedRowDeltaTimer.stop();
               if (rowDeltaPayload == null) continue;
               final rowDeltaCandidate = _candidateFromPayload(
                 rowDeltaPayload.payload,
@@ -1586,6 +1954,17 @@ class MCOImageCodec {
                     ? 'dynamic'
                     : 'fixed',
                 container: rowDeltaVariant.container,
+              );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 ${rowDeltaVariant.container} scan=${scan.name} '
+                    'ref=${_referenceEncodingLabel(referenceEncoding)} '
+                    'order=${rowDeltaVariant.paletteOrder.name}',
+                elapsed: boundedRowDeltaTimer.elapsed,
+                candidate: rowDeltaCandidate,
+                outputTarget: outputTarget,
+                currentBest: best,
               );
               candidates.add(rowDeltaCandidate);
               if (_isBetterCandidate(
@@ -3010,13 +3389,13 @@ class MCOImageCodec {
         : maxRegions;
 
     if (useExtremeSearch && !useBoundedExtremeSearch) {
-      developer.log(
-        '[MCOimg][Extreme][Regions] deep search skipped: '
-        'bg=$backgroundColor, pixels=${image.pixels.length}/'
-        '$_maxExtremeRegionPixels, components=${connectedRegions.length}/'
-        '$_maxExtremeRegionComponents',
-        name: 'MCOimg',
-      );
+      debugPrint(
+        '[MCOimg][Extreme][Regions] SKIP; '
+        'deep search; '
+        'bg=$backgroundColor; '
+        'pixels=${image.pixels.length}/$_maxExtremeRegionPixels; '
+        'components=${connectedRegions.length}/'
+        '$_maxExtremeRegionComponents;');
     }
 
     final splitRegions = _splitRegionsByEmptyLines(
@@ -3194,14 +3573,15 @@ class MCOImageCodec {
     final improved = <_RegionBeamState>[];
 
     if (useExtremeSearch) {
-      developer.log(
-        '[MCOimg][Extreme][Regions] beam start: bg=$backgroundColor, '
-        'initial=${initialStates.length}, maxRegions=$maxRegions, '
-        'width=$beamWidth, depth=$beamDepth, '
-        'neighbors=$_extremeRegionNeighbors, '
-        'budget=$evaluationBudget',
-        name: 'MCOimg',
-      );
+      debugPrint(
+        '[MCOimg][Extreme][Regions] START; '
+        'budget=$evaluationBudget; '
+        'bg=$backgroundColor; '
+        'initial=${initialStates.length}; '
+        'maxRegions=$maxRegions; '
+        'width=$beamWidth; '
+        'depth=$beamDepth; '
+        'neighbors=$_extremeRegionNeighbors;');
     }
 
     for (var depth = 0; depth < beamDepth; depth++) {
@@ -3246,13 +3626,14 @@ class MCOImageCodec {
       if (useExtremeSearch) {
         final percentage =
             (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
-        developer.log(
-          '[MCOimg][Extreme][Regions] beam depth '
-          '$completedDepths/$beamDepth: evaluated=$evaluatedLayouts/'
-          '$evaluationBudget (${percentage.toStringAsFixed(1)}%), '
-          'frontier=${beam.length}, improved=${improved.length}',
-          name: 'MCOimg',
-        );
+        debugPrint(
+          '[MCOimg][Extreme][Regions] '
+          '$completedDepths/$beamDepth '
+          '(${(completedDepths * 100 / beamDepth).toStringAsFixed(1)}%); '
+          'evaluated=$evaluatedLayouts/$evaluationBudget '
+          '(${percentage.toStringAsFixed(1)}% budget); '
+          'frontier=${beam.length}; '
+          'improved=${improved.length};');
       }
       if (budgetExhausted) break;
     }
@@ -3260,13 +3641,16 @@ class MCOImageCodec {
     if (useExtremeSearch) {
       final percentage =
           (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
-      developer.log(
-        '[MCOimg][Extreme][Regions] beam done: bg=$backgroundColor, '
-        'depths=$completedDepths/$beamDepth, evaluated=$evaluatedLayouts/'
-        '$evaluationBudget (${percentage.toStringAsFixed(1)}%), '
-        'improved=${improved.length}, budgetExhausted=$budgetExhausted',
-        name: 'MCOimg',
-      );
+      debugPrint(
+        '[MCOimg][Extreme][Regions] '
+        '$completedDepths/$beamDepth '
+        '(${(completedDepths * 100 / beamDepth).toStringAsFixed(1)}%); '
+        'evaluated=$evaluatedLayouts/$evaluationBudget '
+        '(${percentage.toStringAsFixed(1)}% budget); '
+        'COMPLETE; '
+        'bg=$backgroundColor; '
+        'improved=${improved.length}; '
+        'budgetExhausted=$budgetExhausted;');
     }
 
     improved.sort((left, right) => left.cost.compareTo(right.cost));

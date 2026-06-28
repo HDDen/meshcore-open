@@ -3220,9 +3220,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     var completedSlices = 0;
 
     debugPrint(
-      '[MCOimg][Extreme] start: ${request.width}x${request.height}, '
-      'palette=${request.paletteProfile.name}, '
-      'slices=${slices.length}, workers=$workerCount',
+      '[MCOimg][Extreme] START; '
+      'size=${request.width}x${request.height}; '
+      'palette=${request.paletteProfile.name}; '
+      'slices=${slices.length}; '
+      'workers=$workerCount;',
     );
 
     Future<void> runWorker(int workerIndex) async {
@@ -3238,10 +3240,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             : completedBefore * 100 / slices.length;
 
         debugPrint(
-          '[MCOimg][Extreme][W${workerIndex + 1}] START '
-          '${sliceIndex + 1}/${slices.length} '
-          '(${startPercentage.toStringAsFixed(1)}% complete): '
-          '${slice.label}',
+          '[MCOimg][Extreme][W${workerIndex + 1}] '
+          'START ${sliceIndex + 1}/${slices.length} '
+          '(${startPercentage.toStringAsFixed(1)}% complete); '
+          '${slice.label};',
         );
 
         final task = _startEncodeTask(
@@ -3256,19 +3258,34 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           completedSlices++;
           stopwatch.stop();
           final percentage = completedSlices * 100 / slices.length;
+          final currentBest = MCOImageCodec.selectBestCandidate(
+            results,
+            request.outputTarget,
+          );
+          final isBest = identical(currentBest, result);
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] DONE '
-            '${sliceIndex + 1}/${slices.length}; total '
+            '[MCOimg][Extreme][W${workerIndex + 1}] '
             '$completedSlices/${slices.length} '
-            '(${percentage.toStringAsFixed(1)}%): ${slice.label}; '
+            '(${percentage.toStringAsFixed(1)}%); '
+            'bytes=${result.byteLength}; '
+            'chars=${result.charLength}; '
             '${stopwatch.elapsedMilliseconds} ms; '
-            'best=${result.container}, ${result.byteLength} bytes',
+            '${isBest ? 'BEST' : 'not-best'}; '
+            '${slice.label}; '
+            'container=${result.container}; '
+            'mode=${result.mode.name}; '
+            'scan=${result.scan.name}; '
+            'bg=${result.backgroundColor ?? -1}; '
+            'bgRank=${result.backgroundRank}; '
+            'bounds=${result.boundsPresent};',
           );
         } on CancellableComputeCancelledException {
           stopwatch.stop();
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] CANCELLED '
-            '${sliceIndex + 1}/${slices.length}: ${slice.label}',
+            '[MCOimg][Extreme][W${workerIndex + 1}] '
+            'CANCELLED ${sliceIndex + 1}/${slices.length}; '
+            '${stopwatch.elapsedMilliseconds} ms; '
+            '${slice.label};',
           );
           rethrow;
         } on MCOImageCodecException catch (error) {
@@ -3278,11 +3295,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           stopwatch.stop();
           final percentage = completedSlices * 100 / slices.length;
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] SKIP '
-            '${sliceIndex + 1}/${slices.length}; total '
+            '[MCOimg][Extreme][W${workerIndex + 1}] '
             '$completedSlices/${slices.length} '
-            '(${percentage.toStringAsFixed(1)}%): ${slice.label}; '
-            '${stopwatch.elapsedMilliseconds} ms; $error',
+            '(${percentage.toStringAsFixed(1)}%); '
+            'SKIP; '
+            '${stopwatch.elapsedMilliseconds} ms; '
+            '${slice.label}; '
+            'error=$error;',
           );
         } finally {
           runningTasks.remove(task);
@@ -3300,8 +3319,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         request.outputTarget,
       );
       debugPrint(
-        '[MCOimg][Extreme] complete: ${slices.length}/${slices.length} '
-        '(100.0%), best=${best.container}, ${best.byteLength} bytes',
+        '[MCOimg][Extreme] ${slices.length}/${slices.length} (100.0%); '
+        'bytes=${best.byteLength}; '
+        'chars=${best.charLength}; '
+        'COMPLETE; '
+        'container=${best.container}; '
+        'mode=${best.mode.name}; '
+        'scan=${best.scan.name}; '
+        'bg=${best.backgroundColor ?? -1}; '
+        'bgRank=${best.backgroundRank}; '
+        'bounds=${best.boundsPresent};',
       );
       return best;
     } catch (_) {
