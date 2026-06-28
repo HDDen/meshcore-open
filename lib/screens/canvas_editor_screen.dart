@@ -267,6 +267,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
   int _payloadRefreshRequestId = 0;
+  Completer<void>? _payloadRefreshCompletion;
   final Set<CancellableComputeTask<EncodedMCOImage>> _activeEncodeTasks =
       <CancellableComputeTask<EncodedMCOImage>>{};
   bool _isDisposed = false;
@@ -309,7 +310,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshPending = false;
     _payloadRefreshTimer?.cancel();
     _payloadRefreshTimer = null;
-    _cancelActiveEncodes();
+    _cancelActiveEncodeTasksNow();
+    final refreshCompletion = _payloadRefreshCompletion;
+    _payloadRefreshCompletion = null;
+    if (refreshCompletion != null && !refreshCompletion.isCompleted) {
+      refreshCompletion.complete();
+    }
     _widthController.dispose();
     _heightController.dispose();
     _toolsScrollController.dispose();
@@ -1584,10 +1590,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _ => MCOImageCodec.compressionLevelHigh,
     };
     if (nextLevel == _compressionLevel) return;
+
     setState(() => _compressionLevel = nextLevel);
     unawaited(
       PrefsManager.instance.setInt(_prefsCompressionLevelKey, nextLevel),
     );
+
+    // _markPayloadDirty() now performs cancellation and restart for every
+    // setting or canvas mutation.
     _markPayloadDirty();
   }
 
@@ -1881,11 +1891,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _markPayloadDirty() {
     _payloadRefreshRequestId++;
+
     if (!_payloadRefreshPending && mounted) {
       setState(() => _payloadRefreshPending = true);
     } else {
       _payloadRefreshPending = true;
     }
+
+    // Stop the workers that are encoding the previous canvas/settings state.
+    // There is no need to await cancellation here: if the debounce expires
+    // before the old refresh has fully unwound, _refreshPayloadIfIdle() will
+    // see _payloadRefreshInProgress and reschedule itself.
+    unawaited(
+      _cancelCurrentEncoding(
+        preservePendingRefresh: true,
+      ),
+    );
+
+    // Reuse the existing debounce. Every subsequent canvas/settings change
+    // resets this timer, so only one encoding starts after the user pauses.
     _schedulePayloadRefresh();
   }
 
@@ -1919,13 +1943,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     _payloadRefreshPending = false;
     final requestId = _payloadRefreshRequestId;
+    final refreshCompletion = Completer<void>();
+    _payloadRefreshCompletion = refreshCompletion;
     setState(() => _payloadRefreshInProgress = true);
 
     EncodedMCOImage? encoded;
     try {
       encoded = await _encodeCanvasInBackground();
     } on CancellableComputeCancelledException {
-      // Cancellation is expected only when this screen is being disposed.
+      // Cancellation is expected when the canvas/settings change or when this
+      // screen is being disposed.
     } on MCOImageCodecException catch (error, stackTrace) {
       // Keep the last valid payload value. A later canvas change will schedule
       // another calculation.
@@ -1946,7 +1973,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     // The widget may have been disposed while the background isolate was
     // finishing. Do not touch State after that point.
-    if (!mounted) return;
+    if (!mounted) {
+      _completePayloadRefreshCycle(refreshCompletion);
+      return;
+    }
 
     final isCurrentResult = requestId == _payloadRefreshRequestId;
     setState(() {
@@ -1961,9 +1991,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     });
 
     // If the canvas changed during this calculation, _markPayloadDirty()
-    // already set _payloadRefreshPending. Start a fresh calculation now.
-    if (_payloadRefreshPending) {
+    // has normally already started the debounce timer. Only create one here
+    // when that timer has already fired while the previous refresh was still
+    // unwinding.
+    if (_payloadRefreshPending && _payloadRefreshTimer == null) {
       _schedulePayloadRefresh();
+    }
+
+    _completePayloadRefreshCycle(refreshCompletion);
+  }
+
+  void _completePayloadRefreshCycle(Completer<void> completion) {
+    if (identical(_payloadRefreshCompletion, completion)) {
+      _payloadRefreshCompletion = null;
+    }
+    if (!completion.isCompleted) {
+      completion.complete();
     }
   }
 
@@ -3230,12 +3273,56 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  void _cancelActiveEncodes() {
+  List<CancellableComputeTask<EncodedMCOImage>>
+  _cancelActiveEncodeTasksNow() {
     final tasks = _activeEncodeTasks.toList(growable: false);
     _activeEncodeTasks.clear();
     for (final task in tasks) {
       task.cancel();
     }
+    return tasks;
+  }
+
+  /// Stops every currently running encoder worker and waits until the active
+  /// payload refresh method has observed the cancellation.
+  ///
+  /// Returns true when no calculation from the previous request remains.
+  /// Interactive canvas/settings changes normally call this without awaiting
+  /// it and let the existing debounce decide when the next encode may start.
+  Future<bool> _cancelCurrentEncoding({
+    bool preservePendingRefresh = false,
+  }) async {
+    _payloadRefreshRequestId++;
+    if (!preservePendingRefresh) {
+      _payloadRefreshPending = false;
+    }
+    _payloadRefreshTimer?.cancel();
+    _payloadRefreshTimer = null;
+
+    final refreshCompletion = _payloadRefreshCompletion?.future;
+    final tasks = _cancelActiveEncodeTasksNow();
+
+    // Await the worker futures so cancellation has propagated through
+    // _encodeCanvasInBackground() and _refreshPayloadIfIdle().
+    await Future.wait<void>(
+      tasks.map((task) async {
+        try {
+          await task.result;
+        } catch (_) {
+          // A cancelled worker completes with
+          // CancellableComputeCancelledException. A worker that had already
+          // completed or failed is also no longer consuming CPU.
+        }
+      }),
+    );
+
+    if (refreshCompletion != null) {
+      await refreshCompletion;
+    }
+
+    if (!mounted) return true;
+
+    return _activeEncodeTasks.isEmpty && !_payloadRefreshInProgress;
   }
 
   int _extremeEncodeWorkerLimit() {
