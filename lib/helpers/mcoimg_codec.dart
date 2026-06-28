@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -262,6 +263,24 @@ class MCOImageCodec {
   static const int _regionBeamWidth = 3;
   static const int _regionBeamDepth = 2;
   static const int _regionBeamNeighbors = 8;
+
+  // Extreme region search used to scale its width/depth/neighbour count from
+  // maxRegions (32 -> 64/64/128), which made the number of evaluated layouts
+  // explode. Keep the search bounded and predictable instead.
+  static const int _maxExtremeRegionPixels = 1024;
+  static const int _maxExtremeRegionComponents = 16;
+  static const int _maxExtremeRegionBackgroundRank = 3;
+  static const int _maxExtremeRegionSearchRegions = 16;
+  static const int _extremeRegionBeamWidth = 8;
+  static const int _extremeRegionBeamDepth = 6;
+  static const int _extremeRegionNeighbors = 24;
+  static const int _extremeRegionResultLimit = 6;
+  static const int _extremeRegionEvaluationBudget = 768;
+  static const int _extremeRegionDeepFixedVariantLimit = 2;
+
+  // Factorial palette search is useful for small local palettes, but grows
+  // from 720 permutations at six colors to 5040 at seven.
+  static const int _maxExtremeExhaustivePaletteColors = 6;
   static const int _greedyTieLargestArea = 0;
   static const int _greedyTieWidest = 1;
   static const int _greedyTieTallest = 2;
@@ -664,7 +683,9 @@ class MCOImageCodec {
           referenceEncoding,
           maxRegions,
           includeExtendedFixedBlocks: useHighCompressionExtras,
-          useExtremeSearch: useExtremeCompressionExtras,
+          useExtremeSearch:
+              useExtremeCompressionExtras &&
+              background.rank <= _maxExtremeRegionBackgroundRank,
         );
         for (final regionsPayload in regionsPayloads) {
           final candidate = _candidateFromPayload(
@@ -2980,6 +3001,24 @@ class MCOImageCodec {
       image.height,
       backgroundColor,
     );
+    final useBoundedExtremeSearch =
+        useExtremeSearch &&
+        image.pixels.length <= _maxExtremeRegionPixels &&
+        connectedRegions.length <= _maxExtremeRegionComponents;
+    final beamMaxRegions = useBoundedExtremeSearch
+        ? math.min(maxRegions, _maxExtremeRegionSearchRegions)
+        : maxRegions;
+
+    if (useExtremeSearch && !useBoundedExtremeSearch) {
+      developer.log(
+        '[MCOimg][Extreme][Regions] deep search skipped: '
+        'bg=$backgroundColor, pixels=${image.pixels.length}/'
+        '$_maxExtremeRegionPixels, components=${connectedRegions.length}/'
+        '$_maxExtremeRegionComponents',
+        name: 'MCOimg',
+      );
+    }
+
     final splitRegions = _splitRegionsByEmptyLines(
       image.pixels,
       image.width,
@@ -3018,7 +3057,8 @@ class MCOImageCodec {
       }
     }
     final beamVariantCosts = <String, int>{};
-    if ((useExtremeSearch || image.pixels.length <= _maxBeamRegionPixels) &&
+    if ((useBoundedExtremeSearch ||
+            image.pixels.length <= _maxBeamRegionPixels) &&
         (image.paletteProfile.isFixed ||
             referenceEncoding == DynamicPaletteReferenceEncoding.flat)) {
       final beamVariants = _findPayloadOptimizedRegionVariants(
@@ -3026,8 +3066,8 @@ class MCOImageCodec {
         backgroundColor,
         referenceEncoding,
         variants,
-        maxRegions,
-        useExtremeSearch: useExtremeSearch,
+        beamMaxRegions,
+        useExtremeSearch: useBoundedExtremeSearch,
       );
       for (final state in beamVariants) {
         final key = _regionListKey(state.regions);
@@ -3039,9 +3079,17 @@ class MCOImageCodec {
     }
 
     final payloads = <_V2Payload>[];
+    var deepFixedVariantsUsed = 0;
     for (final regions in variants) {
       final regionKey = _regionListKey(regions);
       final beamCost = beamVariantCosts[regionKey];
+      final useDeepFixedSearchForVariant =
+          useBoundedExtremeSearch &&
+          beamCost != null &&
+          deepFixedVariantsUsed < _extremeRegionDeepFixedVariantLimit;
+      if (useDeepFixedSearchForVariant) {
+        deepFixedVariantsUsed++;
+      }
       for (final compactGeometry in const [false, true]) {
           final payload = _tryBuildV2RegionsPayloadFromRegions(
             image,
@@ -3066,7 +3114,7 @@ class MCOImageCodec {
             maxRegions,
             compactGeometry: compactGeometry,
             includeExtendedFixedBlocks: true,
-            useExtremeFixedBlockSearch: useExtremeSearch,
+            useExtremeFixedBlockSearch: useDeepFixedSearchForVariant,
             diagnosticContainer: beamCost == null
                 ? 'regions-extended'
                 : 'regions-beam-extended',
@@ -3120,7 +3168,7 @@ class MCOImageCodec {
         referenceEncoding,
         normalized,
         maxRegions,
-        includeExtendedFixedBlocks: useExtremeSearch,
+        includeExtendedFixedBlocks: false,
       );
       if (cost != null) initialStates.add(_RegionBeamState(normalized, cost));
     }
@@ -3128,16 +3176,33 @@ class MCOImageCodec {
     initialStates.sort((left, right) => left.cost.compareTo(right.cost));
     final bestExistingCost = initialStates.first.cost;
     final beamWidth = useExtremeSearch
-        ? math.max(_regionBeamWidth, maxRegions * 2)
+        ? _extremeRegionBeamWidth
         : _regionBeamWidth;
     final beamDepth = useExtremeSearch
-        ? math.max(_regionBeamDepth, maxRegions * 2)
+        ? _extremeRegionBeamDepth
         : _regionBeamDepth;
     final resultLimit = useExtremeSearch
-        ? math.max(_regionBeamWidth, maxRegions * 2)
+        ? _extremeRegionResultLimit
         : _regionBeamWidth;
+    final evaluationBudget = useExtremeSearch
+        ? _extremeRegionEvaluationBudget
+        : null;
+    var evaluatedLayouts = initialStates.length;
+    var completedDepths = 0;
+    var budgetExhausted = false;
     var beam = initialStates.take(beamWidth).toList();
     final improved = <_RegionBeamState>[];
+
+    if (useExtremeSearch) {
+      developer.log(
+        '[MCOimg][Extreme][Regions] beam start: bg=$backgroundColor, '
+        'initial=${initialStates.length}, maxRegions=$maxRegions, '
+        'width=$beamWidth, depth=$beamDepth, '
+        'neighbors=$_extremeRegionNeighbors, '
+        'budget=$evaluationBudget',
+        name: 'MCOimg',
+      );
+    }
 
     for (var depth = 0; depth < beamDepth; depth++) {
       final next = <_RegionBeamState>[];
@@ -3150,25 +3215,58 @@ class MCOImageCodec {
           maxRegions,
           useExtremeSearch: useExtremeSearch,
         )) {
+          if (evaluationBudget != null &&
+              evaluatedLayouts >= evaluationBudget) {
+            budgetExhausted = true;
+            break;
+          }
           final key = _regionListKey(regions);
           if (!seen.add(key)) continue;
+          evaluatedLayouts++;
           final cost = _regionPayloadByteCost(
             image,
             backgroundColor,
             referenceEncoding,
             regions,
             maxRegions,
-            includeExtendedFixedBlocks: useExtremeSearch,
+            includeExtendedFixedBlocks: false,
           );
           if (cost == null) continue;
           final candidate = _RegionBeamState(regions, cost);
           next.add(candidate);
           if (cost < bestExistingCost) improved.add(candidate);
         }
+        if (budgetExhausted) break;
       }
       if (next.isEmpty) break;
       next.sort((left, right) => left.cost.compareTo(right.cost));
       beam = next.take(beamWidth).toList();
+      completedDepths = depth + 1;
+
+      if (useExtremeSearch) {
+        final percentage =
+            (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
+        developer.log(
+          '[MCOimg][Extreme][Regions] beam depth '
+          '$completedDepths/$beamDepth: evaluated=$evaluatedLayouts/'
+          '$evaluationBudget (${percentage.toStringAsFixed(1)}%), '
+          'frontier=${beam.length}, improved=${improved.length}',
+          name: 'MCOimg',
+        );
+      }
+      if (budgetExhausted) break;
+    }
+
+    if (useExtremeSearch) {
+      final percentage =
+          (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
+      developer.log(
+        '[MCOimg][Extreme][Regions] beam done: bg=$backgroundColor, '
+        'depths=$completedDepths/$beamDepth, evaluated=$evaluatedLayouts/'
+        '$evaluationBudget (${percentage.toStringAsFixed(1)}%), '
+        'improved=${improved.length}, budgetExhausted=$budgetExhausted',
+        name: 'MCOimg',
+      );
     }
 
     improved.sort((left, right) => left.cost.compareTo(right.cost));
@@ -3292,7 +3390,7 @@ class MCOImageCodec {
     final result = <List<_ImageBounds>>[];
     final seen = <String>{};
     final neighborLimit = useExtremeSearch
-        ? math.max(_regionBeamNeighbors, maxRegions * 4)
+        ? _extremeRegionNeighbors
         : _regionBeamNeighbors;
     final perKindLimit = math.max(1, neighborLimit ~/ 2);
     for (final neighbor in [
@@ -11487,7 +11585,8 @@ class MCOImageCodec {
       }
     }
 
-    if (useExtremeSearch && palette.length <= 8) {
+    if (useExtremeSearch &&
+        palette.length <= _maxExtremeExhaustivePaletteColors) {
       final candidate = List<int>.of(palette);
       void permute(int index) {
         if (index == candidate.length) {
@@ -11553,7 +11652,7 @@ class MCOImageCodec {
       ));
     }
 
-    if (palette.length <= 8) {
+    if (palette.length <= _maxExtremeExhaustivePaletteColors) {
       final candidate = List<int>.of(palette);
       void permute(int index) {
         if (index == candidate.length) {

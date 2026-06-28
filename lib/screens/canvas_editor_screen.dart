@@ -94,6 +94,16 @@ class _MCOImageEncodeRequest {
   }) : pixels = List<int>.unmodifiable(pixels);
 }
 
+class _ExtremeEncodeSlice {
+  final _MCOImageEncodeRequest request;
+  final String label;
+
+  const _ExtremeEncodeSlice({
+    required this.request,
+    required this.label,
+  });
+}
+
 @pragma('vm:entry-point')
 EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
   return MCOImageCodec().encode(
@@ -145,25 +155,6 @@ _MCOImageEncodeRequest _encodeRequestWithBackgroundCandidates(
     backgroundCandidates: backgroundCandidates,
     scanModes: scanModes,
     includeNonScanCandidates: includeNonScanCandidates,
-  );
-}
-
-@pragma('vm:entry-point')
-EncodedMCOImage _encodeMCOImageRequestGroup(
-  List<_MCOImageEncodeRequest> requests,
-) {
-  final results = <EncodedMCOImage>[];
-  for (final request in requests) {
-    try {
-      results.add(_encodeMCOImageRequest(request));
-    } on MCOImageCodecException {
-      // Some fine-grained slices may have no viable candidate. Other slices in
-      // the same worker group can still produce the final image.
-    }
-  }
-  return MCOImageCodec.selectBestCandidate(
-    results,
-    requests.first.outputTarget,
   );
 }
 
@@ -3180,64 +3171,143 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       backgroundColor: request.backgroundColor,
       compressionLevel: request.compressionLevel,
     );
-    final sliceRequests = <_MCOImageEncodeRequest>[];
+    final slices = <_ExtremeEncodeSlice>[];
+
+    // Run the relatively predictable scan families first. The heavier
+    // non-scan slice (regions/solid rectangles/quadtree) is still included, but
+    // it no longer hides which part of Extreme mode is taking the time.
     for (final backgroundCandidate in backgroundCandidates) {
       final backgroundSlice = [backgroundCandidate];
-      sliceRequests.add(
-        _encodeRequestWithBackgroundCandidates(
-          request,
-          backgroundSlice,
-          const <ScanMode>[],
-          true,
-        ),
-      );
       for (final scan in ScanMode.values) {
-        sliceRequests.add(
-          _encodeRequestWithBackgroundCandidates(
-            request,
-            backgroundSlice,
-            [scan],
-            false,
+        slices.add(
+          _ExtremeEncodeSlice(
+            request: _encodeRequestWithBackgroundCandidates(
+              request,
+              backgroundSlice,
+              [scan],
+              false,
+            ),
+            label:
+                'scan=${scan.name}, bg=${backgroundCandidate.color}, '
+                'rank=${backgroundCandidate.rank}',
           ),
         );
       }
     }
+    for (final backgroundCandidate in backgroundCandidates) {
+      slices.add(
+        _ExtremeEncodeSlice(
+          request: _encodeRequestWithBackgroundCandidates(
+            request,
+            [backgroundCandidate],
+            const <ScanMode>[],
+            true,
+          ),
+          label:
+              'non-scan/regions, bg=${backgroundCandidate.color}, '
+              'rank=${backgroundCandidate.rank}',
+        ),
+      );
+    }
 
     final workerCount = math.min(
       _extremeEncodeWorkerLimit(),
-      sliceRequests.length,
+      slices.length,
     );
-    final workerGroups = List.generate(
-      workerCount,
-      (_) => <_MCOImageEncodeRequest>[],
+    final results = <EncodedMCOImage>[];
+    final runningTasks = <CancellableComputeTask<EncodedMCOImage>>{};
+    var nextSliceIndex = 0;
+    var completedSlices = 0;
+
+    debugPrint(
+      '[MCOimg][Extreme] start: ${request.width}x${request.height}, '
+      'palette=${request.paletteProfile.name}, '
+      'slices=${slices.length}, workers=$workerCount',
     );
-    for (var index = 0; index < sliceRequests.length; index++) {
-      workerGroups[index % workerCount].add(sliceRequests[index]);
+
+    Future<void> runWorker(int workerIndex) async {
+      while (true) {
+        if (nextSliceIndex >= slices.length) return;
+        final sliceIndex = nextSliceIndex;
+        nextSliceIndex++;
+        final slice = slices[sliceIndex];
+        final stopwatch = Stopwatch()..start();
+        final completedBefore = completedSlices;
+        final startPercentage = slices.isEmpty
+            ? 100.0
+            : completedBefore * 100 / slices.length;
+
+        debugPrint(
+          '[MCOimg][Extreme][W${workerIndex + 1}] START '
+          '${sliceIndex + 1}/${slices.length} '
+          '(${startPercentage.toStringAsFixed(1)}% complete): '
+          '${slice.label}',
+        );
+
+        final task = _startEncodeTask(
+          _encodeMCOImageRequest,
+          slice.request,
+          debugLabel: 'MCOimg Extreme ${sliceIndex + 1}/${slices.length}',
+        );
+        runningTasks.add(task);
+        try {
+          final result = await _awaitEncodeTask(task);
+          results.add(result);
+          completedSlices++;
+          stopwatch.stop();
+          final percentage = completedSlices * 100 / slices.length;
+          debugPrint(
+            '[MCOimg][Extreme][W${workerIndex + 1}] DONE '
+            '${sliceIndex + 1}/${slices.length}; total '
+            '$completedSlices/${slices.length} '
+            '(${percentage.toStringAsFixed(1)}%): ${slice.label}; '
+            '${stopwatch.elapsedMilliseconds} ms; '
+            'best=${result.container}, ${result.byteLength} bytes',
+          );
+        } on CancellableComputeCancelledException {
+          stopwatch.stop();
+          debugPrint(
+            '[MCOimg][Extreme][W${workerIndex + 1}] CANCELLED '
+            '${sliceIndex + 1}/${slices.length}: ${slice.label}',
+          );
+          rethrow;
+        } on MCOImageCodecException catch (error) {
+          // A fine-grained slice may have no viable candidate. Count it as
+          // processed and continue with the remaining slices.
+          completedSlices++;
+          stopwatch.stop();
+          final percentage = completedSlices * 100 / slices.length;
+          debugPrint(
+            '[MCOimg][Extreme][W${workerIndex + 1}] SKIP '
+            '${sliceIndex + 1}/${slices.length}; total '
+            '$completedSlices/${slices.length} '
+            '(${percentage.toStringAsFixed(1)}%): ${slice.label}; '
+            '${stopwatch.elapsedMilliseconds} ms; $error',
+          );
+        } finally {
+          runningTasks.remove(task);
+        }
+      }
     }
 
-    final tasks = workerGroups
-        .where((group) => group.isNotEmpty)
-        .map(
-          (group) => _startEncodeTask(
-            _encodeMCOImageRequestGroup,
-            group,
-            debugLabel: 'MCOimg encode slice group',
-          ),
-        )
-        .toList(growable: false);
-
     try {
-      final results = await Future.wait(
-        tasks.map(_awaitEncodeTask),
+      await Future.wait<void>(
+        List.generate(workerCount, runWorker),
+        eagerError: true,
       );
-      return MCOImageCodec.selectBestCandidate(
+      final best = MCOImageCodec.selectBestCandidate(
         results,
         request.outputTarget,
       );
+      debugPrint(
+        '[MCOimg][Extreme] complete: ${slices.length}/${slices.length} '
+        '(100.0%), best=${best.container}, ${best.byteLength} bytes',
+      );
+      return best;
     } catch (_) {
-      // If one worker fails or the route is closed, stop all remaining workers
-      // instead of letting them continue consuming CPU.
-      for (final task in tasks) {
+      // If one worker fails or the route/settings change, stop all remaining
+      // workers instead of letting them continue consuming CPU.
+      for (final task in runningTasks.toList(growable: false)) {
         task.cancel();
       }
       rethrow;
