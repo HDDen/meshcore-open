@@ -2242,6 +2242,7 @@
   "chat_canvasCompressionLevel": "Уровень сжатия",
   "chat_canvasCompressionLevelNormal": "Обычный",
   "chat_canvasCompressionLevelHigh": "Высокий",
+  "chat_canvasCompressionLevelExtreme": "Экстремальный",
   "chat_showHops": "Отображать хопы",
   "settings_modSettings": "Настройки модификации",
   "settings_modSettingsSubtitle": "В разделе собраны опции, отсутствующие в оригинальном meshcore_open",

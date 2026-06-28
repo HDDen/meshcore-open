@@ -9172,6 +9172,12 @@ abstract class AppLocalizations {
   /// **'High'**
   String get chat_canvasCompressionLevelHigh;
 
+  /// No description provided for @chat_canvasCompressionLevelExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme'**
+  String get chat_canvasCompressionLevelExtreme;
+
   /// No description provided for @chat_showHops.
   ///
   /// In en, this message translates to:

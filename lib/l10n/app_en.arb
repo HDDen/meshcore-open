@@ -3032,6 +3032,7 @@
   "chat_canvasCompressionLevel": "Compression level",
   "chat_canvasCompressionLevelNormal": "Normal",
   "chat_canvasCompressionLevelHigh": "High",
+  "chat_canvasCompressionLevelExtreme": "Extreme",
   "chat_showHops": "Show hops",
   "settings_modSettings": "Modification Settings",
   "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
