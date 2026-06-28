@@ -3058,10 +3058,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  EncodedMCOImage _encodeCanvas() {
-    return _encodeMCOImageRequest(_buildEncodeRequest());
-  }
-
   Future<EncodedMCOImage> _encodeCanvasInBackground() {
     final request = _buildEncodeRequest();
     if (_shouldUseParallelEncode(request)) {
