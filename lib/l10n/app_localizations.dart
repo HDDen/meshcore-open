@@ -9154,6 +9154,24 @@ abstract class AppLocalizations {
   /// **'Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.'**
   String chat_canvasCannotSend(int count);
 
+  /// No description provided for @chat_canvasCompressionLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Compression level'**
+  String get chat_canvasCompressionLevel;
+
+  /// No description provided for @chat_canvasCompressionLevelNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get chat_canvasCompressionLevelNormal;
+
+  /// No description provided for @chat_canvasCompressionLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get chat_canvasCompressionLevelHigh;
+
   /// No description provided for @chat_showHops.
   ///
   /// In en, this message translates to:

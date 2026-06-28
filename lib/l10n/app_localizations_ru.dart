@@ -5352,6 +5352,15 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get chat_canvasCompressionLevel => 'Уровень сжатия';
+
+  @override
+  String get chat_canvasCompressionLevelNormal => 'Обычный';
+
+  @override
+  String get chat_canvasCompressionLevelHigh => 'Высокий';
+
+  @override
   String get chat_showHops => 'Отображать хопы';
 
   @override

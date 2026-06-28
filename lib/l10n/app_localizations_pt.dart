@@ -5333,6 +5333,15 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get chat_canvasCompressionLevel => 'Compression level';
+
+  @override
+  String get chat_canvasCompressionLevelNormal => 'Normal';
+
+  @override
+  String get chat_canvasCompressionLevelHigh => 'High';
+
+  @override
   String get chat_showHops => 'Show hops';
 
   @override

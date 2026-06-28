@@ -171,10 +171,12 @@ class EncodedMCOImage {
 class MCOImageEncodeDiagnostics {
   final EncodedMCOImage result;
   final List<EncodedMCOImage> candidates;
+  final int compressionLevel;
 
   const MCOImageEncodeDiagnostics({
     required this.result,
     required this.candidates,
+    this.compressionLevel = MCOImageCodec.compressionLevelHigh,
   });
 }
 
@@ -203,6 +205,9 @@ class MCOImageCodec {
   static const String prefix = 'im:';
   static const int _encodeVersion = 1;
   static const int _v2EncodeVersion = 2;
+  static const int compressionLevelHigh = 0;
+  static const int compressionLevelNormal = 1;
+  static const int defaultCompressionLevel = compressionLevelHigh;
   static const int _minSupportedVersion = 0;
   static const int _maxSupportedVersion = 2;
   static const int maxSupportedVersion = _maxSupportedVersion;
@@ -289,6 +294,7 @@ class MCOImageCodec {
     int maxRegions = _defaultMaxRegions,
     MCOImageEncodingVersion encodingVersion = MCOImageEncodingVersion.v2,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
+    int compressionLevel = defaultCompressionLevel,
   }) {
     final diagnostics = debugEncode(
       image,
@@ -296,6 +302,7 @@ class MCOImageCodec {
       maxRegions: maxRegions,
       encodingVersion: encodingVersion,
       outputTarget: outputTarget,
+      compressionLevel: compressionLevel,
     );
     final result = diagnostics.result;
     if (maxChars != null && result.charLength > maxChars) {
@@ -312,8 +319,12 @@ class MCOImageCodec {
     int maxRegions = _defaultMaxRegions,
     MCOImageEncodingVersion encodingVersion = MCOImageEncodingVersion.v2,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
+    int compressionLevel = defaultCompressionLevel,
   }) {
     _validateImage(image);
+    final effectiveCompressionLevel = _normalizeCompressionLevel(
+      compressionLevel,
+    );
     if (maxRegions < 0) {
       throw const MCOImageInvalidInputException('maxRegions must be >= 0');
     }
@@ -345,6 +356,7 @@ class MCOImageCodec {
         backgroundColor: backgroundColor,
         maxRegions: maxRegions,
         outputTarget: outputTarget,
+        compressionLevel: effectiveCompressionLevel,
       );
     }
 
@@ -356,7 +368,14 @@ class MCOImageCodec {
       backgroundColor: backgroundColor,
       maxRegions: effectiveMaxRegions,
       outputTarget: outputTarget,
+      compressionLevel: effectiveCompressionLevel,
     );
+  }
+
+  static int _normalizeCompressionLevel(int compressionLevel) {
+    return compressionLevel == compressionLevelNormal
+        ? compressionLevelNormal
+        : compressionLevelHigh;
   }
 
   MCOImageEncodeDiagnostics _debugEncodeLegacyV1(
@@ -364,6 +383,7 @@ class MCOImageCodec {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
+    required int compressionLevel,
   }) {
     final effectiveMaxRegions = maxRegions > _defaultMaxRegions
         ? _defaultMaxRegions
@@ -464,6 +484,7 @@ class MCOImageCodec {
     return MCOImageEncodeDiagnostics(
       result: result,
       candidates: List.unmodifiable(candidates),
+      compressionLevel: compressionLevel,
     );
   }
 
@@ -472,6 +493,7 @@ class MCOImageCodec {
     int? backgroundColor,
     int maxRegions = _defaultMaxRegions,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.text,
+    required int compressionLevel,
   }) {
     final preferredBackgroundColor = backgroundColor ?? image.transparentColor;
     final backgroundCandidates = image.paletteProfile.isDynamic
@@ -1423,6 +1445,7 @@ class MCOImageCodec {
     return MCOImageEncodeDiagnostics(
       result: best,
       candidates: List.unmodifiable(candidates),
+      compressionLevel: compressionLevel,
     );
   }
 

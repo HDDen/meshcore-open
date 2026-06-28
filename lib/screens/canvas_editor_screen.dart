@@ -108,6 +108,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsUnlockSizeKey = 'canvas_editor_unlock_size';
   static const String _prefsShowGridKey = 'canvas_editor_show_grid';
   static const String _prefsShowRulerKey = 'canvas_editor_show_ruler';
+  static const String _prefsCompressionLevelKey =
+      'canvas_editor_compression_level';
   static const List<PaletteProfile> _paletteProfileOptions = [
     PaletteProfile.mono,
     PaletteProfile.grayscale8,
@@ -152,6 +154,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _showRuler = false;
   bool _unlockCanvasSize = false;
   MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v2;
+  int _compressionLevel = MCOImageCodec.defaultCompressionLevel;
   late List<int> _pixels;
   Timer? _payloadRefreshTimer;
   bool _payloadRefreshPending = false;
@@ -263,11 +266,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 onChanged: _setCanvasRulerShown,
               ),
               const SizedBox(height: 16),
-              Text(
-                context.l10n.chat_canvasFormatVer,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
               DropdownButtonFormField<MCOImageEncodingVersion>(
                 key: ValueKey(_encodingVersion),
                 initialValue: _encodingVersion,
@@ -287,12 +285,33 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   _changeEncodingVersion(version);
                 },
               ),
+              if (_supportsCompressionLevelSelection) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  key: ValueKey(_compressionLevel),
+                  initialValue: _compressionLevel,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.chat_canvasCompressionLevel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    DropdownMenuItem<int>(
+                      value: MCOImageCodec.compressionLevelHigh,
+                      child: Text(
+                        context.l10n.chat_canvasCompressionLevelHigh,
+                      ),
+                    ),
+                    DropdownMenuItem<int>(
+                      value: MCOImageCodec.compressionLevelNormal,
+                      child: Text(
+                        context.l10n.chat_canvasCompressionLevelNormal,
+                      ),
+                    ),
+                  ],
+                  onChanged: _setCompressionLevel,
+                ),
+              ],
               const SizedBox(height: 16),
-              Text(
-                context.l10n.chat_canvasPalette,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
               DropdownButtonFormField<Object>(
                 key: ValueKey(
                   _paletteProfile.isDynamic
@@ -1317,6 +1336,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final unlockCanvasSize = prefs.getBool(_prefsUnlockSizeKey) ?? false;
     final showGrid = prefs.getBool(_prefsShowGridKey) ?? true;
     final showRuler = prefs.getBool(_prefsShowRulerKey) ?? false;
+    final compressionLevel = _loadSavedCompressionLevel();
     final bounded = _boundedCanvasSizeForProfile(
       requestedWidth,
       requestedHeight,
@@ -1330,6 +1350,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _unlockCanvasSize = unlockCanvasSize;
     _showGrid = showGrid;
     _showRuler = showRuler;
+    _compressionLevel = compressionLevel;
     if (profile.isDynamic) {
       _dynamicPaletteProfile = profile;
     }
@@ -1350,6 +1371,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
     _showRuler =
         PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    _compressionLevel = _loadSavedCompressionLevel();
     _encodingVersion = image.encodingVersion;
     _paletteProfile = image.paletteProfile;
     if (image.paletteProfile.isDynamic) {
@@ -1376,6 +1398,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
     _showRuler =
         PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    _compressionLevel = _loadSavedCompressionLevel();
     if (paletteProfile != null) {
       _paletteProfile = paletteProfile;
       if (paletteProfile.isDynamic) {
@@ -1421,6 +1444,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     await PrefsManager.instance.setBool(_prefsUnlockSizeKey, value);
   }
 
+  int _loadSavedCompressionLevel() {
+    final saved = PrefsManager.instance.getInt(_prefsCompressionLevelKey);
+    return saved == MCOImageCodec.compressionLevelNormal
+        ? MCOImageCodec.compressionLevelNormal
+        : MCOImageCodec.compressionLevelHigh;
+  }
+
+  void _setCompressionLevel(int? value) {
+    final nextLevel = value == MCOImageCodec.compressionLevelNormal
+        ? MCOImageCodec.compressionLevelNormal
+        : MCOImageCodec.compressionLevelHigh;
+    if (nextLevel == _compressionLevel) return;
+    setState(() => _compressionLevel = nextLevel);
+    unawaited(
+      PrefsManager.instance.setInt(_prefsCompressionLevelKey, nextLevel),
+    );
+    _markPayloadDirty();
+  }
+
   void _setCanvasGridShown(bool? value) {
     final showGrid = value ?? true;
     if (showGrid == _showGrid) return;
@@ -1440,6 +1482,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool get _supportsAlphaTransparency =>
       _encodingVersion == MCOImageEncodingVersion.v2;
+
+  bool get _supportsCompressionLevelSelection =>
+      _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
   int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {
     return version == MCOImageEncodingVersion.v1Legacy
@@ -2896,6 +2941,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       outputTarget: widget.maxBinaryPayloadBytes != null
           ? MCOImageOutputTarget.binary
           : MCOImageOutputTarget.text,
+      compressionLevel: _compressionLevel,
     );
   }
 
