@@ -3,12 +3,12 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart' as file_selector;
-import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../helpers/cancellable_compute.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
@@ -94,6 +94,7 @@ class _MCOImageEncodeRequest {
   }) : pixels = List<int>.unmodifiable(pixels);
 }
 
+@pragma('vm:entry-point')
 EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
   return MCOImageCodec().encode(
     MCOImage(
@@ -147,6 +148,7 @@ _MCOImageEncodeRequest _encodeRequestWithBackgroundCandidates(
   );
 }
 
+@pragma('vm:entry-point')
 EncodedMCOImage _encodeMCOImageRequestGroup(
   List<_MCOImageEncodeRequest> requests,
 ) {
@@ -265,6 +267,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
   int _payloadRefreshRequestId = 0;
+  final Set<CancellableComputeTask<EncodedMCOImage>> _activeEncodeTasks =
+      <CancellableComputeTask<EncodedMCOImage>>{};
+  bool _isDisposed = false;
   bool _isDrawing = false;
   bool _canvasInputLocked = false;
   int? _lineStartIndex;
@@ -299,7 +304,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   @override
   void dispose() {
+    _isDisposed = true;
+    _payloadRefreshRequestId++;
+    _payloadRefreshPending = false;
     _payloadRefreshTimer?.cancel();
+    _payloadRefreshTimer = null;
+    _cancelActiveEncodes();
     _widthController.dispose();
     _heightController.dispose();
     _toolsScrollController.dispose();
@@ -1910,19 +1920,50 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshPending = false;
     final requestId = _payloadRefreshRequestId;
     setState(() => _payloadRefreshInProgress = true);
+
+    EncodedMCOImage? encoded;
     try {
-      final encoded = await _encodeCanvasInBackground();
-      if (!mounted || requestId != _payloadRefreshRequestId) return;
-      setState(() {
+      encoded = await _encodeCanvasInBackground();
+    } on CancellableComputeCancelledException {
+      // Cancellation is expected only when this screen is being disposed.
+    } on MCOImageCodecException catch (error, stackTrace) {
+      // Keep the last valid payload value. A later canvas change will schedule
+      // another calculation.
+      debugPrint('[MCOimg] Background encode failed: $error');
+      debugPrintStack(
+        label: '[MCOimg] Background encode stack trace',
+        stackTrace: stackTrace,
+      );
+    } catch (error, stackTrace) {
+      // Preserve the last valid value if a worker fails unexpectedly. Log the
+      // real error instead of silently leaving the initial counter at zero.
+      debugPrint('[MCOimg] Background worker failed: $error');
+      debugPrintStack(
+        label: '[MCOimg] Background worker stack trace',
+        stackTrace: stackTrace,
+      );
+    }
+
+    // The widget may have been disposed while the background isolate was
+    // finishing. Do not touch State after that point.
+    if (!mounted) return;
+
+    final isCurrentResult = requestId == _payloadRefreshRequestId;
+    setState(() {
+      if (isCurrentResult && encoded != null) {
         _currentEncodedCandidate = encoded;
         _currentPayloadChars = _displayPayloadSizeForEncoded(encoded);
-        _payloadRefreshInProgress = false;
-      });
-      if (_payloadRefreshPending) _schedulePayloadRefresh();
-    } catch (_) {
-      if (!mounted || requestId != _payloadRefreshRequestId) return;
-      setState(() => _payloadRefreshInProgress = false);
-      if (_payloadRefreshPending) _schedulePayloadRefresh();
+      }
+
+      // This flag belongs to the only active refresh operation. It must be
+      // cleared even when its result became stale while the user was drawing.
+      _payloadRefreshInProgress = false;
+    });
+
+    // If the canvas changed during this calculation, _markPayloadDirty()
+    // already set _payloadRefreshPending. Start a fresh calculation now.
+    if (_payloadRefreshPending) {
+      _schedulePayloadRefresh();
     }
   }
 
@@ -3049,7 +3090,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         return;
       }
       Navigator.pop(context, encoded.text);
+    } on CancellableComputeCancelledException {
+      // The route was closed while encoding. Its isolate has already been
+      // terminated, so no UI feedback is needed.
+      return;
     } on MCOImageCodecException catch (error) {
+      if (!mounted) return;
       showDismissibleSnackBar(
         context,
         content: Text(error.message),
@@ -3059,15 +3105,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<EncodedMCOImage> _encodeCanvasInBackground() {
+    if (_isDisposed) {
+      return Future<EncodedMCOImage>.error(
+        const CancellableComputeCancelledException(),
+      );
+    }
+
     final request = _buildEncodeRequest();
     if (_shouldUseParallelEncode(request)) {
       return _encodeCanvasInParallel(request);
     }
-    return compute(
+
+    final task = _startEncodeTask(
       _encodeMCOImageRequest,
       request,
       debugLabel: 'MCOimg encode',
     );
+    return _awaitEncodeTask(task);
   }
 
   bool _shouldUseParallelEncode(_MCOImageEncodeRequest request) {
@@ -3117,21 +3171,71 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     for (var index = 0; index < sliceRequests.length; index++) {
       workerGroups[index % workerCount].add(sliceRequests[index]);
     }
+
     final tasks = workerGroups
         .where((group) => group.isNotEmpty)
         .map(
-          (group) => compute(
+          (group) => _startEncodeTask(
             _encodeMCOImageRequestGroup,
             group,
             debugLabel: 'MCOimg encode slice group',
           ),
         )
         .toList(growable: false);
-    final results = await Future.wait(tasks);
-    return MCOImageCodec.selectBestCandidate(
-      results,
-      request.outputTarget,
+
+    try {
+      final results = await Future.wait(
+        tasks.map(_awaitEncodeTask),
+      );
+      return MCOImageCodec.selectBestCandidate(
+        results,
+        request.outputTarget,
+      );
+    } catch (_) {
+      // If one worker fails or the route is closed, stop all remaining workers
+      // instead of letting them continue consuming CPU.
+      for (final task in tasks) {
+        task.cancel();
+      }
+      rethrow;
+    }
+  }
+
+  CancellableComputeTask<EncodedMCOImage> _startEncodeTask<M>(
+    FutureOr<EncodedMCOImage> Function(M message) callback,
+    M message, {
+    required String debugLabel,
+  }) {
+    final task = startCancellableCompute<M, EncodedMCOImage>(
+      callback,
+      message,
+      debugLabel: debugLabel,
     );
+
+    if (_isDisposed) {
+      task.cancel();
+    } else {
+      _activeEncodeTasks.add(task);
+    }
+    return task;
+  }
+
+  Future<EncodedMCOImage> _awaitEncodeTask(
+    CancellableComputeTask<EncodedMCOImage> task,
+  ) async {
+    try {
+      return await task.result;
+    } finally {
+      _activeEncodeTasks.remove(task);
+    }
+  }
+
+  void _cancelActiveEncodes() {
+    final tasks = _activeEncodeTasks.toList(growable: false);
+    _activeEncodeTasks.clear();
+    for (final task in tasks) {
+      task.cancel();
+    }
   }
 
   int _extremeEncodeWorkerLimit() {
