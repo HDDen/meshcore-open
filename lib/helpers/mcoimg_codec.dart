@@ -3406,6 +3406,7 @@ class MCOImageCodec {
         variants,
         beamMaxRegions,
         useExtremeSearch: useBoundedExtremeSearch,
+        includeExtendedFixedBlocks: includeExtendedFixedBlocks,
       );
       for (final state in beamVariants) {
         final key = _regionListKey(state.regions);
@@ -3421,20 +3422,21 @@ class MCOImageCodec {
       final regionKey = _regionListKey(regions);
       final beamCost = beamVariantCosts[regionKey];
       for (final compactGeometry in const [false, true]) {
-          final payload = _tryBuildV2RegionsPayloadFromRegions(
-            image,
-            backgroundColor,
-            referenceEncoding,
-            regions,
-            maxRegions,
-            compactGeometry: compactGeometry,
-            includeExtendedFixedBlocks: false,
-            diagnosticContainer: beamCost == null ? null : 'regions-beam',
-          );
-        if (payload == null) continue;
-        if (beamCost != null && payload.payload.length != beamCost) continue;
-        payloads.add(payload);
-        if (includeExtendedFixedBlocks && image.paletteProfile.isFixed) {
+        final payload = _tryBuildV2RegionsPayloadFromRegions(
+          image,
+          backgroundColor,
+          referenceEncoding,
+          regions,
+          maxRegions,
+          compactGeometry: compactGeometry,
+          includeExtendedFixedBlocks: false,
+          diagnosticContainer: beamCost == null ? null : 'regions-beam',
+        );
+        if (payload != null &&
+            (beamCost == null || payload.payload.length == beamCost)) {
+          payloads.add(payload);
+        }
+        if (includeExtendedFixedBlocks) {
           final extendedPayload = _tryBuildV2RegionsPayloadFromRegions(
             image,
             backgroundColor,
@@ -3447,7 +3449,11 @@ class MCOImageCodec {
                 ? 'regions-extended'
                 : 'regions-beam-extended',
           );
-          if (extendedPayload != null) payloads.add(extendedPayload);
+          if (extendedPayload != null &&
+              (beamCost == null ||
+                  extendedPayload.payload.length == beamCost)) {
+            payloads.add(extendedPayload);
+          }
         }
         if (image.paletteProfile.isFixed) {
           final sharedPayload = _tryBuildV2RegionsPayloadFromRegions(
@@ -3463,7 +3469,31 @@ class MCOImageCodec {
                 ? 'regions-shared-fixed'
                 : 'regions-beam-shared-fixed',
           );
-          if (sharedPayload != null) payloads.add(sharedPayload);
+          if (sharedPayload != null &&
+              (beamCost == null || sharedPayload.payload.length == beamCost)) {
+            payloads.add(sharedPayload);
+          }
+          if (includeExtendedFixedBlocks) {
+            final sharedExtendedPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: compactGeometry,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true,
+                  diagnosticContainer: beamCost == null
+                      ? 'regions-shared-fixed-extended'
+                      : 'regions-beam-shared-fixed-extended',
+                );
+            if (sharedExtendedPayload != null &&
+                (beamCost == null ||
+                    sharedExtendedPayload.payload.length == beamCost)) {
+              payloads.add(sharedExtendedPayload);
+            }
+          }
         }
       }
     }
@@ -3477,6 +3507,7 @@ class MCOImageCodec {
     List<List<_ImageBounds>> initialVariants,
     int maxRegions, {
     required bool useExtremeSearch,
+    required bool includeExtendedFixedBlocks,
   }) {
     final initialStates = <_RegionBeamState>[];
     final seen = <String>{};
@@ -3495,7 +3526,7 @@ class MCOImageCodec {
         referenceEncoding,
         normalized,
         maxRegions,
-        includeExtendedFixedBlocks: false,
+        includeExtendedFixedBlocks: includeExtendedFixedBlocks,
       );
       if (cost != null) initialStates.add(_RegionBeamState(normalized, cost));
     }
@@ -3557,7 +3588,7 @@ class MCOImageCodec {
             referenceEncoding,
             regions,
             maxRegions,
-            includeExtendedFixedBlocks: false,
+            includeExtendedFixedBlocks: includeExtendedFixedBlocks,
           );
           if (cost == null) continue;
           final candidate = _RegionBeamState(regions, cost);
@@ -3635,7 +3666,7 @@ class MCOImageCodec {
       if (payload != null && (best == null || payload.payload.length < best)) {
         best = payload.payload.length;
       }
-      if (includeExtendedFixedBlocks && image.paletteProfile.isFixed) {
+      if (includeExtendedFixedBlocks) {
         final extendedPayload = _tryBuildV2RegionsPayloadFromRegions(
           image,
           backgroundColor,
@@ -3648,6 +3679,39 @@ class MCOImageCodec {
         if (extendedPayload != null &&
             (best == null || extendedPayload.payload.length < best)) {
           best = extendedPayload.payload.length;
+        }
+      }
+      if (image.paletteProfile.isFixed) {
+        final sharedPayload = _tryBuildV2RegionsPayloadFromRegions(
+          image,
+          backgroundColor,
+          referenceEncoding,
+          regions,
+          maxRegions,
+          compactGeometry: compactGeometry,
+          sharedFixedPalette: true,
+          includeExtendedFixedBlocks: false,
+        );
+        if (sharedPayload != null &&
+            (best == null || sharedPayload.payload.length < best)) {
+          best = sharedPayload.payload.length;
+        }
+        if (includeExtendedFixedBlocks) {
+          final sharedExtendedPayload =
+              _tryBuildV2RegionsPayloadFromRegions(
+                image,
+                backgroundColor,
+                referenceEncoding,
+                regions,
+                maxRegions,
+                compactGeometry: compactGeometry,
+                sharedFixedPalette: true,
+                includeExtendedFixedBlocks: true,
+              );
+          if (sharedExtendedPayload != null &&
+              (best == null || sharedExtendedPayload.payload.length < best)) {
+            best = sharedExtendedPayload.payload.length;
+          }
         }
       }
     }

@@ -257,6 +257,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Timer? _payloadRefreshTimer;
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
+  int? _payloadRefreshProgressPercent;
   int _payloadRefreshRequestId = 0;
   Completer<void>? _payloadRefreshCompletion;
   final Set<CancellableComputeTask<EncodedMCOImage>> _activeEncodeTasks =
@@ -1153,7 +1154,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           _payloadRefreshPending || _payloadRefreshInProgress
-                              ? _payloadCalculatingLabel(context)
+                              ? _payloadCalculatingLabel(
+                                  context,
+                                  progressPercent:
+                                      _payloadRefreshProgressPercent,
+                                )
                               : context.l10n.chat_canvasCurrentPayload(
                                   _currentPayloadChars,
                                 ),
@@ -1884,9 +1889,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshRequestId++;
 
     if (!_payloadRefreshPending && mounted) {
-      setState(() => _payloadRefreshPending = true);
+      setState(() {
+        _payloadRefreshPending = true;
+        _payloadRefreshProgressPercent = null;
+      });
     } else {
       _payloadRefreshPending = true;
+      _payloadRefreshProgressPercent = null;
     }
 
     // Stop the workers that are encoding the previous canvas/settings state.
@@ -1936,11 +1945,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final requestId = _payloadRefreshRequestId;
     final refreshCompletion = Completer<void>();
     _payloadRefreshCompletion = refreshCompletion;
-    setState(() => _payloadRefreshInProgress = true);
+    setState(() {
+      _payloadRefreshInProgress = true;
+      _payloadRefreshProgressPercent = 0;
+    });
 
     EncodedMCOImage? encoded;
     try {
-      encoded = await _encodeCanvasInBackground();
+      encoded = await _encodeCanvasInBackground(
+        onProgress: (progressPercent) {
+          _setPayloadRefreshProgress(requestId, progressPercent);
+        },
+      );
     } on CancellableComputeCancelledException {
       // Cancellation is expected when the canvas/settings change or when this
       // screen is being disposed.
@@ -1979,6 +1995,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // This flag belongs to the only active refresh operation. It must be
       // cleared even when its result became stale while the user was drawing.
       _payloadRefreshInProgress = false;
+      _payloadRefreshProgressPercent = null;
     });
 
     // If the canvas changed during this calculation, _markPayloadDirty()
@@ -2001,11 +2018,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  String _payloadCalculatingLabel(BuildContext context) {
+  void _setPayloadRefreshProgress(int requestId, int progressPercent) {
+    if (!mounted ||
+        requestId != _payloadRefreshRequestId ||
+        !_payloadRefreshInProgress) {
+      return;
+    }
+    final clamped = progressPercent.clamp(0, 100).toInt();
+    if (_payloadRefreshProgressPercent == clamped) return;
+    setState(() => _payloadRefreshProgressPercent = clamped);
+  }
+
+  String _payloadCalculatingLabel(
+    BuildContext context, {
+    int? progressPercent,
+  }) {
     const placeholder = -987654321;
-    return context.l10n
+    final label = context.l10n
         .chat_canvasCurrentPayload(placeholder)
         .replaceFirst('$placeholder', '...');
+    if (progressPercent == null) return label;
+    return '$label ($progressPercent%)';
   }
 
   String _encodingCandidateLabel(EncodedMCOImage candidate) {
@@ -2076,6 +2109,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'Regions shared palette x${candidate.regionCount}',
       'regions-beam-shared-fixed' =>
         'Regions beam shared palette x${candidate.regionCount}',
+      'regions-shared-fixed-extended' =>
+        'Regions shared palette extended x${candidate.regionCount}',
+      'regions-beam-shared-fixed-extended' =>
+        'Regions beam shared palette extended x${candidate.regionCount}',
       'solid-bg' => 'Solid background',
       'solid-rects' => 'Solid rectangles',
       'compact-bounds' => 'Compact bounds',
@@ -3139,7 +3176,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  Future<EncodedMCOImage> _encodeCanvasInBackground() {
+  Future<EncodedMCOImage> _encodeCanvasInBackground({
+    void Function(int progressPercent)? onProgress,
+  }) {
     if (_isDisposed) {
       return Future<EncodedMCOImage>.error(
         const CancellableComputeCancelledException(),
@@ -3148,7 +3187,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     final request = _buildEncodeRequest();
     if (_shouldUseParallelEncode(request)) {
-      return _encodeCanvasInParallel(request);
+      return _encodeCanvasInParallel(
+        request,
+        onProgress: onProgress,
+      );
     }
 
     final task = _startEncodeTask(
@@ -3165,8 +3207,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<EncodedMCOImage> _encodeCanvasInParallel(
-    _MCOImageEncodeRequest request,
-  ) async {
+    _MCOImageEncodeRequest request, {
+    void Function(int progressPercent)? onProgress,
+  }) async {
     final backgroundCandidates = MCOImageCodec.backgroundCandidatesFor(
       _imageFromEncodeRequest(request),
       backgroundColor: request.backgroundColor,
@@ -3227,6 +3270,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'slices=${slices.length}; '
       'workers=$workerCount;',
     );
+    onProgress?.call(0);
 
     Future<void> runWorker(int workerIndex) async {
       while (true) {
@@ -3259,6 +3303,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           completedSlices++;
           stopwatch.stop();
           final percentage = completedSlices * 100 / slices.length;
+          onProgress?.call(percentage.round().clamp(0, 100).toInt());
           final currentBest = MCOImageCodec.selectBestCandidate(
             results,
             request.outputTarget,
@@ -3295,6 +3340,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           completedSlices++;
           stopwatch.stop();
           final percentage = completedSlices * 100 / slices.length;
+          onProgress?.call(percentage.round().clamp(0, 100).toInt());
           debugPrint(
             '[MCOimg][Extreme][W${workerIndex + 1}] '
             '$completedSlices/${slices.length} '
@@ -3331,6 +3377,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'bgRank=${best.backgroundRank}; '
         'bounds=${best.boundsPresent};',
       );
+      onProgress?.call(100);
       return best;
     } catch (_) {
       // If one worker fails or the route/settings change, stop all remaining
