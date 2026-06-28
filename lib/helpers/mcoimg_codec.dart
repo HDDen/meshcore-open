@@ -3988,6 +3988,7 @@ class MCOImageCodec {
               image.paletteProfile,
               backgroundColor,
               localIndexByProfileColorId!,
+              includeExtendedBlocks: includeExtendedFixedBlocks,
             )
           : sharedFixedPalette
           ? _bestV2FixedSharedBlockPayload(
@@ -3996,6 +3997,7 @@ class MCOImageCodec {
               region.height,
               backgroundColor,
               localIndexByFixedColor!,
+              includeExtendedBlocks: includeExtendedFixedBlocks,
             )
           : _bestV2BlockPayload(
               regionPixels,
@@ -4805,11 +4807,34 @@ class MCOImageCodec {
     int height,
     PaletteProfile profile,
     int backgroundColor,
-    Map<int, int> localIndexByProfileColorId,
-  ) {
+    Map<int, int> localIndexByProfileColorId, {
+    required bool includeExtendedBlocks,
+  }) {
     _BlockPayload? best;
     for (final scan in ScanMode.values) {
       final linear = _toScanOrder(pixels, width, height, scan);
+      final localBits = _localBits(localIndexByProfileColorId.length);
+      final localPixels = linear
+          .map((globalIndex) {
+            final profileColorId = _profileColorIdForGlobalIndex(
+              profile,
+              globalIndex,
+            );
+            final localIndex = localIndexByProfileColorId[profileColorId];
+            if (localIndex == null) {
+              throw MCOImageInvalidInputException(
+                'Dynamic shared palette is missing globalIndex $globalIndex',
+              );
+            }
+            return localIndex;
+          })
+          .toList(growable: false);
+      final backgroundProfileColorId = _profileColorIdForGlobalIndex(
+        profile,
+        backgroundColor,
+      )!;
+      final backgroundIndex =
+          localIndexByProfileColorId[backgroundProfileColorId];
       for (final mode in _dynamicBlockModes) {
         if (mode == ImageMode.biColorMask &&
             _biColorForeground(linear, backgroundColor) == null) {
@@ -4834,6 +4859,29 @@ class MCOImageCodec {
           best = candidate;
         }
       }
+      if (includeExtendedBlocks) {
+        for (final block in _tryBuildV2SharedPaletteExtendedBlockBodies(
+          localPixels,
+          localBits,
+          backgroundIndex,
+          rowLength: _rowLengthForScan(scan, width, height),
+          width: width,
+          height: height,
+        )) {
+          final candidate = _BlockPayload(
+            block.payload,
+            ImageMode.extended,
+            scan,
+          );
+          if (best == null ||
+              candidate.payload.length < best.payload.length ||
+              (candidate.payload.length == best.payload.length &&
+                  _modeTieOrder.indexOf(candidate.mode) <
+                      _modeTieOrder.indexOf(best.mode))) {
+            best = candidate;
+          }
+        }
+      }
     }
     return best!;
   }
@@ -4843,11 +4891,17 @@ class MCOImageCodec {
     int width,
     int height,
     int backgroundColor,
-    Map<int, int> localIndexByColor,
-  ) {
+    Map<int, int> localIndexByColor, {
+    required bool includeExtendedBlocks,
+  }) {
     _BlockPayload? best;
     for (final scan in ScanMode.values) {
       final linear = _toScanOrder(pixels, width, height, scan);
+      final localBits = _localBits(localIndexByColor.length);
+      final localPixels = linear
+          .map((color) => localIndexByColor[color]!)
+          .toList(growable: false);
+      final backgroundIndex = localIndexByColor[backgroundColor];
       for (final mode in _dynamicBlockModes) {
         if (mode == ImageMode.biColorMask &&
             _biColorForeground(linear, backgroundColor) == null) {
@@ -4871,8 +4925,251 @@ class MCOImageCodec {
           best = candidate;
         }
       }
+      if (includeExtendedBlocks) {
+        for (final block in _tryBuildV2SharedPaletteExtendedBlockBodies(
+          localPixels,
+          localBits,
+          backgroundIndex,
+          rowLength: _rowLengthForScan(scan, width, height),
+          width: width,
+          height: height,
+        )) {
+          final candidate = _BlockPayload(
+            block.payload,
+            ImageMode.extended,
+            scan,
+          );
+          if (best == null ||
+              candidate.payload.length < best.payload.length ||
+              (candidate.payload.length == best.payload.length &&
+                  _modeTieOrder.indexOf(candidate.mode) <
+                      _modeTieOrder.indexOf(best.mode))) {
+            best = candidate;
+          }
+        }
+      }
     }
     return best!;
+  }
+
+  List<_V2BlockPayload> _tryBuildV2SharedPaletteExtendedBlockBodies(
+    List<int> localPixels,
+    int localBits,
+    int? backgroundIndex, {
+    required int rowLength,
+    required int width,
+    required int height,
+  }) {
+    if (localPixels.isEmpty) return const <_V2BlockPayload>[];
+    final result = <_V2BlockPayload>[];
+
+    final compactRle = _tryBuildV2SharedCompactRleBlockBody(
+      localPixels,
+      localBits,
+    );
+    if (compactRle != null) result.add(compactRle);
+
+    if (backgroundIndex != null) {
+      final compactSparse = _tryBuildV2SharedCompactSparseBlockBody(
+        localPixels,
+        localBits,
+        backgroundIndex,
+      );
+      if (compactSparse != null) result.add(compactSparse);
+    }
+
+    final bitplanes = _tryBuildV2SharedBitplanesBlockBody(
+      localPixels,
+      localBits,
+    );
+    if (bitplanes != null) result.add(bitplanes);
+
+    final lzPixels = _tryBuildV2SharedLzPixelsBlockBody(
+      localPixels,
+      localBits,
+      optimizeParsing: false,
+    );
+    if (lzPixels != null) result.add(lzPixels);
+
+    final optimalLzPixels = _tryBuildV2SharedLzPixelsBlockBody(
+      localPixels,
+      localBits,
+      optimizeParsing: true,
+    );
+    if (optimalLzPixels != null) result.add(optimalLzPixels);
+
+    if (width > 0 && height > 0 && localPixels.length == width * height) {
+      final quadtree = _tryBuildV2SharedQuadtreeBlockBody(
+        localPixels,
+        localBits,
+        width: width,
+        height: height,
+      );
+      if (quadtree != null) result.add(quadtree);
+    }
+
+    if (rowLength > 0) {
+      final compactRowDelta = _tryBuildV2SharedCompactRowDeltaBlockBody(
+        localPixels,
+        localBits,
+        rowLength,
+      );
+      if (compactRowDelta != null) result.add(compactRowDelta);
+    }
+
+    return result;
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedCompactRleBlockBody(
+    List<int> localPixels,
+    int localBits,
+  ) {
+    if (localPixels.isEmpty) return null;
+    final writer = _BitWriter()
+      ..writeBits(ExtendedImageMode.compactRle.index, _extendedSubmodeBits);
+    for (final run in _buildRuns(localPixels)) {
+      writer.writeBits(run.color, localBits);
+      _writeCompactUint(writer, run.length - 1);
+    }
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedCompactSparseBlockBody(
+    List<int> localPixels,
+    int localBits,
+    int backgroundIndex,
+  ) {
+    if (localPixels.isEmpty ||
+        localPixels.every((pixel) => pixel == backgroundIndex)) {
+      return null;
+    }
+    final segments = _buildSparseSegments(localPixels, backgroundIndex);
+    if (segments.isEmpty) return null;
+    final writer = _BitWriter()
+      ..writeBits(ExtendedImageMode.compactSparse.index, _extendedSubmodeBits);
+    _writeCompactUint(writer, segments.length - 1);
+    var pos = 0;
+    for (final segment in segments) {
+      _writeCompactUint(writer, segment.start - pos);
+      writer.writeBits(segment.color, localBits);
+      _writeCompactUint(writer, segment.length - 1);
+      pos = segment.start + segment.length;
+    }
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedBitplanesBlockBody(
+    List<int> localPixels,
+    int localBits,
+  ) {
+    if (localPixels.isEmpty) return null;
+    final writer = _BitWriter()
+      ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
+    _writeAdaptiveBitplanesBody(writer, localPixels, localBits);
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedLzPixelsBlockBody(
+    List<int> localPixels,
+    int localBits, {
+    required bool optimizeParsing,
+  }) {
+    if (localPixels.isEmpty) return null;
+    final greedyTokens = _buildGreedyLzPixelTokens(localPixels, localBits);
+    final List<_LzPixelToken> tokens;
+    if (optimizeParsing) {
+      if (localPixels.length > _maxOptimalLzPixels) return null;
+      final optimalTokens = _buildOptimalLzPixelTokens(localPixels, localBits);
+      if (optimalTokens == null) return null;
+      final optimalCost = _lzPixelTokensBitCost(optimalTokens, localBits);
+      final greedyCost = _lzPixelTokensBitCost(greedyTokens, localBits);
+      if (optimalCost > greedyCost ||
+          (optimalCost == greedyCost &&
+              _lzPixelTokensEqual(optimalTokens, greedyTokens))) {
+        return null;
+      }
+      tokens = optimalTokens;
+    } else {
+      tokens = greedyTokens;
+    }
+    final writer = _BitWriter()
+      ..writeBits(ExtendedImageMode.lzPixels.index, _extendedSubmodeBits);
+    for (final token in tokens) {
+      if (token.isMatch) {
+        writer.writeBits(1, 1);
+        _writeCompactUint(writer, token.distance - 1);
+        _writeCompactUint(writer, token.length - _minLzMatchLength);
+      } else {
+        writer.writeBits(0, 1);
+        _writeCompactUint(writer, token.literals.length - 1);
+        for (final color in token.literals) {
+          writer.writeBits(color, localBits);
+        }
+      }
+    }
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedQuadtreeBlockBody(
+    List<int> localPixels,
+    int localBits, {
+    required int width,
+    required int height,
+  }) {
+    if (localPixels.isEmpty || width <= 0 || height <= 0) return null;
+    final writer = _BitWriter()
+      ..writeBits(ExtendedImageMode.quadtree.index, _extendedSubmodeBits);
+    _writeQuadtreeNode(
+      writer,
+      localPixels,
+      width,
+      0,
+      0,
+      width,
+      height,
+      localBits,
+    );
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
+  }
+
+  _V2BlockPayload? _tryBuildV2SharedCompactRowDeltaBlockBody(
+    List<int> localPixels,
+    int localBits,
+    int rowLength,
+  ) {
+    if (localPixels.isEmpty || rowLength <= 0) return null;
+    final writer = _BitWriter()
+      ..writeBits(
+        ExtendedImageMode.compactRowDelta.index,
+        _extendedSubmodeBits,
+      )
+      ..writeBits(0, 1);
+    _writeCompactRowDeltaBody(
+      writer,
+      localPixels,
+      rowLength,
+      localBits,
+      directGrayscale: false,
+    );
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitsPerLocalPixel: localBits,
+    );
   }
 
   void _writeV2Header(
@@ -7194,13 +7491,221 @@ class MCOImageCodec {
           );
         }
         return _readBiColorMask(reader, count, background, foreground);
-      case ImageMode.rawGlobal:
       case ImageMode.extended:
+        return _decodeDynamicExtendedBodyWithPalette(
+          reader,
+          width,
+          height,
+          palette,
+          background,
+          rowLength: rowLength,
+        );
+      case ImageMode.rawGlobal:
       case ImageMode.regionsBg:
         throw const MCOImageInvalidPayloadException(
           'Unsupported dynamic region block mode',
         );
     }
+  }
+
+  List<int> _decodeDynamicExtendedBodyWithPalette(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+    int background, {
+    required int rowLength,
+  }) {
+    final submode = reader.readBits(_extendedSubmodeBits);
+    if (submode == ExtendedImageMode.compactRle.index) {
+      return _decodeSharedPaletteCompactRle(reader, width, height, palette);
+    }
+    if (submode == ExtendedImageMode.compactSparse.index) {
+      return _decodeSharedPaletteCompactSparse(
+        reader,
+        width,
+        height,
+        palette,
+        background,
+      );
+    }
+    if (submode == ExtendedImageMode.lzPixels.index) {
+      return _decodeSharedPaletteLzPixels(reader, width, height, palette);
+    }
+    if (submode == ExtendedImageMode.quadtree.index) {
+      return _decodeSharedPaletteQuadtree(reader, width, height, palette);
+    }
+    if (submode == ExtendedImageMode.bitplanes.index) {
+      return _decodeAdaptiveBitplanesBody(
+        reader,
+        width,
+        height,
+        palette.globalColors,
+      );
+    }
+    if (submode == ExtendedImageMode.compactRowDelta.index) {
+      final directGrayscale = reader.readBits(1) != 0;
+      if (directGrayscale) {
+        throw const MCOImageInvalidPayloadException(
+          'Shared palette row-delta cannot use direct grayscale',
+        );
+      }
+      final localPixels = _readCompactRowDeltaBody(
+        reader,
+        width * height,
+        rowLength,
+        _localBits(palette.globalColors.length),
+        directGrayscale: false,
+        maxValue: palette.globalColors.length - 1,
+      );
+      return localPixels
+          .map((index) {
+            if (index >= palette.globalColors.length) {
+              throw const MCOImageInvalidPayloadException(
+                'Shared palette row-delta index out of range',
+              );
+            }
+            return palette.globalColors[index];
+          })
+          .toList(growable: false);
+    }
+    throw const MCOImageInvalidPayloadException(
+      'Unsupported shared palette extended region mode',
+    );
+  }
+
+  List<int> _decodeSharedPaletteCompactRle(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+  ) {
+    final pixelCount = width * height;
+    final localBits = _localBits(palette.globalColors.length);
+    final result = <int>[];
+    while (result.length < pixelCount) {
+      final index = reader.readBits(localBits);
+      if (index >= palette.globalColors.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Shared palette compact RLE index out of range',
+        );
+      }
+      final length = _readCompactUint(reader) + 1;
+      if (result.length + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Shared palette compact RLE exceeds pixel count',
+        );
+      }
+      result.addAll(List<int>.filled(length, palette.globalColors[index]));
+    }
+    return result;
+  }
+
+  List<int> _decodeSharedPaletteCompactSparse(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+    int background,
+  ) {
+    final pixelCount = width * height;
+    final segmentCount = _readCompactUint(reader) + 1;
+    if (segmentCount <= 0 || segmentCount > pixelCount) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid shared palette compact sparse segment count',
+      );
+    }
+    final localBits = _localBits(palette.globalColors.length);
+    final result = List<int>.filled(pixelCount, background);
+    var pos = 0;
+    for (var i = 0; i < segmentCount; i++) {
+      final skip = _readCompactUint(reader);
+      pos += skip;
+      final index = reader.readBits(localBits);
+      if (index >= palette.globalColors.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Shared palette compact sparse index out of range',
+        );
+      }
+      final length = _readCompactUint(reader) + 1;
+      if (pos >= pixelCount || pos + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid shared palette compact sparse segment',
+        );
+      }
+      for (var j = 0; j < length; j++) {
+        result[pos + j] = palette.globalColors[index];
+      }
+      pos += length;
+    }
+    return result;
+  }
+
+  List<int> _decodeSharedPaletteLzPixels(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+  ) {
+    final pixelCount = width * height;
+    final localBits = _localBits(palette.globalColors.length);
+    final result = <int>[];
+    while (result.length < pixelCount) {
+      final isMatch = reader.readBits(1) != 0;
+      if (isMatch) {
+        final distance = _readCompactUint(reader) + 1;
+        final length =
+            _readCompactUint(reader) + _minLzMatchLength;
+        if (distance <= 0 ||
+            distance > result.length ||
+            result.length + length > pixelCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid shared palette LZ match',
+          );
+        }
+        for (var i = 0; i < length; i++) {
+          result.add(result[result.length - distance]);
+        }
+      } else {
+        final length = _readCompactUint(reader) + 1;
+        if (result.length + length > pixelCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid shared palette LZ literal length',
+          );
+        }
+        for (var i = 0; i < length; i++) {
+          final index = reader.readBits(localBits);
+          if (index >= palette.globalColors.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Shared palette LZ index out of range',
+            );
+          }
+          result.add(palette.globalColors[index]);
+        }
+      }
+    }
+    return result;
+  }
+
+  List<int> _decodeSharedPaletteQuadtree(
+    _BitReader reader,
+    int width,
+    int height,
+    _DynamicLocalPalette palette,
+  ) {
+    final result = List<int>.filled(width * height, palette.globalColors.first);
+    _readQuadtreeNode(
+      reader,
+      result,
+      width,
+      0,
+      0,
+      width,
+      height,
+      palette.globalColors,
+      _localBits(palette.globalColors.length),
+    );
+    return result;
   }
 
   List<int> _decodeRegions(

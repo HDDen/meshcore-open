@@ -2037,6 +2037,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final usedBankCount = candidate.usedBankCount;
     if (usedBankCount != null) parts.add('$usedBankCount banks');
     if (candidate.paletteKind == 'dynamic' &&
+        _paletteProfile.isDynamic &&
         candidate.backgroundColor ==
             MCOImageDynamicPalette.whiteGlobalIndexFor(
               _paletteProfile,
