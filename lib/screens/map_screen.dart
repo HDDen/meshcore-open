@@ -1237,17 +1237,15 @@ class _MapScreenState extends State<MapScreen>
               ? () => _sendWardriveDiscovery(wardrive)
               : null,
           tooltip: context.l10n.map_wardriveZeroHopDiscovery,
-          child: wardrive.isSendingDiscovery
-              ? const Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(Icons.radar),
-                    SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ],
+          child: wardrive.isSendingDiscovery ||
+                  wardrive.isAwaitingDiscoveryResponse
+              ? SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 )
               : const Icon(Icons.radar),
         ),

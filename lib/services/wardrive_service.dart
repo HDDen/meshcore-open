@@ -85,12 +85,14 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<Position>? _positionSubscription;
   Timer? _autoDiscoveryTimer;
   Timer? _oneShotDiscoveryTimer;
+  Timer? _discoveryResponseWaitTimer;
   Timer? _autoUploadTimer;
   bool _isRunning = false;
   bool _acceptOneShotDiscoveryResponses = false;
   bool _showMapState = false;
   bool _usePhoneLocationForDisplay = false;
   bool _isSendingDiscovery = false;
+  bool _isAwaitingDiscoveryResponse = false;
   bool _isUpdatingLocation = false;
   bool _screenWakelockEnabled = false;
   bool _runInBackgroundEnabled = false;
@@ -124,6 +126,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool get usesPhoneLocationForDisplay =>
       hasMapState && (_isRunning || _usePhoneLocationForDisplay);
   bool get isSendingDiscovery => _isSendingDiscovery;
+  bool get isAwaitingDiscoveryResponse => _isAwaitingDiscoveryResponse;
   bool get isUpdatingLocation => _isUpdatingLocation;
   bool get screenWakelockEnabled => _screenWakelockEnabled;
   bool get runInBackgroundEnabled => _runInBackgroundEnabled;
@@ -542,6 +545,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       await _connector.sendFrame(buildSendControlDataFrame(payload));
       _lastDiscoveryRequestAt = startedAt;
       _discoveryRequestsSent++;
+      _startDiscoveryResponseWait();
       if (!startWardrive) {
         _oneShotDiscoveryTimer = Timer(const Duration(seconds: 10), () {
           _acceptOneShotDiscoveryResponses = false;
@@ -721,6 +725,9 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(_saveSample(result));
     }
     if (isCurrentRequest) {
+      if (_currentDiscoveryPublicKeys.isEmpty) {
+        _clearDiscoveryResponseWait();
+      }
       // Keep the map highlight and panel list scoped to the latest discovery
       // request. Late responses from an older tag may still be saved as samples.
       // Ignored repeaters still stay visible as responders on the live map,
@@ -1028,6 +1035,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_foregroundService.stop().catchError((_) {}));
     _autoDiscoveryTimer?.cancel();
     _oneShotDiscoveryTimer?.cancel();
+    _discoveryResponseWaitTimer?.cancel();
     _autoUploadTimer?.cancel();
     _clearDiscoveryTracking();
     final positionSubscription = _positionSubscription;
@@ -1047,6 +1055,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       _discoveryResponsesByTag.clear();
       _pendingDiscoveryRequests.clear();
       _currentDiscoveryTag = null;
+      _clearDiscoveryResponseWait();
       return;
     }
 
@@ -1055,7 +1064,24 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _pendingDiscoveryRequests.remove(tag);
     if (_currentDiscoveryTag == tag) {
       _currentDiscoveryTag = null;
+      _clearDiscoveryResponseWait();
     }
+  }
+
+  void _startDiscoveryResponseWait() {
+    _discoveryResponseWaitTimer?.cancel();
+    _isAwaitingDiscoveryResponse = true;
+    _discoveryResponseWaitTimer = Timer(_discoveryResponseWindow, () {
+      _clearDiscoveryResponseWait();
+      notifyListeners();
+    });
+    notifyListeners();
+  }
+
+  void _clearDiscoveryResponseWait() {
+    _discoveryResponseWaitTimer?.cancel();
+    _discoveryResponseWaitTimer = null;
+    _isAwaitingDiscoveryResponse = false;
   }
 }
 
