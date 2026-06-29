@@ -84,6 +84,56 @@ void main() {
       );
       expect(decoded.pixels, image.pixels);
     });
+
+    test('small drawing inside large background uses bounds block', () {
+      final image = _image(
+        32,
+        32,
+        (x, y) {
+          if (x >= 12 && x < 20 && y >= 10 && y < 18) {
+            return ((x + y) & 1) == 0 ? 3 : 5;
+          }
+          return 0;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(
+        encoded.encodedCandidate.container,
+        MCOImageV3Container.boundsBlock.name,
+      );
+      expect(encoded.encodedCandidate.boundsPresent, isTrue);
+      expect(encoded.encodedCandidate.boundsX, 12);
+      expect(encoded.encodedCandidate.boundsY, 10);
+      expect(encoded.encodedCandidate.boundsWidth, 8);
+      expect(encoded.encodedCandidate.boundsHeight, 8);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('separate drawings can use compact regions stream', () {
+      final image = _image(
+        32,
+        32,
+        (x, y) {
+          final inFirst = x >= 3 && x < 11 && y >= 4 && y < 12;
+          final inSecond = x >= 21 && x < 29 && y >= 19 && y < 27;
+          if (inFirst || inSecond) return ((x + y) & 1) == 0 ? 2 : 6;
+          return 0;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(
+        encoded.encodedCandidate.container,
+        MCOImageV3Container.compactRegionsStream.name,
+      );
+      expect(encoded.encodedCandidate.regionCount, 2);
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {
