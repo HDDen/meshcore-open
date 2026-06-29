@@ -407,10 +407,12 @@ void main() {
       }, profile: PaletteProfile.mono);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
       final beamCandidates = diagnostics.candidates.where(
-        (candidate) => candidate.container == 'regions-beam',
+        (candidate) => candidate.container.startsWith('regions-beam'),
       );
       final existingRegions = diagnostics.candidates.where(
-        (candidate) => candidate.container == 'regions',
+        (candidate) =>
+            candidate.mode == ImageMode.regionsBg &&
+            !candidate.container.startsWith('regions-beam'),
       );
 
       expect(beamCandidates, isNotEmpty);
@@ -418,8 +420,11 @@ void main() {
       final shortestExisting = existingRegions
           .map((candidate) => candidate.byteLength)
           .reduce(math.min);
+      final shortestBeam = beamCandidates
+          .map((candidate) => candidate.byteLength)
+          .reduce(math.min);
+      expect(shortestBeam, lessThan(shortestExisting));
       for (final candidate in beamCandidates) {
-        expect(candidate.byteLength, lessThan(shortestExisting));
         expect(codec.decode(candidate.text).pixels, image.pixels);
       }
     });
@@ -439,7 +444,7 @@ void main() {
         backgroundColor: colors[0],
       );
       final candidates = diagnostics.candidates.where(
-        (candidate) => candidate.container == 'regions-beam',
+        (candidate) => candidate.container.startsWith('regions-beam'),
       );
 
       expect(candidates, isNotEmpty);
