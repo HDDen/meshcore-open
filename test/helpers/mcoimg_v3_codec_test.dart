@@ -209,6 +209,44 @@ void main() {
       expect(algorithmId, MCOImageV3BlockAlgorithm.quadtree.index);
       expect(decoded.pixels, image.pixels);
     });
+
+    test('structured color planes can use bitplanes algorithm', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) {
+          final lowBit = x < 8 ? 0 : 1;
+          final highBit = y < 8 ? 0 : 2;
+          return lowBit | highBit;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(algorithmId, MCOImageV3BlockAlgorithm.bitplanes.index);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('sparse color planes can use adaptive bitplanes algorithm', () {
+      final image = _image(
+        24,
+        24,
+        (x, y) {
+          if (x == 5 && y == 5) return 3;
+          if (x == 18 && y == 12) return 7;
+          return 0;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(algorithmId, MCOImageV3BlockAlgorithm.adaptiveBitplanes.index);
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {

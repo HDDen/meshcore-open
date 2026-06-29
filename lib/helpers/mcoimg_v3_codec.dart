@@ -37,6 +37,7 @@ enum MCOImageV3BlockAlgorithm {
   lzPixels,
   quadtree,
   bitplanes,
+  adaptiveBitplanes,
   compactRowDelta,
   wrappedBlock,
 }
@@ -242,6 +243,8 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.compactRle,
           MCOImageV3BlockAlgorithm.lzPixels,
           MCOImageV3BlockAlgorithm.quadtree,
+          MCOImageV3BlockAlgorithm.bitplanes,
+          MCOImageV3BlockAlgorithm.adaptiveBitplanes,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -268,6 +271,8 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.lzPixels,
         MCOImageV3BlockAlgorithm.quadtree,
+        MCOImageV3BlockAlgorithm.bitplanes,
+        MCOImageV3BlockAlgorithm.adaptiveBitplanes,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -462,6 +467,8 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.lzPixels,
         MCOImageV3BlockAlgorithm.quadtree,
+        MCOImageV3BlockAlgorithm.bitplanes,
+        MCOImageV3BlockAlgorithm.adaptiveBitplanes,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
         MCOImageV3BlockAlgorithm.compactSparse,
@@ -836,6 +843,42 @@ class MCOImageV3Codec {
           bits,
         );
         break;
+      case MCOImageV3BlockAlgorithm.bitplanes:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        for (var bit = 0; bit < bits; bit++) {
+          final runs = _buildBitplaneRuns(localPixels, bit);
+          final rleBits = 2 + runs.fold<int>(
+            0,
+            (sum, length) => sum + _compactUintBitLength(length - 1),
+          );
+          final rawBits = 1 + localPixels.length;
+          if (rleBits < rawBits) {
+            writer
+              ..writeBits(1, 1)
+              ..writeBits((localPixels.first >> bit) & 1, 1);
+            for (final length in runs) {
+              writer.writeCompactUint(length - 1);
+            }
+          } else {
+            writer.writeBits(0, 1);
+            for (final pixel in localPixels) {
+              writer.writeBits((pixel >> bit) & 1, 1);
+            }
+          }
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        _writeAdaptiveBitplanesBody(writer, localPixels, bits);
+        break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         _writeColorRef(writer, profile, backgroundColor);
         final nonBg = linear
@@ -911,7 +954,6 @@ class MCOImageV3Codec {
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidInputException(
@@ -1044,6 +1086,48 @@ class MCOImageV3Codec {
           _localBits(palette.length),
         );
         return result;
+      case MCOImageV3BlockAlgorithm.bitplanes:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final localPixels = List<int>.filled(count, 0);
+        for (var bit = 0; bit < bits; bit++) {
+          final isRle = reader.readBits(1) != 0;
+          if (!isRle) {
+            for (var i = 0; i < count; i++) {
+              localPixels[i] |= reader.readBits(1) << bit;
+            }
+            continue;
+          }
+
+          var value = reader.readBits(1);
+          var position = 0;
+          while (position < count) {
+            final length = reader.readCompactUint() + 1;
+            if (position + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Bitplane RLE exceeds pixel count',
+              );
+            }
+            if (value != 0) {
+              for (var i = 0; i < length; i++) {
+                localPixels[position + i] |= 1 << bit;
+              }
+            }
+            position += length;
+            value ^= 1;
+          }
+        }
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Bitplane color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
+      case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
+        final palette = _readLocalPalette(reader, profile);
+        return _decodeAdaptiveBitplanesBody(reader, count, palette);
       case MCOImageV3BlockAlgorithm.sparseBackground:
         final background = _readColorRef(reader, profile);
         final palette = _readLocalPalette(reader, profile);
@@ -1131,7 +1215,6 @@ class MCOImageV3Codec {
           return palette[index];
         }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidPayloadException(
@@ -1221,6 +1304,8 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.compactRle ||
       MCOImageV3BlockAlgorithm.lzPixels ||
       MCOImageV3BlockAlgorithm.quadtree ||
+      MCOImageV3BlockAlgorithm.bitplanes ||
+      MCOImageV3BlockAlgorithm.adaptiveBitplanes ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
       MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse =>
@@ -1677,6 +1762,344 @@ class MCOImageV3Codec {
       result.add(_V3SparseSegment(start, color, pos - start));
     }
     return result;
+  }
+
+  static List<int> _buildBitplaneRuns(List<int> pixels, int bit) {
+    if (pixels.isEmpty) return const <int>[];
+    final runs = <int>[];
+    var current = (pixels.first >> bit) & 1;
+    var length = 1;
+    for (var i = 1; i < pixels.length; i++) {
+      final value = (pixels[i] >> bit) & 1;
+      if (value == current) {
+        length++;
+      } else {
+        runs.add(length);
+        current = value;
+        length = 1;
+      }
+    }
+    runs.add(length);
+    return runs;
+  }
+
+  static void _writeAdaptiveBitplanesBody(
+    _V3BitWriter writer,
+    List<int> pixels,
+    int bitCount,
+  ) {
+    for (var bit = 0; bit < bitCount; bit++) {
+      final decision = _chooseAdaptiveBitplaneEncoding(pixels, bit);
+      switch (decision.mode) {
+        case _V3AdaptiveBitplaneMode.raw:
+          writer.writeBits(0, 1);
+          for (final pixel in pixels) {
+            writer.writeBits((pixel >> bit) & 1, 1);
+          }
+          break;
+        case _V3AdaptiveBitplaneMode.legacyRle:
+          writer
+            ..writeBits(1, 2)
+            ..writeBits(decision.startingBit, 1);
+          for (final length in decision.runs) {
+            writer.writeCompactUint(length - 1);
+          }
+          break;
+        case _V3AdaptiveBitplaneMode.shortRle:
+          writer
+            ..writeBits(3, 3)
+            ..writeBits(decision.startingBit, 1);
+          for (final length in decision.runs) {
+            _writeShortBitplaneRunLength(writer, length);
+          }
+          break;
+        case _V3AdaptiveBitplaneMode.constantZero:
+          writer.writeBits(7, 5);
+          break;
+        case _V3AdaptiveBitplaneMode.constantOne:
+          writer.writeBits(15, 5);
+          break;
+        case _V3AdaptiveBitplaneMode.sparseOne:
+          writer.writeBits(23, 5);
+          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          break;
+        case _V3AdaptiveBitplaneMode.sparseZero:
+          writer.writeBits(31, 5);
+          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          break;
+      }
+    }
+  }
+
+  static List<int> _decodeAdaptiveBitplanesBody(
+    _V3BitReader reader,
+    int pixelCount,
+    List<int> palette,
+  ) {
+    final bits = _localBits(palette.length);
+    final localPixels = List<int>.filled(pixelCount, 0);
+    for (var bit = 0; bit < bits; bit++) {
+      final firstPrefixBit = reader.readBits(1);
+      if (firstPrefixBit == 0) {
+        for (var i = 0; i < pixelCount; i++) {
+          localPixels[i] |= reader.readBits(1) << bit;
+        }
+        continue;
+      }
+
+      final secondPrefixBit = reader.readBits(1);
+      if (secondPrefixBit == 0) {
+        _readAdaptiveBitplaneRuns(
+          reader,
+          localPixels,
+          bit,
+          pixelCount,
+          shortLengths: false,
+        );
+        continue;
+      }
+
+      final thirdPrefixBit = reader.readBits(1);
+      if (thirdPrefixBit == 0) {
+        _readAdaptiveBitplaneRuns(
+          reader,
+          localPixels,
+          bit,
+          pixelCount,
+          shortLengths: true,
+        );
+        continue;
+      }
+
+      switch (reader.readBits(2)) {
+        case 0:
+          break;
+        case 1:
+          for (var i = 0; i < pixelCount; i++) {
+            localPixels[i] |= 1 << bit;
+          }
+          break;
+        case 2:
+          _readSparseBitplane(
+            reader,
+            localPixels,
+            bit,
+            pixelCount,
+            minorityBit: 1,
+          );
+          break;
+        case 3:
+          for (var i = 0; i < pixelCount; i++) {
+            localPixels[i] |= 1 << bit;
+          }
+          _readSparseBitplane(
+            reader,
+            localPixels,
+            bit,
+            pixelCount,
+            minorityBit: 0,
+          );
+          break;
+      }
+    }
+    return localPixels.map((index) {
+      if (index >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Adaptive bitplane color index out of range',
+        );
+      }
+      return palette[index];
+    }).toList(growable: false);
+  }
+
+  static _V3AdaptiveBitplaneDecision _chooseAdaptiveBitplaneEncoding(
+    List<int> pixels,
+    int bit,
+  ) {
+    final runs = _buildBitplaneRuns(pixels, bit);
+    final startingBit = (pixels.first >> bit) & 1;
+    final onePositions = <int>[];
+    final zeroPositions = <int>[];
+    for (var i = 0; i < pixels.length; i++) {
+      (((pixels[i] >> bit) & 1) == 0 ? zeroPositions : onePositions).add(i);
+    }
+
+    final decisions = <_V3AdaptiveBitplaneDecision>[
+      _V3AdaptiveBitplaneDecision(
+        _V3AdaptiveBitplaneMode.raw,
+        1 + pixels.length,
+        startingBit: startingBit,
+        runs: runs,
+      ),
+      _V3AdaptiveBitplaneDecision(
+        _V3AdaptiveBitplaneMode.legacyRle,
+        3 +
+            runs.fold<int>(
+              0,
+              (sum, length) => sum + _compactUintBitLength(length - 1),
+            ),
+        startingBit: startingBit,
+        runs: runs,
+      ),
+      _V3AdaptiveBitplaneDecision(
+        _V3AdaptiveBitplaneMode.shortRle,
+        4 +
+            runs.fold<int>(
+              0,
+              (sum, length) => sum + _shortBitplaneRunBitLength(length),
+            ),
+        startingBit: startingBit,
+        runs: runs,
+      ),
+    ];
+    if (onePositions.isEmpty || zeroPositions.isEmpty) {
+      decisions.add(
+        _V3AdaptiveBitplaneDecision(
+          onePositions.isEmpty
+              ? _V3AdaptiveBitplaneMode.constantZero
+              : _V3AdaptiveBitplaneMode.constantOne,
+          5,
+          startingBit: startingBit,
+          runs: runs,
+        ),
+      );
+    } else {
+      decisions
+        ..add(
+          _V3AdaptiveBitplaneDecision(
+            _V3AdaptiveBitplaneMode.sparseOne,
+            5 + _sparseBitplanePositionCost(onePositions),
+            startingBit: startingBit,
+            runs: runs,
+            minorityPositions: onePositions,
+          ),
+        )
+        ..add(
+          _V3AdaptiveBitplaneDecision(
+            _V3AdaptiveBitplaneMode.sparseZero,
+            5 + _sparseBitplanePositionCost(zeroPositions),
+            startingBit: startingBit,
+            runs: runs,
+            minorityPositions: zeroPositions,
+          ),
+        );
+    }
+    var best = decisions.first;
+    for (final decision in decisions.skip(1)) {
+      if (decision.bitCost < best.bitCost) best = decision;
+    }
+    return best;
+  }
+
+  static void _readAdaptiveBitplaneRuns(
+    _V3BitReader reader,
+    List<int> pixels,
+    int bit,
+    int pixelCount, {
+    required bool shortLengths,
+  }) {
+    var value = reader.readBits(1);
+    var position = 0;
+    while (position < pixelCount) {
+      final length = shortLengths
+          ? _readShortBitplaneRunLength(reader)
+          : reader.readCompactUint() + 1;
+      if (length <= 0 || position + length > pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Adaptive bitplane RLE exceeds pixel count',
+        );
+      }
+      if (value != 0) {
+        for (var i = 0; i < length; i++) {
+          pixels[position + i] |= 1 << bit;
+        }
+      }
+      position += length;
+      value ^= 1;
+    }
+  }
+
+  static void _readSparseBitplane(
+    _V3BitReader reader,
+    List<int> pixels,
+    int bit,
+    int pixelCount, {
+    required int minorityBit,
+  }) {
+    final count = reader.readCompactUint() + 1;
+    if (count > pixelCount) {
+      throw const MCOImageInvalidPayloadException(
+        'Sparse bitplane count exceeds pixel count',
+      );
+    }
+    var previous = -1;
+    for (var i = 0; i < count; i++) {
+      final gap = reader.readCompactUint();
+      final position = previous + gap + 1;
+      if (position <= previous || position >= pixelCount) {
+        throw const MCOImageInvalidPayloadException(
+          'Sparse bitplane position out of range',
+        );
+      }
+      if (minorityBit == 0) {
+        pixels[position] &= ~(1 << bit);
+      } else {
+        pixels[position] |= 1 << bit;
+      }
+      previous = position;
+    }
+  }
+
+  static int _sparseBitplanePositionCost(List<int> positions) {
+    var cost = _compactUintBitLength(positions.length - 1);
+    var previous = -1;
+    for (final position in positions) {
+      cost += _compactUintBitLength(position - previous - 1);
+      previous = position;
+    }
+    return cost;
+  }
+
+  static void _writeSparseBitplanePositions(
+    _V3BitWriter writer,
+    List<int> positions,
+  ) {
+    writer.writeCompactUint(positions.length - 1);
+    var previous = -1;
+    for (final position in positions) {
+      writer.writeCompactUint(position - previous - 1);
+      previous = position;
+    }
+  }
+
+  static void _writeShortBitplaneRunLength(
+    _V3BitWriter writer,
+    int length,
+  ) {
+    if (length <= 0) {
+      throw const MCOImageInvalidInputException('Invalid bitplane run');
+    }
+    if (length <= 3) {
+      writer.writeBits((1 << (length - 1)) - 1, length);
+      return;
+    }
+    writer.writeBits(7, 3);
+    writer.writeCompactUint(length - 4);
+  }
+
+  static int _readShortBitplaneRunLength(_V3BitReader reader) {
+    if (reader.readBits(1) == 0) return 1;
+    if (reader.readBits(1) == 0) return 2;
+    if (reader.readBits(1) == 0) return 3;
+    return reader.readCompactUint() + 4;
+  }
+
+  static int _shortBitplaneRunBitLength(int length) {
+    if (length <= 0) {
+      throw const MCOImageInvalidInputException('Invalid bitplane run');
+    }
+    if (length <= 3) return length;
+    return 3 + _compactUintBitLength(length - 4);
   }
 
   static int? _biColorForeground(List<int> pixels, int background) {
@@ -2196,6 +2619,32 @@ class _V3LzPixelToken {
     : literals = const <int>[];
 
   bool get isMatch => distance > 0;
+}
+
+enum _V3AdaptiveBitplaneMode {
+  raw,
+  legacyRle,
+  shortRle,
+  constantZero,
+  constantOne,
+  sparseOne,
+  sparseZero,
+}
+
+class _V3AdaptiveBitplaneDecision {
+  final _V3AdaptiveBitplaneMode mode;
+  final int bitCost;
+  final int startingBit;
+  final List<int> runs;
+  final List<int> minorityPositions;
+
+  const _V3AdaptiveBitplaneDecision(
+    this.mode,
+    this.bitCost, {
+    required this.startingBit,
+    this.runs = const <int>[],
+    this.minorityPositions = const <int>[],
+  });
 }
 
 class _V3Bounds {
