@@ -465,7 +465,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   border: const OutlineInputBorder(),
                 ),
                 items: [
-                  for (final version in MCOImageEncodingVersion.values)
+                  for (final version in _availableEncodingVersions)
                     DropdownMenuItem(
                       value: version,
                       child: Text(_encodingVersionLabel(version)),
@@ -1692,13 +1692,24 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   bool get _supportsDynamicPalettes =>
-      _encodingVersion == MCOImageEncodingVersion.v2;
+      _encodingVersion == MCOImageEncodingVersion.v2 ||
+      _encodingVersion == MCOImageEncodingVersion.v3;
 
   bool get _supportsAlphaTransparency =>
-      _encodingVersion == MCOImageEncodingVersion.v2;
+      _encodingVersion == MCOImageEncodingVersion.v2 ||
+      _encodingVersion == MCOImageEncodingVersion.v3;
 
   bool get _supportsCompressionLevelSelection =>
       _encodingVersion != MCOImageEncodingVersion.v1Legacy;
+
+  List<MCOImageEncodingVersion> get _availableEncodingVersions {
+    // MCOimg v3 is reserved for the official 0x0120 binary-only path. Keep it
+    // out of the editor selector until the separate v3 codec is wired in.
+    return const [
+      MCOImageEncodingVersion.v1Legacy,
+      MCOImageEncodingVersion.v2,
+    ];
+  }
 
   int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {
     return version == MCOImageEncodingVersion.v1Legacy
@@ -1712,6 +1723,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return switch (version) {
       MCOImageEncodingVersion.v1Legacy => 'v1',
       MCOImageEncodingVersion.v2 => 'v2',
+      MCOImageEncodingVersion.v3 => 'v3',
     };
   }
 

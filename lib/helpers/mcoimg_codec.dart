@@ -57,7 +57,7 @@ enum DynamicPaletteReferenceEncoding {
   bankBitmaps,
 }
 
-enum MCOImageEncodingVersion { v1Legacy, v2 }
+enum MCOImageEncodingVersion { v1Legacy, v2, v3 }
 
 enum MCOImageOutputTarget { text, binary }
 
@@ -397,6 +397,11 @@ class MCOImageCodec {
     maxRegions = math.min(maxRegions, _maxV2Regions);
     if (backgroundColor != null) {
       _validateColor(backgroundColor, image.paletteProfile, 'backgroundColor');
+    }
+    if (encodingVersion == MCOImageEncodingVersion.v3) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v3 is binary-only; use MCOImageV3Codec',
+      );
     }
     if (backgroundCandidates != null) {
       for (final candidate in backgroundCandidates) {
