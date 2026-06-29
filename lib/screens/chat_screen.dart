@@ -13,6 +13,7 @@ import '../utils/platform_info.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
@@ -81,6 +82,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
+  bool _keyboardNavigationActive = true;
+  bool _ignoreNextTextFieldFocus = false;
+  String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
   Message? _pendingUnreadScrollTarget;
@@ -90,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _textController.addListener(_onTextFieldTextChange);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
@@ -116,7 +121,9 @@ class _ChatScreenState extends State<ChatScreen> {
       connector.setActiveContact(keyHex);
       _connector = connector;
       if (PlatformInfo.isDesktop) {
+        _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
+        _keyboardNavigationActive = true;
       }
       if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -165,8 +172,27 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onTextFieldFocusChange() {
-    if (_textFieldFocusNode.hasFocus && mounted) {
+    if (!_textFieldFocusNode.hasFocus) {
+      _keyboardNavigationActive = true;
+      _ignoreNextTextFieldFocus = false;
+      return;
+    }
+    if (_ignoreNextTextFieldFocus) {
+      _ignoreNextTextFieldFocus = false;
+    } else {
+      _keyboardNavigationActive = false;
+    }
+    if (mounted) {
       _scrollController.handleKeyboardOpen();
+    }
+  }
+
+  void _onTextFieldTextChange() {
+    final text = _textController.text;
+    if (text == _lastTextFieldText) return;
+    _lastTextFieldText = text;
+    if (_textFieldFocusNode.hasFocus) {
+      _keyboardNavigationActive = false;
     }
   }
 
@@ -189,6 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
+    _textController.removeListener(_onTextFieldTextChange);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
@@ -363,16 +390,50 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
-    if (!PlatformInfo.isDesktop ||
-        event is! KeyDownEvent ||
-        event.logicalKey != LogicalKeyboardKey.escape) {
+    if (!PlatformInfo.isDesktop) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
       return false;
     }
-    unawaited(_handleEscapeNavigation());
-    return true;
+    final isNavigationKeyDown = event is KeyDownEvent;
+    final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;
+    if (!isNavigationKeyDown && !isScrollKeyEvent) {
+      return false;
+    }
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.escape:
+        unawaited(_handleEscapeNavigation());
+        return true;
+      case LogicalKeyboardKey.arrowLeft:
+        if (!isNavigationKeyDown || !_keyboardNavigationActive) return false;
+        unawaited(_handleEscapeNavigation());
+        return true;
+      case LogicalKeyboardKey.pageUp:
+        if (!isScrollKeyEvent) return false;
+        return _scrollMessagesByPage(1);
+      case LogicalKeyboardKey.pageDown:
+        if (!isScrollKeyEvent) return false;
+        return _scrollMessagesByPage(-1);
+      case LogicalKeyboardKey.arrowUp:
+        if (!isScrollKeyEvent || !_keyboardNavigationActive) return false;
+        return _scrollMessagesByLine(1);
+      case LogicalKeyboardKey.arrowDown:
+        if (!isScrollKeyEvent || !_keyboardNavigationActive) return false;
+        return _scrollMessagesByLine(-1);
+    }
+    return false;
+  }
+
+  bool _scrollMessagesByPage(int direction) {
+    if (!_scrollController.hasClients) return false;
+    return _scrollController.scrollBy(
+      _scrollController.position.viewportDimension * 0.85 * direction,
+    );
+  }
+
+  bool _scrollMessagesByLine(int direction) {
+    return _scrollController.scrollBy(72.0 * direction);
   }
 
   Widget _buildEmptyState() {
@@ -514,6 +575,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _handleEscapeNavigation() async {
+    ChatKeyboardNavigationHistory.rememberContact(widget.contact);
     final navigator = Navigator.of(context);
     final didPop = await navigator.maybePop();
     if (!mounted || didPop) return;

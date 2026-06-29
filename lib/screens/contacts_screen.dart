@@ -10,6 +10,7 @@ import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -59,6 +60,7 @@ class ContactsScreen extends StatefulWidget {
 class _ContactsScreenState extends State<ContactsScreen>
     with DisconnectNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final ContactGroupStore _groupStore = ContactGroupStore();
   MeshCoreConnector? _scopeSyncConnector;
   List<ContactGroup> _groups = [];
@@ -72,6 +74,9 @@ class _ContactsScreenState extends State<ContactsScreen>
   @override
   void initState() {
     super.initState();
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _searchController.text = context
         .read<UiViewStateService>()
         .contactsSearchText;
@@ -100,11 +105,53 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   @override
   void dispose() {
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _searchDebounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     _frameSubscription?.cancel();
     _scopeSyncConnector?.removeListener(_handleConnectorScopeChange);
     super.dispose();
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if (_searchFocusNode.hasFocus) {
+      return false;
+    }
+
+    final target = ChatKeyboardNavigationHistory.lastTarget;
+    if (target?.type != ChatKeyboardNavigationTargetType.contact) {
+      return false;
+    }
+    final rememberedContact = target!.contact;
+    if (rememberedContact == null) return false;
+
+    final connector = context.read<MeshCoreConnector>();
+    final contact = connector.contacts.firstWhere(
+      (contact) => contact.publicKeyHex == rememberedContact.publicKeyHex,
+      orElse: () => rememberedContact,
+    );
+    if (contact.type == advTypeRepeater) return false;
+    final unread = connector.getUnreadCountForContactKey(contact.publicKeyHex);
+    connector.markContactRead(contact.publicKeyHex);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ChatScreen(contact: contact, initialUnreadCount: unread),
+      ),
+    );
+    return true;
   }
 
   void _handleConnectorScopeChange() {
@@ -837,6 +884,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         child: viewState.contactsSearchExpanded
                             ? TextField(
                                 controller: _searchController,
+                                focusNode: _searchFocusNode,
                                 autofocus: true,
                                 decoration: InputDecoration(
                                   hintText: hintText,

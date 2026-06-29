@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/chat_keyboard_navigation_history.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
@@ -52,6 +53,7 @@ class ChannelsScreen extends StatefulWidget {
 class _ChannelsScreenState extends State<ChannelsScreen>
     with DisconnectNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final ChannelGroupStore _channelGroupStore = ChannelGroupStore();
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
@@ -72,6 +74,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   @override
   void initState() {
     super.initState();
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _searchController.text = context
         .read<UiViewStateService>()
         .channelsSearchText;
@@ -153,9 +158,52 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   @override
   void dispose() {
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _searchDebounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if (_searchFocusNode.hasFocus) {
+      return false;
+    }
+
+    final target = ChatKeyboardNavigationHistory.lastTarget;
+    if (target?.type != ChatKeyboardNavigationTargetType.channel) {
+      return false;
+    }
+    final rememberedChannel = target!.channel;
+    if (rememberedChannel == null) return false;
+
+    final connector = context.read<MeshCoreConnector>();
+    final channel = connector.channels.firstWhere(
+      (channel) => channel.index == rememberedChannel.index,
+      orElse: () => rememberedChannel,
+    );
+    final unread = connector.getUnreadCountForChannelIndex(channel.index);
+    connector.markChannelRead(channel.index);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChannelChatScreen(
+          channel: channel,
+          initialUnreadCount: unread,
+        ),
+      ),
+    );
+    return true;
   }
 
   String _relativeTime(DateTime t) {
@@ -307,6 +355,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: _searchController,
+                    focusNode: _searchFocusNode,
                     decoration: InputDecoration(
                       hintText: context.l10n.channels_searchChannels,
                       prefixIcon: const Icon(Icons.search),
