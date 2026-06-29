@@ -3321,7 +3321,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool _shouldUseParallelEncode(_MCOImageEncodeRequest request) {
     return request.encodingVersion == MCOImageEncodingVersion.v2 &&
-        request.compressionLevel != MCOImageCodec.compressionLevelNormal;
+        request.compressionLevel == MCOImageCodec.compressionLevelExtreme;
   }
 
   String _compressionLevelDebugLabel(int compressionLevel) {
