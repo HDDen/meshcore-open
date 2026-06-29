@@ -133,6 +133,7 @@ class MCOImageBackgroundCandidate {
 }
 
 class EncodedMCOImage {
+  final Uint8List payload;
   final String text;
   final ImageMode mode;
   final ScanMode scan;
@@ -158,6 +159,7 @@ class EncodedMCOImage {
   final String container;
 
   const EncodedMCOImage({
+    required this.payload,
     required this.text,
     required this.mode,
     required this.scan,
@@ -8769,8 +8771,10 @@ class MCOImageCodec {
     String paletteKind = 'fixed',
     String container = 'block',
   }) {
+    final payloadCopy = Uint8List.fromList(payload);
     final text = '$prefix${_Base91.encode(payload)}';
     return EncodedMCOImage(
+      payload: payloadCopy,
       text: text,
       mode: mode,
       scan: scan,

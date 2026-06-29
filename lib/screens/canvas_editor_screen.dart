@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart' as file_selector;
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -92,6 +93,58 @@ class _MCOImageEncodeRequest {
     this.scanModes,
     this.includeNonScanCandidates = true,
   }) : pixels = List<int>.unmodifiable(pixels);
+}
+
+class _MCOImageEncodeCacheKey {
+  final int width;
+  final int height;
+  final PaletteProfile paletteProfile;
+  final List<int> pixels;
+  final int? transparentColor;
+  final MCOImageEncodingVersion encodingVersion;
+  final int backgroundColor;
+  final MCOImageOutputTarget outputTarget;
+  final int compressionLevel;
+
+  _MCOImageEncodeCacheKey._({
+    required this.width,
+    required this.height,
+    required this.paletteProfile,
+    required this.pixels,
+    required this.transparentColor,
+    required this.encodingVersion,
+    required this.backgroundColor,
+    required this.outputTarget,
+    required this.compressionLevel,
+  });
+
+  factory _MCOImageEncodeCacheKey.fromRequest(
+    _MCOImageEncodeRequest request,
+  ) {
+    return _MCOImageEncodeCacheKey._(
+      width: request.width,
+      height: request.height,
+      paletteProfile: request.paletteProfile,
+      pixels: List<int>.unmodifiable(request.pixels),
+      transparentColor: request.transparentColor,
+      encodingVersion: request.encodingVersion,
+      backgroundColor: request.backgroundColor,
+      outputTarget: request.outputTarget,
+      compressionLevel: request.compressionLevel,
+    );
+  }
+
+  bool matches(_MCOImageEncodeRequest request) {
+    return width == request.width &&
+        height == request.height &&
+        paletteProfile == request.paletteProfile &&
+        transparentColor == request.transparentColor &&
+        encodingVersion == request.encodingVersion &&
+        backgroundColor == request.backgroundColor &&
+        outputTarget == request.outputTarget &&
+        compressionLevel == request.compressionLevel &&
+        listEquals(pixels, request.pixels);
+  }
 }
 
 class _ExtremeEncodeSlice {
@@ -272,6 +325,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _rectangleSecondIndex;
   int _currentPayloadChars = 0;
   EncodedMCOImage? _currentEncodedCandidate;
+  _MCOImageEncodeCacheKey? _currentEncodedCacheKey;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
@@ -1545,6 +1599,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _setControllerValue(_heightController, _height);
         _pixels = importedImage.pixels;
         _currentEncodedCandidate = null;
+        _currentEncodedCacheKey = null;
       });
       _markPayloadDirty();
     } on MCOImageCodecException {
@@ -1887,6 +1942,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _markPayloadDirty() {
     _payloadRefreshRequestId++;
+    _currentEncodedCacheKey = null;
 
     if (!_payloadRefreshPending && mounted) {
       setState(() {
@@ -1950,9 +2006,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _payloadRefreshProgressPercent = 0;
     });
 
+    final encodeRequest = _buildEncodeRequest();
     EncodedMCOImage? encoded;
     try {
       encoded = await _encodeCanvasInBackground(
+        request: encodeRequest,
         onProgress: (progressPercent) {
           _setPayloadRefreshProgress(requestId, progressPercent);
         },
@@ -1989,6 +2047,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       if (isCurrentResult && encoded != null) {
         _currentEncodedCandidate = encoded;
+        _currentEncodedCacheKey = _MCOImageEncodeCacheKey.fromRequest(
+          encodeRequest,
+        );
         _currentPayloadChars = _displayPayloadSizeForEncoded(encoded);
       }
 
@@ -2183,11 +2244,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _payloadSizeForEncoded(EncodedMCOImage encoded) {
     final binaryLimit = widget.maxBinaryPayloadBytes;
     if (binaryLimit != null) {
-      final payloadBytes = ChannelBinaryDataHelper.mcoImagePayloadLength(
-        encoded.text,
-        widget.binarySenderName ?? 'Me',
+      final payloadBytes = ChannelBinaryDataHelper.binaryEnvelopeLength(
+        bodyLength: encoded.payload.length,
+        senderName: widget.binarySenderName ?? 'Me',
       );
-      if (payloadBytes != null) return payloadBytes;
+      return payloadBytes;
     }
     return encoded.charLength;
   }
@@ -3079,8 +3140,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     try {
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
-      final encoded = await _encodeCanvasInBackground();
-      await MCOImageFileSaver.saveBinaryPayloadFromText(encoded.text);
+      final encoded = await _encodedCanvasForCurrentState();
+      await MCOImageFileSaver.saveBinaryPayload(encoded.payload);
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -3146,9 +3207,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _sendCanvas() async {
     try {
-      final encoded = await _encodeCanvasInBackground();
+      final encoded = await _encodedCanvasForCurrentState();
       if (!mounted) return;
       _currentEncodedCandidate = encoded;
+      _currentEncodedCacheKey = _MCOImageEncodeCacheKey.fromRequest(
+        _buildEncodeRequest(),
+      );
       final payloadSize = _payloadSizeForEncoded(encoded);
       _currentPayloadChars = _displayPayloadSizeForEncoded(encoded);
       final overflow = payloadSize - _effectivePayloadLimit;
@@ -3176,7 +3240,38 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
+  Future<EncodedMCOImage> _encodedCanvasForCurrentState() async {
+    var request = _buildEncodeRequest();
+    final cached = _cachedEncodedForRequest(request);
+    if (cached != null) return cached;
+
+    final refreshCompletion = _payloadRefreshCompletion?.future;
+    if (_payloadRefreshInProgress && refreshCompletion != null) {
+      await refreshCompletion;
+      request = _buildEncodeRequest();
+      final refreshed = _cachedEncodedForRequest(request);
+      if (refreshed != null) return refreshed;
+    }
+
+    final encoded = await _encodeCanvasInBackground(request: request);
+    _currentEncodedCandidate = encoded;
+    _currentEncodedCacheKey = _MCOImageEncodeCacheKey.fromRequest(request);
+    return encoded;
+  }
+
+  EncodedMCOImage? _cachedEncodedForRequest(
+    _MCOImageEncodeRequest request,
+  ) {
+    final cached = _currentEncodedCandidate;
+    final cacheKey = _currentEncodedCacheKey;
+    if (cached == null || cacheKey == null || !cacheKey.matches(request)) {
+      return null;
+    }
+    return cached;
+  }
+
   Future<EncodedMCOImage> _encodeCanvasInBackground({
+    _MCOImageEncodeRequest? request,
     void Function(int progressPercent)? onProgress,
   }) {
     if (_isDisposed) {
@@ -3185,17 +3280,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
-    final request = _buildEncodeRequest();
-    if (_shouldUseParallelEncode(request)) {
+    final effectiveRequest = request ?? _buildEncodeRequest();
+    if (_shouldUseParallelEncode(effectiveRequest)) {
       return _encodeCanvasInParallel(
-        request,
+        effectiveRequest,
         onProgress: onProgress,
       );
     }
 
     final task = _startEncodeTask(
       _encodeMCOImageRequest,
-      request,
+      effectiveRequest,
       debugLabel: 'MCOimg encode',
     );
     return _awaitEncodeTask(task);
