@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
+import 'channel_app_data_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mesh_compressor.dart';
 
-enum ChannelBinaryDataKind { mcoImage, mcmp }
+enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
 
 class ChannelBinaryDataOutbound {
   final int dataType;
@@ -47,6 +48,9 @@ class ChannelBinaryDataHelper {
   static bool sendEnabled = false;
   static const int mcoImageDataType = 0xFFF0;
   static const int mcmpDataType = 0xFFF1;
+  static const int appDataType = ChannelAppDataHelper.appDataType;
+  static const int mcoImageV3SubtypeVersion =
+      ChannelAppDataHelper.mcoImageV3SubtypeVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -150,6 +154,16 @@ class ChannelBinaryDataHelper {
     );
   }
 
+  static int appBinaryEnvelopeLength({
+    required int bodyLength,
+    required String senderName,
+  }) {
+    return ChannelAppDataHelper.envelopeLength(
+      bodyLength: bodyLength,
+      senderName: senderName,
+    );
+  }
+
   static int outgoingCommandFrameLength(
     int envelopeLength, {
     int pathLength = 0,
@@ -170,6 +184,9 @@ class ChannelBinaryDataHelper {
     required Uint8List payload,
   }) {
     if (!enabled) return null;
+    if (dataType == appDataType) {
+      return _tryDecodeAppData(payload);
+    }
     final kind = _kindForDataType(dataType);
     if (kind == null) return null;
 
@@ -208,6 +225,21 @@ class ChannelBinaryDataHelper {
     }
 
     return null;
+  }
+
+  static ChannelBinaryDataInbound? _tryDecodeAppData(Uint8List payload) {
+    final envelope = ChannelAppDataHelper.tryDecodeEnvelope(payload);
+    if (envelope == null) return null;
+
+    switch (envelope.subtype) {
+      case ChannelAppDataSubtype.mcoImageV3:
+        // MCOimg v3 is handled by the future binary-only v3 codec. Until that
+        // decoder is wired in, keep the official app data_type safely ignored
+        // instead of trying to pass it through the legacy v1/v2 decoder.
+        return null;
+      case null:
+        return null;
+    }
   }
 
   static int _envelopeLength({
