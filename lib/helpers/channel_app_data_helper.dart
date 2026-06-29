@@ -19,6 +19,18 @@ class ChannelAppDataEnvelope {
   });
 }
 
+class ChannelAppDataPayload {
+  final int subtypeVersion;
+  final Uint8List body;
+  final ChannelAppDataSubtype? subtype;
+
+  const ChannelAppDataPayload({
+    required this.subtypeVersion,
+    required this.body,
+    required this.subtype,
+  });
+}
+
 class ChannelAppDataHelper {
   ChannelAppDataHelper._();
 
@@ -58,6 +70,23 @@ class ChannelAppDataHelper {
     required Uint8List body,
   }) {
     return Uint8List.fromList(<int>[subtypeVersion, ...body]);
+  }
+
+  static ChannelAppDataPayload? tryDecodeAppPayloadWithoutSender(
+    Uint8List payload,
+  ) {
+    try {
+      final reader = _AppDataReader(payload);
+      final subtypeVersion = reader.readByte();
+      final body = reader.readRemainingBytes();
+      return ChannelAppDataPayload(
+        subtypeVersion: subtypeVersion,
+        body: body,
+        subtype: subtypeForVersion(subtypeVersion),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static Uint8List encodeEnvelope({

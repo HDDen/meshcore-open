@@ -159,15 +159,16 @@ class _ExtremeEncodeSlice {
 
 @pragma('vm:entry-point')
 EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
+  final image = MCOImage(
+    width: request.width,
+    height: request.height,
+    paletteProfile: request.paletteProfile,
+    pixels: request.pixels,
+    transparentColor: request.transparentColor,
+    encodingVersion: request.encodingVersion,
+  );
   return MCOImageCodec().encode(
-    MCOImage(
-      width: request.width,
-      height: request.height,
-      paletteProfile: request.paletteProfile,
-      pixels: request.pixels,
-      transparentColor: request.transparentColor,
-      encodingVersion: request.encodingVersion,
-    ),
+    image,
     backgroundColor: request.backgroundColor,
     backgroundCandidates: request.backgroundCandidates,
     scanModes: request.scanModes,
@@ -182,15 +183,16 @@ EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
 MCOImageEncodeDiagnostics _debugEncodeMCOImageRequest(
   _MCOImageEncodeRequest request,
 ) {
+  final image = MCOImage(
+    width: request.width,
+    height: request.height,
+    paletteProfile: request.paletteProfile,
+    pixels: request.pixels,
+    transparentColor: request.transparentColor,
+    encodingVersion: request.encodingVersion,
+  );
   return MCOImageCodec().debugEncode(
-    MCOImage(
-      width: request.width,
-      height: request.height,
-      paletteProfile: request.paletteProfile,
-      pixels: request.pixels,
-      transparentColor: request.transparentColor,
-      encodingVersion: request.encodingVersion,
-    ),
+    image,
     backgroundColor: request.backgroundColor,
     backgroundCandidates: request.backgroundCandidates,
     scanModes: request.scanModes,
@@ -1703,8 +1705,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
   List<MCOImageEncodingVersion> get _availableEncodingVersions {
-    // MCOimg v3 is reserved for the official 0x0120 binary-only path. Keep it
-    // out of the editor selector until the separate v3 codec is wired in.
     return const [
       MCOImageEncodingVersion.v1Legacy,
       MCOImageEncodingVersion.v2,

@@ -3,63 +3,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'mcoimg_palette.dart';
+import 'mcoimg_types.dart';
 
-enum PaletteProfile {
-  mono,
-  master4,
-  master8,
-  master16,
-  master32,
-  master64,
-  grayscale16,
-  grayscale32,
-  grayscale8,
-  dynamicGlobal8,
-  dynamicGlobal16,
-  dynamicGlobal32,
-  dynamicGlobal64,
-  dynamicGlobal128,
-  dynamicGlobal256,
-  dynamicGlobal512,
-}
-
-enum ImageMode {
-  rawGlobal,
-  rawLocal,
-  rleLocal,
-  sparseBg,
-  regionsBg,
-  biColorMask,
-  rowDelta,
-  rowRepeat,
-  extended,
-}
-
-enum ExtendedImageMode {
-  wrappedBlock,
-  solidRects,
-  compactRle,
-  compactSparse,
-  lzPixels,
-  quadtree,
-  bitplanes,
-  compactRowDelta,
-}
-
-enum ScanMode { h, v, s, sv }
-
-enum DynamicPaletteReferenceEncoding {
-  flat,
-  banked8x64,
-  sortedDelta,
-  rangeRuns,
-  profileBitmap,
-  bankBitmaps,
-}
-
-enum MCOImageEncodingVersion { v1Legacy, v2, v3 }
-
-enum MCOImageOutputTarget { text, binary }
+export 'mcoimg_types.dart';
 
 enum _AdaptivePaletteOrder {
   frequency,
@@ -73,129 +19,6 @@ enum _AdaptivePaletteOrder {
 enum _CompactRowDeltaPaletteOrder {
   frequency,
   transitionFrequency,
-}
-
-extension PaletteProfileKind on PaletteProfile {
-  bool get isDynamic {
-    return switch (this) {
-      PaletteProfile.dynamicGlobal8 ||
-      PaletteProfile.dynamicGlobal16 ||
-      PaletteProfile.dynamicGlobal32 ||
-      PaletteProfile.dynamicGlobal64 ||
-      PaletteProfile.dynamicGlobal128 ||
-      PaletteProfile.dynamicGlobal256 ||
-      PaletteProfile.dynamicGlobal512 => true,
-      _ => false,
-    };
-  }
-
-  bool get isFixed => !isDynamic;
-}
-
-class MCOImage {
-  final int width;
-  final int height;
-  final PaletteProfile paletteProfile;
-  final List<int> pixels;
-  final int? transparentColor;
-  final MCOImageEncodingVersion encodingVersion;
-
-  MCOImage({
-    required this.width,
-    required this.height,
-    required this.paletteProfile,
-    required List<int> pixels,
-    this.transparentColor,
-    this.encodingVersion = MCOImageEncodingVersion.v2,
-  }) : pixels = List.unmodifiable(pixels);
-}
-
-class MCOImagePayloadInfo {
-  final int version;
-  final String algorithm;
-  final int binaryLength;
-
-  const MCOImagePayloadInfo({
-    required this.version,
-    required this.algorithm,
-    required this.binaryLength,
-  });
-}
-
-class MCOImageBackgroundCandidate {
-  final int color;
-  final int rank;
-
-  const MCOImageBackgroundCandidate({
-    required this.color,
-    required this.rank,
-  });
-}
-
-class EncodedMCOImage {
-  final Uint8List payload;
-  final String text;
-  final ImageMode mode;
-  final ScanMode scan;
-  final int byteLength;
-  final int charLength;
-  final bool boundsPresent;
-  final int? boundsX;
-  final int? boundsY;
-  final int? boundsWidth;
-  final int? boundsHeight;
-  final int? backgroundColor;
-  final int? transparentColor;
-  final int regionCount;
-  final int backgroundRank;
-  final int codecVersion;
-  final DynamicPaletteReferenceEncoding? dynamicReferenceEncoding;
-  final int? localPaletteSize;
-  final int? usedBankCount;
-  final int? bitsPerLocalPixel;
-  final MCOImageEncodingVersion requestedEncodingVersion;
-  final MCOImageEncodingVersion actualEncodingVersion;
-  final String paletteKind;
-  final String container;
-
-  const EncodedMCOImage({
-    required this.payload,
-    required this.text,
-    required this.mode,
-    required this.scan,
-    required this.byteLength,
-    required this.charLength,
-    this.boundsPresent = false,
-    this.boundsX,
-    this.boundsY,
-    this.boundsWidth,
-    this.boundsHeight,
-    this.backgroundColor,
-    this.transparentColor,
-    this.regionCount = 0,
-    this.backgroundRank = 0,
-    this.codecVersion = MCOImageCodec._v2EncodeVersion,
-    this.dynamicReferenceEncoding,
-    this.localPaletteSize,
-    this.usedBankCount,
-    this.bitsPerLocalPixel,
-    this.requestedEncodingVersion = MCOImageEncodingVersion.v2,
-    this.actualEncodingVersion = MCOImageEncodingVersion.v2,
-    this.paletteKind = 'fixed',
-    this.container = 'block',
-  });
-}
-
-class MCOImageEncodeDiagnostics {
-  final EncodedMCOImage result;
-  final List<EncodedMCOImage> candidates;
-  final int compressionLevel;
-
-  const MCOImageEncodeDiagnostics({
-    required this.result,
-    required this.candidates,
-    this.compressionLevel = MCOImageCodec.compressionLevelHigh,
-  });
 }
 
 class _MCOImageCandidateDebugEntry {
@@ -212,38 +35,17 @@ class _MCOImageCandidateDebugEntry {
   });
 }
 
-class MCOImageCodecException implements Exception {
-  final String message;
-
-  const MCOImageCodecException(this.message);
-
-  @override
-  String toString() => '$runtimeType: $message';
-}
-
-class MCOImageInvalidInputException extends MCOImageCodecException {
-  const MCOImageInvalidInputException(super.message);
-}
-
-class MCOImageInvalidPayloadException extends MCOImageCodecException {
-  const MCOImageInvalidPayloadException(super.message);
-}
-
-class MCOImageTooLargeException extends MCOImageCodecException {
-  const MCOImageTooLargeException(super.message);
-}
-
 class MCOImageCodec {
   final List<_MCOImageCandidateDebugEntry> _candidateDebugEntries =
       <_MCOImageCandidateDebugEntry>[];
 
   static const String prefix = 'im:';
-  static const int _encodeVersion = 1;
-  static const int _v2EncodeVersion = 2;
-  static const int compressionLevelHigh = 0;
-  static const int compressionLevelNormal = 1;
-  static const int compressionLevelExtreme = 2;
-  static const int defaultCompressionLevel = compressionLevelHigh;
+  static const int _encodeVersion = mcoImageCodecVersionV1;
+  static const int _v2EncodeVersion = mcoImageCodecVersionV2;
+  static const int compressionLevelHigh = mcoImageCompressionLevelHigh;
+  static const int compressionLevelNormal = mcoImageCompressionLevelNormal;
+  static const int compressionLevelExtreme = mcoImageCompressionLevelExtreme;
+  static const int defaultCompressionLevel = mcoImageDefaultCompressionLevel;
   static const int _minSupportedVersion = 0;
   static const int _maxSupportedVersion = 2;
   static const int maxSupportedVersion = _maxSupportedVersion;

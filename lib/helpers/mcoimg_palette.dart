@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'mcoimg_codec.dart';
 import 'mcoimg_dynamic_palettes.dart';
+import 'mcoimg_types.dart';
 
 class MCOImagePalette {
   static const int blackIndex = 0;

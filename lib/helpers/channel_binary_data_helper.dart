@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
 import 'channel_app_data_helper.dart';
 import 'mcoimg_codec.dart';
+import 'mcoimg_v3_codec.dart';
 import 'mesh_compressor.dart';
 
 enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
@@ -41,9 +42,9 @@ class ChannelBinaryDataInbound {
 class ChannelBinaryDataHelper {
   ChannelBinaryDataHelper._();
 
-  // Developer namespace from MeshCore's TxtDataHelpers.h. Keep all custom
-  // routing behind this helper so it can be disabled when upstream adds an
-  // official channel binary transport.
+  // Legacy developer namespace from MeshCore's TxtDataHelpers.h. The official
+  // app data_type path lives under [appDataType] and carries its own subtype
+  // byte inside ChannelAppDataHelper's envelope.
   static bool enabled = true;
   static bool sendEnabled = false;
   static const int mcoImageDataType = 0xFFF0;
@@ -98,6 +99,19 @@ class ChannelBinaryDataHelper {
     return null;
   }
 
+  static ChannelBinaryDataOutbound? tryEncodeMcoImageV3Outbound({
+    required EncodedMCOImageV3 image,
+    required String senderName,
+  }) {
+    if (!canSend) return null;
+    return _encodeAppEnvelope(
+      subtypeVersion: image.subtypeVersion,
+      body: image.body,
+      senderName: senderName,
+      kind: ChannelBinaryDataKind.mcoImageV3,
+    );
+  }
+
   static int? mcoImagePayloadLength(String text, String senderName) {
     if (!canSend) return null;
     try {
@@ -111,6 +125,17 @@ class ChannelBinaryDataHelper {
     } catch (_) {
       return null;
     }
+  }
+
+  static int? mcoImageV3PayloadLength(
+    EncodedMCOImageV3 image,
+    String senderName,
+  ) {
+    if (!canSend) return null;
+    return ChannelAppDataHelper.envelopeLength(
+      bodyLength: image.body.length,
+      senderName: senderName,
+    );
   }
 
   static int? mcmpPayloadLength(String text, String senderName) {
@@ -233,9 +258,14 @@ class ChannelBinaryDataHelper {
 
     switch (envelope.subtype) {
       case ChannelAppDataSubtype.mcoImageV3:
-        // MCOimg v3 is handled by the future binary-only v3 codec. Until that
-        // decoder is wired in, keep the official app data_type safely ignored
-        // instead of trying to pass it through the legacy v1/v2 decoder.
+        try {
+          MCOImageV3Codec().decodeBody(envelope.body);
+        } catch (_) {
+          return null;
+        }
+        // MCOimg v3 belongs to the official 0x0120 app data path and must not
+        // be disguised as the legacy im:/0xFFF0 text payload. The message model
+        // will get a dedicated binary-v3 field when the UI path is wired in.
         return null;
       case null:
         return null;
@@ -270,6 +300,30 @@ class ChannelBinaryDataHelper {
       dataType: dataType,
       payload: payload,
       kind: _kindForDataType(dataType)!,
+    );
+  }
+
+  static ChannelBinaryDataOutbound? _encodeAppEnvelope({
+    required int subtypeVersion,
+    required Uint8List body,
+    required String senderName,
+    required ChannelBinaryDataKind kind,
+  }) {
+    final Uint8List payload;
+    try {
+      payload = ChannelAppDataHelper.encodeEnvelope(
+        senderName: senderName,
+        subtypeVersion: subtypeVersion,
+        body: body,
+      );
+    } catch (_) {
+      return null;
+    }
+
+    return ChannelBinaryDataOutbound(
+      dataType: appDataType,
+      payload: payload,
+      kind: kind,
     );
   }
 

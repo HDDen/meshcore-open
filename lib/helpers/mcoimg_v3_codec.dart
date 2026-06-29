@@ -1,16 +1,56 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'channel_app_data_helper.dart';
-import 'mcoimg_codec.dart';
+import 'mcoimg_palette.dart';
+import 'mcoimg_types.dart';
+
+/// Binary-only MCOimg v3 container kind.
+///
+/// Unlike v2, this is an explicit field in the v3 body grammar. v2 had to reuse
+/// combinations such as regions + extended mode + scan bits as escape markers
+/// after the extended submode space became full. v3 should not inherit those
+/// escape combinations: each top-level image layout gets its own container id.
+enum MCOImageV3Container {
+  block,
+  boundsBlock,
+  regions,
+  compactRegionsStream,
+  solidBackground,
+  solidRects,
+}
+
+/// Binary-only MCOimg v3 block algorithm.
+///
+/// This keeps block algorithms separate from container variants. In v3 the
+/// region stream can point directly at one of these algorithms for each region.
+enum MCOImageV3BlockAlgorithm {
+  rawGlobal,
+  rawLocal,
+  rleLocal,
+  sparseBackground,
+  biColorMask,
+  rowDelta,
+  rowRepeat,
+  compactRle,
+  compactSparse,
+  lzPixels,
+  quadtree,
+  bitplanes,
+  compactRowDelta,
+  wrappedBlock,
+}
 
 class EncodedMCOImageV3 {
   final Uint8List body;
   final int byteLength;
   final int subtypeVersion;
+  final EncodedMCOImage encodedCandidate;
 
   const EncodedMCOImageV3({
     required this.body,
     required this.byteLength,
+    required this.encodedCandidate,
     this.subtypeVersion = ChannelAppDataHelper.mcoImageV3SubtypeVersion,
   });
 
@@ -27,28 +67,1015 @@ class MCOImageV3Codec {
 
   static const int subtypeVersion =
       ChannelAppDataHelper.mcoImageV3SubtypeVersion;
+  static const int _formatMarker = 0x30;
+  static const int _transparentFlag = 0x80;
+  static const int _profileMask = 0x0f;
+  static const int _minSize = 1;
+  static const int _maxSize = 256;
 
-  /// MCOimg v3 is the binary-only image payload for the official 0x0120
-  /// application data_type.
-  ///
-  /// This scaffold intentionally fails closed until the v2 image-body logic is
-  /// physically moved into this file and its header is rewritten for v3. Keeping
-  /// this separate from [MCOImageCodec] lets the old v1/v2 text/dev-binary codec
-  /// remain stable while v3 evolves.
   EncodedMCOImageV3 encode(
     MCOImage image, {
     int? backgroundColor,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
-    int compressionLevel = MCOImageCodec.defaultCompressionLevel,
+    int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
-    throw const MCOImageInvalidInputException(
-      'MCOimg v3 encoder is not implemented yet',
+    if (outputTarget != MCOImageOutputTarget.binary) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v3 supports binary output only',
+      );
+    }
+    _validateImage(image);
+    final result = _encodeNative(image, backgroundColor: backgroundColor);
+    return EncodedMCOImageV3(
+      body: result.payload,
+      byteLength: result.payload.length,
+      encodedCandidate: result,
     );
   }
 
   MCOImage decodeBody(Uint8List body) {
-    throw const MCOImageInvalidPayloadException(
-      'MCOimg v3 decoder is not implemented yet',
+    if (body.length < 5) {
+      throw const MCOImageInvalidPayloadException('MCOimg v3 payload too short');
+    }
+    final header = body[0];
+    if ((header & 0x70) != _formatMarker) {
+      throw const MCOImageInvalidPayloadException('Invalid MCOimg v3 marker');
+    }
+    final hasTransparentColor = (header & _transparentFlag) != 0;
+    final profile = _profileFromId(header & _profileMask);
+    final width = body[1] + 1;
+    final height = body[2] + 1;
+    _validateDimensions(width, height, payload: true);
+    final algorithm = _algorithmFromId(body[3]);
+    final scan = _scanFromId(body[4]);
+    final reader = _V3BitReader(body, byteIndex: 5);
+    final transparentColor = hasTransparentColor
+        ? _readColorRef(reader, profile)
+        : null;
+    final linear = _decodeBlockBody(
+      reader,
+      width,
+      height,
+      profile,
+      algorithm,
+      scan,
     );
+    reader.finish();
+    return MCOImage(
+      width: width,
+      height: height,
+      paletteProfile: profile,
+      pixels: _fromScanOrder(linear, width, height, scan),
+      transparentColor: transparentColor,
+      encodingVersion: MCOImageEncodingVersion.v3,
+    );
+  }
+
+  MCOImage decodeAppPayloadWithoutSender(Uint8List payload) {
+    final appPayload =
+        ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(payload);
+    if (appPayload == null) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid MCOimg v3 app payload',
+      );
+    }
+    if (appPayload.subtypeVersion != subtypeVersion) {
+      throw MCOImageInvalidPayloadException(
+        'Unsupported MCOimg app subtype/version '
+        '0x${appPayload.subtypeVersion.toRadixString(16)}',
+      );
+    }
+    return decodeBody(appPayload.body);
+  }
+
+  EncodedMCOImage _encodeNative(
+    MCOImage image, {
+    int? backgroundColor,
+  }) {
+    final candidates = <EncodedMCOImage>[];
+    final preferredBackground =
+        backgroundColor ?? MCOImagePalette.whiteIndexFor(image.paletteProfile);
+    final usedColors = image.pixels.toSet().toList()..sort();
+    final backgroundCandidates = <int>{
+      if (_isColorValid(preferredBackground, image.paletteProfile))
+        preferredBackground,
+      ...usedColors,
+    }.toList(growable: false);
+
+    for (final scan in ScanMode.values) {
+      final linear = _toScanOrder(image.pixels, image.width, image.height, scan);
+      for (final algorithm in const [
+        MCOImageV3BlockAlgorithm.rawGlobal,
+        MCOImageV3BlockAlgorithm.rawLocal,
+        MCOImageV3BlockAlgorithm.rleLocal,
+        MCOImageV3BlockAlgorithm.rowRepeat,
+      ]) {
+        final candidate = _tryBuildCandidate(
+          image,
+          linear,
+          algorithm,
+          scan,
+          backgroundColor: preferredBackground,
+        );
+        if (candidate != null) candidates.add(candidate);
+      }
+      for (final bg in backgroundCandidates) {
+        for (final algorithm in const [
+          MCOImageV3BlockAlgorithm.sparseBackground,
+          MCOImageV3BlockAlgorithm.biColorMask,
+        ]) {
+          final candidate = _tryBuildCandidate(
+            image,
+            linear,
+            algorithm,
+            scan,
+            backgroundColor: bg,
+          );
+          if (candidate != null) candidates.add(candidate);
+        }
+      }
+    }
+    if (candidates.isEmpty) {
+      throw const MCOImageInvalidInputException('No MCOimg v3 candidate');
+    }
+    candidates.sort((a, b) {
+      final byBytes = a.byteLength.compareTo(b.byteLength);
+      if (byBytes != 0) return byBytes;
+      return _modeTieRank(a.mode).compareTo(_modeTieRank(b.mode));
+    });
+    return candidates.first;
+  }
+
+  EncodedMCOImage? _tryBuildCandidate(
+    MCOImage image,
+    List<int> linear,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan, {
+    required int backgroundColor,
+  }) {
+    final writer = _V3BitWriter();
+    writer.writeAlignedByte(
+      _formatMarker |
+          (image.transparentColor != null ? _transparentFlag : 0) |
+          _profileId(image.paletteProfile),
+    );
+    writer
+      ..writeAlignedByte(image.width - 1)
+      ..writeAlignedByte(image.height - 1)
+      ..writeAlignedByte(algorithm.index)
+      ..writeAlignedByte(scan.index);
+    if (image.transparentColor != null) {
+      _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+
+    final bodyStartBits = writer.bitLength;
+    try {
+      _writeBlockBody(
+        writer,
+        linear,
+        image.paletteProfile,
+        algorithm,
+        backgroundColor: backgroundColor,
+        rowLength: _rowLengthForScan(scan, image.width, image.height),
+      );
+    } on MCOImageCodecException {
+      return null;
+    }
+    if (writer.bitLength == bodyStartBits) return null;
+    final payload = writer.toBytes();
+    return EncodedMCOImage(
+      payload: payload,
+      text: '',
+      mode: _imageModeForAlgorithm(algorithm),
+      scan: scan,
+      byteLength: payload.length,
+      charLength: 0,
+      backgroundColor: backgroundColor,
+      transparentColor: image.transparentColor,
+      codecVersion: ChannelAppDataHelper.mcoImageV3Version,
+      localPaletteSize: _localPaletteSizeFor(linear, algorithm, backgroundColor),
+      bitsPerLocalPixel: _bitsPerLocalPixelFor(
+        linear,
+        algorithm,
+        backgroundColor,
+      ),
+      requestedEncodingVersion: MCOImageEncodingVersion.v3,
+      actualEncodingVersion: MCOImageEncodingVersion.v3,
+      paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+      container: MCOImageV3Container.block.name,
+    );
+  }
+
+  void _writeBlockBody(
+    _V3BitWriter writer,
+    List<int> linear,
+    PaletteProfile profile,
+    MCOImageV3BlockAlgorithm algorithm, {
+    required int backgroundColor,
+    required int rowLength,
+  }) {
+    switch (algorithm) {
+      case MCOImageV3BlockAlgorithm.rawGlobal:
+        for (final color in linear) {
+          _writeColorRef(writer, profile, color);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.rawLocal:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        for (final color in linear) {
+          writer.writeBits(map[color]!, bits);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.rleLocal:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final runs = _buildRuns(linear);
+        writer.writeBitVarUint(runs.length);
+        for (final run in runs) {
+          writer
+            ..writeBits(map[run.color]!, bits)
+            ..writeBitVarUint(run.length);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.sparseBackground:
+        _writeColorRef(writer, profile, backgroundColor);
+        final nonBg = linear
+            .where((color) => color != backgroundColor)
+            .toSet()
+            .toList()
+          ..sort();
+        if (nonBg.isEmpty) {
+          throw const MCOImageInvalidInputException('Empty sparse body');
+        }
+        _writeLocalPalette(writer, profile, nonBg);
+        final map = _localIndexMap(nonBg);
+        final bits = _localBits(nonBg.length);
+        final segments = _buildSparseSegments(linear, backgroundColor);
+        writer.writeBitVarUint(segments.length);
+        var pos = 0;
+        for (final segment in segments) {
+          writer
+            ..writeBitVarUint(segment.start - pos)
+            ..writeBits(map[segment.color]!, bits)
+            ..writeBitVarUint(segment.length);
+          pos = segment.start + segment.length;
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.biColorMask:
+        final foreground = _biColorForeground(linear, backgroundColor);
+        if (foreground == null) {
+          throw const MCOImageInvalidInputException('Not a bi-color image');
+        }
+        _writeColorRef(writer, profile, backgroundColor);
+        _writeColorRef(writer, profile, foreground);
+        for (final color in linear) {
+          writer.writeBits(color == foreground ? 1 : 0, 1);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.rowRepeat:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        _writeRowRepeat(writer, localPixels, rowLength, bits);
+        break;
+      case MCOImageV3BlockAlgorithm.rowDelta:
+      case MCOImageV3BlockAlgorithm.compactRle:
+      case MCOImageV3BlockAlgorithm.compactSparse:
+      case MCOImageV3BlockAlgorithm.lzPixels:
+      case MCOImageV3BlockAlgorithm.quadtree:
+      case MCOImageV3BlockAlgorithm.bitplanes:
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+      case MCOImageV3BlockAlgorithm.wrappedBlock:
+        throw const MCOImageInvalidInputException(
+          'MCOimg v3 algorithm is not implemented yet',
+        );
+    }
+  }
+
+  List<int> _decodeBlockBody(
+    _V3BitReader reader,
+    int width,
+    int height,
+    PaletteProfile profile,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+  ) {
+    final count = width * height;
+    switch (algorithm) {
+      case MCOImageV3BlockAlgorithm.rawGlobal:
+        return List<int>.generate(count, (_) => _readColorRef(reader, profile));
+      case MCOImageV3BlockAlgorithm.rawLocal:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        return List<int>.generate(count, (_) {
+          final index = reader.readBits(bits);
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Local color index out of range',
+            );
+          }
+          return palette[index];
+        });
+      case MCOImageV3BlockAlgorithm.rleLocal:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final runCount = reader.readBitVarUint();
+        final result = <int>[];
+        for (var i = 0; i < runCount; i++) {
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'RLE color index out of range',
+            );
+          }
+          final length = reader.readBitVarUint();
+          if (length <= 0 || result.length + length > count) {
+            throw const MCOImageInvalidPayloadException('Invalid RLE length');
+          }
+          result.addAll(List<int>.filled(length, palette[colorIndex]));
+        }
+        if (result.length != count) {
+          throw const MCOImageInvalidPayloadException('Invalid RLE size');
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.sparseBackground:
+        final background = _readColorRef(reader, profile);
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final result = List<int>.filled(count, background);
+        final segmentCount = reader.readBitVarUint();
+        var pos = 0;
+        for (var i = 0; i < segmentCount; i++) {
+          pos += reader.readBitVarUint();
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Sparse color index out of range',
+            );
+          }
+          final length = reader.readBitVarUint();
+          if (length <= 0 || pos + length > count) {
+            throw const MCOImageInvalidPayloadException('Invalid sparse run');
+          }
+          for (var j = 0; j < length; j++) {
+            result[pos + j] = palette[colorIndex];
+          }
+          pos += length;
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.biColorMask:
+        final background = _readColorRef(reader, profile);
+        final foreground = _readColorRef(reader, profile);
+        return List<int>.generate(
+          count,
+          (_) => reader.readBits(1) != 0 ? foreground : background,
+        );
+      case MCOImageV3BlockAlgorithm.rowRepeat:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final localPixels = _readRowRepeat(
+          reader,
+          count,
+          _rowLengthForScan(scan, width, height),
+          bits,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Row-repeat color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
+      case MCOImageV3BlockAlgorithm.rowDelta:
+      case MCOImageV3BlockAlgorithm.compactRle:
+      case MCOImageV3BlockAlgorithm.compactSparse:
+      case MCOImageV3BlockAlgorithm.lzPixels:
+      case MCOImageV3BlockAlgorithm.quadtree:
+      case MCOImageV3BlockAlgorithm.bitplanes:
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+      case MCOImageV3BlockAlgorithm.wrappedBlock:
+        throw const MCOImageInvalidPayloadException(
+          'Unsupported MCOimg v3 algorithm',
+        );
+    }
+  }
+
+  static MCOImageV3BlockAlgorithm _algorithmFromId(int value) {
+    if (value < 0 || value >= MCOImageV3BlockAlgorithm.values.length) {
+      throw MCOImageInvalidPayloadException(
+        'Unknown MCOimg v3 algorithm $value',
+      );
+    }
+    return MCOImageV3BlockAlgorithm.values[value];
+  }
+
+  static ScanMode _scanFromId(int value) {
+    if (value < 0 || value >= ScanMode.values.length) {
+      throw MCOImageInvalidPayloadException('Unknown MCOimg v3 scan $value');
+    }
+    return ScanMode.values[value];
+  }
+
+  static ImageMode _imageModeForAlgorithm(MCOImageV3BlockAlgorithm algorithm) {
+    return switch (algorithm) {
+      MCOImageV3BlockAlgorithm.rawGlobal => ImageMode.rawGlobal,
+      MCOImageV3BlockAlgorithm.rawLocal => ImageMode.rawLocal,
+      MCOImageV3BlockAlgorithm.rleLocal => ImageMode.rleLocal,
+      MCOImageV3BlockAlgorithm.sparseBackground => ImageMode.sparseBg,
+      MCOImageV3BlockAlgorithm.biColorMask => ImageMode.biColorMask,
+      MCOImageV3BlockAlgorithm.rowDelta => ImageMode.rowDelta,
+      MCOImageV3BlockAlgorithm.rowRepeat => ImageMode.rowRepeat,
+      _ => ImageMode.extended,
+    };
+  }
+
+  static int _modeTieRank(ImageMode mode) {
+    return switch (mode) {
+      ImageMode.biColorMask => 0,
+      ImageMode.sparseBg => 1,
+      ImageMode.rowRepeat => 2,
+      ImageMode.rleLocal => 3,
+      ImageMode.rawLocal => 4,
+      ImageMode.rawGlobal => 5,
+      ImageMode.extended => 6,
+      ImageMode.rowDelta => 7,
+      ImageMode.regionsBg => 8,
+    };
+  }
+
+  static int? _localPaletteSizeFor(
+    List<int> linear,
+    MCOImageV3BlockAlgorithm algorithm,
+    int backgroundColor,
+  ) {
+    return switch (algorithm) {
+      MCOImageV3BlockAlgorithm.rawLocal ||
+      MCOImageV3BlockAlgorithm.rleLocal ||
+      MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
+      MCOImageV3BlockAlgorithm.sparseBackground =>
+        linear.where((color) => color != backgroundColor).toSet().length,
+      MCOImageV3BlockAlgorithm.biColorMask => 2,
+      _ => null,
+    };
+  }
+
+  static int? _bitsPerLocalPixelFor(
+    List<int> linear,
+    MCOImageV3BlockAlgorithm algorithm,
+    int backgroundColor,
+  ) {
+    final paletteSize = _localPaletteSizeFor(
+      linear,
+      algorithm,
+      backgroundColor,
+    );
+    return paletteSize == null || paletteSize <= 0
+        ? null
+        : _localBits(paletteSize);
+  }
+
+  static List<int> _localPalette(List<int> pixels) {
+    final counts = <int, int>{};
+    for (final pixel in pixels) {
+      counts[pixel] = (counts[pixel] ?? 0) + 1;
+    }
+    final colors = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        if (byCount != 0) return byCount;
+        return a.compareTo(b);
+      });
+    if (colors.isEmpty) {
+      throw const MCOImageInvalidInputException('Empty local palette');
+    }
+    return colors;
+  }
+
+  static Map<int, int> _localIndexMap(List<int> colors) {
+    return {for (var i = 0; i < colors.length; i++) colors[i]: i};
+  }
+
+  static List<_V3Run> _buildRuns(List<int> pixels) {
+    if (pixels.isEmpty) return const <_V3Run>[];
+    final runs = <_V3Run>[];
+    var color = pixels.first;
+    var length = 1;
+    for (var i = 1; i < pixels.length; i++) {
+      if (pixels[i] == color) {
+        length++;
+      } else {
+        runs.add(_V3Run(color, length));
+        color = pixels[i];
+        length = 1;
+      }
+    }
+    runs.add(_V3Run(color, length));
+    return runs;
+  }
+
+  static List<_V3SparseSegment> _buildSparseSegments(
+    List<int> pixels,
+    int background,
+  ) {
+    final result = <_V3SparseSegment>[];
+    var pos = 0;
+    while (pos < pixels.length) {
+      while (pos < pixels.length && pixels[pos] == background) {
+        pos++;
+      }
+      if (pos >= pixels.length) break;
+      final start = pos;
+      final color = pixels[pos];
+      while (pos < pixels.length && pixels[pos] == color) {
+        pos++;
+      }
+      result.add(_V3SparseSegment(start, color, pos - start));
+    }
+    return result;
+  }
+
+  static int? _biColorForeground(List<int> pixels, int background) {
+    int? foreground;
+    for (final pixel in pixels) {
+      if (pixel == background) continue;
+      foreground ??= pixel;
+      if (pixel != foreground) return null;
+    }
+    return foreground;
+  }
+
+  static void _writeRowRepeat(
+    _V3BitWriter writer,
+    List<int> localPixels,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || localPixels.length % rowLength != 0) {
+      throw const MCOImageInvalidInputException('Invalid row-repeat geometry');
+    }
+    for (var x = 0; x < rowLength; x++) {
+      writer.writeBits(localPixels[x], localBits);
+    }
+    final rows = localPixels.length ~/ rowLength;
+    for (var row = 1; row < rows; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      var same = true;
+      for (var x = 0; x < rowLength; x++) {
+        if (localPixels[rowStart + x] != localPixels[previousStart + x]) {
+          same = false;
+          break;
+        }
+      }
+      writer.writeBits(same ? 1 : 0, 1);
+      if (!same) {
+        for (var x = 0; x < rowLength; x++) {
+          writer.writeBits(localPixels[rowStart + x], localBits);
+        }
+      }
+    }
+  }
+
+  static List<int> _readRowRepeat(
+    _V3BitReader reader,
+    int count,
+    int rowLength,
+    int localBits,
+  ) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid row-repeat geometry',
+      );
+    }
+    final result = List<int>.filled(count, 0);
+    for (var x = 0; x < rowLength; x++) {
+      result[x] = reader.readBits(localBits);
+    }
+    final rows = count ~/ rowLength;
+    for (var row = 1; row < rows; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      if (reader.readBits(1) != 0) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = result[previousStart + x];
+        }
+      } else {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = reader.readBits(localBits);
+        }
+      }
+    }
+    return result;
+  }
+
+  static void _writeLocalPalette(
+    _V3BitWriter writer,
+    PaletteProfile profile,
+    List<int> colors,
+  ) {
+    writer.writeBitVarUint(colors.length);
+    for (final color in colors) {
+      _writeColorRef(writer, profile, color);
+    }
+  }
+
+  static List<int> _readLocalPalette(
+    _V3BitReader reader,
+    PaletteProfile profile,
+  ) {
+    final length = reader.readBitVarUint();
+    if (length <= 0 || length > _paletteSize(profile)) {
+      throw const MCOImageInvalidPayloadException('Invalid local palette size');
+    }
+    final colors = <int>[];
+    final seen = <int>{};
+    for (var i = 0; i < length; i++) {
+      final color = _readColorRef(reader, profile);
+      if (!seen.add(color)) {
+        throw const MCOImageInvalidPayloadException('Duplicate local color');
+      }
+      colors.add(color);
+    }
+    return colors;
+  }
+
+  static void _writeColorRef(
+    _V3BitWriter writer,
+    PaletteProfile profile,
+    int color,
+  ) {
+    _validateColor(color, profile);
+    if (profile.isDynamic) {
+      writer.writeBits(
+        MCOImageDynamicPalette.profileColorIdForGlobalIndex(profile, color)!,
+        _globalBits(profile),
+      );
+    } else {
+      writer.writeBits(color, _globalBits(profile));
+    }
+  }
+
+  static int _readColorRef(_V3BitReader reader, PaletteProfile profile) {
+    final colorRef = reader.readBits(_globalBits(profile));
+    final color = profile.isDynamic
+        ? MCOImageDynamicPalette.globalIndexForProfileColorId(profile, colorRef)
+        : colorRef;
+    _validateColor(color, profile, payload: true);
+    return color;
+  }
+
+  static int _globalBits(PaletteProfile profile) {
+    return switch (profile) {
+      PaletteProfile.mono => 1,
+      PaletteProfile.master4 => 2,
+      PaletteProfile.master8 => 3,
+      PaletteProfile.grayscale8 => 3,
+      PaletteProfile.master16 => 4,
+      PaletteProfile.grayscale16 => 4,
+      PaletteProfile.master32 => 5,
+      PaletteProfile.grayscale32 => 5,
+      PaletteProfile.master64 => 6,
+      PaletteProfile.dynamicGlobal8 => 3,
+      PaletteProfile.dynamicGlobal16 => 4,
+      PaletteProfile.dynamicGlobal32 => 5,
+      PaletteProfile.dynamicGlobal64 => 6,
+      PaletteProfile.dynamicGlobal128 => 7,
+      PaletteProfile.dynamicGlobal256 => 8,
+      PaletteProfile.dynamicGlobal512 => 9,
+    };
+  }
+
+  static int _paletteSize(PaletteProfile profile) {
+    return switch (profile) {
+      PaletteProfile.mono => 2,
+      PaletteProfile.master4 => 4,
+      PaletteProfile.master8 => 8,
+      PaletteProfile.grayscale8 => 8,
+      PaletteProfile.master16 => 16,
+      PaletteProfile.grayscale16 => 16,
+      PaletteProfile.master32 => 32,
+      PaletteProfile.grayscale32 => 32,
+      PaletteProfile.master64 => 64,
+      PaletteProfile.dynamicGlobal8 => 8,
+      PaletteProfile.dynamicGlobal16 => 16,
+      PaletteProfile.dynamicGlobal32 => 32,
+      PaletteProfile.dynamicGlobal64 => 64,
+      PaletteProfile.dynamicGlobal128 => 128,
+      PaletteProfile.dynamicGlobal256 => 256,
+      PaletteProfile.dynamicGlobal512 => 512,
+    };
+  }
+
+  static int _profileId(PaletteProfile profile) => profile.index;
+
+  static PaletteProfile _profileFromId(int id) {
+    if (id < 0 || id >= PaletteProfile.values.length) {
+      throw MCOImageInvalidPayloadException('Unknown MCOimg v3 profile $id');
+    }
+    return PaletteProfile.values[id];
+  }
+
+  static bool _isColorValid(int color, PaletteProfile profile) {
+    if (profile.isDynamic) {
+      return MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+            profile,
+            color,
+          ) !=
+          null;
+    }
+    return color >= 0 && color < _paletteSize(profile);
+  }
+
+  static void _validateColor(
+    int color,
+    PaletteProfile profile, {
+    bool payload = false,
+  }) {
+    if (_isColorValid(color, profile)) return;
+    final message = 'Color $color is not available in ${profile.name}';
+    if (payload) throw MCOImageInvalidPayloadException(message);
+    throw MCOImageInvalidInputException(message);
+  }
+
+  static void _validateImage(MCOImage image) {
+    _validateDimensions(image.width, image.height);
+    if (image.pixels.length != image.width * image.height) {
+      throw const MCOImageInvalidInputException('Invalid pixel count');
+    }
+    for (final pixel in image.pixels) {
+      _validateColor(pixel, image.paletteProfile);
+    }
+    if (image.transparentColor != null) {
+      _validateColor(image.transparentColor!, image.paletteProfile);
+    }
+  }
+
+  static void _validateDimensions(
+    int width,
+    int height, {
+    bool payload = false,
+  }) {
+    if (width >= _minSize &&
+        height >= _minSize &&
+        width <= _maxSize &&
+        height <= _maxSize) {
+      return;
+    }
+    const message = 'Image size must be 1..256 in both axes';
+    if (payload) throw const MCOImageInvalidPayloadException(message);
+    throw const MCOImageInvalidInputException(message);
+  }
+
+  static int _rowLengthForScan(ScanMode scan, int width, int height) {
+    return switch (scan) {
+      ScanMode.h || ScanMode.s => width,
+      ScanMode.v || ScanMode.sv => height,
+    };
+  }
+
+  static List<int> _toScanOrder(
+    List<int> pixels,
+    int width,
+    int height,
+    ScanMode scan,
+  ) {
+    final result = <int>[];
+    switch (scan) {
+      case ScanMode.h:
+        return List<int>.of(pixels);
+      case ScanMode.v:
+        for (var x = 0; x < width; x++) {
+          for (var y = 0; y < height; y++) {
+            result.add(pixels[y * width + x]);
+          }
+        }
+        return result;
+      case ScanMode.s:
+        for (var y = 0; y < height; y++) {
+          if (y.isEven) {
+            for (var x = 0; x < width; x++) {
+              result.add(pixels[y * width + x]);
+            }
+          } else {
+            for (var x = width - 1; x >= 0; x--) {
+              result.add(pixels[y * width + x]);
+            }
+          }
+        }
+        return result;
+      case ScanMode.sv:
+        for (var x = 0; x < width; x++) {
+          if (x.isEven) {
+            for (var y = 0; y < height; y++) {
+              result.add(pixels[y * width + x]);
+            }
+          } else {
+            for (var y = height - 1; y >= 0; y--) {
+              result.add(pixels[y * width + x]);
+            }
+          }
+        }
+        return result;
+    }
+  }
+
+  static List<int> _fromScanOrder(
+    List<int> linear,
+    int width,
+    int height,
+    ScanMode scan,
+  ) {
+    final result = List<int>.filled(width * height, 0);
+    var index = 0;
+    switch (scan) {
+      case ScanMode.h:
+        return List<int>.of(linear);
+      case ScanMode.v:
+        for (var x = 0; x < width; x++) {
+          for (var y = 0; y < height; y++) {
+            result[y * width + x] = linear[index++];
+          }
+        }
+        return result;
+      case ScanMode.s:
+        for (var y = 0; y < height; y++) {
+          if (y.isEven) {
+            for (var x = 0; x < width; x++) {
+              result[y * width + x] = linear[index++];
+            }
+          } else {
+            for (var x = width - 1; x >= 0; x--) {
+              result[y * width + x] = linear[index++];
+            }
+          }
+        }
+        return result;
+      case ScanMode.sv:
+        for (var x = 0; x < width; x++) {
+          if (x.isEven) {
+            for (var y = 0; y < height; y++) {
+              result[y * width + x] = linear[index++];
+            }
+          } else {
+            for (var y = height - 1; y >= 0; y--) {
+              result[y * width + x] = linear[index++];
+            }
+          }
+        }
+        return result;
+    }
+  }
+
+  static int _localBits(int colorCount) {
+    if (colorCount <= 1) return 0;
+    return (colorCount - 1).bitLength;
+  }
+}
+
+class _V3Run {
+  final int color;
+  final int length;
+
+  const _V3Run(this.color, this.length);
+}
+
+class _V3SparseSegment {
+  final int start;
+  final int color;
+  final int length;
+
+  const _V3SparseSegment(this.start, this.color, this.length);
+}
+
+class _V3BitWriter {
+  final List<int> _bytes = <int>[];
+  var _current = 0;
+  var _bitOffset = 0;
+
+  int get bitLength => _bytes.length * 8 + _bitOffset;
+
+  void writeBits(int value, int bits) {
+    if (bits < 0 || bits > 32) {
+      throw const MCOImageInvalidInputException('Invalid bit length');
+    }
+    if (bits == 0) return;
+    if (value < 0 || value >= (1 << bits)) {
+      throw const MCOImageInvalidInputException('Value does not fit bits');
+    }
+    var remaining = bits;
+    var shifted = value;
+    while (remaining > 0) {
+      final available = 8 - _bitOffset;
+      final take = math.min(available, remaining);
+      final mask = (1 << take) - 1;
+      _current |= (shifted & mask) << _bitOffset;
+      _bitOffset += take;
+      shifted >>= take;
+      remaining -= take;
+      if (_bitOffset == 8) {
+        _bytes.add(_current);
+        _current = 0;
+        _bitOffset = 0;
+      }
+    }
+  }
+
+  void writeAlignedByte(int value) {
+    alignToByte();
+    _bytes.add(value & 0xff);
+  }
+
+  void writeBitVarUint(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative varuint');
+    }
+    var remaining = value;
+    do {
+      var byte = remaining & 0x7f;
+      remaining >>= 7;
+      if (remaining != 0) byte |= 0x80;
+      writeBits(byte, 8);
+    } while (remaining != 0);
+  }
+
+  void alignToByte() {
+    if (_bitOffset > 0) {
+      _bytes.add(_current);
+      _current = 0;
+      _bitOffset = 0;
+    }
+  }
+
+  Uint8List toBytes() {
+    alignToByte();
+    return Uint8List.fromList(_bytes);
+  }
+}
+
+class _V3BitReader {
+  final Uint8List _bytes;
+  int byteIndex;
+  var _bitOffset = 0;
+
+  _V3BitReader(this._bytes, {this.byteIndex = 0});
+
+  int readBits(int bits) {
+    if (bits < 0 || bits > 32) {
+      throw const MCOImageInvalidPayloadException('Invalid bit length');
+    }
+    var result = 0;
+    var shift = 0;
+    var remaining = bits;
+    while (remaining > 0) {
+      if (byteIndex >= _bytes.length) {
+        throw const MCOImageInvalidPayloadException('Unexpected end of bits');
+      }
+      final available = 8 - _bitOffset;
+      final take = math.min(available, remaining);
+      final mask = (1 << take) - 1;
+      result |= ((_bytes[byteIndex] >> _bitOffset) & mask) << shift;
+      _bitOffset += take;
+      if (_bitOffset == 8) {
+        byteIndex++;
+        _bitOffset = 0;
+      }
+      shift += take;
+      remaining -= take;
+    }
+    return result;
+  }
+
+  int readBitVarUint() {
+    var result = 0;
+    var shift = 0;
+    for (var i = 0; i < 5; i++) {
+      final byte = readBits(8);
+      result |= (byte & 0x7f) << shift;
+      if ((byte & 0x80) == 0) return result;
+      shift += 7;
+    }
+    throw const MCOImageInvalidPayloadException('Varuint is too long');
+  }
+
+  void finish() {
+    if (_bitOffset != 0) {
+      final unusedMask = 0xff << _bitOffset;
+      if ((_bytes[byteIndex] & unusedMask) != 0) {
+        throw const MCOImageInvalidPayloadException('Non-zero padding bits');
+      }
+      byteIndex++;
+      _bitOffset = 0;
+    }
+    if (byteIndex != _bytes.length) {
+      throw const MCOImageInvalidPayloadException('Trailing payload bytes');
+    }
   }
 }
