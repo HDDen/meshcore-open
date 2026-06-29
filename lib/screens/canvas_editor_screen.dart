@@ -1368,6 +1368,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final newWidth = width ?? _width;
     final newHeight = height ?? _height;
     if (newWidth == _width && newHeight == _height) return;
+    _cancelPayloadCalculationBeforeCanvasReplacement();
     final oldWidth = _width;
     final oldHeight = _height;
     final nextPixels = _resizePixels(
@@ -1401,6 +1402,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _resizeByCropping({required int width, required int height}) {
     if (width == _width && height == _height) return;
+    _cancelPayloadCalculationBeforeCanvasReplacement();
     final nextPixels = _cropOrPadPixels(
       sourcePixels: _pixels,
       sourceWidth: _width,
@@ -1990,6 +1992,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     // Reuse the existing debounce. Every subsequent canvas/settings change
     // resets this timer, so only one encoding starts after the user pauses.
     _schedulePayloadRefresh();
+  }
+
+  bool _cancelPayloadCalculationBeforeCanvasReplacement() {
+    final hadPendingRefresh = _payloadRefreshPending;
+    _currentEncodedCacheKey = null;
+    _payloadRefreshProgressPercent = null;
+
+    // File loading and other whole-canvas replacements can spend noticeable
+    // time before _markPayloadDirty() is reached. Stop stale encoders now so
+    // their progress/debug output does not continue for the previous canvas.
+    unawaited(
+      _cancelCurrentEncoding(
+        preservePendingRefresh: true,
+      ),
+    );
+    return hadPendingRefresh;
   }
 
   void _queueInitialPayloadRefresh() {
@@ -2848,6 +2866,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _clearCanvas() {
+    _cancelPayloadCalculationBeforeCanvasReplacement();
     _clearCanvasHistory();
     setState(() {
       _pixels = List.filled(_width * _height, _whiteIndex);
@@ -2861,6 +2880,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<void> _loadCanvasFromFile() async {
+    var shouldRestorePendingRefreshOnError = false;
     try {
       final file = await file_selector.openFile(
         acceptedTypeGroups: const [
@@ -2880,6 +2900,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
       if (file == null) return;
 
+      shouldRestorePendingRefreshOnError =
+          _cancelPayloadCalculationBeforeCanvasReplacement();
       final bytes = await file.readAsBytes();
       if (file.name.toLowerCase().endsWith('.mcoimg.bin')) {
         final image = _codec.decode(MCOImageCodec.textFromBinaryPayload(bytes));
@@ -2916,6 +2938,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _markPayloadDirty();
       unawaited(_saveCanvasSize(importedImage.width, importedImage.height));
     } catch (error) {
+      if (shouldRestorePendingRefreshOnError && mounted) {
+        _schedulePayloadRefresh();
+      }
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
