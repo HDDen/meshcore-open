@@ -91,6 +91,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -182,6 +185,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _screenFocusNode.dispose();
@@ -196,15 +202,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return Focus(
       focusNode: _screenFocusNode,
       autofocus: PlatformInfo.isDesktop,
-      onKeyEvent: (node, event) {
-        if (!PlatformInfo.isDesktop ||
-            event is! KeyDownEvent ||
-            event.logicalKey != LogicalKeyboardKey.escape) {
-          return KeyEventResult.ignored;
-        }
-        unawaited(_handleEscapeNavigation());
-        return KeyEventResult.handled;
-      },
       child: Scaffold(
         appBar: AppBar(
           title: Consumer<MeshCoreConnector>(
@@ -363,6 +360,19 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    unawaited(_handleEscapeNavigation());
+    return true;
   }
 
   Widget _buildEmptyState() {

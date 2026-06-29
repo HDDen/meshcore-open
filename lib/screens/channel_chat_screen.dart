@@ -108,6 +108,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   void initState() {
     super.initState();
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
     region = context.read<MeshCoreConnector>().getChannelRegion(
@@ -207,6 +210,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveChannel(null);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _screenFocusNode.dispose();
@@ -496,15 +502,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return Focus(
       focusNode: _screenFocusNode,
       autofocus: PlatformInfo.isDesktop,
-      onKeyEvent: (node, event) {
-        if (!PlatformInfo.isDesktop ||
-            event is! KeyDownEvent ||
-            event.logicalKey != LogicalKeyboardKey.escape) {
-          return KeyEventResult.ignored;
-        }
-        unawaited(_handleEscapeNavigation());
-        return KeyEventResult.handled;
-      },
       child: Scaffold(
         appBar: AppBar(
           title: GestureDetector(
@@ -752,6 +749,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ),
       ),
     );
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    unawaited(_handleEscapeNavigation());
+    return true;
   }
 
   void _markAsUnread(ChannelMessage message) {
