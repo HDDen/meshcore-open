@@ -189,6 +189,26 @@ void main() {
       expect(encoded.encodedCandidate.mode, ImageMode.extended);
       expect(decoded.pixels, image.pixels);
     });
+
+    test('large solid quadrants can use quadtree algorithm', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) {
+          if (x < 8 && y < 8) return 0;
+          if (x >= 8 && y < 8) return 2;
+          if (x < 8 && y >= 8) return 4;
+          return 6;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(algorithmId, MCOImageV3BlockAlgorithm.quadtree.index);
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {

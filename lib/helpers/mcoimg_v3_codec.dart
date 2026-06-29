@@ -241,6 +241,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.rleLocal,
           MCOImageV3BlockAlgorithm.compactRle,
           MCOImageV3BlockAlgorithm.lzPixels,
+          MCOImageV3BlockAlgorithm.quadtree,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -266,6 +267,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rleLocal,
         MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.lzPixels,
+        MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -459,11 +461,16 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rleLocal,
         MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.lzPixels,
+        MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
         MCOImageV3BlockAlgorithm.compactSparse,
         MCOImageV3BlockAlgorithm.biColorMask,
       ]) {
+        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+            scan != ScanMode.h) {
+          continue;
+        }
         final writer = _V3BitWriter();
         try {
           _writeBlockBody(
@@ -506,6 +513,10 @@ class MCOImageV3Codec {
     required int backgroundColor,
   }) {
     final writer = _V3BitWriter();
+    if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+        scan != ScanMode.h) {
+      return null;
+    }
     writer.writeAlignedByte(
       _formatMarker |
           (image.transparentColor != null ? _transparentFlag : 0) |
@@ -581,6 +592,10 @@ class MCOImageV3Codec {
     ScanMode scan, {
     required int backgroundColor,
   }) {
+    if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+        scan != ScanMode.h) {
+      return null;
+    }
     final writer = _V3BitWriter();
     writer.writeAlignedByte(
       _formatMarker |
@@ -798,6 +813,29 @@ class MCOImageV3Codec {
           }
         }
         break;
+      case MCOImageV3BlockAlgorithm.quadtree:
+        if (rowLength <= 0 ||
+            rowLength != linear.length && linear.length % rowLength != 0) {
+          throw const MCOImageInvalidInputException(
+            'Invalid quadtree geometry',
+          );
+        }
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        _writeQuadtreeNode(
+          writer,
+          localPixels,
+          rowLength,
+          0,
+          0,
+          rowLength,
+          linear.length ~/ rowLength,
+          bits,
+        );
+        break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         _writeColorRef(writer, profile, backgroundColor);
         final nonBg = linear
@@ -873,7 +911,6 @@ class MCOImageV3Codec {
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
@@ -987,6 +1024,26 @@ class MCOImageV3Codec {
           }
         }
         return result;
+      case MCOImageV3BlockAlgorithm.quadtree:
+        if (scan != ScanMode.h) {
+          throw const MCOImageInvalidPayloadException(
+            'Quadtree requires horizontal scan',
+          );
+        }
+        final palette = _readLocalPalette(reader, profile);
+        final result = List<int>.filled(count, palette.first);
+        _readQuadtreeNode(
+          reader,
+          result,
+          width,
+          0,
+          0,
+          width,
+          height,
+          palette,
+          _localBits(palette.length),
+        );
+        return result;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         final background = _readColorRef(reader, profile);
         final palette = _readLocalPalette(reader, profile);
@@ -1074,7 +1131,6 @@ class MCOImageV3Codec {
           return palette[index];
         }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
@@ -1164,6 +1220,7 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rleLocal ||
       MCOImageV3BlockAlgorithm.compactRle ||
       MCOImageV3BlockAlgorithm.lzPixels ||
+      MCOImageV3BlockAlgorithm.quadtree ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
       MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse =>
@@ -1304,6 +1361,262 @@ class MCOImageV3Codec {
       bits += 8;
     } while (current != 0);
     return bits;
+  }
+
+  static void _writeQuadtreeNode(
+    _V3BitWriter writer,
+    List<int> pixels,
+    int stride,
+    int x,
+    int y,
+    int width,
+    int height,
+    int localBits,
+  ) {
+    final firstColor = pixels[y * stride + x];
+    var isSolid = true;
+    for (var dy = 0; dy < height && isSolid; dy++) {
+      final rowStart = (y + dy) * stride + x;
+      for (var dx = 0; dx < width; dx++) {
+        if (pixels[rowStart + dx] != firstColor) {
+          isSolid = false;
+          break;
+        }
+      }
+    }
+    if (isSolid) {
+      writer
+        ..writeBits(1, 1)
+        ..writeBits(firstColor, localBits);
+      return;
+    }
+
+    writer.writeBits(0, 1);
+    if (width == 1) {
+      final topHeight = height ~/ 2;
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y,
+        width,
+        topHeight,
+        localBits,
+      );
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y + topHeight,
+        width,
+        height - topHeight,
+        localBits,
+      );
+      return;
+    }
+    if (height == 1) {
+      final leftWidth = width ~/ 2;
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x,
+        y,
+        leftWidth,
+        height,
+        localBits,
+      );
+      _writeQuadtreeNode(
+        writer,
+        pixels,
+        stride,
+        x + leftWidth,
+        y,
+        width - leftWidth,
+        height,
+        localBits,
+      );
+      return;
+    }
+
+    final leftWidth = width ~/ 2;
+    final topHeight = height ~/ 2;
+    _writeQuadtreeNode(
+      writer,
+      pixels,
+      stride,
+      x,
+      y,
+      leftWidth,
+      topHeight,
+      localBits,
+    );
+    _writeQuadtreeNode(
+      writer,
+      pixels,
+      stride,
+      x + leftWidth,
+      y,
+      width - leftWidth,
+      topHeight,
+      localBits,
+    );
+    _writeQuadtreeNode(
+      writer,
+      pixels,
+      stride,
+      x,
+      y + topHeight,
+      leftWidth,
+      height - topHeight,
+      localBits,
+    );
+    _writeQuadtreeNode(
+      writer,
+      pixels,
+      stride,
+      x + leftWidth,
+      y + topHeight,
+      width - leftWidth,
+      height - topHeight,
+      localBits,
+    );
+  }
+
+  static void _readQuadtreeNode(
+    _V3BitReader reader,
+    List<int> pixels,
+    int stride,
+    int x,
+    int y,
+    int width,
+    int height,
+    List<int> palette,
+    int localBits,
+  ) {
+    final isSolid = reader.readBits(1) != 0;
+    if (isSolid) {
+      final colorIndex = reader.readBits(localBits);
+      if (colorIndex >= palette.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Quadtree color index out of range',
+        );
+      }
+      for (var dy = 0; dy < height; dy++) {
+        final rowStart = (y + dy) * stride + x;
+        for (var dx = 0; dx < width; dx++) {
+          pixels[rowStart + dx] = palette[colorIndex];
+        }
+      }
+      return;
+    }
+    if (width == 1 && height == 1) {
+      throw const MCOImageInvalidPayloadException(
+        'Quadtree splits a single pixel',
+      );
+    }
+
+    if (width == 1) {
+      final topHeight = height ~/ 2;
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y,
+        width,
+        topHeight,
+        palette,
+        localBits,
+      );
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y + topHeight,
+        width,
+        height - topHeight,
+        palette,
+        localBits,
+      );
+      return;
+    }
+    if (height == 1) {
+      final leftWidth = width ~/ 2;
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x,
+        y,
+        leftWidth,
+        height,
+        palette,
+        localBits,
+      );
+      _readQuadtreeNode(
+        reader,
+        pixels,
+        stride,
+        x + leftWidth,
+        y,
+        width - leftWidth,
+        height,
+        palette,
+        localBits,
+      );
+      return;
+    }
+
+    final leftWidth = width ~/ 2;
+    final topHeight = height ~/ 2;
+    _readQuadtreeNode(
+      reader,
+      pixels,
+      stride,
+      x,
+      y,
+      leftWidth,
+      topHeight,
+      palette,
+      localBits,
+    );
+    _readQuadtreeNode(
+      reader,
+      pixels,
+      stride,
+      x + leftWidth,
+      y,
+      width - leftWidth,
+      topHeight,
+      palette,
+      localBits,
+    );
+    _readQuadtreeNode(
+      reader,
+      pixels,
+      stride,
+      x,
+      y + topHeight,
+      leftWidth,
+      height - topHeight,
+      palette,
+      localBits,
+    );
+    _readQuadtreeNode(
+      reader,
+      pixels,
+      stride,
+      x + leftWidth,
+      y + topHeight,
+      width - leftWidth,
+      height - topHeight,
+      palette,
+      localBits,
+    );
   }
 
   static List<int> _localPalette(List<int> pixels) {
