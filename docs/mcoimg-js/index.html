@@ -484,6 +484,15 @@
           </select>
         </label>
 
+        <label id="compressionLevelLabel" style="margin-top: 12px;">
+          Compression level
+          <select id="compressionLevel">
+            <option value="2">Extreme</option>
+            <option value="0" selected>High</option>
+            <option value="1">Normal</option>
+          </select>
+        </label>
+
         <label style="margin-top: 12px;">
           Palette profile
           <select id="palette"></select>
@@ -825,6 +834,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       PaletteDisplayOrder,
       PaletteDisplayName,
       MCOImageEncodingVersion,
+      MCOImageCompressionLevel,
       MCOImageTextOutputFormat,
       DynamicGlobalIndices,
       getPalette,
@@ -843,6 +853,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     const editor = document.getElementById('editor');
     const decodedCanvas = document.getElementById('decoded');
     const formatVersionSelect = document.getElementById('formatVersion');
+    const compressionLevelLabel = document.getElementById('compressionLevelLabel');
+    const compressionLevelSelect = document.getElementById('compressionLevel');
     const paletteSelect = document.getElementById('palette');
     const palettePreview = document.getElementById('palettePreview');
     const paletteToggle = document.getElementById('paletteToggle');
@@ -869,6 +881,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       height: 11,
       paletteProfile: PaletteProfile.master8,
       encodingVersion: MCOImageEncodingVersion.v2,
+      compressionLevel: MCOImageCompressionLevel.high,
       pixels: [],
       selectedColor: 0,
       transparentColor: null,
@@ -888,6 +901,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       redoStack: [],
       historyLimit: 10,
       scale: 24,
+      encodeTask: null,
+      encodeRequestId: 0,
     };
 
     function init() {
@@ -895,6 +910,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
       formatVersionSelect.value = String(state.encodingVersion);
+      compressionLevelSelect.value = String(state.compressionLevel);
       state.selectedColor = blackIndexFor(state.paletteProfile);
       resetPixels();
       bindEvents();
@@ -927,8 +943,15 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         heightInput.value = String(state.height);
         renderPaletteOptions();
         formatVersionSelect.value = String(state.encodingVersion);
+        compressionLevelLabel.hidden =
+          state.encodingVersion !== MCOImageEncodingVersion.v2;
         renderPaletteOptions();
         paletteSelect.value = String(state.paletteProfile);
+        renderAll();
+      });
+
+      compressionLevelSelect.addEventListener('change', () => {
+        state.compressionLevel = Number(compressionLevelSelect.value);
         renderAll();
       });
 
@@ -1860,6 +1883,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           encodingVersion: selectedEncodingVersion(),
         }, {
           encodingVersion: selectedEncodingVersion(),
+          compressionLevel: state.compressionLevel,
         });
         const pngBytes = codec.convertTextPayload(
           encoded.text,
@@ -1892,6 +1916,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           encodingVersion: selectedEncodingVersion(),
         }, {
           encodingVersion: selectedEncodingVersion(),
+          compressionLevel: state.compressionLevel,
         });
         const blob = new Blob([bytes], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
@@ -2187,6 +2212,9 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         height: state.height,
         paletteProfile: state.paletteProfile,
       });
+      compressionLevelLabel.hidden =
+        state.encodingVersion !== MCOImageEncodingVersion.v2;
+      compressionLevelSelect.value = String(state.compressionLevel);
       renderPalette();
       renderAlphaControl();
       showGridInput.checked = state.showGrid;
@@ -2341,32 +2369,58 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       ctx.restore();
     }
 
+    function cancelEncodeTask() {
+      if (state.encodeTask && typeof state.encodeTask.cancel === 'function') {
+        state.encodeTask.cancel();
+      }
+      state.encodeTask = null;
+    }
+
     function encodeCurrent() {
+      const requestId = ++state.encodeRequestId;
+      cancelEncodeTask();
+      encodedMeta.textContent = 'Encoding…';
+      const image = {
+        width: state.width,
+        height: state.height,
+        paletteProfile: state.paletteProfile,
+        pixels: state.pixels.slice(),
+        transparentColor:
+          selectedEncodingVersion() === MCOImageEncodingVersion.v2
+            ? state.transparentColor
+            : null,
+        encodingVersion: selectedEncodingVersion(),
+      };
+      const options = {
+        encodingVersion: selectedEncodingVersion(),
+        compressionLevel: state.compressionLevel,
+      };
+
       try {
-        const encoded = codec.encode({
-          width: state.width,
-          height: state.height,
-          paletteProfile: state.paletteProfile,
-          pixels: state.pixels,
-          transparentColor:
-            selectedEncodingVersion() === MCOImageEncodingVersion.v2
-              ? state.transparentColor
-              : null,
-          encodingVersion: selectedEncodingVersion(),
-        }, {
-          encodingVersion: selectedEncodingVersion(),
+        const task = window.MCOImgBrowser.startCancellableEncode(image, options);
+        state.encodeTask = task;
+        task.result.then((encoded) => {
+          if (requestId !== state.encodeRequestId || task.isCancelled) return;
+          state.encodeTask = null;
+          encodedText.value = encoded.text;
+          const payloadInfo = MCOImageCodec.inspectPayload(encoded.text);
+          encodedMeta.textContent =
+            `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
+            `v${encoded.codecVersion || selectedEncodingVersion()} ` +
+            `${payloadInfo?.algorithm || encoded.modeName}/${encoded.scanName}` +
+            (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
+            (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
+          drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
+          renderBinaryInspector(encoded.text);
+        }).catch((error) => {
+          if (requestId !== state.encodeRequestId || task.isCancelled) return;
+          state.encodeTask = null;
+          encodedMeta.textContent = error.message;
+          renderBinaryInspector(encodedText.value);
         });
-        encodedText.value = encoded.text;
-        const payloadInfo = MCOImageCodec.inspectPayload(encoded.text);
-        encodedMeta.textContent =
-          `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
-          `v${encoded.codecVersion || selectedEncodingVersion()} ` +
-          `${payloadInfo?.algorithm || encoded.modeName}/${encoded.scanName}` +
-          (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
-          (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
-        drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
-        renderBinaryInspector(encoded.text);
       } catch (error) {
+        if (requestId !== state.encodeRequestId) return;
+        state.encodeTask = null;
         encodedMeta.textContent = error.message;
         renderBinaryInspector(encodedText.value);
       }

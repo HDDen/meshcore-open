@@ -178,6 +178,29 @@ EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
   );
 }
 
+@pragma('vm:entry-point')
+MCOImageEncodeDiagnostics _debugEncodeMCOImageRequest(
+  _MCOImageEncodeRequest request,
+) {
+  return MCOImageCodec().debugEncode(
+    MCOImage(
+      width: request.width,
+      height: request.height,
+      paletteProfile: request.paletteProfile,
+      pixels: request.pixels,
+      transparentColor: request.transparentColor,
+      encodingVersion: request.encodingVersion,
+    ),
+    backgroundColor: request.backgroundColor,
+    backgroundCandidates: request.backgroundCandidates,
+    scanModes: request.scanModes,
+    includeNonScanCandidates: request.includeNonScanCandidates,
+    encodingVersion: request.encodingVersion,
+    outputTarget: request.outputTarget,
+    compressionLevel: request.compressionLevel,
+  );
+}
+
 MCOImage _imageFromEncodeRequest(_MCOImageEncodeRequest request) {
   return MCOImage(
     width: request.width,
@@ -313,8 +336,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _payloadRefreshProgressPercent;
   int _payloadRefreshRequestId = 0;
   Completer<void>? _payloadRefreshCompletion;
-  final Set<CancellableComputeTask<EncodedMCOImage>> _activeEncodeTasks =
-      <CancellableComputeTask<EncodedMCOImage>>{};
+  final Set<CancellableComputeTask<dynamic>> _activeEncodeTasks =
+      <CancellableComputeTask<dynamic>>{};
   bool _isDisposed = false;
   bool _isDrawing = false;
   bool _canvasInputLocked = false;
@@ -3298,7 +3321,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool _shouldUseParallelEncode(_MCOImageEncodeRequest request) {
     return request.encodingVersion == MCOImageEncodingVersion.v2 &&
-        request.compressionLevel == MCOImageCodec.compressionLevelExtreme;
+        request.compressionLevel != MCOImageCodec.compressionLevelNormal;
+  }
+
+  String _compressionLevelDebugLabel(int compressionLevel) {
+    return switch (compressionLevel) {
+      MCOImageCodec.compressionLevelNormal => 'Normal',
+      MCOImageCodec.compressionLevelExtreme => 'Extreme',
+      _ => 'High',
+    };
   }
 
   Future<EncodedMCOImage> _encodeCanvasInParallel(
@@ -3314,7 +3345,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     // Run the relatively predictable scan families first. The heavier
     // non-scan slice (regions/solid rectangles/quadtree) is still included, but
-    // it no longer hides which part of Extreme mode is taking the time.
+    // it no longer hides which part of the encode is taking the time.
     for (final backgroundCandidate in backgroundCandidates) {
       final backgroundSlice = [backgroundCandidate];
       for (final scan in ScanMode.values) {
@@ -3353,13 +3384,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _extremeEncodeWorkerLimit(),
       slices.length,
     );
-    final results = <EncodedMCOImage>[];
-    final runningTasks = <CancellableComputeTask<EncodedMCOImage>>{};
+    final candidates = <EncodedMCOImage>[];
+    final runningTasks = <CancellableComputeTask<MCOImageEncodeDiagnostics>>{};
     var nextSliceIndex = 0;
     var completedSlices = 0;
+    final compressionLabel = _compressionLevelDebugLabel(
+      request.compressionLevel,
+    );
 
     debugPrint(
-      '[MCOimg][Extreme] START; '
+      '[MCOimg][$compressionLabel] START; '
       'size=${request.width}x${request.height}; '
       'palette=${request.paletteProfile.name}; '
       'slices=${slices.length}; '
@@ -3380,37 +3414,40 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             : completedBefore * 100 / slices.length;
 
         debugPrint(
-          '[MCOimg][Extreme][W${workerIndex + 1}] '
+          '[MCOimg][$compressionLabel][W${workerIndex + 1}] '
           'START ${sliceIndex + 1}/${slices.length} '
           '(${startPercentage.toStringAsFixed(1)}% complete); '
           '${slice.label};',
         );
 
-        final task = _startEncodeTask(
-          _encodeMCOImageRequest,
+        final task = _startComputeTask(
+          _debugEncodeMCOImageRequest,
           slice.request,
-          debugLabel: 'MCOimg Extreme ${sliceIndex + 1}/${slices.length}',
+          debugLabel:
+              'MCOimg $compressionLabel ${sliceIndex + 1}/${slices.length}',
         );
         runningTasks.add(task);
         try {
-          final result = await _awaitEncodeTask(task);
-          results.add(result);
+          final diagnostics = await _awaitComputeTask(task);
+          final result = diagnostics.result;
+          candidates.addAll(diagnostics.candidates);
           completedSlices++;
           stopwatch.stop();
           final percentage = completedSlices * 100 / slices.length;
           onProgress?.call(percentage.round().clamp(0, 100).toInt());
           final currentBest = MCOImageCodec.selectBestCandidate(
-            results,
+            candidates,
             request.outputTarget,
           );
           final isBest = identical(currentBest, result);
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] '
+            '[MCOimg][$compressionLabel][W${workerIndex + 1}] '
             '$completedSlices/${slices.length} '
             '(${percentage.toStringAsFixed(1)}%); '
             'bytes=${result.byteLength}; '
             'chars=${result.charLength}; '
             '${stopwatch.elapsedMilliseconds} ms; '
+            'candidates=${diagnostics.candidates.length}; '
             '${isBest ? 'BEST' : 'not-best'}; '
             '${slice.label}; '
             'container=${result.container}; '
@@ -3423,13 +3460,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         } on CancellableComputeCancelledException {
           stopwatch.stop();
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] '
+            '[MCOimg][$compressionLabel][W${workerIndex + 1}] '
             'CANCELLED ${sliceIndex + 1}/${slices.length}; '
             '${stopwatch.elapsedMilliseconds} ms; '
             '${slice.label};',
           );
           rethrow;
-        } on MCOImageCodecException catch (error) {
+        } on MCOImageTooLargeException catch (error) {
           // A fine-grained slice may have no viable candidate. Count it as
           // processed and continue with the remaining slices.
           completedSlices++;
@@ -3437,7 +3474,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           final percentage = completedSlices * 100 / slices.length;
           onProgress?.call(percentage.round().clamp(0, 100).toInt());
           debugPrint(
-            '[MCOimg][Extreme][W${workerIndex + 1}] '
+            '[MCOimg][$compressionLabel][W${workerIndex + 1}] '
             '$completedSlices/${slices.length} '
             '(${percentage.toStringAsFixed(1)}%); '
             'SKIP; '
@@ -3457,11 +3494,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         eagerError: true,
       );
       final best = MCOImageCodec.selectBestCandidate(
-        results,
+        candidates,
         request.outputTarget,
       );
       debugPrint(
-        '[MCOimg][Extreme] ${slices.length}/${slices.length} (100.0%); '
+        '[MCOimg][$compressionLabel] '
+        '${slices.length}/${slices.length} (100.0%); '
         'bytes=${best.byteLength}; '
         'chars=${best.charLength}; '
         'COMPLETE; '
@@ -3474,9 +3512,28 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
       onProgress?.call(100);
       return best;
-    } catch (_) {
+    } on CancellableComputeCancelledException {
       // If one worker fails or the route/settings change, stop all remaining
       // workers instead of letting them continue consuming CPU.
+      for (final task in runningTasks.toList(growable: false)) {
+        task.cancel();
+      }
+      rethrow;
+    } on MCOImageCodecException catch (error) {
+      for (final task in runningTasks.toList(growable: false)) {
+        task.cancel();
+      }
+      debugPrint(
+        '[MCOimg][$compressionLabel] parallel fallback to single encode; '
+        'error=$error;',
+      );
+      final task = _startEncodeTask(
+        _encodeMCOImageRequest,
+        request,
+        debugLabel: 'MCOimg $compressionLabel fallback',
+      );
+      return _awaitEncodeTask(task);
+    } catch (_) {
       for (final task in runningTasks.toList(growable: false)) {
         task.cancel();
       }
@@ -3484,12 +3541,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  CancellableComputeTask<EncodedMCOImage> _startEncodeTask<M>(
-    FutureOr<EncodedMCOImage> Function(M message) callback,
+  CancellableComputeTask<R> _startComputeTask<M, R>(
+    FutureOr<R> Function(M message) callback,
     M message, {
     required String debugLabel,
   }) {
-    final task = startCancellableCompute<M, EncodedMCOImage>(
+    final task = startCancellableCompute<M, R>(
       callback,
       message,
       debugLabel: debugLabel,
@@ -3503,8 +3560,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return task;
   }
 
-  Future<EncodedMCOImage> _awaitEncodeTask(
-    CancellableComputeTask<EncodedMCOImage> task,
+  CancellableComputeTask<EncodedMCOImage> _startEncodeTask<M>(
+    FutureOr<EncodedMCOImage> Function(M message) callback,
+    M message, {
+    required String debugLabel,
+  }) {
+    return _startComputeTask<M, EncodedMCOImage>(
+      callback,
+      message,
+      debugLabel: debugLabel,
+    );
+  }
+
+  Future<R> _awaitComputeTask<R>(
+    CancellableComputeTask<R> task,
   ) async {
     try {
       return await task.result;
@@ -3513,8 +3582,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  List<CancellableComputeTask<EncodedMCOImage>>
-  _cancelActiveEncodeTasksNow() {
+  Future<EncodedMCOImage> _awaitEncodeTask(
+    CancellableComputeTask<EncodedMCOImage> task,
+  ) {
+    return _awaitComputeTask(task);
+  }
+
+  List<CancellableComputeTask<dynamic>> _cancelActiveEncodeTasksNow() {
     final tasks = _activeEncodeTasks.toList(growable: false);
     _activeEncodeTasks.clear();
     for (final task in tasks) {

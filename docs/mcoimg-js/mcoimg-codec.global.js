@@ -228,6 +228,18 @@
     binary: 'binary',
   });
 
+  const MCOImageCompressionLevel = Object.freeze({
+    high: 0,
+    normal: 1,
+    extreme: 2,
+  });
+
+  const MCOImageCompressionLevelName = Object.freeze([
+    'high',
+    'normal',
+    'extreme',
+  ]);
+
   const DynamicGlobal512 = Object.freeze([4294967295, 4294704123, 4294440951, 4294111986, 4293848814, 4293585642, 4293322470, 4292993505, 4292730333, 4292467161, 4292203989, 4291940817, 4291611852, 4291348680, 4291085508, 4290822336, 4290493371, 4290230199, 4289967027, 4289638318, 4289374890, 4288980132, 4288782753, 4288454044, 4288190616, 4287861907, 4287466893, 4287269770, 4287072391, 4286875012, 4286677633, 4286480254, 4286282619, 4286085240, 4285887861, 4285690482, 4285493103, 4285229931, 4284900966, 4284769380, 4284572001, 4284308829, 4284111450, 4283848278, 4283650899, 4283387727, 4283058762, 4282729797, 4282466625, 4282137660, 4281808695, 4281479730, 4281216558, 4280887593, 4280558628, 4280295456, 4280032284, 4279769112, 4279505940, 4279242768, 4278979596, 4278716424, 4278453252, 4278190080, 4294946979, 4294946464, 4294945693, 4294945178, 4294944407, 4294943893, 4294943122, 4294942607, 4294941836, 4294941321, 4294939265, 4294937465, 4294935409, 4294933353, 4294931553, 4294929497, 4294927441, 4294925641, 4294923585, 4294922298, 4294920755, 4294919467, 4294917924, 4294851101, 4294849558, 4294848270, 4294846727, 4294845440, 4294517504, 4294189824, 4293861888, 4293533952, 4293206273, 4292878337, 4292550401, 4292222721, 4291894785, 4291435777, 4290976769, 4290517761, 4290058753, 4289534208, 4289075200, 4288616192, 4288157184, 4287698176, 4287370240, 4287042304, 4286649088, 4286321152, 4285993217, 4285665281, 4285272065, 4284944129, 4284616193, 4284419585, 4284222721, 4283960577, 4283763713, 4283567104, 4283370240, 4283108096, 4282911232, 4282714624, 4294947683, 4294947425, 4294947168, 4294946654, 4294946397, 4294946139, 4294945882, 4294945368, 4294945111, 4294944853, 4294944337, 4294943565, 4294943050, 4294942534, 4294941762, 4294941246, 4294940731, 4294939959, 4294939443, 4294938925, 4294938664, 4294938146, 4294937628, 4294937367, 4294936849, 4294936331, 4294936070, 4294935552, 4294738432, 4294541568, 4294344448, 4294147584, 4293950465, 4293753601, 4293556481, 4293359617, 4293162497, 4292965377, 4292702721, 4292505857, 4292243201, 4292046081, 4291783425, 4291586561, 4291323905, 4291126785, 4290732801, 4290338817, 4289944577, 4289550593, 4289091072, 4288697088, 4288302848, 4287908864, 4287514880, 4287383552, 4287252224, 4287120896, 4286989568, 4286792704, 4286661376, 4286530048, 4286398720, 4286267392, 4294436210, 4294435951, 4294435693, 4294370154, 4294369896, 4294369637, 4294369379, 4294303840, 4294303582, 4294303323, 4294303057, 4294236999, 4294236733, 4294170675, 4294170408, 4294104350, 4294104084, 4294038026, 4294037760, 4293906176, 4293774592, 4293643265, 4293511681, 4293380097, 4293248513, 4293117186, 4292985602, 4292854018, 4292722434, 4292590850, 4292393986, 4292262402, 4292130817, 4291999233, 4291802369, 4291670785, 4291539201, 4291407617, 4291210497, 4291078657, 4290881537, 4290749954, 4290552834, 4290420994, 4290223874, 4290092290, 4289829122, 4289566210, 4289303042, 4289039874, 4288711426, 4288448258, 4288185090, 4287922178, 4287659010, 4287461890, 4287330306, 4287133186, 4286936066, 4286804226, 4286607106, 4286409986, 4286278402, 4286081282, 4290242203, 4289979799, 4289717139, 4289520271, 4289257867, 4288995206, 4288732802, 4288535934, 4288273274, 4288010870, 4287748465, 4287420268, 4287157864, 4286829667, 4286567262, 4286239065, 4285976661, 4285648464, 4285386059, 4285123651, 4284860986, 4284533042, 4284270378, 4284007969, 4283745305, 4283417361, 4283154696, 4282892288, 4282826240, 4282825728, 4282759936, 4282693888, 4282693376, 4282627328, 4282561536, 4282561024, 4282494976, 4282428672, 4282362368, 4282230528, 4282164224, 4282097665, 4282031361, 4281899521, 4281833217, 4281766913, 4281634817, 4281568257, 4281435905, 4281369345, 4281237248, 4281170688, 4281038336, 4280971776, 4280839680, 4280773376, 4280706816, 4280574976, 4280508416, 4280442112, 4280375552, 4280243712, 4280177152, 4280110848, 4291097087, 4290900223, 4290703359, 4290572031, 4290375167, 4290178559, 4289981695, 4289850367, 4289653503, 4289456639, 4289128703, 4288800511, 4288472575, 4288144383, 4287881983, 4287553791, 4287225855, 4286897663, 4286569727, 4285651455, 4284733183, 4283815167, 4282896895, 4281978623, 4281060351, 4280142335, 4279224063, 4278305791, 4278305533, 4278305019, 4278304761, 4278304247, 4278238454, 4278237940, 4278237682, 4278237168, 4278236910, 4278236652, 4278236139, 4278235881, 4278235623, 4278300646, 4278300388, 4278300130, 4278299617, 4278299359, 4278298587, 4278297814, 4278362322, 4278361550, 4278360777, 4278360005, 4278424513, 4278423740, 4278422968, 4278421939, 4278421167, 4278354602, 4278353830, 4278352801, 4278352029, 4278285464, 4278284692, 4278283663, 4287736575, 4287539455, 4287342335, 4287144959, 4286947839, 4286685183, 4286488063, 4286290687, 4286093567, 4285896447, 4285501695, 4285041663, 4284646911, 4284186879, 4283792127, 4283332095, 4282937343, 4282214911, 4282082559, 4281622527, 4281228287, 4280768255, 4280373759, 4279913983, 4279519487, 4279059455, 4278665215, 4278205183, 4278204924, 4278204664, 4278270197, 4278269938, 4278269678, 4278269419, 4278334952, 4278334692, 4278334433, 4278334174, 4278334172, 4278333913, 4278333911, 4278333652, 4278333650, 4278333391, 4278333389, 4278333130, 4278332871, 4278332868, 4278332609, 4278332350, 4278266812, 4278266553, 4278266294, 4278266291, 4278266032, 4278265773, 4278265770, 4278265511, 4278265252, 4278199714, 4278199455, 4278199196, 4278199193, 4278198934, 4292326143, 4292062719, 4291799295, 4291536127, 4291272703, 4290943743, 4290680319, 4290417151, 4290153727, 4289890303, 4289692671, 4289560575, 4289363199, 4289165567, 4289033471, 4288835839, 4288638463, 4288506367, 4288308735, 4288176639, 4287978751, 4287846655, 4287714303, 4287516671, 4287384319, 4287252223, 4287054335, 4286922239, 4286854911, 4286722047, 4286654975, 4286587647, 4286454783, 4286387455, 4286320383, 4286187519, 4286120191, 4285989115, 4285858039, 4285792756, 4285661680, 4285530604, 4285399528, 4285334245, 4285137123, 4285072093, 4284941016, 4284744403, 4284613326, 4284416713, 4284285379, 4284088766, 4283957689, 4283761076, 4283629999, 4283367847, 4283105694, 4282843542, 4282581390, 4282318981, 4282056829, 4281794677, 4281532524, 4281270372]);
   const DynamicGlobalIndices = Object.freeze({
     [PaletteProfile.dynamicGlobal8]: Object.freeze([0, 26, 63, 91, 210, 283, 401, 484]),
@@ -668,6 +680,9 @@
   MCOImageCodec.maxSupportedVersion = 1;
   MCOImageCodec.containerBlock = 0;
   MCOImageCodec.containerRegions = 1;
+  MCOImageCodec.regionsVariantCompactGeometry = ScanMode.h;
+  MCOImageCodec.regionsVariantCompactStream = ScanMode.v;
+  MCOImageCodec.regionsVariantCompactStreamCommon = ScanMode.s;
   MCOImageCodec.minSize = 1;
   MCOImageCodec.maxSize = 85;
   MCOImageCodec.defaultMaxRegions = 8;
@@ -1366,6 +1381,10 @@
       this.bitOffset = 0;
     }
 
+    get bitLength() {
+      return this.bytes.length * 8 - (this.bitOffset === 0 ? 0 : 8 - this.bitOffset);
+    }
+
     writeAlignedByte(value) {
       this.alignToByte();
       this.bytes.push(value & 0xff);
@@ -1374,6 +1393,20 @@
     writeAlignedBytes(values) {
       this.alignToByte();
       for (const value of values) this.bytes.push(value & 0xff);
+    }
+
+    writeBitsFromBytes(values, bitCount) {
+      if (bitCount < 0 || bitCount > values.length * 8) {
+        throw new MCOImageInvalidInputError('Invalid byte bit length');
+      }
+      let remaining = bitCount;
+      let index = 0;
+      while (remaining > 0) {
+        const take = Math.min(remaining, 8);
+        this.writeBits(values[index], take);
+        remaining -= take;
+        index += 1;
+      }
     }
 
     writeBits(value, bitCount) {
@@ -1440,6 +1473,20 @@
       const result = this.bytes.slice(this.byteIndex, this.byteIndex + length);
       this.byteIndex += length;
       return result;
+    }
+
+    readBytesByBits(bitCount) {
+      if (bitCount < 0) throw new MCOImageInvalidPayloadError('Negative byte bit length');
+      const output = new Uint8Array(Math.ceil(bitCount / 8));
+      let remaining = bitCount;
+      let index = 0;
+      while (remaining > 0) {
+        const take = Math.min(remaining, 8);
+        output[index] = this.readBits(take);
+        remaining -= take;
+        index += 1;
+      }
+      return output;
     }
 
     readBits(bitCount) {
@@ -1641,6 +1688,10 @@
   MCOImageCodec.maxSupportedVersion = 2;
   MCOImageCodec.maxSizeV1 = 85;
   MCOImageCodec.maxSizeV2 = 256;
+  MCOImageCodec.compressionLevelHigh = MCOImageCompressionLevel.high;
+  MCOImageCodec.compressionLevelNormal = MCOImageCompressionLevel.normal;
+  MCOImageCodec.compressionLevelExtreme = MCOImageCompressionLevel.extreme;
+  MCOImageCodec.defaultCompressionLevel = MCOImageCompressionLevel.high;
   MCOImageCodec.v2TransparentProfileFlag = 0x10;
   MCOImageCodec.v2ProfileIdMask = 0x0f;
   MCOImageCodec.maxV2Regions = 32;
@@ -1673,6 +1724,22 @@
     ImageMode.rawGlobal,
     ImageMode.regionsBg,
   ]);
+
+  function normalizeCompressionLevel(compressionLevel) {
+    switch (Number(compressionLevel)) {
+      case MCOImageCompressionLevel.normal:
+        return MCOImageCompressionLevel.normal;
+      case MCOImageCompressionLevel.extreme:
+        return MCOImageCompressionLevel.extreme;
+      case MCOImageCompressionLevel.high:
+      default:
+        return MCOImageCompressionLevel.high;
+    }
+  }
+
+  function compressionLevelLabel(compressionLevel) {
+    return MCOImageCompressionLevelName[normalizeCompressionLevel(compressionLevel)] || 'high';
+  }
 
   function normalizeEncodingVersion(version) {
     if (version === undefined || version === null) return MCOImageEncodingVersion.v2;
@@ -2623,7 +2690,12 @@
       }
     }
     if (!best) throw new MCOImageTooLargeError('Image uses too many colors for local palette');
-    return { result: best, candidates: Object.freeze(candidates.slice()) };
+    return {
+      result: best,
+      candidates: Object.freeze(candidates.slice()),
+      compressionLevel,
+      compressionLevelName: compressionLevelLabel(compressionLevel),
+    };
   }
 
   function bitsForChoiceCount(count) {
@@ -3441,6 +3513,8 @@
 
   function decodeV2RegionsCurrent(reader, width, height, profile, referenceEncoding, {
     compactGeometry,
+    compactStream = false,
+    compactStreamCommonBlockHeader = false,
     implicitWhiteBackground,
     sharedFixedPalette,
   }) {
@@ -3462,6 +3536,13 @@
     }
     const pixels = new Array(width * height).fill(background);
     const occupied = new Array(width * height).fill(false);
+    let commonRegionMode = null;
+    let commonRegionScan = null;
+    if (compactStreamCommonBlockHeader) {
+      const packed = reader.readBits(5);
+      commonRegionMode = modeFromBits(packed & 0x07);
+      commonRegionScan = scanFromBits((packed >> 3) & 0x03);
+    }
     for (let i = 0; i < regionCount; i++) {
       const region = compactGeometry
         ? readV2CompactBounds(reader, width, height)
@@ -3475,15 +3556,37 @@
           region.x + region.width > width || region.y + region.height > height) {
         throw new MCOImageInvalidPayloadError('Invalid v2 image region');
       }
-      const modeAndScan = reader.readAlignedByte();
-      if ((modeAndScan & 0x07) !== 0) throw new MCOImageInvalidPayloadError('Reserved region bits are set');
-      const regionMode = modeFromBits((modeAndScan >> 5) & 0x07);
-      const regionScan = scanFromBits((modeAndScan >> 3) & 0x03);
+      let regionMode;
+      let regionScan;
+      if (compactStreamCommonBlockHeader) {
+        const overrideHeader = reader.readBits(1) !== 0;
+        if (overrideHeader) {
+          const packed = reader.readBits(5);
+          regionMode = modeFromBits(packed & 0x07);
+          regionScan = scanFromBits((packed >> 3) & 0x03);
+        } else {
+          regionMode = commonRegionMode;
+          regionScan = commonRegionScan;
+        }
+      } else if (compactStream) {
+        const packed = reader.readBits(5);
+        regionMode = modeFromBits(packed & 0x07);
+        regionScan = scanFromBits((packed >> 3) & 0x03);
+      } else {
+        const modeAndScan = reader.readAlignedByte();
+        if ((modeAndScan & 0x07) !== 0) throw new MCOImageInvalidPayloadError('Reserved region bits are set');
+        regionMode = modeFromBits((modeAndScan >> 5) & 0x07);
+        regionScan = scanFromBits((modeAndScan >> 3) & 0x03);
+      }
       if (isDynamicProfile(profile) && regionMode === ImageMode.rawGlobal) {
         throw new MCOImageInvalidPayloadError('Dynamic region rawGlobal is reserved');
       }
-      const payloadLength = readBitVarUint(reader);
-      const payload = reader.readAlignedBytes(payloadLength);
+      const payloadBitLength = compactStream
+        ? readBitVarUint(reader)
+        : readBitVarUint(reader) * 8;
+      const payload = compactStream
+        ? reader.readBytesByBits(payloadBitLength)
+        : reader.readAlignedBytes(payloadBitLength / 8);
       const regionReader = new BitReader(payload);
       const linear = sharedPalette
         ? decodeV2DynamicRegionBody(
@@ -3552,12 +3655,25 @@
 
     if (regions) {
       const compactGeometry = mode === ImageMode.extended;
-      if (boundsPresent || (mode !== ImageMode.rawGlobal && !compactGeometry) || scan !== ScanMode.h) {
+      const compactStream =
+        compactGeometry && scan === MCOImageCodec.regionsVariantCompactStream;
+      const compactStreamCommon =
+        compactGeometry && scan === MCOImageCodec.regionsVariantCompactStreamCommon;
+      const validRegionsScan = compactGeometry
+        ? (
+            scan === MCOImageCodec.regionsVariantCompactGeometry ||
+            scan === MCOImageCodec.regionsVariantCompactStream ||
+            scan === MCOImageCodec.regionsVariantCompactStreamCommon
+          )
+        : scan === ScanMode.h;
+      if (boundsPresent || (mode !== ImageMode.rawGlobal && !compactGeometry) || !validRegionsScan) {
         throw new MCOImageInvalidPayloadError('Invalid v2 regions header');
       }
       const transparentColor = hasTransparentColor ? readV2ColorRef(reader, profile) : null;
       const pixels = decodeV2RegionsCurrent(reader, width, height, profile, referenceEncoding, {
         compactGeometry,
+        compactStream: compactStream || compactStreamCommon,
+        compactStreamCommonBlockHeader: compactStreamCommon,
         implicitWhiteBackground: headerImplicitWhite,
         sharedFixedPalette,
       });
@@ -4649,7 +4765,143 @@
     };
   }
 
-  function tryBuildV2RegionsPayload(image, backgroundColor, referenceEncoding, maxRegions) {
+  function mostCommonRegionBlockHeader(blocks) {
+    const counts = new Map();
+    for (const block of blocks) {
+      const key = `${block.mode}:${block.scan}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    let best = null;
+    for (const block of blocks) {
+      const key = `${block.mode}:${block.scan}`;
+      const count = counts.get(key) || 0;
+      if (
+        best == null ||
+        count > best.count ||
+        (count === best.count && key < best.key)
+      ) {
+        best = { key, count, mode: block.mode, scan: block.scan };
+      }
+    }
+    return best;
+  }
+
+  function tryBuildV2CompactRegionsStreamPayloadFromRegions(
+    image,
+    backgroundColor,
+    referenceEncoding,
+    regions,
+    maxRegions,
+    { commonBlockHeader = false } = {},
+  ) {
+    if (regions.length === 0 || regions.length > maxRegions) return null;
+    if (isDynamicProfile(image.paletteProfile) && referenceEncoding == null) {
+      throw new MCOImageInvalidInputError('Dynamic v2 regions require reference encoding');
+    }
+    if (!isDynamicProfile(image.paletteProfile) && referenceEncoding != null) return null;
+
+    let localIndexByProfileColorId = null;
+    let usedBankCount = null;
+    let bitsPerLocalPixel = null;
+    let localPaletteSize = null;
+    let dynamicLocalPalette = null;
+
+    if (isDynamicProfile(image.paletteProfile)) {
+      const allRegionProfileColorIds = [];
+      for (const region of regions) {
+        const regionPixels = cropPixels(image.pixels, image.width, region);
+        for (const globalIndex of regionPixels) {
+          const profileColorId = profileColorIdForGlobalIndex(image.paletteProfile, globalIndex);
+          if (profileColorId == null) {
+            throw new MCOImageInvalidInputError(`Pixel globalIndex ${globalIndex} is not available in dynamic profile`);
+          }
+          allRegionProfileColorIds.push(profileColorId);
+        }
+      }
+      const backgroundProfileColorId = profileColorIdForGlobalIndex(image.paletteProfile, backgroundColor);
+      dynamicLocalPalette = buildDynamicLocalPalette(
+        image.paletteProfile,
+        allRegionProfileColorIds,
+        backgroundProfileColorId,
+      );
+      if (referenceEncoding >= DynamicPaletteReferenceEncoding.sortedDelta) {
+        dynamicLocalPalette.sort((a, b) => a - b);
+      }
+      if (dynamicLocalPalette.length === 0 || dynamicLocalPalette.length > MCOImageCodec.maxDynamicLocalPalette) return null;
+      localIndexByProfileColorId = new Map(dynamicLocalPalette.map((id, i) => [id, i]));
+      bitsPerLocalPixel = bitsForLocalPalette(dynamicLocalPalette.length);
+      localPaletteSize = dynamicLocalPalette.length;
+      usedBankCount = referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64
+        ? new Set(dynamicLocalPalette.map((id) => id >> 6)).size
+        : null;
+    }
+
+    const blocks = [];
+    for (const region of regions) {
+      const regionPixels = cropPixels(image.pixels, image.width, region);
+      const block = isDynamicProfile(image.paletteProfile)
+        ? bestV2DynamicSharedBlockPayload(
+            regionPixels,
+            region.width,
+            region.height,
+            image.paletteProfile,
+            backgroundColor,
+            localIndexByProfileColorId,
+          )
+        : bestV2BlockPayload(regionPixels, region.width, region.height, image.paletteProfile, backgroundColor);
+      blocks.push({ ...block, region, bitLength: block.payload.length * 8 });
+    }
+
+    const commonHeader = commonBlockHeader ? mostCommonRegionBlockHeader(blocks) : null;
+    const writer = new BitWriter();
+    writeV2Header(writer, {
+      profile: image.paletteProfile,
+      container: MCOImageCodec.containerRegions,
+      mode: ImageMode.extended,
+      scan: commonBlockHeader
+        ? MCOImageCodec.regionsVariantCompactStreamCommon
+        : MCOImageCodec.regionsVariantCompactStream,
+      boundsPresent: false,
+      referenceEncoding,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    });
+    if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    if (dynamicLocalPalette) {
+      writeDynamicLocalPalette(writer, image.paletteProfile, dynamicLocalPalette, referenceEncoding);
+    }
+    writer.writeBits(regions.length - 1, bitsForChoiceCount(MCOImageCodec.maxV2Regions));
+    if (commonHeader) {
+      writer.writeBits(modeBits(commonHeader.mode) | (scanBits(commonHeader.scan) << 3), 5);
+    }
+    for (const block of blocks) {
+      writeV2CompactBounds(writer, block.region, image.width, image.height);
+      if (commonHeader) {
+        const useOverride =
+          block.mode !== commonHeader.mode || block.scan !== commonHeader.scan;
+        writer.writeBits(useOverride ? 1 : 0, 1);
+        if (useOverride) {
+          writer.writeBits(modeBits(block.mode) | (scanBits(block.scan) << 3), 5);
+        }
+      } else {
+        writer.writeBits(modeBits(block.mode) | (scanBits(block.scan) << 3), 5);
+      }
+      writeBitVarUint(writer, block.bitLength);
+      writer.writeBitsFromBytes(block.payload, block.bitLength);
+    }
+
+    return {
+      payload: writer.toBytes(),
+      regionCount: regions.length,
+      localPaletteSize,
+      usedBankCount,
+      bitsPerLocalPixel,
+    };
+  }
+
+  function tryBuildV2RegionsPayload(image, backgroundColor, referenceEncoding, maxRegions, options = {}) {
     if (maxRegions === 0) return null;
     const connectedRegions = findRegions(image.pixels, image.width, image.height, backgroundColor);
     const splitRegions = splitRegionsByEmptyLines(image.pixels, image.width, backgroundColor, connectedRegions, maxRegions);
@@ -4677,6 +4929,16 @@
     ];
 
     let best = null;
+    const consider = (payload) => {
+      if (!payload) return;
+      if (
+        best == null ||
+        payload.payload.length < best.payload.length ||
+        (payload.payload.length === best.payload.length && payload.regionCount < best.regionCount)
+      ) {
+        best = payload;
+      }
+    };
     for (const regions of variants) {
       const payload = tryBuildV2RegionsPayloadFromRegions(
         image,
@@ -4685,13 +4947,26 @@
         regions,
         maxRegions,
       );
-      if (!payload) continue;
-      if (
-        best == null ||
-        payload.payload.length < best.payload.length ||
-        (payload.payload.length === best.payload.length && payload.regionCount < best.regionCount)
-      ) {
-        best = payload;
+      consider(payload);
+      if (options.compactStream) {
+        consider(tryBuildV2CompactRegionsStreamPayloadFromRegions(
+          image,
+          backgroundColor,
+          referenceEncoding,
+          regions,
+          maxRegions,
+          { commonBlockHeader: false },
+        ));
+      }
+      if (options.compactStreamCommon) {
+        consider(tryBuildV2CompactRegionsStreamPayloadFromRegions(
+          image,
+          backgroundColor,
+          referenceEncoding,
+          regions,
+          maxRegions,
+          { commonBlockHeader: true },
+        ));
       }
     }
     return best;
@@ -5032,12 +5307,19 @@
 
   function debugEncodeV2Full(image, options = {}) {
     validateImageAny(image);
+    const compressionLevel = normalizeCompressionLevel(
+      options.compressionLevel ?? MCOImageCodec.defaultCompressionLevel,
+    );
+    const useHighCompressionExtras =
+      compressionLevel !== MCOImageCompressionLevel.normal;
+    const useExtremeCompressionExtras =
+      compressionLevel === MCOImageCompressionLevel.extreme;
     let maxRegions = options.maxRegions ?? MCOImageCodec.defaultMaxRegions;
     if (maxRegions < 0) throw new MCOImageInvalidInputError('maxRegions must be >= 0');
     maxRegions = Math.min(maxRegions, MCOImageCodec.maxV2Regions);
-    const effectiveMaxRegions = maxRegions > MCOImageCodec.defaultMaxRegions
-      ? MCOImageCodec.defaultMaxRegions
-      : maxRegions;
+    const effectiveMaxRegions = useHighCompressionExtras
+      ? (useExtremeCompressionExtras ? maxRegions : Math.min(maxRegions, 16))
+      : Math.min(maxRegions, MCOImageCodec.defaultMaxRegions);
     const backgroundColor = options.backgroundColor;
     if (backgroundColor != null) validateColorAny(backgroundColor, image.paletteProfile, 'backgroundColor');
     const preferred = backgroundColor ?? image.transparentColor;
@@ -5064,6 +5346,7 @@
     let best = null;
     const outputTarget = options.outputTarget ?? MCOImageOutputTarget.text;
     function addExtendedCandidates(linear, scan, bg, bgInfo, dataWidth, dataHeight, bounds, refs) {
+      if (!useHighCompressionExtras) return;
       for (const ref of refs) {
         for (const submode of [
           ExtendedImageMode.compactRle,
@@ -5117,7 +5400,10 @@
           candidates.push(solidCandidate);
           if (isBetterCandidate(solidCandidate, best, outputTarget)) best = solidCandidate;
         }
-        const regionsPayload = tryBuildV2RegionsPayload(image, bg, ref, effectiveMaxRegions);
+        const regionsPayload = tryBuildV2RegionsPayload(image, bg, ref, effectiveMaxRegions, {
+          compactStream: useHighCompressionExtras,
+          compactStreamCommon: useHighCompressionExtras,
+        });
         if (regionsPayload) {
           const candidate = candidateFromV2Payload(
             regionsPayload.payload,
@@ -5731,6 +6017,8 @@
     DynamicPaletteReferenceEncodingName,
     MCOImageEncodingVersion,
     MCOImageOutputTarget,
+    MCOImageCompressionLevel,
+    MCOImageCompressionLevelName,
     MCOImageRgbaOutputFormat,
     MCOImageTextOutputFormat,
     MCOImageBinaryOutputFormat,

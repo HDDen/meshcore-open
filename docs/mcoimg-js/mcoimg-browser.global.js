@@ -10,6 +10,7 @@
 
   const {
     MCOImageCodec,
+    MCOImage,
     MCOImageRgbaOutputFormat,
     MCOImageTextOutputFormat,
     MCOImageBinaryOutputFormat,
@@ -584,6 +585,160 @@
     return rows.join('\n');
   }
 
+  function findCodecScriptUrl() {
+    if (typeof document === 'undefined') return null;
+    const scripts = Array.from(document.getElementsByTagName('script'));
+    const script = scripts.find((item) =>
+      item.src && /mcoimg-codec\.global\.js(?:[?#].*)?$/.test(item.src),
+    );
+    return script ? script.src : null;
+  }
+
+  function startCancellableEncode(imageLike, options = {}) {
+    const useWorker = options.useWorker !== false &&
+      typeof Worker === 'function' &&
+      typeof Blob === 'function' &&
+      typeof URL !== 'undefined' &&
+      typeof URL.createObjectURL === 'function';
+    const image = imageLike instanceof MCOImage ? imageLike : new MCOImage(imageLike);
+    const encodeOptions = { ...options };
+    delete encodeOptions.useWorker;
+    delete encodeOptions.codec;
+    delete encodeOptions.codecScriptUrl;
+
+    if (!useWorker) {
+      let cancelled = false;
+      const result = Promise.resolve().then(() => {
+        if (cancelled) throw new Error('Encoding was cancelled');
+        const encoded = codecFromOptions(options).encode(image, encodeOptions);
+        if (cancelled) throw new Error('Encoding was cancelled');
+        return encoded;
+      });
+      return {
+        result,
+        get isCancelled() { return cancelled; },
+        cancel() { cancelled = true; },
+      };
+    }
+
+    const codecScriptUrl = options.codecScriptUrl || findCodecScriptUrl();
+    if (!codecScriptUrl) {
+      throw new Error('Could not locate mcoimg-codec.global.js for worker encoding');
+    }
+
+    const workerSource = `
+      self.onmessage = function(event) {
+        var data = event.data || {};
+        try {
+          importScripts(data.codecScriptUrl);
+          var core = self.MCOImg;
+          var codec = new core.MCOImageCodec();
+          var image = new core.MCOImage(data.image);
+          var encoded = codec.encode(image, data.options || {});
+          self.postMessage({
+            ok: true,
+            encoded: {
+              text: encoded.text,
+              mode: encoded.mode,
+              modeName: encoded.modeName,
+              scan: encoded.scan,
+              scanName: encoded.scanName,
+              byteLength: encoded.byteLength,
+              charLength: encoded.charLength,
+              boundsPresent: !!encoded.boundsPresent,
+              boundsX: encoded.boundsX,
+              boundsY: encoded.boundsY,
+              boundsWidth: encoded.boundsWidth,
+              boundsHeight: encoded.boundsHeight,
+              backgroundColor: encoded.backgroundColor,
+              transparentColor: encoded.transparentColor,
+              regionCount: encoded.regionCount || 0,
+              backgroundRank: encoded.backgroundRank || 0,
+              codecVersion: encoded.codecVersion,
+              dynamicReferenceEncoding: encoded.dynamicReferenceEncoding,
+              localPaletteSize: encoded.localPaletteSize,
+              usedBankCount: encoded.usedBankCount,
+              bitsPerLocalPixel: encoded.bitsPerLocalPixel,
+              requestedEncodingVersion: encoded.requestedEncodingVersion,
+              actualEncodingVersion: encoded.actualEncodingVersion,
+              paletteKind: encoded.paletteKind,
+              container: encoded.container,
+              payload: encoded.payload,
+            },
+          });
+        } catch (error) {
+          self.postMessage({
+            ok: false,
+            message: error && error.message ? error.message : String(error),
+            name: error && error.name ? error.name : 'Error',
+            stack: error && error.stack ? error.stack : '',
+          });
+        }
+      };
+    `;
+    const blob = new Blob([workerSource], { type: 'text/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
+    let cancelled = false;
+    let settled = false;
+    let rejectResult = null;
+
+    const result = new Promise((resolve, reject) => {
+      rejectResult = reject;
+      worker.onmessage = (event) => {
+        if (settled) return;
+        settled = true;
+        worker.terminate();
+        URL.revokeObjectURL(workerUrl);
+        if (cancelled) {
+          reject(new Error('Encoding was cancelled'));
+          return;
+        }
+        const data = event.data || {};
+        if (data.ok) resolve(data.encoded);
+        else {
+          const error = new Error(data.message || 'Worker encoding failed');
+          error.name = data.name || error.name;
+          error.stack = data.stack || error.stack;
+          reject(error);
+        }
+      };
+      worker.onerror = (event) => {
+        if (settled) return;
+        settled = true;
+        worker.terminate();
+        URL.revokeObjectURL(workerUrl);
+        reject(new Error(event.message || 'Worker encoding failed'));
+      };
+    });
+
+    worker.postMessage({
+      codecScriptUrl,
+      image: {
+        width: image.width,
+        height: image.height,
+        paletteProfile: image.paletteProfile,
+        pixels: image.pixels,
+        transparentColor: image.transparentColor,
+        encodingVersion: image.encodingVersion,
+      },
+      options: encodeOptions,
+    });
+
+    return {
+      result,
+      get isCancelled() { return cancelled; },
+      cancel() {
+        if (cancelled || settled) return;
+        cancelled = true;
+        settled = true;
+        worker.terminate();
+        URL.revokeObjectURL(workerUrl);
+        if (rejectResult) rejectResult(new Error('Encoding was cancelled'));
+      },
+    };
+  }
+
   global.MCOImgBrowser = Object.freeze({
     canvasToImageData,
     canvasToRgbaInput,
@@ -603,5 +758,6 @@
     inspectMcoImageChannelPacket,
     extractMcoImagePayload,
     bytesToHex,
+    startCancellableEncode,
   });
 })(typeof window !== 'undefined' ? window : globalThis);

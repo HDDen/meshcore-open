@@ -3437,8 +3437,7 @@ class MCOImageCodec {
           includeExtendedFixedBlocks: false,
           diagnosticContainer: beamCost == null ? null : 'regions-beam',
         );
-        if (payload != null &&
-            (beamCost == null || payload.payload.length == beamCost)) {
+        if (payload != null) {
           payloads.add(payload);
         }
         if (includeExtendedFixedBlocks) {
@@ -3454,9 +3453,7 @@ class MCOImageCodec {
                 ? 'regions-extended'
                 : 'regions-beam-extended',
           );
-          if (extendedPayload != null &&
-              (beamCost == null ||
-                  extendedPayload.payload.length == beamCost)) {
+          if (extendedPayload != null) {
             payloads.add(extendedPayload);
           }
           if (compactGeometry) {
@@ -3473,9 +3470,7 @@ class MCOImageCodec {
                   ? 'regions-compact-stream'
                   : 'regions-beam-compact-stream',
             );
-            if (compactStreamPayload != null &&
-                (beamCost == null ||
-                    compactStreamPayload.payload.length == beamCost)) {
+            if (compactStreamPayload != null) {
               payloads.add(compactStreamPayload);
             }
             final compactStreamCommonPayload =
@@ -3493,9 +3488,7 @@ class MCOImageCodec {
                       ? 'regions-compact-stream-common'
                       : 'regions-beam-compact-stream-common',
                 );
-            if (compactStreamCommonPayload != null &&
-                (beamCost == null ||
-                    compactStreamCommonPayload.payload.length == beamCost)) {
+            if (compactStreamCommonPayload != null) {
               payloads.add(compactStreamCommonPayload);
             }
             final compactStreamExtendedPayload =
@@ -3512,9 +3505,7 @@ class MCOImageCodec {
                       ? 'regions-compact-stream-extended'
                       : 'regions-beam-compact-stream-extended',
                 );
-            if (compactStreamExtendedPayload != null &&
-                (beamCost == null ||
-                    compactStreamExtendedPayload.payload.length == beamCost)) {
+            if (compactStreamExtendedPayload != null) {
               payloads.add(compactStreamExtendedPayload);
             }
             final compactStreamCommonExtendedPayload =
@@ -3532,10 +3523,7 @@ class MCOImageCodec {
                       ? 'regions-compact-stream-common-extended'
                       : 'regions-beam-compact-stream-common-extended',
                 );
-            if (compactStreamCommonExtendedPayload != null &&
-                (beamCost == null ||
-                    compactStreamCommonExtendedPayload.payload.length ==
-                        beamCost)) {
+            if (compactStreamCommonExtendedPayload != null) {
               payloads.add(compactStreamCommonExtendedPayload);
             }
           }
@@ -3554,8 +3542,7 @@ class MCOImageCodec {
                 ? 'regions-shared-fixed'
                 : 'regions-beam-shared-fixed',
           );
-          if (sharedPayload != null &&
-              (beamCost == null || sharedPayload.payload.length == beamCost)) {
+          if (sharedPayload != null) {
             payloads.add(sharedPayload);
           }
           if (includeExtendedFixedBlocks) {
@@ -3573,9 +3560,7 @@ class MCOImageCodec {
                       ? 'regions-shared-fixed-extended'
                       : 'regions-beam-shared-fixed-extended',
                 );
-            if (sharedExtendedPayload != null &&
-                (beamCost == null ||
-                    sharedExtendedPayload.payload.length == beamCost)) {
+            if (sharedExtendedPayload != null) {
               payloads.add(sharedExtendedPayload);
             }
             if (compactGeometry) {
@@ -3594,9 +3579,7 @@ class MCOImageCodec {
                         ? 'regions-shared-fixed-compact-stream'
                         : 'regions-beam-shared-fixed-compact-stream',
                   );
-              if (sharedCompactStreamPayload != null &&
-                  (beamCost == null ||
-                      sharedCompactStreamPayload.payload.length == beamCost)) {
+              if (sharedCompactStreamPayload != null) {
                 payloads.add(sharedCompactStreamPayload);
               }
               final sharedCompactStreamCommonPayload =
@@ -3615,10 +3598,7 @@ class MCOImageCodec {
                         ? 'regions-shared-fixed-compact-stream-common'
                         : 'regions-beam-shared-fixed-compact-stream-common',
                   );
-              if (sharedCompactStreamCommonPayload != null &&
-                  (beamCost == null ||
-                      sharedCompactStreamCommonPayload.payload.length ==
-                          beamCost)) {
+              if (sharedCompactStreamCommonPayload != null) {
                 payloads.add(sharedCompactStreamCommonPayload);
               }
               final sharedCompactStreamExtendedPayload =
@@ -3636,10 +3616,7 @@ class MCOImageCodec {
                         ? 'regions-shared-fixed-compact-stream-extended'
                         : 'regions-beam-shared-fixed-compact-stream-extended',
                   );
-              if (sharedCompactStreamExtendedPayload != null &&
-                  (beamCost == null ||
-                      sharedCompactStreamExtendedPayload.payload.length ==
-                          beamCost)) {
+              if (sharedCompactStreamExtendedPayload != null) {
                 payloads.add(sharedCompactStreamExtendedPayload);
               }
               final sharedCompactStreamCommonExtendedPayload =
@@ -3658,10 +3635,7 @@ class MCOImageCodec {
                         ? 'regions-shared-fixed-compact-stream-common-extended'
                         : 'regions-beam-shared-fixed-compact-stream-common-extended',
                   );
-              if (sharedCompactStreamCommonExtendedPayload != null &&
-                  (beamCost == null ||
-                      sharedCompactStreamCommonExtendedPayload.payload.length ==
-                          beamCost)) {
+              if (sharedCompactStreamCommonExtendedPayload != null) {
                 payloads.add(sharedCompactStreamCommonExtendedPayload);
               }
             }
