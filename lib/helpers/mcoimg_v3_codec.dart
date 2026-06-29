@@ -78,6 +78,16 @@ class MCOImageV3Codec {
   static const int _maxRegions = 32;
   static const int _minLzMatchLength = 3;
   static const int _maxLzMatchCandidates = 48;
+  static const int _compactRowDeltaOpBits = 3;
+  static const int _compactRowDeltaOpRepeat = 0;
+  static const int _compactRowDeltaOpRaw = 1;
+  static const int _compactRowDeltaOpIndexed = 2;
+  static const int _compactRowDeltaOpSameScalar = 3;
+  static const int _compactRowDeltaOpSegments = 4;
+  static const int _compactRowDeltaOpTrimmedMask = 5;
+  static const int _compactRowDeltaOpPredicted = 7;
+  static const int _rowDeltaPredictorLeft = 1;
+  static const int _rowDeltaPredictorRight = 2;
 
   EncodedMCOImageV3 encode(
     MCOImage image, {
@@ -245,6 +255,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.quadtree,
           MCOImageV3BlockAlgorithm.bitplanes,
           MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+          MCOImageV3BlockAlgorithm.compactRowDelta,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -273,6 +284,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+        MCOImageV3BlockAlgorithm.compactRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -469,6 +481,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+        MCOImageV3BlockAlgorithm.compactRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
         MCOImageV3BlockAlgorithm.compactSparse,
@@ -879,6 +892,19 @@ class MCOImageV3Codec {
         final localPixels = linear.map((color) => map[color]!).toList();
         _writeAdaptiveBitplanesBody(writer, localPixels, bits);
         break;
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        _writeCompactRowDeltaBody(
+          writer,
+          localPixels,
+          rowLength,
+          bits,
+        );
+        break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         _writeColorRef(writer, profile, backgroundColor);
         final nonBg = linear
@@ -954,7 +980,6 @@ class MCOImageV3Codec {
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidInputException(
           'MCOimg v3 algorithm is not implemented yet',
@@ -1128,6 +1153,24 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
         final palette = _readLocalPalette(reader, profile);
         return _decodeAdaptiveBitplanesBody(reader, count, palette);
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final localPixels = _readCompactRowDeltaBody(
+          reader,
+          count,
+          _rowLengthForScan(scan, width, height),
+          bits,
+          maxValue: palette.length - 1,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.sparseBackground:
         final background = _readColorRef(reader, profile);
         final palette = _readLocalPalette(reader, profile);
@@ -1215,7 +1258,6 @@ class MCOImageV3Codec {
           return palette[index];
         }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.compactRowDelta:
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidPayloadException(
           'Unsupported MCOimg v3 algorithm',
@@ -1306,6 +1348,7 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.quadtree ||
       MCOImageV3BlockAlgorithm.bitplanes ||
       MCOImageV3BlockAlgorithm.adaptiveBitplanes ||
+      MCOImageV3BlockAlgorithm.compactRowDelta ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
       MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse =>
@@ -2102,6 +2145,544 @@ class MCOImageV3Codec {
     return 3 + _compactUintBitLength(length - 4);
   }
 
+  static void _writeCompactRowDeltaBody(
+    _V3BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+  ) {
+    if (rowLength <= 0 || values.length % rowLength != 0) {
+      throw const MCOImageInvalidInputException(
+        'Invalid compact row-delta geometry',
+      );
+    }
+    writer.writeBits(0, 1);
+    for (var x = 0; x < rowLength; x++) {
+      writer.writeBits(values[x], valueBits);
+    }
+    final rowCount = values.length ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final decision = _bestCompactRowDeltaDecision(
+        values,
+        rowLength,
+        valueBits,
+        row,
+      );
+      _writeCompactRowDeltaDecision(
+        writer,
+        values,
+        rowLength,
+        valueBits,
+        row,
+        decision,
+      );
+    }
+  }
+
+  static List<int> _readCompactRowDeltaBody(
+    _V3BitReader reader,
+    int count,
+    int rowLength,
+    int valueBits, {
+    required int maxValue,
+  }) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid compact row-delta geometry',
+      );
+    }
+    final useVirtualBaseRow = reader.readBits(1) != 0;
+    if (useVirtualBaseRow) {
+      throw const MCOImageInvalidPayloadException(
+        'Virtual compact row-delta base row is not supported in v3 yet',
+      );
+    }
+    final result = List<int>.filled(count, 0);
+    for (var x = 0; x < rowLength; x++) {
+      final value = reader.readBits(valueBits);
+      if (value > maxValue) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact row-delta first row value out of range',
+        );
+      }
+      result[x] = value;
+    }
+    final rowCount = count ~/ rowLength;
+    for (var row = 1; row < rowCount; row++) {
+      final rowStart = row * rowLength;
+      final previousStart = rowStart - rowLength;
+      final op = reader.readBits(_compactRowDeltaOpBits);
+      if (op == _compactRowDeltaOpRepeat) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = result[previousStart + x];
+        }
+        continue;
+      }
+      if (op == _compactRowDeltaOpRaw) {
+        for (var x = 0; x < rowLength; x++) {
+          final value = reader.readBits(valueBits);
+          if (value > maxValue) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta raw value out of range',
+            );
+          }
+          result[rowStart + x] = value;
+        }
+        continue;
+      }
+      if (op == _compactRowDeltaOpIndexed) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = result[previousStart + x];
+        }
+        final changeCount = reader.readCompactUint() + 1;
+        if (changeCount > rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact row-delta change count exceeds row length',
+          );
+        }
+        final positions = _readCompactChangePositions(
+          reader,
+          changeCount,
+          rowLength,
+        );
+        for (final x in positions) {
+          final value = reader.readBits(valueBits);
+          if (value > maxValue) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta indexed value out of range',
+            );
+          }
+          result[rowStart + x] = value;
+        }
+        continue;
+      }
+      if (op == _compactRowDeltaOpPredicted) {
+        final predictor = _readCompactRowDeltaPredictor(reader);
+        _copyCompactRowDeltaPredictedRow(
+          result,
+          rowStart,
+          rowLength,
+          row,
+          predictor,
+        );
+        continue;
+      }
+      if (op == _compactRowDeltaOpSameScalar ||
+          op == _compactRowDeltaOpSegments ||
+          op == _compactRowDeltaOpTrimmedMask) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] = result[previousStart + x];
+        }
+        final positions = <int>[];
+        if (op == _compactRowDeltaOpSameScalar) {
+          final changeCount = reader.readCompactUint() + 1;
+          if (changeCount > rowLength) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta change count exceeds row length',
+            );
+          }
+          positions.addAll(
+            _readCompactChangePositions(reader, changeCount, rowLength),
+          );
+          final value = reader.readBits(valueBits);
+          if (value > maxValue) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta scalar value out of range',
+            );
+          }
+          for (final x in positions) {
+            result[rowStart + x] = value;
+          }
+          continue;
+        }
+        if (op == _compactRowDeltaOpSegments) {
+          final segmentCount = reader.readCompactUint() + 1;
+          if (segmentCount > rowLength) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta segment count exceeds row length',
+            );
+          }
+          var previousEnd = 0;
+          for (var i = 0; i < segmentCount; i++) {
+            final gap = reader.readCompactUint();
+            final start = (i == 0 ? 0 : previousEnd) + gap;
+            final length = reader.readCompactUint() + 1;
+            if (start < previousEnd || start + length > rowLength) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid compact row-delta segment',
+              );
+            }
+            for (var x = start; x < start + length; x++) {
+              positions.add(x);
+            }
+            previousEnd = start + length;
+          }
+        } else {
+          final start = reader.readCompactUint();
+          final span = reader.readCompactUint() + 1;
+          if (start + span > rowLength) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid compact row-delta mask bounds',
+            );
+          }
+          for (var offset = 0; offset < span; offset++) {
+            if (reader.readBits(1) != 0) positions.add(start + offset);
+          }
+          if (positions.isEmpty) {
+            throw const MCOImageInvalidPayloadException(
+              'Empty compact row-delta mask',
+            );
+          }
+        }
+        for (final x in positions) {
+          final value = reader.readBits(valueBits);
+          if (value > maxValue) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact row-delta changed value out of range',
+            );
+          }
+          result[rowStart + x] = value;
+        }
+        continue;
+      }
+      throw const MCOImageInvalidPayloadException(
+        'Unsupported compact row-delta op',
+      );
+    }
+    return result;
+  }
+
+  static List<_V3RowDeltaChange> _compactRowDeltaChanges(
+    List<int> values,
+    int rowLength,
+    int row,
+  ) {
+    final changes = <_V3RowDeltaChange>[];
+    final rowStart = row * rowLength;
+    final previousStart = rowStart - rowLength;
+    for (var x = 0; x < rowLength; x++) {
+      final value = values[rowStart + x];
+      if (value != values[previousStart + x]) {
+        changes.add(_V3RowDeltaChange(x, value));
+      }
+    }
+    return changes;
+  }
+
+  static _V3CompactRowDeltaDecision _bestCompactRowDeltaDecision(
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row,
+  ) {
+    final rowStart = row * rowLength;
+    var best = _V3CompactRowDeltaDecision(
+      op: _compactRowDeltaOpRaw,
+      changes: const <_V3RowDeltaChange>[],
+      bitCost: _compactRowDeltaOpBits + rowLength * valueBits,
+    );
+
+    final changes = _compactRowDeltaChanges(values, rowLength, row);
+    if (changes.isEmpty) {
+      best = const _V3CompactRowDeltaDecision(
+        op: _compactRowDeltaOpRepeat,
+        changes: <_V3RowDeltaChange>[],
+        bitCost: _compactRowDeltaOpBits,
+      );
+    } else {
+      final indexedCost = _compactRowDeltaOpBits +
+          _compactUintBitLength(changes.length - 1) +
+          _compactChangePositionsBitCost(changes) +
+          changes.length * valueBits;
+      if (indexedCost < best.bitCost) {
+        best = _V3CompactRowDeltaDecision(
+          op: _compactRowDeltaOpIndexed,
+          changes: changes,
+          bitCost: indexedCost,
+        );
+      }
+
+      final sameValue = _sameRowDeltaChangeValue(changes);
+      if (sameValue != null) {
+        final sameScalarCost = _compactRowDeltaOpBits +
+            _compactUintBitLength(changes.length - 1) +
+            _compactChangePositionsBitCost(changes) +
+            valueBits;
+        if (sameScalarCost < best.bitCost) {
+          best = _V3CompactRowDeltaDecision(
+            op: _compactRowDeltaOpSameScalar,
+            changes: changes,
+            bitCost: sameScalarCost,
+          );
+        }
+      }
+
+      final segments = _rowDeltaSegments(changes);
+      var segmentGeometryCost = _compactUintBitLength(segments.length - 1);
+      var previousEnd = 0;
+      for (var i = 0; i < segments.length; i++) {
+        final segment = segments[i];
+        final gap = i == 0 ? segment.x : segment.x - previousEnd;
+        segmentGeometryCost += _compactUintBitLength(gap) +
+            _compactUintBitLength(segment.length - 1);
+        previousEnd = segment.x + segment.length;
+      }
+      final segmentCost = _compactRowDeltaOpBits +
+          segmentGeometryCost +
+          changes.length * valueBits;
+      if (segmentCost < best.bitCost) {
+        best = _V3CompactRowDeltaDecision(
+          op: _compactRowDeltaOpSegments,
+          changes: changes,
+          bitCost: segmentCost,
+        );
+      }
+
+      final span = changes.last.x - changes.first.x + 1;
+      final maskCost = _compactRowDeltaOpBits +
+          _compactUintBitLength(changes.first.x) +
+          _compactUintBitLength(span - 1) +
+          span +
+          changes.length * valueBits;
+      if (maskCost < best.bitCost) {
+        best = _V3CompactRowDeltaDecision(
+          op: _compactRowDeltaOpTrimmedMask,
+          changes: changes,
+          bitCost: maskCost,
+        );
+      }
+    }
+
+    for (final predictor in const [
+      _rowDeltaPredictorLeft,
+      _rowDeltaPredictorRight,
+    ]) {
+      var predicted = true;
+      for (var x = 0; x < rowLength; x++) {
+        if (values[rowStart + x] !=
+            _compactRowDeltaPredictedValue(
+              values,
+              rowLength,
+              row,
+              x,
+              predictor,
+            )) {
+          predicted = false;
+          break;
+        }
+      }
+      if (!predicted) continue;
+      const cost = _compactRowDeltaOpBits + 2;
+      if (cost < best.bitCost) {
+        best = _V3CompactRowDeltaDecision(
+          op: _compactRowDeltaOpPredicted,
+          predictor: predictor,
+          changes: const <_V3RowDeltaChange>[],
+          bitCost: cost,
+        );
+      }
+    }
+
+    return best;
+  }
+
+  static void _writeCompactRowDeltaDecision(
+    _V3BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row,
+    _V3CompactRowDeltaDecision decision,
+  ) {
+    writer.writeBits(decision.op, _compactRowDeltaOpBits);
+    if (decision.op == _compactRowDeltaOpRepeat) return;
+    if (decision.op == _compactRowDeltaOpPredicted) {
+      _writeCompactRowDeltaPredictor(writer, decision.predictor);
+      return;
+    }
+    final rowStart = row * rowLength;
+    if (decision.op == _compactRowDeltaOpRaw) {
+      for (var x = 0; x < rowLength; x++) {
+        writer.writeBits(values[rowStart + x], valueBits);
+      }
+      return;
+    }
+
+    final changes = decision.changes;
+    switch (decision.op) {
+      case _compactRowDeltaOpIndexed:
+        writer.writeCompactUint(changes.length - 1);
+        _writeCompactChangePositions(writer, changes);
+        for (final change in changes) {
+          writer.writeBits(change.value, valueBits);
+        }
+        break;
+      case _compactRowDeltaOpSameScalar:
+        writer.writeCompactUint(changes.length - 1);
+        _writeCompactChangePositions(writer, changes);
+        writer.writeBits(changes.first.value, valueBits);
+        break;
+      case _compactRowDeltaOpSegments:
+        final segments = _rowDeltaSegments(changes);
+        writer.writeCompactUint(segments.length - 1);
+        var previousEnd = 0;
+        for (var i = 0; i < segments.length; i++) {
+          final segment = segments[i];
+          writer
+            ..writeCompactUint(i == 0 ? segment.x : segment.x - previousEnd)
+            ..writeCompactUint(segment.length - 1);
+          previousEnd = segment.x + segment.length;
+        }
+        for (final change in changes) {
+          writer.writeBits(change.value, valueBits);
+        }
+        break;
+      case _compactRowDeltaOpTrimmedMask:
+        final start = changes.first.x;
+        final span = changes.last.x - start + 1;
+        writer
+          ..writeCompactUint(start)
+          ..writeCompactUint(span - 1);
+        var changeIndex = 0;
+        for (var offset = 0; offset < span; offset++) {
+          final changed = changeIndex < changes.length &&
+              changes[changeIndex].x == start + offset;
+          writer.writeBits(changed ? 1 : 0, 1);
+          if (changed) changeIndex++;
+        }
+        for (final change in changes) {
+          writer.writeBits(change.value, valueBits);
+        }
+        break;
+      default:
+        throw const MCOImageInvalidInputException(
+          'Invalid compact row-delta op',
+        );
+    }
+  }
+
+  static void _writeCompactRowDeltaPredictor(
+    _V3BitWriter writer,
+    int predictor,
+  ) {
+    writer.writeBits(predictor == _rowDeltaPredictorLeft ? 0 : 1, 1);
+  }
+
+  static int _readCompactRowDeltaPredictor(_V3BitReader reader) {
+    return reader.readBits(1) == 0
+        ? _rowDeltaPredictorLeft
+        : _rowDeltaPredictorRight;
+  }
+
+  static void _copyCompactRowDeltaPredictedRow(
+    List<int> values,
+    int rowStart,
+    int rowLength,
+    int row,
+    int predictor,
+  ) {
+    for (var x = 0; x < rowLength; x++) {
+      values[rowStart + x] = _compactRowDeltaPredictedValue(
+        values,
+        rowLength,
+        row,
+        x,
+        predictor,
+      );
+    }
+  }
+
+  static int _compactRowDeltaPredictedValue(
+    List<int> values,
+    int rowLength,
+    int row,
+    int x,
+    int predictor,
+  ) {
+    final previousStart = (row - 1) * rowLength;
+    return switch (predictor) {
+      _rowDeltaPredictorLeft =>
+        values[previousStart + (x == 0 ? rowLength - 1 : x - 1)],
+      _rowDeltaPredictorRight =>
+        values[previousStart + (x + 1 == rowLength ? 0 : x + 1)],
+      _ => values[previousStart + x],
+    };
+  }
+
+  static int _compactChangePositionsBitCost(
+    List<_V3RowDeltaChange> changes,
+  ) {
+    var cost = 0;
+    var previousX = -1;
+    for (final change in changes) {
+      cost += _compactUintBitLength(change.x - previousX - 1);
+      previousX = change.x;
+    }
+    return cost;
+  }
+
+  static void _writeCompactChangePositions(
+    _V3BitWriter writer,
+    List<_V3RowDeltaChange> changes,
+  ) {
+    var previousX = -1;
+    for (final change in changes) {
+      writer.writeCompactUint(change.x - previousX - 1);
+      previousX = change.x;
+    }
+  }
+
+  static int? _sameRowDeltaChangeValue(List<_V3RowDeltaChange> changes) {
+    if (changes.isEmpty) return null;
+    final value = changes.first.value;
+    for (final change in changes.skip(1)) {
+      if (change.value != value) return null;
+    }
+    return value;
+  }
+
+  static List<_V3RowDeltaSegment> _rowDeltaSegments(
+    List<_V3RowDeltaChange> changes,
+  ) {
+    if (changes.isEmpty) return const <_V3RowDeltaSegment>[];
+    final segments = <_V3RowDeltaSegment>[];
+    var startX = changes.first.x;
+    final values = <int>[changes.first.value];
+    for (final change in changes.skip(1)) {
+      if (change.x == startX + values.length) {
+        values.add(change.value);
+      } else {
+        segments.add(_V3RowDeltaSegment(startX, List<int>.of(values)));
+        startX = change.x;
+        values
+          ..clear()
+          ..add(change.value);
+      }
+    }
+    segments.add(_V3RowDeltaSegment(startX, List<int>.of(values)));
+    return segments;
+  }
+
+  static List<int> _readCompactChangePositions(
+    _V3BitReader reader,
+    int count,
+    int rowLength,
+  ) {
+    final positions = <int>[];
+    var previousX = -1;
+    for (var i = 0; i < count; i++) {
+      final x = previousX + 1 + reader.readCompactUint();
+      if (x >= rowLength) {
+        throw const MCOImageInvalidPayloadException(
+          'Compact row-delta position out of range',
+        );
+      }
+      positions.add(x);
+      previousX = x;
+    }
+    return positions;
+  }
+
   static int? _biColorForeground(List<int> pixels, int background) {
     int? foreground;
     for (final pixel in pixels) {
@@ -2644,6 +3225,36 @@ class _V3AdaptiveBitplaneDecision {
     required this.startingBit,
     this.runs = const <int>[],
     this.minorityPositions = const <int>[],
+  });
+}
+
+class _V3RowDeltaChange {
+  final int x;
+  final int value;
+
+  const _V3RowDeltaChange(this.x, this.value);
+}
+
+class _V3RowDeltaSegment {
+  final int x;
+  final List<int> values;
+
+  const _V3RowDeltaSegment(this.x, this.values);
+
+  int get length => values.length;
+}
+
+class _V3CompactRowDeltaDecision {
+  final int op;
+  final int predictor;
+  final List<_V3RowDeltaChange> changes;
+  final int bitCost;
+
+  const _V3CompactRowDeltaDecision({
+    required this.op,
+    this.predictor = 0,
+    required this.changes,
+    required this.bitCost,
   });
 }
 

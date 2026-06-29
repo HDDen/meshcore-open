@@ -247,6 +247,42 @@ void main() {
       expect(algorithmId, MCOImageV3BlockAlgorithm.adaptiveBitplanes.index);
       expect(decoded.pixels, image.pixels);
     });
+
+    test('rows with small changes can use compact row delta algorithm', () {
+      final image = _image(
+        16,
+        12,
+        (x, y) {
+          if (y == 0) return x.isEven ? 1 : 2;
+          if (x == y % 16) return 3;
+          if (x == (y * 3) % 16) return 4;
+          return x.isEven ? 1 : 2;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(algorithmId, MCOImageV3BlockAlgorithm.compactRowDelta.index);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('shifted rows roundtrip through compact row delta predictors', () {
+      final base = [1, 2, 3, 4, 1, 2, 3, 4];
+      final image = _image(
+        8,
+        8,
+        (x, y) => base[(x - y) % base.length],
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(algorithmId, MCOImageV3BlockAlgorithm.compactRowDelta.index);
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {
