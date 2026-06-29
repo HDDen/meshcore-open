@@ -75,6 +75,8 @@ class MCOImageV3Codec {
   static const int _minSize = 1;
   static const int _maxSize = 256;
   static const int _maxRegions = 32;
+  static const int _minLzMatchLength = 3;
+  static const int _maxLzMatchCandidates = 48;
 
   EncodedMCOImageV3 encode(
     MCOImage image, {
@@ -238,6 +240,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.rawLocal,
           MCOImageV3BlockAlgorithm.rleLocal,
           MCOImageV3BlockAlgorithm.compactRle,
+          MCOImageV3BlockAlgorithm.lzPixels,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -262,6 +265,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rawLocal,
         MCOImageV3BlockAlgorithm.rleLocal,
         MCOImageV3BlockAlgorithm.compactRle,
+        MCOImageV3BlockAlgorithm.lzPixels,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -454,6 +458,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rawLocal,
         MCOImageV3BlockAlgorithm.rleLocal,
         MCOImageV3BlockAlgorithm.compactRle,
+        MCOImageV3BlockAlgorithm.lzPixels,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
         MCOImageV3BlockAlgorithm.compactSparse,
@@ -770,6 +775,29 @@ class MCOImageV3Codec {
             ..writeCompactUint(run.length - 1);
         }
         break;
+      case MCOImageV3BlockAlgorithm.lzPixels:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        final localPixels = linear.map((color) => map[color]!).toList();
+        final tokens = _buildGreedyLzPixelTokens(localPixels, bits);
+        for (final token in tokens) {
+          if (token.isMatch) {
+            writer
+              ..writeBits(1, 1)
+              ..writeCompactUint(token.distance - 1)
+              ..writeCompactUint(token.length - _minLzMatchLength);
+          } else {
+            writer
+              ..writeBits(0, 1)
+              ..writeCompactUint(token.literals.length - 1);
+            for (final color in token.literals) {
+              writer.writeBits(color, bits);
+            }
+          }
+        }
+        break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         _writeColorRef(writer, profile, backgroundColor);
         final nonBg = linear
@@ -845,7 +873,6 @@ class MCOImageV3Codec {
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.lzPixels:
       case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
@@ -920,6 +947,44 @@ class MCOImageV3Codec {
             );
           }
           result.addAll(List<int>.filled(length, palette[colorIndex]));
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.lzPixels:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final result = <int>[];
+        while (result.length < count) {
+          final isMatch = reader.readBits(1) != 0;
+          if (isMatch) {
+            final distance = reader.readCompactUint() + 1;
+            final length = reader.readCompactUint() + _minLzMatchLength;
+            if (distance <= 0 ||
+                distance > result.length ||
+                result.length + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel match',
+              );
+            }
+            for (var i = 0; i < length; i++) {
+              result.add(result[result.length - distance]);
+            }
+          } else {
+            final length = reader.readCompactUint() + 1;
+            if (result.length + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel literal length',
+              );
+            }
+            for (var i = 0; i < length; i++) {
+              final colorIndex = reader.readBits(bits);
+              if (colorIndex >= palette.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'LZ pixel color index out of range',
+                );
+              }
+              result.add(palette[colorIndex]);
+            }
+          }
         }
         return result;
       case MCOImageV3BlockAlgorithm.sparseBackground:
@@ -1009,7 +1074,6 @@ class MCOImageV3Codec {
           return palette[index];
         }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.lzPixels:
       case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
       case MCOImageV3BlockAlgorithm.compactRowDelta:
@@ -1098,6 +1162,8 @@ class MCOImageV3Codec {
     return switch (algorithm) {
       MCOImageV3BlockAlgorithm.rawLocal ||
       MCOImageV3BlockAlgorithm.rleLocal ||
+      MCOImageV3BlockAlgorithm.compactRle ||
+      MCOImageV3BlockAlgorithm.lzPixels ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
       MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse =>
@@ -1120,6 +1186,124 @@ class MCOImageV3Codec {
     return paletteSize == null || paletteSize <= 0
         ? null
         : _localBits(paletteSize);
+  }
+
+  static List<_V3LzPixelToken> _buildGreedyLzPixelTokens(
+    List<int> pixels,
+    int localBits,
+  ) {
+    final tokens = <_V3LzPixelToken>[];
+    final pendingLiterals = <int>[];
+    final positionsByKey = <int, List<int>>{};
+
+    void flushLiterals() {
+      if (pendingLiterals.isEmpty) return;
+      tokens.add(_V3LzPixelToken.literal(List<int>.of(pendingLiterals)));
+      pendingLiterals.clear();
+    }
+
+    var position = 0;
+    while (position < pixels.length) {
+      var bestLength = 0;
+      var bestDistance = 0;
+      if (position + _minLzMatchLength <= pixels.length) {
+        final key = _lzPixelKey(pixels, position, localBits);
+        final candidates = positionsByKey[key];
+        if (candidates != null) {
+          for (var i = candidates.length - 1; i >= 0; i--) {
+            final previous = candidates[i];
+            final distance = position - previous;
+            var length = _minLzMatchLength;
+            while (position + length < pixels.length &&
+                pixels[previous + length] == pixels[position + length]) {
+              length++;
+            }
+            if (length > bestLength ||
+                length == bestLength &&
+                    (bestDistance == 0 || distance < bestDistance)) {
+              bestLength = length;
+              bestDistance = distance;
+            }
+          }
+        }
+      }
+
+      final matchBits = bestLength >= _minLzMatchLength
+          ? 1 +
+                _compactUintBitLength(bestDistance - 1) +
+                _compactUintBitLength(bestLength - _minLzMatchLength)
+          : 0;
+      final literalBits = bestLength >= _minLzMatchLength
+          ? 1 +
+                _compactUintBitLength(bestLength - 1) +
+                bestLength * localBits
+          : 0;
+      if (bestLength >= _minLzMatchLength && matchBits < literalBits) {
+        flushLiterals();
+        tokens.add(_V3LzPixelToken.match(bestDistance, bestLength));
+        for (var i = 0; i < bestLength; i++) {
+          _addLzPixelPosition(
+            positionsByKey,
+            pixels,
+            position + i,
+            localBits,
+          );
+        }
+        position += bestLength;
+      } else {
+        pendingLiterals.add(pixels[position]);
+        _addLzPixelPosition(positionsByKey, pixels, position, localBits);
+        position++;
+      }
+    }
+    flushLiterals();
+    return tokens;
+  }
+
+  static int _lzPixelKey(List<int> pixels, int position, int localBits) {
+    return (pixels[position] << (localBits * 2)) |
+        (pixels[position + 1] << localBits) |
+        pixels[position + 2];
+  }
+
+  static void _addLzPixelPosition(
+    Map<int, List<int>> positionsByKey,
+    List<int> pixels,
+    int position,
+    int localBits,
+  ) {
+    if (position + _minLzMatchLength > pixels.length) return;
+    final positions = positionsByKey.putIfAbsent(
+      _lzPixelKey(pixels, position, localBits),
+      () => <int>[],
+    );
+    positions.add(position);
+    if (positions.length > _maxLzMatchCandidates) {
+      positions.removeAt(0);
+    }
+  }
+
+  static int _compactUintBitLength(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative compact uint');
+    }
+    if (value <= 3) return 3;
+    if (value <= 19) return 6;
+    if (value <= 275) return 11;
+    return 3 + _bitVarUintBitLength(value);
+  }
+
+  static int _bitVarUintBitLength(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative varuint');
+    }
+    var current = value;
+    var bits = 0;
+    do {
+      current >>= 7;
+      bits += 8;
+    } while (current != 0);
+    return bits;
   }
 
   static List<int> _localPalette(List<int> pixels) {
@@ -1684,6 +1868,21 @@ class _V3SparseSegment {
   final int length;
 
   const _V3SparseSegment(this.start, this.color, this.length);
+}
+
+class _V3LzPixelToken {
+  final List<int> literals;
+  final int distance;
+  final int length;
+
+  const _V3LzPixelToken.literal(this.literals)
+    : distance = 0,
+      length = 0;
+
+  const _V3LzPixelToken.match(this.distance, this.length)
+    : literals = const <int>[];
+
+  bool get isMatch => distance > 0;
 }
 
 class _V3Bounds {

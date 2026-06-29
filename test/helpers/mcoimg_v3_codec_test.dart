@@ -174,6 +174,21 @@ void main() {
       );
       expect(decoded.pixels, image.pixels);
     });
+
+    test('repeated pixel patterns can use LZ pixels candidates', () {
+      final pattern = [0, 1, 2, 3, 2, 1];
+      final image = _image(
+        36,
+        1,
+        (x, _) => pattern[x % pattern.length],
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(encoded.encodedCandidate.mode, ImageMode.extended);
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {
