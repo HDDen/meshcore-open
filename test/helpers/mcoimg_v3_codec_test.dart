@@ -26,6 +26,7 @@ void main() {
       );
       expect(encoded.byteLength, encoded.body.length);
       expect(encoded.encodedCandidate.text, isEmpty);
+      expect(encoded.encodedCandidate.container, MCOImageV3Container.block.name);
       expect(decoded.width, image.width);
       expect(decoded.height, image.height);
       expect(decoded.paletteProfile, image.paletteProfile);
@@ -64,6 +65,23 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
 
       expect(decoded.transparentColor, 0);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('solid image uses solid background container', () {
+      final image = _image(
+        11,
+        11,
+        (_, _) => 3,
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(
+        encoded.encodedCandidate.container,
+        MCOImageV3Container.solidBackground.name,
+      );
       expect(decoded.pixels, image.pixels);
     });
   });

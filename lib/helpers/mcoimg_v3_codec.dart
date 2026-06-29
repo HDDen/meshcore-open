@@ -70,6 +70,8 @@ class MCOImageV3Codec {
   static const int _formatMarker = 0x30;
   static const int _transparentFlag = 0x80;
   static const int _profileMask = 0x0f;
+  static const int _containerAlgorithmContainerShift = 5;
+  static const int _containerAlgorithmAlgorithmMask = 0x1f;
   static const int _minSize = 1;
   static const int _maxSize = 256;
 
@@ -106,20 +108,35 @@ class MCOImageV3Codec {
     final width = body[1] + 1;
     final height = body[2] + 1;
     _validateDimensions(width, height, payload: true);
-    final algorithm = _algorithmFromId(body[3]);
+    final containerAlgorithm = body[3];
+    final container = _containerFromId(
+      containerAlgorithm >> _containerAlgorithmContainerShift,
+    );
+    final algorithm = _algorithmFromId(
+      containerAlgorithm & _containerAlgorithmAlgorithmMask,
+    );
     final scan = _scanFromId(body[4]);
     final reader = _V3BitReader(body, byteIndex: 5);
     final transparentColor = hasTransparentColor
         ? _readColorRef(reader, profile)
         : null;
-    final linear = _decodeBlockBody(
-      reader,
-      width,
-      height,
-      profile,
-      algorithm,
-      scan,
-    );
+    final linear = switch (container) {
+      MCOImageV3Container.block => _decodeBlockBody(
+        reader,
+        width,
+        height,
+        profile,
+        algorithm,
+        scan,
+      ),
+      MCOImageV3Container.solidBackground => List<int>.filled(
+        width * height,
+        _readColorRef(reader, profile),
+      ),
+      _ => throw const MCOImageInvalidPayloadException(
+        'Unsupported MCOimg v3 container',
+      ),
+    };
     reader.finish();
     return MCOImage(
       width: width,
@@ -161,6 +178,8 @@ class MCOImageV3Codec {
         preferredBackground,
       ...usedColors,
     }.toList(growable: false);
+    final solidCandidate = _tryBuildSolidBackgroundCandidate(image);
+    if (solidCandidate != null) candidates.add(solidCandidate);
 
     for (final scan in ScanMode.values) {
       final linear = _toScanOrder(image.pixels, image.width, image.height, scan);
@@ -206,6 +225,55 @@ class MCOImageV3Codec {
     return candidates.first;
   }
 
+  EncodedMCOImage? _tryBuildSolidBackgroundCandidate(MCOImage image) {
+    if (image.pixels.isEmpty) return null;
+    final color = image.pixels.first;
+    for (final pixel in image.pixels) {
+      if (pixel != color) return null;
+    }
+
+    final writer = _V3BitWriter();
+    writer.writeAlignedByte(
+      _formatMarker |
+          (image.transparentColor != null ? _transparentFlag : 0) |
+          _profileId(image.paletteProfile),
+    );
+    const container = MCOImageV3Container.solidBackground;
+    writer
+      ..writeAlignedByte(image.width - 1)
+      ..writeAlignedByte(image.height - 1)
+      ..writeAlignedByte(
+        _containerAlgorithmByte(
+          container,
+          MCOImageV3BlockAlgorithm.rawGlobal,
+        ),
+      )
+      ..writeAlignedByte(ScanMode.h.index);
+    if (image.transparentColor != null) {
+      _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    _writeColorRef(writer, image.paletteProfile, color);
+
+    final payload = writer.toBytes();
+    return EncodedMCOImage(
+      payload: payload,
+      text: '',
+      mode: ImageMode.rawGlobal,
+      scan: ScanMode.h,
+      byteLength: payload.length,
+      charLength: 0,
+      backgroundColor: color,
+      transparentColor: image.transparentColor,
+      codecVersion: ChannelAppDataHelper.mcoImageV3Version,
+      localPaletteSize: 1,
+      bitsPerLocalPixel: 0,
+      requestedEncodingVersion: MCOImageEncodingVersion.v3,
+      actualEncodingVersion: MCOImageEncodingVersion.v3,
+      paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+      container: container.name,
+    );
+  }
+
   EncodedMCOImage? _tryBuildCandidate(
     MCOImage image,
     List<int> linear,
@@ -219,10 +287,11 @@ class MCOImageV3Codec {
           (image.transparentColor != null ? _transparentFlag : 0) |
           _profileId(image.paletteProfile),
     );
+    const container = MCOImageV3Container.block;
     writer
       ..writeAlignedByte(image.width - 1)
       ..writeAlignedByte(image.height - 1)
-      ..writeAlignedByte(algorithm.index)
+      ..writeAlignedByte(_containerAlgorithmByte(container, algorithm))
       ..writeAlignedByte(scan.index);
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
@@ -262,7 +331,7 @@ class MCOImageV3Codec {
       requestedEncodingVersion: MCOImageEncodingVersion.v3,
       actualEncodingVersion: MCOImageEncodingVersion.v3,
       paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-      container: MCOImageV3Container.block.name,
+      container: container.name,
     );
   }
 
@@ -475,6 +544,33 @@ class MCOImageV3Codec {
       );
     }
     return MCOImageV3BlockAlgorithm.values[value];
+  }
+
+  static MCOImageV3Container _containerFromId(int value) {
+    if (value < 0 || value >= MCOImageV3Container.values.length) {
+      throw MCOImageInvalidPayloadException(
+        'Unknown MCOimg v3 container $value',
+      );
+    }
+    return MCOImageV3Container.values[value];
+  }
+
+  static int _containerAlgorithmByte(
+    MCOImageV3Container container,
+    MCOImageV3BlockAlgorithm algorithm,
+  ) {
+    if (container.index >= (1 << 3)) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v3 container id does not fit',
+      );
+    }
+    if (algorithm.index > _containerAlgorithmAlgorithmMask) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v3 algorithm id does not fit',
+      );
+    }
+    return (container.index << _containerAlgorithmContainerShift) |
+        algorithm.index;
   }
 
   static ScanMode _scanFromId(int value) {
