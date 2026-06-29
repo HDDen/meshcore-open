@@ -283,6 +283,24 @@ void main() {
       expect(algorithmId, MCOImageV3BlockAlgorithm.compactRowDelta.index);
       expect(decoded.pixels, image.pixels);
     });
+
+    test('grayscale levels can use direct grayscale bitplanes', () {
+      final image = _image(
+        16,
+        16,
+        (x, y) => (x + y) % 16,
+        profile: PaletteProfile.grayscale16,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+      final algorithmId = encoded.body[3] & 0x1f;
+
+      expect(
+        algorithmId,
+        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes.index,
+      );
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {

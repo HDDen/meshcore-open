@@ -38,6 +38,7 @@ enum MCOImageV3BlockAlgorithm {
   quadtree,
   bitplanes,
   adaptiveBitplanes,
+  directGrayscaleBitplanes,
   compactRowDelta,
   wrappedBlock,
 }
@@ -255,6 +256,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.quadtree,
           MCOImageV3BlockAlgorithm.bitplanes,
           MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+          MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
           MCOImageV3BlockAlgorithm.compactRowDelta,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
@@ -284,6 +286,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
         MCOImageV3BlockAlgorithm.compactRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
@@ -481,6 +484,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
         MCOImageV3BlockAlgorithm.compactRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
@@ -892,6 +896,14 @@ class MCOImageV3Codec {
         final localPixels = linear.map((color) => map[color]!).toList();
         _writeAdaptiveBitplanesBody(writer, localPixels, bits);
         break;
+      case MCOImageV3BlockAlgorithm.directGrayscaleBitplanes:
+        if (!_isGrayscaleProfile(profile)) {
+          throw const MCOImageInvalidInputException(
+            'Direct grayscale bitplanes require a grayscale profile',
+          );
+        }
+        _writeAdaptiveBitplanesBody(writer, linear, _globalBits(profile));
+        break;
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         final palette = _localPalette(linear);
         _writeLocalPalette(writer, profile, palette);
@@ -1153,6 +1165,17 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
         final palette = _readLocalPalette(reader, profile);
         return _decodeAdaptiveBitplanesBody(reader, count, palette);
+      case MCOImageV3BlockAlgorithm.directGrayscaleBitplanes:
+        if (!_isGrayscaleProfile(profile)) {
+          throw const MCOImageInvalidPayloadException(
+            'Direct grayscale bitplanes require a grayscale profile',
+          );
+        }
+        return _decodeAdaptiveBitplanesBody(
+          reader,
+          count,
+          List<int>.generate(_paletteSize(profile), (index) => index),
+        );
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         final palette = _readLocalPalette(reader, profile);
         final bits = _localBits(palette.length);
@@ -2853,6 +2876,12 @@ class MCOImageV3Codec {
       PaletteProfile.dynamicGlobal256 => 256,
       PaletteProfile.dynamicGlobal512 => 512,
     };
+  }
+
+  static bool _isGrayscaleProfile(PaletteProfile profile) {
+    return profile == PaletteProfile.grayscale8 ||
+        profile == PaletteProfile.grayscale16 ||
+        profile == PaletteProfile.grayscale32;
   }
 
   static int _profileId(PaletteProfile profile) => profile.index;
