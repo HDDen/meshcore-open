@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/channel_binary_data_helper.dart';
 import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
 import 'package:meshcore_open/helpers/mcoimg_types.dart';
 import 'package:meshcore_open/helpers/mcoimg_v3_codec.dart';
@@ -106,6 +107,31 @@ void main() {
       expect(decodedEnvelope.subtype, ChannelAppDataSubtype.mcoImageV3);
       expect(decodedEnvelope.subtypeVersion, encoded.subtypeVersion);
       expect(codec.decodeBody(decodedEnvelope.body).pixels, image.pixels);
+    });
+
+    test('channel binary helper decodes app data separately from legacy text', () {
+      final image = _image(4, 4, (x, y) => (x + y) & 1);
+      final encoded = codec.encode(image);
+      final payload = ChannelAppDataHelper.encodeEnvelope(
+        senderName: 'botQRC',
+        subtypeVersion: encoded.subtypeVersion,
+        body: encoded.body,
+      );
+
+      final legacyDecoded = ChannelBinaryDataHelper.tryDecodeInbound(
+        dataType: ChannelBinaryDataHelper.appDataType,
+        payload: payload,
+      );
+      expect(legacyDecoded, isNull);
+
+      final appDecoded = ChannelBinaryDataHelper.tryDecodeAppData(
+        dataType: ChannelBinaryDataHelper.appDataType,
+        payload: payload,
+      );
+      expect(appDecoded, isNotNull);
+      expect(appDecoded!.senderName, 'botQRC');
+      expect(appDecoded.subtype, ChannelAppDataSubtype.mcoImageV3);
+      expect(appDecoded.mcoImage!.pixels, image.pixels);
     });
   });
 }

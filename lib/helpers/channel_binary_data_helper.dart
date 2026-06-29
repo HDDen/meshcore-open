@@ -39,6 +39,24 @@ class ChannelBinaryDataInbound {
   });
 }
 
+class ChannelAppDataInbound {
+  final String senderName;
+  final int subtypeVersion;
+  final ChannelAppDataSubtype subtype;
+  final Uint8List body;
+  final int payloadLength;
+  final MCOImage? mcoImage;
+
+  const ChannelAppDataInbound({
+    required this.senderName,
+    required this.subtypeVersion,
+    required this.subtype,
+    required this.body,
+    required this.payloadLength,
+    this.mcoImage,
+  });
+}
+
 class ChannelBinaryDataHelper {
   ChannelBinaryDataHelper._();
 
@@ -209,9 +227,7 @@ class ChannelBinaryDataHelper {
     required Uint8List payload,
   }) {
     if (!enabled) return null;
-    if (dataType == appDataType) {
-      return _tryDecodeAppData(payload);
-    }
+    if (dataType == appDataType) return null;
     final kind = _kindForDataType(dataType);
     if (kind == null) return null;
 
@@ -252,21 +268,34 @@ class ChannelBinaryDataHelper {
     return null;
   }
 
-  static ChannelBinaryDataInbound? _tryDecodeAppData(Uint8List payload) {
+  static ChannelAppDataInbound? tryDecodeAppData({
+    required int dataType,
+    required Uint8List payload,
+  }) {
+    if (!enabled || dataType != appDataType) return null;
+    return _tryDecodeAppData(payload);
+  }
+
+  static ChannelAppDataInbound? _tryDecodeAppData(Uint8List payload) {
     final envelope = ChannelAppDataHelper.tryDecodeEnvelope(payload);
     if (envelope == null) return null;
 
     switch (envelope.subtype) {
       case ChannelAppDataSubtype.mcoImageV3:
+        final MCOImage image;
         try {
-          MCOImageV3Codec().decodeBody(envelope.body);
+          image = MCOImageV3Codec().decodeBody(envelope.body);
         } catch (_) {
           return null;
         }
-        // MCOimg v3 belongs to the official 0x0120 app data path and must not
-        // be disguised as the legacy im:/0xFFF0 text payload. The message model
-        // will get a dedicated binary-v3 field when the UI path is wired in.
-        return null;
+        return ChannelAppDataInbound(
+          senderName: envelope.senderName,
+          subtypeVersion: envelope.subtypeVersion,
+          subtype: ChannelAppDataSubtype.mcoImageV3,
+          body: envelope.body,
+          payloadLength: payload.length,
+          mcoImage: image,
+        );
       case null:
         return null;
     }
