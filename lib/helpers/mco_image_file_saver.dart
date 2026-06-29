@@ -6,6 +6,7 @@ import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:share_plus/share_plus.dart';
 
 import 'mcoimg_codec.dart';
+import 'mcoimg_v3_codec.dart';
 import 'mcoimg_palette.dart';
 
 class MCOImageFileSaver {
@@ -48,6 +49,10 @@ class MCOImageFileSaver {
   static Future<bool> saveBinaryPayloadFromText(String text) async {
     final payload = MCOImageCodec.binaryPayloadFromText(text.trimLeft());
     return saveBinaryPayload(payload);
+  }
+
+  static Future<bool> saveV3AppPayload(EncodedMCOImageV3 image) async {
+    return saveBinaryPayload(image.toAppPayloadWithoutSender());
   }
 
   static Future<bool> saveBinaryPayload(Uint8List payload) async {
