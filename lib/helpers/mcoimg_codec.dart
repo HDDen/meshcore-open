@@ -247,6 +247,9 @@ class MCOImageCodec {
   static const int maxSupportedVersion = _maxSupportedVersion;
   static const int _containerBlock = 0;
   static const int _containerRegions = 1;
+  static const ScanMode _regionsVariantCompactGeometry = ScanMode.h;
+  static const ScanMode _regionsVariantCompactStream = ScanMode.v;
+  static const ScanMode _regionsVariantCompactStreamCommon = ScanMode.s;
   static const int _paletteKindFixed = 0;
   static const int _paletteKindDynamic = 1;
   static const int _v2TransparentProfileFlag = 0x10;
@@ -3454,6 +3457,86 @@ class MCOImageCodec {
                   extendedPayload.payload.length == beamCost)) {
             payloads.add(extendedPayload);
           }
+          if (compactGeometry) {
+            final compactStreamPayload = _tryBuildV2RegionsPayloadFromRegions(
+              image,
+              backgroundColor,
+              referenceEncoding,
+              regions,
+              maxRegions,
+              compactGeometry: true,
+              compactStream: true,
+              includeExtendedFixedBlocks: false,
+              diagnosticContainer: beamCost == null
+                  ? 'regions-compact-stream'
+                  : 'regions-beam-compact-stream',
+            );
+            if (compactStreamPayload != null &&
+                (beamCost == null ||
+                    compactStreamPayload.payload.length == beamCost)) {
+              payloads.add(compactStreamPayload);
+            }
+            final compactStreamCommonPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  includeExtendedFixedBlocks: false,
+                  diagnosticContainer: beamCost == null
+                      ? 'regions-compact-stream-common'
+                      : 'regions-beam-compact-stream-common',
+                );
+            if (compactStreamCommonPayload != null &&
+                (beamCost == null ||
+                    compactStreamCommonPayload.payload.length == beamCost)) {
+              payloads.add(compactStreamCommonPayload);
+            }
+            final compactStreamExtendedPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  includeExtendedFixedBlocks: true,
+                  diagnosticContainer: beamCost == null
+                      ? 'regions-compact-stream-extended'
+                      : 'regions-beam-compact-stream-extended',
+                );
+            if (compactStreamExtendedPayload != null &&
+                (beamCost == null ||
+                    compactStreamExtendedPayload.payload.length == beamCost)) {
+              payloads.add(compactStreamExtendedPayload);
+            }
+            final compactStreamCommonExtendedPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  includeExtendedFixedBlocks: true,
+                  diagnosticContainer: beamCost == null
+                      ? 'regions-compact-stream-common-extended'
+                      : 'regions-beam-compact-stream-common-extended',
+                );
+            if (compactStreamCommonExtendedPayload != null &&
+                (beamCost == null ||
+                    compactStreamCommonExtendedPayload.payload.length ==
+                        beamCost)) {
+              payloads.add(compactStreamCommonExtendedPayload);
+            }
+          }
         }
         if (image.paletteProfile.isFixed) {
           final sharedPayload = _tryBuildV2RegionsPayloadFromRegions(
@@ -3492,6 +3575,93 @@ class MCOImageCodec {
                 (beamCost == null ||
                     sharedExtendedPayload.payload.length == beamCost)) {
               payloads.add(sharedExtendedPayload);
+            }
+            if (compactGeometry) {
+              final sharedCompactStreamPayload =
+                  _tryBuildV2RegionsPayloadFromRegions(
+                    image,
+                    backgroundColor,
+                    referenceEncoding,
+                    regions,
+                    maxRegions,
+                    compactGeometry: true,
+                    compactStream: true,
+                    sharedFixedPalette: true,
+                    includeExtendedFixedBlocks: false,
+                    diagnosticContainer: beamCost == null
+                        ? 'regions-shared-fixed-compact-stream'
+                        : 'regions-beam-shared-fixed-compact-stream',
+                  );
+              if (sharedCompactStreamPayload != null &&
+                  (beamCost == null ||
+                      sharedCompactStreamPayload.payload.length == beamCost)) {
+                payloads.add(sharedCompactStreamPayload);
+              }
+              final sharedCompactStreamCommonPayload =
+                  _tryBuildV2RegionsPayloadFromRegions(
+                    image,
+                    backgroundColor,
+                    referenceEncoding,
+                    regions,
+                    maxRegions,
+                    compactGeometry: true,
+                    compactStream: true,
+                    compactStreamCommonBlockHeader: true,
+                    sharedFixedPalette: true,
+                    includeExtendedFixedBlocks: false,
+                    diagnosticContainer: beamCost == null
+                        ? 'regions-shared-fixed-compact-stream-common'
+                        : 'regions-beam-shared-fixed-compact-stream-common',
+                  );
+              if (sharedCompactStreamCommonPayload != null &&
+                  (beamCost == null ||
+                      sharedCompactStreamCommonPayload.payload.length ==
+                          beamCost)) {
+                payloads.add(sharedCompactStreamCommonPayload);
+              }
+              final sharedCompactStreamExtendedPayload =
+                  _tryBuildV2RegionsPayloadFromRegions(
+                    image,
+                    backgroundColor,
+                    referenceEncoding,
+                    regions,
+                    maxRegions,
+                    compactGeometry: true,
+                    compactStream: true,
+                    sharedFixedPalette: true,
+                    includeExtendedFixedBlocks: true,
+                    diagnosticContainer: beamCost == null
+                        ? 'regions-shared-fixed-compact-stream-extended'
+                        : 'regions-beam-shared-fixed-compact-stream-extended',
+                  );
+              if (sharedCompactStreamExtendedPayload != null &&
+                  (beamCost == null ||
+                      sharedCompactStreamExtendedPayload.payload.length ==
+                          beamCost)) {
+                payloads.add(sharedCompactStreamExtendedPayload);
+              }
+              final sharedCompactStreamCommonExtendedPayload =
+                  _tryBuildV2RegionsPayloadFromRegions(
+                    image,
+                    backgroundColor,
+                    referenceEncoding,
+                    regions,
+                    maxRegions,
+                    compactGeometry: true,
+                    compactStream: true,
+                    compactStreamCommonBlockHeader: true,
+                    sharedFixedPalette: true,
+                    includeExtendedFixedBlocks: true,
+                    diagnosticContainer: beamCost == null
+                        ? 'regions-shared-fixed-compact-stream-common-extended'
+                        : 'regions-beam-shared-fixed-compact-stream-common-extended',
+                  );
+              if (sharedCompactStreamCommonExtendedPayload != null &&
+                  (beamCost == null ||
+                      sharedCompactStreamCommonExtendedPayload.payload.length ==
+                          beamCost)) {
+                payloads.add(sharedCompactStreamCommonExtendedPayload);
+              }
             }
           }
         }
@@ -3680,6 +3850,72 @@ class MCOImageCodec {
             (best == null || extendedPayload.payload.length < best)) {
           best = extendedPayload.payload.length;
         }
+        if (compactGeometry) {
+          final compactStreamPayload = _tryBuildV2RegionsPayloadFromRegions(
+            image,
+            backgroundColor,
+            referenceEncoding,
+            regions,
+            maxRegions,
+            compactGeometry: true,
+            compactStream: true,
+            includeExtendedFixedBlocks: false,
+          );
+          if (compactStreamPayload != null &&
+              (best == null || compactStreamPayload.payload.length < best)) {
+            best = compactStreamPayload.payload.length;
+          }
+          final compactStreamCommonPayload =
+              _tryBuildV2RegionsPayloadFromRegions(
+                image,
+                backgroundColor,
+                referenceEncoding,
+                regions,
+                maxRegions,
+                compactGeometry: true,
+                compactStream: true,
+                compactStreamCommonBlockHeader: true,
+                includeExtendedFixedBlocks: false,
+              );
+          if (compactStreamCommonPayload != null &&
+              (best == null ||
+                  compactStreamCommonPayload.payload.length < best)) {
+            best = compactStreamCommonPayload.payload.length;
+          }
+          final compactStreamExtendedPayload =
+              _tryBuildV2RegionsPayloadFromRegions(
+                image,
+                backgroundColor,
+                referenceEncoding,
+                regions,
+                maxRegions,
+                compactGeometry: true,
+                compactStream: true,
+                includeExtendedFixedBlocks: true,
+              );
+          if (compactStreamExtendedPayload != null &&
+              (best == null ||
+                  compactStreamExtendedPayload.payload.length < best)) {
+            best = compactStreamExtendedPayload.payload.length;
+          }
+          final compactStreamCommonExtendedPayload =
+              _tryBuildV2RegionsPayloadFromRegions(
+                image,
+                backgroundColor,
+                referenceEncoding,
+                regions,
+                maxRegions,
+                compactGeometry: true,
+                compactStream: true,
+                compactStreamCommonBlockHeader: true,
+                includeExtendedFixedBlocks: true,
+              );
+          if (compactStreamCommonExtendedPayload != null &&
+              (best == null ||
+                  compactStreamCommonExtendedPayload.payload.length < best)) {
+            best = compactStreamCommonExtendedPayload.payload.length;
+          }
+        }
       }
       if (image.paletteProfile.isFixed) {
         final sharedPayload = _tryBuildV2RegionsPayloadFromRegions(
@@ -3711,6 +3947,79 @@ class MCOImageCodec {
           if (sharedExtendedPayload != null &&
               (best == null || sharedExtendedPayload.payload.length < best)) {
             best = sharedExtendedPayload.payload.length;
+          }
+          if (compactGeometry) {
+            final sharedCompactStreamPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: false,
+                );
+            if (sharedCompactStreamPayload != null &&
+                (best == null ||
+                    sharedCompactStreamPayload.payload.length < best)) {
+              best = sharedCompactStreamPayload.payload.length;
+            }
+            final sharedCompactStreamCommonPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: false,
+                );
+            if (sharedCompactStreamCommonPayload != null &&
+                (best == null ||
+                    sharedCompactStreamCommonPayload.payload.length < best)) {
+              best = sharedCompactStreamCommonPayload.payload.length;
+            }
+            final sharedCompactStreamExtendedPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true,
+                );
+            if (sharedCompactStreamExtendedPayload != null &&
+                (best == null ||
+                    sharedCompactStreamExtendedPayload.payload.length < best)) {
+              best = sharedCompactStreamExtendedPayload.payload.length;
+            }
+            final sharedCompactStreamCommonExtendedPayload =
+                _tryBuildV2RegionsPayloadFromRegions(
+                  image,
+                  backgroundColor,
+                  referenceEncoding,
+                  regions,
+                  maxRegions,
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true,
+                );
+            if (sharedCompactStreamCommonExtendedPayload != null &&
+                (best == null ||
+                    sharedCompactStreamCommonExtendedPayload.payload.length <
+                        best)) {
+              best = sharedCompactStreamCommonExtendedPayload.payload.length;
+            }
           }
         }
       }
@@ -3899,6 +4208,8 @@ class MCOImageCodec {
     List<_ImageBounds> regions,
     int maxRegions, {
     required bool compactGeometry,
+    bool compactStream = false,
+    bool compactStreamCommonBlockHeader = false,
     bool sharedFixedPalette = false,
     required bool includeExtendedFixedBlocks,
     String? diagnosticContainer,
@@ -3915,14 +4226,21 @@ class MCOImageCodec {
     }
     if (image.paletteProfile.isFixed && referenceEncoding != null) return null;
     if (sharedFixedPalette && !image.paletteProfile.isFixed) return null;
+    if (compactStreamCommonBlockHeader && !compactStream) return null;
 
     final writer = _BitWriter();
     _writeV2Header(
       writer,
       profile: image.paletteProfile,
       container: _containerRegions,
-      mode: compactGeometry ? ImageMode.extended : ImageMode.rawGlobal,
-      scan: ScanMode.h,
+      mode: (compactGeometry || compactStream)
+          ? ImageMode.extended
+          : ImageMode.rawGlobal,
+      scan: compactStreamCommonBlockHeader
+          ? _regionsVariantCompactStreamCommon
+          : compactStream
+          ? _regionsVariantCompactStream
+          : ScanMode.h,
       boundsPresent: false,
       referenceEncoding: referenceEncoding,
       implicitWhiteBackground: _isImplicitWhiteBackground(
@@ -4034,14 +4352,7 @@ class MCOImageCodec {
       bitsPerLocalPixel = _localBits(palette.length);
     }
 
-    if (compactGeometry) {
-      writer.writeBits(
-        regions.length - 1,
-        _bitsForChoiceCount(_maxV2Regions),
-      );
-    } else {
-      writer.writeBitVarUint(regions.length);
-    }
+    final regionBlocks = <_V2RegionBlock>[];
     for (final region in regions) {
       final regionPixels = _cropPixels(image.pixels, image.width, region);
       final block = image.paletteProfile.isDynamic
@@ -4071,7 +4382,32 @@ class MCOImageCodec {
               backgroundColor,
               includeExtendedBlocks: includeExtendedFixedBlocks,
             );
-      if (compactGeometry) {
+      regionBlocks.add(_V2RegionBlock(region, block));
+    }
+
+    _RegionBlockHeader? commonBlockHeader;
+    if (compactStreamCommonBlockHeader) {
+      commonBlockHeader = _mostCommonRegionBlockHeader(regionBlocks);
+      if (commonBlockHeader == null) return null;
+    }
+
+    if (compactGeometry || compactStream) {
+      writer.writeBits(
+        regions.length - 1,
+        _bitsForChoiceCount(_maxV2Regions),
+      );
+    } else {
+      writer.writeBitVarUint(regions.length);
+    }
+    if (commonBlockHeader != null) {
+      writer
+        ..writeBits(_modeBits(commonBlockHeader.mode), 3)
+        ..writeBits(_scanBits(commonBlockHeader.scan), 2);
+    }
+    for (final regionBlock in regionBlocks) {
+      final region = regionBlock.region;
+      final block = regionBlock.block;
+      if (compactGeometry || compactStream) {
         _writeV2CompactBounds(
           writer,
           region,
@@ -4085,12 +4421,33 @@ class MCOImageCodec {
           ..writeBitVarUint(region.width)
           ..writeBitVarUint(region.height);
       }
-      writer
-        ..writeAlignedByte(
-          (_modeBits(block.mode) << 5) | (_scanBits(block.scan) << 3),
-        )
-        ..writeBitVarUint(block.payload.length)
-        ..writeAlignedBytes(block.payload);
+      if (compactStream) {
+        if (commonBlockHeader != null) {
+          final usesCommon =
+              block.mode == commonBlockHeader.mode &&
+              block.scan == commonBlockHeader.scan;
+          writer.writeBits(usesCommon ? 0 : 1, 1);
+          if (!usesCommon) {
+            writer
+              ..writeBits(_modeBits(block.mode), 3)
+              ..writeBits(_scanBits(block.scan), 2);
+          }
+        } else {
+          writer
+            ..writeBits(_modeBits(block.mode), 3)
+            ..writeBits(_scanBits(block.scan), 2);
+        }
+        writer
+          ..writeBitVarUint(block.payloadBitLength)
+          ..writeBitsFromBytes(block.payload, block.payloadBitLength);
+      } else {
+        writer
+          ..writeAlignedByte(
+            (_modeBits(block.mode) << 5) | (_scanBits(block.scan) << 3),
+          )
+          ..writeBitVarUint(block.payload.length)
+          ..writeAlignedBytes(block.payload);
+      }
     }
 
     return _V2Payload(
@@ -4102,6 +4459,22 @@ class MCOImageCodec {
       usedBankCount: usedBankCount,
       bitsPerLocalPixel: bitsPerLocalPixel,
       diagnosticContainer: diagnosticContainer,
+    );
+  }
+
+  _V2BlockPayload _v2BlockPayload(
+    _BitWriter writer, {
+    int? localPaletteSize,
+    int? usedBankCount,
+    int? bitsPerLocalPixel,
+  }) {
+    final bitLength = writer.bitLength;
+    return _V2BlockPayload(
+      writer.toBytes(),
+      bitLength: bitLength,
+      localPaletteSize: localPaletteSize,
+      usedBankCount: usedBankCount,
+      bitsPerLocalPixel: bitsPerLocalPixel,
     );
   }
 
@@ -4137,8 +4510,8 @@ class MCOImageCodec {
     switch (mode) {
       case ImageMode.rawGlobal:
         _encodeRawGlobal(writer, linear, profile);
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: null,
           bitsPerLocalPixel: _globalBits(profile),
         );
@@ -4155,8 +4528,8 @@ class MCOImageCodec {
         for (final pixel in linear) {
           writer.writeBits(map[pixel]!, localBits);
         }
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: palette.length,
           bitsPerLocalPixel: localBits,
         );
@@ -4176,8 +4549,8 @@ class MCOImageCodec {
           writer.writeBits(map[run.color]!, localBits);
           writer.writeBitVarUint(run.length);
         }
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: palette.length,
           bitsPerLocalPixel: localBits,
         );
@@ -4204,8 +4577,8 @@ class MCOImageCodec {
           writer.writeBitVarUint(segment.length);
           pos = segment.start + segment.length;
         }
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: palette.length,
           bitsPerLocalPixel: localBits,
         );
@@ -4225,8 +4598,8 @@ class MCOImageCodec {
           rowLength,
           localBits,
         );
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: palette.length,
           bitsPerLocalPixel: localBits,
         );
@@ -4249,8 +4622,8 @@ class MCOImageCodec {
           rowLength,
           localBits,
         );
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: palette.length,
           bitsPerLocalPixel: localBits,
         );
@@ -4262,8 +4635,8 @@ class MCOImageCodec {
         }
         _writeV2ColorRef(writer, profile, foregroundColor);
         _writeBiColorMask(writer, linear, backgroundColor, foregroundColor);
-        return _V2BlockPayload(
-          writer.toBytes(),
+        return _v2BlockPayload(
+          writer,
           localPaletteSize: 2,
           bitsPerLocalPixel: 1,
         );
@@ -4322,8 +4695,8 @@ class MCOImageCodec {
               foregroundProfileColorId >> 6,
             }.length
           : null;
-      return _V2BlockPayload(
-        writer.toBytes(),
+      return _v2BlockPayload(
+        writer,
         localPaletteSize: 2,
         usedBankCount: usedBankCount,
         bitsPerLocalPixel: 1,
@@ -4456,8 +4829,8 @@ class MCOImageCodec {
               .toSet()
               .length
         : null;
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: localPalette.length,
       usedBankCount: usedBankCount,
       bitsPerLocalPixel: localBits,
@@ -4486,12 +4859,13 @@ class MCOImageCodec {
           writeSparseBackground: false,
         );
         if (block == null) continue;
-        final candidate = _BlockPayload(block.payload, mode, scan);
-        if (best == null ||
-            candidate.payload.length < best.payload.length ||
-            (candidate.payload.length == best.payload.length &&
-                _modeTieOrder.indexOf(candidate.mode) <
-                    _modeTieOrder.indexOf(best.mode))) {
+        final candidate = _BlockPayload(
+          block.payload,
+          mode,
+          scan,
+          bitLength: block.payloadBitLength,
+        );
+        if (_isBetterBlockPayload(candidate, best)) {
           best = candidate;
         }
       }
@@ -4506,18 +4880,52 @@ class MCOImageCodec {
             block.payload,
             ImageMode.extended,
             scan,
+            bitLength: block.payloadBitLength,
           );
-          if (best == null ||
-              candidate.payload.length < best.payload.length ||
-              (candidate.payload.length == best.payload.length &&
-                  _modeTieOrder.indexOf(candidate.mode) <
-                      _modeTieOrder.indexOf(best.mode))) {
+          if (_isBetterBlockPayload(candidate, best)) {
             best = candidate;
           }
         }
       }
     }
     return best!;
+  }
+
+  bool _isBetterBlockPayload(_BlockPayload candidate, _BlockPayload? current) {
+    if (current == null) return true;
+    if (candidate.payloadBitLength != current.payloadBitLength) {
+      return candidate.payloadBitLength < current.payloadBitLength;
+    }
+    return _modeTieOrder.indexOf(candidate.mode) <
+        _modeTieOrder.indexOf(current.mode);
+  }
+
+  _RegionBlockHeader? _mostCommonRegionBlockHeader(
+    List<_V2RegionBlock> blocks,
+  ) {
+    if (blocks.isEmpty) return null;
+    final counts = <String, ({ImageMode mode, ScanMode scan, int count})>{};
+    for (final block in blocks) {
+      final key = '${block.block.mode.index}:${block.block.scan.index}';
+      final previous = counts[key];
+      counts[key] = (
+        mode: block.block.mode,
+        scan: block.block.scan,
+        count: (previous?.count ?? 0) + 1,
+      );
+    }
+    final values = counts.values.toList()
+      ..sort((left, right) {
+        final byCount = right.count.compareTo(left.count);
+        if (byCount != 0) return byCount;
+        final byMode = _modeTieOrder
+            .indexOf(left.mode)
+            .compareTo(_modeTieOrder.indexOf(right.mode));
+        if (byMode != 0) return byMode;
+        return left.scan.index.compareTo(right.scan.index);
+      });
+    final best = values.first;
+    return _RegionBlockHeader(best.mode, best.scan);
   }
 
   List<_V2BlockPayload> _tryBuildV2FixedExtendedBlockBodies(
@@ -4643,8 +5051,8 @@ class MCOImageCodec {
         }
       }
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: palette.length,
       bitsPerLocalPixel: localBits,
     );
@@ -4687,8 +5095,8 @@ class MCOImageCodec {
       height,
       localBits,
     );
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: palette.length,
       bitsPerLocalPixel: localBits,
     );
@@ -4714,8 +5122,8 @@ class MCOImageCodec {
       writer.writeBits(localIndexByColor[run.color]!, localBits);
       _writeCompactUint(writer, run.length - 1);
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: palette.length,
       bitsPerLocalPixel: localBits,
     );
@@ -4751,8 +5159,8 @@ class MCOImageCodec {
       _writeCompactUint(writer, segment.length - 1);
       pos = segment.start + segment.length;
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: palette.length,
       bitsPerLocalPixel: localBits,
     );
@@ -4798,8 +5206,8 @@ class MCOImageCodec {
         }
       }
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: palette.length,
       bitsPerLocalPixel: localBits,
     );
@@ -4858,8 +5266,8 @@ class MCOImageCodec {
       valueBits,
       directGrayscale: directGrayscale,
     );
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       localPaletteSize: localPaletteSize,
       bitsPerLocalPixel: valueBits,
     );
@@ -4914,12 +5322,14 @@ class MCOImageCodec {
           backgroundColor: backgroundColor,
           localIndexByProfileColorId: localIndexByProfileColorId,
         );
-        final candidate = _BlockPayload(writer.toBytes(), mode, scan);
-        if (best == null ||
-            candidate.payload.length < best.payload.length ||
-            (candidate.payload.length == best.payload.length &&
-                _modeTieOrder.indexOf(candidate.mode) <
-                    _modeTieOrder.indexOf(best.mode))) {
+        final bitLength = writer.bitLength;
+        final candidate = _BlockPayload(
+          writer.toBytes(),
+          mode,
+          scan,
+          bitLength: bitLength,
+        );
+        if (_isBetterBlockPayload(candidate, best)) {
           best = candidate;
         }
       }
@@ -4936,12 +5346,9 @@ class MCOImageCodec {
             block.payload,
             ImageMode.extended,
             scan,
+            bitLength: block.payloadBitLength,
           );
-          if (best == null ||
-              candidate.payload.length < best.payload.length ||
-              (candidate.payload.length == best.payload.length &&
-                  _modeTieOrder.indexOf(candidate.mode) <
-                      _modeTieOrder.indexOf(best.mode))) {
+          if (_isBetterBlockPayload(candidate, best)) {
             best = candidate;
           }
         }
@@ -4980,12 +5387,14 @@ class MCOImageCodec {
           backgroundColor: backgroundColor,
           localIndexByColor: localIndexByColor,
         );
-        final candidate = _BlockPayload(writer.toBytes(), mode, scan);
-        if (best == null ||
-            candidate.payload.length < best.payload.length ||
-            (candidate.payload.length == best.payload.length &&
-                _modeTieOrder.indexOf(candidate.mode) <
-                    _modeTieOrder.indexOf(best.mode))) {
+        final bitLength = writer.bitLength;
+        final candidate = _BlockPayload(
+          writer.toBytes(),
+          mode,
+          scan,
+          bitLength: bitLength,
+        );
+        if (_isBetterBlockPayload(candidate, best)) {
           best = candidate;
         }
       }
@@ -5002,12 +5411,9 @@ class MCOImageCodec {
             block.payload,
             ImageMode.extended,
             scan,
+            bitLength: block.payloadBitLength,
           );
-          if (best == null ||
-              candidate.payload.length < best.payload.length ||
-              (candidate.payload.length == best.payload.length &&
-                  _modeTieOrder.indexOf(candidate.mode) <
-                      _modeTieOrder.indexOf(best.mode))) {
+          if (_isBetterBlockPayload(candidate, best)) {
             best = candidate;
           }
         }
@@ -5095,8 +5501,8 @@ class MCOImageCodec {
       writer.writeBits(run.color, localBits);
       _writeCompactUint(writer, run.length - 1);
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5122,8 +5528,8 @@ class MCOImageCodec {
       _writeCompactUint(writer, segment.length - 1);
       pos = segment.start + segment.length;
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5136,8 +5542,8 @@ class MCOImageCodec {
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
     _writeAdaptiveBitplanesBody(writer, localPixels, localBits);
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5180,8 +5586,8 @@ class MCOImageCodec {
         }
       }
     }
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5205,8 +5611,8 @@ class MCOImageCodec {
       height,
       localBits,
     );
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5230,8 +5636,8 @@ class MCOImageCodec {
       localBits,
       directGrayscale: false,
     );
-    return _V2BlockPayload(
-      writer.toBytes(),
+    return _v2BlockPayload(
+      writer,
       bitsPerLocalPixel: localBits,
     );
   }
@@ -5253,9 +5659,15 @@ class MCOImageCodec {
     bool solidBackground = false,
   }) {
     if (container == _containerRegions) {
+      final validRegionsScan =
+          mode == ImageMode.extended
+              ? (scan == _regionsVariantCompactGeometry ||
+                    scan == _regionsVariantCompactStream ||
+                    scan == _regionsVariantCompactStreamCommon)
+              : scan == ScanMode.h;
       if (boundsPresent ||
           (mode != ImageMode.rawGlobal && mode != ImageMode.extended) ||
-          scan != ScanMode.h) {
+          !validRegionsScan) {
         throw const MCOImageInvalidInputException('Invalid v2 regions header');
       }
     }
@@ -5897,9 +6309,19 @@ class MCOImageCodec {
         (profile.isDynamic || referenceEncodingValue != 0);
     if (container == _containerRegions) {
       final compactGeometry = mode == ImageMode.extended;
+      final compactStream =
+          compactGeometry && scan == _regionsVariantCompactStream;
+      final compactStreamCommon =
+          compactGeometry && scan == _regionsVariantCompactStreamCommon;
+      final validRegionsScan =
+          compactGeometry
+              ? (scan == _regionsVariantCompactGeometry ||
+                    scan == _regionsVariantCompactStream ||
+                    scan == _regionsVariantCompactStreamCommon)
+              : scan == ScanMode.h;
       if (boundsPresent ||
           (mode != ImageMode.rawGlobal && !compactGeometry) ||
-          scan != ScanMode.h) {
+          !validRegionsScan) {
         throw const MCOImageInvalidPayloadException(
           'Invalid v2 regions header',
         );
@@ -5918,6 +6340,8 @@ class MCOImageCodec {
         profile,
         referenceEncoding,
         compactGeometry: compactGeometry,
+        compactStream: compactStream || compactStreamCommon,
+        compactStreamCommonBlockHeader: compactStreamCommon,
         implicitWhiteBackground: headerImplicitWhiteBackground,
         sharedFixedPalette: sharedFixedRegionsPalette,
       );
@@ -7844,6 +8268,8 @@ class MCOImageCodec {
     PaletteProfile profile,
     DynamicPaletteReferenceEncoding? referenceEncoding, {
     required bool compactGeometry,
+    required bool compactStream,
+    required bool compactStreamCommonBlockHeader,
     required bool implicitWhiteBackground,
     required bool sharedFixedPalette,
   }) {
@@ -7874,17 +8300,26 @@ class MCOImageCodec {
       );
     }
 
-    final regionCount = compactGeometry
+    final compactBounds = compactGeometry || compactStream;
+    final regionCount = compactBounds
         ? reader.readBits(_bitsForChoiceCount(_maxV2Regions)) + 1
         : reader.readBitVarUint();
     if (regionCount <= 0 || regionCount > _maxV2Regions) {
       throw const MCOImageInvalidPayloadException('Invalid v2 region count');
     }
 
+    _RegionBlockHeader? commonBlockHeader;
+    if (compactStreamCommonBlockHeader) {
+      commonBlockHeader = _RegionBlockHeader(
+        _modeFromBits(reader.readBits(3)),
+        _scanFromBits(reader.readBits(2)),
+      );
+    }
+
     final pixels = List<int>.filled(width * height, background);
     final occupied = List<bool>.filled(width * height, false);
     for (var i = 0; i < regionCount; i++) {
-      final region = compactGeometry
+      final region = compactBounds
           ? _readV2CompactBounds(reader, width, height)
           : _ImageBounds(
               x: reader.readBitVarUint(),
@@ -7899,21 +8334,37 @@ class MCOImageCodec {
         throw const MCOImageInvalidPayloadException('Invalid v2 image region');
       }
 
-      final modeAndScan = reader.readAlignedByte();
-      if ((modeAndScan & 0x07) != 0) {
-        throw const MCOImageInvalidPayloadException(
-          'Reserved region bits are set',
-        );
+      final ImageMode regionMode;
+      final ScanMode regionScan;
+      if (compactStream) {
+        if (commonBlockHeader != null && reader.readBits(1) == 0) {
+          regionMode = commonBlockHeader.mode;
+          regionScan = commonBlockHeader.scan;
+        } else {
+          regionMode = _modeFromBits(reader.readBits(3));
+          regionScan = _scanFromBits(reader.readBits(2));
+        }
+      } else {
+        final modeAndScan = reader.readAlignedByte();
+        if ((modeAndScan & 0x07) != 0) {
+          throw const MCOImageInvalidPayloadException(
+            'Reserved region bits are set',
+          );
+        }
+        regionMode = _modeFromBits((modeAndScan >> 5) & 0x07);
+        regionScan = _scanFromBits((modeAndScan >> 3) & 0x03);
       }
-      final regionMode = _modeFromBits((modeAndScan >> 5) & 0x07);
-      final regionScan = _scanFromBits((modeAndScan >> 3) & 0x03);
       if (profile.isDynamic && regionMode == ImageMode.rawGlobal) {
         throw const MCOImageInvalidPayloadException(
           'Dynamic region rawGlobal is reserved',
         );
       }
-      final payloadLength = reader.readBitVarUint();
-      final payload = reader.readAlignedBytes(payloadLength);
+      final payloadBitLength = compactStream
+          ? reader.readBitVarUint()
+          : null;
+      final payload = compactStream
+          ? reader.readBytesByBits(payloadBitLength!)
+          : reader.readAlignedBytes(reader.readBitVarUint());
       final regionReader = _BitReader(payload);
       final linear = profile.isDynamic
           ? _decodeDynamicBodyWithPalette(
@@ -13178,6 +13629,9 @@ class _BitWriter {
   final List<int> _bytes = [];
   var _bitOffset = 0;
 
+  int get bitLength =>
+      _bytes.length * 8 - (_bitOffset == 0 ? 0 : 8 - _bitOffset);
+
   void writeAlignedByte(int value) {
     alignToByte();
     _bytes.add(value & 0xff);
@@ -13186,6 +13640,20 @@ class _BitWriter {
   void writeAlignedBytes(Uint8List values) {
     alignToByte();
     _bytes.addAll(values);
+  }
+
+  void writeBitsFromBytes(Uint8List values, int bitCount) {
+    if (bitCount < 0 || bitCount > values.length * 8) {
+      throw const MCOImageInvalidInputException('Invalid byte bit length');
+    }
+    var remaining = bitCount;
+    var index = 0;
+    while (remaining > 0) {
+      final take = math.min(remaining, 8);
+      writeBits(values[index], take);
+      remaining -= take;
+      index++;
+    }
   }
 
   void writeBits(int value, int bitCount) {
@@ -13269,6 +13737,22 @@ class _BitReader {
     final result = Uint8List.sublistView(_bytes, byteIndex, byteIndex + length);
     byteIndex += length;
     return result;
+  }
+
+  Uint8List readBytesByBits(int bitCount) {
+    if (bitCount < 0) {
+      throw const MCOImageInvalidPayloadException('Negative bit length');
+    }
+    final output = Uint8List((bitCount + 7) ~/ 8);
+    var remaining = bitCount;
+    var index = 0;
+    while (remaining > 0) {
+      final take = math.min(remaining, 8);
+      output[index] = readBits(take);
+      remaining -= take;
+      index++;
+    }
+    return output;
   }
 
   int readBits(int bitCount) {
@@ -13733,8 +14217,25 @@ class _BlockPayload {
   final Uint8List payload;
   final ImageMode mode;
   final ScanMode scan;
+  final int? bitLength;
 
-  const _BlockPayload(this.payload, this.mode, this.scan);
+  const _BlockPayload(this.payload, this.mode, this.scan, {this.bitLength});
+
+  int get payloadBitLength => bitLength ?? payload.length * 8;
+}
+
+class _V2RegionBlock {
+  final _ImageBounds region;
+  final _BlockPayload block;
+
+  const _V2RegionBlock(this.region, this.block);
+}
+
+class _RegionBlockHeader {
+  final ImageMode mode;
+  final ScanMode scan;
+
+  const _RegionBlockHeader(this.mode, this.scan);
 }
 
 class _RegionPayload {
@@ -13764,16 +14265,20 @@ class _V2Payload {
 
 class _V2BlockPayload {
   final Uint8List payload;
+  final int? bitLength;
   final int? localPaletteSize;
   final int? usedBankCount;
   final int? bitsPerLocalPixel;
 
   const _V2BlockPayload(
     this.payload, {
+    this.bitLength,
     this.localPaletteSize,
     this.usedBankCount,
     this.bitsPerLocalPixel,
   });
+
+  int get payloadBitLength => bitLength ?? payload.length * 8;
 }
 
 class _DynamicLocalPalette {
