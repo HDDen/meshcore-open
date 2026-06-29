@@ -134,6 +134,46 @@ void main() {
       expect(encoded.encodedCandidate.regionCount, 2);
       expect(decoded.pixels, image.pixels);
     });
+
+    test('long runs can use compact RLE algorithm', () {
+      final image = _image(
+        24,
+        1,
+        (x, _) {
+          if (x < 8) return 0;
+          if (x < 16) return 4;
+          return 1;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(encoded.encodedCandidate.mode, ImageMode.extended);
+      expect(decoded.pixels, image.pixels);
+    });
+
+    test('sparse multicolor image roundtrips through compact sparse candidates', () {
+      final image = _image(
+        24,
+        24,
+        (x, y) {
+          if (x == 1 && y == 1) return 2;
+          if (x >= 10 && x < 13 && y == 8) return 4;
+          if (x == 22 && y >= 19 && y < 23) return 6;
+          return 0;
+        },
+        profile: PaletteProfile.master8,
+      );
+      final encoded = codec.encode(image, backgroundColor: 0);
+      final decoded = codec.decodeBody(encoded.body);
+
+      expect(
+        encoded.encodedCandidate.mode,
+        anyOf(ImageMode.extended, ImageMode.sparseBg, ImageMode.regionsBg),
+      );
+      expect(decoded.pixels, image.pixels);
+    });
   });
 
   group('MCOImageV3Codec app payload', () {

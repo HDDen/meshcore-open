@@ -237,6 +237,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.rawGlobal,
           MCOImageV3BlockAlgorithm.rawLocal,
           MCOImageV3BlockAlgorithm.rleLocal,
+          MCOImageV3BlockAlgorithm.compactRle,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -260,6 +261,7 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rawGlobal,
         MCOImageV3BlockAlgorithm.rawLocal,
         MCOImageV3BlockAlgorithm.rleLocal,
+        MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -274,6 +276,7 @@ class MCOImageV3Codec {
       for (final bg in backgroundCandidates) {
         for (final algorithm in const [
           MCOImageV3BlockAlgorithm.sparseBackground,
+          MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
         ]) {
           final candidate = _tryBuildCandidate(
@@ -450,8 +453,10 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.rawGlobal,
         MCOImageV3BlockAlgorithm.rawLocal,
         MCOImageV3BlockAlgorithm.rleLocal,
+        MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.rowRepeat,
         MCOImageV3BlockAlgorithm.sparseBackground,
+        MCOImageV3BlockAlgorithm.compactSparse,
         MCOImageV3BlockAlgorithm.biColorMask,
       ]) {
         final writer = _V3BitWriter();
@@ -754,6 +759,17 @@ class MCOImageV3Codec {
             ..writeBitVarUint(run.length);
         }
         break;
+      case MCOImageV3BlockAlgorithm.compactRle:
+        final palette = _localPalette(linear);
+        _writeLocalPalette(writer, profile, palette);
+        final map = _localIndexMap(palette);
+        final bits = _localBits(palette.length);
+        for (final run in _buildRuns(linear)) {
+          writer
+            ..writeBits(map[run.color]!, bits)
+            ..writeCompactUint(run.length - 1);
+        }
+        break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         _writeColorRef(writer, profile, backgroundColor);
         final nonBg = linear
@@ -778,6 +794,37 @@ class MCOImageV3Codec {
           pos = segment.start + segment.length;
         }
         break;
+      case MCOImageV3BlockAlgorithm.compactSparse:
+        _writeColorRef(writer, profile, backgroundColor);
+        final segments = _buildSparseSegments(linear, backgroundColor);
+        if (segments.isEmpty) {
+          throw const MCOImageInvalidInputException(
+            'Empty compact sparse body',
+          );
+        }
+        final nonBg = linear
+            .where((color) => color != backgroundColor)
+            .toSet()
+            .toList()
+          ..sort();
+        if (nonBg.isEmpty) {
+          throw const MCOImageInvalidInputException(
+            'Empty compact sparse palette',
+          );
+        }
+        _writeLocalPalette(writer, profile, nonBg);
+        final map = _localIndexMap(nonBg);
+        final bits = _localBits(nonBg.length);
+        writer.writeCompactUint(segments.length - 1);
+        var pos = 0;
+        for (final segment in segments) {
+          writer
+            ..writeCompactUint(segment.start - pos)
+            ..writeBits(map[segment.color]!, bits)
+            ..writeCompactUint(segment.length - 1);
+          pos = segment.start + segment.length;
+        }
+        break;
       case MCOImageV3BlockAlgorithm.biColorMask:
         final foreground = _biColorForeground(linear, backgroundColor);
         if (foreground == null) {
@@ -798,8 +845,6 @@ class MCOImageV3Codec {
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.compactRle:
-      case MCOImageV3BlockAlgorithm.compactSparse:
       case MCOImageV3BlockAlgorithm.lzPixels:
       case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
@@ -857,6 +902,26 @@ class MCOImageV3Codec {
           throw const MCOImageInvalidPayloadException('Invalid RLE size');
         }
         return result;
+      case MCOImageV3BlockAlgorithm.compactRle:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final result = <int>[];
+        while (result.length < count) {
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact RLE color index out of range',
+            );
+          }
+          final length = reader.readCompactUint() + 1;
+          if (result.length + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact RLE exceeds pixel count',
+            );
+          }
+          result.addAll(List<int>.filled(length, palette[colorIndex]));
+        }
+        return result;
       case MCOImageV3BlockAlgorithm.sparseBackground:
         final background = _readColorRef(reader, profile);
         final palette = _readLocalPalette(reader, profile);
@@ -875,6 +940,43 @@ class MCOImageV3Codec {
           final length = reader.readBitVarUint();
           if (length <= 0 || pos + length > count) {
             throw const MCOImageInvalidPayloadException('Invalid sparse run');
+          }
+          for (var j = 0; j < length; j++) {
+            result[pos + j] = palette[colorIndex];
+          }
+          pos += length;
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.compactSparse:
+        final background = _readColorRef(reader, profile);
+        final palette = _readLocalPalette(reader, profile);
+        if (palette.contains(background)) {
+          throw const MCOImageInvalidPayloadException(
+            'Compact sparse palette contains background',
+          );
+        }
+        final bits = _localBits(palette.length);
+        final result = List<int>.filled(count, background);
+        final segmentCount = reader.readCompactUint() + 1;
+        if (segmentCount <= 0 || segmentCount > count) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid compact sparse segment count',
+          );
+        }
+        var pos = 0;
+        for (var i = 0; i < segmentCount; i++) {
+          pos += reader.readCompactUint();
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact sparse color index out of range',
+            );
+          }
+          final length = reader.readCompactUint() + 1;
+          if (pos >= count || pos + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid compact sparse segment',
+            );
           }
           for (var j = 0; j < length; j++) {
             result[pos + j] = palette[colorIndex];
@@ -907,8 +1009,6 @@ class MCOImageV3Codec {
           return palette[index];
         }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.compactRle:
-      case MCOImageV3BlockAlgorithm.compactSparse:
       case MCOImageV3BlockAlgorithm.lzPixels:
       case MCOImageV3BlockAlgorithm.quadtree:
       case MCOImageV3BlockAlgorithm.bitplanes:
@@ -999,7 +1099,8 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rawLocal ||
       MCOImageV3BlockAlgorithm.rleLocal ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
-      MCOImageV3BlockAlgorithm.sparseBackground =>
+      MCOImageV3BlockAlgorithm.sparseBackground ||
+      MCOImageV3BlockAlgorithm.compactSparse =>
         linear.where((color) => color != backgroundColor).toSet().length,
       MCOImageV3BlockAlgorithm.biColorMask => 2,
       _ => null,
@@ -1661,6 +1762,25 @@ class _V3BitWriter {
     } while (remaining != 0);
   }
 
+  void writeCompactUint(int value) {
+    if (value < 0) {
+      throw const MCOImageInvalidInputException('Negative compact uint');
+    }
+    if (value <= 3) {
+      writeBits(0, 1);
+      writeBits(value, 2);
+    } else if (value <= 19) {
+      writeBits(1, 2);
+      writeBits(value - 4, 4);
+    } else if (value <= 275) {
+      writeBits(3, 3);
+      writeBits(value - 20, 8);
+    } else {
+      writeBits(7, 3);
+      writeBitVarUint(value);
+    }
+  }
+
   void alignToByte() {
     if (_bitOffset > 0) {
       _bytes.add(_current);
@@ -1718,6 +1838,13 @@ class _V3BitReader {
       shift += 7;
     }
     throw const MCOImageInvalidPayloadException('Varuint is too long');
+  }
+
+  int readCompactUint() {
+    if (readBits(1) == 0) return readBits(2);
+    if (readBits(1) == 0) return readBits(4) + 4;
+    if (readBits(1) == 0) return readBits(8) + 20;
+    return readBitVarUint();
   }
 
   void finish() {
