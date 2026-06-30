@@ -168,6 +168,9 @@ class MCOImageV3Codec {
   static const int _maxSize = 256;
   static const int _maxRegions = 32;
   static const int _normalMaxRegions = 16;
+  static const int _greedyTieLargestArea = 0;
+  static const int _greedyTieWidest = 1;
+  static const int _greedyTieTallest = 2;
   static const int _maxFrequentBackgroundCandidates = 8;
   static const int _maxExhaustiveBackgroundColors = 64;
   static const int _maxExhaustiveBackgroundPixels = 4096;
@@ -543,83 +546,109 @@ class MCOImageV3Codec {
     for (final background in effectiveBackgroundCandidates) {
       final bg = background.color;
       if (includeNonScanCandidates) {
-        final regionsCandidate = _tryBuildRegionsCandidate(
+        final maxRegions = useHighCompressionExtras
+            ? _maxRegions
+            : _normalMaxRegions;
+        final regionVariants = _regionVariantsForBackground(
           image,
           bg,
-          compactGeometry: false,
-          useHighCompressionExtras: useHighCompressionExtras,
+          maxRegions,
         );
-        if (regionsCandidate != null) candidates.add(regionsCandidate);
-        if (useHighCompressionExtras) {
-          final compactRegionsCandidate = _tryBuildRegionsCandidate(
+        for (final variant in regionVariants) {
+          final regionsCandidate = _tryBuildRegionsCandidate(
             image,
             bg,
-            compactGeometry: true,
-            commonBlockHeader: false,
-            deltaGeometry: false,
+            regionsOverride: variant.regions,
+            variantLabel: variant.label,
+            compactGeometry: false,
             useHighCompressionExtras: useHighCompressionExtras,
           );
-          if (compactRegionsCandidate != null) {
-            candidates.add(compactRegionsCandidate);
-          }
-          final deltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-            image,
-            bg,
-            compactGeometry: true,
-            commonBlockHeader: false,
-            deltaGeometry: true,
-            useHighCompressionExtras: useHighCompressionExtras,
-          );
-          if (deltaCompactRegionsCandidate != null) {
-            candidates.add(deltaCompactRegionsCandidate);
-          }
-          final commonCompactRegionsCandidate = _tryBuildRegionsCandidate(
-            image,
-            bg,
-            compactGeometry: true,
-            commonBlockHeader: true,
-            deltaGeometry: false,
-            sharedLocalPalette: false,
-            useHighCompressionExtras: useHighCompressionExtras,
-          );
-          if (commonCompactRegionsCandidate != null) {
-            candidates.add(commonCompactRegionsCandidate);
-          }
-          final sharedCompactRegionsCandidate = _tryBuildRegionsCandidate(
-            image,
-            bg,
-            compactGeometry: true,
-            commonBlockHeader: true,
-            deltaGeometry: false,
-            sharedLocalPalette: true,
-            useHighCompressionExtras: useHighCompressionExtras,
-          );
-          if (sharedCompactRegionsCandidate != null) {
-            candidates.add(sharedCompactRegionsCandidate);
-          }
-          final commonDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-            image,
-            bg,
-            compactGeometry: true,
-            commonBlockHeader: true,
-            deltaGeometry: true,
-            sharedLocalPalette: false,
-            useHighCompressionExtras: useHighCompressionExtras,
-          );
-          if (commonDeltaCompactRegionsCandidate != null) {
-            candidates.add(commonDeltaCompactRegionsCandidate);
-          }
-          final sharedDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-            image,
-            bg,
-            compactGeometry: true,
-            commonBlockHeader: true,
-            deltaGeometry: true,
-            sharedLocalPalette: true,
-            useHighCompressionExtras: useHighCompressionExtras,
-          );
-          if (sharedDeltaCompactRegionsCandidate != null) {
-            candidates.add(sharedDeltaCompactRegionsCandidate);
+          if (regionsCandidate != null) candidates.add(regionsCandidate);
+          if (useHighCompressionExtras) {
+            final compactRegionsCandidate = _tryBuildRegionsCandidate(
+              image,
+              bg,
+              regionsOverride: variant.regions,
+              variantLabel: variant.label,
+              compactGeometry: true,
+              commonBlockHeader: false,
+              deltaGeometry: false,
+              useHighCompressionExtras: useHighCompressionExtras,
+            );
+            if (compactRegionsCandidate != null) {
+              candidates.add(compactRegionsCandidate);
+            }
+            final deltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+              image,
+              bg,
+              regionsOverride: variant.regions,
+              variantLabel: variant.label,
+              compactGeometry: true,
+              commonBlockHeader: false,
+              deltaGeometry: true,
+              useHighCompressionExtras: useHighCompressionExtras,
+            );
+            if (deltaCompactRegionsCandidate != null) {
+              candidates.add(deltaCompactRegionsCandidate);
+            }
+            final commonCompactRegionsCandidate = _tryBuildRegionsCandidate(
+              image,
+              bg,
+              regionsOverride: variant.regions,
+              variantLabel: variant.label,
+              compactGeometry: true,
+              commonBlockHeader: true,
+              deltaGeometry: false,
+              sharedLocalPalette: false,
+              useHighCompressionExtras: useHighCompressionExtras,
+            );
+            if (commonCompactRegionsCandidate != null) {
+              candidates.add(commonCompactRegionsCandidate);
+            }
+            final sharedCompactRegionsCandidate = _tryBuildRegionsCandidate(
+              image,
+              bg,
+              regionsOverride: variant.regions,
+              variantLabel: variant.label,
+              compactGeometry: true,
+              commonBlockHeader: true,
+              deltaGeometry: false,
+              sharedLocalPalette: true,
+              useHighCompressionExtras: useHighCompressionExtras,
+            );
+            if (sharedCompactRegionsCandidate != null) {
+              candidates.add(sharedCompactRegionsCandidate);
+            }
+            final commonDeltaCompactRegionsCandidate =
+                _tryBuildRegionsCandidate(
+                  image,
+                  bg,
+                  regionsOverride: variant.regions,
+                  variantLabel: variant.label,
+                  compactGeometry: true,
+                  commonBlockHeader: true,
+                  deltaGeometry: true,
+                  sharedLocalPalette: false,
+                  useHighCompressionExtras: useHighCompressionExtras,
+                );
+            if (commonDeltaCompactRegionsCandidate != null) {
+              candidates.add(commonDeltaCompactRegionsCandidate);
+            }
+            final sharedDeltaCompactRegionsCandidate =
+                _tryBuildRegionsCandidate(
+                  image,
+                  bg,
+                  regionsOverride: variant.regions,
+                  variantLabel: variant.label,
+                  compactGeometry: true,
+                  commonBlockHeader: true,
+                  deltaGeometry: true,
+                  sharedLocalPalette: true,
+                  useHighCompressionExtras: useHighCompressionExtras,
+                );
+            if (sharedDeltaCompactRegionsCandidate != null) {
+              candidates.add(sharedDeltaCompactRegionsCandidate);
+            }
           }
         }
       }
@@ -843,13 +872,16 @@ class MCOImageV3Codec {
   EncodedMCOImage? _tryBuildRegionsCandidate(
     MCOImage image,
     int backgroundColor, {
+    List<_V3Bounds>? regionsOverride,
+    String? variantLabel,
     required bool compactGeometry,
     bool commonBlockHeader = false,
     bool deltaGeometry = false,
     bool sharedLocalPalette = false,
     required bool useHighCompressionExtras,
   }) {
-    final regions = _componentBoundsForBackground(image, backgroundColor);
+    final regions =
+        regionsOverride ?? _componentBoundsForBackground(image, backgroundColor);
     final maxRegions = useHighCompressionExtras
         ? _maxRegions
         : _normalMaxRegions;
@@ -1001,6 +1033,7 @@ class MCOImageV3Codec {
       paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
       container: _regionsContainerName(
         container,
+        variantLabel: variantLabel,
         commonBlockHeader: commonBlockHeader,
         deltaGeometry: deltaGeometry,
         sharedLocalPalette: sharedLocalPalette,
@@ -4466,40 +4499,48 @@ class MCOImageV3Codec {
   ) {
     final visited = List<bool>.filled(image.pixels.length, false);
     final regions = <_V3Bounds>[];
+    const neighbors = [
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [-1, 0],
+      [1, 0],
+      [-1, 1],
+      [0, 1],
+      [1, 1],
+    ];
+
     for (var start = 0; start < image.pixels.length; start++) {
       if (visited[start] || image.pixels[start] == backgroundColor) continue;
       final queue = <int>[start];
-      var read = 0;
       visited[start] = true;
       var minX = image.width;
       var minY = image.height;
       var maxX = -1;
       var maxY = -1;
-      while (read < queue.length) {
-        final index = queue[read++];
+      while (queue.isNotEmpty) {
+        final index = queue.removeLast();
         final x = index % image.width;
         final y = index ~/ image.width;
         minX = math.min(minX, x);
         minY = math.min(minY, y);
         maxX = math.max(maxX, x);
         maxY = math.max(maxY, y);
-        void addNeighbor(int nx, int ny) {
+
+        for (final neighborOffset in neighbors) {
+          final nx = x + neighborOffset[0];
+          final ny = y + neighborOffset[1];
           if (nx < 0 || ny < 0 || nx >= image.width || ny >= image.height) {
-            return;
+            continue;
           }
           final neighbor = ny * image.width + nx;
           if (visited[neighbor] ||
               image.pixels[neighbor] == backgroundColor) {
-            return;
+            continue;
           }
           visited[neighbor] = true;
           queue.add(neighbor);
         }
-
-        addNeighbor(x - 1, y);
-        addNeighbor(x + 1, y);
-        addNeighbor(x, y - 1);
-        addNeighbor(x, y + 1);
       }
       regions.add(
         _V3Bounds(
@@ -4516,6 +4557,737 @@ class MCOImageV3Codec {
       return a.x.compareTo(b.x);
     });
     return regions;
+  }
+
+  List<_V3RegionVariant> _regionVariantsForBackground(
+    MCOImage image,
+    int backgroundColor,
+    int maxRegions,
+  ) {
+    if (maxRegions == 0) return const <_V3RegionVariant>[];
+    final connectedRegions = _componentBoundsForBackground(
+      image,
+      backgroundColor,
+    );
+    if (connectedRegions.isEmpty) return const <_V3RegionVariant>[];
+
+    final rawVariants = <_V3RegionVariant>[
+      _V3RegionVariant(connectedRegions, null),
+    ];
+    final splitRegions = _splitRegionsByEmptyLines(
+      image.pixels,
+      image.width,
+      backgroundColor,
+      connectedRegions,
+      maxRegions,
+    );
+    if (splitRegions.isNotEmpty) {
+      rawVariants.add(_V3RegionVariant(splitRegions, 'split'));
+    }
+    final sparseSplitRegions = _splitRegionsBySparseLines(
+      image.pixels,
+      image.width,
+      backgroundColor,
+      connectedRegions,
+      maxRegions,
+      maxLineNonBackground: 2,
+    );
+    if (sparseSplitRegions.isNotEmpty) {
+      rawVariants.add(_V3RegionVariant(sparseSplitRegions, 'sparse-split'));
+    }
+    for (final regions in _findGreedyRectRegionVariants(
+      image.pixels,
+      image.width,
+      image.height,
+      backgroundColor,
+      maxRegions,
+    )) {
+      rawVariants.add(_V3RegionVariant(regions, 'greedy'));
+    }
+
+    final result = <_V3RegionVariant>[];
+    final seen = <String>{};
+    for (final variant in rawVariants) {
+      final regions = _sortedRegions(variant.regions);
+      if (regions.isEmpty ||
+          regions.length > maxRegions ||
+          !_regionsDoNotOverlap(regions)) {
+        continue;
+      }
+      final key = _regionListKey(regions);
+      if (seen.add(key)) {
+        result.add(_V3RegionVariant(regions, variant.label));
+      }
+    }
+    return result;
+  }
+
+  List<_V3Bounds> _splitRegionsByEmptyLines(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    List<_V3Bounds> regions,
+    int maxRegions,
+  ) {
+    final output = <_V3Bounds>[];
+    for (final region in regions) {
+      _splitRegionByBestEmptyLine(
+        pixels,
+        fullWidth,
+        background,
+        region,
+        output,
+        maxRegions,
+      );
+      if (output.length > maxRegions) return const <_V3Bounds>[];
+    }
+    return _sameRegionList(output, regions) ? const <_V3Bounds>[] : output;
+  }
+
+  void _splitRegionByBestEmptyLine(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    List<_V3Bounds> output,
+    int maxRegions,
+  ) {
+    final horizontalSplit = _bestEmptyRowSplit(
+      pixels,
+      fullWidth,
+      background,
+      region,
+    );
+    final verticalSplit = _bestEmptyColumnSplit(
+      pixels,
+      fullWidth,
+      background,
+      region,
+    );
+    final split = _betterRegionPartition(horizontalSplit, verticalSplit);
+    if (split == null) {
+      output.add(region);
+      return;
+    }
+
+    for (final part in split.parts) {
+      _splitRegionByBestEmptyLine(
+        pixels,
+        fullWidth,
+        background,
+        part,
+        output,
+        maxRegions,
+      );
+      if (output.length > maxRegions) return;
+    }
+  }
+
+  _V3RegionPartition? _bestEmptyRowSplit(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+  ) {
+    _V3RegionPartition? best;
+    for (var y = region.y; y < region.y + region.height; y++) {
+      if (_regionRowNonBackgroundCount(
+            pixels,
+            fullWidth,
+            background,
+            region,
+            y,
+          ) !=
+          0) {
+        continue;
+      }
+      final parts = [
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(region.x, region.y, region.width, y - region.y),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(
+            region.x,
+            y + 1,
+            region.width,
+            region.y + region.height - y - 1,
+          ),
+        ),
+      ].whereType<_V3Bounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
+      }
+    }
+    return best;
+  }
+
+  _V3RegionPartition? _bestEmptyColumnSplit(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+  ) {
+    _V3RegionPartition? best;
+    for (var x = region.x; x < region.x + region.width; x++) {
+      if (_regionColumnNonBackgroundCount(
+            pixels,
+            fullWidth,
+            background,
+            region,
+            x,
+          ) !=
+          0) {
+        continue;
+      }
+      final parts = [
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(region.x, region.y, x - region.x, region.height),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(
+            x + 1,
+            region.y,
+            region.x + region.width - x - 1,
+            region.height,
+          ),
+        ),
+      ].whereType<_V3Bounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
+      }
+    }
+    return best;
+  }
+
+  List<_V3Bounds> _splitRegionsBySparseLines(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    List<_V3Bounds> regions,
+    int maxRegions, {
+    required int maxLineNonBackground,
+  }) {
+    final output = <_V3Bounds>[];
+    for (final region in regions) {
+      _splitRegionByBestSparseLine(
+        pixels,
+        fullWidth,
+        background,
+        region,
+        output,
+        maxRegions,
+        maxLineNonBackground: maxLineNonBackground,
+      );
+      if (output.length > maxRegions) return const <_V3Bounds>[];
+    }
+    return _sameRegionList(output, regions) ? const <_V3Bounds>[] : output;
+  }
+
+  void _splitRegionByBestSparseLine(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    List<_V3Bounds> output,
+    int maxRegions, {
+    required int maxLineNonBackground,
+  }) {
+    final horizontalSplit = _bestSparseRowSplit(
+      pixels,
+      fullWidth,
+      background,
+      region,
+      maxLineNonBackground,
+    );
+    final verticalSplit = _bestSparseColumnSplit(
+      pixels,
+      fullWidth,
+      background,
+      region,
+      maxLineNonBackground,
+    );
+    final split = _betterRegionPartition(horizontalSplit, verticalSplit);
+    if (split == null) {
+      output.add(region);
+      return;
+    }
+
+    for (final part in split.parts) {
+      _splitRegionByBestSparseLine(
+        pixels,
+        fullWidth,
+        background,
+        part,
+        output,
+        maxRegions,
+        maxLineNonBackground: maxLineNonBackground,
+      );
+      if (output.length > maxRegions) return;
+    }
+  }
+
+  _V3RegionPartition? _bestSparseRowSplit(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    int maxLineNonBackground,
+  ) {
+    _V3RegionPartition? best;
+    var y = region.y;
+    while (y < region.y + region.height) {
+      final count = _regionRowNonBackgroundCount(
+        pixels,
+        fullWidth,
+        background,
+        region,
+        y,
+      );
+      if (count > maxLineNonBackground) {
+        y++;
+        continue;
+      }
+
+      final startY = y;
+      while (y < region.y + region.height &&
+          _regionRowNonBackgroundCount(
+                pixels,
+                fullWidth,
+                background,
+                region,
+                y,
+              ) <=
+              maxLineNonBackground) {
+        y++;
+      }
+      final endY = y - 1;
+      final parts = [
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(region.x, region.y, region.width, startY - region.y),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(region.x, startY, region.width, endY - startY + 1),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(
+            region.x,
+            endY + 1,
+            region.width,
+            region.y + region.height - endY - 1,
+          ),
+        ),
+      ].whereType<_V3Bounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
+      }
+    }
+    return best;
+  }
+
+  _V3RegionPartition? _bestSparseColumnSplit(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    int maxLineNonBackground,
+  ) {
+    _V3RegionPartition? best;
+    var x = region.x;
+    while (x < region.x + region.width) {
+      final count = _regionColumnNonBackgroundCount(
+        pixels,
+        fullWidth,
+        background,
+        region,
+        x,
+      );
+      if (count > maxLineNonBackground) {
+        x++;
+        continue;
+      }
+
+      final startX = x;
+      while (x < region.x + region.width &&
+          _regionColumnNonBackgroundCount(
+                pixels,
+                fullWidth,
+                background,
+                region,
+                x,
+              ) <=
+              maxLineNonBackground) {
+        x++;
+      }
+      final endX = x - 1;
+      final parts = [
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(region.x, region.y, startX - region.x, region.height),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(startX, region.y, endX - startX + 1, region.height),
+        ),
+        _tightBoundsInRect(
+          pixels,
+          fullWidth,
+          background,
+          _V3Bounds(
+            endX + 1,
+            region.y,
+            region.x + region.width - endX - 1,
+            region.height,
+          ),
+        ),
+      ].whereType<_V3Bounds>().toList();
+      final partition = _partitionIfUseful(region, parts);
+      if (partition != null &&
+          (best == null || partition.savedArea > best.savedArea)) {
+        best = partition;
+      }
+    }
+    return best;
+  }
+
+  _V3RegionPartition? _partitionIfUseful(
+    _V3Bounds original,
+    List<_V3Bounds> parts,
+  ) {
+    if (parts.length < 2) return null;
+    var area = 0;
+    for (final part in parts) {
+      area += part.area;
+    }
+    final savedArea = original.area - area;
+    if (savedArea <= 0) return null;
+    return _V3RegionPartition(List.unmodifiable(parts), savedArea);
+  }
+
+  _V3RegionPartition? _betterRegionPartition(
+    _V3RegionPartition? a,
+    _V3RegionPartition? b,
+  ) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.savedArea >= b.savedArea ? a : b;
+  }
+
+  int _regionRowNonBackgroundCount(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    int y,
+  ) {
+    var count = 0;
+    for (var x = region.x; x < region.x + region.width; x++) {
+      if (pixels[y * fullWidth + x] != background) count++;
+    }
+    return count;
+  }
+
+  int _regionColumnNonBackgroundCount(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds region,
+    int x,
+  ) {
+    var count = 0;
+    for (var y = region.y; y < region.y + region.height; y++) {
+      if (pixels[y * fullWidth + x] != background) count++;
+    }
+    return count;
+  }
+
+  _V3Bounds? _tightBoundsInRect(
+    List<int> pixels,
+    int fullWidth,
+    int background,
+    _V3Bounds rect,
+  ) {
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    var minX = rect.x + rect.width;
+    var minY = rect.y + rect.height;
+    var maxX = rect.x - 1;
+    var maxY = rect.y - 1;
+
+    for (var y = rect.y; y < rect.y + rect.height; y++) {
+      for (var x = rect.x; x < rect.x + rect.width; x++) {
+        if (pixels[y * fullWidth + x] == background) continue;
+        minX = math.min(minX, x);
+        minY = math.min(minY, y);
+        maxX = math.max(maxX, x);
+        maxY = math.max(maxY, y);
+      }
+    }
+
+    if (maxX < minX || maxY < minY) return null;
+    return _V3Bounds(minX, minY, maxX - minX + 1, maxY - minY + 1);
+  }
+
+  bool _sameRegionList(List<_V3Bounds> a, List<_V3Bounds> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].x != b[i].x ||
+          a[i].y != b[i].y ||
+          a[i].width != b[i].width ||
+          a[i].height != b[i].height) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  List<List<_V3Bounds>> _findGreedyRectRegionVariants(
+    List<int> pixels,
+    int width,
+    int height,
+    int background,
+    int maxRegions,
+  ) {
+    if (maxRegions == 0) return const <List<_V3Bounds>>[];
+
+    const strategies = <_V3GreedyRectStrategy>[
+      _V3GreedyRectStrategy(1, 1, _greedyTieLargestArea),
+      _V3GreedyRectStrategy(1, 1, _greedyTieWidest),
+      _V3GreedyRectStrategy(1, 1, _greedyTieTallest),
+      _V3GreedyRectStrategy(-1, 1, _greedyTieLargestArea),
+      _V3GreedyRectStrategy(1, -1, _greedyTieLargestArea),
+      _V3GreedyRectStrategy(-1, -1, _greedyTieLargestArea),
+    ];
+
+    final variants = <List<_V3Bounds>>[];
+    final seen = <String>{};
+    for (final strategy in strategies) {
+      final regions = _findGreedyRectRegionsWithStrategy(
+        pixels,
+        width,
+        height,
+        background,
+        maxRegions,
+        strategy,
+      );
+      if (regions.isEmpty) continue;
+      final key = _regionListKey(regions);
+      if (seen.add(key)) variants.add(regions);
+    }
+    return variants;
+  }
+
+  List<_V3Bounds> _findGreedyRectRegionsWithStrategy(
+    List<int> pixels,
+    int width,
+    int height,
+    int background,
+    int maxRegions,
+    _V3GreedyRectStrategy strategy,
+  ) {
+    final covered = List<bool>.filled(pixels.length, false);
+    final regions = <_V3Bounds>[];
+
+    while (true) {
+      final startIndex = _findGreedyStartIndex(
+        pixels,
+        covered,
+        width,
+        height,
+        background,
+        strategy,
+      );
+      if (startIndex < 0) break;
+
+      final startX = startIndex % width;
+      final startY = startIndex ~/ width;
+      final rect = _bestGreedyRectAt(
+        pixels,
+        covered,
+        width,
+        height,
+        background,
+        startX,
+        startY,
+        strategy,
+      );
+
+      regions.add(rect);
+      if (regions.length > maxRegions) {
+        return const <_V3Bounds>[];
+      }
+
+      for (var y = rect.y; y < rect.y + rect.height; y++) {
+        for (var x = rect.x; x < rect.x + rect.width; x++) {
+          covered[y * width + x] = true;
+        }
+      }
+    }
+
+    return _sortedRegions(regions);
+  }
+
+  int _findGreedyStartIndex(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int height,
+    int background,
+    _V3GreedyRectStrategy strategy,
+  ) {
+    final yStart = strategy.verticalDirection > 0 ? 0 : height - 1;
+    final yEnd = strategy.verticalDirection > 0 ? height : -1;
+    final xStart = strategy.horizontalDirection > 0 ? 0 : width - 1;
+    final xEnd = strategy.horizontalDirection > 0 ? width : -1;
+
+    for (var y = yStart; y != yEnd; y += strategy.verticalDirection) {
+      for (var x = xStart; x != xEnd; x += strategy.horizontalDirection) {
+        final index = y * width + x;
+        if (pixels[index] != background && !covered[index]) return index;
+      }
+    }
+    return -1;
+  }
+
+  _V3Bounds _bestGreedyRectAt(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int height,
+    int background,
+    int startX,
+    int startY,
+    _V3GreedyRectStrategy strategy,
+  ) {
+    var bestWidth = 1;
+    var bestHeight = 1;
+    var maxCandidateWidth = _greedyRunLength(
+      pixels,
+      covered,
+      width,
+      background,
+      startX,
+      startY,
+      strategy.horizontalDirection,
+    );
+
+    for (var candidateHeight = 1; ; candidateHeight++) {
+      final y = startY + (candidateHeight - 1) * strategy.verticalDirection;
+      if (y < 0 || y >= height) break;
+
+      final rowWidth = _greedyRunLength(
+        pixels,
+        covered,
+        width,
+        background,
+        startX,
+        y,
+        strategy.horizontalDirection,
+      );
+      if (rowWidth == 0) break;
+
+      maxCandidateWidth = math.min(maxCandidateWidth, rowWidth);
+      if (_isBetterGreedyRect(
+        maxCandidateWidth,
+        candidateHeight,
+        bestWidth,
+        bestHeight,
+        strategy.tieMode,
+      )) {
+        bestWidth = maxCandidateWidth;
+        bestHeight = candidateHeight;
+      }
+    }
+
+    final x = strategy.horizontalDirection > 0
+        ? startX
+        : startX - bestWidth + 1;
+    final y = strategy.verticalDirection > 0 ? startY : startY - bestHeight + 1;
+    return _V3Bounds(x, y, bestWidth, bestHeight);
+  }
+
+  int _greedyRunLength(
+    List<int> pixels,
+    List<bool> covered,
+    int width,
+    int background,
+    int startX,
+    int y,
+    int horizontalDirection,
+  ) {
+    var run = 0;
+    for (var x = startX; x >= 0 && x < width; x += horizontalDirection) {
+      final index = y * width + x;
+      if (pixels[index] == background || covered[index]) break;
+      run++;
+    }
+    return run;
+  }
+
+  bool _isBetterGreedyRect(
+    int width,
+    int height,
+    int bestWidth,
+    int bestHeight,
+    int tieMode,
+  ) {
+    final area = width * height;
+    final bestArea = bestWidth * bestHeight;
+    if (area != bestArea) return area > bestArea;
+    return switch (tieMode) {
+      _greedyTieWidest => width > bestWidth,
+      _greedyTieTallest => height > bestHeight,
+      _ => height > bestHeight,
+    };
+  }
+
+  String _regionListKey(List<_V3Bounds> regions) {
+    final parts = <String>[];
+    for (final region in regions) {
+      parts.add('${region.x},${region.y},${region.width},${region.height}');
+    }
+    return parts.join(';');
+  }
+
+  static List<_V3Bounds> _sortedRegions(Iterable<_V3Bounds> regions) {
+    return List<_V3Bounds>.of(regions)..sort((left, right) {
+      final byY = left.y.compareTo(right.y);
+      if (byY != 0) return byY;
+      final byX = left.x.compareTo(right.x);
+      if (byX != 0) return byX;
+      final byHeight = left.height.compareTo(right.height);
+      return byHeight != 0 ? byHeight : left.width.compareTo(right.width);
+    });
   }
 
   static bool _regionsDoNotOverlap(List<_V3Bounds> regions) {
@@ -4649,11 +5421,13 @@ class MCOImageV3Codec {
 
   static String _regionsContainerName(
     MCOImageV3Container container, {
+    String? variantLabel,
     required bool commonBlockHeader,
     required bool deltaGeometry,
     required bool sharedLocalPalette,
   }) {
     final suffixes = <String>[
+      ?variantLabel,
       if (commonBlockHeader) 'common',
       if (deltaGeometry) 'delta',
       if (sharedLocalPalette) 'shared',
@@ -4891,6 +5665,34 @@ class _V3Bounds {
   final int height;
 
   const _V3Bounds(this.x, this.y, this.width, this.height);
+
+  int get area => width * height;
+}
+
+class _V3RegionVariant {
+  final List<_V3Bounds> regions;
+  final String? label;
+
+  const _V3RegionVariant(this.regions, this.label);
+}
+
+class _V3RegionPartition {
+  final List<_V3Bounds> parts;
+  final int savedArea;
+
+  const _V3RegionPartition(this.parts, this.savedArea);
+}
+
+class _V3GreedyRectStrategy {
+  final int horizontalDirection;
+  final int verticalDirection;
+  final int tieMode;
+
+  const _V3GreedyRectStrategy(
+    this.horizontalDirection,
+    this.verticalDirection,
+    this.tieMode,
+  );
 }
 
 class _V3RegionBlock {

@@ -2271,6 +2271,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   String _encodingContainerLabel(EncodedMCOImage candidate) {
+    final container = candidate.container;
+    if (container.startsWith('compactRegionsStream')) {
+      final suffix = container.substring('compactRegionsStream'.length);
+      final details = suffix.isEmpty
+          ? ''
+          : ' ${suffix.substring(1).replaceAll('-', ' ')}';
+      return 'Regions compact$details x${candidate.regionCount}';
+    }
     return switch (candidate.container) {
       'regions' => 'Regions x${candidate.regionCount}',
       'regions-beam' => 'Regions beam x${candidate.regionCount}',
