@@ -86,6 +86,7 @@ void main() {
         encoded.encodedCandidate.container,
         MCOImageV3Container.solidBackground.name,
       );
+      expect(encoded.body.length, 5);
       expect(decoded.pixels, image.pixels);
     });
 

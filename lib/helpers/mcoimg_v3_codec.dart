@@ -19,7 +19,6 @@ enum MCOImageV3Container {
   regions,
   compactRegionsStream,
   solidBackground,
-  solidRects,
 }
 
 /// Binary-only MCOimg v3 block algorithm.
@@ -177,6 +176,12 @@ class MCOImageV3Codec {
         'compactBlock cannot be used with scan-dependent algorithms',
       );
     }
+    if (container == MCOImageV3Container.solidBackground &&
+        algorithm != MCOImageV3BlockAlgorithm.rawGlobal) {
+      throw const MCOImageInvalidPayloadException(
+        'solidBackground must use rawGlobal algorithm id',
+      );
+    }
     final hasScanByte = _containerHasScanByte(container, algorithm);
     if (hasScanByte && body.length < 5) {
       throw const MCOImageInvalidPayloadException(
@@ -250,9 +255,6 @@ class MCOImageV3Codec {
       MCOImageV3Container.solidBackground => List<int>.filled(
         width * height,
         _readColorRef(reader, profile),
-      ),
-      _ => throw const MCOImageInvalidPayloadException(
-        'Unsupported MCOimg v3 container',
       ),
     };
     reader.finish();
@@ -526,8 +528,7 @@ class MCOImageV3Codec {
           container,
           MCOImageV3BlockAlgorithm.rawGlobal,
         ),
-      )
-      ..writeAlignedByte(ScanMode.h.index);
+      );
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -2204,6 +2205,7 @@ class MCOImageV3Codec {
   ) {
     return switch (container) {
       MCOImageV3Container.compactBlock => false,
+      MCOImageV3Container.solidBackground => false,
       MCOImageV3Container.compactBoundsBlock =>
         !_canUseCompactBlockHeader(algorithm),
       _ => true,
