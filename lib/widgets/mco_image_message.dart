@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 
 class MCOImageDecodeMetadata {
   final MCOImage? image;
@@ -33,6 +34,24 @@ class MCOImageMessage extends StatelessWidget {
 
   static MCOImageDecodeMetadata decodeMetadata(String text) {
     final current = MCOImageCodec.maxSupportedVersion;
+    if (MCOImageV3Codec.isTextPayload(text)) {
+      final payloadInfo = MCOImageV3Codec.inspectText(text);
+      try {
+        return MCOImageDecodeMetadata(
+          image: MCOImageV3Codec().decodeText(text),
+          unsupportedVersion: null,
+          currentMaxSupportedVersion: 3,
+          payloadInfo: payloadInfo,
+        );
+      } on MCOImageCodecException {
+        return MCOImageDecodeMetadata(
+          image: null,
+          unsupportedVersion: null,
+          currentMaxSupportedVersion: 3,
+          payloadInfo: payloadInfo,
+        );
+      }
+    }
     final payloadInfo = MCOImageCodec.inspectPayload(text);
     if (!text.startsWith(MCOImageCodec.prefix)) {
       return MCOImageDecodeMetadata(
@@ -88,6 +107,9 @@ class MCOImageMessage extends StatelessWidget {
     final payloadInfo = metadata.payloadInfo;
     if (showFormat && payloadInfo != null) {
       parts.add('v${payloadInfo.version}');
+    } else if (showFormat &&
+        image.encodingVersion == MCOImageEncodingVersion.v3) {
+      parts.add('v3');
     }
     if (showAlgorithm && payloadInfo != null) {
       parts.add(payloadInfo.algorithm);
@@ -95,10 +117,15 @@ class MCOImageMessage extends StatelessWidget {
     if (showBytes) {
       final byteLength = isBinary
           ? payloadInfo != null && senderName != null
-                ? ChannelBinaryDataHelper.binaryEnvelopeLength(
-                    bodyLength: payloadInfo.binaryLength,
-                    senderName: senderName,
-                  )
+                ? payloadInfo.version == 3
+                      ? ChannelBinaryDataHelper.appBinaryEnvelopeLength(
+                          bodyLength: payloadInfo.binaryLength,
+                          senderName: senderName,
+                        )
+                      : ChannelBinaryDataHelper.binaryEnvelopeLength(
+                          bodyLength: payloadInfo.binaryLength,
+                          senderName: senderName,
+                        )
                 : binaryPacketBytes
           : utf8.encode(sourceText).length;
       if (byteLength != null) parts.add('${byteLength}bytes');

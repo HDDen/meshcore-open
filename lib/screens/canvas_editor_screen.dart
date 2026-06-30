@@ -67,6 +67,37 @@ class _ImportedCanvasImage {
   });
 }
 
+class CanvasEditorResult {
+  final String text;
+  final EncodedMCOImage encodedImage;
+
+  CanvasEditorResult._({
+    required this.text,
+    required this.encodedImage,
+  });
+
+  factory CanvasEditorResult.fromEncoded(EncodedMCOImage encoded) {
+    return CanvasEditorResult._(
+      text: encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
+          ? MCOImageV3Codec.textFromBody(encoded.payload)
+          : encoded.text,
+      encodedImage: encoded,
+    );
+  }
+
+  bool get isMcoImageV3 =>
+      encodedImage.actualEncodingVersion == MCOImageEncodingVersion.v3;
+
+  EncodedMCOImageV3? get mcoImageV3 {
+    if (!isMcoImageV3) return null;
+    return EncodedMCOImageV3(
+      body: encodedImage.payload,
+      byteLength: encodedImage.payload.length,
+      encodedCandidate: encodedImage,
+    );
+  }
+}
+
 class _MCOImageEncodeRequest {
   final int width;
   final int height;
@@ -1734,6 +1765,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return const [
       MCOImageEncodingVersion.v1Legacy,
       MCOImageEncodingVersion.v2,
+      MCOImageEncodingVersion.v3,
     ];
   }
 
@@ -2334,6 +2366,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               senderName: widget.binarySenderName ?? 'Me',
             );
       return payloadBytes;
+    }
+    if (encoded.actualEncodingVersion == MCOImageEncodingVersion.v3) {
+      return MCOImageV3Codec.textFromBody(encoded.payload).length;
     }
     return encoded.charLength;
   }
@@ -2948,7 +2983,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           _cancelPayloadCalculationBeforeCanvasReplacement();
       final bytes = await file.readAsBytes();
       if (file.name.toLowerCase().endsWith('.mcoimg.bin')) {
-        final image = _codec.decode(MCOImageCodec.textFromBinaryPayload(bytes));
+        final image = _decodeMcoImageBinaryPayload(bytes);
         if (!mounted) return;
         _clearCanvasHistory();
         setState(() {
@@ -2991,6 +3026,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         content: Text(error.toString()),
         backgroundColor: Theme.of(context).colorScheme.error,
       );
+    }
+  }
+
+  MCOImage _decodeMcoImageBinaryPayload(Uint8List payload) {
+    try {
+      return MCOImageV3Codec().decodeAppPayloadWithoutSender(payload);
+    } on MCOImageCodecException {
+      return _codec.decode(MCOImageCodec.textFromBinaryPayload(payload));
     }
   }
 
@@ -3323,7 +3366,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         setState(() {});
         return;
       }
-      Navigator.pop(context, encoded.text);
+      Navigator.pop(context, CanvasEditorResult.fromEncoded(encoded));
     } on CancellableComputeCancelledException {
       // The route was closed while encoding. Its isolate has already been
       // terminated, so no UI feedback is needed.

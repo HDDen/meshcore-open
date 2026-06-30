@@ -22,6 +22,7 @@ import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
@@ -786,7 +787,7 @@ class _ChatScreenState extends State<ChatScreen> {
     int? initialImageHeight,
     PaletteProfile? initialPaletteProfile,
   }) async {
-    final encodedText = await Navigator.push<String>(
+    final result = await Navigator.push<CanvasEditorResult>(
       context,
       MaterialPageRoute(
         builder: (context) => CanvasEditorScreen(
@@ -799,8 +800,9 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
-    if (encodedText == null || encodedText.isEmpty) return;
+    if (result == null || result.text.isEmpty) return;
     if (!mounted) return;
+    final encodedText = result.text;
     _textController.text = encodedText;
     _textController.selection = TextSelection.collapsed(
       offset: encodedText.length,
@@ -970,9 +972,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // This is only for cyr2lat compression - to see the message being sent in the same format as the other person will receive
     try {
-      if (connector.isContactCyr2LatEnabled(
-        _resolveContact(connector).publicKeyHex,
-      )) {
+      if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
+          !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          connector.isContactCyr2LatEnabled(
+            _resolveContact(connector).publicKeyHex,
+          )) {
         outgoingText = Cyr2Lat.encode(outgoingText);
       }
     } catch (_) {

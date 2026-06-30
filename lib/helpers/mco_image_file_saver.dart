@@ -47,7 +47,10 @@ class MCOImageFileSaver {
   }
 
   static Future<bool> saveBinaryPayloadFromText(String text) async {
-    final payload = MCOImageCodec.binaryPayloadFromText(text.trimLeft());
+    final trimmed = text.trimLeft();
+    final payload = MCOImageV3Codec.isTextPayload(trimmed)
+        ? MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed)
+        : MCOImageCodec.binaryPayloadFromText(trimmed);
     return saveBinaryPayload(payload);
   }
 

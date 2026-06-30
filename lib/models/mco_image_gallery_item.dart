@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 
 class MCOImageGalleryItem {
   final String id;
@@ -47,11 +49,24 @@ class MCOImageGalleryItem {
     );
   }
 
-  String get textPayload => MCOImageCodec.textFromBinaryPayload(binaryPayload);
+  bool get isV3 {
+    if (codecVersion == ChannelAppDataHelper.mcoImageV3Version) return true;
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      binaryPayload,
+    );
+    return appPayload?.subtypeVersion ==
+        ChannelAppDataHelper.mcoImageV3SubtypeVersion;
+  }
+
+  String get textPayload => isV3
+      ? MCOImageV3Codec.textFromAppPayloadWithoutSender(binaryPayload)
+      : MCOImageCodec.textFromBinaryPayload(binaryPayload);
 
   MCOImage? tryDecodeImage() {
     try {
-      return MCOImageCodec().decode(textPayload);
+      return isV3
+          ? MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload)
+          : MCOImageCodec().decode(textPayload);
     } on MCOImageCodecException {
       return null;
     }

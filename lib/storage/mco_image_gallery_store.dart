@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../widgets/mco_image_message.dart';
 import 'prefs_manager.dart';
@@ -34,13 +36,20 @@ class MCOImageGalleryStore {
 
   Future<MCOImageGalleryItem> createFromText(String text) async {
     final trimmed = text.trimLeft();
-    final binaryPayload = MCOImageCodec.binaryPayloadFromText(trimmed);
-    final image = MCOImageCodec().decode(
-      MCOImageCodec.textFromBinaryPayload(binaryPayload),
-    );
-    final payloadInfo = MCOImageCodec.inspectPayload(
-      MCOImageCodec.textFromBinaryPayload(binaryPayload),
-    );
+    final isV3 = MCOImageV3Codec.isTextPayload(trimmed);
+    final binaryPayload = isV3
+        ? MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed)
+        : MCOImageCodec.binaryPayloadFromText(trimmed);
+    final image = isV3
+        ? MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload)
+        : MCOImageCodec().decode(
+            MCOImageCodec.textFromBinaryPayload(binaryPayload),
+          );
+    final payloadInfo = isV3
+        ? null
+        : MCOImageCodec.inspectPayload(
+            MCOImageCodec.textFromBinaryPayload(binaryPayload),
+          );
     final pngBytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
     final now = DateTime.now();
     return MCOImageGalleryItem(
@@ -52,7 +61,9 @@ class MCOImageGalleryStore {
       height: image.height,
       byteLength: binaryPayload.length,
       usedColorCount: image.pixels.toSet().length,
-      codecVersion: payloadInfo?.version ?? _codecVersionForImage(image),
+      codecVersion: isV3
+          ? ChannelAppDataHelper.mcoImageV3Version
+          : payloadInfo?.version ?? _codecVersionForImage(image),
       paletteProfile: image.paletteProfile,
     );
   }
@@ -104,6 +115,7 @@ class MCOImageGalleryStore {
       );
       final codecVersion =
           json['codecVersion'] as int? ??
+          _v3CodecVersionForPayload(binaryPayload) ??
           MCOImageCodec.inspectPayload(
             MCOImageCodec.textFromBinaryPayload(binaryPayload),
           )?.version ??
@@ -137,6 +149,21 @@ class MCOImageGalleryStore {
   }
 
   int _codecVersionForImage(MCOImage image) {
-    return image.encodingVersion == MCOImageEncodingVersion.v1Legacy ? 1 : 2;
+    return switch (image.encodingVersion) {
+      MCOImageEncodingVersion.v1Legacy => 1,
+      MCOImageEncodingVersion.v2 => 2,
+      MCOImageEncodingVersion.v3 => ChannelAppDataHelper.mcoImageV3Version,
+    };
+  }
+
+  int? _v3CodecVersionForPayload(Uint8List payload) {
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      payload,
+    );
+    if (appPayload?.subtypeVersion !=
+        ChannelAppDataHelper.mcoImageV3SubtypeVersion) {
+      return null;
+    }
+    return ChannelAppDataHelper.mcoImageV3Version;
   }
 }

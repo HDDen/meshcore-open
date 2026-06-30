@@ -86,6 +86,14 @@ class ChannelBinaryDataHelper {
 
     try {
       final trimmedLeft = text.trimLeft();
+      if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
+        return _encodeAppEnvelope(
+          subtypeVersion: mcoImageV3SubtypeVersion,
+          body: MCOImageV3Codec.bodyFromText(trimmedLeft),
+          senderName: senderName,
+          kind: ChannelBinaryDataKind.mcoImageV3,
+        );
+      }
       if (trimmedLeft.startsWith(MCOImageCodec.prefix)) {
         final imagePayload = MCOImageCodec.binaryPayloadFromText(trimmedLeft);
         return _encodeEnvelope(
@@ -134,6 +142,12 @@ class ChannelBinaryDataHelper {
     if (!canSend) return null;
     try {
       final trimmedLeft = text.trimLeft();
+      if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
+        return ChannelAppDataHelper.envelopeLength(
+          bodyLength: MCOImageV3Codec.bodyFromText(trimmedLeft).length,
+          senderName: senderName,
+        );
+      }
       if (!trimmedLeft.startsWith(MCOImageCodec.prefix)) return null;
       final imagePayload = MCOImageCodec.binaryPayloadFromText(trimmedLeft);
       return _envelopeLength(

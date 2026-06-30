@@ -23,6 +23,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -4412,6 +4413,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> sendChannelMessage(
     Channel channel,
     String text, {
+    EncodedMCOImageV3? mcoImageV3,
     String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
@@ -4422,9 +4424,13 @@ class MeshCoreConnector extends ChangeNotifier {
   }) async {
     if (!isConnected || text.isEmpty) return;
     final shouldDeferForSync = _shouldDeferChannelSendForSync;
+    final useMcoImageV3Binary =
+        mcoImageV3 != null && ChannelBinaryDataHelper.canSend;
 
     // Check if this is a reaction - if so, process it immediately instead of adding as a message
-    final reactionInfo = ReactionHelper.parseReaction(text);
+    final reactionInfo = useMcoImageV3Binary
+        ? null
+        : ReactionHelper.parseReaction(text);
     if (reactionInfo != null) {
       // Check if we've already processed this reaction
       _processedChannelReactions.putIfAbsent(channel.index, () => {});
@@ -4470,12 +4476,20 @@ class MeshCoreConnector extends ChangeNotifier {
         : await _outgoingChannelRegionForMessage(channel.index);
     if (!isConnected) return;
 
-    final outboundText = prepareChannelOutboundText(channel.index, text);
-    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
-      text: text,
-      senderName: _selfName ?? 'Me',
-      mcmpEnabled: isChannelMcmpEnabled(channel.index),
-    );
+    final outboundText = useMcoImageV3Binary
+        ? text
+        : prepareChannelOutboundText(channel.index, text);
+    final binaryOutbound = useMcoImageV3Binary
+        ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
+            image: mcoImageV3,
+            senderName: _selfName ?? 'Me',
+          )
+        : ChannelBinaryDataHelper.tryEncodeOutbound(
+            text: text,
+            senderName: _selfName ?? 'Me',
+            mcmpEnabled: isChannelMcmpEnabled(channel.index),
+          );
+    if (useMcoImageV3Binary && binaryOutbound == null) return;
     final binaryFrame = binaryOutbound == null
         ? null
         : buildSendChannelDataFrame(
@@ -4486,15 +4500,17 @@ class MeshCoreConnector extends ChangeNotifier {
     final isBinaryTransport = binaryFrame != null;
     final isBinaryMcmpTransport =
         binaryOutbound?.kind == ChannelBinaryDataKind.mcmp;
-    final compression = _channelCompressionMetadata(
-      channel.index,
-      uncompressedText ?? text,
-      outboundText,
-      binaryPayloadBytes: isBinaryMcmpTransport
-          ? binaryOutbound?.payload.length
-          : null,
-      senderName: _selfName ?? 'Me',
-    );
+    final compression = useMcoImageV3Binary
+        ? null
+        : _channelCompressionMetadata(
+            channel.index,
+            uncompressedText ?? text,
+            outboundText,
+            binaryPayloadBytes: isBinaryMcmpTransport
+                ? binaryOutbound?.payload.length
+                : null,
+            senderName: _selfName ?? 'Me',
+          );
     final packetRegion = _displayPacketRegion(
       outgoingRegion,
     );
@@ -4503,7 +4519,8 @@ class MeshCoreConnector extends ChangeNotifier {
       _selfName ?? 'Me',
       channel.index,
       wasMcmpCompressed:
-          MeshCompressor.instance.hasPrefix(outboundText) ||
+          (!useMcoImageV3Binary &&
+              MeshCompressor.instance.hasPrefix(outboundText)) ||
           isBinaryMcmpTransport,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
@@ -4533,6 +4550,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyToMessageId: replyToMessageId,
         replyToSenderName: replyToSenderName,
         replyToText: replyToText,
+        mcoImageV3: useMcoImageV3Binary ? mcoImageV3 : null,
       );
       notifyListeners();
       return;
@@ -4567,6 +4585,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Channel channel,
     String messageId,
     String text, {
+    EncodedMCOImageV3? mcoImageV3,
     String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
@@ -4580,6 +4599,7 @@ class MeshCoreConnector extends ChangeNotifier {
         channel: channel,
         messageId: messageId,
         text: text,
+        mcoImageV3: mcoImageV3,
         uncompressedText: uncompressedText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -4633,15 +4653,28 @@ class MeshCoreConnector extends ChangeNotifier {
       _displayPacketRegion(outgoingRegion),
     );
 
-    final outboundText = prepareChannelOutboundText(
-      pending.channel.index,
-      pending.text,
-    );
-    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
-      text: pending.text,
-      senderName: _selfName ?? 'Me',
-      mcmpEnabled: isChannelMcmpEnabled(pending.channel.index),
-    );
+    final useMcoImageV3Binary =
+        pending.mcoImageV3 != null && ChannelBinaryDataHelper.canSend;
+    final outboundText = useMcoImageV3Binary
+        ? pending.text
+        : prepareChannelOutboundText(
+            pending.channel.index,
+            pending.text,
+          );
+    final binaryOutbound = useMcoImageV3Binary
+        ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
+            image: pending.mcoImageV3!,
+            senderName: _selfName ?? 'Me',
+          )
+        : ChannelBinaryDataHelper.tryEncodeOutbound(
+            text: pending.text,
+            senderName: _selfName ?? 'Me',
+            mcmpEnabled: isChannelMcmpEnabled(pending.channel.index),
+          );
+    if (useMcoImageV3Binary && binaryOutbound == null) {
+      _markPendingChannelMessageFailedById(pending.messageId);
+      return;
+    }
     final binaryFrame = binaryOutbound == null
         ? null
         : buildSendChannelDataFrame(
@@ -7312,15 +7345,22 @@ class MeshCoreConnector extends ChangeNotifier {
       dataType: dataFrame.dataType,
       payload: dataFrame.payload,
     );
-    if (decoded == null) {
+    final appDecoded = decoded == null
+        ? ChannelBinaryDataHelper.tryDecodeAppData(
+            dataType: dataFrame.dataType,
+            payload: dataFrame.payload,
+          )
+        : null;
+    if (decoded == null && appDecoded == null) {
       if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
       return;
     }
 
     final channelName = _channelDisplayName(dataFrame.channelIndex);
+    final senderName = decoded?.senderName ?? appDecoded!.senderName;
     final isSelfDirect =
         dataFrame.pathLength <= 0 &&
-        decoded.senderName.trim() == (_selfName ?? '').trim();
+        senderName.trim() == (_selfName ?? '').trim();
     if (isSelfDirect && !_isSelfChannelFilterBypassed(channelName)) {
       return;
     }
@@ -7332,18 +7372,22 @@ class MeshCoreConnector extends ChangeNotifier {
       dataFrame.dataType,
       dataFrame.payload,
     );
-    final compression = _incomingBinaryCompression(decoded);
+    final compression = decoded == null
+        ? null
+        : _incomingBinaryCompression(decoded);
+    final messageText =
+        decoded?.text ?? MCOImageV3Codec.textFromBody(appDecoded!.body);
     final message = ChannelMessage(
-      senderName: decoded.senderName,
-      text: decoded.text,
-      wasMcmpCompressed: decoded.wasMcmpCompressed,
+      senderName: senderName,
+      text: messageText,
+      wasMcmpCompressed: decoded?.wasMcmpCompressed ?? false,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
-      timestamp: decoded.timestamp,
+      timestamp: decoded?.timestamp ?? receivedAt,
       receivedAt: receivedAt,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -9591,6 +9635,7 @@ class _DeferredChannelMessageSend {
   final Channel channel;
   final String messageId;
   final String text;
+  final EncodedMCOImageV3? mcoImageV3;
   final String? uncompressedText;
   final String? originalText;
   final String? translatedLanguageCode;
@@ -9603,6 +9648,7 @@ class _DeferredChannelMessageSend {
     required this.channel,
     required this.messageId,
     required this.text,
+    required this.mcoImageV3,
     required this.uncompressedText,
     required this.originalText,
     required this.translatedLanguageCode,

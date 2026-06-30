@@ -22,6 +22,7 @@ import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/newline_to_space_formatter.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
@@ -1836,7 +1837,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     int? initialImageHeight,
     PaletteProfile? initialPaletteProfile,
   }) async {
-    final encodedText = await Navigator.push<String>(
+    final result = await Navigator.push<CanvasEditorResult>(
       context,
       MaterialPageRoute(
         builder: (context) => CanvasEditorScreen(
@@ -1855,13 +1856,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ),
       ),
     );
-    if (encodedText == null || encodedText.isEmpty) return;
+    if (result == null || result.text.isEmpty) return;
     if (!mounted) return;
+    final encodedText = result.text;
     _textController.text = encodedText;
     _textController.selection = TextSelection.collapsed(
       offset: encodedText.length,
     );
-    await _sendMessage(skipTranslation: true, skipReplyContext: true);
+    await _sendMessage(
+      skipTranslation: true,
+      skipReplyContext: true,
+      mcoImageV3: result.mcoImageV3,
+    );
   }
 
   Future<void> _showMcoImageGallery(int maxTextChars) async {
@@ -2324,6 +2330,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? quickAnswerText,
     bool skipTranslation = false,
     bool skipReplyContext = false,
+    EncodedMCOImageV3? mcoImageV3,
   }) async {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -2434,6 +2441,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       connector.sendChannelMessage(
         widget.channel,
         messageText,
+        mcoImageV3: mcoImageV3,
         uncompressedText: compressionSourceText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
