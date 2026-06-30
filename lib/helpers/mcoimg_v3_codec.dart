@@ -33,7 +33,6 @@ enum MCOImageV3BlockAlgorithm {
   rleLocal,
   sparseBackground,
   biColorMask,
-  rowDelta,
   rowRepeat,
   compactRle,
   compactSparse,
@@ -46,7 +45,6 @@ enum MCOImageV3BlockAlgorithm {
   compactRowDelta,
   directGrayscaleRowDelta,
   directDynamicRowDelta,
-  wrappedBlock,
 }
 
 class EncodedMCOImageV3 {
@@ -1822,11 +1820,6 @@ class MCOImageV3Codec {
         final localPixels = linear.map((color) => map[color]!).toList();
         _writeRowRepeat(writer, localPixels, rowLength, bits);
         break;
-      case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.wrappedBlock:
-        throw const MCOImageInvalidInputException(
-          'MCOimg v3 algorithm is not implemented yet',
-        );
     }
   }
 
@@ -2277,11 +2270,6 @@ class MCOImageV3Codec {
           }
           return palette[index];
         }).toList(growable: false);
-      case MCOImageV3BlockAlgorithm.rowDelta:
-      case MCOImageV3BlockAlgorithm.wrappedBlock:
-        throw const MCOImageInvalidPayloadException(
-          'Unsupported MCOimg v3 algorithm',
-        );
     }
   }
 
@@ -2504,7 +2492,6 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rleLocal => ImageMode.rleLocal,
       MCOImageV3BlockAlgorithm.sparseBackground => ImageMode.sparseBg,
       MCOImageV3BlockAlgorithm.biColorMask => ImageMode.biColorMask,
-      MCOImageV3BlockAlgorithm.rowDelta => ImageMode.rowDelta,
       MCOImageV3BlockAlgorithm.rowRepeat => ImageMode.rowRepeat,
       _ => ImageMode.extended,
     };
@@ -2560,7 +2547,6 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rleLocal => 'RLE local',
       MCOImageV3BlockAlgorithm.sparseBackground => 'Sparse background',
       MCOImageV3BlockAlgorithm.biColorMask => 'Bi-color mask',
-      MCOImageV3BlockAlgorithm.rowDelta => 'Row delta',
       MCOImageV3BlockAlgorithm.rowRepeat => 'Row repeat',
       MCOImageV3BlockAlgorithm.compactRle => 'Compact RLE',
       MCOImageV3BlockAlgorithm.compactSparse => 'Compact sparse',
@@ -2577,7 +2563,6 @@ class MCOImageV3Codec {
         'Direct grayscale row delta',
       MCOImageV3BlockAlgorithm.directDynamicRowDelta =>
         'Direct dynamic row delta',
-      MCOImageV3BlockAlgorithm.wrappedBlock => 'Wrapped block',
     };
   }
 
