@@ -393,6 +393,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _payloadRefreshPending = false;
   bool _payloadRefreshInProgress = false;
   int? _payloadRefreshProgressPercent;
+  Stopwatch? _payloadRefreshStopwatch;
+  Duration? _payloadRefreshElapsed;
+  Timer? _payloadRefreshElapsedTimer;
   int _payloadRefreshRequestId = 0;
   Completer<void>? _payloadRefreshCompletion;
   final Set<CancellableComputeTask<dynamic>> _activeEncodeTasks =
@@ -438,6 +441,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshPending = false;
     _payloadRefreshTimer?.cancel();
     _payloadRefreshTimer = null;
+    _stopPayloadRefreshElapsedTimer();
     _cancelActiveEncodeTasksNow();
     final refreshCompletion = _payloadRefreshCompletion;
     _payloadRefreshCompletion = null;
@@ -1294,8 +1298,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                                   context,
                                   progressPercent:
                                       _payloadRefreshProgressPercent,
+                                  elapsed: _payloadRefreshElapsed,
                                 )
-                              : context.l10n.chat_canvasCurrentPayload(
+                              : _payloadReadyLabel(
+                                  context,
                                   _currentPayloadChars,
                                 ),
                           style: Theme.of(context).textTheme.bodySmall
@@ -2043,10 +2049,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         _payloadRefreshPending = true;
         _payloadRefreshProgressPercent = null;
+        _payloadRefreshElapsed = null;
       });
     } else {
       _payloadRefreshPending = true;
       _payloadRefreshProgressPercent = null;
+      _payloadRefreshElapsed = null;
     }
 
     // Stop the workers that are encoding the previous canvas/settings state.
@@ -2068,6 +2076,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final hadPendingRefresh = _payloadRefreshPending;
     _currentEncodedCacheKey = null;
     _payloadRefreshProgressPercent = null;
+    _payloadRefreshElapsed = null;
 
     // File loading and other whole-canvas replacements can spend noticeable
     // time before _markPayloadDirty() is reached. Stop stale encoders now so
@@ -2115,7 +2124,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _payloadRefreshInProgress = true;
       _payloadRefreshProgressPercent = 0;
+      _payloadRefreshStopwatch = Stopwatch()..start();
+      _payloadRefreshElapsed = Duration.zero;
     });
+    _startPayloadRefreshElapsedTimer(requestId);
 
     final encodeRequest = _buildEncodeRequest();
     EncodedMCOImage? encoded;
@@ -2155,6 +2167,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
 
     final isCurrentResult = requestId == _payloadRefreshRequestId;
+    final elapsed = _payloadRefreshStopwatch?.elapsed ?? Duration.zero;
+    _stopPayloadRefreshElapsedTimer();
     setState(() {
       if (isCurrentResult && encoded != null) {
         _currentEncodedCandidate = encoded;
@@ -2168,7 +2182,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // cleared even when its result became stale while the user was drawing.
       _payloadRefreshInProgress = false;
       _payloadRefreshProgressPercent = null;
+      _payloadRefreshElapsed = isCurrentResult ? elapsed : null;
+      _payloadRefreshStopwatch = null;
     });
+    if (isCurrentResult && encoded != null) {
+      _logPayloadRefreshComplete(encoded, encodeRequest, elapsed);
+    }
 
     // If the canvas changed during this calculation, _markPayloadDirty()
     // has normally already started the debounce timer. Only create one here
@@ -2190,6 +2209,55 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
+  void _logPayloadRefreshComplete(
+    EncodedMCOImage encoded,
+    _MCOImageEncodeRequest request,
+    Duration elapsed,
+  ) {
+    debugPrint(
+      '[MCOimg][${_compressionLevelDebugLabel(request.compressionLevel)}] '
+      'CANVAS COMPLETE; '
+      'version=v${encoded.codecVersion}; '
+      'size=${request.width}x${request.height}; '
+      'payload=${_displayPayloadSizeForEncoded(encoded)}; '
+      'bytes=${encoded.byteLength}; '
+      'chars=${encoded.charLength}; '
+      'elapsed=${_formatPayloadRefreshElapsed(elapsed)}; '
+      'container=${encoded.container}; '
+      'mode=${encoded.mode.name}; '
+      'scan=${encoded.scan.name}; '
+      'bg=${encoded.backgroundColor ?? -1}; '
+      'bgRank=${encoded.backgroundRank}; '
+      'regions=${encoded.regionCount}; '
+      'bounds=${encoded.boundsPresent};',
+    );
+  }
+
+  void _startPayloadRefreshElapsedTimer(int requestId) {
+    _payloadRefreshElapsedTimer?.cancel();
+    _payloadRefreshElapsedTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updatePayloadRefreshElapsed(requestId),
+    );
+  }
+
+  void _stopPayloadRefreshElapsedTimer() {
+    _payloadRefreshElapsedTimer?.cancel();
+    _payloadRefreshElapsedTimer = null;
+  }
+
+  void _updatePayloadRefreshElapsed(int requestId) {
+    if (!mounted ||
+        requestId != _payloadRefreshRequestId ||
+        !_payloadRefreshInProgress) {
+      _stopPayloadRefreshElapsedTimer();
+      return;
+    }
+    final elapsed = _payloadRefreshStopwatch?.elapsed;
+    if (elapsed == null || _payloadRefreshElapsed == elapsed) return;
+    setState(() => _payloadRefreshElapsed = elapsed);
+  }
+
   void _setPayloadRefreshProgress(int requestId, int progressPercent) {
     if (!mounted ||
         requestId != _payloadRefreshRequestId ||
@@ -2197,20 +2265,46 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
     final clamped = progressPercent.clamp(0, 100).toInt();
-    if (_payloadRefreshProgressPercent == clamped) return;
-    setState(() => _payloadRefreshProgressPercent = clamped);
+    final elapsed = _payloadRefreshStopwatch?.elapsed;
+    if (_payloadRefreshProgressPercent == clamped &&
+        _payloadRefreshElapsed == elapsed) {
+      return;
+    }
+    setState(() {
+      _payloadRefreshProgressPercent = clamped;
+      _payloadRefreshElapsed = elapsed;
+    });
   }
 
   String _payloadCalculatingLabel(
     BuildContext context, {
     int? progressPercent,
+    Duration? elapsed,
   }) {
     const placeholder = -987654321;
     final label = context.l10n
         .chat_canvasCurrentPayload(placeholder)
         .replaceFirst('$placeholder', '...');
-    if (progressPercent == null) return label;
-    return '$label ($progressPercent%)';
+    final details = <String>[];
+    if (progressPercent != null) details.add('$progressPercent%');
+    if (elapsed != null) details.add(_formatPayloadRefreshElapsed(elapsed));
+    if (details.isEmpty) return label;
+    return '$label (${details.join(', ')})';
+  }
+
+  String _payloadReadyLabel(BuildContext context, int payloadSize) {
+    final label = context.l10n.chat_canvasCurrentPayload(payloadSize);
+    final elapsed = _payloadRefreshElapsed;
+    if (elapsed == null) return label;
+    return '$label (${_formatPayloadRefreshElapsed(elapsed)})';
+  }
+
+  String _formatPayloadRefreshElapsed(Duration elapsed) {
+    final milliseconds = elapsed.inMilliseconds;
+    if (milliseconds < 1000) return '${milliseconds}ms';
+    final seconds = milliseconds / 1000;
+    if (seconds < 10) return '${seconds.toStringAsFixed(1)}s';
+    return '${seconds.round()}s';
   }
 
   String _encodingCandidateLabel(EncodedMCOImage candidate) {
@@ -3478,9 +3572,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           );
     final slices = <_ExtremeEncodeSlice>[];
 
-    // Run the relatively predictable scan families first. The heavier
-    // non-scan slice (regions/solid rectangles/quadtree) is still included, but
-    // it no longer hides which part of the encode is taking the time.
+    // Start the heavier non-scan slices (regions/solid rectangles/quadtree)
+    // first. If all region slices sit at the end of the queue, the worker pool
+    // can finish the light scan work first and then spend the tail of the
+    // encode with only a few busy isolates.
+    for (final backgroundCandidate in backgroundCandidates) {
+      slices.add(
+        _ExtremeEncodeSlice(
+          request: _encodeRequestWithBackgroundCandidates(
+            request,
+            [backgroundCandidate],
+            const <ScanMode>[],
+            true,
+          ),
+          label:
+              'non-scan/regions, bg=${backgroundCandidate.color}, '
+              'rank=${backgroundCandidate.rank}',
+        ),
+      );
+    }
     for (final backgroundCandidate in backgroundCandidates) {
       final backgroundSlice = [backgroundCandidate];
       for (final scan in ScanMode.values) {
@@ -3499,21 +3609,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         );
       }
     }
-    for (final backgroundCandidate in backgroundCandidates) {
-      slices.add(
-        _ExtremeEncodeSlice(
-          request: _encodeRequestWithBackgroundCandidates(
-            request,
-            [backgroundCandidate],
-            const <ScanMode>[],
-            true,
-          ),
-          label:
-              'non-scan/regions, bg=${backgroundCandidate.color}, '
-              'rank=${backgroundCandidate.rank}',
-        ),
-      );
-    }
 
     final workerCount = math.min(
       _extremeEncodeWorkerLimit(),
@@ -3530,6 +3625,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final compressionLabel = _compressionLevelDebugLabel(
       request.compressionLevel,
     );
+
+    Future<void> cancelAndAwaitRunningTasks() async {
+      final tasks = runningTasks.toList(growable: false);
+      for (final task in tasks) {
+        task.cancel();
+      }
+      await Future.wait<void>(
+        tasks.map((task) async {
+          try {
+            await task.result;
+          } catch (_) {
+            // The worker owning this task will remove it from the active sets.
+          }
+        }),
+      );
+    }
 
     debugPrint(
       '[MCOimg][$compressionLabel] START; '
@@ -3672,14 +3783,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     } on CancellableComputeCancelledException {
       // If one worker fails or the route/settings change, stop all remaining
       // workers instead of letting them continue consuming CPU.
-      for (final task in runningTasks.toList(growable: false)) {
-        task.cancel();
-      }
+      await cancelAndAwaitRunningTasks();
       rethrow;
     } on MCOImageCodecException catch (error) {
-      for (final task in runningTasks.toList(growable: false)) {
-        task.cancel();
-      }
+      await cancelAndAwaitRunningTasks();
       debugPrint(
         '[MCOimg][$compressionLabel] parallel fallback to single encode; '
         'error=$error;',
@@ -3691,9 +3798,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
       return _awaitEncodeTask(task);
     } catch (_) {
-      for (final task in runningTasks.toList(growable: false)) {
-        task.cancel();
-      }
+      await cancelAndAwaitRunningTasks();
       rethrow;
     }
   }
@@ -3769,6 +3874,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
     _payloadRefreshTimer?.cancel();
     _payloadRefreshTimer = null;
+    _stopPayloadRefreshElapsedTimer();
 
     final refreshCompletion = _payloadRefreshCompletion?.future;
     final tasks = _cancelActiveEncodeTasksNow();
