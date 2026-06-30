@@ -205,6 +205,9 @@ EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
         .encode(
           image,
           backgroundColor: request.backgroundColor,
+          backgroundCandidates: request.backgroundCandidates,
+          scanModes: request.scanModes,
+          includeNonScanCandidates: request.includeNonScanCandidates,
           outputTarget: request.outputTarget,
           compressionLevel: request.compressionLevel,
         )
@@ -235,17 +238,14 @@ MCOImageEncodeDiagnostics _debugEncodeMCOImageRequest(
     encodingVersion: request.encodingVersion,
   );
   if (request.encodingVersion == MCOImageEncodingVersion.v3) {
-    final candidate = MCOImageV3Codec()
-        .encode(
-          image,
-          backgroundColor: request.backgroundColor,
-          outputTarget: request.outputTarget,
-          compressionLevel: request.compressionLevel,
-        )
-        .encodedCandidate;
-    return MCOImageEncodeDiagnostics(
-      result: candidate,
-      candidates: [candidate],
+    return MCOImageV3Codec().debugEncode(
+      image,
+      backgroundColor: request.backgroundColor,
+      backgroundCandidates: request.backgroundCandidates,
+      scanModes: request.scanModes,
+      includeNonScanCandidates: request.includeNonScanCandidates,
+      outputTarget: request.outputTarget,
+      compressionLevel: request.compressionLevel,
     );
   }
   return MCOImageCodec().debugEncode(
@@ -3438,7 +3438,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   bool _shouldUseParallelEncode(_MCOImageEncodeRequest request) {
-    return request.encodingVersion == MCOImageEncodingVersion.v2 &&
+    return (request.encodingVersion == MCOImageEncodingVersion.v2 ||
+            request.encodingVersion == MCOImageEncodingVersion.v3) &&
         request.compressionLevel == MCOImageCodec.compressionLevelExtreme;
   }
 
@@ -3454,11 +3455,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _MCOImageEncodeRequest request, {
     void Function(int progressPercent)? onProgress,
   }) async {
-    final backgroundCandidates = MCOImageCodec.backgroundCandidatesFor(
-      _imageFromEncodeRequest(request),
-      backgroundColor: request.backgroundColor,
-      compressionLevel: request.compressionLevel,
-    );
+    final image = _imageFromEncodeRequest(request);
+    final backgroundCandidates =
+        request.encodingVersion == MCOImageEncodingVersion.v3
+        ? MCOImageV3Codec.backgroundCandidatesFor(
+            image,
+            backgroundColor: request.backgroundColor,
+            compressionLevel: request.compressionLevel,
+          )
+        : MCOImageCodec.backgroundCandidatesFor(
+            image,
+            backgroundColor: request.backgroundColor,
+            compressionLevel: request.compressionLevel,
+          );
     final slices = <_ExtremeEncodeSlice>[];
 
     // Run the relatively predictable scan families first. The heavier
@@ -3502,6 +3511,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _extremeEncodeWorkerLimit(),
       slices.length,
     );
+    final selectionTarget =
+        request.encodingVersion == MCOImageEncodingVersion.v3
+        ? MCOImageOutputTarget.binary
+        : request.outputTarget;
     final candidates = <EncodedMCOImage>[];
     final runningTasks = <CancellableComputeTask<MCOImageEncodeDiagnostics>>{};
     var nextSliceIndex = 0;
@@ -3555,7 +3568,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           onProgress?.call(percentage.round().clamp(0, 100).toInt());
           final currentBest = MCOImageCodec.selectBestCandidate(
             candidates,
-            request.outputTarget,
+            selectionTarget,
           );
           final isBest = identical(currentBest, result);
           debugPrint(
@@ -3584,6 +3597,24 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             '${slice.label};',
           );
           rethrow;
+        } on MCOImageInvalidInputException catch (error) {
+          if (request.encodingVersion != MCOImageEncodingVersion.v3 ||
+              error.message != 'No MCOimg v3 candidate') {
+            rethrow;
+          }
+          completedSlices++;
+          stopwatch.stop();
+          final percentage = completedSlices * 100 / slices.length;
+          onProgress?.call(percentage.round().clamp(0, 100).toInt());
+          debugPrint(
+            '[MCOimg][$compressionLabel][W${workerIndex + 1}] '
+            '$completedSlices/${slices.length} '
+            '(${percentage.toStringAsFixed(1)}%); '
+            'SKIP; '
+            '${stopwatch.elapsedMilliseconds} ms; '
+            '${slice.label}; '
+            'error=$error;',
+          );
         } on MCOImageTooLargeException catch (error) {
           // A fine-grained slice may have no viable candidate. Count it as
           // processed and continue with the remaining slices.
@@ -3613,7 +3644,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
       final best = MCOImageCodec.selectBestCandidate(
         candidates,
-        request.outputTarget,
+        selectionTarget,
       );
       debugPrint(
         '[MCOimg][$compressionLabel] '

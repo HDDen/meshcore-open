@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import 'channel_app_data_helper.dart';
 import 'mcoimg_palette.dart';
 import 'mcoimg_types.dart';
@@ -246,6 +248,14 @@ class MCOImageV3Codec {
     };
   }
 
+  static String _compressionLevelLabel(int compressionLevel) {
+    return switch (_normalizeCompressionLevel(compressionLevel)) {
+      mcoImageCompressionLevelNormal => 'Normal',
+      mcoImageCompressionLevelExtreme => 'Extreme',
+      _ => 'High',
+    };
+  }
+
   static List<MCOImageV3BlockAlgorithm> _regionBlockAlgorithmsForLevel({
     required bool useHighCompressionExtras,
   }) {
@@ -266,6 +276,9 @@ class MCOImageV3Codec {
   EncodedMCOImageV3 encode(
     MCOImage image, {
     int? backgroundColor,
+    List<MCOImageBackgroundCandidate>? backgroundCandidates,
+    List<ScanMode>? scanModes,
+    bool includeNonScanCandidates = true,
     MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
@@ -275,6 +288,10 @@ class MCOImageV3Codec {
     final result = _encodeNative(
       image,
       backgroundColor: backgroundColor,
+      backgroundCandidates: backgroundCandidates,
+      scanModes: scanModes,
+      includeNonScanCandidates: includeNonScanCandidates,
+      outputTarget: outputTarget,
       compressionLevel: compressionLevel,
     );
     return EncodedMCOImageV3(
@@ -282,6 +299,53 @@ class MCOImageV3Codec {
       byteLength: result.payload.length,
       encodedCandidate: result,
     );
+  }
+
+  MCOImageEncodeDiagnostics debugEncode(
+    MCOImage image, {
+    int? backgroundColor,
+    List<MCOImageBackgroundCandidate>? backgroundCandidates,
+    List<ScanMode>? scanModes,
+    bool includeNonScanCandidates = true,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
+    int compressionLevel = mcoImageDefaultCompressionLevel,
+  }) {
+    _validateImage(image);
+    return _debugEncodeNative(
+      image,
+      backgroundColor: backgroundColor,
+      backgroundCandidates: backgroundCandidates,
+      scanModes: scanModes,
+      includeNonScanCandidates: includeNonScanCandidates,
+      outputTarget: outputTarget,
+      compressionLevel: compressionLevel,
+    );
+  }
+
+  static List<MCOImageBackgroundCandidate> backgroundCandidatesFor(
+    MCOImage image, {
+    int? backgroundColor,
+    int compressionLevel = mcoImageDefaultCompressionLevel,
+  }) {
+    _validateImage(image);
+    final effectiveCompressionLevel = _normalizeCompressionLevel(
+      compressionLevel,
+    );
+    final preferredBackground =
+        backgroundColor ?? MCOImagePalette.whiteIndexFor(image.paletteProfile);
+    return _backgroundCandidates(
+      image,
+      preferredBackground,
+      exhaustiveSmallImage:
+          effectiveCompressionLevel != mcoImageCompressionLevelNormal,
+    )
+        .map(
+          (candidate) => MCOImageBackgroundCandidate(
+            color: candidate.color,
+            rank: candidate.rank,
+          ),
+        )
+        .toList(growable: false);
   }
 
   MCOImage decodeBody(Uint8List body) {
@@ -428,6 +492,30 @@ class MCOImageV3Codec {
   EncodedMCOImage _encodeNative(
     MCOImage image, {
     int? backgroundColor,
+    List<MCOImageBackgroundCandidate>? backgroundCandidates,
+    List<ScanMode>? scanModes,
+    bool includeNonScanCandidates = true,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
+    int compressionLevel = mcoImageDefaultCompressionLevel,
+  }) {
+    return _debugEncodeNative(
+      image,
+      backgroundColor: backgroundColor,
+      backgroundCandidates: backgroundCandidates,
+      scanModes: scanModes,
+      includeNonScanCandidates: includeNonScanCandidates,
+      outputTarget: outputTarget,
+      compressionLevel: compressionLevel,
+    ).result;
+  }
+
+  MCOImageEncodeDiagnostics _debugEncodeNative(
+    MCOImage image, {
+    int? backgroundColor,
+    List<MCOImageBackgroundCandidate>? backgroundCandidates,
+    List<ScanMode>? scanModes,
+    bool includeNonScanCandidates = true,
+    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
     final effectiveCompressionLevel = _normalizeCompressionLevel(
@@ -438,93 +526,103 @@ class MCOImageV3Codec {
     final candidates = <EncodedMCOImage>[];
     final preferredBackground =
         backgroundColor ?? MCOImagePalette.whiteIndexFor(image.paletteProfile);
-    final backgroundCandidates = _backgroundCandidates(
-      image,
-      preferredBackground,
-      exhaustiveSmallImage: useHighCompressionExtras,
-    );
-    final solidCandidate = _tryBuildSolidBackgroundCandidate(image);
-    if (solidCandidate != null) candidates.add(solidCandidate);
+    final effectiveBackgroundCandidates = backgroundCandidates == null
+        ? _backgroundCandidates(
+            image,
+            preferredBackground,
+            exhaustiveSmallImage: useHighCompressionExtras,
+          )
+        : _backgroundCandidatesFromPublic(
+            backgroundCandidates,
+            image.paletteProfile,
+          );
+    final effectiveScanModes = scanModes ?? ScanMode.values;
+    if (includeNonScanCandidates) {
+      final solidCandidate = _tryBuildSolidBackgroundCandidate(image);
+      if (solidCandidate != null) candidates.add(solidCandidate);
+    }
 
-    for (final background in backgroundCandidates) {
+    for (final background in effectiveBackgroundCandidates) {
       final bg = background.color;
-      final regionsCandidate = _tryBuildRegionsCandidate(
-        image,
-        bg,
-        compactGeometry: false,
-        useHighCompressionExtras: useHighCompressionExtras,
-      );
-      if (regionsCandidate != null) candidates.add(regionsCandidate);
-      if (useHighCompressionExtras) {
-        final compactRegionsCandidate = _tryBuildRegionsCandidate(
+      if (includeNonScanCandidates) {
+        final regionsCandidate = _tryBuildRegionsCandidate(
           image,
           bg,
-          compactGeometry: true,
-          commonBlockHeader: false,
-          deltaGeometry: false,
+          compactGeometry: false,
           useHighCompressionExtras: useHighCompressionExtras,
         );
-        if (compactRegionsCandidate != null) {
-          candidates.add(compactRegionsCandidate);
-        }
-        final deltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-          image,
-          bg,
-          compactGeometry: true,
-          commonBlockHeader: false,
-          deltaGeometry: true,
-          useHighCompressionExtras: useHighCompressionExtras,
-        );
-        if (deltaCompactRegionsCandidate != null) {
-          candidates.add(deltaCompactRegionsCandidate);
-        }
-        final commonCompactRegionsCandidate = _tryBuildRegionsCandidate(
-          image,
-          bg,
-          compactGeometry: true,
-          commonBlockHeader: true,
-          deltaGeometry: false,
-          sharedLocalPalette: false,
-          useHighCompressionExtras: useHighCompressionExtras,
-        );
-        if (commonCompactRegionsCandidate != null) {
-          candidates.add(commonCompactRegionsCandidate);
-        }
-        final sharedCompactRegionsCandidate = _tryBuildRegionsCandidate(
-          image,
-          bg,
-          compactGeometry: true,
-          commonBlockHeader: true,
-          deltaGeometry: false,
-          sharedLocalPalette: true,
-          useHighCompressionExtras: useHighCompressionExtras,
-        );
-        if (sharedCompactRegionsCandidate != null) {
-          candidates.add(sharedCompactRegionsCandidate);
-        }
-        final commonDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-          image,
-          bg,
-          compactGeometry: true,
-          commonBlockHeader: true,
-          deltaGeometry: true,
-          sharedLocalPalette: false,
-          useHighCompressionExtras: useHighCompressionExtras,
-        );
-        if (commonDeltaCompactRegionsCandidate != null) {
-          candidates.add(commonDeltaCompactRegionsCandidate);
-        }
-        final sharedDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
-          image,
-          bg,
-          compactGeometry: true,
-          commonBlockHeader: true,
-          deltaGeometry: true,
-          sharedLocalPalette: true,
-          useHighCompressionExtras: useHighCompressionExtras,
-        );
-        if (sharedDeltaCompactRegionsCandidate != null) {
-          candidates.add(sharedDeltaCompactRegionsCandidate);
+        if (regionsCandidate != null) candidates.add(regionsCandidate);
+        if (useHighCompressionExtras) {
+          final compactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: false,
+            deltaGeometry: false,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (compactRegionsCandidate != null) {
+            candidates.add(compactRegionsCandidate);
+          }
+          final deltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: false,
+            deltaGeometry: true,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (deltaCompactRegionsCandidate != null) {
+            candidates.add(deltaCompactRegionsCandidate);
+          }
+          final commonCompactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: true,
+            deltaGeometry: false,
+            sharedLocalPalette: false,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (commonCompactRegionsCandidate != null) {
+            candidates.add(commonCompactRegionsCandidate);
+          }
+          final sharedCompactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: true,
+            deltaGeometry: false,
+            sharedLocalPalette: true,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (sharedCompactRegionsCandidate != null) {
+            candidates.add(sharedCompactRegionsCandidate);
+          }
+          final commonDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: true,
+            deltaGeometry: true,
+            sharedLocalPalette: false,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (commonDeltaCompactRegionsCandidate != null) {
+            candidates.add(commonDeltaCompactRegionsCandidate);
+          }
+          final sharedDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+            image,
+            bg,
+            compactGeometry: true,
+            commonBlockHeader: true,
+            deltaGeometry: true,
+            sharedLocalPalette: true,
+            useHighCompressionExtras: useHighCompressionExtras,
+          );
+          if (sharedDeltaCompactRegionsCandidate != null) {
+            candidates.add(sharedDeltaCompactRegionsCandidate);
+          }
         }
       }
 
@@ -533,7 +631,7 @@ class MCOImageV3Codec {
           bounds.width == image.width && bounds.height == image.height) {
         continue;
       }
-      for (final scan in ScanMode.values) {
+      for (final scan in effectiveScanModes) {
         final cropped = _extractBoundsPixels(image, bounds);
         final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
         for (final algorithm in const [
@@ -578,7 +676,7 @@ class MCOImageV3Codec {
       }
     }
 
-    for (final scan in ScanMode.values) {
+    for (final scan in effectiveScanModes) {
       final linear = _toScanOrder(image.pixels, image.width, image.height, scan);
       for (final algorithm in const [
         MCOImageV3BlockAlgorithm.rawGlobal,
@@ -619,7 +717,7 @@ class MCOImageV3Codec {
         );
         if (candidate != null) candidates.add(candidate);
       }
-      for (final background in backgroundCandidates) {
+      for (final background in effectiveBackgroundCandidates) {
         final bg = background.color;
         for (final algorithm in const [
           MCOImageV3BlockAlgorithm.sparseBackground,
@@ -659,7 +757,41 @@ class MCOImageV3Codec {
       if (byBytes != 0) return byBytes;
       return _modeTieRank(a.mode).compareTo(_modeTieRank(b.mode));
     });
-    return candidates.first;
+    _flushCandidateDebugLog(
+      compressionLevel: effectiveCompressionLevel,
+      candidates: candidates,
+    );
+    return MCOImageEncodeDiagnostics(
+      result: candidates.first,
+      candidates: List<EncodedMCOImage>.unmodifiable(candidates),
+      compressionLevel: effectiveCompressionLevel,
+    );
+  }
+
+  static void _flushCandidateDebugLog({
+    required int compressionLevel,
+    required List<EncodedMCOImage> candidates,
+  }) {
+    final total = candidates.length;
+    for (var index = 0; index < total; index++) {
+      final candidate = candidates[index];
+      final completed = index + 1;
+      final percentage = total == 0 ? 100.0 : completed * 100 / total;
+      debugPrint(
+        '[MCOimg][${_compressionLevelLabel(compressionLevel)}] '
+        '$completed/$total (${percentage.toStringAsFixed(1)}%); '
+        'bytes=${candidate.byteLength}; '
+        'chars=${candidate.charLength}; '
+        '${index == 0 ? 'BEST' : 'not-best'}; '
+        'v3 ${candidate.container}; '
+        'container=${candidate.container}; '
+        'mode=${candidate.mode.name}; '
+        'scan=${candidate.scan.name}; '
+        'bg=${candidate.backgroundColor ?? -1}; '
+        'bgRank=${candidate.backgroundRank}; '
+        'bounds=${candidate.boundsPresent};',
+      );
+    }
   }
 
   EncodedMCOImage? _tryBuildSolidBackgroundCandidate(MCOImage image) {
@@ -4206,17 +4338,18 @@ class MCOImageV3Codec {
     final result = <_V3BackgroundCandidate>[];
     final seen = <int>{};
 
-    void add(int color) {
+    void add(int color, int rank) {
       if (!_isColorValid(color, image.paletteProfile)) return;
       if (!seen.add(color)) return;
-      result.add(_V3BackgroundCandidate(color));
+      result.add(_V3BackgroundCandidate(color, rank));
     }
 
-    if (explicitBackground != null) add(explicitBackground);
+    if (explicitBackground != null) add(explicitBackground, 0);
     add(
       image.paletteProfile.isDynamic
           ? MCOImageDynamicPalette.whiteGlobalIndexFor(image.paletteProfile)
           : 0,
+      1,
     );
 
     final counts = <int, int>{};
@@ -4233,14 +4366,28 @@ class MCOImageV3Codec {
       i < math.min(_maxFrequentBackgroundCandidates, colors.length);
       i++
     ) {
-      add(colors[i]);
+      add(colors[i], 2 + i);
     }
     if (exhaustiveSmallImage &&
         image.pixels.length <= _maxExhaustiveBackgroundPixels &&
         colors.length <= _maxExhaustiveBackgroundColors) {
       for (var i = 0; i < colors.length; i++) {
-        add(colors[i]);
+        add(colors[i], 2 + i);
       }
+    }
+    return result;
+  }
+
+  static List<_V3BackgroundCandidate> _backgroundCandidatesFromPublic(
+    List<MCOImageBackgroundCandidate> candidates,
+    PaletteProfile profile,
+  ) {
+    final result = <_V3BackgroundCandidate>[];
+    final seen = <int>{};
+    for (final candidate in candidates) {
+      if (!_isColorValid(candidate.color, profile)) continue;
+      if (!seen.add(candidate.color)) continue;
+      result.add(_V3BackgroundCandidate(candidate.color, candidate.rank));
     }
     return result;
   }
@@ -4849,8 +4996,9 @@ class _V3Base91 {
 
 class _V3BackgroundCandidate {
   final int color;
+  final int rank;
 
-  const _V3BackgroundCandidate(this.color);
+  const _V3BackgroundCandidate(this.color, this.rank);
 }
 
 class _V3RegionPlan {
