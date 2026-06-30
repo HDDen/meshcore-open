@@ -27,7 +27,10 @@ void main() {
       );
       expect(encoded.byteLength, encoded.body.length);
       expect(encoded.encodedCandidate.text, isEmpty);
-      expect(encoded.encodedCandidate.container, MCOImageV3Container.block.name);
+      expect(
+        encoded.encodedCandidate.container,
+        MCOImageV3Container.compactBlock.name,
+      );
       expect(decoded.width, image.width);
       expect(decoded.height, image.height);
       expect(decoded.paletteProfile, image.paletteProfile);
@@ -103,7 +106,7 @@ void main() {
 
       expect(
         encoded.encodedCandidate.container,
-        MCOImageV3Container.boundsBlock.name,
+        MCOImageV3Container.compactBoundsBlock.name,
       );
       expect(encoded.encodedCandidate.boundsPresent, isTrue);
       expect(encoded.encodedCandidate.boundsX, 12);

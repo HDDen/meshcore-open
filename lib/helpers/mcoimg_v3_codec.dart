@@ -13,7 +13,9 @@ import 'mcoimg_types.dart';
 /// escape combinations: each top-level image layout gets its own container id.
 enum MCOImageV3Container {
   block,
+  compactBlock,
   boundsBlock,
+  compactBoundsBlock,
   regions,
   compactRegionsStream,
   solidBackground,
@@ -144,7 +146,7 @@ class MCOImageV3Codec {
   }
 
   MCOImage decodeBody(Uint8List body) {
-    if (body.length < 5) {
+    if (body.length < 4) {
       throw const MCOImageInvalidPayloadException('MCOimg v3 payload too short');
     }
     final header = body[0];
@@ -163,8 +165,26 @@ class MCOImageV3Codec {
     final algorithm = _algorithmFromId(
       containerAlgorithm & _containerAlgorithmAlgorithmMask,
     );
-    final scan = _scanFromId(body[4]);
-    final reader = _V3BitReader(body, byteIndex: 5);
+    if (container == MCOImageV3Container.block &&
+        _canUseCompactBlockHeader(algorithm)) {
+      throw const MCOImageInvalidPayloadException(
+        'Scan-independent v3 block must use compactBlock',
+      );
+    }
+    if (container == MCOImageV3Container.compactBlock &&
+        !_canUseCompactBlockHeader(algorithm)) {
+      throw const MCOImageInvalidPayloadException(
+        'compactBlock cannot be used with scan-dependent algorithms',
+      );
+    }
+    final hasScanByte = _containerHasScanByte(container, algorithm);
+    if (hasScanByte && body.length < 5) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v3 payload too short',
+      );
+    }
+    final scan = hasScanByte ? _scanFromId(body[4]) : ScanMode.h;
+    final reader = _V3BitReader(body, byteIndex: hasScanByte ? 5 : 4);
     final transparentColor = hasTransparentColor
         ? _readColorRef(reader, profile)
         : null;
@@ -182,6 +202,19 @@ class MCOImageV3Codec {
         height,
         scan,
       ),
+      MCOImageV3Container.compactBlock => _fromScanOrder(
+        _decodeBlockBody(
+          reader,
+          width,
+          height,
+          profile,
+          algorithm,
+          ScanMode.h,
+        ),
+        width,
+        height,
+        ScanMode.h,
+      ),
       MCOImageV3Container.boundsBlock => _decodeBoundsBlockBody(
         reader,
         width,
@@ -189,6 +222,16 @@ class MCOImageV3Codec {
         profile,
         algorithm,
         scan,
+        compactGeometry: false,
+      ),
+      MCOImageV3Container.compactBoundsBlock => _decodeBoundsBlockBody(
+        reader,
+        width,
+        height,
+        profile,
+        algorithm,
+        hasScanByte ? scan : ScanMode.h,
+        compactGeometry: true,
       ),
       MCOImageV3Container.regions => _decodeRegionsBody(
         reader,
@@ -361,8 +404,19 @@ class MCOImageV3Codec {
             algorithm,
             scan,
             backgroundColor: bg,
+            compactGeometry: false,
           );
           if (candidate != null) candidates.add(candidate);
+          final compactCandidate = _tryBuildBoundsBlockCandidate(
+            image,
+            bounds,
+            linear,
+            algorithm,
+            scan,
+            backgroundColor: bg,
+            compactGeometry: true,
+          );
+          if (compactCandidate != null) candidates.add(compactCandidate);
         }
       }
     }
@@ -385,12 +439,26 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.directDynamicRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
+        if (_canUseCompactBlockHeader(algorithm)) {
+          if (scan != ScanMode.h) continue;
+          final compactCandidate = _tryBuildCandidate(
+            image,
+            linear,
+            algorithm,
+            scan,
+            backgroundColor: preferredBackground,
+            compactHeader: true,
+          );
+          if (compactCandidate != null) candidates.add(compactCandidate);
+          continue;
+        }
         final candidate = _tryBuildCandidate(
           image,
           linear,
           algorithm,
           scan,
           backgroundColor: preferredBackground,
+          compactHeader: false,
         );
         if (candidate != null) candidates.add(candidate);
       }
@@ -400,12 +468,26 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
         ]) {
+          if (_canUseCompactBlockHeader(algorithm)) {
+            if (scan != ScanMode.h) continue;
+            final compactCandidate = _tryBuildCandidate(
+              image,
+              linear,
+              algorithm,
+              scan,
+              backgroundColor: bg,
+              compactHeader: true,
+            );
+            if (compactCandidate != null) candidates.add(compactCandidate);
+            continue;
+          }
           final candidate = _tryBuildCandidate(
             image,
             linear,
             algorithm,
             scan,
             backgroundColor: bg,
+            compactHeader: false,
           );
           if (candidate != null) candidates.add(candidate);
         }
@@ -530,9 +612,11 @@ class MCOImageV3Codec {
         writer.writeBits(deltaGeometry ? 1 : 0, 1);
         writer.writeBits(sharedLocalPalette ? 1 : 0, 1);
         if (commonBlockHeader) {
-          writer
-            ..writeBits(regionBlocks.first.algorithm.index, 5)
-            ..writeBits(regionBlocks.first.scan.index, 2);
+          final algorithm = regionBlocks.first.algorithm;
+          writer.writeBits(algorithm.index, 5);
+          if (!_canUseCompactBlockHeader(algorithm)) {
+            writer.writeBits(regionBlocks.first.scan.index, 2);
+          }
         }
         if (sharedLocalPalette) {
           _writeLocalPalette(
@@ -558,9 +642,10 @@ class MCOImageV3Codec {
         }
         previousBounds = block.bounds;
         if (!commonBlockHeader) {
-          writer
-            ..writeBits(block.algorithm.index, 5)
-            ..writeBits(block.scan.index, 2);
+          writer.writeBits(block.algorithm.index, 5);
+          if (!_canUseCompactBlockHeader(block.algorithm)) {
+            writer.writeBits(block.scan.index, 2);
+          }
         }
         if (sharedLocalPalette) {
           _writeBlockBodyWithSharedPalette(
@@ -854,8 +939,14 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm,
     ScanMode scan, {
     required int backgroundColor,
+    required bool compactGeometry,
   }) {
     final writer = _V3BitWriter();
+    if (compactGeometry &&
+        _canUseCompactBlockHeader(algorithm) &&
+        scan != ScanMode.h) {
+      return null;
+    }
     if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
         scan != ScanMode.h) {
       return null;
@@ -865,12 +956,16 @@ class MCOImageV3Codec {
           (image.transparentColor != null ? _transparentFlag : 0) |
           _profileId(image.paletteProfile),
     );
-    const container = MCOImageV3Container.boundsBlock;
+    final container = compactGeometry
+        ? MCOImageV3Container.compactBoundsBlock
+        : MCOImageV3Container.boundsBlock;
     writer
       ..writeAlignedByte(image.width - 1)
       ..writeAlignedByte(image.height - 1)
-      ..writeAlignedByte(_containerAlgorithmByte(container, algorithm))
-      ..writeAlignedByte(scan.index);
+      ..writeAlignedByte(_containerAlgorithmByte(container, algorithm));
+    if (_containerHasScanByte(container, algorithm)) {
+      writer.writeAlignedByte(scan.index);
+    }
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -878,11 +973,13 @@ class MCOImageV3Codec {
     final bodyStartBits = writer.bitLength;
     try {
       _writeColorRef(writer, image.paletteProfile, backgroundColor);
-      writer
-        ..writeBits(bounds.x, 8)
-        ..writeBits(bounds.y, 8)
-        ..writeBits(bounds.width - 1, 8)
-        ..writeBits(bounds.height - 1, 8);
+      _writeBoundsGeometry(
+        writer,
+        bounds,
+        image.width,
+        image.height,
+        compactGeometry: compactGeometry,
+      );
       _writeBlockBody(
         writer,
         linear,
@@ -934,7 +1031,12 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm,
     ScanMode scan, {
     required int backgroundColor,
+    bool compactHeader = false,
   }) {
+    if (compactHeader &&
+        (scan != ScanMode.h || !_canUseCompactBlockHeader(algorithm))) {
+      return null;
+    }
     if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
         scan != ScanMode.h) {
       return null;
@@ -945,12 +1047,16 @@ class MCOImageV3Codec {
           (image.transparentColor != null ? _transparentFlag : 0) |
           _profileId(image.paletteProfile),
     );
-    const container = MCOImageV3Container.block;
+    final container = compactHeader
+        ? MCOImageV3Container.compactBlock
+        : MCOImageV3Container.block;
     writer
       ..writeAlignedByte(image.width - 1)
       ..writeAlignedByte(image.height - 1)
-      ..writeAlignedByte(_containerAlgorithmByte(container, algorithm))
-      ..writeAlignedByte(scan.index);
+      ..writeAlignedByte(_containerAlgorithmByte(container, algorithm));
+    if (!compactHeader) {
+      writer.writeAlignedByte(scan.index);
+    }
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -999,40 +1105,35 @@ class MCOImageV3Codec {
     int height,
     PaletteProfile profile,
     MCOImageV3BlockAlgorithm algorithm,
-    ScanMode scan,
-  ) {
+    ScanMode scan, {
+    required bool compactGeometry,
+  }) {
     final background = _readColorRef(reader, profile);
-    final x = reader.readBits(8);
-    final y = reader.readBits(8);
-    final boundsWidth = reader.readBits(8) + 1;
-    final boundsHeight = reader.readBits(8) + 1;
-    if (x >= width ||
-        y >= height ||
-        boundsWidth <= 0 ||
-        boundsHeight <= 0 ||
-        x + boundsWidth > width ||
-        y + boundsHeight > height) {
-      throw const MCOImageInvalidPayloadException('Invalid v3 bounds block');
-    }
+    final bounds = _readBoundsGeometry(
+      reader,
+      width,
+      height,
+      compactGeometry: compactGeometry,
+    );
     final croppedLinear = _decodeBlockBody(
       reader,
-      boundsWidth,
-      boundsHeight,
+      bounds.width,
+      bounds.height,
       profile,
       algorithm,
       scan,
     );
     final cropped = _fromScanOrder(
       croppedLinear,
-      boundsWidth,
-      boundsHeight,
+      bounds.width,
+      bounds.height,
       scan,
     );
     final pixels = List<int>.filled(width * height, background);
-    for (var row = 0; row < boundsHeight; row++) {
-      final srcStart = row * boundsWidth;
-      final dstStart = (y + row) * width + x;
-      for (var col = 0; col < boundsWidth; col++) {
+    for (var row = 0; row < bounds.height; row++) {
+      final srcStart = row * bounds.width;
+      final dstStart = (bounds.y + row) * width + bounds.x;
+      for (var col = 0; col < bounds.width; col++) {
         pixels[dstStart + col] = cropped[srcStart + col];
       }
     }
@@ -1063,8 +1164,11 @@ class MCOImageV3Codec {
     }
     final commonAlgorithm =
         hasCommonBlockHeader ? _algorithmFromId(reader.readBits(5)) : null;
-    final commonScan =
-        hasCommonBlockHeader ? _scanFromId(reader.readBits(2)) : null;
+    final commonScan = commonAlgorithm == null
+        ? null
+        : _canUseCompactBlockHeader(commonAlgorithm)
+            ? ScanMode.h
+            : _scanFromId(reader.readBits(2));
     final sharedLocalPalette = hasSharedLocalPalette
         ? _readLocalPalette(reader, profile)
         : null;
@@ -1087,7 +1191,10 @@ class MCOImageV3Codec {
       previousBounds = bounds;
       final algorithm =
           commonAlgorithm ?? _algorithmFromId(reader.readBits(5));
-      final scan = commonScan ?? _scanFromId(reader.readBits(2));
+      final scan = commonScan ??
+          (_canUseCompactBlockHeader(algorithm)
+              ? ScanMode.h
+              : _scanFromId(reader.readBits(2)));
       final linear = sharedLocalPalette == null
           ? _decodeBlockBody(
               reader,
@@ -2077,6 +2184,29 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rowDelta => ImageMode.rowDelta,
       MCOImageV3BlockAlgorithm.rowRepeat => ImageMode.rowRepeat,
       _ => ImageMode.extended,
+    };
+  }
+
+  static bool _canUseCompactBlockHeader(
+    MCOImageV3BlockAlgorithm algorithm,
+  ) {
+    return switch (algorithm) {
+      MCOImageV3BlockAlgorithm.rawGlobal ||
+      MCOImageV3BlockAlgorithm.rawLocal ||
+      MCOImageV3BlockAlgorithm.biColorMask => true,
+      _ => false,
+    };
+  }
+
+  static bool _containerHasScanByte(
+    MCOImageV3Container container,
+    MCOImageV3BlockAlgorithm algorithm,
+  ) {
+    return switch (container) {
+      MCOImageV3Container.compactBlock => false,
+      MCOImageV3Container.compactBoundsBlock =>
+        !_canUseCompactBlockHeader(algorithm),
+      _ => true,
     };
   }
 
@@ -3984,6 +4114,36 @@ class MCOImageV3Codec {
         a.x + a.width > b.x &&
         a.y < b.y + b.height &&
         a.y + a.height > b.y;
+  }
+
+  static void _writeBoundsGeometry(
+    _V3BitWriter writer,
+    _V3Bounds bounds,
+    int imageWidth,
+    int imageHeight, {
+    required bool compactGeometry,
+  }) {
+    _writeRegionGeometry(
+      writer,
+      bounds,
+      imageWidth,
+      imageHeight,
+      compactGeometry: compactGeometry,
+    );
+  }
+
+  static _V3Bounds _readBoundsGeometry(
+    _V3BitReader reader,
+    int imageWidth,
+    int imageHeight, {
+    required bool compactGeometry,
+  }) {
+    return _readRegionGeometry(
+      reader,
+      imageWidth,
+      imageHeight,
+      compactGeometry: compactGeometry,
+    );
   }
 
   static void _writeRegionGeometry(
