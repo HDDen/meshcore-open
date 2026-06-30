@@ -6306,6 +6306,7 @@ class MCOImageV3Codec {
     var budgetExhausted = false;
     var beam = initialStates.take(beamWidth).toList();
     final improved = <_V3RegionBeamState>[];
+    final evaluatedStates = <_V3RegionBeamState>[];
 
     if (useExtremeSearch) {
       debugPrint(
@@ -6350,6 +6351,7 @@ class MCOImageV3Codec {
           if (cost == null) continue;
           final candidate = _V3RegionBeamState(regions, cost);
           next.add(candidate);
+          evaluatedStates.add(candidate);
           if (cost < bestExistingCost) improved.add(candidate);
         }
         if (budgetExhausted) break;
@@ -6391,10 +6393,13 @@ class MCOImageV3Codec {
       );
     }
 
-    improved.sort((left, right) => left.cost.compareTo(right.cost));
+    final resultSource = useExtremeSearch
+        ? <_V3RegionBeamState>[...improved, ...evaluatedStates]
+        : improved;
+    resultSource.sort((left, right) => left.cost.compareTo(right.cost));
     final result = <_V3RegionBeamState>[];
     final resultKeys = <String>{};
-    for (final state in improved) {
+    for (final state in resultSource) {
       if (resultKeys.add(_regionListKey(state.regions))) {
         result.add(state);
       }
