@@ -11,9 +11,11 @@ import 'package:share_plus/share_plus.dart';
 
 import '../helpers/cancellable_compute.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
@@ -167,6 +169,16 @@ EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
     transparentColor: request.transparentColor,
     encodingVersion: request.encodingVersion,
   );
+  if (request.encodingVersion == MCOImageEncodingVersion.v3) {
+    return MCOImageV3Codec()
+        .encode(
+          image,
+          backgroundColor: request.backgroundColor,
+          outputTarget: request.outputTarget,
+          compressionLevel: request.compressionLevel,
+        )
+        .encodedCandidate;
+  }
   return MCOImageCodec().encode(
     image,
     backgroundColor: request.backgroundColor,
@@ -191,6 +203,20 @@ MCOImageEncodeDiagnostics _debugEncodeMCOImageRequest(
     transparentColor: request.transparentColor,
     encodingVersion: request.encodingVersion,
   );
+  if (request.encodingVersion == MCOImageEncodingVersion.v3) {
+    final candidate = MCOImageV3Codec()
+        .encode(
+          image,
+          backgroundColor: request.backgroundColor,
+          outputTarget: request.outputTarget,
+          compressionLevel: request.compressionLevel,
+        )
+        .encodedCandidate;
+    return MCOImageEncodeDiagnostics(
+      result: candidate,
+      candidates: [candidate],
+    );
+  }
   return MCOImageCodec().debugEncode(
     image,
     backgroundColor: request.backgroundColor,
@@ -2297,10 +2323,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int _payloadSizeForEncoded(EncodedMCOImage encoded) {
     final binaryLimit = widget.maxBinaryPayloadBytes;
     if (binaryLimit != null) {
-      final payloadBytes = ChannelBinaryDataHelper.binaryEnvelopeLength(
-        bodyLength: encoded.payload.length,
-        senderName: widget.binarySenderName ?? 'Me',
-      );
+      final payloadBytes =
+          encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
+          ? ChannelBinaryDataHelper.appBinaryEnvelopeLength(
+              bodyLength: encoded.payload.length,
+              senderName: widget.binarySenderName ?? 'Me',
+            )
+          : ChannelBinaryDataHelper.binaryEnvelopeLength(
+              bodyLength: encoded.payload.length,
+              senderName: widget.binarySenderName ?? 'Me',
+            );
       return payloadBytes;
     }
     return encoded.charLength;
@@ -3201,7 +3233,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
       final encoded = await _encodedCanvasForCurrentState();
-      await MCOImageFileSaver.saveBinaryPayload(encoded.payload);
+      final payload = encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
+          ? ChannelAppDataHelper.appPayloadWithoutSender(
+              subtypeVersion: ChannelAppDataHelper.mcoImageV3SubtypeVersion,
+              body: encoded.payload,
+            )
+          : encoded.payload;
+      await MCOImageFileSaver.saveBinaryPayload(payload);
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
