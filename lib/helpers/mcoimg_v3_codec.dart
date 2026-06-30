@@ -39,7 +39,10 @@ enum MCOImageV3BlockAlgorithm {
   bitplanes,
   adaptiveBitplanes,
   directGrayscaleBitplanes,
+  directDynamicBitplanes,
   compactRowDelta,
+  directGrayscaleRowDelta,
+  directDynamicRowDelta,
   wrappedBlock,
 }
 
@@ -79,6 +82,36 @@ class MCOImageV3Codec {
   static const int _maxRegions = 32;
   static const int _minLzMatchLength = 3;
   static const int _maxLzMatchCandidates = 48;
+  static const List<MCOImageV3BlockAlgorithm> _regionBlockAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawGlobal,
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.rleLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
+    MCOImageV3BlockAlgorithm.directDynamicBitplanes,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
+    MCOImageV3BlockAlgorithm.directDynamicRowDelta,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+    MCOImageV3BlockAlgorithm.sparseBackground,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+  static const List<MCOImageV3BlockAlgorithm> _sharedPaletteRegionAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.rleLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+  ];
   static const int _compactRowDeltaOpBits = 3;
   static const int _compactRowDeltaOpRepeat = 0;
   static const int _compactRowDeltaOpRaw = 1;
@@ -234,9 +267,65 @@ class MCOImageV3Codec {
         image,
         bg,
         compactGeometry: true,
+        commonBlockHeader: false,
+        deltaGeometry: false,
       );
       if (compactRegionsCandidate != null) {
         candidates.add(compactRegionsCandidate);
+      }
+      final deltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+        image,
+        bg,
+        compactGeometry: true,
+        commonBlockHeader: false,
+        deltaGeometry: true,
+      );
+      if (deltaCompactRegionsCandidate != null) {
+        candidates.add(deltaCompactRegionsCandidate);
+      }
+      final commonCompactRegionsCandidate = _tryBuildRegionsCandidate(
+        image,
+        bg,
+        compactGeometry: true,
+        commonBlockHeader: true,
+        deltaGeometry: false,
+        sharedLocalPalette: false,
+      );
+      if (commonCompactRegionsCandidate != null) {
+        candidates.add(commonCompactRegionsCandidate);
+      }
+      final sharedCompactRegionsCandidate = _tryBuildRegionsCandidate(
+        image,
+        bg,
+        compactGeometry: true,
+        commonBlockHeader: true,
+        deltaGeometry: false,
+        sharedLocalPalette: true,
+      );
+      if (sharedCompactRegionsCandidate != null) {
+        candidates.add(sharedCompactRegionsCandidate);
+      }
+      final commonDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+        image,
+        bg,
+        compactGeometry: true,
+        commonBlockHeader: true,
+        deltaGeometry: true,
+        sharedLocalPalette: false,
+      );
+      if (commonDeltaCompactRegionsCandidate != null) {
+        candidates.add(commonDeltaCompactRegionsCandidate);
+      }
+      final sharedDeltaCompactRegionsCandidate = _tryBuildRegionsCandidate(
+        image,
+        bg,
+        compactGeometry: true,
+        commonBlockHeader: true,
+        deltaGeometry: true,
+        sharedLocalPalette: true,
+      );
+      if (sharedDeltaCompactRegionsCandidate != null) {
+        candidates.add(sharedDeltaCompactRegionsCandidate);
       }
 
       final bounds = _boundsForBackground(image, bg);
@@ -257,7 +346,10 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.bitplanes,
           MCOImageV3BlockAlgorithm.adaptiveBitplanes,
           MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
+          MCOImageV3BlockAlgorithm.directDynamicBitplanes,
           MCOImageV3BlockAlgorithm.compactRowDelta,
+          MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
+          MCOImageV3BlockAlgorithm.directDynamicRowDelta,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -287,7 +379,10 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
         MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
+        MCOImageV3BlockAlgorithm.directDynamicBitplanes,
         MCOImageV3BlockAlgorithm.compactRowDelta,
+        MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
+        MCOImageV3BlockAlgorithm.directDynamicRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         final candidate = _tryBuildCandidate(
@@ -380,17 +475,28 @@ class MCOImageV3Codec {
     MCOImage image,
     int backgroundColor, {
     required bool compactGeometry,
+    bool commonBlockHeader = false,
+    bool deltaGeometry = false,
+    bool sharedLocalPalette = false,
   }) {
     final regions = _componentBoundsForBackground(image, backgroundColor);
     if (regions.length < 2 || regions.length > _maxRegions) return null;
     if (!_regionsDoNotOverlap(regions)) return null;
-
-    final regionBlocks = <_V3RegionBlock>[];
-    for (final region in regions) {
-      final block = _bestRegionBlock(image, region, backgroundColor);
-      if (block == null) return null;
-      regionBlocks.add(block);
+    if (commonBlockHeader && !compactGeometry) return null;
+    if (deltaGeometry && !compactGeometry) return null;
+    if (sharedLocalPalette && (!compactGeometry || !commonBlockHeader)) {
+      return null;
     }
+
+    final regionPlan = sharedLocalPalette
+        ? _bestSharedLocalPaletteRegionPlan(image, regions, backgroundColor)
+        : _V3RegionPlan(
+            blocks: commonBlockHeader
+                ? _bestCommonRegionBlocks(image, regions, backgroundColor)
+                : _bestIndividualRegionBlocks(image, regions, backgroundColor),
+          );
+    final regionBlocks = regionPlan.blocks;
+    if (regionBlocks == null) return null;
 
     final writer = _V3BitWriter();
     writer.writeAlignedByte(
@@ -419,29 +525,69 @@ class MCOImageV3Codec {
     try {
       _writeColorRef(writer, image.paletteProfile, backgroundColor);
       writer.writeBitVarUint(regionBlocks.length);
-      for (final block in regionBlocks) {
-        _writeRegionGeometry(
-          writer,
-          block.bounds,
-          image.width,
-          image.height,
-          compactGeometry: compactGeometry,
-        );
-        writer
-          ..writeBits(block.algorithm.index, 5)
-          ..writeBits(block.scan.index, 2);
-        _writeBlockBody(
-          writer,
-          block.linear,
-          image.paletteProfile,
-          block.algorithm,
-          backgroundColor: backgroundColor,
-          rowLength: _rowLengthForScan(
-            block.scan,
-            block.bounds.width,
-            block.bounds.height,
-          ),
-        );
+      if (compactGeometry) {
+        writer.writeBits(commonBlockHeader ? 1 : 0, 1);
+        writer.writeBits(deltaGeometry ? 1 : 0, 1);
+        writer.writeBits(sharedLocalPalette ? 1 : 0, 1);
+        if (commonBlockHeader) {
+          writer
+            ..writeBits(regionBlocks.first.algorithm.index, 5)
+            ..writeBits(regionBlocks.first.scan.index, 2);
+        }
+        if (sharedLocalPalette) {
+          _writeLocalPalette(
+            writer,
+            image.paletteProfile,
+            regionPlan.sharedLocalPalette!,
+          );
+        }
+      }
+      _V3Bounds? previousBounds;
+      for (var index = 0; index < regionBlocks.length; index++) {
+        final block = regionBlocks[index];
+        if (deltaGeometry && index > 0) {
+          _writeDeltaRegionGeometry(writer, block.bounds, previousBounds!);
+        } else {
+          _writeRegionGeometry(
+            writer,
+            block.bounds,
+            image.width,
+            image.height,
+            compactGeometry: compactGeometry,
+          );
+        }
+        previousBounds = block.bounds;
+        if (!commonBlockHeader) {
+          writer
+            ..writeBits(block.algorithm.index, 5)
+            ..writeBits(block.scan.index, 2);
+        }
+        if (sharedLocalPalette) {
+          _writeBlockBodyWithSharedPalette(
+            writer,
+            block.linear,
+            block.algorithm,
+            regionPlan.sharedLocalPalette!,
+            rowLength: _rowLengthForScan(
+              block.scan,
+              block.bounds.width,
+              block.bounds.height,
+            ),
+          );
+        } else {
+          _writeBlockBody(
+            writer,
+            block.linear,
+            image.paletteProfile,
+            block.algorithm,
+            backgroundColor: backgroundColor,
+            rowLength: _rowLengthForScan(
+              block.scan,
+              block.bounds.width,
+              block.bounds.height,
+            ),
+          );
+        }
       }
     } on MCOImageCodecException {
       return null;
@@ -462,7 +608,144 @@ class MCOImageV3Codec {
       requestedEncodingVersion: MCOImageEncodingVersion.v3,
       actualEncodingVersion: MCOImageEncodingVersion.v3,
       paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-      container: container.name,
+      container: _regionsContainerName(
+        container,
+        commonBlockHeader: commonBlockHeader,
+        deltaGeometry: deltaGeometry,
+        sharedLocalPalette: sharedLocalPalette,
+      ),
+    );
+  }
+
+  List<_V3RegionBlock>? _bestIndividualRegionBlocks(
+    MCOImage image,
+    List<_V3Bounds> regions,
+    int backgroundColor,
+  ) {
+    final regionBlocks = <_V3RegionBlock>[];
+    for (final region in regions) {
+      final block = _bestRegionBlock(image, region, backgroundColor);
+      if (block == null) return null;
+      regionBlocks.add(block);
+    }
+    return regionBlocks;
+  }
+
+  List<_V3RegionBlock>? _bestCommonRegionBlocks(
+    MCOImage image,
+    List<_V3Bounds> regions,
+    int backgroundColor,
+  ) {
+    List<_V3RegionBlock>? bestBlocks;
+    int? bestBits;
+    MCOImageV3BlockAlgorithm? bestAlgorithm;
+    for (final scan in ScanMode.values) {
+      for (final algorithm in _regionBlockAlgorithms) {
+        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+            scan != ScanMode.h) {
+          continue;
+        }
+        final blocks = <_V3RegionBlock>[];
+        var totalBits = 0;
+        var failed = false;
+        for (final region in regions) {
+          final block = _tryBuildRegionBlock(
+            image,
+            region,
+            backgroundColor,
+            algorithm,
+            scan,
+          );
+          if (block == null) {
+            failed = true;
+            break;
+          }
+          blocks.add(block);
+          totalBits += block.bitLength;
+        }
+        if (failed) continue;
+        if (bestBits == null ||
+            totalBits < bestBits ||
+            totalBits == bestBits &&
+                _modeTieRank(_imageModeForAlgorithm(algorithm)) <
+                    _modeTieRank(_imageModeForAlgorithm(bestAlgorithm!))) {
+          bestBits = totalBits;
+          bestBlocks = blocks;
+          bestAlgorithm = algorithm;
+        }
+      }
+    }
+    return bestBlocks;
+  }
+
+  _V3RegionPlan _bestSharedLocalPaletteRegionPlan(
+    MCOImage image,
+    List<_V3Bounds> regions,
+    int backgroundColor,
+  ) {
+    final croppedByRegion = <_V3Bounds, List<int>>{};
+    final allPixels = <int>[];
+    for (final region in regions) {
+      final cropped = _extractBoundsPixels(image, region);
+      croppedByRegion[region] = cropped;
+      allPixels.addAll(cropped);
+    }
+    final paletteVariants = _localPaletteVariants(
+      allPixels,
+      image.paletteProfile,
+      includeTransitionOrder: true,
+    );
+
+    List<_V3RegionBlock>? bestBlocks;
+    List<int>? bestPalette;
+    int? bestBits;
+    MCOImageV3BlockAlgorithm? bestAlgorithm;
+    for (final scan in ScanMode.values) {
+      for (final algorithm in _sharedPaletteRegionAlgorithms) {
+        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+            scan != ScanMode.h) {
+          continue;
+        }
+        for (final palette in paletteVariants) {
+          final paletteWriter = _V3BitWriter();
+          _writeLocalPalette(paletteWriter, image.paletteProfile, palette);
+          var totalBits = paletteWriter.bitLength;
+          final blocks = <_V3RegionBlock>[];
+          var failed = false;
+          for (final region in regions) {
+            final block = _tryBuildSharedPaletteRegionBlock(
+              image,
+              region,
+              croppedByRegion[region]!,
+              backgroundColor,
+              algorithm,
+              scan,
+              palette,
+            );
+            if (block == null) {
+              failed = true;
+              break;
+            }
+            blocks.add(block);
+            totalBits += block.bitLength;
+          }
+          if (failed) continue;
+          if (bestBits == null ||
+              totalBits < bestBits ||
+              totalBits == bestBits &&
+                  _modeTieRank(_imageModeForAlgorithm(algorithm)) <
+                      _modeTieRank(_imageModeForAlgorithm(bestAlgorithm!))) {
+            bestBits = totalBits;
+            bestBlocks = blocks;
+            bestPalette = palette;
+            bestAlgorithm = algorithm;
+          }
+        }
+      }
+    }
+    return _V3RegionPlan(
+      blocks: bestBlocks,
+      sharedLocalPalette: bestPalette,
     );
   }
 
@@ -471,61 +754,97 @@ class MCOImageV3Codec {
     _V3Bounds bounds,
     int backgroundColor,
   ) {
-    final cropped = _extractBoundsPixels(image, bounds);
     _V3RegionBlock? best;
     for (final scan in ScanMode.values) {
-      final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
-      for (final algorithm in const [
-        MCOImageV3BlockAlgorithm.rawGlobal,
-        MCOImageV3BlockAlgorithm.rawLocal,
-        MCOImageV3BlockAlgorithm.rleLocal,
-        MCOImageV3BlockAlgorithm.compactRle,
-        MCOImageV3BlockAlgorithm.lzPixels,
-        MCOImageV3BlockAlgorithm.quadtree,
-        MCOImageV3BlockAlgorithm.bitplanes,
-        MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
-        MCOImageV3BlockAlgorithm.compactRowDelta,
-        MCOImageV3BlockAlgorithm.rowRepeat,
-        MCOImageV3BlockAlgorithm.sparseBackground,
-        MCOImageV3BlockAlgorithm.compactSparse,
-        MCOImageV3BlockAlgorithm.biColorMask,
-      ]) {
+      for (final algorithm in _regionBlockAlgorithms) {
         if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
             scan != ScanMode.h) {
           continue;
         }
-        final writer = _V3BitWriter();
-        try {
-          _writeBlockBody(
-            writer,
-            linear,
-            image.paletteProfile,
-            algorithm,
-            backgroundColor: backgroundColor,
-            rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
-          );
-        } on MCOImageCodecException {
-          continue;
-        }
-        final bits = writer.bitLength;
-        if (bits == 0) continue;
+        final block = _tryBuildRegionBlock(
+          image,
+          bounds,
+          backgroundColor,
+          algorithm,
+          scan,
+        );
+        if (block == null) continue;
         if (best == null ||
-            bits < best.bitLength ||
-            bits == best.bitLength &&
+            block.bitLength < best.bitLength ||
+            block.bitLength == best.bitLength &&
                 _modeTieRank(_imageModeForAlgorithm(algorithm)) <
                     _modeTieRank(_imageModeForAlgorithm(best.algorithm))) {
-          best = _V3RegionBlock(
-            bounds: bounds,
-            algorithm: algorithm,
-            scan: scan,
-            linear: linear,
-            bitLength: bits,
-          );
+          best = block;
         }
       }
     }
     return best;
+  }
+
+  _V3RegionBlock? _tryBuildRegionBlock(
+    MCOImage image,
+    _V3Bounds bounds,
+    int backgroundColor,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+  ) {
+    final cropped = _extractBoundsPixels(image, bounds);
+    final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
+    final writer = _V3BitWriter();
+    try {
+      _writeBlockBody(
+        writer,
+        linear,
+        image.paletteProfile,
+        algorithm,
+        backgroundColor: backgroundColor,
+        rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
+      );
+    } on MCOImageCodecException {
+      return null;
+    }
+    final bits = writer.bitLength;
+    if (bits == 0) return null;
+    return _V3RegionBlock(
+      bounds: bounds,
+      algorithm: algorithm,
+      scan: scan,
+      linear: linear,
+      bitLength: bits,
+    );
+  }
+
+  _V3RegionBlock? _tryBuildSharedPaletteRegionBlock(
+    MCOImage image,
+    _V3Bounds bounds,
+    List<int> cropped,
+    int backgroundColor,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+    List<int> palette,
+  ) {
+    final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
+    final writer = _V3BitWriter();
+    try {
+      _writeBlockBodyWithSharedPalette(
+        writer,
+        linear,
+        algorithm,
+        palette,
+        rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
+      );
+    } on MCOImageCodecException {
+      return null;
+    }
+    final bits = writer.bitLength;
+    if (bits == 0) return null;
+    return _V3RegionBlock(
+      bounds: bounds,
+      algorithm: algorithm,
+      scan: scan,
+      linear: linear,
+      bitLength: bits,
+    );
   }
 
   EncodedMCOImage? _tryBuildBoundsBlockCandidate(
@@ -732,24 +1051,60 @@ class MCOImageV3Codec {
     if (regionCount <= 0 || regionCount > _maxRegions) {
       throw const MCOImageInvalidPayloadException('Invalid v3 region count');
     }
+    final hasCommonBlockHeader =
+        compactGeometry && reader.readBits(1) != 0;
+    final hasDeltaGeometry = compactGeometry && reader.readBits(1) != 0;
+    final hasSharedLocalPalette =
+        compactGeometry && reader.readBits(1) != 0;
+    if (hasSharedLocalPalette && !hasCommonBlockHeader) {
+      throw const MCOImageInvalidPayloadException(
+        'Shared region palette requires common region block header',
+      );
+    }
+    final commonAlgorithm =
+        hasCommonBlockHeader ? _algorithmFromId(reader.readBits(5)) : null;
+    final commonScan =
+        hasCommonBlockHeader ? _scanFromId(reader.readBits(2)) : null;
+    final sharedLocalPalette = hasSharedLocalPalette
+        ? _readLocalPalette(reader, profile)
+        : null;
     final pixels = List<int>.filled(width * height, background);
+    _V3Bounds? previousBounds;
     for (var i = 0; i < regionCount; i++) {
-      final bounds = _readRegionGeometry(
-        reader,
-        width,
-        height,
-        compactGeometry: compactGeometry,
-      );
-      final algorithm = _algorithmFromId(reader.readBits(5));
-      final scan = _scanFromId(reader.readBits(2));
-      final linear = _decodeBlockBody(
-        reader,
-        bounds.width,
-        bounds.height,
-        profile,
-        algorithm,
-        scan,
-      );
+      final bounds = hasDeltaGeometry && i > 0
+          ? _readDeltaRegionGeometry(
+              reader,
+              previousBounds!,
+              width,
+              height,
+            )
+          : _readRegionGeometry(
+              reader,
+              width,
+              height,
+              compactGeometry: compactGeometry,
+            );
+      previousBounds = bounds;
+      final algorithm =
+          commonAlgorithm ?? _algorithmFromId(reader.readBits(5));
+      final scan = commonScan ?? _scanFromId(reader.readBits(2));
+      final linear = sharedLocalPalette == null
+          ? _decodeBlockBody(
+              reader,
+              bounds.width,
+              bounds.height,
+              profile,
+              algorithm,
+              scan,
+            )
+          : _decodeBlockBodyWithSharedPalette(
+              reader,
+              bounds.width,
+              bounds.height,
+              algorithm,
+              scan,
+              sharedLocalPalette,
+            );
       final regionPixels = _fromScanOrder(
         linear,
         bounds.width,
@@ -889,12 +1244,13 @@ class MCOImageV3Codec {
         }
         break;
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
-        final palette = _localPalette(linear);
-        _writeLocalPalette(writer, profile, palette);
-        final map = _localIndexMap(palette);
-        final bits = _localBits(palette.length);
-        final localPixels = linear.map((color) => map[color]!).toList();
-        _writeAdaptiveBitplanesBody(writer, localPixels, bits);
+        _writeBestLocalPaletteBlock(
+          writer,
+          linear,
+          profile,
+          includeTransitionOrder: true,
+          writeBody: _writeAdaptiveBitplanesLocalBody,
+        );
         break;
       case MCOImageV3BlockAlgorithm.directGrayscaleBitplanes:
         if (!_isGrayscaleProfile(profile)) {
@@ -904,17 +1260,62 @@ class MCOImageV3Codec {
         }
         _writeAdaptiveBitplanesBody(writer, linear, _globalBits(profile));
         break;
+      case MCOImageV3BlockAlgorithm.directDynamicBitplanes:
+        if (!profile.isDynamic) {
+          throw const MCOImageInvalidInputException(
+            'Direct dynamic bitplanes require a dynamic profile',
+          );
+        }
+        _writeAdaptiveBitplanesBody(
+          writer,
+          _dynamicProfilePixels(profile, linear),
+          _globalBits(profile),
+        );
+        break;
       case MCOImageV3BlockAlgorithm.compactRowDelta:
-        final palette = _localPalette(linear);
-        _writeLocalPalette(writer, profile, palette);
-        final map = _localIndexMap(palette);
-        final bits = _localBits(palette.length);
-        final localPixels = linear.map((color) => map[color]!).toList();
+        _writeBestLocalPaletteBlock(
+          writer,
+          linear,
+          profile,
+          includeTransitionOrder: true,
+          writeBody: (
+            bodyWriter,
+            localPixels,
+            bits,
+          ) {
+            _writeCompactRowDeltaBody(
+              bodyWriter,
+              localPixels,
+              rowLength,
+              bits,
+            );
+          },
+        );
+        break;
+      case MCOImageV3BlockAlgorithm.directGrayscaleRowDelta:
+        if (!_isGrayscaleProfile(profile)) {
+          throw const MCOImageInvalidInputException(
+            'Direct grayscale row-delta requires a grayscale profile',
+          );
+        }
         _writeCompactRowDeltaBody(
           writer,
-          localPixels,
+          linear,
           rowLength,
-          bits,
+          _globalBits(profile),
+        );
+        break;
+      case MCOImageV3BlockAlgorithm.directDynamicRowDelta:
+        if (!profile.isDynamic) {
+          throw const MCOImageInvalidInputException(
+            'Direct dynamic row-delta requires a dynamic profile',
+          );
+        }
+        _writeCompactRowDeltaBody(
+          writer,
+          _dynamicProfilePixels(profile, linear),
+          rowLength,
+          _globalBits(profile),
         );
         break;
       case MCOImageV3BlockAlgorithm.sparseBackground:
@@ -995,6 +1396,131 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidInputException(
           'MCOimg v3 algorithm is not implemented yet',
+        );
+    }
+  }
+
+  void _writeBlockBodyWithSharedPalette(
+    _V3BitWriter writer,
+    List<int> linear,
+    MCOImageV3BlockAlgorithm algorithm,
+    List<int> palette, {
+    required int rowLength,
+  }) {
+    final map = _localIndexMap(palette);
+    final bits = _localBits(palette.length);
+    List<int> localPixels() {
+      return linear.map((color) {
+        final index = map[color];
+        if (index == null) {
+          throw const MCOImageInvalidInputException(
+            'Shared region palette is missing a color',
+          );
+        }
+        return index;
+      }).toList(growable: false);
+    }
+
+    switch (algorithm) {
+      case MCOImageV3BlockAlgorithm.rawLocal:
+        for (final color in linear) {
+          writer.writeBits(map[color]!, bits);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.rleLocal:
+        final runs = _buildRuns(linear);
+        writer.writeBitVarUint(runs.length);
+        for (final run in runs) {
+          writer
+            ..writeBits(map[run.color]!, bits)
+            ..writeBitVarUint(run.length);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.compactRle:
+        for (final run in _buildRuns(linear)) {
+          writer
+            ..writeBits(map[run.color]!, bits)
+            ..writeCompactUint(run.length - 1);
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.lzPixels:
+        final pixels = localPixels();
+        final tokens = _buildGreedyLzPixelTokens(pixels, bits);
+        for (final token in tokens) {
+          if (token.isMatch) {
+            writer
+              ..writeBits(1, 1)
+              ..writeCompactUint(token.distance - 1)
+              ..writeCompactUint(token.length - _minLzMatchLength);
+          } else {
+            writer
+              ..writeBits(0, 1)
+              ..writeCompactUint(token.literals.length - 1);
+            for (final color in token.literals) {
+              writer.writeBits(color, bits);
+            }
+          }
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.quadtree:
+        if (rowLength <= 0 ||
+            rowLength != linear.length && linear.length % rowLength != 0) {
+          throw const MCOImageInvalidInputException(
+            'Invalid quadtree geometry',
+          );
+        }
+        _writeQuadtreeNode(
+          writer,
+          localPixels(),
+          rowLength,
+          0,
+          0,
+          rowLength,
+          linear.length ~/ rowLength,
+          bits,
+        );
+        break;
+      case MCOImageV3BlockAlgorithm.bitplanes:
+        final pixels = localPixels();
+        for (var bit = 0; bit < bits; bit++) {
+          final runs = _buildBitplaneRuns(pixels, bit);
+          final rleBits = 2 + runs.fold<int>(
+            0,
+            (sum, length) => sum + _compactUintBitLength(length - 1),
+          );
+          final rawBits = 1 + pixels.length;
+          if (rleBits < rawBits) {
+            writer
+              ..writeBits(1, 1)
+              ..writeBits((pixels.first >> bit) & 1, 1);
+            for (final length in runs) {
+              writer.writeCompactUint(length - 1);
+            }
+          } else {
+            writer.writeBits(0, 1);
+            for (final pixel in pixels) {
+              writer.writeBits((pixel >> bit) & 1, 1);
+            }
+          }
+        }
+        break;
+      case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
+        _writeAdaptiveBitplanesBody(writer, localPixels(), bits);
+        break;
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+        _writeCompactRowDeltaBody(
+          writer,
+          localPixels(),
+          rowLength,
+          bits,
+        );
+        break;
+      case MCOImageV3BlockAlgorithm.rowRepeat:
+        _writeRowRepeat(writer, localPixels(), rowLength, bits);
+        break;
+      default:
+        throw const MCOImageInvalidInputException(
+          'MCOimg v3 algorithm cannot use a shared region palette',
         );
     }
   }
@@ -1176,6 +1702,17 @@ class MCOImageV3Codec {
           count,
           List<int>.generate(_paletteSize(profile), (index) => index),
         );
+      case MCOImageV3BlockAlgorithm.directDynamicBitplanes:
+        if (!profile.isDynamic) {
+          throw const MCOImageInvalidPayloadException(
+            'Direct dynamic bitplanes require a dynamic profile',
+          );
+        }
+        return _decodeAdaptiveBitplanesBody(
+          reader,
+          count,
+          _dynamicProfilePalette(profile),
+        );
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         final palette = _readLocalPalette(reader, profile);
         final bits = _localBits(palette.length);
@@ -1194,6 +1731,36 @@ class MCOImageV3Codec {
           }
           return palette[index];
         }).toList(growable: false);
+      case MCOImageV3BlockAlgorithm.directGrayscaleRowDelta:
+        if (!_isGrayscaleProfile(profile)) {
+          throw const MCOImageInvalidPayloadException(
+            'Direct grayscale row-delta requires a grayscale profile',
+          );
+        }
+        return _readCompactRowDeltaBody(
+          reader,
+          count,
+          _rowLengthForScan(scan, width, height),
+          _globalBits(profile),
+          maxValue: _paletteSize(profile) - 1,
+        );
+      case MCOImageV3BlockAlgorithm.directDynamicRowDelta:
+        if (!profile.isDynamic) {
+          throw const MCOImageInvalidPayloadException(
+            'Direct dynamic row-delta requires a dynamic profile',
+          );
+        }
+        final profilePixels = _readCompactRowDeltaBody(
+          reader,
+          count,
+          _rowLengthForScan(scan, width, height),
+          _globalBits(profile),
+          maxValue: _paletteSize(profile) - 1,
+        );
+        final palette = _dynamicProfilePalette(profile);
+        return profilePixels.map((index) => palette[index]).toList(
+              growable: false,
+            );
       case MCOImageV3BlockAlgorithm.sparseBackground:
         final background = _readColorRef(reader, profile);
         final palette = _readLocalPalette(reader, profile);
@@ -1284,6 +1851,175 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.wrappedBlock:
         throw const MCOImageInvalidPayloadException(
           'Unsupported MCOimg v3 algorithm',
+        );
+    }
+  }
+
+  List<int> _decodeBlockBodyWithSharedPalette(
+    _V3BitReader reader,
+    int width,
+    int height,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+    List<int> palette,
+  ) {
+    final count = width * height;
+    final bits = _localBits(palette.length);
+    List<int> mapLocalPixels(List<int> localPixels) {
+      return localPixels.map((index) {
+        if (index >= palette.length) {
+          throw const MCOImageInvalidPayloadException(
+            'Shared palette color index out of range',
+          );
+        }
+        return palette[index];
+      }).toList(growable: false);
+    }
+
+    switch (algorithm) {
+      case MCOImageV3BlockAlgorithm.rawLocal:
+        return mapLocalPixels(
+          List<int>.generate(count, (_) => reader.readBits(bits)),
+        );
+      case MCOImageV3BlockAlgorithm.rleLocal:
+        final result = <int>[];
+        final runCount = reader.readBitVarUint();
+        for (var i = 0; i < runCount; i++) {
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'RLE shared palette index out of range',
+            );
+          }
+          final length = reader.readBitVarUint();
+          if (length <= 0 || result.length + length > count) {
+            throw const MCOImageInvalidPayloadException('Invalid RLE length');
+          }
+          result.addAll(List<int>.filled(length, palette[colorIndex]));
+        }
+        if (result.length != count) {
+          throw const MCOImageInvalidPayloadException('Invalid RLE size');
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.compactRle:
+        final result = <int>[];
+        while (result.length < count) {
+          final colorIndex = reader.readBits(bits);
+          if (colorIndex >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact RLE shared palette index out of range',
+            );
+          }
+          final length = reader.readCompactUint() + 1;
+          if (result.length + length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'Compact RLE exceeds pixel count',
+            );
+          }
+          result.addAll(List<int>.filled(length, palette[colorIndex]));
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.lzPixels:
+        final result = <int>[];
+        while (result.length < count) {
+          final isMatch = reader.readBits(1) != 0;
+          if (isMatch) {
+            final distance = reader.readCompactUint() + 1;
+            final length = reader.readCompactUint() + _minLzMatchLength;
+            if (distance <= 0 ||
+                distance > result.length ||
+                result.length + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel match',
+              );
+            }
+            for (var i = 0; i < length; i++) {
+              result.add(result[result.length - distance]);
+            }
+          } else {
+            final length = reader.readCompactUint() + 1;
+            if (result.length + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel literal length',
+              );
+            }
+            for (var i = 0; i < length; i++) {
+              final colorIndex = reader.readBits(bits);
+              if (colorIndex >= palette.length) {
+                throw const MCOImageInvalidPayloadException(
+                  'LZ shared palette index out of range',
+                );
+              }
+              result.add(palette[colorIndex]);
+            }
+          }
+        }
+        return result;
+      case MCOImageV3BlockAlgorithm.quadtree:
+        if (scan != ScanMode.h) {
+          throw const MCOImageInvalidPayloadException(
+            'Quadtree requires horizontal scan',
+          );
+        }
+        final result = List<int>.filled(count, palette.first);
+        _readQuadtreeNode(
+          reader,
+          result,
+          width,
+          0,
+          0,
+          width,
+          height,
+          palette,
+          bits,
+        );
+        return result;
+      case MCOImageV3BlockAlgorithm.bitplanes:
+        final localPixels = List<int>.filled(count, 0);
+        for (var bit = 0; bit < bits; bit++) {
+          final isRle = reader.readBits(1) != 0;
+          if (!isRle) {
+            for (var i = 0; i < count; i++) {
+              localPixels[i] |= reader.readBits(1) << bit;
+            }
+            continue;
+          }
+          var value = reader.readBits(1);
+          var position = 0;
+          while (position < count) {
+            final length = reader.readCompactUint() + 1;
+            if (position + length > count) {
+              throw const MCOImageInvalidPayloadException(
+                'Bitplane RLE exceeds pixel count',
+              );
+            }
+            if (value != 0) {
+              for (var i = 0; i < length; i++) {
+                localPixels[position + i] |= 1 << bit;
+              }
+            }
+            position += length;
+            value ^= 1;
+          }
+        }
+        return mapLocalPixels(localPixels);
+      case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
+        return _decodeAdaptiveBitplanesBody(reader, count, palette);
+      case MCOImageV3BlockAlgorithm.compactRowDelta:
+        return mapLocalPixels(
+          _readCompactRowDeltaBody(
+            reader,
+            count,
+            _rowLengthForScan(scan, width, height),
+            bits,
+            maxValue: palette.length - 1,
+          ),
+        );
+      case MCOImageV3BlockAlgorithm.rowRepeat:
+        return mapLocalPixels(_readRowRepeat(reader, count, width, bits));
+      default:
+        throw const MCOImageInvalidPayloadException(
+          'MCOimg v3 algorithm cannot use a shared region palette',
         );
     }
   }
@@ -1785,6 +2521,191 @@ class MCOImageV3Codec {
       throw const MCOImageInvalidInputException('Empty local palette');
     }
     return colors;
+  }
+
+  static void _writeBestLocalPaletteBlock(
+    _V3BitWriter writer,
+    List<int> linear,
+    PaletteProfile profile, {
+    required bool includeTransitionOrder,
+    required void Function(
+      _V3BitWriter writer,
+      List<int> localPixels,
+      int bits,
+    ) writeBody,
+  }) {
+    final variants = _localPaletteVariants(
+      linear,
+      profile,
+      includeTransitionOrder: includeTransitionOrder,
+    );
+    _V3LocalPaletteEncoding? best;
+    for (final palette in variants) {
+      final candidate = _encodeLocalPaletteBlock(
+        linear,
+        profile,
+        palette,
+        writeBody,
+      );
+      if (best == null || candidate.bitLength < best.bitLength) {
+        best = candidate;
+      }
+    }
+    if (best == null) {
+      throw const MCOImageInvalidInputException('Empty local palette');
+    }
+    _writeLocalPalette(writer, profile, best.palette);
+    writeBody(writer, best.localPixels, best.bits);
+  }
+
+  static _V3LocalPaletteEncoding _encodeLocalPaletteBlock(
+    List<int> linear,
+    PaletteProfile profile,
+    List<int> palette,
+    void Function(
+      _V3BitWriter writer,
+      List<int> localPixels,
+      int bits,
+    ) writeBody,
+  ) {
+    final map = _localIndexMap(palette);
+    final bits = _localBits(palette.length);
+    final localPixels = linear.map((color) => map[color]!).toList();
+    final writer = _V3BitWriter();
+    _writeLocalPalette(writer, profile, palette);
+    writeBody(writer, localPixels, bits);
+    return _V3LocalPaletteEncoding(
+      palette: palette,
+      localPixels: localPixels,
+      bits: bits,
+      bitLength: writer.bitLength,
+    );
+  }
+
+  static List<List<int>> _localPaletteVariants(
+    List<int> pixels,
+    PaletteProfile profile, {
+    required bool includeTransitionOrder,
+  }) {
+    final variants = <List<int>>[];
+    final seen = <String>{};
+    void add(List<int> palette) {
+      if (palette.isEmpty) return;
+      final key = palette.join(',');
+      if (seen.add(key)) variants.add(palette);
+    }
+
+    add(_localPalette(pixels));
+    add(_firstUseLocalPalette(pixels));
+    add(_profileOrderLocalPalette(pixels, profile));
+    if (includeTransitionOrder) {
+      final transitionPalette = _transitionLocalPalette(pixels);
+      if (transitionPalette != null) add(transitionPalette);
+    }
+    return variants;
+  }
+
+  static List<int> _firstUseLocalPalette(List<int> pixels) {
+    final seen = <int>{};
+    final palette = <int>[];
+    for (final pixel in pixels) {
+      if (seen.add(pixel)) palette.add(pixel);
+    }
+    return palette;
+  }
+
+  static List<int> _profileOrderLocalPalette(
+    List<int> pixels,
+    PaletteProfile profile,
+  ) {
+    final colors = pixels.toSet().toList();
+    colors.sort((a, b) {
+      final aRef = _profileOrderColorRef(profile, a);
+      final bRef = _profileOrderColorRef(profile, b);
+      final byRef = aRef.compareTo(bRef);
+      return byRef != 0 ? byRef : a.compareTo(b);
+    });
+    return colors;
+  }
+
+  static int _profileOrderColorRef(PaletteProfile profile, int color) {
+    if (!profile.isDynamic) return color;
+    return MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+          profile,
+          color,
+        ) ??
+        color;
+  }
+
+  static List<int>? _transitionLocalPalette(List<int> pixels) {
+    final colors = pixels.toSet().toList();
+    if (colors.length < 2 || colors.length > 64) return null;
+
+    final counts = <int, int>{};
+    final edgeWeights = <int, Map<int, int>>{};
+    for (final pixel in pixels) {
+      counts[pixel] = (counts[pixel] ?? 0) + 1;
+    }
+    for (var i = 1; i < pixels.length; i++) {
+      final a = pixels[i - 1];
+      final b = pixels[i];
+      if (a == b) continue;
+      edgeWeights.putIfAbsent(a, () => <int, int>{});
+      edgeWeights.putIfAbsent(b, () => <int, int>{});
+      edgeWeights[a]![b] = (edgeWeights[a]![b] ?? 0) + 1;
+      edgeWeights[b]![a] = (edgeWeights[b]![a] ?? 0) + 1;
+    }
+
+    colors.sort((a, b) {
+      final byCount = (counts[b] ?? 0).compareTo(counts[a] ?? 0);
+      return byCount != 0 ? byCount : a.compareTo(b);
+    });
+    final remaining = colors.toSet();
+    final palette = <int>[colors.first];
+    remaining.remove(colors.first);
+    while (remaining.isNotEmpty) {
+      final previous = palette.last;
+      var best = remaining.first;
+      var bestWeight = edgeWeights[previous]?[best] ?? 0;
+      for (final color in remaining.skip(1)) {
+        final weight = edgeWeights[previous]?[color] ?? 0;
+        if (_isBetterTransitionPaletteColor(
+          color,
+          weight,
+          best,
+          bestWeight,
+          counts,
+        )) {
+          best = color;
+          bestWeight = weight;
+        }
+      }
+      palette.add(best);
+      remaining.remove(best);
+    }
+    return palette;
+  }
+
+  static bool _isBetterTransitionPaletteColor(
+    int color,
+    int weight,
+    int best,
+    int bestWeight,
+    Map<int, int> counts,
+  ) {
+    if (weight != bestWeight) return weight > bestWeight;
+    final count = counts[color] ?? 0;
+    final bestCount = counts[best] ?? 0;
+    if (count != bestCount) return count > bestCount;
+    return color < best;
+  }
+
+  static void _writeAdaptiveBitplanesLocalBody(
+    _V3BitWriter writer,
+    List<int> localPixels,
+    int bits,
+  ) {
+    _writeAdaptiveBitplanesBody(writer, localPixels, bits);
   }
 
   static Map<int, int> _localIndexMap(List<int> colors) {
@@ -2884,6 +3805,30 @@ class MCOImageV3Codec {
         profile == PaletteProfile.grayscale32;
   }
 
+  static List<int> _dynamicProfilePixels(
+    PaletteProfile profile,
+    List<int> pixels,
+  ) {
+    return pixels.map((pixel) {
+      final profileColorId =
+          MCOImageDynamicPalette.profileColorIdForGlobalIndex(profile, pixel);
+      if (profileColorId == null) {
+        throw MCOImageInvalidInputException(
+          'Color $pixel is outside dynamic profile $profile',
+        );
+      }
+      return profileColorId;
+    }).toList(growable: false);
+  }
+
+  static List<int> _dynamicProfilePalette(PaletteProfile profile) {
+    return List<int>.generate(
+      _paletteSize(profile),
+      (index) =>
+          MCOImageDynamicPalette.globalIndexForProfileColorId(profile, index),
+    );
+  }
+
   static int _profileId(PaletteProfile profile) => profile.index;
 
   static PaletteProfile _profileFromId(int id) {
@@ -3079,6 +4024,66 @@ class MCOImageV3Codec {
     return bounds;
   }
 
+  static void _writeDeltaRegionGeometry(
+    _V3BitWriter writer,
+    _V3Bounds bounds,
+    _V3Bounds previous,
+  ) {
+    _writeSignedCompactInt(writer, bounds.x - previous.x);
+    _writeSignedCompactInt(writer, bounds.y - previous.y);
+    _writeSignedCompactInt(writer, bounds.width - previous.width);
+    _writeSignedCompactInt(writer, bounds.height - previous.height);
+  }
+
+  static _V3Bounds _readDeltaRegionGeometry(
+    _V3BitReader reader,
+    _V3Bounds previous,
+    int imageWidth,
+    int imageHeight,
+  ) {
+    final bounds = _V3Bounds(
+      previous.x + _readSignedCompactInt(reader),
+      previous.y + _readSignedCompactInt(reader),
+      previous.width + _readSignedCompactInt(reader),
+      previous.height + _readSignedCompactInt(reader),
+    );
+    if (bounds.x < 0 ||
+        bounds.y < 0 ||
+        bounds.width <= 0 ||
+        bounds.height <= 0 ||
+        bounds.x + bounds.width > imageWidth ||
+        bounds.y + bounds.height > imageHeight) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid v3 delta region',
+      );
+    }
+    return bounds;
+  }
+
+  static void _writeSignedCompactInt(_V3BitWriter writer, int value) {
+    writer.writeCompactUint(value < 0 ? (-value * 2) - 1 : value * 2);
+  }
+
+  static int _readSignedCompactInt(_V3BitReader reader) {
+    final encoded = reader.readCompactUint();
+    return encoded.isEven ? encoded ~/ 2 : -((encoded + 1) ~/ 2);
+  }
+
+  static String _regionsContainerName(
+    MCOImageV3Container container, {
+    required bool commonBlockHeader,
+    required bool deltaGeometry,
+    required bool sharedLocalPalette,
+  }) {
+    final suffixes = <String>[
+      if (commonBlockHeader) 'common',
+      if (deltaGeometry) 'delta',
+      if (sharedLocalPalette) 'shared',
+    ];
+    if (suffixes.isEmpty) return container.name;
+    return '${container.name}-${suffixes.join('-')}';
+  }
+
   static int _geometryBits(int size) {
     if (size <= 1) return 0;
     return (size - 1).bitLength;
@@ -3208,6 +4213,20 @@ class _V3Run {
   const _V3Run(this.color, this.length);
 }
 
+class _V3LocalPaletteEncoding {
+  final List<int> palette;
+  final List<int> localPixels;
+  final int bits;
+  final int bitLength;
+
+  const _V3LocalPaletteEncoding({
+    required this.palette,
+    required this.localPixels,
+    required this.bits,
+    required this.bitLength,
+  });
+}
+
 class _V3SparseSegment {
   final int start;
   final int color;
@@ -3309,6 +4328,16 @@ class _V3RegionBlock {
     required this.scan,
     required this.linear,
     required this.bitLength,
+  });
+}
+
+class _V3RegionPlan {
+  final List<_V3RegionBlock>? blocks;
+  final List<int>? sharedLocalPalette;
+
+  const _V3RegionPlan({
+    required this.blocks,
+    this.sharedLocalPalette,
   });
 }
 
