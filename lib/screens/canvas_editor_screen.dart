@@ -3380,7 +3380,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       final encoded = await _encodedCanvasForCurrentState();
       final payload = encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
           ? ChannelAppDataHelper.appPayloadWithoutSender(
-              subtypeVersion: ChannelAppDataHelper.mcoImageV3SubtypeVersion,
+              subtypeId: ChannelAppDataHelper.mcoImageSubtype,
+              version: ChannelAppDataHelper.mcoImageV3Version,
               body: encoded.payload,
             )
           : encoded.payload;

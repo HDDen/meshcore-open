@@ -3,52 +3,142 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 
-enum ChannelAppDataSubtype { mcoImageV3 }
+enum ChannelAppDataSubtype {
+  mcoImage(0x01),
+  mcmp(0x02);
+
+  final int id;
+
+  const ChannelAppDataSubtype(this.id);
+
+  /// Compatibility alias for callers written before subtype and version were
+  /// represented separately. This aliases the MCOimg type; check [version]
+  /// separately when routing payloads.
+  @Deprecated('Use ChannelAppDataSubtype.mcoImage and check version == 3')
+  static const ChannelAppDataSubtype mcoImageV3 = mcoImage;
+}
 
 class ChannelAppDataEnvelope {
   final String senderName;
-  final int subtypeVersion;
+  final int subtypeId;
+  final int version;
   final Uint8List body;
   final ChannelAppDataSubtype? subtype;
 
   const ChannelAppDataEnvelope({
     required this.senderName,
-    required this.subtypeVersion,
+    int? subtypeId,
+    int? version,
+    @Deprecated('Pass subtypeId and version separately') int? subtypeVersion,
     required this.body,
     required this.subtype,
-  });
+  }) : assert(
+         subtypeVersion != null || (subtypeId != null && version != null),
+         'Provide subtypeVersion or both subtypeId and version',
+       ),
+       assert(
+         subtypeVersion == null ||
+             subtypeId == null ||
+             subtypeId == (subtypeVersion >> 4),
+         'subtypeId conflicts with subtypeVersion',
+       ),
+       assert(
+         subtypeVersion == null ||
+             version == null ||
+             version == (subtypeVersion & 0x0f),
+         'version conflicts with subtypeVersion',
+       ),
+       subtypeId = subtypeId ?? ((subtypeVersion ?? 0) >> 4),
+       version = version ?? ((subtypeVersion ?? 0) & 0x0f);
+
+  int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
+        subtypeId: subtypeId,
+        version: version,
+      );
 }
 
 class ChannelAppDataPayload {
-  final int subtypeVersion;
+  final int subtypeId;
+  final int version;
   final Uint8List body;
   final ChannelAppDataSubtype? subtype;
 
   const ChannelAppDataPayload({
-    required this.subtypeVersion,
+    int? subtypeId,
+    int? version,
+    @Deprecated('Pass subtypeId and version separately') int? subtypeVersion,
     required this.body,
     required this.subtype,
-  });
+  }) : assert(
+         subtypeVersion != null || (subtypeId != null && version != null),
+         'Provide subtypeVersion or both subtypeId and version',
+       ),
+       assert(
+         subtypeVersion == null ||
+             subtypeId == null ||
+             subtypeId == (subtypeVersion >> 4),
+         'subtypeId conflicts with subtypeVersion',
+       ),
+       assert(
+         subtypeVersion == null ||
+             version == null ||
+             version == (subtypeVersion & 0x0f),
+         'version conflicts with subtypeVersion',
+       ),
+       subtypeId = subtypeId ?? ((subtypeVersion ?? 0) >> 4),
+       version = version ?? ((subtypeVersion ?? 0) & 0x0f);
+
+  int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
+        subtypeId: subtypeId,
+        version: version,
+      );
 }
 
 class ChannelAppDataHelper {
   ChannelAppDataHelper._();
 
-  /// Official MeshCore application data_type reserved for MCO Advanced payloads.
+  /// Official MeshCore application data_type reserved for MCO Advanced
+  /// payloads.
   ///
-  /// Payload grammar:
+  /// Envelope grammar:
   ///   senderNameLen(varuint) | senderName(utf8) | subtypeVersion(u8) | body
   ///
-  /// subtypeVersion packs content type and version:
+  /// subtypeVersion remains one byte on wire:
   ///   high nibble = content subtype, low nibble = content version.
   ///
-  /// 0x13 is MCOimg v3. The v3 image body is binary-only and does not carry
-  /// the old text/base91 wrapper.
+  /// Examples:
+  ///   0x13 = MCOimg v3
+  ///   0x21 = MCMP v1
+  ///
+  /// MCOimg v3 bodies are binary. They can be carried either in this official
+  /// binary envelope or in the im3: Base91 text transport.
   static const int appDataType = 0x0120;
+
   static const int mcoImageSubtype = 0x01;
+  static const int mcmpSubtype = 0x02;
+
   static const int mcoImageV3Version = 0x03;
   static const int mcoImageV3SubtypeVersion =
       (mcoImageSubtype << 4) | mcoImageV3Version;
+
+  static int packSubtypeVersion({
+    required int subtypeId,
+    required int version,
+  }) {
+    _validateNibble(subtypeId, 'subtypeId');
+    _validateNibble(version, 'version');
+    return (subtypeId << 4) | version;
+  }
+
+  static int subtypeIdFromPacked(int subtypeVersion) {
+    _validateByte(subtypeVersion, 'subtypeVersion');
+    return subtypeVersion >> 4;
+  }
+
+  static int versionFromPacked(int subtypeVersion) {
+    _validateByte(subtypeVersion, 'subtypeVersion');
+    return subtypeVersion & 0x0f;
+  }
 
   static int envelopeLength({
     required int bodyLength,
@@ -66,10 +156,17 @@ class ChannelAppDataHelper {
   }
 
   static Uint8List appPayloadWithoutSender({
-    required int subtypeVersion,
+    int? subtypeId,
+    int? version,
+    @Deprecated('Pass subtypeId and version separately') int? subtypeVersion,
     required Uint8List body,
   }) {
-    return Uint8List.fromList(<int>[subtypeVersion, ...body]);
+    final packed = _resolveSubtypeVersion(
+      subtypeId: subtypeId,
+      version: version,
+      subtypeVersion: subtypeVersion,
+    );
+    return Uint8List.fromList(<int>[packed, ...body]);
   }
 
   static ChannelAppDataPayload? tryDecodeAppPayloadWithoutSender(
@@ -78,11 +175,14 @@ class ChannelAppDataHelper {
     try {
       final reader = _AppDataReader(payload);
       final subtypeVersion = reader.readByte();
+      final subtypeId = subtypeIdFromPacked(subtypeVersion);
+      final version = versionFromPacked(subtypeVersion);
       final body = reader.readRemainingBytes();
       return ChannelAppDataPayload(
-        subtypeVersion: subtypeVersion,
+        subtypeId: subtypeId,
+        version: version,
         body: body,
-        subtype: subtypeForVersion(subtypeVersion),
+        subtype: subtypeForId(subtypeId),
       );
     } catch (_) {
       return null;
@@ -91,14 +191,21 @@ class ChannelAppDataHelper {
 
   static Uint8List encodeEnvelope({
     required String senderName,
-    required int subtypeVersion,
+    int? subtypeId,
+    int? version,
+    @Deprecated('Pass subtypeId and version separately') int? subtypeVersion,
     required Uint8List body,
   }) {
     final senderNameBytes = utf8.encode(senderName);
+    final packed = _resolveSubtypeVersion(
+      subtypeId: subtypeId,
+      version: version,
+      subtypeVersion: subtypeVersion,
+    );
     final payload = Uint8List.fromList(<int>[
       ..._varUint(senderNameBytes.length),
       ...senderNameBytes,
-      subtypeVersion,
+      packed,
       ...body,
     ]);
     if (payload.length > maxChannelDataLength) {
@@ -113,23 +220,75 @@ class ChannelAppDataHelper {
       final senderNameLength = reader.readVarUint();
       final senderName = utf8.decode(reader.readBytes(senderNameLength));
       final subtypeVersion = reader.readByte();
+      final subtypeId = subtypeIdFromPacked(subtypeVersion);
+      final version = versionFromPacked(subtypeVersion);
       final body = reader.readRemainingBytes();
       return ChannelAppDataEnvelope(
         senderName: senderName.isEmpty ? 'Unknown' : senderName,
-        subtypeVersion: subtypeVersion,
+        subtypeId: subtypeId,
+        version: version,
         body: body,
-        subtype: subtypeForVersion(subtypeVersion),
+        subtype: subtypeForId(subtypeId),
       );
     } catch (_) {
       return null;
     }
   }
 
-  static ChannelAppDataSubtype? subtypeForVersion(int subtypeVersion) {
-    return switch (subtypeVersion) {
-      mcoImageV3SubtypeVersion => ChannelAppDataSubtype.mcoImageV3,
-      _ => null,
-    };
+  static ChannelAppDataSubtype? subtypeForId(int subtypeId) {
+    for (final subtype in ChannelAppDataSubtype.values) {
+      if (subtype.id == subtypeId) return subtype;
+    }
+    return null;
+  }
+
+  static int _resolveSubtypeVersion({
+    int? subtypeId,
+    int? version,
+    int? subtypeVersion,
+  }) {
+    if (subtypeVersion != null) {
+      _validateByte(subtypeVersion, 'subtypeVersion');
+      final packedSubtypeId = subtypeIdFromPacked(subtypeVersion);
+      final packedVersion = versionFromPacked(subtypeVersion);
+      if (subtypeId != null && subtypeId != packedSubtypeId) {
+        throw ArgumentError.value(
+          subtypeId,
+          'subtypeId',
+          'Conflicts with subtypeVersion',
+        );
+      }
+      if (version != null && version != packedVersion) {
+        throw ArgumentError.value(
+          version,
+          'version',
+          'Conflicts with subtypeVersion',
+        );
+      }
+      return subtypeVersion;
+    }
+
+    if (subtypeId == null || version == null) {
+      throw ArgumentError(
+        'Provide subtypeVersion or both subtypeId and version',
+      );
+    }
+    return packSubtypeVersion(
+      subtypeId: subtypeId,
+      version: version,
+    );
+  }
+
+  static void _validateNibble(int value, String name) {
+    if (value < 0 || value > 0x0f) {
+      throw RangeError.range(value, 0, 0x0f, name);
+    }
+  }
+
+  static void _validateByte(int value, String name) {
+    if (value < 0 || value > 0xff) {
+      throw RangeError.range(value, 0, 0xff, name);
+    }
   }
 
   static List<int> _varUint(int value) {

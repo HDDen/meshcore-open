@@ -52,19 +52,27 @@ enum MCOImageV3BlockAlgorithm {
 class EncodedMCOImageV3 {
   final Uint8List body;
   final int byteLength;
-  final int subtypeVersion;
+  final int subtypeId;
+  final int version;
   final EncodedMCOImage encodedCandidate;
 
   const EncodedMCOImageV3({
     required this.body,
     required this.byteLength,
     required this.encodedCandidate,
-    this.subtypeVersion = ChannelAppDataHelper.mcoImageV3SubtypeVersion,
+    this.subtypeId = ChannelAppDataHelper.mcoImageSubtype,
+    this.version = ChannelAppDataHelper.mcoImageV3Version,
   });
+
+  int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
+        subtypeId: subtypeId,
+        version: version,
+      );
 
   Uint8List toAppPayloadWithoutSender() {
     return ChannelAppDataHelper.appPayloadWithoutSender(
-      subtypeVersion: subtypeVersion,
+      subtypeId: subtypeId,
+      version: version,
       body: body,
     );
   }
@@ -74,6 +82,8 @@ class MCOImageV3Codec {
   MCOImageV3Codec();
 
   static const String textPrefix = 'im3:';
+  static const int subtypeId = ChannelAppDataHelper.mcoImageSubtype;
+  static const int version = ChannelAppDataHelper.mcoImageV3Version;
   static const int subtypeVersion =
       ChannelAppDataHelper.mcoImageV3SubtypeVersion;
 
@@ -82,7 +92,8 @@ class MCOImageV3Codec {
   static String textFromBody(Uint8List body) {
     return textFromAppPayloadWithoutSender(
       ChannelAppDataHelper.appPayloadWithoutSender(
-        subtypeVersion: subtypeVersion,
+        subtypeId: subtypeId,
+        version: version,
         body: body,
       ),
     );
@@ -103,7 +114,7 @@ class MCOImageV3Codec {
     final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
       appPayloadWithoutSenderFromText(text),
     );
-    if (appPayload == null || appPayload.subtypeVersion != subtypeVersion) {
+    if (appPayload == null || appPayload.subtypeId != subtypeId || appPayload.version != version) {
       throw const MCOImageInvalidPayloadException(
         'Invalid MCOimg v3 app payload',
       );
@@ -126,7 +137,7 @@ class MCOImageV3Codec {
     final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
       payload,
     );
-    if (appPayload == null || appPayload.subtypeVersion != subtypeVersion) {
+    if (appPayload == null || appPayload.subtypeId != subtypeId || appPayload.version != version) {
       throw const MCOImageInvalidPayloadException(
         'Invalid MCOimg v3 app payload',
       );
@@ -139,9 +150,7 @@ class MCOImageV3Codec {
       throw const MCOImageInvalidPayloadException('MCOimg v3 payload too short');
     }
     final header = body[0];
-    if ((header & _formatMarkerMask) != _formatMarker) {
-      throw const MCOImageInvalidPayloadException('Invalid MCOimg v3 marker');
-    }
+    final scan = _scanFromHeader(header);
     final containerAlgorithm = body[3];
     final container = _containerFromId(
       containerAlgorithm >> _containerAlgorithmContainerShift,
@@ -149,6 +158,7 @@ class MCOImageV3Codec {
     final algorithm = _algorithmFromId(
       containerAlgorithm & _containerAlgorithmAlgorithmMask,
     );
+    _validateTopLevelScan(container, algorithm, scan);
     return MCOImagePayloadInfo(
       version: ChannelAppDataHelper.mcoImageV3Version,
       algorithm: _payloadAlgorithmLabel(container, algorithm),
@@ -161,10 +171,10 @@ class MCOImageV3Codec {
       appPayloadWithoutSenderFromText(text),
     );
   }
-  static const int _formatMarker = 0x30;
-  static const int _formatMarkerMask = 0x30;
   static const int _transparentFlag = 0x80;
   static const int _implicitWhiteBackgroundFlag = 0x40;
+  static const int _scanShift = 4;
+  static const int _scanMask = 0x30;
   static const int _profileMask = 0x0f;
   static const int _containerAlgorithmContainerShift = 5;
   static const int _containerAlgorithmAlgorithmMask = 0x1f;
@@ -398,9 +408,7 @@ class MCOImageV3Codec {
       throw const MCOImageInvalidPayloadException('MCOimg v3 payload too short');
     }
     final header = body[0];
-    if ((header & _formatMarkerMask) != _formatMarker) {
-      throw const MCOImageInvalidPayloadException('Invalid MCOimg v3 marker');
-    }
+    final scan = _scanFromHeader(header);
     final hasTransparentColor = (header & _transparentFlag) != 0;
     final implicitWhiteBackground =
         (header & _implicitWhiteBackgroundFlag) != 0;
@@ -439,14 +447,8 @@ class MCOImageV3Codec {
         'solidRects must use rawGlobal algorithm id',
       );
     }
-    final hasScanByte = _containerHasScanByte(container, algorithm);
-    if (hasScanByte && body.length < 5) {
-      throw const MCOImageInvalidPayloadException(
-        'MCOimg v3 payload too short',
-      );
-    }
-    final scan = hasScanByte ? _scanFromId(body[4]) : ScanMode.h;
-    final reader = _V3BitReader(body, byteIndex: hasScanByte ? 5 : 4);
+    _validateTopLevelScan(container, algorithm, scan);
+    final reader = _V3BitReader(body, byteIndex: 4);
     final transparentColor = hasTransparentColor
         ? _readColorRef(reader, profile)
         : null;
@@ -493,7 +495,7 @@ class MCOImageV3Codec {
         height,
         profile,
         algorithm,
-        hasScanByte ? scan : ScanMode.h,
+        scan,
         compactGeometry: true,
         implicitWhiteBackground: implicitWhiteBackground,
       ),
@@ -544,10 +546,10 @@ class MCOImageV3Codec {
         'Invalid MCOimg v3 app payload',
       );
     }
-    if (appPayload.subtypeVersion != subtypeVersion) {
+    if (appPayload.subtypeId != subtypeId || appPayload.version != version) {
       throw MCOImageInvalidPayloadException(
-        'Unsupported MCOimg app subtype/version '
-        '0x${appPayload.subtypeVersion.toRadixString(16)}',
+        'Unsupported MCOimg app subtype=${appPayload.subtypeId} '
+        'version=${appPayload.version}',
       );
     }
     return decodeBody(appPayload.body);
@@ -911,6 +913,7 @@ class MCOImageV3Codec {
     writer.writeAlignedByte(
       _headerByte(
         image.paletteProfile,
+        scan: ScanMode.h,
         hasTransparentColor: image.transparentColor != null,
         implicitWhiteBackground: false,
       ),
@@ -973,6 +976,7 @@ class MCOImageV3Codec {
       writer.writeAlignedByte(
         _headerByte(
           image.paletteProfile,
+          scan: ScanMode.h,
           hasTransparentColor: image.transparentColor != null,
           implicitWhiteBackground: implicitWhiteBackground,
         ),
@@ -1100,6 +1104,7 @@ class MCOImageV3Codec {
     writer.writeAlignedByte(
       _headerByte(
         image.paletteProfile,
+        scan: ScanMode.h,
         hasTransparentColor: image.transparentColor != null,
         implicitWhiteBackground: implicitWhiteBackground,
       ),
@@ -1115,8 +1120,7 @@ class MCOImageV3Codec {
           container,
           MCOImageV3BlockAlgorithm.rawGlobal,
         ),
-      )
-      ..writeAlignedByte(ScanMode.h.index);
+      );
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -1136,9 +1140,16 @@ class MCOImageV3Codec {
         writer.writeBits(sharedLocalPalette ? 1 : 0, 1);
         if (commonBlockHeader) {
           final algorithm = regionBlocks.first.algorithm;
+          final scan = regionBlocks.first.scan;
+          assert(
+            regionBlocks.every(
+              (block) => block.algorithm == algorithm && block.scan == scan,
+            ),
+            'Common region header requires one algorithm and scan',
+          );
           writer.writeBits(algorithm.index, 5);
           if (!_canUseCompactBlockHeader(algorithm)) {
-            writer.writeBits(regionBlocks.first.scan.index, 2);
+            writer.writeBits(scan.index, 2);
           }
         }
         if (sharedLocalPalette) {
@@ -1202,7 +1213,29 @@ class MCOImageV3Codec {
       return null;
     }
     if (writer.bitLength == bodyStartBits) return null;
+    final serializedBitLength = writer.bitLength;
     final payload = writer.toBytes();
+    assert(() {
+      final expectedBitLength = _regionCandidateBitLength(
+        image,
+        backgroundColor,
+        regionPlan,
+        compactGeometry: compactGeometry,
+        commonBlockHeader: commonBlockHeader,
+        deltaGeometry: deltaGeometry,
+        sharedLocalPalette: sharedLocalPalette,
+      );
+      assert(
+        serializedBitLength == expectedBitLength,
+        'MCOimg v3 region cost mismatch: estimated $expectedBitLength bits, '
+        'serialized $serializedBitLength bits',
+      );
+      assert(
+        payload.length == (expectedBitLength + 7) ~/ 8,
+        'MCOimg v3 region byte cost mismatch',
+      );
+      return true;
+    }());
     return EncodedMCOImage(
       payload: payload,
       text: '',
@@ -1264,12 +1297,13 @@ class MCOImageV3Codec {
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
       )) {
-        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
-            scan != ScanMode.h) {
+        if (!_regionAlgorithmSupportsScan(algorithm, scan) ||
+            algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+                scan != ScanMode.h) {
           continue;
         }
         final blocks = <_V3RegionBlock>[];
-        var totalBits = 0;
+        var totalBits = _commonRegionBlockHeaderBitLength(algorithm);
         var failed = false;
         for (final region in regions) {
           final block = _tryBuildRegionBlock(
@@ -1333,14 +1367,17 @@ class MCOImageV3Codec {
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
       )) {
-        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
-            scan != ScanMode.h) {
+        if (!_regionAlgorithmSupportsScan(algorithm, scan) ||
+            algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+                scan != ScanMode.h) {
           continue;
         }
         for (final palette in paletteVariants) {
           final paletteWriter = _V3BitWriter();
           _writeLocalPalette(paletteWriter, image.paletteProfile, palette);
-          var totalBits = paletteWriter.bitLength;
+          var totalBits =
+              paletteWriter.bitLength +
+              _commonRegionBlockHeaderBitLength(algorithm);
           final blocks = <_V3RegionBlock>[];
           var failed = false;
           for (final region in regions) {
@@ -1388,13 +1425,15 @@ class MCOImageV3Codec {
     bool reducedCostEvaluator = false,
   }) {
     _V3RegionBlock? best;
+    int? bestBits;
     for (final scan in ScanMode.values) {
       for (final algorithm in _regionBlockAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
       )) {
-        if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
-            scan != ScanMode.h) {
+        if (!_regionAlgorithmSupportsScan(algorithm, scan) ||
+            algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+                scan != ScanMode.h) {
           continue;
         }
         final block = _tryBuildRegionBlock(
@@ -1405,16 +1444,145 @@ class MCOImageV3Codec {
           scan,
         );
         if (block == null) continue;
+        final blockBits = _individualRegionBlockBitLength(block);
         if (best == null ||
-            block.bitLength < best.bitLength ||
-            block.bitLength == best.bitLength &&
+            blockBits < bestBits! ||
+            blockBits == bestBits &&
                 _modeTieRank(_imageModeForAlgorithm(algorithm)) <
                     _modeTieRank(_imageModeForAlgorithm(best.algorithm))) {
           best = block;
+          bestBits = blockBits;
         }
       }
     }
     return best;
+  }
+
+  static bool _regionAlgorithmSupportsScan(
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+  ) {
+    return !_canUseCompactBlockHeader(algorithm) || scan == ScanMode.h;
+  }
+
+  static int _regionBlockScanBitLength(
+    MCOImageV3BlockAlgorithm algorithm,
+  ) {
+    return _canUseCompactBlockHeader(algorithm) ? 0 : 2;
+  }
+
+  static int _individualRegionBlockBitLength(_V3RegionBlock block) {
+    return 5 + _regionBlockScanBitLength(block.algorithm) + block.bitLength;
+  }
+
+  static int _commonRegionBlockHeaderBitLength(
+    MCOImageV3BlockAlgorithm algorithm,
+  ) {
+    return 5 + _regionBlockScanBitLength(algorithm);
+  }
+
+  int _regionCandidateBitLength(
+    MCOImage image,
+    int backgroundColor,
+    _V3RegionPlan regionPlan, {
+    required bool compactGeometry,
+    required bool commonBlockHeader,
+    required bool deltaGeometry,
+    required bool sharedLocalPalette,
+  }) {
+    final regionBlocks = regionPlan.blocks;
+    if (regionBlocks == null || regionBlocks.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Region cost requires at least one encoded block',
+      );
+    }
+    final implicitWhiteBackground = _isImplicitWhiteBackground(
+      image.paletteProfile,
+      backgroundColor,
+    );
+    final writer = _V3BitWriter();
+    writer.writeAlignedByte(
+      _headerByte(
+        image.paletteProfile,
+        scan: ScanMode.h,
+        hasTransparentColor: image.transparentColor != null,
+        implicitWhiteBackground: implicitWhiteBackground,
+      ),
+    );
+    final container = compactGeometry
+        ? MCOImageV3Container.compactRegionsStream
+        : MCOImageV3Container.regions;
+    writer
+      ..writeAlignedByte(image.width - 1)
+      ..writeAlignedByte(image.height - 1)
+      ..writeAlignedByte(
+        _containerAlgorithmByte(
+          container,
+          MCOImageV3BlockAlgorithm.rawGlobal,
+        ),
+      );
+    if (image.transparentColor != null) {
+      _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
+    }
+    _writeBackgroundRef(
+      writer,
+      image.paletteProfile,
+      backgroundColor,
+      implicitWhiteBackground: implicitWhiteBackground,
+    );
+    writer.writeBitVarUint(regionBlocks.length);
+    if (compactGeometry) {
+      writer.writeBits(commonBlockHeader ? 1 : 0, 1);
+      writer.writeBits(deltaGeometry ? 1 : 0, 1);
+      writer.writeBits(sharedLocalPalette ? 1 : 0, 1);
+      if (commonBlockHeader) {
+        final algorithm = regionBlocks.first.algorithm;
+        final scan = regionBlocks.first.scan;
+        assert(
+          regionBlocks.every(
+            (block) => block.algorithm == algorithm && block.scan == scan,
+          ),
+          'Common region header requires one algorithm and scan',
+        );
+        writer.writeBits(algorithm.index, 5);
+        if (!_canUseCompactBlockHeader(algorithm)) {
+          writer.writeBits(scan.index, 2);
+        }
+      }
+      if (sharedLocalPalette) {
+        final palette = regionPlan.sharedLocalPalette;
+        if (palette == null) {
+          throw const MCOImageInvalidInputException(
+            'Shared region palette is missing',
+          );
+        }
+        _writeLocalPalette(writer, image.paletteProfile, palette);
+      }
+    }
+    _V3Bounds? previousBounds;
+    for (var index = 0; index < regionBlocks.length; index++) {
+      final block = regionBlocks[index];
+      if (deltaGeometry && index > 0) {
+        _writeDeltaRegionGeometry(writer, block.bounds, previousBounds!);
+      } else {
+        _writeRegionGeometry(
+          writer,
+          block.bounds,
+          image.width,
+          image.height,
+          compactGeometry: compactGeometry,
+        );
+      }
+      previousBounds = block.bounds;
+      if (!commonBlockHeader) {
+        writer.writeBits(block.algorithm.index, 5);
+        if (!_canUseCompactBlockHeader(block.algorithm)) {
+          writer.writeBits(block.scan.index, 2);
+        }
+      }
+      writer.writeZeroBits(block.bitLength);
+    }
+    return writer.bitLength;
   }
 
   _V3RegionBlock? _tryBuildRegionBlock(
@@ -1424,6 +1592,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm,
     ScanMode scan,
   ) {
+    if (!_regionAlgorithmSupportsScan(algorithm, scan)) return null;
     final cropped = _extractBoundsPixels(image, bounds);
     final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
     final writer = _V3BitWriter();
@@ -1459,6 +1628,7 @@ class MCOImageV3Codec {
     ScanMode scan,
     List<int> palette,
   ) {
+    if (!_regionAlgorithmSupportsScan(algorithm, scan)) return null;
     final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
     final writer = _V3BitWriter();
     try {
@@ -1510,6 +1680,7 @@ class MCOImageV3Codec {
     writer.writeAlignedByte(
       _headerByte(
         image.paletteProfile,
+        scan: scan,
         hasTransparentColor: image.transparentColor != null,
         implicitWhiteBackground: implicitWhiteBackground,
       ),
@@ -1521,9 +1692,6 @@ class MCOImageV3Codec {
       ..writeAlignedByte(image.width - 1)
       ..writeAlignedByte(image.height - 1)
       ..writeAlignedByte(_containerAlgorithmByte(container, algorithm));
-    if (_containerHasScanByte(container, algorithm)) {
-      writer.writeAlignedByte(scan.index);
-    }
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -1608,6 +1776,7 @@ class MCOImageV3Codec {
     writer.writeAlignedByte(
       _headerByte(
         image.paletteProfile,
+        scan: scan,
         hasTransparentColor: image.transparentColor != null,
         implicitWhiteBackground: false,
       ),
@@ -1619,9 +1788,6 @@ class MCOImageV3Codec {
       ..writeAlignedByte(image.width - 1)
       ..writeAlignedByte(image.height - 1)
       ..writeAlignedByte(_containerAlgorithmByte(container, algorithm));
-    if (!compactHeader) {
-      writer.writeAlignedByte(scan.index);
-    }
     if (image.transparentColor != null) {
       _writeColorRef(writer, image.paletteProfile, image.transparentColor!);
     }
@@ -2866,13 +3032,51 @@ class MCOImageV3Codec {
 
   static int _headerByte(
     PaletteProfile profile, {
+    required ScanMode scan,
     required bool hasTransparentColor,
     required bool implicitWhiteBackground,
   }) {
-    return _formatMarker |
-        (hasTransparentColor ? _transparentFlag : 0) |
+    if (scan.index >= (1 << 2)) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v3 scan id does not fit',
+      );
+    }
+    return (hasTransparentColor ? _transparentFlag : 0) |
         (implicitWhiteBackground ? _implicitWhiteBackgroundFlag : 0) |
+        (scan.index << _scanShift) |
         _profileId(profile);
+  }
+
+  static ScanMode _scanFromHeader(int header) {
+    return _scanFromId((header & _scanMask) >> _scanShift);
+  }
+
+  static void _validateTopLevelScan(
+    MCOImageV3Container container,
+    MCOImageV3BlockAlgorithm algorithm,
+    ScanMode scan,
+  ) {
+    final requiresHorizontalScan = switch (container) {
+      MCOImageV3Container.compactBlock ||
+      MCOImageV3Container.regions ||
+      MCOImageV3Container.compactRegionsStream ||
+      MCOImageV3Container.solidBackground ||
+      MCOImageV3Container.solidRects => true,
+      MCOImageV3Container.compactBoundsBlock =>
+        _canUseCompactBlockHeader(algorithm),
+      _ => false,
+    };
+    if (requiresHorizontalScan && scan != ScanMode.h) {
+      throw MCOImageInvalidPayloadException(
+        '${container.name} requires horizontal top-level scan',
+      );
+    }
+    if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
+        scan != ScanMode.h) {
+      throw const MCOImageInvalidPayloadException(
+        'Quadtree requires horizontal scan',
+      );
+    }
   }
 
   static bool _isImplicitWhiteBackground(
@@ -2930,20 +3134,6 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.rawLocal ||
       MCOImageV3BlockAlgorithm.biColorMask => true,
       _ => false,
-    };
-  }
-
-  static bool _containerHasScanByte(
-    MCOImageV3Container container,
-    MCOImageV3BlockAlgorithm algorithm,
-  ) {
-    return switch (container) {
-      MCOImageV3Container.compactBlock => false,
-      MCOImageV3Container.solidBackground => false,
-      MCOImageV3Container.solidRects => false,
-      MCOImageV3Container.compactBoundsBlock =>
-        !_canUseCompactBlockHeader(algorithm),
-      _ => true,
     };
   }
 
@@ -6529,14 +6719,15 @@ class MCOImageV3Codec {
       reducedCostEvaluator: true,
     );
     if (individualBlocks == null) return null;
-    final individualBits = _regionLayoutOverheadBits(
-          image,
-          regions,
-          compactGeometry: true,
-          commonBlockHeader: false,
-          deltaGeometry: false,
-        ) +
-        _regionBlocksPayloadBits(individualBlocks);
+    final individualBits = _regionCandidateBitLength(
+      image,
+      backgroundColor,
+      _V3RegionPlan(blocks: individualBlocks),
+      compactGeometry: true,
+      commonBlockHeader: false,
+      deltaGeometry: false,
+      sharedLocalPalette: false,
+    );
 
     final commonBlocks = _bestCommonRegionBlocks(
       image,
@@ -6548,99 +6739,18 @@ class MCOImageV3Codec {
     if (commonBlocks == null) {
       return (individualBits + 7) ~/ 8;
     }
-    final commonBits = _regionLayoutOverheadBits(
-          image,
-          regions,
-          compactGeometry: true,
-          commonBlockHeader: true,
-          deltaGeometry: true,
-        ) +
-        _regionBlocksPayloadBits(commonBlocks);
+    final commonBits = _regionCandidateBitLength(
+      image,
+      backgroundColor,
+      _V3RegionPlan(blocks: commonBlocks),
+      compactGeometry: true,
+      commonBlockHeader: true,
+      deltaGeometry: true,
+      sharedLocalPalette: false,
+    );
     return (math.min(individualBits, commonBits) + 7) ~/ 8;
   }
 
-  static int _regionBlocksPayloadBits(List<_V3RegionBlock> blocks) {
-    return blocks.fold<int>(
-      0,
-      (sum, block) =>
-          sum + _bitVarUintBitLength(block.bitLength) + block.bitLength,
-    );
-  }
-
-  int _regionLayoutOverheadBits(
-    MCOImage image,
-    List<_V3Bounds> regions, {
-    required bool compactGeometry,
-    required bool commonBlockHeader,
-    required bool deltaGeometry,
-  }) {
-    var bits = 0;
-    bits += 8; // v3 header
-    bits += 8; // width
-    bits += 8; // height
-    bits += 8; // container/algorithm
-    bits += 8; // scan byte
-    if (image.transparentColor != null) {
-      bits += _colorRefBits(image.paletteProfile);
-    }
-    bits += _colorRefBits(image.paletteProfile); // background
-    bits += _bitVarUintBitLength(regions.length);
-    if (compactGeometry) {
-      bits += 3; // common block header, delta geometry, shared palette flags
-      if (commonBlockHeader) {
-        bits += 5;
-      }
-    }
-    _V3Bounds? previous;
-    for (var index = 0; index < regions.length; index++) {
-      final region = regions[index];
-      if (deltaGeometry && index > 0) {
-        bits += _deltaRegionGeometryBitLength(region, previous!);
-      } else {
-        bits += _regionGeometryBitLength(
-          image.width,
-          image.height,
-          compactGeometry: compactGeometry,
-        );
-      }
-      if (commonBlockHeader) {
-        bits += 1; // common header marker
-      } else {
-        bits += 5; // algorithm
-      }
-      previous = region;
-    }
-    return bits;
-  }
-
-  static int _regionGeometryBitLength(
-    int imageWidth,
-    int imageHeight, {
-    required bool compactGeometry,
-  }) {
-    final xBits = compactGeometry ? _geometryBits(imageWidth) : 8;
-    final yBits = compactGeometry ? _geometryBits(imageHeight) : 8;
-    return xBits * 2 + yBits * 2;
-  }
-
-  static int _deltaRegionGeometryBitLength(
-    _V3Bounds bounds,
-    _V3Bounds previous,
-  ) {
-    return _signedCompactIntBitLength(bounds.x - previous.x) +
-        _signedCompactIntBitLength(bounds.y - previous.y) +
-        _signedCompactIntBitLength(bounds.width - previous.width) +
-        _signedCompactIntBitLength(bounds.height - previous.height);
-  }
-
-  static int _signedCompactIntBitLength(int value) {
-    final magnitude = value < 0 ? -value : value;
-    return 1 + _compactUintBitLength(magnitude);
-  }
-
-  static int _colorRefBits(PaletteProfile profile) {
-    return _globalBits(profile);
-  }
 
   List<List<_V3Bounds>> _regionBeamNeighborsFor(
     List<int> pixels,
@@ -8247,6 +8357,18 @@ class _V3BitWriter {
         _current = 0;
         _bitOffset = 0;
       }
+    }
+  }
+
+  void writeZeroBits(int bits) {
+    if (bits < 0) {
+      throw const MCOImageInvalidInputException('Invalid bit length');
+    }
+    var remaining = bits;
+    while (remaining > 0) {
+      final take = math.min(remaining, 32);
+      writeBits(0, take);
+      remaining -= take;
     }
   }
 

@@ -41,7 +41,8 @@ class ChannelBinaryDataInbound {
 
 class ChannelAppDataInbound {
   final String senderName;
-  final int subtypeVersion;
+  final int subtypeId;
+  final int version;
   final ChannelAppDataSubtype subtype;
   final Uint8List body;
   final int payloadLength;
@@ -49,12 +50,18 @@ class ChannelAppDataInbound {
 
   const ChannelAppDataInbound({
     required this.senderName,
-    required this.subtypeVersion,
+    required this.subtypeId,
+    required this.version,
     required this.subtype,
     required this.body,
     required this.payloadLength,
     this.mcoImage,
   });
+
+  int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
+        subtypeId: subtypeId,
+        version: version,
+      );
 }
 
 class ChannelBinaryDataHelper {
@@ -68,8 +75,10 @@ class ChannelBinaryDataHelper {
   static const int mcoImageDataType = 0xFFF0;
   static const int mcmpDataType = 0xFFF1;
   static const int appDataType = ChannelAppDataHelper.appDataType;
-  static const int mcoImageV3SubtypeVersion =
-      ChannelAppDataHelper.mcoImageV3SubtypeVersion;
+  static const int mcoImageSubtype =
+      ChannelAppDataHelper.mcoImageSubtype;
+  static const int mcoImageV3Version =
+      ChannelAppDataHelper.mcoImageV3Version;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -88,7 +97,8 @@ class ChannelBinaryDataHelper {
       final trimmedLeft = text.trimLeft();
       if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
         return _encodeAppEnvelope(
-          subtypeVersion: mcoImageV3SubtypeVersion,
+          subtypeId: mcoImageSubtype,
+          version: mcoImageV3Version,
           body: MCOImageV3Codec.bodyFromText(trimmedLeft),
           senderName: senderName,
           kind: ChannelBinaryDataKind.mcoImageV3,
@@ -131,7 +141,8 @@ class ChannelBinaryDataHelper {
   }) {
     if (!canSend) return null;
     return _encodeAppEnvelope(
-      subtypeVersion: image.subtypeVersion,
+      subtypeId: image.subtypeId,
+      version: image.version,
       body: image.body,
       senderName: senderName,
       kind: ChannelBinaryDataKind.mcoImageV3,
@@ -295,7 +306,8 @@ class ChannelBinaryDataHelper {
     if (envelope == null) return null;
 
     switch (envelope.subtype) {
-      case ChannelAppDataSubtype.mcoImageV3:
+      case ChannelAppDataSubtype.mcoImage:
+        if (envelope.version != mcoImageV3Version) return null;
         final MCOImage image;
         try {
           image = MCOImageV3Codec().decodeBody(envelope.body);
@@ -304,12 +316,14 @@ class ChannelBinaryDataHelper {
         }
         return ChannelAppDataInbound(
           senderName: envelope.senderName,
-          subtypeVersion: envelope.subtypeVersion,
-          subtype: ChannelAppDataSubtype.mcoImageV3,
+          subtypeId: envelope.subtypeId,
+          version: envelope.version,
+          subtype: ChannelAppDataSubtype.mcoImage,
           body: envelope.body,
           payloadLength: payload.length,
           mcoImage: image,
         );
+      case ChannelAppDataSubtype.mcmp:
       case null:
         return null;
     }
@@ -347,7 +361,8 @@ class ChannelBinaryDataHelper {
   }
 
   static ChannelBinaryDataOutbound? _encodeAppEnvelope({
-    required int subtypeVersion,
+    required int subtypeId,
+    required int version,
     required Uint8List body,
     required String senderName,
     required ChannelBinaryDataKind kind,
@@ -356,7 +371,8 @@ class ChannelBinaryDataHelper {
     try {
       payload = ChannelAppDataHelper.encodeEnvelope(
         senderName: senderName,
-        subtypeVersion: subtypeVersion,
+        subtypeId: subtypeId,
+        version: version,
         body: body,
       );
     } catch (_) {
