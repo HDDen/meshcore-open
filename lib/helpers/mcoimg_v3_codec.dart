@@ -49,7 +49,8 @@ enum MCOImageV3BlockAlgorithm {
 
   directBitplanes,
   compactRowDelta,
-  directRowDelta;
+  directRowDelta,
+  rowDelta;
 
   @Deprecated('Use directBitplanes')
   static const MCOImageV3BlockAlgorithm directGrayscaleBitplanes =
@@ -232,6 +233,7 @@ class MCOImageV3Codec {
   static const int _extremeRegionBeamDepth = 8;
   static const int _extremeRegionNeighbors = 32;
   static const int _extremeRegionResultLimit = 10;
+  static const int _extremeRegionExactRerankPoolSize = 32;
   static const int _extremeRegionEvaluationBudget = 1536;
   static const int _maxFrequentBackgroundCandidates = 8;
   static const int _maxExhaustiveBackgroundColors = 64;
@@ -258,6 +260,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.directBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
     MCOImageV3BlockAlgorithm.directRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
@@ -271,6 +274,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
@@ -284,6 +288,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
   ];
   static const List<MCOImageV3BlockAlgorithm> _regionCostBlockAlgorithms = [
@@ -292,7 +297,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
   ];
   static const List<MCOImageV3BlockAlgorithm>
       _normalSharedPaletteRegionAlgorithms = [
@@ -304,8 +309,20 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
   ];
+  static const int _rowDeltaOpBits = 2;
+  static const int _rowDeltaOpRaw = 0;
+  static const int _rowDeltaOpRepeat = 1;
+  static const int _rowDeltaOpIndexed = 2;
+  static const int _rowDeltaOpExtended = 3;
+  static const int _rowDeltaExtendedBits = 2;
+  static const int _rowDeltaExtendedMask = 0;
+  static const int _rowDeltaExtendedSegments = 1;
+  static const int _rowDeltaExtendedSameScalarMask = 2;
+  static const int _rowDeltaExtendedRepeatRun = 3;
+
   static const int _compactRowDeltaOpBits = 3;
   static const int _compactRowDeltaOpRepeat = 0;
   static const int _compactRowDeltaOpRaw = 1;
@@ -411,7 +428,9 @@ class MCOImageV3Codec {
       compressionLevel,
     );
     final preferredBackground =
-        backgroundColor ?? MCOImagePalette.whiteIndexFor(image.paletteProfile);
+        backgroundColor ??
+        image.transparentColor ??
+        MCOImagePalette.whiteIndexFor(image.paletteProfile);
     return _backgroundCandidates(
       image,
       preferredBackground,
@@ -636,7 +655,9 @@ class MCOImageV3Codec {
     }
 
     final preferredBackground =
-        backgroundColor ?? MCOImagePalette.whiteIndexFor(image.paletteProfile);
+        backgroundColor ??
+        image.transparentColor ??
+        MCOImagePalette.whiteIndexFor(image.paletteProfile);
     final effectiveBackgroundCandidates = backgroundCandidates == null
         ? _backgroundCandidates(
             image,
@@ -805,6 +826,7 @@ class MCOImageV3Codec {
           MCOImageV3BlockAlgorithm.directBitplanes,
           MCOImageV3BlockAlgorithm.compactRowDelta,
           MCOImageV3BlockAlgorithm.directRowDelta,
+          MCOImageV3BlockAlgorithm.rowDelta,
           MCOImageV3BlockAlgorithm.rowRepeat,
           MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
@@ -823,6 +845,7 @@ class MCOImageV3Codec {
               bounds.width,
               bounds.height,
             ),
+            backgroundInherited: true,
           );
           if (blockBody == null) continue;
 
@@ -864,7 +887,6 @@ class MCOImageV3Codec {
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
         MCOImageV3BlockAlgorithm.directBitplanes,
-        MCOImageV3BlockAlgorithm.compactRowDelta,
         MCOImageV3BlockAlgorithm.directRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
@@ -894,6 +916,8 @@ class MCOImageV3Codec {
       for (final background in effectiveBackgroundCandidates) {
         final bg = background.color;
         for (final algorithm in const [
+          MCOImageV3BlockAlgorithm.rowDelta,
+          MCOImageV3BlockAlgorithm.compactRowDelta,
           MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
         ]) {
@@ -1271,6 +1295,7 @@ class MCOImageV3Codec {
               block.bounds.width,
               block.bounds.height,
             ),
+            backgroundInherited: true,
           );
         }
       }
@@ -1755,6 +1780,7 @@ class MCOImageV3Codec {
         algorithm,
         backgroundColor: backgroundColor,
         rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
+        backgroundInherited: true,
       );
     } on MCOImageCodecException {
       return null;
@@ -1811,6 +1837,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm, {
     required int backgroundColor,
     required int rowLength,
+    bool backgroundInherited = false,
   }) {
     final bodyWriter = _V3BitWriter();
     try {
@@ -1821,6 +1848,7 @@ class MCOImageV3Codec {
         algorithm,
         backgroundColor: backgroundColor,
         rowLength: rowLength,
+        backgroundInherited: backgroundInherited,
       );
     } on MCOImageCodecException {
       return null;
@@ -2026,6 +2054,7 @@ class MCOImageV3Codec {
       algorithm,
       scan,
       implicitWhiteBackground: implicitWhiteBackground,
+      inheritedBackgroundColor: background,
     );
     final cropped = _fromScanOrder(
       croppedLinear,
@@ -2114,6 +2143,7 @@ class MCOImageV3Codec {
               algorithm,
               scan,
               implicitWhiteBackground: implicitWhiteBackground,
+              inheritedBackgroundColor: background,
             )
           : _decodeBlockBodyWithSharedPalette(
               reader,
@@ -2194,6 +2224,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm, {
     required int backgroundColor,
     required int rowLength,
+    bool backgroundInherited = false,
   }) {
     switch (algorithm) {
       case MCOImageV3BlockAlgorithm.rawGlobal:
@@ -2349,6 +2380,24 @@ class MCOImageV3Codec {
         throw const MCOImageInvalidInputException(
           'Direct bitplanes require a grayscale or dynamic profile',
         );
+      case MCOImageV3BlockAlgorithm.rowDelta:
+        _writeBestLocalPaletteBlock(
+          writer,
+          linear,
+          profile,
+          indexOrderSensitive: true,
+          includeTransitionOrder: true,
+          preferredFirstColor: backgroundColor,
+          writeBody: (bodyWriter, localPixels, bits) {
+            _writeRowDeltaBody(
+              bodyWriter,
+              localPixels,
+              rowLength,
+              bits,
+            );
+          },
+        );
+        break;
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         _writeBestLocalPaletteBlock(
           writer,
@@ -2356,6 +2405,7 @@ class MCOImageV3Codec {
           profile,
           indexOrderSensitive: true,
           includeTransitionOrder: true,
+          preferredFirstColor: backgroundColor,
           writeBody: (
             bodyWriter,
             localPixels,
@@ -2396,15 +2446,18 @@ class MCOImageV3Codec {
           'Direct row-delta requires a grayscale or dynamic profile',
         );
       case MCOImageV3BlockAlgorithm.compactSparse:
-        _writeBackgroundRef(
-          writer,
-          profile,
-          backgroundColor,
-          implicitWhiteBackground: _isImplicitWhiteBackground(
+        // Bounds and regions already serialize their background once.
+        if (!backgroundInherited) {
+          _writeBackgroundRef(
+            writer,
             profile,
             backgroundColor,
-          ),
-        );
+            implicitWhiteBackground: _isImplicitWhiteBackground(
+              profile,
+              backgroundColor,
+            ),
+          );
+        }
         final segments = _buildSparseSegments(linear, backgroundColor);
         if (segments.isEmpty) {
           throw const MCOImageInvalidInputException(
@@ -2448,15 +2501,17 @@ class MCOImageV3Codec {
         if (foreground == null) {
           throw const MCOImageInvalidInputException('Not a bi-color image');
         }
-        _writeBackgroundRef(
-          writer,
-          profile,
-          backgroundColor,
-          implicitWhiteBackground: _isImplicitWhiteBackground(
+        if (!backgroundInherited) {
+          _writeBackgroundRef(
+            writer,
             profile,
             backgroundColor,
-          ),
-        );
+            implicitWhiteBackground: _isImplicitWhiteBackground(
+              profile,
+              backgroundColor,
+            ),
+          );
+        }
         _writeColorRef(writer, profile, foreground);
         for (final color in linear) {
           writer.writeBits(color == foreground ? 1 : 0, 1);
@@ -2611,6 +2666,14 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
         _writeAdaptiveBitplanesBody(writer, localPixels(), bits);
         break;
+      case MCOImageV3BlockAlgorithm.rowDelta:
+        _writeRowDeltaBody(
+          writer,
+          localPixels(),
+          rowLength,
+          bits,
+        );
+        break;
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         _writeCompactRowDeltaBody(
           writer,
@@ -2638,6 +2701,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm,
     ScanMode scan, {
     required bool implicitWhiteBackground,
+    int? inheritedBackgroundColor,
   }) {
     final count = width * height;
     switch (algorithm) {
@@ -2804,6 +2868,24 @@ class MCOImageV3Codec {
         throw const MCOImageInvalidPayloadException(
           'Direct bitplanes require a grayscale or dynamic profile',
         );
+      case MCOImageV3BlockAlgorithm.rowDelta:
+        final palette = _readLocalPalette(reader, profile);
+        final bits = _localBits(palette.length);
+        final localPixels = _readRowDeltaBody(
+          reader,
+          count,
+          _rowLengthForScan(scan, width, height),
+          bits,
+          maxValue: palette.length - 1,
+        );
+        return localPixels.map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Row-delta color index out of range',
+            );
+          }
+          return palette[index];
+        }).toList(growable: false);
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         final palette = _readLocalPalette(reader, profile);
         final bits = _localBits(palette.length);
@@ -2852,11 +2934,12 @@ class MCOImageV3Codec {
           'Direct row-delta requires a grayscale or dynamic profile',
         );
       case MCOImageV3BlockAlgorithm.compactSparse:
-        final background = _readBackgroundRef(
-          reader,
-          profile,
-          implicitWhiteBackground: implicitWhiteBackground,
-        );
+        final background = inheritedBackgroundColor ??
+            _readBackgroundRef(
+              reader,
+              profile,
+              implicitWhiteBackground: implicitWhiteBackground,
+            );
         final palette = _readLocalPalette(reader, profile);
         if (palette.contains(background)) {
           throw const MCOImageInvalidPayloadException(
@@ -2890,11 +2973,12 @@ class MCOImageV3Codec {
         }
         return result;
       case MCOImageV3BlockAlgorithm.biColorMask:
-        final background = _readBackgroundRef(
-          reader,
-          profile,
-          implicitWhiteBackground: implicitWhiteBackground,
-        );
+        final background = inheritedBackgroundColor ??
+            _readBackgroundRef(
+              reader,
+              profile,
+              implicitWhiteBackground: implicitWhiteBackground,
+            );
         final foreground = _readColorRef(reader, profile);
         return List<int>.generate(
           count,
@@ -3093,6 +3177,16 @@ class MCOImageV3Codec {
         return mapLocalPixels(localPixels);
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
         return _decodeAdaptiveBitplanesBody(reader, count, palette);
+      case MCOImageV3BlockAlgorithm.rowDelta:
+        return mapLocalPixels(
+          _readRowDeltaBody(
+            reader,
+            count,
+            _rowLengthForScan(scan, width, height),
+            bits,
+            maxValue: palette.length - 1,
+          ),
+        );
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         return mapLocalPixels(
           _readCompactRowDeltaBody(
@@ -3420,6 +3514,7 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.compactSparse => ImageMode.sparseBg,
       MCOImageV3BlockAlgorithm.biColorMask => ImageMode.biColorMask,
       MCOImageV3BlockAlgorithm.rowRepeat => ImageMode.rowRepeat,
+      MCOImageV3BlockAlgorithm.rowDelta => ImageMode.rowDelta,
       _ => ImageMode.extended,
     };
   }
@@ -3472,6 +3567,7 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.directBitplanes => 'Direct bitplanes',
       MCOImageV3BlockAlgorithm.compactRowDelta => 'Compact row delta',
       MCOImageV3BlockAlgorithm.directRowDelta => 'Direct row delta',
+      MCOImageV3BlockAlgorithm.rowDelta => 'Row delta',
     };
   }
 
@@ -3495,7 +3591,8 @@ class MCOImageV3Codec {
     return switch (algorithm) {
       MCOImageV3BlockAlgorithm.bitplanes ||
       MCOImageV3BlockAlgorithm.adaptiveBitplanes ||
-      MCOImageV3BlockAlgorithm.compactRowDelta => true,
+      MCOImageV3BlockAlgorithm.compactRowDelta ||
+      MCOImageV3BlockAlgorithm.rowDelta => true,
       _ => false,
     };
   }
@@ -3513,6 +3610,7 @@ class MCOImageV3Codec {
       MCOImageV3BlockAlgorithm.bitplanes ||
       MCOImageV3BlockAlgorithm.adaptiveBitplanes ||
       MCOImageV3BlockAlgorithm.compactRowDelta ||
+      MCOImageV3BlockAlgorithm.rowDelta ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
       MCOImageV3BlockAlgorithm.compactSparse =>
         linear.where((color) => color != backgroundColor).toSet().length,
@@ -4409,7 +4507,16 @@ class MCOImageV3Codec {
       if (seen.add(key)) variants.add(palette);
     }
 
-    add(_localPalette(pixels));
+    final frequencyPalette = _localPalette(pixels);
+    add(frequencyPalette);
+    if (indexOrderSensitive &&
+        preferredFirstColor != null &&
+        frequencyPalette.contains(preferredFirstColor)) {
+      add(<int>[
+        preferredFirstColor,
+        ...frequencyPalette.where((color) => color != preferredFirstColor),
+      ]);
+    }
     if (indexOrderSensitive) {
       add(_firstUseLocalPalette(pixels));
     }
@@ -5214,6 +5321,694 @@ class MCOImageV3Codec {
           length - 4,
           remainingLength - 4,
         );
+  }
+
+  static void _writeRowDeltaBody(
+    _V3BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+  ) {
+    if (rowLength <= 0 || values.length % rowLength != 0) {
+      throw const MCOImageInvalidInputException(
+        'Invalid row-delta geometry',
+      );
+    }
+    if (values.isEmpty) return;
+
+    final noShiftRawCost = _rowDeltaBodyVariantBitCost(
+      values,
+      rowLength,
+      valueBits,
+      useVirtualBaseRow: false,
+      allowShiftPredictors: false,
+    );
+    final noShiftVirtualCost = _rowDeltaBodyVariantBitCost(
+      values,
+      rowLength,
+      valueBits,
+      useVirtualBaseRow: true,
+      allowShiftPredictors: false,
+    );
+    final shiftRawCost = _rowDeltaBodyVariantBitCost(
+      values,
+      rowLength,
+      valueBits,
+      useVirtualBaseRow: false,
+      allowShiftPredictors: true,
+    );
+    final shiftVirtualCost = _rowDeltaBodyVariantBitCost(
+      values,
+      rowLength,
+      valueBits,
+      useVirtualBaseRow: true,
+      allowShiftPredictors: true,
+    );
+
+    final noShiftCost = math.min(noShiftRawCost, noShiftVirtualCost);
+    final shiftCost = math.min(shiftRawCost, shiftVirtualCost);
+    final allowShiftPredictors = shiftCost < noShiftCost;
+    final useVirtualBaseRow = allowShiftPredictors
+        ? shiftVirtualCost < shiftRawCost
+        : noShiftVirtualCost < noShiftRawCost;
+
+    writer
+      ..writeBits(useVirtualBaseRow ? 1 : 0, 1)
+      ..writeBits(allowShiftPredictors ? 1 : 0, 1);
+    _writeRowDeltaBodyVariant(
+      writer,
+      values,
+      rowLength,
+      valueBits,
+      useVirtualBaseRow: useVirtualBaseRow,
+      allowShiftPredictors: allowShiftPredictors,
+    );
+  }
+
+  static int _rowDeltaBodyVariantBitCost(
+    List<int> values,
+    int rowLength,
+    int valueBits, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    var cost = useVirtualBaseRow ? 0 : rowLength * valueBits;
+    final rowCount = values.length ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      final repeatCount = _compactRepeatedRowCount(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      if (repeatCount >= 2) {
+        final repeatRunCost = _rowDeltaOpBits +
+            _rowDeltaExtendedBits +
+            _rangeCompactUintBitLength(
+              repeatCount - 2,
+              rowCount - row - 2,
+            );
+        if (repeatRunCost < repeatCount * _rowDeltaOpBits) {
+          cost += repeatRunCost;
+          row += repeatCount;
+          continue;
+        }
+      }
+
+      cost += _bestRowDeltaDecision(
+        values,
+        rowLength,
+        valueBits,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        allowShiftPredictors: allowShiftPredictors,
+      ).bitCost;
+      row++;
+    }
+    return cost;
+  }
+
+  static void _writeRowDeltaBodyVariant(
+    _V3BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    if (!useVirtualBaseRow) {
+      for (var x = 0; x < rowLength; x++) {
+        writer.writeBits(values[x], valueBits);
+      }
+    }
+
+    final rowCount = values.length ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      final repeatCount = _compactRepeatedRowCount(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      if (repeatCount >= 2) {
+        final repeatRunCost = _rowDeltaOpBits +
+            _rowDeltaExtendedBits +
+            _rangeCompactUintBitLength(
+              repeatCount - 2,
+              rowCount - row - 2,
+            );
+        if (repeatRunCost < repeatCount * _rowDeltaOpBits) {
+          writer
+            ..writeBits(_rowDeltaOpExtended, _rowDeltaOpBits)
+            ..writeBits(
+              _rowDeltaExtendedRepeatRun,
+              _rowDeltaExtendedBits,
+            )
+            ..writeRangeCompactUint(
+              repeatCount - 2,
+              rowCount - row - 2,
+            );
+          row += repeatCount;
+          continue;
+        }
+      }
+
+      final decision = _bestRowDeltaDecision(
+        values,
+        rowLength,
+        valueBits,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        allowShiftPredictors: allowShiftPredictors,
+      );
+      _writeRowDeltaDecision(
+        writer,
+        values,
+        rowLength,
+        valueBits,
+        row,
+        decision,
+        allowShiftPredictors: allowShiftPredictors,
+      );
+      row++;
+    }
+  }
+
+  static _V3RowDeltaDecision _bestRowDeltaDecision(
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    _V3RowDeltaDecision best = _V3RowDeltaDecision(
+      op: _rowDeltaOpRaw,
+      extendedOp: -1,
+      predictor: _rowDeltaPredictorSame,
+      changes: const <_V3RowDeltaChange>[],
+      bitCost: _rowDeltaOpBits + rowLength * valueBits,
+    );
+    final predictors = allowShiftPredictors
+        ? _rowDeltaPredictorsForRow(
+            row,
+            useVirtualBaseRow: useVirtualBaseRow,
+          )
+        : const <int>[_rowDeltaPredictorSame];
+
+    for (final predictor in predictors) {
+      final changes = _compactRowDeltaChanges(
+        values,
+        rowLength,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        predictor: predictor,
+      );
+      if (changes.isEmpty && predictor == _rowDeltaPredictorSame) {
+        final repeat = _V3RowDeltaDecision(
+          op: _rowDeltaOpRepeat,
+          extendedOp: -1,
+          predictor: predictor,
+          changes: changes,
+          bitCost: _rowDeltaOpBits,
+        );
+        if (repeat.bitCost < best.bitCost) best = repeat;
+        continue;
+      }
+
+      final predictorCost = allowShiftPredictors
+          ? _compactPredictorBitCost(predictor)
+          : 0;
+      final positionBits = (rowLength - 1).bitLength;
+      final indexedCost = _rowDeltaOpBits +
+          predictorCost +
+          rowLength.bitLength +
+          changes.length * (positionBits + valueBits);
+      if (indexedCost < best.bitCost) {
+        best = _V3RowDeltaDecision(
+          op: _rowDeltaOpIndexed,
+          extendedOp: -1,
+          predictor: predictor,
+          changes: changes,
+          bitCost: indexedCost,
+        );
+      }
+      if (changes.isEmpty) continue;
+
+      final maskCost = _rowDeltaOpBits +
+          _rowDeltaExtendedBits +
+          predictorCost +
+          rowLength +
+          changes.length * valueBits;
+      if (maskCost < best.bitCost) {
+        best = _V3RowDeltaDecision(
+          op: _rowDeltaOpExtended,
+          extendedOp: _rowDeltaExtendedMask,
+          predictor: predictor,
+          changes: changes,
+          bitCost: maskCost,
+        );
+      }
+
+      final segments = _rowDeltaSegments(changes);
+      final segmentGeometryCost = (rowLength - 1).bitLength +
+          segments.length * positionBits * 2;
+      final segmentCost = _rowDeltaOpBits +
+          _rowDeltaExtendedBits +
+          predictorCost +
+          segmentGeometryCost +
+          changes.length * valueBits;
+      if (segmentCost < best.bitCost) {
+        best = _V3RowDeltaDecision(
+          op: _rowDeltaOpExtended,
+          extendedOp: _rowDeltaExtendedSegments,
+          predictor: predictor,
+          changes: changes,
+          bitCost: segmentCost,
+        );
+      }
+
+      final sameValue = _sameRowDeltaChangeValue(changes);
+      if (sameValue != null) {
+        final sameScalarMaskCost = _rowDeltaOpBits +
+            _rowDeltaExtendedBits +
+            predictorCost +
+            rowLength +
+            valueBits;
+        if (sameScalarMaskCost < best.bitCost) {
+          best = _V3RowDeltaDecision(
+            op: _rowDeltaOpExtended,
+            extendedOp: _rowDeltaExtendedSameScalarMask,
+            predictor: predictor,
+            changes: changes,
+            bitCost: sameScalarMaskCost,
+          );
+        }
+      }
+    }
+    return best;
+  }
+
+  static void _writeRowDeltaDecision(
+    _V3BitWriter writer,
+    List<int> values,
+    int rowLength,
+    int valueBits,
+    int row,
+    _V3RowDeltaDecision decision, {
+    required bool allowShiftPredictors,
+  }) {
+    writer.writeBits(decision.op, _rowDeltaOpBits);
+    if (decision.op == _rowDeltaOpRepeat) return;
+    if (decision.op == _rowDeltaOpRaw) {
+      final rowStart = row * rowLength;
+      for (var x = 0; x < rowLength; x++) {
+        writer.writeBits(values[rowStart + x], valueBits);
+      }
+      return;
+    }
+
+    if (decision.op == _rowDeltaOpIndexed) {
+      if (allowShiftPredictors) {
+        _writeCompactRowDeltaPredictor(writer, decision.predictor);
+      }
+      final positionBits = (rowLength - 1).bitLength;
+      writer.writeBits(decision.changes.length, rowLength.bitLength);
+      for (final change in decision.changes) {
+        writer
+          ..writeBits(change.x, positionBits)
+          ..writeBits(change.value, valueBits);
+      }
+      return;
+    }
+
+    if (decision.op != _rowDeltaOpExtended ||
+        decision.extendedOp == _rowDeltaExtendedRepeatRun) {
+      throw const MCOImageInvalidInputException(
+        'Invalid row-delta decision',
+      );
+    }
+    writer.writeBits(decision.extendedOp, _rowDeltaExtendedBits);
+    if (allowShiftPredictors) {
+      _writeCompactRowDeltaPredictor(writer, decision.predictor);
+    }
+    switch (decision.extendedOp) {
+      case _rowDeltaExtendedMask:
+        _writeRowDeltaMask(
+          writer,
+          decision.changes,
+          rowLength,
+          valueBits,
+        );
+        break;
+      case _rowDeltaExtendedSegments:
+        _writeRowDeltaSegments(
+          writer,
+          decision.changes,
+          rowLength,
+          valueBits,
+        );
+        break;
+      case _rowDeltaExtendedSameScalarMask:
+        _writeRowDeltaSameScalarMask(
+          writer,
+          decision.changes,
+          rowLength,
+          valueBits,
+        );
+        break;
+      default:
+        throw const MCOImageInvalidInputException(
+          'Invalid row-delta extended op',
+        );
+    }
+  }
+
+  static void _writeRowDeltaMask(
+    _V3BitWriter writer,
+    List<_V3RowDeltaChange> changes,
+    int rowLength,
+    int valueBits,
+  ) {
+    var changeIndex = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final changed = changeIndex < changes.length &&
+          changes[changeIndex].x == x;
+      writer.writeBits(changed ? 1 : 0, 1);
+      if (changed) changeIndex++;
+    }
+    for (final change in changes) {
+      writer.writeBits(change.value, valueBits);
+    }
+  }
+
+  static void _writeRowDeltaSameScalarMask(
+    _V3BitWriter writer,
+    List<_V3RowDeltaChange> changes,
+    int rowLength,
+    int valueBits,
+  ) {
+    final value = _sameRowDeltaChangeValue(changes);
+    if (value == null) {
+      throw const MCOImageInvalidInputException(
+        'Row-delta changes are not same-scalar',
+      );
+    }
+    var changeIndex = 0;
+    for (var x = 0; x < rowLength; x++) {
+      final changed = changeIndex < changes.length &&
+          changes[changeIndex].x == x;
+      writer.writeBits(changed ? 1 : 0, 1);
+      if (changed) changeIndex++;
+    }
+    writer.writeBits(value, valueBits);
+  }
+
+  static void _writeRowDeltaSegments(
+    _V3BitWriter writer,
+    List<_V3RowDeltaChange> changes,
+    int rowLength,
+    int valueBits,
+  ) {
+    final segments = _rowDeltaSegments(changes);
+    final positionBits = (rowLength - 1).bitLength;
+    writer.writeBits(
+      segments.length - 1,
+      (rowLength - 1).bitLength,
+    );
+    for (final segment in segments) {
+      writer
+        ..writeBits(segment.x, positionBits)
+        ..writeBits(segment.length - 1, positionBits);
+      for (final value in segment.values) {
+        writer.writeBits(value, valueBits);
+      }
+    }
+  }
+
+  static List<int> _readRowDeltaBody(
+    _V3BitReader reader,
+    int count,
+    int rowLength,
+    int valueBits, {
+    required int maxValue,
+  }) {
+    if (rowLength <= 0 || count % rowLength != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid row-delta geometry',
+      );
+    }
+    if (count == 0) return const <int>[];
+
+    final useVirtualBaseRow = reader.readBits(1) != 0;
+    final allowShiftPredictors = reader.readBits(1) != 0;
+    final result = List<int>.filled(count, 0);
+    if (!useVirtualBaseRow) {
+      for (var x = 0; x < rowLength; x++) {
+        result[x] = _readRowDeltaValue(reader, valueBits, maxValue);
+      }
+    }
+
+    final rowCount = count ~/ rowLength;
+    var row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      final rowStart = row * rowLength;
+      final op = reader.readBits(_rowDeltaOpBits);
+      if (op == _rowDeltaOpRaw) {
+        for (var x = 0; x < rowLength; x++) {
+          result[rowStart + x] =
+              _readRowDeltaValue(reader, valueBits, maxValue);
+        }
+        row++;
+        continue;
+      }
+      if (op == _rowDeltaOpRepeat) {
+        _copyCompactRowDeltaPredictedRow(
+          result,
+          rowStart,
+          rowLength,
+          row,
+          _rowDeltaPredictorSame,
+          useVirtualBaseRow: useVirtualBaseRow,
+        );
+        row++;
+        continue;
+      }
+      if (op == _rowDeltaOpIndexed) {
+        final predictor = _readRowDeltaPredictor(
+          reader,
+          row,
+          useVirtualBaseRow: useVirtualBaseRow,
+          allowShiftPredictors: allowShiftPredictors,
+        );
+        _copyCompactRowDeltaPredictedRow(
+          result,
+          rowStart,
+          rowLength,
+          row,
+          predictor,
+          useVirtualBaseRow: useVirtualBaseRow,
+        );
+        final changeCount = reader.readBits(rowLength.bitLength);
+        if (changeCount > rowLength) {
+          throw const MCOImageInvalidPayloadException(
+            'Row-delta change count exceeds row length',
+          );
+        }
+        final positionBits = (rowLength - 1).bitLength;
+        var previousX = -1;
+        for (var i = 0; i < changeCount; i++) {
+          final x = reader.readBits(positionBits);
+          if (x >= rowLength || x <= previousX) {
+            throw const MCOImageInvalidPayloadException(
+              'Invalid row-delta change position',
+            );
+          }
+          result[rowStart + x] =
+              _readRowDeltaValue(reader, valueBits, maxValue);
+          previousX = x;
+        }
+        row++;
+        continue;
+      }
+      if (op != _rowDeltaOpExtended) {
+        throw const MCOImageInvalidPayloadException(
+          'Unknown row-delta row op',
+        );
+      }
+
+      final extendedOp = reader.readBits(_rowDeltaExtendedBits);
+      if (extendedOp == _rowDeltaExtendedRepeatRun) {
+        if (row + 2 > rowCount) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid row-delta repeat run',
+          );
+        }
+        final repeatCount =
+            reader.readRangeCompactUint(rowCount - row - 2) + 2;
+        for (var repeat = 0; repeat < repeatCount; repeat++) {
+          final repeatRow = row + repeat;
+          _copyCompactRowDeltaPredictedRow(
+            result,
+            repeatRow * rowLength,
+            rowLength,
+            repeatRow,
+            _rowDeltaPredictorSame,
+            useVirtualBaseRow: useVirtualBaseRow,
+          );
+        }
+        row += repeatCount;
+        continue;
+      }
+
+      final predictor = _readRowDeltaPredictor(
+        reader,
+        row,
+        useVirtualBaseRow: useVirtualBaseRow,
+        allowShiftPredictors: allowShiftPredictors,
+      );
+      _copyCompactRowDeltaPredictedRow(
+        result,
+        rowStart,
+        rowLength,
+        row,
+        predictor,
+        useVirtualBaseRow: useVirtualBaseRow,
+      );
+      switch (extendedOp) {
+        case _rowDeltaExtendedMask:
+          _readRowDeltaMask(
+            reader,
+            result,
+            rowStart,
+            rowLength,
+            valueBits,
+            maxValue,
+            sameScalar: false,
+          );
+          break;
+        case _rowDeltaExtendedSegments:
+          _readRowDeltaSegments(
+            reader,
+            result,
+            rowStart,
+            rowLength,
+            valueBits,
+            maxValue,
+          );
+          break;
+        case _rowDeltaExtendedSameScalarMask:
+          _readRowDeltaMask(
+            reader,
+            result,
+            rowStart,
+            rowLength,
+            valueBits,
+            maxValue,
+            sameScalar: true,
+          );
+          break;
+        default:
+          throw const MCOImageInvalidPayloadException(
+            'Unknown row-delta extended op',
+          );
+      }
+      row++;
+    }
+    return result;
+  }
+
+  static int _readRowDeltaPredictor(
+    _V3BitReader reader,
+    int row, {
+    required bool useVirtualBaseRow,
+    required bool allowShiftPredictors,
+  }) {
+    if (!allowShiftPredictors) return _rowDeltaPredictorSame;
+    final predictor = _readCompactRowDeltaPredictor(reader);
+    if (row == 0 &&
+        useVirtualBaseRow &&
+        predictor != _rowDeltaPredictorSame) {
+      throw const MCOImageInvalidPayloadException(
+        'Shifted row-delta predictor cannot use virtual row',
+      );
+    }
+    return predictor;
+  }
+
+  static int _readRowDeltaValue(
+    _V3BitReader reader,
+    int valueBits,
+    int maxValue,
+  ) {
+    final value = reader.readBits(valueBits);
+    if (value > maxValue) {
+      throw const MCOImageInvalidPayloadException(
+        'Row-delta value out of range',
+      );
+    }
+    return value;
+  }
+
+  static void _readRowDeltaMask(
+    _V3BitReader reader,
+    List<int> result,
+    int rowStart,
+    int rowLength,
+    int valueBits,
+    int maxValue, {
+    required bool sameScalar,
+  }) {
+    final positions = <int>[];
+    for (var x = 0; x < rowLength; x++) {
+      if (reader.readBits(1) != 0) positions.add(x);
+    }
+    if (positions.isEmpty) {
+      throw const MCOImageInvalidPayloadException(
+        'Empty row-delta mask',
+      );
+    }
+    if (sameScalar) {
+      final value = _readRowDeltaValue(reader, valueBits, maxValue);
+      for (final x in positions) {
+        result[rowStart + x] = value;
+      }
+      return;
+    }
+    for (final x in positions) {
+      result[rowStart + x] =
+          _readRowDeltaValue(reader, valueBits, maxValue);
+    }
+  }
+
+  static void _readRowDeltaSegments(
+    _V3BitReader reader,
+    List<int> result,
+    int rowStart,
+    int rowLength,
+    int valueBits,
+    int maxValue,
+  ) {
+    final positionBits = (rowLength - 1).bitLength;
+    final segmentCount =
+        reader.readBits((rowLength - 1).bitLength) + 1;
+    var previousEnd = -1;
+    for (var i = 0; i < segmentCount; i++) {
+      final start = reader.readBits(positionBits);
+      final length = reader.readBits(positionBits) + 1;
+      if (start <= previousEnd || start + length > rowLength) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid row-delta segment',
+        );
+      }
+      for (var x = start; x < start + length; x++) {
+        result[rowStart + x] =
+            _readRowDeltaValue(reader, valueBits, maxValue);
+      }
+      previousEnd = start + length - 1;
+    }
   }
 
   static void _writeCompactRowDeltaBody(
@@ -7586,15 +8381,42 @@ class MCOImageV3Codec {
         ? <_V3RegionBeamState>[...improved, ...evaluatedStates]
         : improved;
     resultSource.sort((left, right) => left.cost.compareTo(right.cost));
-    final result = <_V3RegionBeamState>[];
+    final reducedResult = <_V3RegionBeamState>[];
     final resultKeys = <String>{};
+    final reducedResultLimit = useExtremeSearch
+        ? _extremeRegionExactRerankPoolSize
+        : resultLimit;
     for (final state in resultSource) {
       if (resultKeys.add(_regionListKey(state.regions))) {
-        result.add(state);
+        reducedResult.add(state);
       }
-      if (result.length >= resultLimit) break;
+      if (reducedResult.length >= reducedResultLimit) break;
     }
-    return result;
+    if (!useExtremeSearch || reducedResult.isEmpty) {
+      return reducedResult;
+    }
+
+    // Reduced cost keeps the beam search affordable, but it does not model
+    // every final regions variant (notably shared palettes). Re-rank a wider
+    // reduced-cost pool with the exact encoder before returning the top layouts.
+    final exactResult = <_V3RegionBeamState>[];
+    for (final state in reducedResult) {
+      final exactCost = _regionPayloadByteCost(
+        image,
+        backgroundColor,
+        state.regions,
+        useHighCompressionExtras: useHighCompressionExtras,
+        reducedCostEvaluator: false,
+      );
+      if (exactCost != null) {
+        exactResult.add(_V3RegionBeamState(state.regions, exactCost));
+      }
+    }
+    if (exactResult.isEmpty) {
+      return reducedResult.take(resultLimit).toList(growable: false);
+    }
+    exactResult.sort((left, right) => left.cost.compareTo(right.cost));
+    return exactResult.take(resultLimit).toList(growable: false);
   }
 
   int? _regionPayloadByteCost(
@@ -9207,6 +10029,22 @@ class _V3RowDeltaSegment {
   const _V3RowDeltaSegment(this.x, this.values);
 
   int get length => values.length;
+}
+
+class _V3RowDeltaDecision {
+  final int op;
+  final int extendedOp;
+  final int predictor;
+  final List<_V3RowDeltaChange> changes;
+  final int bitCost;
+
+  const _V3RowDeltaDecision({
+    required this.op,
+    required this.extendedOp,
+    required this.predictor,
+    required this.changes,
+    required this.bitCost,
+  });
 }
 
 class _V3CompactRowDeltaDecision {
