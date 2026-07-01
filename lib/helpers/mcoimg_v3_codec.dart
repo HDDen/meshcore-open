@@ -258,7 +258,7 @@ class MCOImageV3Codec {
   static const int _minSize = 1;
   static const int _maxSize = 256;
   static const int _maxRegions = 32;
-  static const int _normalMaxRegions = 16;
+  static const int _normalMaxRegions = 12;
   static const int _greedyTieLargestArea = 0;
   static const int _greedyTieWidest = 1;
   static const int _greedyTieTallest = 2;
@@ -277,6 +277,7 @@ class MCOImageV3Codec {
   static const int _extremeRegionExactRerankPoolSize = 32;
   static const int _extremeRegionEvaluationBudget = 1536;
   static const int _maxFrequentBackgroundCandidates = 8;
+  static const int _maxNormalBackgroundCandidates = 4;
   static const int _maxExhaustiveBackgroundColors = 64;
   static const int _maxExhaustiveBackgroundPixels = 4096;
   static const int _minLzMatchLength = 3;
@@ -316,10 +317,13 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.varUintSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
   ];
+  // Normal keeps the strong, relatively inexpensive region-body families.
+  // It still skips direct codecs and full palette-order optimization;
+  // High/Extreme retain the complete candidate table above.
   static const List<MCOImageV3BlockAlgorithm> _normalRegionBlockAlgorithms = [
-    MCOImageV3BlockAlgorithm.rawGlobal,
     MCOImageV3BlockAlgorithm.rawLocal,
     MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.varUintRle,
     MCOImageV3BlockAlgorithm.lzPixels,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
@@ -328,6 +332,7 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
     MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
   ];
   static const List<MCOImageV3BlockAlgorithm> _sharedPaletteRegionAlgorithms = [
@@ -360,7 +365,7 @@ class MCOImageV3Codec {
       _normalSharedPaletteRegionAlgorithms = [
     MCOImageV3BlockAlgorithm.rawLocal,
     MCOImageV3BlockAlgorithm.compactRle,
-    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintRle,
     MCOImageV3BlockAlgorithm.lzPixels,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
@@ -368,7 +373,173 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm.compactRowDelta,
     MCOImageV3BlockAlgorithm.rowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm> _normalBlockAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawGlobal,
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.varUintRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
+    MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm> _fullBlockAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawGlobal,
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.varUintRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.directBitplanes,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.directRowDelta,
+    MCOImageV3BlockAlgorithm.rowDelta,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
+    MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm>
+      _normalTopLevelBackgroundIndependentAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawGlobal,
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.varUintRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm>
+      _fullTopLevelBackgroundIndependentAlgorithms = [
+    MCOImageV3BlockAlgorithm.rawGlobal,
+    MCOImageV3BlockAlgorithm.rawLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.varUintRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
+    MCOImageV3BlockAlgorithm.quadtree,
+    MCOImageV3BlockAlgorithm.directBitplanes,
+    MCOImageV3BlockAlgorithm.directRowDelta,
+    MCOImageV3BlockAlgorithm.rowRepeat,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm>
+      _normalTopLevelBackgroundSensitiveAlgorithms = [
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.rowDelta,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
+    MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+
+  static const List<MCOImageV3BlockAlgorithm>
+      _fullTopLevelBackgroundSensitiveAlgorithms = [
+    MCOImageV3BlockAlgorithm.bitplanes,
+    MCOImageV3BlockAlgorithm.adaptiveBitplanes,
+    MCOImageV3BlockAlgorithm.rowDelta,
+    MCOImageV3BlockAlgorithm.compactRowDelta,
+    MCOImageV3BlockAlgorithm.compactSparse,
+    MCOImageV3BlockAlgorithm.varUintSparse,
+    MCOImageV3BlockAlgorithm.biColorMask,
+  ];
+
+  // Normal evaluates every non-hybrid compact Regions combination. This
+  // recovers the largest wire-size wins (compact/delta/common/shared) while
+  // leaving hybrid headers and beam geometry to High/Extreme.
+  static const _normalRegionCandidateOptions = [
+    (
+      commonBlockHeader: false,
+      hybridCommonHeader: false,
+      deltaGeometry: false,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: false,
+      hybridCommonHeader: false,
+      deltaGeometry: true,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: false,
+      hybridCommonHeader: false,
+      deltaGeometry: false,
+      sharedLocalPalette: true,
+    ),
+    (
+      commonBlockHeader: false,
+      hybridCommonHeader: false,
+      deltaGeometry: true,
+      sharedLocalPalette: true,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: false,
+      deltaGeometry: false,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: false,
+      deltaGeometry: true,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: false,
+      deltaGeometry: false,
+      sharedLocalPalette: true,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: false,
+      deltaGeometry: true,
+      sharedLocalPalette: true,
+    ),
+  ];
+
+  static const _fullRegionCandidateOptions = [
+    ..._normalRegionCandidateOptions,
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: true,
+      deltaGeometry: false,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: true,
+      deltaGeometry: true,
+      sharedLocalPalette: false,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: true,
+      deltaGeometry: false,
+      sharedLocalPalette: true,
+    ),
+    (
+      commonBlockHeader: true,
+      hybridCommonHeader: true,
+      deltaGeometry: true,
+      sharedLocalPalette: true,
+    ),
   ];
   static const int _rowDeltaOpBits = 2;
   static const int _rowDeltaOpRaw = 0;
@@ -431,6 +602,16 @@ class MCOImageV3Codec {
         : _normalSharedPaletteRegionAlgorithms;
   }
 
+  static List<ScanMode> _regionScanModesForLevel({
+    required bool useHighCompressionExtras,
+    bool reducedCostEvaluator = false,
+  }) {
+    if (useHighCompressionExtras || reducedCostEvaluator) {
+      return ScanMode.values;
+    }
+    return const <ScanMode>[ScanMode.h, ScanMode.v, ScanMode.s];
+  }
+
   EncodedMCOImageV3 encode(
     MCOImage image, {
     int? backgroundColor,
@@ -489,12 +670,15 @@ class MCOImageV3Codec {
         backgroundColor ??
         image.transparentColor ??
         MCOImagePalette.whiteIndexFor(image.paletteProfile);
-    return _backgroundCandidates(
-      image,
-      preferredBackground,
-      exhaustiveSmallImage:
-          effectiveCompressionLevel != mcoImageCompressionLevelNormal,
-    )
+    final candidates =
+        effectiveCompressionLevel == mcoImageCompressionLevelNormal
+            ? _normalBackgroundCandidates(image, preferredBackground)
+            : _backgroundCandidates(
+                image,
+                preferredBackground,
+                exhaustiveSmallImage: true,
+              );
+    return candidates
         .map(
           (candidate) => MCOImageBackgroundCandidate(
             color: candidate.color,
@@ -779,16 +963,31 @@ class MCOImageV3Codec {
         image.transparentColor ??
         MCOImagePalette.whiteIndexFor(image.paletteProfile);
     final effectiveBackgroundCandidates = backgroundCandidates == null
-        ? _backgroundCandidates(
-            image,
-            preferredBackground,
-            exhaustiveSmallImage: useHighCompressionExtras,
-          )
+        ? useHighCompressionExtras
+            ? _backgroundCandidates(
+                image,
+                preferredBackground,
+                exhaustiveSmallImage: true,
+              )
+            : _normalBackgroundCandidates(image, preferredBackground)
         : _backgroundCandidatesFromPublic(
             backgroundCandidates,
             image.paletteProfile,
           );
-    final effectiveScanModes = scanModes ?? ScanMode.values;
+    final effectiveScanModes = scanModes ??
+        (useHighCompressionExtras
+            ? ScanMode.values
+            : const <ScanMode>[ScanMode.h, ScanMode.v, ScanMode.s]);
+    final effectiveBlockAlgorithms = useHighCompressionExtras
+        ? _fullBlockAlgorithms
+        : _normalBlockAlgorithms;
+    final topLevelBackgroundIndependentAlgorithms =
+        useHighCompressionExtras
+            ? _fullTopLevelBackgroundIndependentAlgorithms
+            : _normalTopLevelBackgroundIndependentAlgorithms;
+    final topLevelBackgroundSensitiveAlgorithms = useHighCompressionExtras
+        ? _fullTopLevelBackgroundSensitiveAlgorithms
+        : _normalTopLevelBackgroundSensitiveAlgorithms;
     if (includeNonScanCandidates) {
       final solidCandidate = _tryBuildSolidBackgroundCandidate(image);
       if (solidCandidate != null) addCandidate(solidCandidate);
@@ -815,6 +1014,7 @@ class MCOImageV3Codec {
           useHighCompressionExtras: useHighCompressionExtras,
           useExtremeSearch: useExtremeCompressionExtras &&
               background.rank <= _maxExtremeRegionBackgroundRank,
+          useNormalSharedBeam: !useHighCompressionExtras,
         );
         for (final variant in regionVariants) {
           final regionPlanCache =
@@ -862,97 +1062,24 @@ class MCOImageV3Codec {
             useHighCompressionExtras: useHighCompressionExtras,
           );
           if (regionsCandidate != null) addCandidate(regionsCandidate);
-          if (useHighCompressionExtras) {
-            const regionOptions = [
-              (
-                commonBlockHeader: false,
-                hybridCommonHeader: false,
-                deltaGeometry: false,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: false,
-                hybridCommonHeader: false,
-                deltaGeometry: true,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: false,
-                hybridCommonHeader: false,
-                deltaGeometry: false,
-                sharedLocalPalette: true,
-              ),
-              (
-                commonBlockHeader: false,
-                hybridCommonHeader: false,
-                deltaGeometry: true,
-                sharedLocalPalette: true,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: false,
-                deltaGeometry: false,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: false,
-                deltaGeometry: true,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: false,
-                deltaGeometry: false,
-                sharedLocalPalette: true,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: false,
-                deltaGeometry: true,
-                sharedLocalPalette: true,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: true,
-                deltaGeometry: false,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: true,
-                deltaGeometry: true,
-                sharedLocalPalette: false,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: true,
-                deltaGeometry: false,
-                sharedLocalPalette: true,
-              ),
-              (
-                commonBlockHeader: true,
-                hybridCommonHeader: true,
-                deltaGeometry: true,
-                sharedLocalPalette: true,
-              ),
-            ];
-            for (final options in regionOptions) {
-              final candidate = _tryBuildRegionsCandidate(
-                image,
-                bg,
-                regionsOverride: variant.regions,
-                variantLabel: variant.label,
-                regionPlanCache: regionPlanCache,
-                compactGeometry: true,
-                commonBlockHeader: options.commonBlockHeader,
-                hybridCommonHeader: options.hybridCommonHeader,
-                deltaGeometry: options.deltaGeometry,
-                sharedLocalPalette: options.sharedLocalPalette,
-                useHighCompressionExtras: useHighCompressionExtras,
-              );
-              if (candidate != null) addCandidate(candidate);
-            }
+          final regionOptions = useHighCompressionExtras
+              ? _fullRegionCandidateOptions
+              : _normalRegionCandidateOptions;
+          for (final options in regionOptions) {
+            final candidate = _tryBuildRegionsCandidate(
+              image,
+              bg,
+              regionsOverride: variant.regions,
+              variantLabel: variant.label,
+              regionPlanCache: regionPlanCache,
+              compactGeometry: true,
+              commonBlockHeader: options.commonBlockHeader,
+              hybridCommonHeader: options.hybridCommonHeader,
+              deltaGeometry: options.deltaGeometry,
+              sharedLocalPalette: options.sharedLocalPalette,
+              useHighCompressionExtras: useHighCompressionExtras,
+            );
+            if (candidate != null) addCandidate(candidate);
           }
         }
       }
@@ -965,24 +1092,7 @@ class MCOImageV3Codec {
       final cropped = _extractBoundsPixels(image, bounds);
       for (final scan in effectiveScanModes) {
         final linear = _toScanOrder(cropped, bounds.width, bounds.height, scan);
-        for (final algorithm in const [
-          MCOImageV3BlockAlgorithm.rawGlobal,
-          MCOImageV3BlockAlgorithm.rawLocal,
-          MCOImageV3BlockAlgorithm.compactRle,
-          MCOImageV3BlockAlgorithm.varUintRle,
-          MCOImageV3BlockAlgorithm.lzPixels,
-          MCOImageV3BlockAlgorithm.quadtree,
-          MCOImageV3BlockAlgorithm.bitplanes,
-          MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-          MCOImageV3BlockAlgorithm.directBitplanes,
-          MCOImageV3BlockAlgorithm.compactRowDelta,
-          MCOImageV3BlockAlgorithm.directRowDelta,
-          MCOImageV3BlockAlgorithm.rowDelta,
-          MCOImageV3BlockAlgorithm.rowRepeat,
-          MCOImageV3BlockAlgorithm.compactSparse,
-          MCOImageV3BlockAlgorithm.varUintSparse,
-          MCOImageV3BlockAlgorithm.biColorMask,
-        ]) {
+        for (final algorithm in effectiveBlockAlgorithms) {
           if (algorithm == MCOImageV3BlockAlgorithm.quadtree &&
               scan != ScanMode.h) {
             continue;
@@ -998,6 +1108,8 @@ class MCOImageV3Codec {
               bounds.height,
             ),
             backgroundInherited: true,
+            greedyLzOnly: !useHighCompressionExtras,
+            useHighCompressionExtras: useHighCompressionExtras,
           );
           if (blockBody == null) continue;
 
@@ -1030,17 +1142,7 @@ class MCOImageV3Codec {
 
     for (final scan in effectiveScanModes) {
       final linear = _toScanOrder(image.pixels, image.width, image.height, scan);
-      for (final algorithm in const [
-        MCOImageV3BlockAlgorithm.rawGlobal,
-        MCOImageV3BlockAlgorithm.rawLocal,
-        MCOImageV3BlockAlgorithm.compactRle,
-        MCOImageV3BlockAlgorithm.varUintRle,
-        MCOImageV3BlockAlgorithm.lzPixels,
-        MCOImageV3BlockAlgorithm.quadtree,
-        MCOImageV3BlockAlgorithm.directBitplanes,
-        MCOImageV3BlockAlgorithm.directRowDelta,
-        MCOImageV3BlockAlgorithm.rowRepeat,
-      ]) {
+      for (final algorithm in topLevelBackgroundIndependentAlgorithms) {
         if (_canUseCompactBlockHeader(algorithm)) {
           if (scan != ScanMode.h) continue;
           final compactCandidate = _tryBuildCandidate(
@@ -1050,6 +1152,8 @@ class MCOImageV3Codec {
             scan,
             backgroundColor: preferredBackground,
             compactHeader: true,
+            greedyLzOnly: !useHighCompressionExtras,
+            useHighCompressionExtras: useHighCompressionExtras,
           );
           if (compactCandidate != null) addCandidate(compactCandidate);
           continue;
@@ -1061,20 +1165,14 @@ class MCOImageV3Codec {
           scan,
           backgroundColor: preferredBackground,
           compactHeader: false,
+          greedyLzOnly: !useHighCompressionExtras,
+          useHighCompressionExtras: useHighCompressionExtras,
         );
         if (candidate != null) addCandidate(candidate);
       }
       for (final background in effectiveBackgroundCandidates) {
         final bg = background.color;
-        for (final algorithm in const [
-          MCOImageV3BlockAlgorithm.bitplanes,
-          MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-          MCOImageV3BlockAlgorithm.rowDelta,
-          MCOImageV3BlockAlgorithm.compactRowDelta,
-          MCOImageV3BlockAlgorithm.compactSparse,
-          MCOImageV3BlockAlgorithm.varUintSparse,
-          MCOImageV3BlockAlgorithm.biColorMask,
-        ]) {
+        for (final algorithm in topLevelBackgroundSensitiveAlgorithms) {
           if (_canUseCompactBlockHeader(algorithm)) {
             if (scan != ScanMode.h) continue;
             final compactCandidate = _tryBuildCandidate(
@@ -1084,6 +1182,8 @@ class MCOImageV3Codec {
               scan,
               backgroundColor: bg,
               compactHeader: true,
+              greedyLzOnly: !useHighCompressionExtras,
+              useHighCompressionExtras: useHighCompressionExtras,
             );
             if (compactCandidate != null) addCandidate(compactCandidate);
             continue;
@@ -1095,6 +1195,8 @@ class MCOImageV3Codec {
             scan,
             backgroundColor: bg,
             compactHeader: false,
+            greedyLzOnly: !useHighCompressionExtras,
+            useHighCompressionExtras: useHighCompressionExtras,
           );
           if (candidate != null) addCandidate(candidate);
         }
@@ -1370,82 +1472,9 @@ class MCOImageV3Codec {
       deltaGeometry: false,
       sharedLocalPalette: false,
     );
-    if (!useHighCompressionExtras) return best;
-
-    const optionsList = [
-      (
-        commonBlockHeader: false,
-        hybridCommonHeader: false,
-        deltaGeometry: false,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: false,
-        hybridCommonHeader: false,
-        deltaGeometry: true,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: false,
-        hybridCommonHeader: false,
-        deltaGeometry: false,
-        sharedLocalPalette: true,
-      ),
-      (
-        commonBlockHeader: false,
-        hybridCommonHeader: false,
-        deltaGeometry: true,
-        sharedLocalPalette: true,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: false,
-        deltaGeometry: false,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: false,
-        deltaGeometry: true,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: false,
-        deltaGeometry: false,
-        sharedLocalPalette: true,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: false,
-        deltaGeometry: true,
-        sharedLocalPalette: true,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: true,
-        deltaGeometry: false,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: true,
-        deltaGeometry: true,
-        sharedLocalPalette: false,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: true,
-        deltaGeometry: false,
-        sharedLocalPalette: true,
-      ),
-      (
-        commonBlockHeader: true,
-        hybridCommonHeader: true,
-        deltaGeometry: true,
-        sharedLocalPalette: true,
-      ),
-    ];
+    final optionsList = useHighCompressionExtras
+        ? _fullRegionCandidateOptions
+        : _normalRegionCandidateOptions;
     for (final options in optionsList) {
       consider(
         compactGeometry: true,
@@ -1617,6 +1646,7 @@ class MCOImageV3Codec {
               block.bounds.width,
               block.bounds.height,
             ),
+            greedyLzOnly: !useHighCompressionExtras,
           );
         } else {
           _writeBlockBody(
@@ -1631,6 +1661,8 @@ class MCOImageV3Codec {
               block.bounds.height,
             ),
             backgroundInherited: true,
+            greedyLzOnly: !useHighCompressionExtras,
+            useHighCompressionExtras: useHighCompressionExtras,
           );
         }
       }
@@ -1689,24 +1721,33 @@ class MCOImageV3Codec {
 
   static List<_V3PreparedRegion> _prepareRegions(
     MCOImage image,
-    List<_V3Bounds> regions,
-  ) {
+    List<_V3Bounds> regions, {
+    required bool useHighCompressionExtras,
+  }) {
     return [
-      for (final bounds in regions) _prepareRegion(image, bounds),
+      for (final bounds in regions)
+        _prepareRegion(
+          image,
+          bounds,
+          useHighCompressionExtras: useHighCompressionExtras,
+        ),
     ];
   }
 
   static _V3PreparedRegion _prepareRegion(
     MCOImage image,
-    _V3Bounds bounds,
-  ) {
+    _V3Bounds bounds, {
+    required bool useHighCompressionExtras,
+  }) {
     final cropped = _extractBoundsPixels(image, bounds);
     return _V3PreparedRegion(
       bounds: bounds,
       cropped: cropped,
       scanOrders: [
         for (final scan in ScanMode.values)
-          _toScanOrder(cropped, bounds.width, bounds.height, scan),
+          useHighCompressionExtras || scan != ScanMode.sv
+              ? _toScanOrder(cropped, bounds.width, bounds.height, scan)
+              : const <int>[],
       ],
     );
   }
@@ -1719,7 +1760,11 @@ class MCOImageV3Codec {
     bool reducedCostEvaluator = false,
   }) {
     return _V3RegionPlanCache(
-      preparedRegions: _prepareRegions(image, regions),
+      preparedRegions: _prepareRegions(
+        image,
+        regions,
+        useHighCompressionExtras: useHighCompressionExtras,
+      ),
       backgroundColor: backgroundColor,
       useHighCompressionExtras: useHighCompressionExtras,
       reducedCostEvaluator: reducedCostEvaluator,
@@ -1753,9 +1798,12 @@ class MCOImageV3Codec {
       allPixels,
       image.paletteProfile,
       indexOrderSensitive: true,
-      includeTransitionOrder: !cache.reducedCostEvaluator,
-      includeBitplaneOptimizedOrder: !cache.reducedCostEvaluator,
-      includeRgbOrder: !cache.reducedCostEvaluator,
+      includeTransitionOrder:
+          cache.useHighCompressionExtras && !cache.reducedCostEvaluator,
+      includeBitplaneOptimizedOrder:
+          cache.useHighCompressionExtras && !cache.reducedCostEvaluator,
+      includeRgbOrder:
+          cache.useHighCompressionExtras && !cache.reducedCostEvaluator,
       preferredFirstColor: cache.backgroundColor,
     );
   }
@@ -1944,7 +1992,10 @@ class MCOImageV3Codec {
     List<_V3RegionBlock>? bestBlocks;
     int? bestBits;
     MCOImageV3BlockAlgorithm? bestAlgorithm;
-    for (final scan in ScanMode.values) {
+    for (final scan in _regionScanModesForLevel(
+      useHighCompressionExtras: useHighCompressionExtras,
+      reducedCostEvaluator: reducedCostEvaluator,
+    )) {
       for (final algorithm in _regionBlockAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
@@ -1964,7 +2015,7 @@ class MCOImageV3Codec {
             backgroundColor,
             algorithm,
             scan,
-            greedyLzOnly: reducedCostEvaluator,
+            greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
           );
           if (block == null) {
             failed = true;
@@ -2010,7 +2061,10 @@ class MCOImageV3Codec {
     int? bestBits;
     MCOImageV3BlockAlgorithm? bestAlgorithm;
     ScanMode? bestScan;
-    for (final scan in ScanMode.values) {
+    for (final scan in _regionScanModesForLevel(
+      useHighCompressionExtras: useHighCompressionExtras,
+      reducedCostEvaluator: reducedCostEvaluator,
+    )) {
       for (final algorithm in _sharedPaletteRegionAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
@@ -2044,7 +2098,7 @@ class MCOImageV3Codec {
               algorithm,
               scan,
               palette,
-              greedyLzOnly: reducedCostEvaluator,
+              greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
             );
             if (block == null) {
               failed = true;
@@ -2086,7 +2140,10 @@ class MCOImageV3Codec {
   }) {
     _V3RegionBlock? best;
     int? bestBits;
-    for (final scan in ScanMode.values) {
+    for (final scan in _regionScanModesForLevel(
+      useHighCompressionExtras: useHighCompressionExtras,
+      reducedCostEvaluator: reducedCostEvaluator,
+    )) {
       for (final algorithm in _sharedPaletteRegionAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
@@ -2103,7 +2160,7 @@ class MCOImageV3Codec {
           algorithm,
           scan,
           palette,
-          greedyLzOnly: reducedCostEvaluator,
+          greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
         );
         if (block == null) continue;
         final blockBits = _individualRegionBlockBitLength(block);
@@ -2188,7 +2245,10 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm? bestAlgorithm;
     ScanMode? bestScan;
     int? bestBits;
-    for (final scan in ScanMode.values) {
+    for (final scan in _regionScanModesForLevel(
+      useHighCompressionExtras: useHighCompressionExtras,
+      reducedCostEvaluator: reducedCostEvaluator,
+    )) {
       for (final algorithm in _regionBlockAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
@@ -2210,7 +2270,7 @@ class MCOImageV3Codec {
             backgroundColor,
             algorithm,
             scan,
-            greedyLzOnly: reducedCostEvaluator,
+            greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
           );
           final individualBlock = individualBlocks[index];
           final commonBits =
@@ -2293,7 +2353,10 @@ class MCOImageV3Codec {
       }
       if (failed) continue;
 
-      for (final scan in ScanMode.values) {
+      for (final scan in _regionScanModesForLevel(
+        useHighCompressionExtras: useHighCompressionExtras,
+        reducedCostEvaluator: reducedCostEvaluator,
+      )) {
         for (final algorithm in _sharedPaletteRegionAlgorithmsForLevel(
           useHighCompressionExtras: useHighCompressionExtras,
           reducedCostEvaluator: reducedCostEvaluator,
@@ -2317,7 +2380,7 @@ class MCOImageV3Codec {
               algorithm,
               scan,
               palette,
-              greedyLzOnly: reducedCostEvaluator,
+              greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
             );
             final individualBlock = individualBlocks[index];
             final commonBits =
@@ -2370,7 +2433,10 @@ class MCOImageV3Codec {
   }) {
     _V3RegionBlock? best;
     int? bestBits;
-    for (final scan in ScanMode.values) {
+    for (final scan in _regionScanModesForLevel(
+      useHighCompressionExtras: useHighCompressionExtras,
+      reducedCostEvaluator: reducedCostEvaluator,
+    )) {
       for (final algorithm in _regionBlockAlgorithmsForLevel(
         useHighCompressionExtras: useHighCompressionExtras,
         reducedCostEvaluator: reducedCostEvaluator,
@@ -2386,7 +2452,7 @@ class MCOImageV3Codec {
           backgroundColor,
           algorithm,
           scan,
-          greedyLzOnly: reducedCostEvaluator,
+          greedyLzOnly: reducedCostEvaluator || !useHighCompressionExtras,
         );
         if (block == null) continue;
         final blockBits = _individualRegionBlockBitLength(block);
@@ -2645,6 +2711,8 @@ class MCOImageV3Codec {
         rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
         backgroundInherited: true,
         greedyLzOnly: greedyLzOnly,
+        useHighCompressionExtras:
+            _activeRegionPlanCache?.useHighCompressionExtras ?? true,
       );
     } on MCOImageCodecException {
       return null;
@@ -2751,6 +2819,8 @@ class MCOImageV3Codec {
     required int backgroundColor,
     required int rowLength,
     bool backgroundInherited = false,
+    bool greedyLzOnly = false,
+    bool useHighCompressionExtras = true,
   }) {
     final bodyWriter = _V3BitWriter();
     try {
@@ -2762,6 +2832,8 @@ class MCOImageV3Codec {
         backgroundColor: backgroundColor,
         rowLength: rowLength,
         backgroundInherited: backgroundInherited,
+        greedyLzOnly: greedyLzOnly,
+        useHighCompressionExtras: useHighCompressionExtras,
       );
     } on MCOImageCodecException {
       return null;
@@ -2869,6 +2941,8 @@ class MCOImageV3Codec {
     ScanMode scan, {
     required int backgroundColor,
     bool compactHeader = false,
+    bool greedyLzOnly = false,
+    bool useHighCompressionExtras = true,
   }) {
     if (compactHeader &&
         (scan != ScanMode.h || !_canUseCompactBlockHeader(algorithm))) {
@@ -2909,6 +2983,8 @@ class MCOImageV3Codec {
         algorithm,
         backgroundColor: backgroundColor,
         rowLength: _rowLengthForScan(scan, image.width, image.height),
+        greedyLzOnly: greedyLzOnly,
+        useHighCompressionExtras: useHighCompressionExtras,
       );
     } on MCOImageCodecException {
       return null;
@@ -3147,6 +3223,7 @@ class MCOImageV3Codec {
     required int rowLength,
     bool backgroundInherited = false,
     bool greedyLzOnly = false,
+    bool useHighCompressionExtras = true,
   }) {
     switch (algorithm) {
       case MCOImageV3BlockAlgorithm.rawGlobal:
@@ -3160,7 +3237,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             for (final color in localPixels) {
               bodyWriter.writeBits(color, bits);
@@ -3174,7 +3251,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             var consumed = 0;
             for (final run in _buildRunsCached(localPixels)) {
@@ -3195,7 +3272,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             // Pixel count terminates the stream, so unlike v2 there is no
             // redundant run-count field.
@@ -3213,7 +3290,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             final tokens = greedyLzOnly
                 ? _buildGreedyLzPixelTokensCached(localPixels, bits)
@@ -3239,7 +3316,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             _writeQuadtreeNode(
               bodyWriter,
@@ -3263,7 +3340,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: true,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           preferredFirstColor: backgroundColor,
           writeBody: (bodyWriter, localPixels, bits) {
             for (var bit = 0; bit < bits; bit++) {
@@ -3296,9 +3373,9 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: true,
-          includeTransitionOrder: true,
-          includeBitplaneOptimizedOrder: true,
-          includeRgbOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
+          includeBitplaneOptimizedOrder: useHighCompressionExtras,
+          includeRgbOrder: useHighCompressionExtras,
           preferredFirstColor: backgroundColor,
           writeBody: _writeAdaptiveBitplanesLocalBody,
         );
@@ -3329,7 +3406,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: true,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           preferredFirstColor: backgroundColor,
           writeBody: (bodyWriter, localPixels, bits) {
             _writeRowDeltaBody(
@@ -3347,7 +3424,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: true,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           preferredFirstColor: backgroundColor,
           writeBody: (
             bodyWriter,
@@ -3501,7 +3578,7 @@ class MCOImageV3Codec {
           linear,
           profile,
           indexOrderSensitive: false,
-          includeTransitionOrder: true,
+          includeTransitionOrder: useHighCompressionExtras,
           writeBody: (bodyWriter, localPixels, bits) {
             _writeRowRepeat(bodyWriter, localPixels, rowLength, bits);
           },
@@ -3519,6 +3596,11 @@ class MCOImageV3Codec {
     required int rowLength,
     bool greedyLzOnly = false,
   }) {
+    if (linear.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Shared-palette block has no pixels',
+      );
+    }
     final map = _localIndexMapCached(palette);
     final bits = _localBits(palette.length);
     List<int> localPixels() => _localPixelsForPalette(linear, palette);
@@ -6348,6 +6430,11 @@ class MCOImageV3Codec {
     List<int> pixels,
     int bit,
   ) {
+    if (pixels.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Adaptive bitplanes require at least one pixel',
+      );
+    }
     final runs = _buildBitplaneRuns(pixels, bit);
     final startingBit = (pixels.first >> bit) & 1;
     final onePositions = <int>[];
@@ -9379,6 +9466,39 @@ class MCOImageV3Codec {
     );
   }
 
+  static List<_V3BackgroundCandidate> _normalBackgroundCandidates(
+    MCOImage image,
+    int preferredBackground,
+  ) {
+    final result = <_V3BackgroundCandidate>[];
+    final seen = <int>{};
+
+    void add(int color, int rank) {
+      if (result.length >= _maxNormalBackgroundCandidates) return;
+      if (!_isColorValid(color, image.paletteProfile)) return;
+      if (!seen.add(color)) return;
+      result.add(_V3BackgroundCandidate(color, rank));
+    }
+
+    add(preferredBackground, 0);
+    final counts = <int, int>{};
+    for (final pixel in image.pixels) {
+      counts[pixel] = (counts[pixel] ?? 0) + 1;
+    }
+    final colors = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    for (var index = 0;
+        index < colors.length &&
+            result.length < _maxNormalBackgroundCandidates;
+        index++) {
+      add(colors[index], 1 + index);
+    }
+    return result;
+  }
+
   static List<_V3BackgroundCandidate> _backgroundCandidates(
     MCOImage image,
     int? explicitBackground, {
@@ -9596,6 +9716,7 @@ class MCOImageV3Codec {
     int maxRegions, {
     required bool useHighCompressionExtras,
     required bool useExtremeSearch,
+    required bool useNormalSharedBeam,
   }) {
     if (maxRegions == 0) return const <_V3RegionVariant>[];
     final connectedRegions = _componentBoundsForBackground(
@@ -9637,24 +9758,28 @@ class MCOImageV3Codec {
     if (splitRegions.isNotEmpty) {
       rawVariants.add(_V3RegionVariant(splitRegions, 'split'));
     }
-    final sparseSplitRegions = _splitRegionsBySparseLines(
-      image.pixels,
-      image.width,
-      backgroundColor,
-      connectedRegions,
-      maxRegions,
-      maxLineNonBackground: 2,
-    );
-    if (sparseSplitRegions.isNotEmpty) {
-      rawVariants.add(_V3RegionVariant(sparseSplitRegions, 'sparse-split'));
+    {
+      final sparseSplitRegions = _splitRegionsBySparseLines(
+        image.pixels,
+        image.width,
+        backgroundColor,
+        connectedRegions,
+        maxRegions,
+        maxLineNonBackground: 2,
+      );
+      if (sparseSplitRegions.isNotEmpty) {
+        rawVariants.add(_V3RegionVariant(sparseSplitRegions, 'sparse-split'));
+      }
     }
-    for (final regions in _findGreedyRectRegionVariants(
+    final greedyVariants = _findGreedyRectRegionVariants(
       image.pixels,
       image.width,
       image.height,
       backgroundColor,
       maxRegions,
-    )) {
+      firstOnly: !useHighCompressionExtras,
+    );
+    for (final regions in greedyVariants) {
       rawVariants.add(_V3RegionVariant(regions, 'greedy'));
     }
 
@@ -9673,7 +9798,8 @@ class MCOImageV3Codec {
       }
     }
 
-    if (result.isNotEmpty &&
+    if (useHighCompressionExtras &&
+        result.isNotEmpty &&
         (useBoundedExtremeSearch ||
             image.pixels.length <= _maxBeamRegionPixels)) {
       final beamVariants = _findPayloadOptimizedRegionVariants(
@@ -9681,8 +9807,31 @@ class MCOImageV3Codec {
         backgroundColor,
         result.map((variant) => variant.regions).toList(growable: false),
         beamMaxRegions,
-        useHighCompressionExtras: useHighCompressionExtras,
+        useHighCompressionExtras: true,
         useExtremeSearch: useBoundedExtremeSearch,
+      );
+      for (final state in beamVariants) {
+        final key = _regionListKey(state.regions);
+        if (seen.add(key)) {
+          result.add(
+            _V3RegionVariant(
+              state.regions,
+              'beam',
+              regionPlanCache: state.exactPlanCache,
+            ),
+          );
+        }
+      }
+    }
+
+    if (useNormalSharedBeam &&
+        result.isNotEmpty &&
+        image.pixels.length <= _maxBeamRegionPixels) {
+      final beamVariants = _findNormalSharedCompactRegionVariants(
+        image,
+        backgroundColor,
+        result.map((variant) => variant.regions).toList(growable: false),
+        beamMaxRegions,
       );
       for (final state in beamVariants) {
         final key = _regionListKey(state.regions);
@@ -9882,6 +10031,132 @@ class MCOImageV3Codec {
     }
     exactResult.sort((left, right) => left.cost.compareTo(right.cost));
     return exactResult.take(resultLimit).toList(growable: false);
+  }
+
+  List<_V3RegionBeamState> _findNormalSharedCompactRegionVariants(
+    MCOImage image,
+    int backgroundColor,
+    List<List<_V3Bounds>> initialVariants,
+    int maxRegions,
+  ) {
+    final initialStates = <_V3RegionBeamState>[];
+    final seen = <String>{};
+    for (final regions in initialVariants) {
+      if (regions.isEmpty ||
+          regions.length > maxRegions ||
+          !_regionsDoNotOverlap(regions)) {
+        continue;
+      }
+      final normalized = _sortedRegions(regions);
+      final key = _regionListKey(normalized);
+      if (!seen.add(key)) continue;
+      final exactCost = _normalSharedCompactRegionPayloadCost(
+        image,
+        backgroundColor,
+        normalized,
+      );
+      if (exactCost != null) {
+        initialStates.add(
+          _V3RegionBeamState(
+            normalized,
+            exactCost.cost,
+            exactPlanCache: exactCost.planCache,
+          ),
+        );
+      }
+    }
+    if (initialStates.isEmpty) return const <_V3RegionBeamState>[];
+    initialStates.sort((left, right) => left.cost.compareTo(right.cost));
+    final bestExistingCost = initialStates.first.cost;
+    var beam = initialStates.take(_regionBeamWidth).toList();
+    final improved = <_V3RegionBeamState>[];
+
+    for (var depth = 0; depth < _regionBeamDepth; depth++) {
+      final next = <_V3RegionBeamState>[];
+      for (final state in beam) {
+        for (final regions in _regionBeamNeighborsFor(
+          image.pixels,
+          image.width,
+          backgroundColor,
+          state.regions,
+          maxRegions,
+          useExtremeSearch: false,
+        )) {
+          final key = _regionListKey(regions);
+          if (!seen.add(key)) continue;
+          final exactCost = _normalSharedCompactRegionPayloadCost(
+            image,
+            backgroundColor,
+            regions,
+          );
+          if (exactCost == null) continue;
+          final candidate = _V3RegionBeamState(
+            regions,
+            exactCost.cost,
+            exactPlanCache: exactCost.planCache,
+          );
+          next.add(candidate);
+          if (candidate.cost < bestExistingCost) improved.add(candidate);
+        }
+      }
+      if (next.isEmpty) break;
+      next.sort((left, right) => left.cost.compareTo(right.cost));
+      beam = next.take(_regionBeamWidth).toList();
+    }
+
+    improved.sort((left, right) => left.cost.compareTo(right.cost));
+    final result = <_V3RegionBeamState>[];
+    final resultKeys = <String>{};
+    for (final state in improved) {
+      if (resultKeys.add(_regionListKey(state.regions))) result.add(state);
+      if (result.length >= _regionBeamWidth) break;
+    }
+    return result;
+  }
+
+  _V3ExactRegionCost? _normalSharedCompactRegionPayloadCost(
+    MCOImage image,
+    int backgroundColor,
+    List<_V3Bounds> regions,
+  ) {
+    final regionPlanCache = _createRegionPlanCache(
+      image,
+      regions,
+      backgroundColor: backgroundColor,
+      useHighCompressionExtras: false,
+      reducedCostEvaluator: false,
+    );
+    int? bestBitLength;
+    for (final options in _normalRegionCandidateOptions) {
+      if (!options.sharedLocalPalette) continue;
+      final plan = _regionPlanForCandidate(
+        image,
+        backgroundColor,
+        regionPlanCache,
+        commonBlockHeader: options.commonBlockHeader,
+        hybridCommonHeader: false,
+        sharedLocalPalette: true,
+      );
+      if (plan.blocks == null) continue;
+      final bitLength = _regionCandidateBitLength(
+        image,
+        backgroundColor,
+        plan,
+        compactGeometry: true,
+        commonBlockHeader: options.commonBlockHeader,
+        hybridCommonHeader: false,
+        deltaGeometry: options.deltaGeometry,
+        sharedLocalPalette: true,
+      );
+      if (bestBitLength == null || bitLength < bestBitLength) {
+        bestBitLength = bitLength;
+      }
+    }
+    if (bestBitLength == null) return null;
+    return _V3ExactRegionCost(
+      (bestBitLength + 7) ~/ 8,
+      regionPlanCache,
+    );
   }
 
   int? _regionPayloadByteCost(
@@ -10582,8 +10857,9 @@ class MCOImageV3Codec {
     int width,
     int height,
     int background,
-    int maxRegions,
-  ) {
+    int maxRegions, {
+    bool firstOnly = false,
+  }) {
     if (maxRegions == 0) return const <List<_V3Bounds>>[];
 
     const strategies = <_V3GreedyRectStrategy>[
@@ -10608,7 +10884,10 @@ class MCOImageV3Codec {
       );
       if (regions.isEmpty) continue;
       final key = _regionListKey(regions);
-      if (seen.add(key)) variants.add(regions);
+      if (seen.add(key)) {
+        variants.add(regions);
+        if (firstOnly) break;
+      }
     }
     return variants;
   }
