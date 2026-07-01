@@ -2277,18 +2277,18 @@ class MCOImageV3Codec {
           writeBody: (bodyWriter, localPixels, bits) {
             for (var bit = 0; bit < bits; bit++) {
               final runs = _buildBitplaneRuns(localPixels, bit);
-              final rleBits = 2 + runs.fold<int>(
-                0,
-                (sum, length) => sum + _compactUintBitLength(length - 1),
-              );
+              final rleBits =
+                  2 + _residualRunLengthsBitCost(runs, localPixels.length);
               final rawBits = 1 + localPixels.length;
               if (rleBits < rawBits) {
                 bodyWriter
                   ..writeBits(1, 1)
                   ..writeBits((localPixels.first >> bit) & 1, 1);
-                for (final length in runs) {
-                  bodyWriter.writeCompactUint(length - 1);
-                }
+                _writeResidualRunLengths(
+                  bodyWriter,
+                  runs,
+                  localPixels.length,
+                );
               } else {
                 bodyWriter.writeBits(0, 1);
                 for (final pixel in localPixels) {
@@ -2566,18 +2566,18 @@ class MCOImageV3Codec {
         final pixels = localPixels();
         for (var bit = 0; bit < bits; bit++) {
           final runs = _buildBitplaneRuns(pixels, bit);
-          final rleBits = 2 + runs.fold<int>(
-            0,
-            (sum, length) => sum + _compactUintBitLength(length - 1),
-          );
+          final rleBits =
+              2 + _residualRunLengthsBitCost(runs, pixels.length);
           final rawBits = 1 + pixels.length;
           if (rleBits < rawBits) {
             writer
               ..writeBits(1, 1)
               ..writeBits((pixels.first >> bit) & 1, 1);
-            for (final length in runs) {
-              writer.writeCompactUint(length - 1);
-            }
+            _writeResidualRunLengths(
+              writer,
+              runs,
+              pixels.length,
+            );
           } else {
             writer.writeBits(0, 1);
             for (final pixel in pixels) {
@@ -2725,7 +2725,8 @@ class MCOImageV3Codec {
           var value = reader.readBits(1);
           var position = 0;
           while (position < count) {
-            final length = reader.readCompactUint() + 1;
+            final length =
+                reader.readRangeCompactUint(count - position - 1) + 1;
             if (position + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Bitplane RLE exceeds pixel count',
@@ -3027,7 +3028,8 @@ class MCOImageV3Codec {
           var value = reader.readBits(1);
           var position = 0;
           while (position < count) {
-            final length = reader.readCompactUint() + 1;
+            final length =
+                reader.readRangeCompactUint(count - position - 1) + 1;
             if (position + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Bitplane RLE exceeds pixel count',
@@ -3859,6 +3861,16 @@ class MCOImageV3Codec {
     }
   }
 
+  static int _rangeCompactUintBitLength(int value, int maxValue) {
+    if (maxValue < 0 || value < 0 || value > maxValue) {
+      throw const MCOImageInvalidInputException(
+        'Range compact uint is out of range',
+      );
+    }
+    if (maxValue <= 7) return maxValue.bitLength;
+    return _compactUintBitLength(value);
+  }
+
   static int _compactUintBitLength(int value) {
     if (value < 0) {
       throw const MCOImageInvalidInputException('Negative compact uint');
@@ -4582,6 +4594,57 @@ class MCOImageV3Codec {
     return runs;
   }
 
+  static int _residualRunLengthsBitCost(
+    List<int> runs,
+    int totalLength,
+  ) {
+    var cost = 0;
+    var consumed = 0;
+    for (final length in runs) {
+      if (length <= 0 || consumed + length > totalLength) {
+        throw const MCOImageInvalidInputException(
+          'Invalid residual run lengths',
+        );
+      }
+      cost += _rangeCompactUintBitLength(
+        length - 1,
+        totalLength - consumed - 1,
+      );
+      consumed += length;
+    }
+    if (consumed != totalLength) {
+      throw const MCOImageInvalidInputException(
+        'Residual run lengths do not fill the input',
+      );
+    }
+    return cost;
+  }
+
+  static void _writeResidualRunLengths(
+    _V3BitWriter writer,
+    List<int> runs,
+    int totalLength,
+  ) {
+    var consumed = 0;
+    for (final length in runs) {
+      if (length <= 0 || consumed + length > totalLength) {
+        throw const MCOImageInvalidInputException(
+          'Invalid residual run lengths',
+        );
+      }
+      writer.writeRangeCompactUint(
+        length - 1,
+        totalLength - consumed - 1,
+      );
+      consumed += length;
+    }
+    if (consumed != totalLength) {
+      throw const MCOImageInvalidInputException(
+        'Residual run lengths do not fill the input',
+      );
+    }
+  }
+
   static void _writeAdaptiveBitplanesBody(
     _V3BitWriter writer,
     List<int> pixels,
@@ -4600,9 +4663,11 @@ class MCOImageV3Codec {
           writer
             ..writeBits(1, 2)
             ..writeBits(decision.startingBit, 1);
-          for (final length in decision.runs) {
-            writer.writeCompactUint(length - 1);
-          }
+          _writeResidualRunLengths(
+            writer,
+            decision.runs,
+            pixels.length,
+          );
           break;
         case _V3AdaptiveBitplaneMode.shortRle:
           writer
@@ -4620,11 +4685,19 @@ class MCOImageV3Codec {
           break;
         case _V3AdaptiveBitplaneMode.sparseOne:
           writer.writeBits(23, 5);
-          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          _writeSparseBitplanePositions(
+            writer,
+            decision.minorityPositions,
+            pixels.length,
+          );
           break;
         case _V3AdaptiveBitplaneMode.sparseZero:
           writer.writeBits(31, 5);
-          _writeSparseBitplanePositions(writer, decision.minorityPositions);
+          _writeSparseBitplanePositions(
+            writer,
+            decision.minorityPositions,
+            pixels.length,
+          );
           break;
       }
     }
@@ -4732,11 +4805,7 @@ class MCOImageV3Codec {
       ),
       _V3AdaptiveBitplaneDecision(
         _V3AdaptiveBitplaneMode.legacyRle,
-        3 +
-            runs.fold<int>(
-              0,
-              (sum, length) => sum + _compactUintBitLength(length - 1),
-            ),
+        3 + _residualRunLengthsBitCost(runs, pixels.length),
         startingBit: startingBit,
         runs: runs,
       ),
@@ -4767,7 +4836,7 @@ class MCOImageV3Codec {
         ..add(
           _V3AdaptiveBitplaneDecision(
             _V3AdaptiveBitplaneMode.sparseOne,
-            5 + _sparseBitplanePositionCost(onePositions),
+            5 + _sparseBitplanePositionCost(onePositions, pixels.length),
             startingBit: startingBit,
             runs: runs,
             minorityPositions: onePositions,
@@ -4776,7 +4845,7 @@ class MCOImageV3Codec {
         ..add(
           _V3AdaptiveBitplaneDecision(
             _V3AdaptiveBitplaneMode.sparseZero,
-            5 + _sparseBitplanePositionCost(zeroPositions),
+            5 + _sparseBitplanePositionCost(zeroPositions, pixels.length),
             startingBit: startingBit,
             runs: runs,
             minorityPositions: zeroPositions,
@@ -4802,7 +4871,7 @@ class MCOImageV3Codec {
     while (position < pixelCount) {
       final length = shortLengths
           ? _readShortBitplaneRunLength(reader)
-          : reader.readCompactUint() + 1;
+          : reader.readRangeCompactUint(pixelCount - position - 1) + 1;
       if (length <= 0 || position + length > pixelCount) {
         throw const MCOImageInvalidPayloadException(
           'Adaptive bitplane RLE exceeds pixel count',
@@ -4825,7 +4894,8 @@ class MCOImageV3Codec {
     int pixelCount, {
     required int minorityBit,
   }) {
-    final count = reader.readCompactUint() + 1;
+    final count =
+        reader.readRangeCompactUint(pixelCount - 1) + 1;
     if (count > pixelCount) {
       throw const MCOImageInvalidPayloadException(
         'Sparse bitplane count exceeds pixel count',
@@ -4833,7 +4903,10 @@ class MCOImageV3Codec {
     }
     var previous = -1;
     for (var i = 0; i < count; i++) {
-      final gap = reader.readCompactUint();
+      final remainingPositions = count - i - 1;
+      final maxGap =
+          pixelCount - previous - remainingPositions - 2;
+      final gap = reader.readRangeCompactUint(maxGap);
       final position = previous + gap + 1;
       if (position <= previous || position >= pixelCount) {
         throw const MCOImageInvalidPayloadException(
@@ -4849,11 +4922,24 @@ class MCOImageV3Codec {
     }
   }
 
-  static int _sparseBitplanePositionCost(List<int> positions) {
-    var cost = _compactUintBitLength(positions.length - 1);
+  static int _sparseBitplanePositionCost(
+    List<int> positions,
+    int pixelCount,
+  ) {
+    var cost = _rangeCompactUintBitLength(
+      positions.length - 1,
+      pixelCount - 1,
+    );
     var previous = -1;
-    for (final position in positions) {
-      cost += _compactUintBitLength(position - previous - 1);
+    for (var i = 0; i < positions.length; i++) {
+      final position = positions[i];
+      final remainingPositions = positions.length - i - 1;
+      final maxGap =
+          pixelCount - previous - remainingPositions - 2;
+      cost += _rangeCompactUintBitLength(
+        position - previous - 1,
+        maxGap,
+      );
       previous = position;
     }
     return cost;
@@ -4862,11 +4948,22 @@ class MCOImageV3Codec {
   static void _writeSparseBitplanePositions(
     _V3BitWriter writer,
     List<int> positions,
+    int pixelCount,
   ) {
-    writer.writeCompactUint(positions.length - 1);
+    writer.writeRangeCompactUint(
+      positions.length - 1,
+      pixelCount - 1,
+    );
     var previous = -1;
-    for (final position in positions) {
-      writer.writeCompactUint(position - previous - 1);
+    for (var i = 0; i < positions.length; i++) {
+      final position = positions[i];
+      final remainingPositions = positions.length - i - 1;
+      final maxGap =
+          pixelCount - previous - remainingPositions - 2;
+      writer.writeRangeCompactUint(
+        position - previous - 1,
+        maxGap,
+      );
       previous = position;
     }
   }
@@ -4947,7 +5044,10 @@ class MCOImageV3Codec {
       if (repeatCount >= 2) {
         writer
           ..writeBits(_compactRowDeltaOpRepeatRun, _compactRowDeltaOpBits)
-          ..writeCompactUint(repeatCount - 2);
+          ..writeRangeCompactUint(
+            repeatCount - 2,
+            rowCount - row - 2,
+          );
         row += repeatCount;
         continue;
       }
@@ -5010,7 +5110,7 @@ class MCOImageV3Codec {
           op == _compactRowDeltaOpRepeatRun) {
         final repeatCount = op == _compactRowDeltaOpRepeat
             ? 1
-            : reader.readCompactUint() + 2;
+            : reader.readRangeCompactUint(rowCount - row - 2) + 2;
         if (row + repeatCount > rowCount) {
           throw const MCOImageInvalidPayloadException(
             'Compact row-delta repeat exceeds row count',
@@ -5069,7 +5169,8 @@ class MCOImageV3Codec {
       final useResidual = directGrayscale && reader.readBits(1) != 0;
       if (op == _compactRowDeltaOpIndexed ||
           op == _compactRowDeltaOpSameScalar) {
-        final changeCount = reader.readCompactUint() + 1;
+        final changeCount =
+            reader.readRangeCompactUint(rowLength - 1) + 1;
         if (changeCount > rowLength) {
           throw const MCOImageInvalidPayloadException(
             'Compact row-delta change count exceeds row length',
@@ -5120,7 +5221,8 @@ class MCOImageV3Codec {
           op == _compactRowDeltaOpTrimmedMask) {
         final positions = <int>[];
         if (op == _compactRowDeltaOpSegments) {
-          final segmentCount = reader.readCompactUint() + 1;
+          final segmentCount =
+              reader.readRangeCompactUint(rowLength - 1) + 1;
           if (segmentCount > rowLength) {
             throw const MCOImageInvalidPayloadException(
               'Compact row-delta segment count exceeds row length',
@@ -5128,9 +5230,15 @@ class MCOImageV3Codec {
           }
           var previousEnd = 0;
           for (var i = 0; i < segmentCount; i++) {
-            final gap = reader.readCompactUint();
-            final start = (i == 0 ? 0 : previousEnd) + gap;
-            final length = reader.readCompactUint() + 1;
+            final remainingSegments = segmentCount - i - 1;
+            final maxGap =
+                rowLength - previousEnd - remainingSegments - 1;
+            final gap = reader.readRangeCompactUint(maxGap);
+            final start = previousEnd + gap;
+            final maxLength =
+                rowLength - start - remainingSegments;
+            final length =
+                reader.readRangeCompactUint(maxLength - 1) + 1;
             if (start < previousEnd || start + length > rowLength) {
               throw const MCOImageInvalidPayloadException(
                 'Invalid compact row-delta segment',
@@ -5142,8 +5250,12 @@ class MCOImageV3Codec {
             previousEnd = start + length;
           }
         } else {
-          final start = reader.readCompactUint();
-          final span = reader.readCompactUint() + 1;
+          final start =
+              reader.readRangeCompactUint(rowLength - 1);
+          final span = reader.readRangeCompactUint(
+                rowLength - start - 1,
+              ) +
+              1;
           if (start + span > rowLength) {
             throw const MCOImageInvalidPayloadException(
               'Invalid compact row-delta mask bounds',
@@ -5200,8 +5312,11 @@ class MCOImageV3Codec {
         useVirtualBaseRow: useVirtualBaseRow,
       );
       if (repeatCount >= 2) {
-        cost +=
-            _compactRowDeltaOpBits + _compactUintBitLength(repeatCount - 2);
+        cost += _compactRowDeltaOpBits +
+            _rangeCompactUintBitLength(
+              repeatCount - 2,
+              rowCount - row - 2,
+            );
         row += repeatCount;
         continue;
       }
@@ -5317,8 +5432,11 @@ class MCOImageV3Codec {
       final predictorCost = _compactPredictorBitCost(predictor);
       final indexedCost = _compactRowDeltaOpBits +
           predictorCost +
-          _compactUintBitLength(changes.length - 1) +
-          _compactChangePositionsBitCost(changes) +
+          _rangeCompactUintBitLength(
+            changes.length - 1,
+            rowLength - 1,
+          ) +
+          _compactChangePositionsBitCost(changes, rowLength) +
           _bestCompactValueEncoding(
             values,
             rowLength,
@@ -5362,8 +5480,11 @@ class MCOImageV3Codec {
       if (sameScalar != null) {
         final sameScalarCost = _compactRowDeltaOpBits +
             predictorCost +
-            _compactUintBitLength(changes.length - 1) +
-            _compactChangePositionsBitCost(changes) +
+            _rangeCompactUintBitLength(
+            changes.length - 1,
+            rowLength - 1,
+          ) +
+            _compactChangePositionsBitCost(changes, rowLength) +
             sameScalar.bitCost;
         if (sameScalarCost < best.bitCost) {
           best = _V3CompactRowDeltaDecision(
@@ -5387,13 +5508,25 @@ class MCOImageV3Codec {
         directGrayscale: directGrayscale,
       );
       final segments = _rowDeltaSegments(changes);
-      var segmentGeometryCost = _compactUintBitLength(segments.length - 1);
+      var segmentGeometryCost = _rangeCompactUintBitLength(
+        segments.length - 1,
+        rowLength - 1,
+      );
       var previousEnd = 0;
       for (var i = 0; i < segments.length; i++) {
         final segment = segments[i];
-        final gap = i == 0 ? segment.x : segment.x - previousEnd;
-        segmentGeometryCost += _compactUintBitLength(gap) +
-            _compactUintBitLength(segment.length - 1);
+        final remainingSegments = segments.length - i - 1;
+        final gap = segment.x - previousEnd;
+        final maxGap =
+            rowLength - previousEnd - remainingSegments - 1;
+        final maxLength =
+            rowLength - segment.x - remainingSegments;
+        segmentGeometryCost +=
+            _rangeCompactUintBitLength(gap, maxGap) +
+            _rangeCompactUintBitLength(
+              segment.length - 1,
+              maxLength - 1,
+            );
         previousEnd = segment.x + segment.length;
       }
       final segmentCost = _compactRowDeltaOpBits +
@@ -5413,8 +5546,14 @@ class MCOImageV3Codec {
       final span = changes.last.x - changes.first.x + 1;
       final maskCost = _compactRowDeltaOpBits +
           predictorCost +
-          _compactUintBitLength(changes.first.x) +
-          _compactUintBitLength(span - 1) +
+          _rangeCompactUintBitLength(
+            changes.first.x,
+            rowLength - 1,
+          ) +
+          _rangeCompactUintBitLength(
+            span - 1,
+            rowLength - changes.first.x - 1,
+          ) +
           span +
           valuesEncoding.bitCost;
       if (maskCost < best.bitCost) {
@@ -5459,8 +5598,11 @@ class MCOImageV3Codec {
     final changes = decision.changes;
     switch (decision.op) {
       case _compactRowDeltaOpIndexed:
-        writer.writeCompactUint(changes.length - 1);
-        _writeCompactChangePositions(writer, changes);
+        writer.writeRangeCompactUint(
+          changes.length - 1,
+          rowLength - 1,
+        );
+        _writeCompactChangePositions(writer, changes, rowLength);
         _writeCompactChangedValues(
           writer,
           values,
@@ -5474,8 +5616,11 @@ class MCOImageV3Codec {
         );
         break;
       case _compactRowDeltaOpSameScalar:
-        writer.writeCompactUint(changes.length - 1);
-        _writeCompactChangePositions(writer, changes);
+        writer.writeRangeCompactUint(
+          changes.length - 1,
+          rowLength - 1,
+        );
+        _writeCompactChangePositions(writer, changes, rowLength);
         if (decision.useResidual) {
           final delta = _compactGrayscaleDelta(
             values,
@@ -5492,13 +5637,25 @@ class MCOImageV3Codec {
         break;
       case _compactRowDeltaOpSegments:
         final segments = _rowDeltaSegments(changes);
-        writer.writeCompactUint(segments.length - 1);
+        writer.writeRangeCompactUint(
+          segments.length - 1,
+          rowLength - 1,
+        );
         var previousEnd = 0;
         for (var i = 0; i < segments.length; i++) {
           final segment = segments[i];
+          final remainingSegments = segments.length - i - 1;
+          final gap = segment.x - previousEnd;
+          final maxGap =
+              rowLength - previousEnd - remainingSegments - 1;
+          final maxLength =
+              rowLength - segment.x - remainingSegments;
           writer
-            ..writeCompactUint(i == 0 ? segment.x : segment.x - previousEnd)
-            ..writeCompactUint(segment.length - 1);
+            ..writeRangeCompactUint(gap, maxGap)
+            ..writeRangeCompactUint(
+              segment.length - 1,
+              maxLength - 1,
+            );
           previousEnd = segment.x + segment.length;
         }
         _writeCompactChangedValues(
@@ -5517,8 +5674,11 @@ class MCOImageV3Codec {
         final start = changes.first.x;
         final span = changes.last.x - start + 1;
         writer
-          ..writeCompactUint(start)
-          ..writeCompactUint(span - 1);
+          ..writeRangeCompactUint(start, rowLength - 1)
+          ..writeRangeCompactUint(
+            span - 1,
+            rowLength - start - 1,
+          );
         var changeIndex = 0;
         for (var offset = 0; offset < span; offset++) {
           final changed = changeIndex < changes.length &&
@@ -5607,11 +5767,19 @@ class MCOImageV3Codec {
 
   static int _compactChangePositionsBitCost(
     List<_V3RowDeltaChange> changes,
+    int rowLength,
   ) {
     var cost = 0;
     var previousX = -1;
-    for (final change in changes) {
-      cost += _compactUintBitLength(change.x - previousX - 1);
+    for (var i = 0; i < changes.length; i++) {
+      final change = changes[i];
+      final remainingPositions = changes.length - i - 1;
+      final maxGap =
+          rowLength - previousX - remainingPositions - 2;
+      cost += _rangeCompactUintBitLength(
+        change.x - previousX - 1,
+        maxGap,
+      );
       previousX = change.x;
     }
     return cost;
@@ -5620,10 +5788,18 @@ class MCOImageV3Codec {
   static void _writeCompactChangePositions(
     _V3BitWriter writer,
     List<_V3RowDeltaChange> changes,
+    int rowLength,
   ) {
     var previousX = -1;
-    for (final change in changes) {
-      writer.writeCompactUint(change.x - previousX - 1);
+    for (var i = 0; i < changes.length; i++) {
+      final change = changes[i];
+      final remainingPositions = changes.length - i - 1;
+      final maxGap =
+          rowLength - previousX - remainingPositions - 2;
+      writer.writeRangeCompactUint(
+        change.x - previousX - 1,
+        maxGap,
+      );
       previousX = change.x;
     }
   }
@@ -5847,7 +6023,11 @@ class MCOImageV3Codec {
     final positions = <int>[];
     var previousX = -1;
     for (var i = 0; i < count; i++) {
-      final x = previousX + 1 + reader.readCompactUint();
+      final remainingPositions = count - i - 1;
+      final maxGap =
+          rowLength - previousX - remainingPositions - 2;
+      final x =
+          previousX + 1 + reader.readRangeCompactUint(maxGap);
       if (x >= rowLength) {
         throw const MCOImageInvalidPayloadException(
           'Compact row-delta position out of range',
@@ -6208,7 +6388,10 @@ class MCOImageV3Codec {
   ) {
     final runs = _localPaletteRefRanges(profile, colors);
     var cost = _localPaletteDescriptorPrefixBitLength(profile) +
-        _compactUintBitLength(runs.length - 1);
+        _rangeCompactUintBitLength(
+          runs.length - 1,
+          _paletteSize(profile) - 1,
+        );
     final refBits = _globalBits(profile);
     for (final run in runs) {
       cost += refBits + _compactUintBitLength(run.length - 1);
@@ -6344,7 +6527,10 @@ class MCOImageV3Codec {
         break;
       case _localPaletteDescriptorRangeRuns:
         final runs = _localPaletteRefRanges(profile, colors);
-        writer.writeCompactUint(runs.length - 1);
+        writer.writeRangeCompactUint(
+          runs.length - 1,
+          _paletteSize(profile) - 1,
+        );
         for (final run in runs) {
           writer
             ..writeBits(run.start, _globalBits(profile))
@@ -6448,7 +6634,8 @@ class MCOImageV3Codec {
     _V3BitReader reader,
     PaletteProfile profile,
   ) {
-    final runCount = reader.readCompactUint() + 1;
+    final runCount =
+        reader.readRangeCompactUint(_paletteSize(profile) - 1) + 1;
     if (runCount <= 0 || runCount > _paletteSize(profile)) {
       throw const MCOImageInvalidPayloadException(
         'Invalid local palette range count',
@@ -8313,13 +8500,42 @@ class MCOImageV3Codec {
     int imageHeight, {
     required bool compactGeometry,
   }) {
+    if (bounds.x < 0 ||
+        bounds.y < 0 ||
+        bounds.width <= 0 ||
+        bounds.height <= 0 ||
+        bounds.x + bounds.width > imageWidth ||
+        bounds.y + bounds.height > imageHeight) {
+      throw const MCOImageInvalidInputException(
+        'Invalid v3 region geometry',
+      );
+    }
+
     final xBits = compactGeometry ? _geometryBits(imageWidth) : 8;
     final yBits = compactGeometry ? _geometryBits(imageHeight) : 8;
     writer
       ..writeBits(bounds.x, xBits)
-      ..writeBits(bounds.y, yBits)
-      ..writeBits(bounds.width - 1, xBits)
-      ..writeBits(bounds.height - 1, yBits);
+      ..writeBits(bounds.y, yBits);
+
+    if (!compactGeometry) {
+      writer
+        ..writeBits(bounds.width - 1, xBits)
+        ..writeBits(bounds.height - 1, yBits);
+      return;
+    }
+
+    // Once x/y are known, width/height cannot exceed the remaining image
+    // extent. Using that smaller bound is never worse than the old full-axis
+    // bit width and becomes cheaper near the right/bottom edges.
+    writer
+      ..writeBits(
+        bounds.width - 1,
+        _geometryBits(imageWidth - bounds.x),
+      )
+      ..writeBits(
+        bounds.height - 1,
+        _geometryBits(imageHeight - bounds.y),
+      );
   }
 
   static _V3Bounds _readRegionGeometry(
@@ -8332,13 +8548,18 @@ class MCOImageV3Codec {
     final yBits = compactGeometry ? _geometryBits(imageHeight) : 8;
     final x = reader.readBits(xBits);
     final y = reader.readBits(yBits);
-    final width = reader.readBits(xBits) + 1;
-    final height = reader.readBits(yBits) + 1;
+    if (x >= imageWidth || y >= imageHeight) {
+      throw const MCOImageInvalidPayloadException('Invalid v3 region origin');
+    }
+
+    final widthBits =
+        compactGeometry ? _geometryBits(imageWidth - x) : xBits;
+    final heightBits =
+        compactGeometry ? _geometryBits(imageHeight - y) : yBits;
+    final width = reader.readBits(widthBits) + 1;
+    final height = reader.readBits(heightBits) + 1;
     final bounds = _V3Bounds(x, y, width, height);
-    if (x >= imageWidth ||
-        y >= imageHeight ||
-        x + width > imageWidth ||
-        y + height > imageHeight) {
+    if (x + width > imageWidth || y + height > imageHeight) {
       throw const MCOImageInvalidPayloadException('Invalid v3 region');
     }
     return bounds;
@@ -9088,12 +9309,34 @@ class _V3BitWriter {
     } while (remaining != 0);
   }
 
+  void writeRangeCompactUint(int value, int maxValue) {
+    if (maxValue < 0 || value < 0 || value > maxValue) {
+      throw const MCOImageInvalidInputException(
+        'Range compact uint is out of range',
+      );
+    }
+    if (maxValue <= 7) {
+      writeBits(value, maxValue.bitLength);
+      return;
+    }
+    writeCompactUint(value);
+  }
+
   void writeBoundedCompactUint(int value, int maxValue) {
     if (maxValue < 0 || value < 0 || value > maxValue) {
       throw const MCOImageInvalidInputException(
         'Bounded compact uint is out of range',
       );
     }
+
+    // A known range of 0..7 needs at most three fixed bits. This is always
+    // no longer than the prefix-based bounded format and can become a
+    // zero-bit field when maxValue == 0.
+    if (maxValue <= 7) {
+      writeBits(value, maxValue.bitLength);
+      return;
+    }
+
     if (value <= 3) {
       writeBits(0, 1);
       writeBits(value, 2);
@@ -9193,11 +9436,32 @@ class _V3BitReader {
     throw const MCOImageInvalidPayloadException('Varuint is too long');
   }
 
+  int readRangeCompactUint(int maxValue) {
+    if (maxValue < 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid range compact uint limit',
+      );
+    }
+    final value = maxValue <= 7
+        ? readBits(maxValue.bitLength)
+        : readCompactUint();
+    if (value > maxValue) {
+      throw const MCOImageInvalidPayloadException(
+        'Range compact uint exceeds limit',
+      );
+    }
+    return value;
+  }
+
   int readBoundedCompactUint(int maxValue) {
     if (maxValue < 0) {
       throw const MCOImageInvalidPayloadException(
         'Invalid bounded compact uint limit',
       );
+    }
+
+    if (maxValue <= 7) {
+      return readBits(maxValue.bitLength);
     }
 
     late final int value;
