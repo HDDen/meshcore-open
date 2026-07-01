@@ -5,7 +5,9 @@ import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
+import '../widgets/mco_image_message.dart';
 import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
@@ -257,7 +259,51 @@ class NotificationService {
     if (RegExp(r'^g:[A-Za-z0-9_-]+$').hasMatch(trimmed)) {
       return 'Sent a GIF';
     }
+    if (isMcoImageNotificationText(trimmed)) {
+      return 'MCOimg';
+    }
     return text;
+  }
+
+  static bool isMcoImageNotificationText(String text) {
+    return MCOImageMessage.decodeMetadata(text.trim()).image != null;
+  }
+
+  Future<_MCOImageNotificationAttachment?> _tryBuildMcoImageAttachment(
+    String text,
+  ) async {
+    try {
+      final image = MCOImageMessage.decodeMetadata(text.trim()).image;
+      if (image == null) return null;
+      final bytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
+      String? filePath;
+      if (!kIsWeb &&
+          (PlatformInfo.isAndroid ||
+              PlatformInfo.isIOS ||
+              PlatformInfo.isMacOS)) {
+        final directory = await getTemporaryDirectory();
+        final timestamp = DateTime.now().microsecondsSinceEpoch;
+        final file = File(
+          '${directory.path}/mcoimg_notification_$timestamp.png',
+        );
+        await file.writeAsBytes(bytes, flush: true);
+        filePath = file.path;
+      }
+      return _MCOImageNotificationAttachment(bytes: bytes, filePath: filePath);
+    } catch (error) {
+      debugPrint('Failed to build MCOimg notification attachment: $error');
+      return null;
+    }
+  }
+
+  List<DarwinNotificationAttachment>? _darwinAttachmentsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final filePath = attachment?.filePath;
+    if (filePath == null) {
+      return null;
+    }
+    return [DarwinNotificationAttachment(filePath)];
   }
 
   Future<void> _showMessageNotificationImpl({
@@ -267,6 +313,10 @@ class NotificationService {
     int? badgeCount,
   }) async {
     if (!await _ensureCanNotify()) return;
+    final mcoAttachment = await _tryBuildMcoImageAttachment(message);
+    final body = mcoAttachment == null
+        ? formatNotificationText(message)
+        : 'MCOimg';
 
     final androidDetails = AndroidNotificationDetails(
       'messages',
@@ -276,6 +326,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       number: badgeCount,
+      largeIcon: mcoAttachment == null
+          ? null
+          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
+      styleInformation: mcoAttachment == null
+          ? null
+          : BigPictureStyleInformation(
+              ByteArrayAndroidBitmap(mcoAttachment.bytes),
+              contentTitle: contactName,
+              summaryText: 'MCOimg',
+              hideExpandedLargeIcon: true,
+            ),
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -283,6 +344,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -290,6 +352,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final notificationDetails = NotificationDetails(
@@ -302,7 +365,7 @@ class NotificationService {
       await _notifications.show(
         id: contactId?.hashCode ?? 0,
         title: contactName,
-        body: formatNotificationText(message),
+        body: body,
         notificationDetails: notificationDetails,
         payload: 'message:$contactId',
       );
@@ -367,6 +430,7 @@ class NotificationService {
     int? badgeCount,
   }) async {
     if (!await _ensureCanNotify()) return;
+    final mcoAttachment = await _tryBuildMcoImageAttachment(message);
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -376,6 +440,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       number: badgeCount,
+      largeIcon: mcoAttachment == null
+          ? null
+          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
+      styleInformation: mcoAttachment == null
+          ? null
+          : BigPictureStyleInformation(
+              ByteArrayAndroidBitmap(mcoAttachment.bytes),
+              contentTitle: channelName,
+              summaryText: 'MCOimg',
+              hideExpandedLargeIcon: true,
+            ),
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -383,6 +458,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -390,6 +466,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final notificationDetails = NotificationDetails(
@@ -398,7 +475,9 @@ class NotificationService {
       macOS: macDetails,
     );
 
-    final preview = formatNotificationText(message.trim());
+    final preview = mcoAttachment == null
+        ? formatNotificationText(message.trim())
+        : 'MCOimg';
     final body = preview.isEmpty
         ? _l10n.notification_receivedNewMessage
         : preview;
@@ -710,6 +789,16 @@ class NotificationService {
       debugPrint('Failed to show batch summary notification: $e');
     }
   }
+}
+
+class _MCOImageNotificationAttachment {
+  final Uint8List bytes;
+  final String? filePath;
+
+  const _MCOImageNotificationAttachment({
+    required this.bytes,
+    required this.filePath,
+  });
 }
 
 // Helper class for pending notifications
