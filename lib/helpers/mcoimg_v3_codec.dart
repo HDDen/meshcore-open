@@ -31,22 +31,33 @@ enum MCOImageV3Container {
 enum MCOImageV3BlockAlgorithm {
   rawGlobal,
   rawLocal,
-  rleLocal,
-  sparseBackground,
-  biColorMask,
-  rowRepeat,
   compactRle,
   compactSparse,
+  biColorMask,
+  rowRepeat,
   lzPixels,
-  lzPixelsOptimal,
   quadtree,
   bitplanes,
   adaptiveBitplanes,
-  directGrayscaleBitplanes,
-  directDynamicBitplanes,
+  directBitplanes,
   compactRowDelta,
-  directGrayscaleRowDelta,
-  directDynamicRowDelta,
+  directRowDelta;
+
+  @Deprecated('Use directBitplanes')
+  static const MCOImageV3BlockAlgorithm directGrayscaleBitplanes =
+      directBitplanes;
+
+  @Deprecated('Use directBitplanes')
+  static const MCOImageV3BlockAlgorithm directDynamicBitplanes =
+      directBitplanes;
+
+  @Deprecated('Use directRowDelta')
+  static const MCOImageV3BlockAlgorithm directGrayscaleRowDelta =
+      directRowDelta;
+
+  @Deprecated('Use directRowDelta')
+  static const MCOImageV3BlockAlgorithm directDynamicRowDelta =
+      directRowDelta;
 }
 
 class EncodedMCOImageV3 {
@@ -231,44 +242,36 @@ class MCOImageV3Codec {
   static const List<MCOImageV3BlockAlgorithm> _regionBlockAlgorithms = [
     MCOImageV3BlockAlgorithm.rawGlobal,
     MCOImageV3BlockAlgorithm.rawLocal,
-    MCOImageV3BlockAlgorithm.rleLocal,
     MCOImageV3BlockAlgorithm.compactRle,
     MCOImageV3BlockAlgorithm.lzPixels,
-    MCOImageV3BlockAlgorithm.lzPixelsOptimal,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-    MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
-    MCOImageV3BlockAlgorithm.directDynamicBitplanes,
+    MCOImageV3BlockAlgorithm.directBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
-    MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
-    MCOImageV3BlockAlgorithm.directDynamicRowDelta,
+    MCOImageV3BlockAlgorithm.directRowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
-    MCOImageV3BlockAlgorithm.sparseBackground,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
   ];
   static const List<MCOImageV3BlockAlgorithm> _normalRegionBlockAlgorithms = [
     MCOImageV3BlockAlgorithm.rawGlobal,
     MCOImageV3BlockAlgorithm.rawLocal,
-    MCOImageV3BlockAlgorithm.rleLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
     MCOImageV3BlockAlgorithm.lzPixels,
-    MCOImageV3BlockAlgorithm.lzPixelsOptimal,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
     MCOImageV3BlockAlgorithm.compactRowDelta,
     MCOImageV3BlockAlgorithm.rowRepeat,
-    MCOImageV3BlockAlgorithm.sparseBackground,
+    MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.biColorMask,
   ];
   static const List<MCOImageV3BlockAlgorithm> _sharedPaletteRegionAlgorithms = [
     MCOImageV3BlockAlgorithm.rawLocal,
-    MCOImageV3BlockAlgorithm.rleLocal,
     MCOImageV3BlockAlgorithm.compactRle,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.lzPixels,
-    MCOImageV3BlockAlgorithm.lzPixelsOptimal,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
@@ -277,7 +280,6 @@ class MCOImageV3Codec {
   ];
   static const List<MCOImageV3BlockAlgorithm> _regionCostBlockAlgorithms = [
     MCOImageV3BlockAlgorithm.rawLocal,
-    MCOImageV3BlockAlgorithm.rleLocal,
     MCOImageV3BlockAlgorithm.compactRle,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.bitplanes,
@@ -287,10 +289,9 @@ class MCOImageV3Codec {
   static const List<MCOImageV3BlockAlgorithm>
       _normalSharedPaletteRegionAlgorithms = [
     MCOImageV3BlockAlgorithm.rawLocal,
-    MCOImageV3BlockAlgorithm.rleLocal,
+    MCOImageV3BlockAlgorithm.compactRle,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.lzPixels,
-    MCOImageV3BlockAlgorithm.lzPixelsOptimal,
     MCOImageV3BlockAlgorithm.quadtree,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
@@ -795,20 +796,15 @@ class MCOImageV3Codec {
         for (final algorithm in const [
           MCOImageV3BlockAlgorithm.rawGlobal,
           MCOImageV3BlockAlgorithm.rawLocal,
-          MCOImageV3BlockAlgorithm.rleLocal,
           MCOImageV3BlockAlgorithm.compactRle,
           MCOImageV3BlockAlgorithm.lzPixels,
-          MCOImageV3BlockAlgorithm.lzPixelsOptimal,
-          MCOImageV3BlockAlgorithm.quadtree,
+                MCOImageV3BlockAlgorithm.quadtree,
           MCOImageV3BlockAlgorithm.bitplanes,
           MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-          MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
-          MCOImageV3BlockAlgorithm.directDynamicBitplanes,
+          MCOImageV3BlockAlgorithm.directBitplanes,
           MCOImageV3BlockAlgorithm.compactRowDelta,
-          MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
-          MCOImageV3BlockAlgorithm.directDynamicRowDelta,
+          MCOImageV3BlockAlgorithm.directRowDelta,
           MCOImageV3BlockAlgorithm.rowRepeat,
-          MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
         ]) {
@@ -861,18 +857,14 @@ class MCOImageV3Codec {
       for (final algorithm in const [
         MCOImageV3BlockAlgorithm.rawGlobal,
         MCOImageV3BlockAlgorithm.rawLocal,
-        MCOImageV3BlockAlgorithm.rleLocal,
         MCOImageV3BlockAlgorithm.compactRle,
         MCOImageV3BlockAlgorithm.lzPixels,
-        MCOImageV3BlockAlgorithm.lzPixelsOptimal,
-        MCOImageV3BlockAlgorithm.quadtree,
+            MCOImageV3BlockAlgorithm.quadtree,
         MCOImageV3BlockAlgorithm.bitplanes,
         MCOImageV3BlockAlgorithm.adaptiveBitplanes,
-        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes,
-        MCOImageV3BlockAlgorithm.directDynamicBitplanes,
+        MCOImageV3BlockAlgorithm.directBitplanes,
         MCOImageV3BlockAlgorithm.compactRowDelta,
-        MCOImageV3BlockAlgorithm.directGrayscaleRowDelta,
-        MCOImageV3BlockAlgorithm.directDynamicRowDelta,
+        MCOImageV3BlockAlgorithm.directRowDelta,
         MCOImageV3BlockAlgorithm.rowRepeat,
       ]) {
         if (_canUseCompactBlockHeader(algorithm)) {
@@ -901,7 +893,6 @@ class MCOImageV3Codec {
       for (final background in effectiveBackgroundCandidates) {
         final bg = background.color;
         for (final algorithm in const [
-          MCOImageV3BlockAlgorithm.sparseBackground,
           MCOImageV3BlockAlgorithm.compactSparse,
           MCOImageV3BlockAlgorithm.biColorMask,
         ]) {
@@ -2211,32 +2202,6 @@ class MCOImageV3Codec {
           },
         );
         break;
-      case MCOImageV3BlockAlgorithm.rleLocal:
-        _writeBestLocalPaletteBlock(
-          writer,
-          linear,
-          profile,
-          indexOrderSensitive: false,
-          includeTransitionOrder: true,
-          writeBody: (bodyWriter, localPixels, bits) {
-            final runs = _buildRuns(localPixels);
-            bodyWriter.writeBoundedCompactUint(
-              runs.length - 1,
-              localPixels.length - 1,
-            );
-            var consumed = 0;
-            for (final run in runs) {
-              bodyWriter
-                ..writeBits(run.color, bits)
-                ..writeBoundedCompactUint(
-                  run.length - 1,
-                  localPixels.length - consumed - 1,
-                );
-              consumed += run.length;
-            }
-          },
-        );
-        break;
       case MCOImageV3BlockAlgorithm.compactRle:
         _writeBestLocalPaletteBlock(
           writer,
@@ -2259,7 +2224,6 @@ class MCOImageV3Codec {
         );
         break;
       case MCOImageV3BlockAlgorithm.lzPixels:
-      case MCOImageV3BlockAlgorithm.lzPixelsOptimal:
         _writeBestLocalPaletteBlock(
           writer,
           linear,
@@ -2267,12 +2231,7 @@ class MCOImageV3Codec {
           indexOrderSensitive: false,
           includeTransitionOrder: true,
           writeBody: (bodyWriter, localPixels, bits) {
-            final tokens = _buildLzPixelTokens(
-              localPixels,
-              bits,
-              optimizeParsing:
-                  algorithm == MCOImageV3BlockAlgorithm.lzPixelsOptimal,
-            );
+            final tokens = _buildBestLzPixelTokens(localPixels, bits);
             _writeLzPixelTokens(bodyWriter, tokens, bits);
           },
         );
@@ -2349,26 +2308,26 @@ class MCOImageV3Codec {
           writeBody: _writeAdaptiveBitplanesLocalBody,
         );
         break;
-      case MCOImageV3BlockAlgorithm.directGrayscaleBitplanes:
-        if (!_isGrayscaleProfile(profile)) {
-          throw const MCOImageInvalidInputException(
-            'Direct grayscale bitplanes require a grayscale profile',
+      case MCOImageV3BlockAlgorithm.directBitplanes:
+        if (_isGrayscaleProfile(profile)) {
+          _writeAdaptiveBitplanesBody(
+            writer,
+            linear,
+            _globalBits(profile),
           );
+          break;
         }
-        _writeAdaptiveBitplanesBody(writer, linear, _globalBits(profile));
-        break;
-      case MCOImageV3BlockAlgorithm.directDynamicBitplanes:
-        if (!profile.isDynamic) {
-          throw const MCOImageInvalidInputException(
-            'Direct dynamic bitplanes require a dynamic profile',
+        if (profile.isDynamic) {
+          _writeAdaptiveBitplanesBody(
+            writer,
+            _dynamicProfilePixels(profile, linear),
+            _globalBits(profile),
           );
+          break;
         }
-        _writeAdaptiveBitplanesBody(
-          writer,
-          _dynamicProfilePixels(profile, linear),
-          _globalBits(profile),
+        throw const MCOImageInvalidInputException(
+          'Direct bitplanes require a grayscale or dynamic profile',
         );
-        break;
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         _writeBestLocalPaletteBlock(
           writer,
@@ -2391,75 +2350,30 @@ class MCOImageV3Codec {
           },
         );
         break;
-      case MCOImageV3BlockAlgorithm.directGrayscaleRowDelta:
-        if (!_isGrayscaleProfile(profile)) {
-          throw const MCOImageInvalidInputException(
-            'Direct grayscale row-delta requires a grayscale profile',
+      case MCOImageV3BlockAlgorithm.directRowDelta:
+        if (_isGrayscaleProfile(profile)) {
+          _writeCompactRowDeltaBody(
+            writer,
+            linear,
+            rowLength,
+            _globalBits(profile),
+            directGrayscale: true,
           );
+          break;
         }
-        _writeCompactRowDeltaBody(
-          writer,
-          linear,
-          rowLength,
-          _globalBits(profile),
-          directGrayscale: true,
-        );
-        break;
-      case MCOImageV3BlockAlgorithm.directDynamicRowDelta:
-        if (!profile.isDynamic) {
-          throw const MCOImageInvalidInputException(
-            'Direct dynamic row-delta requires a dynamic profile',
+        if (profile.isDynamic) {
+          _writeCompactRowDeltaBody(
+            writer,
+            _dynamicProfilePixels(profile, linear),
+            rowLength,
+            _globalBits(profile),
+            directGrayscale: false,
           );
+          break;
         }
-        _writeCompactRowDeltaBody(
-          writer,
-          _dynamicProfilePixels(profile, linear),
-          rowLength,
-          _globalBits(profile),
-          directGrayscale: false,
+        throw const MCOImageInvalidInputException(
+          'Direct row-delta requires a grayscale or dynamic profile',
         );
-        break;
-      case MCOImageV3BlockAlgorithm.sparseBackground:
-        _writeBackgroundRef(
-          writer,
-          profile,
-          backgroundColor,
-          implicitWhiteBackground: _isImplicitWhiteBackground(
-            profile,
-            backgroundColor,
-          ),
-        );
-        final nonBg = linear
-            .where((color) => color != backgroundColor)
-            .toSet()
-            .toList()
-          ..sort();
-        if (nonBg.isEmpty) {
-          throw const MCOImageInvalidInputException('Empty sparse body');
-        }
-        _writeLocalPalette(writer, profile, nonBg);
-        final map = _localIndexMap(nonBg);
-        final bits = _localBits(nonBg.length);
-        final segments = _buildSparseSegments(linear, backgroundColor);
-        writer.writeBoundedCompactUint(
-          segments.length - 1,
-          linear.length - 1,
-        );
-        var pos = 0;
-        for (final segment in segments) {
-          writer
-            ..writeBoundedCompactUint(
-              segment.start - pos,
-              linear.length - pos - 1,
-            )
-            ..writeBits(map[segment.color]!, bits)
-            ..writeBoundedCompactUint(
-              segment.length - 1,
-              linear.length - segment.start - 1,
-            );
-          pos = segment.start + segment.length;
-        }
-        break;
       case MCOImageV3BlockAlgorithm.compactSparse:
         _writeBackgroundRef(
           writer,
@@ -2570,23 +2484,6 @@ class MCOImageV3Codec {
           writer.writeBits(map[color]!, bits);
         }
         break;
-      case MCOImageV3BlockAlgorithm.rleLocal:
-        final runs = _buildRuns(linear);
-        writer.writeBoundedCompactUint(
-          runs.length - 1,
-          linear.length - 1,
-        );
-        var consumed = 0;
-        for (final run in runs) {
-          writer
-            ..writeBits(map[run.color]!, bits)
-            ..writeBoundedCompactUint(
-              run.length - 1,
-              linear.length - consumed - 1,
-            );
-          consumed += run.length;
-        }
-        break;
       case MCOImageV3BlockAlgorithm.compactRle:
         var consumed = 0;
         for (final run in _buildRuns(linear)) {
@@ -2639,14 +2536,8 @@ class MCOImageV3Codec {
         }
         break;
       case MCOImageV3BlockAlgorithm.lzPixels:
-      case MCOImageV3BlockAlgorithm.lzPixelsOptimal:
         final pixels = localPixels();
-        final tokens = _buildLzPixelTokens(
-          pixels,
-          bits,
-          optimizeParsing:
-              algorithm == MCOImageV3BlockAlgorithm.lzPixelsOptimal,
-        );
+        final tokens = _buildBestLzPixelTokens(pixels, bits);
         _writeLzPixelTokens(writer, tokens, bits);
         break;
       case MCOImageV3BlockAlgorithm.quadtree:
@@ -2738,34 +2629,6 @@ class MCOImageV3Codec {
           }
           return palette[index];
         });
-      case MCOImageV3BlockAlgorithm.rleLocal:
-        final palette = _readLocalPalette(reader, profile);
-        final bits = _localBits(palette.length);
-        final runCount =
-            reader.readBoundedCompactUint(count - 1) + 1;
-        final result = <int>[];
-        for (var i = 0; i < runCount; i++) {
-          if (result.length >= count) {
-            throw const MCOImageInvalidPayloadException(
-              'Invalid RLE run count',
-            );
-          }
-          final colorIndex = reader.readBits(bits);
-          if (colorIndex >= palette.length) {
-            throw const MCOImageInvalidPayloadException(
-              'RLE color index out of range',
-            );
-          }
-          final length = reader.readBoundedCompactUint(
-                count - result.length - 1,
-              ) +
-              1;
-          result.addAll(List<int>.filled(length, palette[colorIndex]));
-        }
-        if (result.length != count) {
-          throw const MCOImageInvalidPayloadException('Invalid RLE size');
-        }
-        return result;
       case MCOImageV3BlockAlgorithm.compactRle:
         final palette = _readLocalPalette(reader, profile);
         final bits = _localBits(palette.length);
@@ -2785,7 +2648,6 @@ class MCOImageV3Codec {
         }
         return result;
       case MCOImageV3BlockAlgorithm.lzPixels:
-      case MCOImageV3BlockAlgorithm.lzPixelsOptimal:
         final palette = _readLocalPalette(reader, profile);
         final bits = _localBits(palette.length);
         final result = <int>[];
@@ -2885,27 +2747,23 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.adaptiveBitplanes:
         final palette = _readLocalPalette(reader, profile);
         return _decodeAdaptiveBitplanesBody(reader, count, palette);
-      case MCOImageV3BlockAlgorithm.directGrayscaleBitplanes:
-        if (!_isGrayscaleProfile(profile)) {
-          throw const MCOImageInvalidPayloadException(
-            'Direct grayscale bitplanes require a grayscale profile',
+      case MCOImageV3BlockAlgorithm.directBitplanes:
+        if (_isGrayscaleProfile(profile)) {
+          return _decodeAdaptiveBitplanesBody(
+            reader,
+            count,
+            List<int>.generate(_paletteSize(profile), (index) => index),
           );
         }
-        return _decodeAdaptiveBitplanesBody(
-          reader,
-          count,
-          List<int>.generate(_paletteSize(profile), (index) => index),
-        );
-      case MCOImageV3BlockAlgorithm.directDynamicBitplanes:
-        if (!profile.isDynamic) {
-          throw const MCOImageInvalidPayloadException(
-            'Direct dynamic bitplanes require a dynamic profile',
+        if (profile.isDynamic) {
+          return _decodeAdaptiveBitplanesBody(
+            reader,
+            count,
+            _dynamicProfilePalette(profile),
           );
         }
-        return _decodeAdaptiveBitplanesBody(
-          reader,
-          count,
-          _dynamicProfilePalette(profile),
+        throw const MCOImageInvalidPayloadException(
+          'Direct bitplanes require a grayscale or dynamic profile',
         );
       case MCOImageV3BlockAlgorithm.compactRowDelta:
         final palette = _readLocalPalette(reader, profile);
@@ -2926,71 +2784,34 @@ class MCOImageV3Codec {
           }
           return palette[index];
         }).toList(growable: false);
-      case MCOImageV3BlockAlgorithm.directGrayscaleRowDelta:
-        if (!_isGrayscaleProfile(profile)) {
-          throw const MCOImageInvalidPayloadException(
-            'Direct grayscale row-delta requires a grayscale profile',
+      case MCOImageV3BlockAlgorithm.directRowDelta:
+        if (_isGrayscaleProfile(profile)) {
+          return _readCompactRowDeltaBody(
+            reader,
+            count,
+            _rowLengthForScan(scan, width, height),
+            _globalBits(profile),
+            directGrayscale: true,
+            maxValue: _paletteSize(profile) - 1,
           );
         }
-        return _readCompactRowDeltaBody(
-          reader,
-          count,
-          _rowLengthForScan(scan, width, height),
-          _globalBits(profile),
-          directGrayscale: true,
-          maxValue: _paletteSize(profile) - 1,
-        );
-      case MCOImageV3BlockAlgorithm.directDynamicRowDelta:
-        if (!profile.isDynamic) {
-          throw const MCOImageInvalidPayloadException(
-            'Direct dynamic row-delta requires a dynamic profile',
+        if (profile.isDynamic) {
+          final profilePixels = _readCompactRowDeltaBody(
+            reader,
+            count,
+            _rowLengthForScan(scan, width, height),
+            _globalBits(profile),
+            directGrayscale: false,
+            maxValue: _paletteSize(profile) - 1,
           );
+          final palette = _dynamicProfilePalette(profile);
+          return profilePixels.map((index) => palette[index]).toList(
+                growable: false,
+              );
         }
-        final profilePixels = _readCompactRowDeltaBody(
-          reader,
-          count,
-          _rowLengthForScan(scan, width, height),
-          _globalBits(profile),
-          directGrayscale: false,
-          maxValue: _paletteSize(profile) - 1,
+        throw const MCOImageInvalidPayloadException(
+          'Direct row-delta requires a grayscale or dynamic profile',
         );
-        final palette = _dynamicProfilePalette(profile);
-        return profilePixels.map((index) => palette[index]).toList(
-              growable: false,
-            );
-      case MCOImageV3BlockAlgorithm.sparseBackground:
-        final background = _readBackgroundRef(
-          reader,
-          profile,
-          implicitWhiteBackground: implicitWhiteBackground,
-        );
-        final palette = _readLocalPalette(reader, profile);
-        final bits = _localBits(palette.length);
-        final result = List<int>.filled(count, background);
-        final segmentCount =
-            reader.readBoundedCompactUint(count - 1) + 1;
-        var pos = 0;
-        for (var i = 0; i < segmentCount; i++) {
-          if (pos >= count) {
-            throw const MCOImageInvalidPayloadException(
-              'Invalid sparse segment count',
-            );
-          }
-          pos += reader.readBoundedCompactUint(count - pos - 1);
-          final colorIndex = reader.readBits(bits);
-          if (colorIndex >= palette.length) {
-            throw const MCOImageInvalidPayloadException(
-              'Sparse color index out of range',
-            );
-          }
-          final length =
-              reader.readBoundedCompactUint(count - pos - 1) + 1;
-          for (var j = 0; j < length; j++) {
-            result[pos + j] = palette[colorIndex];
-          }
-          pos += length;
-        }
-        return result;
       case MCOImageV3BlockAlgorithm.compactSparse:
         final background = _readBackgroundRef(
           reader,
@@ -3087,32 +2908,6 @@ class MCOImageV3Codec {
         return mapLocalPixels(
           List<int>.generate(count, (_) => reader.readBits(bits)),
         );
-      case MCOImageV3BlockAlgorithm.rleLocal:
-        final result = <int>[];
-        final runCount =
-            reader.readBoundedCompactUint(count - 1) + 1;
-        for (var i = 0; i < runCount; i++) {
-          if (result.length >= count) {
-            throw const MCOImageInvalidPayloadException(
-              'Invalid shared RLE run count',
-            );
-          }
-          final colorIndex = reader.readBits(bits);
-          if (colorIndex >= palette.length) {
-            throw const MCOImageInvalidPayloadException(
-              'RLE shared palette index out of range',
-            );
-          }
-          final length = reader.readBoundedCompactUint(
-                count - result.length - 1,
-              ) +
-              1;
-          result.addAll(List<int>.filled(length, palette[colorIndex]));
-        }
-        if (result.length != count) {
-          throw const MCOImageInvalidPayloadException('Invalid RLE size');
-        }
-        return result;
       case MCOImageV3BlockAlgorithm.compactRle:
         final result = <int>[];
         while (result.length < count) {
@@ -3161,7 +2956,6 @@ class MCOImageV3Codec {
         }
         return result;
       case MCOImageV3BlockAlgorithm.lzPixels:
-      case MCOImageV3BlockAlgorithm.lzPixelsOptimal:
         final result = <int>[];
         while (result.length < count) {
           final isMatch = reader.readBits(1) != 0;
@@ -3501,7 +3295,6 @@ class MCOImageV3Codec {
     MCOImageV3BlockAlgorithm algorithm,
   ) {
     return switch (algorithm) {
-      MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse ||
       MCOImageV3BlockAlgorithm.biColorMask => true,
       _ => false,
@@ -3571,8 +3364,8 @@ class MCOImageV3Codec {
     return switch (algorithm) {
       MCOImageV3BlockAlgorithm.rawGlobal => ImageMode.rawGlobal,
       MCOImageV3BlockAlgorithm.rawLocal => ImageMode.rawLocal,
-      MCOImageV3BlockAlgorithm.rleLocal => ImageMode.rleLocal,
-      MCOImageV3BlockAlgorithm.sparseBackground => ImageMode.sparseBg,
+      MCOImageV3BlockAlgorithm.compactRle => ImageMode.rleLocal,
+      MCOImageV3BlockAlgorithm.compactSparse => ImageMode.sparseBg,
       MCOImageV3BlockAlgorithm.biColorMask => ImageMode.biColorMask,
       MCOImageV3BlockAlgorithm.rowRepeat => ImageMode.rowRepeat,
       _ => ImageMode.extended,
@@ -3616,26 +3409,17 @@ class MCOImageV3Codec {
     return switch (algorithm) {
       MCOImageV3BlockAlgorithm.rawGlobal => 'Raw global',
       MCOImageV3BlockAlgorithm.rawLocal => 'Raw local',
-      MCOImageV3BlockAlgorithm.rleLocal => 'RLE local',
-      MCOImageV3BlockAlgorithm.sparseBackground => 'Sparse background',
+      MCOImageV3BlockAlgorithm.compactRle => 'RLE local',
+      MCOImageV3BlockAlgorithm.compactSparse => 'Sparse background',
       MCOImageV3BlockAlgorithm.biColorMask => 'Bi-color mask',
       MCOImageV3BlockAlgorithm.rowRepeat => 'Row repeat',
-      MCOImageV3BlockAlgorithm.compactRle => 'Compact RLE',
-      MCOImageV3BlockAlgorithm.compactSparse => 'Compact sparse',
       MCOImageV3BlockAlgorithm.lzPixels => 'LZ pixels',
-      MCOImageV3BlockAlgorithm.lzPixelsOptimal => 'LZ pixels optimal',
       MCOImageV3BlockAlgorithm.quadtree => 'Quadtree',
       MCOImageV3BlockAlgorithm.bitplanes => 'Bitplanes',
       MCOImageV3BlockAlgorithm.adaptiveBitplanes => 'Adaptive bitplanes',
-      MCOImageV3BlockAlgorithm.directGrayscaleBitplanes =>
-        'Direct grayscale bitplanes',
-      MCOImageV3BlockAlgorithm.directDynamicBitplanes =>
-        'Direct dynamic bitplanes',
+      MCOImageV3BlockAlgorithm.directBitplanes => 'Direct bitplanes',
       MCOImageV3BlockAlgorithm.compactRowDelta => 'Compact row delta',
-      MCOImageV3BlockAlgorithm.directGrayscaleRowDelta =>
-        'Direct grayscale row delta',
-      MCOImageV3BlockAlgorithm.directDynamicRowDelta =>
-        'Direct dynamic row delta',
+      MCOImageV3BlockAlgorithm.directRowDelta => 'Direct row delta',
     };
   }
 
@@ -3671,16 +3455,13 @@ class MCOImageV3Codec {
   ) {
     return switch (algorithm) {
       MCOImageV3BlockAlgorithm.rawLocal ||
-      MCOImageV3BlockAlgorithm.rleLocal ||
       MCOImageV3BlockAlgorithm.compactRle ||
       MCOImageV3BlockAlgorithm.lzPixels ||
-      MCOImageV3BlockAlgorithm.lzPixelsOptimal ||
       MCOImageV3BlockAlgorithm.quadtree ||
       MCOImageV3BlockAlgorithm.bitplanes ||
       MCOImageV3BlockAlgorithm.adaptiveBitplanes ||
       MCOImageV3BlockAlgorithm.compactRowDelta ||
       MCOImageV3BlockAlgorithm.rowRepeat => linear.toSet().length,
-      MCOImageV3BlockAlgorithm.sparseBackground ||
       MCOImageV3BlockAlgorithm.compactSparse =>
         linear.where((color) => color != backgroundColor).toSet().length,
       MCOImageV3BlockAlgorithm.biColorMask => 2,
@@ -3775,11 +3556,10 @@ class MCOImageV3Codec {
     return tokens;
   }
 
-  List<_V3LzPixelToken> _buildLzPixelTokens(
+  List<_V3LzPixelToken> _buildBestLzPixelTokens(
     List<int> pixels,
-    int localBits, {
-    required bool optimizeParsing,
-  }) {
+    int localBits,
+  ) {
     final cacheKey = _lzOptimizationCacheKey(pixels, localBits);
     final entry = _lzTokenCache.entries.putIfAbsent(cacheKey, () {
       final greedyTokens = _buildGreedyLzPixelTokens(pixels, localBits);
@@ -3789,11 +3569,8 @@ class MCOImageV3Codec {
       );
     });
 
-    if (!optimizeParsing) return entry.greedyTokens;
     if (pixels.length > _maxOptimalLzPixels) {
-      throw const MCOImageInvalidInputException(
-        'Optimal LZ pixels skipped for a large block',
-      );
+      return entry.greedyTokens;
     }
 
     if (!entry.optimalComputed) {
@@ -3806,15 +3583,13 @@ class MCOImageV3Codec {
 
     final optimalTokens = entry.optimalTokens;
     final optimalBitCost = entry.optimalBitCost;
-    if (optimalTokens == null ||
-        optimalBitCost == null ||
-        optimalBitCost >= entry.greedyBitCost ||
-        _lzPixelTokensEqual(optimalTokens, entry.greedyTokens)) {
-      throw const MCOImageInvalidInputException(
-        'Optimal LZ pixels do not improve greedy parsing',
-      );
+    if (optimalTokens != null &&
+        optimalBitCost != null &&
+        optimalBitCost < entry.greedyBitCost &&
+        !_lzPixelTokensEqual(optimalTokens, entry.greedyTokens)) {
+      return optimalTokens;
     }
-    return optimalTokens;
+    return entry.greedyTokens;
   }
 
   static String _lzOptimizationCacheKey(
