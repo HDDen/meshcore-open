@@ -216,8 +216,7 @@ class ChannelMessage {
           : packetRegion as String?,
       packetRegionInfoAvailable:
           packetRegionInfoAvailable ?? this.packetRegionInfoAvailable,
-      noRetransmissionWarningSeconds:
-          noRetransmissionWarningSeconds == _unset
+      noRetransmissionWarningSeconds: noRetransmissionWarningSeconds == _unset
           ? this.noRetransmissionWarningSeconds
           : noRetransmissionWarningSeconds as int?,
       messageId: messageId,

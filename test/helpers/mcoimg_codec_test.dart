@@ -146,16 +146,12 @@ void main() {
           .where(
             (candidate) =>
                 candidate.mode == ImageMode.rleLocal &&
-                (candidate.scan == ScanMode.v ||
-                    candidate.scan == ScanMode.sv),
+                (candidate.scan == ScanMode.v || candidate.scan == ScanMode.sv),
           )
           .map((candidate) => candidate.charLength)
           .reduce(math.min);
 
-      expect(
-        diagnostics.result.charLength,
-        lessThanOrEqualTo(columnRleLength),
-      );
+      expect(diagnostics.result.charLength, lessThanOrEqualTo(columnRleLength));
       expect(codec.decode(diagnostics.result.text).pixels, image.pixels);
     });
 
@@ -363,11 +359,7 @@ void main() {
         expect(encoded.boundsPresent, isTrue);
         expect(
           encoded.mode,
-          anyOf(
-            ImageMode.rawLocal,
-            ImageMode.rleLocal,
-            ImageMode.extended,
-          ),
+          anyOf(ImageMode.rawLocal, ImageMode.rleLocal, ImageMode.extended),
         );
         expect(codec.decode(encoded.text).pixels, image.pixels);
       },
@@ -400,9 +392,7 @@ void main() {
 
     test('beam regions merge nearby components when payload is smaller', () {
       final image = _image(16, 16, (x, y) {
-        final selected =
-            (x == 5 || x == 7) &&
-            (y == 5 || y == 7);
+        final selected = (x == 5 || x == 7) && (y == 5 || y == 7);
         return selected ? 1 : 0;
       }, profile: PaletteProfile.mono);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
@@ -434,15 +424,10 @@ void main() {
         PaletteProfile.dynamicGlobal32,
       );
       final image = _image(16, 16, (x, y) {
-        final selected =
-            (x == 5 || x == 7) &&
-            (y == 5 || y == 7);
+        final selected = (x == 5 || x == 7) && (y == 5 || y == 7);
         return selected ? colors[3] : colors[0];
       }, profile: PaletteProfile.dynamicGlobal32);
-      final diagnostics = codec.debugEncode(
-        image,
-        backgroundColor: colors[0],
-      );
+      final diagnostics = codec.debugEncode(image, backgroundColor: colors[0]);
       final candidates = diagnostics.candidates.where(
         (candidate) => candidate.container.startsWith('regions-beam'),
       );
@@ -514,8 +499,8 @@ void main() {
 
     test('v2 compact bounds candidates roundtrip', () {
       final image = _image(24, 24, (x, y) {
-        final plus = (x == 12 && y >= 9 && y <= 15) ||
-            (y == 12 && x >= 9 && x <= 15);
+        final plus =
+            (x == 12 && y >= 9 && y <= 15) || (y == 12 && x >= 9 && x <= 15);
         return plus ? 1 : 0;
       }, profile: PaletteProfile.mono);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
@@ -536,15 +521,13 @@ void main() {
         return first || second ? 1 : 0;
       }, profile: PaletteProfile.mono);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
-      final regionCandidate = diagnostics.candidates.firstWhere(
-        (candidate) {
-          if (candidate.mode != ImageMode.regionsBg) return false;
-          final bytes = _base91Decode(
-            candidate.text.substring(MCOImageCodec.prefix.length),
-          );
-          return ((bytes.first >> 3) & 0x07) == 7;
-        },
-      );
+      final regionCandidate = diagnostics.candidates.firstWhere((candidate) {
+        if (candidate.mode != ImageMode.regionsBg) return false;
+        final bytes = _base91Decode(
+          candidate.text.substring(MCOImageCodec.prefix.length),
+        );
+        return ((bytes.first >> 3) & 0x07) == 7;
+      });
       final bytes = _base91Decode(
         regionCandidate.text.substring(MCOImageCodec.prefix.length),
       );
@@ -684,15 +667,10 @@ void main() {
 
     test('optimal LZ bounds candidates roundtrip', () {
       const sequence = [0, 1, 2, 3, 1, 2, 3, 0, 2, 0];
-      final image = _image(
-        14,
-        3,
-        (x, y) {
-          if (y != 1 || x < 2 || x >= 12) return 0;
-          return sequence[x - 2];
-        },
-        profile: PaletteProfile.master4,
-      );
+      final image = _image(14, 3, (x, y) {
+        if (y != 1 || x < 2 || x >= 12) return 0;
+        return sequence[x - 2];
+      }, profile: PaletteProfile.master4);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
       final candidates = diagnostics.candidates.where(
         (candidate) => candidate.container == 'lz-pixels-optimal-bounds',
@@ -811,27 +789,26 @@ void main() {
         PaletteProfile.master64,
       ]) {
         final paletteSize = MCOImagePalette.colorsFor(profile).length;
-        final image = _image(
-          18,
-          14,
-          (x, y) {
-            if (x < 2 || x >= 16 || y < 2 || y >= 12) return 0;
-            if (x == 2 || x == 15 || y == 2 || y == 11) return 1;
-            return paletteSize - 1;
-          },
-          profile: profile,
-        );
+        final image = _image(18, 14, (x, y) {
+          if (x < 2 || x >= 16 || y < 2 || y >= 12) return 0;
+          if (x == 2 || x == 15 || y == 2 || y == 11) return 1;
+          return paletteSize - 1;
+        }, profile: profile);
         final diagnostics = codec.debugEncode(image, backgroundColor: 0);
-        final adaptiveCandidates = diagnostics.candidates.where(
-          (candidate) =>
-              candidate.container.startsWith('adaptive-bitplanes-') &&
-              candidate.container.contains('-order'),
-        ).toList();
-        final rowDeltaCandidates = diagnostics.candidates.where(
-          (candidate) => candidate.container.startsWith(
-            'compact-row-delta-palette-optimized',
-          ),
-        ).toList();
+        final adaptiveCandidates = diagnostics.candidates
+            .where(
+              (candidate) =>
+                  candidate.container.startsWith('adaptive-bitplanes-') &&
+                  candidate.container.contains('-order'),
+            )
+            .toList();
+        final rowDeltaCandidates = diagnostics.candidates
+            .where(
+              (candidate) => candidate.container.startsWith(
+                'compact-row-delta-palette-optimized',
+              ),
+            )
+            .toList();
 
         for (final container in const [
           'adaptive-bitplanes-profile-order',
@@ -890,9 +867,8 @@ void main() {
       for (final image in images) {
         final diagnostics = codec.debugEncode(image, backgroundColor: 0);
         final candidates = diagnostics.candidates.where(
-          (candidate) => candidate.container.startsWith(
-            'adaptive-bitplanes-multistart',
-          ),
+          (candidate) =>
+              candidate.container.startsWith('adaptive-bitplanes-multistart'),
         );
         for (final candidate in candidates) {
           multiStartCandidates.add(candidate);
@@ -1089,20 +1065,17 @@ void main() {
         backgroundColor: selected.first,
       );
 
-      EncodedMCOImage candidateFor(
-        DynamicPaletteReferenceEncoding encoding,
-      ) => diagnostics.candidates.firstWhere(
-        (candidate) =>
-            candidate.container == 'compact-rle' &&
-            candidate.scan == ScanMode.h &&
-            candidate.backgroundColor == selected.first &&
-            candidate.dynamicReferenceEncoding == encoding,
-      );
+      EncodedMCOImage candidateFor(DynamicPaletteReferenceEncoding encoding) =>
+          diagnostics.candidates.firstWhere(
+            (candidate) =>
+                candidate.container == 'compact-rle' &&
+                candidate.scan == ScanMode.h &&
+                candidate.backgroundColor == selected.first &&
+                candidate.dynamicReferenceEncoding == encoding,
+          );
 
       final flat = candidateFor(DynamicPaletteReferenceEncoding.flat);
-      final ranges = candidateFor(
-        DynamicPaletteReferenceEncoding.rangeRuns,
-      );
+      final ranges = candidateFor(DynamicPaletteReferenceEncoding.rangeRuns);
       expect(ranges.byteLength, lessThan(flat.byteLength));
       expect(codec.decode(ranges.text).pixels, image.pixels);
     });
@@ -1123,15 +1096,14 @@ void main() {
         backgroundColor: selected.first,
       );
 
-      EncodedMCOImage candidateFor(
-        DynamicPaletteReferenceEncoding encoding,
-      ) => diagnostics.candidates.firstWhere(
-        (candidate) =>
-            candidate.container == 'compact-rle' &&
-            candidate.scan == ScanMode.h &&
-            candidate.backgroundColor == selected.first &&
-            candidate.dynamicReferenceEncoding == encoding,
-      );
+      EncodedMCOImage candidateFor(DynamicPaletteReferenceEncoding encoding) =>
+          diagnostics.candidates.firstWhere(
+            (candidate) =>
+                candidate.container == 'compact-rle' &&
+                candidate.scan == ScanMode.h &&
+                candidate.backgroundColor == selected.first &&
+                candidate.dynamicReferenceEncoding == encoding,
+          );
 
       final flat = candidateFor(DynamicPaletteReferenceEncoding.flat);
       final bitmap = candidateFor(
@@ -1154,22 +1126,17 @@ void main() {
         backgroundColor: selected.first,
       );
 
-      EncodedMCOImage candidateFor(
-        DynamicPaletteReferenceEncoding encoding,
-      ) => diagnostics.candidates.firstWhere(
-        (candidate) =>
-            candidate.container == 'compact-rle' &&
-            candidate.scan == ScanMode.h &&
-            candidate.backgroundColor == selected.first &&
-            candidate.dynamicReferenceEncoding == encoding,
-      );
+      EncodedMCOImage candidateFor(DynamicPaletteReferenceEncoding encoding) =>
+          diagnostics.candidates.firstWhere(
+            (candidate) =>
+                candidate.container == 'compact-rle' &&
+                candidate.scan == ScanMode.h &&
+                candidate.backgroundColor == selected.first &&
+                candidate.dynamicReferenceEncoding == encoding,
+          );
 
-      final banked = candidateFor(
-        DynamicPaletteReferenceEncoding.banked8x64,
-      );
-      final bitmaps = candidateFor(
-        DynamicPaletteReferenceEncoding.bankBitmaps,
-      );
+      final banked = candidateFor(DynamicPaletteReferenceEncoding.banked8x64);
+      final bitmaps = candidateFor(DynamicPaletteReferenceEncoding.bankBitmaps);
       expect(bitmaps.byteLength, lessThan(banked.byteLength));
       expect(codec.decode(bitmaps.text).pixels, image.pixels);
     });
@@ -1314,18 +1281,13 @@ void main() {
     });
 
     test('fixed regions can share one local palette', () {
-      final image = _image(
-        24,
-        24,
-        (x, y) {
-          final first = x >= 2 && x <= 5 && y >= 2 && y <= 5;
-          final second = x >= 18 && x <= 21 && y >= 18 && y <= 21;
-          if (first) return 8 + ((x + y) & 3);
-          if (second) return 8 + ((x * 3 + y) & 3);
-          return 0;
-        },
-        profile: PaletteProfile.master32,
-      );
+      final image = _image(24, 24, (x, y) {
+        final first = x >= 2 && x <= 5 && y >= 2 && y <= 5;
+        final second = x >= 18 && x <= 21 && y >= 18 && y <= 21;
+        if (first) return 8 + ((x + y) & 3);
+        if (second) return 8 + ((x * 3 + y) & 3);
+        return 0;
+      }, profile: PaletteProfile.master32);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
       final candidates = diagnostics.candidates.where(
         (item) => item.container.contains('regions-shared-fixed'),
@@ -1364,12 +1326,7 @@ void main() {
     });
 
     test('empty fixed canvas uses the short solid background grammar', () {
-      final image = _solid(
-        30,
-        30,
-        0,
-        profile: PaletteProfile.master64,
-      );
+      final image = _solid(30, 30, 0, profile: PaletteProfile.master64);
       final diagnostics = codec.debugEncode(image, backgroundColor: 0);
       final candidate = diagnostics.candidates.firstWhere(
         (item) => item.container == 'solid-bg',

@@ -753,15 +753,10 @@ class MeshCoreConnector extends ChangeNotifier {
             _applyContactMessageSummary(contactKeyHex, knownLatest) || changed;
         continue;
       }
-      final summary = await _messageStore.loadMessageSummary(
-        contactKeyHex,
-      );
+      final summary = await _messageStore.loadMessageSummary(contactKeyHex);
       if (summary == null) continue;
       changed =
-          _applyContactMessageSummary(
-            contactKeyHex,
-            summary.latestMessageAt,
-          ) ||
+          _applyContactMessageSummary(contactKeyHex, summary.latestMessageAt) ||
           changed;
     }
     if (!changed) return;
@@ -965,10 +960,7 @@ class MeshCoreConnector extends ChangeNotifier {
     List<ChannelMessage> primary,
     List<ChannelMessage> secondary,
   ) {
-    return mergeChannelMessagesPreservingPrimaryOrder(
-      primary,
-      secondary,
-    );
+    return mergeChannelMessagesPreservingPrimaryOrder(primary, secondary);
   }
 
   @visibleForTesting
@@ -1006,9 +998,7 @@ class MeshCoreConnector extends ChangeNotifier {
     return merged;
   }
 
-  List<ChannelMessage> _orderedChannelMessages(
-    List<ChannelMessage> messages,
-  ) {
+  List<ChannelMessage> _orderedChannelMessages(List<ChannelMessage> messages) {
     if (messages.length < 2) return messages;
     final ordered = List<ChannelMessage>.of(messages);
     ordered.sort(_compareChannelMessages);
@@ -1654,9 +1644,7 @@ class MeshCoreConnector extends ChangeNotifier {
     int count = 50,
   }) async {
     final allMessages = _orderedChannelMessages(
-      await _channelMessageStore.loadChannelMessages(
-        channelIndex,
-      ),
+      await _channelMessageStore.loadChannelMessages(channelIndex),
     );
     final currentMessages = _channelMessages[channelIndex] ?? [];
 
@@ -1691,8 +1679,7 @@ class MeshCoreConnector extends ChangeNotifier {
         ? _channelMessageStore
         : (ChannelMessageStore()..setPublicKeyHex = publicKeyHex);
     store.replaceChannels(
-      channelBindings ??
-          (_channels.isNotEmpty ? _channels : _cachedChannels),
+      channelBindings ?? (_channels.isNotEmpty ? _channels : _cachedChannels),
     );
     final channelCount = maxChannels ?? _maxChannels;
     var changed = false;
@@ -1798,8 +1785,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final settings = _appSettingsService?.settings;
     final noRetransmissionWarningSeconds =
         settings?.noRetransmissionWarningSeconds ?? 0;
-    if (noRetransmissionWarningSeconds !=
-        _lastNoRetransmissionWarningSeconds) {
+    if (noRetransmissionWarningSeconds != _lastNoRetransmissionWarningSeconds) {
       _lastNoRetransmissionWarningSeconds = noRetransmissionWarningSeconds;
       if (noRetransmissionWarningSeconds <= 0) {
         _cancelAllChannelNoRetransmissionTimers();
@@ -1881,8 +1867,7 @@ class MeshCoreConnector extends ChangeNotifier {
         ? _channelRegionStore
         : (ChannelRegionStore()..setPublicKeyHex = publicKeyHex);
     final knownChannels =
-        channelBindings ??
-        (_channels.isNotEmpty ? _channels : _cachedChannels);
+        channelBindings ?? (_channels.isNotEmpty ? _channels : _cachedChannels);
     settingsStore.replaceChannels(knownChannels);
     regionStore.replaceChannels(knownChannels);
     _channelMcmpEnabled.clear();
@@ -1915,20 +1900,26 @@ class MeshCoreConnector extends ChangeNotifier {
     final channelSettingsStore = settingsStore ?? _channelSettingsStore;
     final channelRegionStore = regionStore ?? _channelRegionStore;
     _channelCyr2LatProfileId.remove(channelIndex);
-    final mcmpEnabled = await channelSettingsStore
-        .loadMcmpEnabled(channelIndex);
-    final smazEnabled = await channelSettingsStore
-        .loadSmazEnabled(channelIndex);
-    final cyr2LatEnabled = await channelSettingsStore
-        .loadCyr2LatEnabled(channelIndex);
+    final mcmpEnabled = await channelSettingsStore.loadMcmpEnabled(
+      channelIndex,
+    );
+    final smazEnabled = await channelSettingsStore.loadSmazEnabled(
+      channelIndex,
+    );
+    final cyr2LatEnabled = await channelSettingsStore.loadCyr2LatEnabled(
+      channelIndex,
+    );
     final sendingDelayEnabled = await channelSettingsStore
         .loadSendingDelayEnabled(channelIndex);
-    final quickAnswerIds = await channelSettingsStore
-        .loadQuickAnswerIds(channelIndex);
-    final widgetColor = await channelSettingsStore
-        .loadWidgetColor(channelIndex);
-    final widgetTextColor = await channelSettingsStore
-        .loadWidgetTextColor(channelIndex);
+    final quickAnswerIds = await channelSettingsStore.loadQuickAnswerIds(
+      channelIndex,
+    );
+    final widgetColor = await channelSettingsStore.loadWidgetColor(
+      channelIndex,
+    );
+    final widgetTextColor = await channelSettingsStore.loadWidgetTextColor(
+      channelIndex,
+    );
     final region = await channelRegionStore.loadRegion(channelIndex);
     if (expectedPublicKeyHex != null &&
         expectedPublicKeyHex != selfPublicKeyHex) {
@@ -3908,7 +3899,8 @@ class MeshCoreConnector extends ChangeNotifier {
   Contact getFromDiscovered(Contact contact) {
     final indexedPosition =
         _discoveredContactSyncIndexes?[contact.publicKeyHex];
-    final tmp = indexedPosition != null &&
+    final tmp =
+        indexedPosition != null &&
             indexedPosition >= 0 &&
             indexedPosition < _discoveredContacts.length
         ? _discoveredContacts[indexedPosition]
@@ -4065,9 +4057,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = Message.outgoing(
         contact.publicKey,
         text,
-        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-          outboundText,
-        ),
+        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(outboundText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
@@ -4511,9 +4501,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 : null,
             senderName: _selfName ?? 'Me',
           );
-    final packetRegion = _displayPacketRegion(
-      outgoingRegion,
-    );
+    final packetRegion = _displayPacketRegion(outgoingRegion);
     final message = ChannelMessage.outgoing(
       text,
       _selfName ?? 'Me',
@@ -4657,10 +4645,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pending.mcoImageV3 != null && ChannelBinaryDataHelper.canSend;
     final outboundText = useMcoImageV3Binary
         ? pending.text
-        : prepareChannelOutboundText(
-            pending.channel.index,
-            pending.text,
-          );
+        : prepareChannelOutboundText(pending.channel.index, pending.text);
     final binaryOutbound = useMcoImageV3Binary
         ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
             image: pending.mcoImageV3!,
@@ -4847,9 +4832,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final message = Message.outgoing(
       contact.publicKey,
       text,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        outboundText,
-      ),
+      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(outboundText),
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
@@ -4925,9 +4908,8 @@ class MeshCoreConnector extends ChangeNotifier {
       text,
       _selfName ?? 'Me',
       channel.index,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        outboundText,
-      ) || usesBinaryMcmp,
+      wasMcmpCompressed:
+          MeshCompressor.instance.hasPrefix(outboundText) || usesBinaryMcmp,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
@@ -6334,9 +6316,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final isNewContact = !_knownContactKeys.contains(contact.publicKeyHex);
       final existingIndex = isContactSync
           ? (_contactSyncIndexes?[contact.publicKeyHex] ?? -1)
-          : _contacts.indexWhere(
-              (c) => c.publicKeyHex == contact.publicKeyHex,
-            );
+          : _contacts.indexWhere((c) => c.publicKeyHex == contact.publicKeyHex);
 
       if (existingIndex >= 0) {
         final existing = _contacts[existingIndex];
@@ -7597,22 +7577,34 @@ class MeshCoreConnector extends ChangeNotifier {
       dataType: dataType,
       payload: dataPayload,
     );
-    if (decoded == null) return null;
+    final appDecoded = decoded == null
+        ? ChannelBinaryDataHelper.tryDecodeAppData(
+            dataType: dataType,
+            payload: dataPayload,
+          )
+        : null;
+    if (decoded == null && appDecoded == null) return null;
 
     final pktHash = _computePacketHash(packet.payloadType, packet.payload);
-    final compression = _incomingBinaryCompression(decoded);
+    final compression = decoded == null
+        ? null
+        : _incomingBinaryCompression(decoded);
+    final senderName = decoded?.senderName ?? appDecoded!.senderName;
+    final messageText =
+        decoded?.text ?? MCOImageV3Codec.textFromBody(appDecoded!.body);
+    final timestamp = decoded?.timestamp ?? DateTime.now();
     return ChannelMessage(
       senderKey: null,
-      senderName: decoded.senderName,
-      text: decoded.text,
-      wasMcmpCompressed: decoded.wasMcmpCompressed,
+      senderName: senderName,
+      text: messageText,
+      wasMcmpCompressed: decoded?.wasMcmpCompressed ?? false,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       wasBinaryTransport: true,
       binaryPacketBytes: dataPayload.length,
-      timestamp: decoded.timestamp,
+      timestamp: timestamp,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
       pathLength: packet.isFlood ? packet.hopCount : 0,
@@ -7915,7 +7907,8 @@ class MeshCoreConnector extends ChangeNotifier {
       (entry) => entry?.name == channel.name,
       orElse: () => null,
     );
-    channel.unreadCount = cachedByName?.unreadCount ??
+    channel.unreadCount =
+        cachedByName?.unreadCount ??
         existingAtIndex?.unreadCount ??
         channel.unreadCount;
     _channels.add(channel);
@@ -8464,8 +8457,7 @@ class MeshCoreConnector extends ChangeNotifier {
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
         packetRegionInfoAvailable: message.packetRegionInfoAvailable,
-        noRetransmissionWarningSeconds:
-            message.noRetransmissionWarningSeconds,
+        noRetransmissionWarningSeconds: message.noRetransmissionWarningSeconds,
         messageId: message.messageId,
         packetHash: message.packetHash,
         replyToMessageId: replyToMessageId,
@@ -8504,8 +8496,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
         pathBytes: mergedPathBytes,
         pathVariants: mergedPathVariants,
-        packetRegion:
-            existing.packetRegion ?? processedMessage.packetRegion,
+        packetRegion: existing.packetRegion ?? processedMessage.packetRegion,
         packetRegionInfoAvailable:
             existing.packetRegionInfoAvailable ||
             processedMessage.packetRegionInfoAvailable,
@@ -8594,7 +8585,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   bool _isChannelRepeat(ChannelMessage existing, ChannelMessage incoming) {
     if (existing.text != incoming.text) return false;
-    if (existing.isOutgoing && incoming.isOutgoing) return false; // manual resend workaround
+    if (existing.isOutgoing && incoming.isOutgoing) {
+      return false; // manual resend workaround
+    }
 
     // Self-echo: an outgoing message coming back via a repeater. The send is
     // delayed by _waitForRadioQuiet (often 10s+) and propagation can add more,
@@ -9374,19 +9367,19 @@ class MeshCoreConnector extends ChangeNotifier {
           ? existing.lastMessageAt
           : contact.lastMessageAt;
       _discoveredContacts[existingIndex] = existing.copyWith(
-            rawPacket: rawPacket,
-            name: contact.name,
-            type: contact.type,
-            pathLength: contact.pathLength,
-            path: contact.path,
-            latitude: contact.latitude,
-            longitude: contact.longitude,
-            lastSeen: contact.lastSeen,
-            lastMessageAt: mergedLastMessageAt,
-            hasMessages: mergedHasMessages,
-            flags: 0,
-            isActive: addActive,
-          );
+        rawPacket: rawPacket,
+        name: contact.name,
+        type: contact.type,
+        pathLength: contact.pathLength,
+        path: contact.path,
+        latitude: contact.latitude,
+        longitude: contact.longitude,
+        lastSeen: contact.lastSeen,
+        lastMessageAt: mergedLastMessageAt,
+        hasMessages: mergedHasMessages,
+        flags: 0,
+        isActive: addActive,
+      );
       if (notifyChange) notifyListeners();
       if (persist) unawaited(_persistDiscoveredContacts());
       return;
@@ -9456,9 +9449,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _sharedChannelSecondaryIdentityKeys.remove(channelIndex);
     final channel = _findChannelByIndex(channelIndex);
     if (channel != null) {
-      _hiddenSharedChannelIdentityKeys[channelIndex] = _sharedChannelIdentityKey(
-        channel,
-      );
+      _hiddenSharedChannelIdentityKeys[channelIndex] =
+          _sharedChannelIdentityKey(channel);
     }
     unawaited(_channelMessageStore.saveChannelMessages(channelIndex, messages));
     markChannelRead(channelIndex);

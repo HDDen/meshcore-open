@@ -115,10 +115,7 @@ class MCOImageBackgroundCandidate {
   final int color;
   final int rank;
 
-  const MCOImageBackgroundCandidate({
-    required this.color,
-    required this.rank,
-  });
+  const MCOImageBackgroundCandidate({required this.color, required this.rank});
 }
 
 class EncodedMCOImage {

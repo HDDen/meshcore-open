@@ -31,9 +31,7 @@ class MCOImageGalleryItem {
     this.showPngFallback = false,
   });
 
-  MCOImageGalleryItem copyWith({
-    bool? showPngFallback,
-  }) {
+  MCOImageGalleryItem copyWith({bool? showPngFallback}) {
     return MCOImageGalleryItem(
       id: id,
       createdAt: createdAt,

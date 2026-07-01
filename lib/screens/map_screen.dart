@@ -1078,8 +1078,7 @@ class _MapScreenState extends State<MapScreen>
                           ),
                           showLabels: _showNodeLabels,
                           wardriveHighlightActive: wardriveHighlightActive,
-                          wardriveDisableClustering:
-                              wardriveDisableClustering,
+                          wardriveDisableClustering: wardriveDisableClustering,
                           wardriveAnsweredKeys: wardriveAnsweredKeys,
                         ),
                         ...sharedMarkers.map(_buildSharedMarker),
@@ -1237,7 +1236,8 @@ class _MapScreenState extends State<MapScreen>
               ? () => _sendWardriveDiscovery(wardrive)
               : null,
           tooltip: context.l10n.map_wardriveZeroHopDiscovery,
-          child: wardrive.isSendingDiscovery ||
+          child:
+              wardrive.isSendingDiscovery ||
                   wardrive.isAwaitingDiscoveryResponse
               ? SizedBox(
                   width: 24,

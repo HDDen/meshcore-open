@@ -21,7 +21,9 @@ mixin ChannelNameKeyedStore {
       ..clear()
       ..addEntries(
         channels
-            .where((channel) => !channel.isEmpty && channel.name.trim().isNotEmpty)
+            .where(
+              (channel) => !channel.isEmpty && channel.name.trim().isNotEmpty,
+            )
             .map((channel) => MapEntry(channel.index, channel.name.trim())),
       );
   }

@@ -45,8 +45,7 @@ class WardriveForegroundService {
       );
     }
 
-    final batteryOptimizationIgnored =
-        await _isIgnoringBatteryOptimizations();
+    final batteryOptimizationIgnored = await _isIgnoringBatteryOptimizations();
     if (!batteryOptimizationIgnored) {
       await _openAppBackgroundSettings();
       throw StateError(

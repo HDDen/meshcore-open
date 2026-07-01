@@ -60,11 +60,7 @@ class _FallbackCancellableComputeTask<M, R>
     String? debugLabel,
   ) async {
     try {
-      final value = await compute(
-        callback,
-        message,
-        debugLabel: debugLabel,
-      );
+      final value = await compute(callback, message, debugLabel: debugLabel);
       if (!_completer.isCompleted) {
         _completer.complete(value);
       }
@@ -80,9 +76,7 @@ class _FallbackCancellableComputeTask<M, R>
     if (_isCancelled) return;
     _isCancelled = true;
     if (!_completer.isCompleted) {
-      _completer.completeError(
-        const CancellableComputeCancelledException(),
-      );
+      _completer.completeError(const CancellableComputeCancelledException());
     }
   }
 }

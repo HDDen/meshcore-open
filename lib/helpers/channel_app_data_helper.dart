@@ -52,9 +52,9 @@ class ChannelAppDataEnvelope {
        version = version ?? ((subtypeVersion ?? 0) & 0x0f);
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
-        subtypeId: subtypeId,
-        version: version,
-      );
+    subtypeId: subtypeId,
+    version: version,
+  );
 }
 
 class ChannelAppDataPayload {
@@ -89,9 +89,9 @@ class ChannelAppDataPayload {
        version = version ?? ((subtypeVersion ?? 0) & 0x0f);
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
-        subtypeId: subtypeId,
-        version: version,
-      );
+    subtypeId: subtypeId,
+    version: version,
+  );
 }
 
 class ChannelAppDataHelper {
@@ -273,10 +273,7 @@ class ChannelAppDataHelper {
         'Provide subtypeVersion or both subtypeId and version',
       );
     }
-    return packSubtypeVersion(
-      subtypeId: subtypeId,
-      version: version,
-    );
+    return packSubtypeVersion(subtypeId: subtypeId, version: version);
   }
 
   static void _validateNibble(int value, String name) {

@@ -72,9 +72,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       await prefs.remove(scopedIndexKey);
       await prefs.remove(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating channel messages to name-keyed storage $key',
-        );
+        appLogger.info('Migrating channel messages to name-keyed storage $key');
         await prefs.setString(key, legacyJsonString);
         jsonString = legacyJsonString;
       }
@@ -86,12 +84,11 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       return _orderedMessages(
         jsonList
-          .map(
-            (json) => _messageFromJson(json).copyWith(
-              channelIndex: channelIndex,
-            ),
-          )
-          .toList(),
+            .map(
+              (json) =>
+                  _messageFromJson(json).copyWith(channelIndex: channelIndex),
+            )
+            .toList(),
       );
     } catch (e) {
       // If parsing fails, return empty list

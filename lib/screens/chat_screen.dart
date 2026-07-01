@@ -858,9 +858,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (payloadBytes > maxBytes) {
       showDismissibleSnackBar(
         context,
-        content: Text(context.l10n.chat_canvasCannotSend(
-          payloadBytes - maxBytes,
-        )),
+        content: Text(
+          context.l10n.chat_canvasCannotSend(payloadBytes - maxBytes),
+        ),
         backgroundColor: Theme.of(context).colorScheme.errorContainer,
       );
       return;
@@ -1815,16 +1815,14 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
-    final showCompressionRatio =
-        settingsService.settings.showCompressionRatio;
+    final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
     final compressionType =
         message.compressionType ??
         (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
     final compressionRatioPrefix =
-        showCompressionRatio &&
-            message.compressionSavingsPercent != null
+        showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
     final compressionLabel = compressionType == null

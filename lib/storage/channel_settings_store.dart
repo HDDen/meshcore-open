@@ -81,39 +81,67 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         read: PrefsManager.instance.getBool,
         write: PrefsManager.instance.setBool,
         additionalLegacyKeys: ['$_keyPrefix$channelIndex'],
-      ) ?? false;
+      ) ??
+      false;
 
   Future<void> saveSmazEnabled(int channelIndex, bool enabled) =>
-      _saveValue<bool>(nameKeyPrefix: keyFor, channelIndex: channelIndex,
-          value: enabled, write: PrefsManager.instance.setBool);
+      _saveValue<bool>(
+        nameKeyPrefix: keyFor,
+        channelIndex: channelIndex,
+        value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
 
   Future<bool> loadMcmpEnabled(int channelIndex) async =>
-      await _loadValue<bool>(nameKeyPrefix: keyForMcmp,
-          channelIndex: channelIndex, read: PrefsManager.instance.getBool,
-          write: PrefsManager.instance.setBool) ?? false;
+      await _loadValue<bool>(
+        nameKeyPrefix: keyForMcmp,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getBool,
+        write: PrefsManager.instance.setBool,
+      ) ??
+      false;
 
   Future<void> saveMcmpEnabled(int channelIndex, bool enabled) =>
-      _saveValue<bool>(nameKeyPrefix: keyForMcmp, channelIndex: channelIndex,
-          value: enabled, write: PrefsManager.instance.setBool);
+      _saveValue<bool>(
+        nameKeyPrefix: keyForMcmp,
+        channelIndex: channelIndex,
+        value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
 
   Future<bool> loadCyr2LatEnabled(int channelIndex) async =>
-      await _loadValue<bool>(nameKeyPrefix: keyForCyr2Lat,
-          channelIndex: channelIndex, read: PrefsManager.instance.getBool,
-          write: PrefsManager.instance.setBool) ?? false;
+      await _loadValue<bool>(
+        nameKeyPrefix: keyForCyr2Lat,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getBool,
+        write: PrefsManager.instance.setBool,
+      ) ??
+      false;
 
   Future<void> saveCyr2LatEnabled(int channelIndex, bool enabled) =>
-      _saveValue<bool>(nameKeyPrefix: keyForCyr2Lat, channelIndex: channelIndex,
-          value: enabled, write: PrefsManager.instance.setBool);
+      _saveValue<bool>(
+        nameKeyPrefix: keyForCyr2Lat,
+        channelIndex: channelIndex,
+        value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
 
   Future<bool> loadSendingDelayEnabled(int channelIndex) async =>
-      await _loadValue<bool>(nameKeyPrefix: keyForSendingDelay,
-          channelIndex: channelIndex, read: PrefsManager.instance.getBool,
-          write: PrefsManager.instance.setBool) ?? false;
+      await _loadValue<bool>(
+        nameKeyPrefix: keyForSendingDelay,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getBool,
+        write: PrefsManager.instance.setBool,
+      ) ??
+      false;
 
   Future<void> saveSendingDelayEnabled(int channelIndex, bool enabled) =>
-      _saveValue<bool>(nameKeyPrefix: keyForSendingDelay,
-          channelIndex: channelIndex, value: enabled,
-          write: PrefsManager.instance.setBool);
+      _saveValue<bool>(
+        nameKeyPrefix: keyForSendingDelay,
+        channelIndex: channelIndex,
+        value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
 
   Future<List<String>> loadQuickAnswerIds(int channelIndex) async {
     final value = await _loadValue<List<String>>(
@@ -126,41 +154,57 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   }
 
   Future<void> saveQuickAnswerIds(int channelIndex, List<String> answerIds) =>
-      _saveValue<List<String>>(nameKeyPrefix: keyForQuickAnswerIds,
-          channelIndex: channelIndex,
-          value: AppSettings.normalizeQuickAnswerIds(answerIds),
-          write: PrefsManager.instance.setStringList);
+      _saveValue<List<String>>(
+        nameKeyPrefix: keyForQuickAnswerIds,
+        channelIndex: channelIndex,
+        value: AppSettings.normalizeQuickAnswerIds(answerIds),
+        write: PrefsManager.instance.setStringList,
+      );
 
   Future<String?> loadCyr2LatProfileId(int channelIndex) => _loadValue<String>(
-    nameKeyPrefix: '${keyForCyr2Lat}profile_', channelIndex: channelIndex,
+    nameKeyPrefix: '${keyForCyr2Lat}profile_',
+    channelIndex: channelIndex,
     read: PrefsManager.instance.getString,
     write: PrefsManager.instance.setString,
   );
 
   Future<void> saveCyr2LatProfileId(int channelIndex, String? profileId) =>
-      _saveValue<String>(nameKeyPrefix: '${keyForCyr2Lat}profile_',
-          channelIndex: channelIndex, value: profileId,
-          write: PrefsManager.instance.setString);
+      _saveValue<String>(
+        nameKeyPrefix: '${keyForCyr2Lat}profile_',
+        channelIndex: channelIndex,
+        value: profileId,
+        write: PrefsManager.instance.setString,
+      );
 
   Future<int?> loadWidgetColor(int channelIndex) => _loadValue<int>(
-    nameKeyPrefix: keyForWidgetColor, channelIndex: channelIndex,
-    read: PrefsManager.instance.getInt, write: PrefsManager.instance.setInt,
+    nameKeyPrefix: keyForWidgetColor,
+    channelIndex: channelIndex,
+    read: PrefsManager.instance.getInt,
+    write: PrefsManager.instance.setInt,
   );
 
   Future<void> saveWidgetColor(int channelIndex, int? colorValue) =>
-      _saveValue<int>(nameKeyPrefix: keyForWidgetColor,
-          channelIndex: channelIndex, value: colorValue,
-          write: PrefsManager.instance.setInt);
+      _saveValue<int>(
+        nameKeyPrefix: keyForWidgetColor,
+        channelIndex: channelIndex,
+        value: colorValue,
+        write: PrefsManager.instance.setInt,
+      );
 
   Future<int?> loadWidgetTextColor(int channelIndex) => _loadValue<int>(
-    nameKeyPrefix: keyForWidgetTextColor, channelIndex: channelIndex,
-    read: PrefsManager.instance.getInt, write: PrefsManager.instance.setInt,
+    nameKeyPrefix: keyForWidgetTextColor,
+    channelIndex: channelIndex,
+    read: PrefsManager.instance.getInt,
+    write: PrefsManager.instance.setInt,
   );
 
   Future<void> saveWidgetTextColor(int channelIndex, int? colorValue) =>
-      _saveValue<int>(nameKeyPrefix: keyForWidgetTextColor,
-          channelIndex: channelIndex, value: colorValue,
-          write: PrefsManager.instance.setInt);
+      _saveValue<int>(
+        nameKeyPrefix: keyForWidgetTextColor,
+        channelIndex: channelIndex,
+        value: colorValue,
+        write: PrefsManager.instance.setInt,
+      );
 
   Future<void> clearChannelSettings(int channelIndex) async {
     final prefixes = <String>[

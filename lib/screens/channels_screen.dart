@@ -197,10 +197,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChannelChatScreen(
-          channel: channel,
-          initialUnreadCount: unread,
-        ),
+        builder: (context) =>
+            ChannelChatScreen(channel: channel, initialUnreadCount: unread),
       ),
     );
     return true;
@@ -698,8 +696,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           child: Icon(
                             Icons.notifications_off,
                             size: 14,
-                            color:
-                                widgetTextColor ?? scheme.onSurfaceVariant,
+                            color: widgetTextColor ?? scheme.onSurfaceVariant,
                           ),
                         ),
                       for (
@@ -758,10 +755,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final color = textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        label,
-        style: MeshTheme.mono(fontSize: 11, color: color),
-      ),
+      child: Text(label, style: MeshTheme.mono(fontSize: 11, color: color)),
     );
   }
 
@@ -827,11 +821,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 Navigator.pop(sheetContext);
                 await Future.delayed(const Duration(milliseconds: 100));
                 if (parentContext.mounted) {
-                  _confirmDeleteChannel(
-                    parentContext,
-                    connector,
-                    channel,
-                  );
+                  _confirmDeleteChannel(parentContext, connector, channel);
                 }
               },
             ),

@@ -138,10 +138,7 @@ List<_BenchmarkCase> _benchmarkCases() {
     PaletteProfile.dynamicGlobal128,
   );
   final contiguous128 = dynamic128.sublist(64, 80);
-  final scattered128 = List<int>.generate(
-    64,
-    (index) => dynamic128[index * 2],
-  );
+  final scattered128 = List<int>.generate(64, (index) => dynamic128[index * 2]);
   final denseBank512 = List<int>.generate(32, (index) => 64 + index);
 
   return [
@@ -187,15 +184,10 @@ List<_BenchmarkCase> _benchmarkCases() {
     ),
     _BenchmarkCase(
       'dynamic128-white-bounds',
-      _image(
-        24,
-        24,
-        (x, y) {
-          if (x < 7 || x > 16 || y < 7 || y > 16) return white128;
-          return contiguous128[(x + y) % contiguous128.length];
-        },
-        PaletteProfile.dynamicGlobal128,
-      ),
+      _image(24, 24, (x, y) {
+        if (x < 7 || x > 16 || y < 7 || y > 16) return white128;
+        return contiguous128[(x + y) % contiguous128.length];
+      }, PaletteProfile.dynamicGlobal128),
       white128,
     ),
   ];

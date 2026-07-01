@@ -109,7 +109,8 @@ class SharedMessageHistoryHelper {
   }
 
   String _sourceNameForScope(String scope) {
-    final storedName = (NodeIdentityStore()..setPublicKeyHex = scope).loadName();
+    final storedName = (NodeIdentityStore()..setPublicKeyHex = scope)
+        .loadName();
     return storedName ?? scope.substring(0, 6).toUpperCase();
   }
 
@@ -118,7 +119,8 @@ class SharedMessageHistoryHelper {
     String sourceName,
   ) {
     return message.copyWith(
-      status: message.isOutgoing && message.status == ChannelMessageStatus.pending
+      status:
+          message.isOutgoing && message.status == ChannelMessageStatus.pending
           ? ChannelMessageStatus.sent
           : message.status,
       sharedHistorySourceName: sourceName,

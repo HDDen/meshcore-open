@@ -12,9 +12,7 @@ class ConnectionTransportPreferenceStore {
   static final Map<String, bool> _autoconnectCache = {};
 
   String get lastTransport =>
-      _lastSavedTransport ??
-      PrefsManager.instance.getString(_key) ??
-      bluetooth;
+      _lastSavedTransport ?? PrefsManager.instance.getString(_key) ?? bluetooth;
 
   Future<void> save(String transport) async {
     if (transport != bluetooth && transport != tcp && transport != usb) {

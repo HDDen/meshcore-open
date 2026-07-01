@@ -97,7 +97,10 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
-                    secondary: const Icon(Icons.account_tree_outlined, size: 20),
+                    secondary: const Icon(
+                      Icons.account_tree_outlined,
+                      size: 20,
+                    ),
                     title: Text(
                       context.l10n.settings_modSettingsVisualShowMCOimgAlgo,
                     ),
@@ -291,9 +294,7 @@ class ModSettingsScreen extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              context
-                                  .l10n
-                                  .settings_modSettingsNoRetraHeading,
+                              context.l10n.settings_modSettingsNoRetraHeading,
                             ),
                           ),
                           Text(
@@ -328,7 +329,9 @@ class ModSettingsScreen extends StatelessWidget {
                         onChanged: (value) {
                           final rounded = value.round();
                           settingsService.setNoRetransmissionWarningSeconds(
-                            rounded < AppSettings.minNoRetransmissionWarningSeconds
+                            rounded <
+                                    AppSettings
+                                        .minNoRetransmissionWarningSeconds
                                 ? 0
                                 : rounded,
                           );

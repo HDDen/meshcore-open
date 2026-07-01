@@ -71,10 +71,7 @@ class CanvasEditorResult {
   final String text;
   final EncodedMCOImage encodedImage;
 
-  CanvasEditorResult._({
-    required this.text,
-    required this.encodedImage,
-  });
+  CanvasEditorResult._({required this.text, required this.encodedImage});
 
   factory CanvasEditorResult.fromEncoded(EncodedMCOImage encoded) {
     return CanvasEditorResult._(
@@ -151,9 +148,7 @@ class _MCOImageEncodeCacheKey {
     required this.compressionLevel,
   });
 
-  factory _MCOImageEncodeCacheKey.fromRequest(
-    _MCOImageEncodeRequest request,
-  ) {
+  factory _MCOImageEncodeCacheKey.fromRequest(_MCOImageEncodeRequest request) {
     return _MCOImageEncodeCacheKey._(
       width: request.width,
       height: request.height,
@@ -184,10 +179,7 @@ class _ExtremeEncodeSlice {
   final _MCOImageEncodeRequest request;
   final String label;
 
-  const _ExtremeEncodeSlice({
-    required this.request,
-    required this.label,
-  });
+  const _ExtremeEncodeSlice({required this.request, required this.label});
 }
 
 @pragma('vm:entry-point')
@@ -328,9 +320,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   // allow a larger editor grid and still validate the exact encoded payload.
   static const double _master64CellBudgetMultiplier = 4.0;
   static const int _master64BitsPerCell = 6;
-  static const Duration _payloadRefreshDebounce = Duration(
-    milliseconds: 1200,
-  );
+  static const Duration _payloadRefreshDebounce = Duration(milliseconds: 1200);
   static const int _mobileExtremeEncodeWorkerLimit = 6;
   static const double _desktopExtremeEncodeCpuShare = 0.85;
   static const String _prefsWidthKey = 'canvas_editor_width';
@@ -339,6 +329,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsUnlockSizeKey = 'canvas_editor_unlock_size';
   static const String _prefsShowGridKey = 'canvas_editor_show_grid';
   static const String _prefsShowRulerKey = 'canvas_editor_show_ruler';
+  static const String _prefsEncodingVersionKey =
+      'canvas_editor_encoding_version';
   static const String _prefsCompressionLevelKey =
       'canvas_editor_compression_level';
   static const List<PaletteProfile> _paletteProfileOptions = [
@@ -384,7 +376,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool _showGrid = true;
   bool _showRuler = false;
   bool _unlockCanvasSize = false;
-  MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v2;
+  MCOImageEncodingVersion _encodingVersion = MCOImageEncodingVersion.v3;
   int _compressionLevel = MCOImageCodec.defaultCompressionLevel;
   late List<int> _pixels;
   Timer? _payloadRefreshTimer;
@@ -555,9 +547,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                     DropdownMenuItem<int>(
                       value: MCOImageCodec.compressionLevelHigh,
-                      child: Text(
-                        context.l10n.chat_canvasCompressionLevelHigh,
-                      ),
+                      child: Text(context.l10n.chat_canvasCompressionLevelHigh),
                     ),
                     DropdownMenuItem<int>(
                       value: MCOImageCodec.compressionLevelNormal,
@@ -849,7 +839,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               break;
             }
           }
-          if (selectedIndex != null && !visibleIndices.contains(selectedIndex)) {
+          if (selectedIndex != null &&
+              !visibleIndices.contains(selectedIndex)) {
             visibleIndices = List<int>.of(visibleIndices)
               ..[visibleIndices.length - 1] = selectedIndex;
           }
@@ -1602,12 +1593,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final unlockCanvasSize = prefs.getBool(_prefsUnlockSizeKey) ?? false;
     final showGrid = prefs.getBool(_prefsShowGridKey) ?? true;
     final showRuler = prefs.getBool(_prefsShowRulerKey) ?? false;
+    final encodingVersion = _loadSavedEncodingVersion();
     final compressionLevel = _loadSavedCompressionLevel();
     final bounded = _boundedCanvasSizeForProfile(
       requestedWidth,
       requestedHeight,
       profile,
       unlockAdaptiveLimit: unlockCanvasSize,
+      encodingVersion: encodingVersion,
     );
     final width = bounded[0];
     final height = bounded[1];
@@ -1616,6 +1609,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _unlockCanvasSize = unlockCanvasSize;
     _showGrid = showGrid;
     _showRuler = showRuler;
+    _encodingVersion = encodingVersion;
     _compressionLevel = compressionLevel;
     if (profile.isDynamic) {
       _dynamicPaletteProfile = profile;
@@ -1634,8 +1628,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _unlockCanvasSize =
         PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
-    _showRuler =
-        PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    _showRuler = PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
     _compressionLevel = _loadSavedCompressionLevel();
     _encodingVersion = image.encodingVersion;
     _paletteProfile = image.paletteProfile;
@@ -1660,8 +1653,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _unlockCanvasSize =
         PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
-    _showRuler =
-        PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    _showRuler = PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
+    _encodingVersion = _loadSavedEncodingVersion();
     _compressionLevel = _loadSavedCompressionLevel();
     if (paletteProfile != null) {
       _paletteProfile = paletteProfile;
@@ -1718,6 +1711,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         MCOImageCodec.compressionLevelExtreme,
       _ => MCOImageCodec.compressionLevelHigh,
     };
+  }
+
+  MCOImageEncodingVersion _loadSavedEncodingVersion() {
+    final saved = PrefsManager.instance.getString(_prefsEncodingVersionKey);
+    return switch (saved) {
+      'v1Legacy' => MCOImageEncodingVersion.v1Legacy,
+      'v2' => MCOImageEncodingVersion.v2,
+      'v3' => MCOImageEncodingVersion.v3,
+      _ => MCOImageEncodingVersion.v3,
+    };
+  }
+
+  Future<void> _saveEncodingVersion(MCOImageEncodingVersion version) {
+    return PrefsManager.instance.setString(
+      _prefsEncodingVersionKey,
+      version.name,
+    );
   }
 
   void _setCompressionLevel(int? value) {
@@ -1879,6 +1889,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _rectangleSecondIndex = null;
     });
     _markPayloadDirty();
+    unawaited(_saveEncodingVersion(version));
     unawaited(_saveCanvasSize(nextWidth, nextHeight));
     unawaited(_saveCanvasPalette(nextProfile));
   }
@@ -2059,11 +2070,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     // There is no need to await cancellation here: if the debounce expires
     // before the old refresh has fully unwound, _refreshPayloadIfIdle() will
     // see _payloadRefreshInProgress and reschedule itself.
-    unawaited(
-      _cancelCurrentEncoding(
-        preservePendingRefresh: true,
-      ),
-    );
+    unawaited(_cancelCurrentEncoding(preservePendingRefresh: true));
 
     // Reuse the existing debounce. Every subsequent canvas/settings change
     // resets this timer, so only one encoding starts after the user pauses.
@@ -2079,11 +2086,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     // File loading and other whole-canvas replacements can spend noticeable
     // time before _markPayloadDirty() is reached. Stop stale encoders now so
     // their progress/debug output does not continue for the previous canvas.
-    unawaited(
-      _cancelCurrentEncoding(
-        preservePendingRefresh: true,
-      ),
-    );
+    unawaited(_cancelCurrentEncoding(preservePendingRefresh: true));
     return hadPendingRefresh;
   }
 
@@ -2323,7 +2326,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         '@ ${candidate.boundsX},${candidate.boundsY}',
       );
     }
-    parts.add('codec ${candidate.byteLength} B / ${candidate.charLength} chars');
+    parts.add(
+      'codec ${candidate.byteLength} B / ${candidate.charLength} chars',
+    );
     final localPaletteSize = candidate.localPaletteSize;
     final bitsPerPixel = candidate.bitsPerLocalPixel;
     if (localPaletteSize != null && bitsPerPixel != null) {
@@ -2337,9 +2342,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (candidate.paletteKind == 'dynamic' &&
         _paletteProfile.isDynamic &&
         candidate.backgroundColor ==
-            MCOImageDynamicPalette.whiteGlobalIndexFor(
-              _paletteProfile,
-            )) {
+            MCOImageDynamicPalette.whiteGlobalIndexFor(_paletteProfile)) {
       parts.add('implicit white bg');
     }
     switch (candidate.dynamicReferenceEncoding) {
@@ -2423,8 +2426,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'adaptive-bitplanes-optimized' => 'Adaptive bitplanes optimized',
       'adaptive-bitplanes-optimized-bounds' =>
         'Adaptive bitplanes optimized bounds',
-      'adaptive-bitplanes-profile-order' =>
-        'Adaptive bitplanes profile order',
+      'adaptive-bitplanes-profile-order' => 'Adaptive bitplanes profile order',
       'adaptive-bitplanes-profile-order-bounds' =>
         'Adaptive bitplanes profile order bounds',
       'adaptive-bitplanes-rgb-order' => 'Adaptive bitplanes RGB order',
@@ -2434,16 +2436,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'Adaptive bitplanes transition order',
       'adaptive-bitplanes-transition-order-bounds' =>
         'Adaptive bitplanes transition order bounds',
-      'adaptive-bitplanes-multistart' =>
-        'Adaptive bitplanes multi-start',
+      'adaptive-bitplanes-multistart' => 'Adaptive bitplanes multi-start',
       'adaptive-bitplanes-multistart-bounds' =>
         'Adaptive bitplanes multi-start bounds',
       'direct-grayscale-bitplanes' => 'Direct grayscale bitplanes',
       'direct-grayscale-bitplanes-bounds' =>
         'Direct grayscale bitplanes bounds',
       'direct-dynamic-bitplanes' => 'Direct dynamic bitplanes',
-      'direct-dynamic-bitplanes-bounds' =>
-        'Direct dynamic bitplanes bounds',
+      'direct-dynamic-bitplanes-bounds' => 'Direct dynamic bitplanes bounds',
       'compact-row-delta' => 'Compact row delta',
       'compact-row-delta-bounds' => 'Compact row delta bounds',
       'compact-row-delta-palette-optimized' =>
@@ -3394,7 +3394,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
       final encoded = await _encodedCanvasForCurrentState();
-      final payload = encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
+      final payload =
+          encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
           ? ChannelAppDataHelper.appPayloadWithoutSender(
               subtypeId: ChannelAppDataHelper.mcoImageSubtype,
               version: ChannelAppDataHelper.mcoImageV3Version,
@@ -3519,9 +3520,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return encoded;
   }
 
-  EncodedMCOImage? _cachedEncodedForRequest(
-    _MCOImageEncodeRequest request,
-  ) {
+  EncodedMCOImage? _cachedEncodedForRequest(_MCOImageEncodeRequest request) {
     final cached = _currentEncodedCandidate;
     final cacheKey = _currentEncodedCacheKey;
     if (cached == null || cacheKey == null || !cacheKey.matches(request)) {
@@ -3542,10 +3541,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     final effectiveRequest = request ?? _buildEncodeRequest();
     if (_shouldUseParallelEncode(effectiveRequest)) {
-      return _encodeCanvasInParallel(
-        effectiveRequest,
-        onProgress: onProgress,
-      );
+      return _encodeCanvasInParallel(effectiveRequest, onProgress: onProgress);
     }
 
     final task = _startEncodeTask(
@@ -3627,10 +3623,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
 
-    final workerCount = math.min(
-      _extremeEncodeWorkerLimit(),
-      slices.length,
-    );
+    final workerCount = math.min(_extremeEncodeWorkerLimit(), slices.length);
     final selectionTarget =
         request.encodingVersion == MCOImageEncodingVersion.v3
         ? MCOImageOutputTarget.binary
@@ -3853,9 +3846,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  Future<R> _awaitComputeTask<R>(
-    CancellableComputeTask<R> task,
-  ) async {
+  Future<R> _awaitComputeTask<R>(CancellableComputeTask<R> task) async {
     try {
       return await task.result;
     } finally {
@@ -3927,10 +3918,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return math.min(_mobileExtremeEncodeWorkerLimit, processors);
     }
     if (PlatformInfo.isDesktop) {
-      return math.max(
-        1,
-        (processors * _desktopExtremeEncodeCpuShare).floor(),
-      );
+      return math.max(1, (processors * _desktopExtremeEncodeCpuShare).floor());
     }
     return 1;
   }

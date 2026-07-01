@@ -574,11 +574,7 @@ void main() {
     test(
       'ChannelMessageStore decodes and migrates legacy mode-encoded paths',
       () async {
-        final channel = Channel.fromHex(
-          1,
-          'Test',
-          Channel.publicChannelPsk,
-        );
+        final channel = Channel.fromHex(1, 'Test', Channel.publicChannelPsk);
         final store = ChannelMessageStore()
           ..publicKeyHex = '1234567890'
           ..replaceChannels([channel]);
@@ -631,28 +627,31 @@ void main() {
       },
     );
 
-    test('channel settings follow the channel name when its slot changes', () async {
-      final original = Channel.fromHex(
-        2,
-        'Named channel',
-        Channel.publicChannelPsk,
-      );
-      final originalStore = ChannelSettingsStore()
-        ..setPublicKeyHex = '1234567890'
-        ..replaceChannels([original]);
-      await originalStore.saveMcmpEnabled(2, true);
+    test(
+      'channel settings follow the channel name when its slot changes',
+      () async {
+        final original = Channel.fromHex(
+          2,
+          'Named channel',
+          Channel.publicChannelPsk,
+        );
+        final originalStore = ChannelSettingsStore()
+          ..setPublicKeyHex = '1234567890'
+          ..replaceChannels([original]);
+        await originalStore.saveMcmpEnabled(2, true);
 
-      final moved = Channel.fromHex(
-        9,
-        'Named channel',
-        Channel.publicChannelPsk,
-      );
-      final movedStore = ChannelSettingsStore()
-        ..setPublicKeyHex = '1234567890'
-        ..replaceChannels([moved]);
+        final moved = Channel.fromHex(
+          9,
+          'Named channel',
+          Channel.publicChannelPsk,
+        );
+        final movedStore = ChannelSettingsStore()
+          ..setPublicKeyHex = '1234567890'
+          ..replaceChannels([moved]);
 
-      expect(await movedStore.loadMcmpEnabled(9), isTrue);
-    });
+        expect(await movedStore.loadMcmpEnabled(9), isTrue);
+      },
+    );
 
     test(
       'ContactDiscoveryStore decodes and migrates legacy mode-encoded paths',

@@ -537,10 +537,9 @@ class AppSettings {
        copyMsgPathFinalTemplate = normalizeCopyMsgPathFinalTemplate(
          copyMsgPathFinalTemplate,
        ),
-       noRetransmissionWarningSeconds =
-           normalizeNoRetransmissionWarningSeconds(
-             noRetransmissionWarningSeconds,
-           ),
+       noRetransmissionWarningSeconds = normalizeNoRetransmissionWarningSeconds(
+         noRetransmissionWarningSeconds,
+       ),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -680,29 +679,24 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
-      hideMapZoomControls:
-          json['hide_map_zoom_controls'] as bool? ?? false,
+      hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
       showMcoImageResolution:
           json['show_mco_image_resolution'] as bool? ?? false,
       showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
-      showMcoImageAlgorithm:
-          json['show_mco_image_algorithm'] as bool? ?? true,
+      showMcoImageAlgorithm: json['show_mco_image_algorithm'] as bool? ?? true,
       showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
-      showCompressionRatio:
-          json['show_compression_ratio'] as bool? ?? false,
+      showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
       showMessageRegion: json['show_message_region'] as bool? ?? false,
-      channelsUnreadSorting:
-          json['channels_unread_sorting'] as bool? ?? false,
+      channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
       ),
-      noRetransmissionWarningSeconds:
-          json['no_retransmission_warning_seconds'],
+      noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -919,17 +913,14 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
-      hideMapZoomControls:
-          hideMapZoomControls ?? this.hideMapZoomControls,
+      hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,
       showMcoImageResolution:
           showMcoImageResolution ?? this.showMcoImageResolution,
-      showMcoImageFormat:
-          showMcoImageFormat ?? this.showMcoImageFormat,
+      showMcoImageFormat: showMcoImageFormat ?? this.showMcoImageFormat,
       showMcoImageAlgorithm:
           showMcoImageAlgorithm ?? this.showMcoImageAlgorithm,
       showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
-      showCompressionRatio:
-          showCompressionRatio ?? this.showCompressionRatio,
+      showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
       showMessageRegion: showMessageRegion ?? this.showMessageRegion,
@@ -941,8 +932,7 @@ class AppSettings {
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
       noRetransmissionWarningSeconds:
-          noRetransmissionWarningSeconds ??
-          this.noRetransmissionWarningSeconds,
+          noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

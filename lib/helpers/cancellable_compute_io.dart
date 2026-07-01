@@ -61,11 +61,7 @@ Future<void> _runCancellableCompute<M, R>(
     invocation.resultPort.send(<Object?>[0, result]);
   } catch (error, stackTrace) {
     try {
-      invocation.resultPort.send(<Object?>[
-        1,
-        error,
-        stackTrace.toString(),
-      ]);
+      invocation.resultPort.send(<Object?>[1, error, stackTrace.toString()]);
     } catch (_) {
       // Some exception objects are not transferable between isolates.
       invocation.resultPort.send(<Object?>[
@@ -109,9 +105,7 @@ class _IsolateCancellableComputeTask<M, R>
     String? debugLabel,
   ) async {
     try {
-      final isolate = await Isolate.spawn<
-        _CancellableComputeInvocation<M, R>
-      >(
+      final isolate = await Isolate.spawn<_CancellableComputeInvocation<M, R>>(
         _runCancellableCompute<M, R>,
         _CancellableComputeInvocation<M, R>(
           callback: callback,
@@ -223,9 +217,7 @@ class _IsolateCancellableComputeTask<M, R>
     _isolate = null;
 
     if (!_completer.isCompleted) {
-      _completer.completeError(
-        const CancellableComputeCancelledException(),
-      );
+      _completer.completeError(const CancellableComputeCancelledException());
     }
     _cleanup();
   }

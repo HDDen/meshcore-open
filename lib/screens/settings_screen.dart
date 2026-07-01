@@ -340,10 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showSelfTelemetry(
-    BuildContext context,
-    MeshCoreConnector connector,
-  ) {
+  void _showSelfTelemetry(BuildContext context, MeshCoreConnector connector) {
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey == null) return;
 

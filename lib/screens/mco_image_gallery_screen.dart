@@ -15,10 +15,7 @@ class MCOImageGalleryResult {
   final MCOImageGalleryAction action;
   final MCOImageGalleryItem item;
 
-  const MCOImageGalleryResult({
-    required this.action,
-    required this.item,
-  });
+  const MCOImageGalleryResult({required this.action, required this.item});
 }
 
 class MCOImageGalleryScreen extends StatefulWidget {
@@ -53,14 +50,10 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
   }
 
   void _selectItem(MCOImageGalleryItem item) {
-    final action =
-        item.showPngFallback || item.tryDecodeImage() == null
+    final action = item.showPngFallback || item.tryDecodeImage() == null
         ? MCOImageGalleryAction.edit
         : MCOImageGalleryAction.send;
-    Navigator.pop(
-      context,
-      MCOImageGalleryResult(action: action, item: item),
-    );
+    Navigator.pop(context, MCOImageGalleryResult(action: action, item: item));
   }
 
   Future<void> _showItemActions(MCOImageGalleryItem item) async {

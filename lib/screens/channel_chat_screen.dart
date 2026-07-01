@@ -866,8 +866,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTracing = settingsService.settings.enableMessageTracing;
     final noRetransmissionWarningsEnabled =
         settingsService.settings.noRetransmissionWarningSeconds > 0;
-    final showCompressionRatio =
-        settingsService.settings.showCompressionRatio;
+    final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final showHops = settingsService.settings.showHops;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final incomingQuoteAsMentions =
@@ -879,8 +878,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         message.compressionType ??
         (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
     final compressionRatioPrefix =
-        showCompressionRatio &&
-            message.compressionSavingsPercent != null
+        showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
     final compressionLabel = compressionType == null
@@ -1229,8 +1227,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               child: Wrap(
                                 spacing: 4,
                                 runSpacing: 2,
-                                crossAxisAlignment:
-                                    WrapCrossAlignment.center,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   RouteChip(
                                     isDirect: (message.pathLength ?? -1) >= 0,
@@ -1906,9 +1903,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final binaryPayloadBytes = _channelBinaryPayloadBytes(connector, text);
     final payloadBytes =
         binaryPayloadBytes ??
-        utf8.encode(
-          connector.prepareChannelOutboundText(widget.channel.index, text),
-        ).length;
+        utf8
+            .encode(
+              connector.prepareChannelOutboundText(widget.channel.index, text),
+            )
+            .length;
     final maxBytes = binaryPayloadBytes == null
         ? _maxChannelInputBytes(connector, settings)
         : _maxChannelBinaryPayloadBytes(settings);

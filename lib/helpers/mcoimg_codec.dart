@@ -16,10 +16,7 @@ enum _AdaptivePaletteOrder {
   multiStartOptimized,
 }
 
-enum _CompactRowDeltaPaletteOrder {
-  frequency,
-  transitionFrequency,
-}
+enum _CompactRowDeltaPaletteOrder { frequency, transitionFrequency }
 
 class _MCOImageCandidateDebugEntry {
   final String label;
@@ -255,7 +252,8 @@ class MCOImageCodec {
         'size=${image.width}x${image.height}; '
         'container=${diagnostics.result.container}; '
         'mode=${diagnostics.result.mode.name}; '
-        'scan=${diagnostics.result.scan.name};');
+        'scan=${diagnostics.result.scan.name};',
+      );
       return diagnostics;
     }
 
@@ -289,7 +287,8 @@ class MCOImageCodec {
       'size=${image.width}x${image.height}; '
       'container=${diagnostics.result.container}; '
       'mode=${diagnostics.result.mode.name}; '
-      'scan=${diagnostics.result.scan.name};');
+      'scan=${diagnostics.result.scan.name};',
+    );
     return diagnostics;
   }
 
@@ -353,7 +352,8 @@ class MCOImageCodec {
         'scan=${candidate.scan.name}; '
         'bg=${candidate.backgroundColor ?? -1}; '
         'bgRank=${candidate.backgroundRank}; '
-        'bounds=${candidate.boundsPresent};');
+        'bounds=${candidate.boundsPresent};',
+      );
     }
     _candidateDebugEntries.clear();
   }
@@ -563,8 +563,7 @@ class MCOImageCodec {
     required int compressionLevel,
   }) {
     final preferredBackgroundColor = backgroundColor ?? image.transparentColor;
-    final useHighCompressionExtras =
-        compressionLevel != compressionLevelNormal;
+    final useHighCompressionExtras = compressionLevel != compressionLevelNormal;
     final useExtremeCompressionExtras =
         compressionLevel == compressionLevelExtreme;
     final effectiveBackgroundCandidates = backgroundCandidates == null
@@ -597,204 +596,33 @@ class MCOImageCodec {
       final bounds = _findBounds(image.pixels, image.width, image.height, bg);
       if (includeNonScanCandidates) {
         for (final referenceEncoding in referenceEncodings) {
-        final solidBgTimer = Stopwatch()..start();
-        final solidBackgroundPayload = _tryBuildV2SolidBackgroundPayload(
-          image,
-          bg,
-          referenceEncoding,
-        );
-        solidBgTimer.stop();
-        if (solidBackgroundPayload != null) {
-          final candidate = _candidateFromPayload(
-            solidBackgroundPayload.payload,
-            ImageMode.rawGlobal,
-            ScanMode.h,
-            backgroundColor: bg,
-            transparentColor: image.transparentColor,
-            backgroundRank: background.rank,
-            codecVersion: _v2EncodeVersion,
-            dynamicReferenceEncoding: referenceEncoding,
-            localPaletteSize: 1,
-            bitsPerLocalPixel: 0,
-            paletteKind: image.paletteProfile.isDynamic
-                ? 'dynamic'
-                : 'fixed',
-            container: 'solid-bg',
-          );
-          _logCandidateDebug(
-            compressionLevel: compressionLevel,
-            label: 'v2 solid-bg ref=${_referenceEncodingLabel(referenceEncoding)}',
-            elapsed: solidBgTimer.elapsed,
-            candidate: candidate,
-            outputTarget: outputTarget,
-            currentBest: best,
-          );
-          candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best, outputTarget)) {
-            best = candidate;
-          }
-        }
-        final regionsTimer = Stopwatch()..start();
-        final regionsPayloads = _tryBuildV2RegionsPayloads(
-          image,
-          bg,
-          referenceEncoding,
-          maxRegions,
-          includeExtendedFixedBlocks: useHighCompressionExtras,
-          useExtremeSearch:
-              useExtremeCompressionExtras &&
-              background.rank <= _maxExtremeRegionBackgroundRank,
-        );
-        regionsTimer.stop();
-        for (final regionsPayload in regionsPayloads) {
-          final candidate = _candidateFromPayload(
-            regionsPayload.payload,
-            ImageMode.regionsBg,
-            ScanMode.h,
-            backgroundColor: bg,
-            transparentColor: image.transparentColor,
-            backgroundRank: background.rank,
-            regionCount: regionsPayload.regionCount,
-            codecVersion: _v2EncodeVersion,
-            dynamicReferenceEncoding: referenceEncoding,
-            localPaletteSize: regionsPayload.localPaletteSize,
-            usedBankCount: regionsPayload.usedBankCount,
-            bitsPerLocalPixel: regionsPayload.bitsPerLocalPixel,
-            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-            container: regionsPayload.diagnosticContainer ?? 'regions',
-          );
-          _logCandidateDebug(
-            compressionLevel: compressionLevel,
-            label:
-                "v2 regions ref=${_referenceEncodingLabel(referenceEncoding)} "
-                "variant=${regionsPayload.diagnosticContainer ?? 'regions'} "
-                "regions=${regionsPayload.regionCount}",
-            elapsed: regionsTimer.elapsed,
-            candidate: candidate,
-            outputTarget: outputTarget,
-            currentBest: best,
-          );
-          candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best, outputTarget)) {
-            best = candidate;
-          }
-        }
-
-        final solidRectsTimer = Stopwatch()..start();
-        final solidRectsPayload = _tryBuildV2SolidRectsPayload(
-          image,
-          bg,
-          referenceEncoding,
-        );
-        solidRectsTimer.stop();
-        if (solidRectsPayload != null) {
-          final candidate = _candidateFromPayload(
-            solidRectsPayload.payload,
-            ImageMode.extended,
-            ScanMode.h,
-            backgroundColor: bg,
-            transparentColor: image.transparentColor,
-            backgroundRank: background.rank,
-            codecVersion: _v2EncodeVersion,
-            dynamicReferenceEncoding: referenceEncoding,
-            localPaletteSize: solidRectsPayload.localPaletteSize,
-            usedBankCount: solidRectsPayload.usedBankCount,
-            bitsPerLocalPixel: solidRectsPayload.bitsPerLocalPixel,
-            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-            container: 'solid-rects',
-          );
-          _logCandidateDebug(
-            compressionLevel: compressionLevel,
-            label:
-                'v2 solid-rects ref=${_referenceEncodingLabel(referenceEncoding)}',
-            elapsed: solidRectsTimer.elapsed,
-            candidate: candidate,
-            outputTarget: outputTarget,
-            currentBest: best,
-          );
-          candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best, outputTarget)) {
-            best = candidate;
-          }
-        }
-
-        final quadtreeTimer = Stopwatch()..start();
-        final quadtreePayload = _tryBuildV2QuadtreePayload(
-          image,
-          image.pixels,
-          image.width,
-          image.height,
-          bg,
-          referenceEncoding,
-        );
-        quadtreeTimer.stop();
-        if (quadtreePayload != null) {
-          final candidate = _candidateFromPayload(
-            quadtreePayload.payload,
-            ImageMode.extended,
-            ScanMode.h,
-            backgroundColor: bg,
-            transparentColor: image.transparentColor,
-            backgroundRank: background.rank,
-            codecVersion: _v2EncodeVersion,
-            dynamicReferenceEncoding: referenceEncoding,
-            localPaletteSize: quadtreePayload.localPaletteSize,
-            usedBankCount: quadtreePayload.usedBankCount,
-            bitsPerLocalPixel: quadtreePayload.bitsPerLocalPixel,
-            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
-            container: 'quadtree',
-          );
-          _logCandidateDebug(
-            compressionLevel: compressionLevel,
-            label: 'v2 quadtree ref=${_referenceEncodingLabel(referenceEncoding)}',
-            elapsed: quadtreeTimer.elapsed,
-            candidate: candidate,
-            outputTarget: outputTarget,
-            currentBest: best,
-          );
-          candidates.add(candidate);
-          if (_isBetterCandidate(candidate, best, outputTarget)) {
-            best = candidate;
-          }
-        }
-
-        if (bounds.area < image.width * image.height) {
-          final cropped = _cropPixels(image.pixels, image.width, bounds);
-          final boundedQuadtreeTimer = Stopwatch()..start();
-          final boundedQuadtreePayload = _tryBuildV2QuadtreePayload(
+          final solidBgTimer = Stopwatch()..start();
+          final solidBackgroundPayload = _tryBuildV2SolidBackgroundPayload(
             image,
-            cropped,
-            bounds.width,
-            bounds.height,
             bg,
             referenceEncoding,
-            bounds: bounds,
           );
-          boundedQuadtreeTimer.stop();
-          if (boundedQuadtreePayload != null) {
+          solidBgTimer.stop();
+          if (solidBackgroundPayload != null) {
             final candidate = _candidateFromPayload(
-              boundedQuadtreePayload.payload,
-              ImageMode.extended,
+              solidBackgroundPayload.payload,
+              ImageMode.rawGlobal,
               ScanMode.h,
-              bounds: bounds,
               backgroundColor: bg,
               transparentColor: image.transparentColor,
               backgroundRank: background.rank,
               codecVersion: _v2EncodeVersion,
               dynamicReferenceEncoding: referenceEncoding,
-              localPaletteSize: boundedQuadtreePayload.localPaletteSize,
-              usedBankCount: boundedQuadtreePayload.usedBankCount,
-              bitsPerLocalPixel: boundedQuadtreePayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
-              container: 'quadtree-bounds',
+              localPaletteSize: 1,
+              bitsPerLocalPixel: 0,
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+              container: 'solid-bg',
             );
             _logCandidateDebug(
               compressionLevel: compressionLevel,
               label:
-                  'v2 quadtree-bounds ref=${_referenceEncodingLabel(referenceEncoding)}',
-              elapsed: boundedQuadtreeTimer.elapsed,
+                  'v2 solid-bg ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: solidBgTimer.elapsed,
               candidate: candidate,
               outputTarget: outputTarget,
               currentBest: best,
@@ -804,8 +632,179 @@ class MCOImageCodec {
               best = candidate;
             }
           }
+          final regionsTimer = Stopwatch()..start();
+          final regionsPayloads = _tryBuildV2RegionsPayloads(
+            image,
+            bg,
+            referenceEncoding,
+            maxRegions,
+            includeExtendedFixedBlocks: useHighCompressionExtras,
+            useExtremeSearch:
+                useExtremeCompressionExtras &&
+                background.rank <= _maxExtremeRegionBackgroundRank,
+          );
+          regionsTimer.stop();
+          for (final regionsPayload in regionsPayloads) {
+            final candidate = _candidateFromPayload(
+              regionsPayload.payload,
+              ImageMode.regionsBg,
+              ScanMode.h,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              regionCount: regionsPayload.regionCount,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: regionsPayload.localPaletteSize,
+              usedBankCount: regionsPayload.usedBankCount,
+              bitsPerLocalPixel: regionsPayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+              container: regionsPayload.diagnosticContainer ?? 'regions',
+            );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  "v2 regions ref=${_referenceEncodingLabel(referenceEncoding)} "
+                  "variant=${regionsPayload.diagnosticContainer ?? 'regions'} "
+                  "regions=${regionsPayload.regionCount}",
+              elapsed: regionsTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
+
+          final solidRectsTimer = Stopwatch()..start();
+          final solidRectsPayload = _tryBuildV2SolidRectsPayload(
+            image,
+            bg,
+            referenceEncoding,
+          );
+          solidRectsTimer.stop();
+          if (solidRectsPayload != null) {
+            final candidate = _candidateFromPayload(
+              solidRectsPayload.payload,
+              ImageMode.extended,
+              ScanMode.h,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: solidRectsPayload.localPaletteSize,
+              usedBankCount: solidRectsPayload.usedBankCount,
+              bitsPerLocalPixel: solidRectsPayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+              container: 'solid-rects',
+            );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 solid-rects ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: solidRectsTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
+
+          final quadtreeTimer = Stopwatch()..start();
+          final quadtreePayload = _tryBuildV2QuadtreePayload(
+            image,
+            image.pixels,
+            image.width,
+            image.height,
+            bg,
+            referenceEncoding,
+          );
+          quadtreeTimer.stop();
+          if (quadtreePayload != null) {
+            final candidate = _candidateFromPayload(
+              quadtreePayload.payload,
+              ImageMode.extended,
+              ScanMode.h,
+              backgroundColor: bg,
+              transparentColor: image.transparentColor,
+              backgroundRank: background.rank,
+              codecVersion: _v2EncodeVersion,
+              dynamicReferenceEncoding: referenceEncoding,
+              localPaletteSize: quadtreePayload.localPaletteSize,
+              usedBankCount: quadtreePayload.usedBankCount,
+              bitsPerLocalPixel: quadtreePayload.bitsPerLocalPixel,
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+              container: 'quadtree',
+            );
+            _logCandidateDebug(
+              compressionLevel: compressionLevel,
+              label:
+                  'v2 quadtree ref=${_referenceEncodingLabel(referenceEncoding)}',
+              elapsed: quadtreeTimer.elapsed,
+              candidate: candidate,
+              outputTarget: outputTarget,
+              currentBest: best,
+            );
+            candidates.add(candidate);
+            if (_isBetterCandidate(candidate, best, outputTarget)) {
+              best = candidate;
+            }
+          }
+
+          if (bounds.area < image.width * image.height) {
+            final cropped = _cropPixels(image.pixels, image.width, bounds);
+            final boundedQuadtreeTimer = Stopwatch()..start();
+            final boundedQuadtreePayload = _tryBuildV2QuadtreePayload(
+              image,
+              cropped,
+              bounds.width,
+              bounds.height,
+              bg,
+              referenceEncoding,
+              bounds: bounds,
+            );
+            boundedQuadtreeTimer.stop();
+            if (boundedQuadtreePayload != null) {
+              final candidate = _candidateFromPayload(
+                boundedQuadtreePayload.payload,
+                ImageMode.extended,
+                ScanMode.h,
+                bounds: bounds,
+                backgroundColor: bg,
+                transparentColor: image.transparentColor,
+                backgroundRank: background.rank,
+                codecVersion: _v2EncodeVersion,
+                dynamicReferenceEncoding: referenceEncoding,
+                localPaletteSize: boundedQuadtreePayload.localPaletteSize,
+                usedBankCount: boundedQuadtreePayload.usedBankCount,
+                bitsPerLocalPixel: boundedQuadtreePayload.bitsPerLocalPixel,
+                paletteKind: image.paletteProfile.isDynamic
+                    ? 'dynamic'
+                    : 'fixed',
+                container: 'quadtree-bounds',
+              );
+              _logCandidateDebug(
+                compressionLevel: compressionLevel,
+                label:
+                    'v2 quadtree-bounds ref=${_referenceEncodingLabel(referenceEncoding)}',
+                elapsed: boundedQuadtreeTimer.elapsed,
+                candidate: candidate,
+                outputTarget: outputTarget,
+                currentBest: best,
+              );
+              candidates.add(candidate);
+              if (_isBetterCandidate(candidate, best, outputTarget)) {
+                best = candidate;
+              }
+            }
+          }
         }
-      }
       }
       for (final scan in effectiveScanModes) {
         final linear = _toScanOrder(
@@ -886,9 +885,7 @@ class MCOImageCodec {
               localPaletteSize: payload.localPaletteSize,
               usedBankCount: payload.usedBankCount,
               bitsPerLocalPixel: payload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: 'compact-rle',
             );
             _logCandidateDebug(
@@ -931,9 +928,7 @@ class MCOImageCodec {
               localPaletteSize: sparsePayload.localPaletteSize,
               usedBankCount: sparsePayload.usedBankCount,
               bitsPerLocalPixel: sparsePayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: 'compact-sparse',
             );
             _logCandidateDebug(
@@ -1028,9 +1023,7 @@ class MCOImageCodec {
               localPaletteSize: bitplanesPayload.localPaletteSize,
               usedBankCount: bitplanesPayload.usedBankCount,
               bitsPerLocalPixel: bitplanesPayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: 'bitplanes',
             );
             _logCandidateDebug(
@@ -1049,80 +1042,83 @@ class MCOImageCodec {
             }
           }
 
-          for (final adaptiveVariant in <({
-            bool directGrayscale,
-            bool directDynamicProfile,
-            _AdaptivePaletteOrder paletteOrder,
-            String container,
-          })>[
-            (
-              directGrayscale: false,
-              directDynamicProfile: false,
-              paletteOrder: _AdaptivePaletteOrder.frequency,
-              container: 'adaptive-bitplanes',
-            ),
-            (
-              directGrayscale: false,
-              directDynamicProfile: false,
-              paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
-              container: 'adaptive-bitplanes-optimized',
-            ),
-            if (_supportsAlternativeAdaptivePaletteOrders(
-              image.paletteProfile,
-              referenceEncoding,
-            ))
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.profileId,
-                container: 'adaptive-bitplanes-profile-order',
-              ),
-            if (_supportsAlternativeAdaptivePaletteOrders(
-              image.paletteProfile,
-              referenceEncoding,
-            ))
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.rgbProximity,
-                container: 'adaptive-bitplanes-rgb-order',
-              ),
-            if (_supportsAlternativeAdaptivePaletteOrders(
-              image.paletteProfile,
-              referenceEncoding,
-            ))
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
-                container: 'adaptive-bitplanes-transition-order',
-              ),
-            if (_supportsAlternativeAdaptivePaletteOrders(
-              image.paletteProfile,
-              referenceEncoding,
-            ))
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
-                container: 'adaptive-bitplanes-multistart',
-              ),
-            if (_isGrayscaleProfile(image.paletteProfile))
-              (
-                directGrayscale: true,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.frequency,
-                container: 'direct-grayscale-bitplanes',
-              ),
-            if (image.paletteProfile.isDynamic &&
-                referenceEncoding == DynamicPaletteReferenceEncoding.flat)
-              (
-                directGrayscale: false,
-                directDynamicProfile: true,
-                paletteOrder: _AdaptivePaletteOrder.frequency,
-                container: 'direct-dynamic-bitplanes',
-              ),
-          ]) {
+          for (final adaptiveVariant
+              in <
+                ({
+                  bool directGrayscale,
+                  bool directDynamicProfile,
+                  _AdaptivePaletteOrder paletteOrder,
+                  String container,
+                })
+              >[
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.frequency,
+                  container: 'adaptive-bitplanes',
+                ),
+                (
+                  directGrayscale: false,
+                  directDynamicProfile: false,
+                  paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
+                  container: 'adaptive-bitplanes-optimized',
+                ),
+                if (_supportsAlternativeAdaptivePaletteOrders(
+                  image.paletteProfile,
+                  referenceEncoding,
+                ))
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.profileId,
+                    container: 'adaptive-bitplanes-profile-order',
+                  ),
+                if (_supportsAlternativeAdaptivePaletteOrders(
+                  image.paletteProfile,
+                  referenceEncoding,
+                ))
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.rgbProximity,
+                    container: 'adaptive-bitplanes-rgb-order',
+                  ),
+                if (_supportsAlternativeAdaptivePaletteOrders(
+                  image.paletteProfile,
+                  referenceEncoding,
+                ))
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
+                    container: 'adaptive-bitplanes-transition-order',
+                  ),
+                if (_supportsAlternativeAdaptivePaletteOrders(
+                  image.paletteProfile,
+                  referenceEncoding,
+                ))
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
+                    container: 'adaptive-bitplanes-multistart',
+                  ),
+                if (_isGrayscaleProfile(image.paletteProfile))
+                  (
+                    directGrayscale: true,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.frequency,
+                    container: 'direct-grayscale-bitplanes',
+                  ),
+                if (image.paletteProfile.isDynamic &&
+                    referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: true,
+                    paletteOrder: _AdaptivePaletteOrder.frequency,
+                    container: 'direct-dynamic-bitplanes',
+                  ),
+              ]) {
             final adaptiveTimer = Stopwatch()..start();
             final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
               image,
@@ -1151,9 +1147,7 @@ class MCOImageCodec {
               localPaletteSize: adaptivePayload.localPaletteSize,
               usedBankCount: adaptivePayload.usedBankCount,
               bitsPerLocalPixel: adaptivePayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: adaptiveVariant.container,
             );
             _logCandidateDebug(
@@ -1173,32 +1167,36 @@ class MCOImageCodec {
             }
           }
 
-          for (final rowDeltaVariant in <({
-            bool directGrayscale,
-            _CompactRowDeltaPaletteOrder paletteOrder,
-            String container,
-          })>[
-            (
-              directGrayscale: false,
-              paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
-              container: 'compact-row-delta',
-            ),
-            if (_supportsTransitionOptimizedRowDelta(
-              image.paletteProfile,
-              referenceEncoding,
-            ))
-              (
-                directGrayscale: false,
-                paletteOrder: _CompactRowDeltaPaletteOrder.transitionFrequency,
-                container: 'compact-row-delta-palette-optimized',
-              ),
-            if (_isGrayscaleProfile(image.paletteProfile))
-              (
-                directGrayscale: true,
-                paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
-                container: 'grayscale-row-delta',
-              ),
-          ]) {
+          for (final rowDeltaVariant
+              in <
+                ({
+                  bool directGrayscale,
+                  _CompactRowDeltaPaletteOrder paletteOrder,
+                  String container,
+                })
+              >[
+                (
+                  directGrayscale: false,
+                  paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
+                  container: 'compact-row-delta',
+                ),
+                if (_supportsTransitionOptimizedRowDelta(
+                  image.paletteProfile,
+                  referenceEncoding,
+                ))
+                  (
+                    directGrayscale: false,
+                    paletteOrder:
+                        _CompactRowDeltaPaletteOrder.transitionFrequency,
+                    container: 'compact-row-delta-palette-optimized',
+                  ),
+                if (_isGrayscaleProfile(image.paletteProfile))
+                  (
+                    directGrayscale: true,
+                    paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
+                    container: 'grayscale-row-delta',
+                  ),
+              ]) {
             final rowDeltaTimer = Stopwatch()..start();
             final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
               image,
@@ -1225,9 +1223,7 @@ class MCOImageCodec {
               localPaletteSize: rowDeltaPayload.localPaletteSize,
               usedBankCount: rowDeltaPayload.usedBankCount,
               bitsPerLocalPixel: rowDeltaPayload.bitsPerLocalPixel,
-              paletteKind: image.paletteProfile.isDynamic
-                  ? 'dynamic'
-                  : 'fixed',
+              paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
               container: rowDeltaVariant.container,
             );
             _logCandidateDebug(
@@ -1345,11 +1341,7 @@ class MCOImageCodec {
                   currentBest: best,
                 );
                 candidates.add(compactCandidate);
-                if (_isBetterCandidate(
-                  compactCandidate,
-                  best,
-                  outputTarget,
-                )) {
+                if (_isBetterCandidate(compactCandidate, best, outputTarget)) {
                   best = compactCandidate;
                 }
               }
@@ -1547,89 +1539,88 @@ class MCOImageCodec {
                 currentBest: best,
               );
               candidates.add(bitplanesCandidate);
-              if (_isBetterCandidate(
-                bitplanesCandidate,
-                best,
-                outputTarget,
-              )) {
+              if (_isBetterCandidate(bitplanesCandidate, best, outputTarget)) {
                 best = bitplanesCandidate;
               }
             }
 
-            for (final adaptiveVariant in <({
-              bool directGrayscale,
-              bool directDynamicProfile,
-              _AdaptivePaletteOrder paletteOrder,
-              String container,
-            })>[
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.frequency,
-                container: 'adaptive-bitplanes-bounds',
-              ),
-              (
-                directGrayscale: false,
-                directDynamicProfile: false,
-                paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
-                container: 'adaptive-bitplanes-optimized-bounds',
-              ),
-              if (_supportsAlternativeAdaptivePaletteOrders(
-                image.paletteProfile,
-                referenceEncoding,
-              ))
-                (
-                  directGrayscale: false,
-                  directDynamicProfile: false,
-                  paletteOrder: _AdaptivePaletteOrder.profileId,
-                  container: 'adaptive-bitplanes-profile-order-bounds',
-                ),
-              if (_supportsAlternativeAdaptivePaletteOrders(
-                image.paletteProfile,
-                referenceEncoding,
-              ))
-                (
-                  directGrayscale: false,
-                  directDynamicProfile: false,
-                  paletteOrder: _AdaptivePaletteOrder.rgbProximity,
-                  container: 'adaptive-bitplanes-rgb-order-bounds',
-                ),
-              if (_supportsAlternativeAdaptivePaletteOrders(
-                image.paletteProfile,
-                referenceEncoding,
-              ))
-                (
-                  directGrayscale: false,
-                  directDynamicProfile: false,
-                  paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
-                  container: 'adaptive-bitplanes-transition-order-bounds',
-                ),
-              if (_supportsAlternativeAdaptivePaletteOrders(
-                image.paletteProfile,
-                referenceEncoding,
-              ))
-                (
-                  directGrayscale: false,
-                  directDynamicProfile: false,
-                  paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
-                  container: 'adaptive-bitplanes-multistart-bounds',
-                ),
-              if (_isGrayscaleProfile(image.paletteProfile))
-                (
-                  directGrayscale: true,
-                  directDynamicProfile: false,
-                  paletteOrder: _AdaptivePaletteOrder.frequency,
-                  container: 'direct-grayscale-bitplanes-bounds',
-                ),
-              if (image.paletteProfile.isDynamic &&
-                  referenceEncoding == DynamicPaletteReferenceEncoding.flat)
-                (
-                  directGrayscale: false,
-                  directDynamicProfile: true,
-                  paletteOrder: _AdaptivePaletteOrder.frequency,
-                  container: 'direct-dynamic-bitplanes-bounds',
-                ),
-            ]) {
+            for (final adaptiveVariant
+                in <
+                  ({
+                    bool directGrayscale,
+                    bool directDynamicProfile,
+                    _AdaptivePaletteOrder paletteOrder,
+                    String container,
+                  })
+                >[
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.frequency,
+                    container: 'adaptive-bitplanes-bounds',
+                  ),
+                  (
+                    directGrayscale: false,
+                    directDynamicProfile: false,
+                    paletteOrder: _AdaptivePaletteOrder.bitplaneOptimized,
+                    container: 'adaptive-bitplanes-optimized-bounds',
+                  ),
+                  if (_supportsAlternativeAdaptivePaletteOrders(
+                    image.paletteProfile,
+                    referenceEncoding,
+                  ))
+                    (
+                      directGrayscale: false,
+                      directDynamicProfile: false,
+                      paletteOrder: _AdaptivePaletteOrder.profileId,
+                      container: 'adaptive-bitplanes-profile-order-bounds',
+                    ),
+                  if (_supportsAlternativeAdaptivePaletteOrders(
+                    image.paletteProfile,
+                    referenceEncoding,
+                  ))
+                    (
+                      directGrayscale: false,
+                      directDynamicProfile: false,
+                      paletteOrder: _AdaptivePaletteOrder.rgbProximity,
+                      container: 'adaptive-bitplanes-rgb-order-bounds',
+                    ),
+                  if (_supportsAlternativeAdaptivePaletteOrders(
+                    image.paletteProfile,
+                    referenceEncoding,
+                  ))
+                    (
+                      directGrayscale: false,
+                      directDynamicProfile: false,
+                      paletteOrder: _AdaptivePaletteOrder.transitionFrequency,
+                      container: 'adaptive-bitplanes-transition-order-bounds',
+                    ),
+                  if (_supportsAlternativeAdaptivePaletteOrders(
+                    image.paletteProfile,
+                    referenceEncoding,
+                  ))
+                    (
+                      directGrayscale: false,
+                      directDynamicProfile: false,
+                      paletteOrder: _AdaptivePaletteOrder.multiStartOptimized,
+                      container: 'adaptive-bitplanes-multistart-bounds',
+                    ),
+                  if (_isGrayscaleProfile(image.paletteProfile))
+                    (
+                      directGrayscale: true,
+                      directDynamicProfile: false,
+                      paletteOrder: _AdaptivePaletteOrder.frequency,
+                      container: 'direct-grayscale-bitplanes-bounds',
+                    ),
+                  if (image.paletteProfile.isDynamic &&
+                      referenceEncoding == DynamicPaletteReferenceEncoding.flat)
+                    (
+                      directGrayscale: false,
+                      directDynamicProfile: true,
+                      paletteOrder: _AdaptivePaletteOrder.frequency,
+                      container: 'direct-dynamic-bitplanes-bounds',
+                    ),
+                ]) {
               final boundedAdaptiveTimer = Stopwatch()..start();
               final adaptivePayload = _tryBuildV2AdaptiveBitplanesPayload(
                 image,
@@ -1682,33 +1673,36 @@ class MCOImageCodec {
               }
             }
 
-            for (final rowDeltaVariant in <({
-              bool directGrayscale,
-              _CompactRowDeltaPaletteOrder paletteOrder,
-              String container,
-            })>[
-              (
-                directGrayscale: false,
-                paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
-                container: 'compact-row-delta-bounds',
-              ),
-              if (_supportsTransitionOptimizedRowDelta(
-                image.paletteProfile,
-                referenceEncoding,
-              ))
-                (
-                  directGrayscale: false,
-                  paletteOrder:
-                      _CompactRowDeltaPaletteOrder.transitionFrequency,
-                  container: 'compact-row-delta-palette-optimized-bounds',
-                ),
-              if (_isGrayscaleProfile(image.paletteProfile))
-                (
-                  directGrayscale: true,
-                  paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
-                  container: 'grayscale-row-delta-bounds',
-                ),
-            ]) {
+            for (final rowDeltaVariant
+                in <
+                  ({
+                    bool directGrayscale,
+                    _CompactRowDeltaPaletteOrder paletteOrder,
+                    String container,
+                  })
+                >[
+                  (
+                    directGrayscale: false,
+                    paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
+                    container: 'compact-row-delta-bounds',
+                  ),
+                  if (_supportsTransitionOptimizedRowDelta(
+                    image.paletteProfile,
+                    referenceEncoding,
+                  ))
+                    (
+                      directGrayscale: false,
+                      paletteOrder:
+                          _CompactRowDeltaPaletteOrder.transitionFrequency,
+                      container: 'compact-row-delta-palette-optimized-bounds',
+                    ),
+                  if (_isGrayscaleProfile(image.paletteProfile))
+                    (
+                      directGrayscale: true,
+                      paletteOrder: _CompactRowDeltaPaletteOrder.frequency,
+                      container: 'grayscale-row-delta-bounds',
+                    ),
+                ]) {
               final boundedRowDeltaTimer = Stopwatch()..start();
               final rowDeltaPayload = _tryBuildV2CompactRowDeltaPayload(
                 image,
@@ -1754,11 +1748,7 @@ class MCOImageCodec {
                 currentBest: best,
               );
               candidates.add(rowDeltaCandidate);
-              if (_isBetterCandidate(
-                rowDeltaCandidate,
-                best,
-                outputTarget,
-              )) {
+              if (_isBetterCandidate(rowDeltaCandidate, best, outputTarget)) {
                 best = rowDeltaCandidate;
               }
             }
@@ -1828,10 +1818,7 @@ class MCOImageCodec {
               bounds != null ||
               mode == ImageMode.sparseBg ||
               mode == ImageMode.biColorMask) &&
-          _isImplicitWhiteBackground(
-            image.paletteProfile,
-            backgroundColor,
-          ),
+          _isImplicitWhiteBackground(image.paletteProfile, backgroundColor),
       width: image.width,
       height: image.height,
       hasTransparentColor: image.transparentColor != null,
@@ -2021,10 +2008,8 @@ class MCOImageCodec {
       if (image.paletteProfile.isDynamic) {
         final profileColorIds = rectColors
             .map(
-              (color) => _profileColorIdForGlobalIndex(
-                image.paletteProfile,
-                color,
-              )!,
+              (color) =>
+                  _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
             )
             .toList();
         final backgroundId = _profileColorIdForGlobalIndex(
@@ -2075,12 +2060,7 @@ class MCOImageCodec {
 
       writer.writeBitVarUint(rects.length);
       for (final rect in rects) {
-        _writeV2CompactBounds(
-          writer,
-          rect.bounds,
-          image.width,
-          image.height,
-        );
+        _writeV2CompactBounds(writer, rect.bounds, image.width, image.height);
         writer.writeBits(localIndexByColor[rect.color]!, localBits);
       }
       final payload = _V2Payload(
@@ -2140,12 +2120,7 @@ class MCOImageCodec {
     }
     if (bounds != null) {
       _writeV2BackgroundRef(writer, image.paletteProfile, backgroundColor);
-      _writeV2CompactBounds(
-        writer,
-        bounds,
-        image.width,
-        image.height,
-      );
+      _writeV2CompactBounds(writer, bounds, image.width, image.height);
     }
     if (image.paletteProfile.isDynamic) writer.alignToByte();
     writer.writeBits(ExtendedImageMode.compactRle.index, _extendedSubmodeBits);
@@ -2157,10 +2132,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profileColorIds = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList();
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -2187,10 +2160,8 @@ class MCOImageCodec {
       localBits = _localBits(localPalette.length);
       localIndexByColor = {
         for (var i = 0; i < localPalette.length; i++)
-          _globalIndexForProfileColorId(
-            image.paletteProfile,
-            localPalette[i],
-          ): i,
+          _globalIndexForProfileColorId(image.paletteProfile, localPalette[i]):
+              i,
       };
       usedBankCount =
           referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
@@ -2293,10 +2264,8 @@ class MCOImageCodec {
       final profileColorIds = linear
           .where((color) => color != backgroundColor)
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final localPalette = _buildDynamicLocalPalette(
@@ -2319,10 +2288,8 @@ class MCOImageCodec {
       localBits = _localBits(localPalette.length);
       localIndexByColor = {
         for (var i = 0; i < localPalette.length; i++)
-          _globalIndexForProfileColorId(
-            image.paletteProfile,
-            localPalette[i],
-          ): i,
+          _globalIndexForProfileColorId(image.paletteProfile, localPalette[i]):
+              i,
       };
       usedBankCount =
           referenceEncoding == DynamicPaletteReferenceEncoding.banked8x64
@@ -2415,10 +2382,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profileColorIds = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -2563,10 +2528,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profileColorIds = pixels
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -2688,10 +2651,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profileColorIds = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -2744,10 +2705,12 @@ class MCOImageCodec {
 
     for (var bit = 0; bit < localBits; bit++) {
       final runs = _buildBitplaneRuns(localPixels, bit);
-      final rleBits = 2 + runs.fold<int>(
-        0,
-        (sum, length) => sum + _compactUintBitLength(length - 1),
-      );
+      final rleBits =
+          2 +
+          runs.fold<int>(
+            0,
+            (sum, length) => sum + _compactUintBitLength(length - 1),
+          );
       final rawBits = 1 + localPixels.length;
       if (rleBits < rawBits) {
         writer
@@ -2853,10 +2816,8 @@ class MCOImageCodec {
     if (directDynamicProfile) {
       final profilePixels = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final profileSize = _dynamicProfileSize(image.paletteProfile);
@@ -2874,10 +2835,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profileColorIds = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -2896,10 +2855,8 @@ class MCOImageCodec {
       }
       palette = profilePalette
           .map(
-            (color) => _globalIndexForProfileColorId(
-              image.paletteProfile,
-              color,
-            ),
+            (color) =>
+                _globalIndexForProfileColorId(image.paletteProfile, color),
           )
           .toList(growable: false);
     } else {
@@ -2907,8 +2864,10 @@ class MCOImageCodec {
     }
     final orderedPalette = switch (paletteOrder) {
       _AdaptivePaletteOrder.frequency => palette,
-      _AdaptivePaletteOrder.bitplaneOptimized =>
-        _optimizeBitplanesPaletteOrder(linear, palette),
+      _AdaptivePaletteOrder.bitplaneOptimized => _optimizeBitplanesPaletteOrder(
+        linear,
+        palette,
+      ),
       _AdaptivePaletteOrder.profileId => _orderPaletteByProfileId(
         image.paletteProfile,
         palette,
@@ -2920,11 +2879,7 @@ class MCOImageCodec {
         backgroundColor,
       ),
       _AdaptivePaletteOrder.transitionFrequency =>
-        _optimizeTransitionPaletteOrder(
-          linear,
-          palette,
-          backgroundColor,
-        ),
+        _optimizeTransitionPaletteOrder(linear, palette, backgroundColor),
       _AdaptivePaletteOrder.multiStartOptimized =>
         _optimizeBitplanesPaletteOrderMultiStart(
           image.paletteProfile,
@@ -2944,10 +2899,8 @@ class MCOImageCodec {
     if (image.paletteProfile.isDynamic) {
       final profilePalette = orderedPalette
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       _writeDynamicLocalPaletteBody(
@@ -3030,10 +2983,7 @@ class MCOImageCodec {
     }
     if (image.paletteProfile.isDynamic) writer.alignToByte();
     writer
-      ..writeBits(
-        ExtendedImageMode.compactRowDelta.index,
-        _extendedSubmodeBits,
-      )
+      ..writeBits(ExtendedImageMode.compactRowDelta.index, _extendedSubmodeBits)
       ..writeBits(directGrayscale ? 1 : 0, 1);
 
     final int valueBits;
@@ -3046,10 +2996,8 @@ class MCOImageCodec {
     } else if (image.paletteProfile.isDynamic) {
       final profileColorIds = linear
           .map(
-            (color) => _profileColorIdForGlobalIndex(
-              image.paletteProfile,
-              color,
-            )!,
+            (color) =>
+                _profileColorIdForGlobalIndex(image.paletteProfile, color)!,
           )
           .toList(growable: false);
       final backgroundId = _profileColorIdForGlobalIndex(
@@ -3166,7 +3114,8 @@ class MCOImageCodec {
         'bg=$backgroundColor; '
         'pixels=${image.pixels.length}/$_maxExtremeRegionPixels; '
         'components=${connectedRegions.length}/'
-        '$_maxExtremeRegionComponents;');
+        '$_maxExtremeRegionComponents;',
+      );
     }
 
     final splitRegions = _splitRegionsByEmptyLines(
@@ -3353,20 +3302,19 @@ class MCOImageCodec {
             payloads.add(sharedPayload);
           }
           if (includeExtendedFixedBlocks) {
-            final sharedExtendedPayload =
-                _tryBuildV2RegionsPayloadFromRegions(
-                  image,
-                  backgroundColor,
-                  referenceEncoding,
-                  regions,
-                  maxRegions,
-                  compactGeometry: compactGeometry,
-                  sharedFixedPalette: true,
-                  includeExtendedFixedBlocks: true,
-                  diagnosticContainer: beamCost == null
-                      ? 'regions-shared-fixed-extended'
-                      : 'regions-beam-shared-fixed-extended',
-                );
+            final sharedExtendedPayload = _tryBuildV2RegionsPayloadFromRegions(
+              image,
+              backgroundColor,
+              referenceEncoding,
+              regions,
+              maxRegions,
+              compactGeometry: compactGeometry,
+              sharedFixedPalette: true,
+              includeExtendedFixedBlocks: true,
+              diagnosticContainer: beamCost == null
+                  ? 'regions-shared-fixed-extended'
+                  : 'regions-beam-shared-fixed-extended',
+            );
             if (sharedExtendedPayload != null) {
               payloads.add(sharedExtendedPayload);
             }
@@ -3513,7 +3461,8 @@ class MCOImageCodec {
         'maxRegions=$maxRegions; '
         'width=$beamWidth; '
         'depth=$beamDepth; '
-        'neighbors=$_extremeRegionNeighbors;');
+        'neighbors=$_extremeRegionNeighbors;',
+      );
     }
 
     for (var depth = 0; depth < beamDepth; depth++) {
@@ -3556,8 +3505,10 @@ class MCOImageCodec {
       completedDepths = depth + 1;
 
       if (useExtremeSearch) {
-        final percentage =
-            (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
+        final percentage = (evaluatedLayouts * 100 / evaluationBudget!).clamp(
+          0,
+          100,
+        );
         debugPrint(
           '[MCOimg][Extreme][Regions] '
           '$completedDepths/$beamDepth '
@@ -3565,14 +3516,17 @@ class MCOImageCodec {
           'evaluated=$evaluatedLayouts/$evaluationBudget '
           '(${percentage.toStringAsFixed(1)}% budget); '
           'frontier=${beam.length}; '
-          'improved=${improved.length};');
+          'improved=${improved.length};',
+        );
       }
       if (budgetExhausted) break;
     }
 
     if (useExtremeSearch) {
-      final percentage =
-          (evaluatedLayouts * 100 / evaluationBudget!).clamp(0, 100);
+      final percentage = (evaluatedLayouts * 100 / evaluationBudget!).clamp(
+        0,
+        100,
+      );
       debugPrint(
         '[MCOimg][Extreme][Regions] '
         '$completedDepths/$beamDepth '
@@ -3582,7 +3536,8 @@ class MCOImageCodec {
         'COMPLETE; '
         'bg=$backgroundColor; '
         'improved=${improved.length}; '
-        'budgetExhausted=$budgetExhausted;');
+        'budgetExhausted=$budgetExhausted;',
+      );
     }
 
     improved.sort((left, right) => left.cost.compareTo(right.cost));
@@ -3716,17 +3671,16 @@ class MCOImageCodec {
           best = sharedPayload.payload.length;
         }
         if (includeExtendedFixedBlocks) {
-          final sharedExtendedPayload =
-              _tryBuildV2RegionsPayloadFromRegions(
-                image,
-                backgroundColor,
-                referenceEncoding,
-                regions,
-                maxRegions,
-                compactGeometry: compactGeometry,
-                sharedFixedPalette: true,
-                includeExtendedFixedBlocks: true,
-              );
+          final sharedExtendedPayload = _tryBuildV2RegionsPayloadFromRegions(
+            image,
+            backgroundColor,
+            referenceEncoding,
+            regions,
+            maxRegions,
+            compactGeometry: compactGeometry,
+            sharedFixedPalette: true,
+            includeExtendedFixedBlocks: true,
+          );
           if (sharedExtendedPayload != null &&
               (best == null || sharedExtendedPayload.payload.length < best)) {
             best = sharedExtendedPayload.payload.length;
@@ -3854,7 +3808,13 @@ class MCOImageCodec {
             vertical: true,
             cut: cut,
           );
-          _addRegionSplitNeighbor(splitNeighbors, regions, index, region, parts);
+          _addRegionSplitNeighbor(
+            splitNeighbors,
+            regions,
+            index,
+            region,
+            parts,
+          );
         }
         for (var cut = 1; cut < region.height; cut++) {
           final parts = _tightSplitRegion(
@@ -3865,7 +3825,13 @@ class MCOImageCodec {
             vertical: false,
             cut: cut,
           );
-          _addRegionSplitNeighbor(splitNeighbors, regions, index, region, parts);
+          _addRegionSplitNeighbor(
+            splitNeighbors,
+            regions,
+            index,
+            region,
+            parts,
+          );
         }
       }
     }
@@ -4175,10 +4141,7 @@ class MCOImageCodec {
     }
 
     if (compactGeometry || compactStream) {
-      writer.writeBits(
-        regions.length - 1,
-        _bitsForChoiceCount(_maxV2Regions),
-      );
+      writer.writeBits(regions.length - 1, _bitsForChoiceCount(_maxV2Regions));
     } else {
       writer.writeBitVarUint(regions.length);
     }
@@ -4191,12 +4154,7 @@ class MCOImageCodec {
       final region = regionBlock.region;
       final block = regionBlock.block;
       if (compactGeometry || compactStream) {
-        _writeV2CompactBounds(
-          writer,
-          region,
-          image.width,
-          image.height,
-        );
+        _writeV2CompactBounds(writer, region, image.width, image.height);
       } else {
         writer
           ..writeBitVarUint(region.x)
@@ -4794,11 +4752,7 @@ class MCOImageCodec {
     if (local.colors.isEmpty) return null;
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.lzPixels.index, _extendedSubmodeBits);
-    final palette = _writeV2FixedLocalPalette(
-      writer,
-      local.colors,
-      profile,
-    );
+    final palette = _writeV2FixedLocalPalette(writer, local.colors, profile);
     final localBits = _localBits(palette.length);
     final localIndexByColor = _localIndexMap(palette);
     final localPixels = linear
@@ -4858,11 +4812,7 @@ class MCOImageCodec {
     if (local.colors.isEmpty) return null;
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.quadtree.index, _extendedSubmodeBits);
-    final palette = _writeV2FixedLocalPalette(
-      writer,
-      local.colors,
-      profile,
-    );
+    final palette = _writeV2FixedLocalPalette(writer, local.colors, profile);
     final localBits = _localBits(palette.length);
     final localIndexByColor = _localIndexMap(palette);
     final localPixels = linear
@@ -4894,11 +4844,7 @@ class MCOImageCodec {
     if (local.colors.isEmpty) return null;
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.compactRle.index, _extendedSubmodeBits);
-    final palette = _writeV2FixedLocalPalette(
-      writer,
-      local.colors,
-      profile,
-    );
+    final palette = _writeV2FixedLocalPalette(writer, local.colors, profile);
     final localBits = _localBits(palette.length);
     final localIndexByColor = _localIndexMap(palette);
     for (final run in _buildRuns(linear)) {
@@ -4927,11 +4873,7 @@ class MCOImageCodec {
     if (local.colors.isEmpty) return null;
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.compactSparse.index, _extendedSubmodeBits);
-    final palette = _writeV2FixedLocalPalette(
-      writer,
-      local.colors,
-      profile,
-    );
+    final palette = _writeV2FixedLocalPalette(writer, local.colors, profile);
     final localBits = _localBits(palette.length);
     final localIndexByColor = _localIndexMap(palette);
     _writeCompactUint(writer, segments.length - 1);
@@ -4958,11 +4900,7 @@ class MCOImageCodec {
     if (local.colors.isEmpty) return null;
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
-    final palette = _writeV2FixedLocalPalette(
-      writer,
-      local.colors,
-      profile,
-    );
+    final palette = _writeV2FixedLocalPalette(writer, local.colors, profile);
     final localBits = _localBits(palette.length);
     final localIndexByColor = _localIndexMap(palette);
     final localPixels = linear
@@ -4970,10 +4908,12 @@ class MCOImageCodec {
         .toList(growable: false);
     for (var bit = 0; bit < localBits; bit++) {
       final runs = _buildBitplaneRuns(localPixels, bit);
-      final rleBits = 2 + runs.fold<int>(
-        0,
-        (sum, length) => sum + _compactUintBitLength(length - 1),
-      );
+      final rleBits =
+          2 +
+          runs.fold<int>(
+            0,
+            (sum, length) => sum + _compactUintBitLength(length - 1),
+          );
       final rawBits = 1 + localPixels.length;
       if (rleBits < rawBits) {
         writer
@@ -5007,10 +4947,7 @@ class MCOImageCodec {
     if (!profile.isFixed || linear.isEmpty) return null;
     if (directGrayscale && !_isGrayscaleProfile(profile)) return null;
     final writer = _BitWriter()
-      ..writeBits(
-        ExtendedImageMode.compactRowDelta.index,
-        _extendedSubmodeBits,
-      )
+      ..writeBits(ExtendedImageMode.compactRowDelta.index, _extendedSubmodeBits)
       ..writeBits(directGrayscale ? 1 : 0, 1);
     final int valueBits;
     int? localPaletteSize;
@@ -5284,10 +5221,7 @@ class MCOImageCodec {
       writer.writeBits(run.color, localBits);
       _writeCompactUint(writer, run.length - 1);
     }
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   _V2BlockPayload? _tryBuildV2SharedCompactSparseBlockBody(
@@ -5311,10 +5245,7 @@ class MCOImageCodec {
       _writeCompactUint(writer, segment.length - 1);
       pos = segment.start + segment.length;
     }
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   _V2BlockPayload? _tryBuildV2SharedBitplanesBlockBody(
@@ -5325,10 +5256,7 @@ class MCOImageCodec {
     final writer = _BitWriter()
       ..writeBits(ExtendedImageMode.bitplanes.index, _extendedSubmodeBits);
     _writeAdaptiveBitplanesBody(writer, localPixels, localBits);
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   _V2BlockPayload? _tryBuildV2SharedLzPixelsBlockBody(
@@ -5369,10 +5297,7 @@ class MCOImageCodec {
         }
       }
     }
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   _V2BlockPayload? _tryBuildV2SharedQuadtreeBlockBody(
@@ -5394,10 +5319,7 @@ class MCOImageCodec {
       height,
       localBits,
     );
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   _V2BlockPayload? _tryBuildV2SharedCompactRowDeltaBlockBody(
@@ -5407,10 +5329,7 @@ class MCOImageCodec {
   ) {
     if (localPixels.isEmpty || rowLength <= 0) return null;
     final writer = _BitWriter()
-      ..writeBits(
-        ExtendedImageMode.compactRowDelta.index,
-        _extendedSubmodeBits,
-      )
+      ..writeBits(ExtendedImageMode.compactRowDelta.index, _extendedSubmodeBits)
       ..writeBits(0, 1);
     _writeCompactRowDeltaBody(
       writer,
@@ -5419,10 +5338,7 @@ class MCOImageCodec {
       localBits,
       directGrayscale: false,
     );
-    return _v2BlockPayload(
-      writer,
-      bitsPerLocalPixel: localBits,
-    );
+    return _v2BlockPayload(writer, bitsPerLocalPixel: localBits);
   }
 
   void _writeV2Header(
@@ -5442,12 +5358,11 @@ class MCOImageCodec {
     bool solidBackground = false,
   }) {
     if (container == _containerRegions) {
-      final validRegionsScan =
-          mode == ImageMode.extended
-              ? (scan == _regionsVariantCompactGeometry ||
-                    scan == _regionsVariantCompactStream ||
-                    scan == _regionsVariantCompactStreamCommon)
-              : scan == ScanMode.h;
+      final validRegionsScan = mode == ImageMode.extended
+          ? (scan == _regionsVariantCompactGeometry ||
+                scan == _regionsVariantCompactStream ||
+                scan == _regionsVariantCompactStreamCommon)
+          : scan == ScanMode.h;
       if (boundsPresent ||
           (mode != ImageMode.rawGlobal && mode != ImageMode.extended) ||
           !validRegionsScan) {
@@ -5486,9 +5401,7 @@ class MCOImageCodec {
         'Banked palette references require dynamicGlobal512',
       );
     }
-    final fixedSolidImplicitWhite =
-        profile.isFixed &&
-        solidBackground;
+    final fixedSolidImplicitWhite = profile.isFixed && solidBackground;
     final fixedBlockExtension =
         profile.isFixed &&
         container == _containerBlock &&
@@ -5505,10 +5418,10 @@ class MCOImageCodec {
         ((profile.isDynamic ? _paletteKindDynamic : _paletteKindFixed) << 7) |
             ((container == _containerRegions ? 1 : 0) << 6) |
             (((sharedFixedRegionsPalette ||
-                            fixedBlockExtension ||
-                            fixedSolidImplicitWhite ||
-                            referenceEncoding ==
-                                DynamicPaletteReferenceEncoding.banked8x64)
+                        fixedBlockExtension ||
+                        fixedSolidImplicitWhite ||
+                        referenceEncoding ==
+                            DynamicPaletteReferenceEncoding.banked8x64)
                     ? 1
                     : 0) <<
                 5) |
@@ -5522,12 +5435,8 @@ class MCOImageCodec {
       ..writeAlignedByte(height - 1);
     if (fixedBlockExtension) {
       writer.writeBits(
-        (implicitWhiteBackground
-                ? _v2FixedBlockExtensionImplicitWhite
-                : 0) |
-            (unalignedExtendedBody
-                ? _v2FixedBlockExtensionUnaligned
-                : 0),
+        (implicitWhiteBackground ? _v2FixedBlockExtensionImplicitWhite : 0) |
+            (unalignedExtendedBody ? _v2FixedBlockExtensionUnaligned : 0),
         2,
       );
     }
@@ -5570,10 +5479,7 @@ class MCOImageCodec {
     return _readV2ColorRef(reader, profile);
   }
 
-  static bool _isImplicitWhiteBackground(
-    PaletteProfile profile,
-    int color,
-  ) =>
+  static bool _isImplicitWhiteBackground(PaletteProfile profile, int color) =>
       profile.isDynamic
       ? color == MCOImageDynamicPalette.whiteGlobalIndexFor(profile)
       : color == 0;
@@ -5617,10 +5523,7 @@ class MCOImageCodec {
     writer
       ..writeBits(bounds.x, _bitsForChoiceCount(fullWidth))
       ..writeBits(bounds.y, _bitsForChoiceCount(fullHeight))
-      ..writeBits(
-        bounds.width - 1,
-        _bitsForChoiceCount(fullWidth - bounds.x),
-      )
+      ..writeBits(bounds.width - 1, _bitsForChoiceCount(fullWidth - bounds.x))
       ..writeBits(
         bounds.height - 1,
         _bitsForChoiceCount(fullHeight - bounds.y),
@@ -5637,10 +5540,8 @@ class MCOImageCodec {
     if (x >= fullWidth || y >= fullHeight) {
       throw const MCOImageInvalidPayloadException('Invalid compact bounds');
     }
-    final width =
-        reader.readBits(_bitsForChoiceCount(fullWidth - x)) + 1;
-    final height =
-        reader.readBits(_bitsForChoiceCount(fullHeight - y)) + 1;
+    final width = reader.readBits(_bitsForChoiceCount(fullWidth - x)) + 1;
+    final height = reader.readBits(_bitsForChoiceCount(fullHeight - y)) + 1;
     if (x + width > fullWidth || y + height > fullHeight) {
       throw const MCOImageInvalidPayloadException('Invalid compact bounds');
     }
@@ -6096,12 +5997,11 @@ class MCOImageCodec {
           compactGeometry && scan == _regionsVariantCompactStream;
       final compactStreamCommon =
           compactGeometry && scan == _regionsVariantCompactStreamCommon;
-      final validRegionsScan =
-          compactGeometry
-              ? (scan == _regionsVariantCompactGeometry ||
-                    scan == _regionsVariantCompactStream ||
-                    scan == _regionsVariantCompactStreamCommon)
-              : scan == ScanMode.h;
+      final validRegionsScan = compactGeometry
+          ? (scan == _regionsVariantCompactGeometry ||
+                scan == _regionsVariantCompactStream ||
+                scan == _regionsVariantCompactStreamCommon)
+          : scan == ScanMode.h;
       if (boundsPresent ||
           (mode != ImageMode.rawGlobal && !compactGeometry) ||
           !validRegionsScan) {
@@ -6377,8 +6277,7 @@ class MCOImageCodec {
         );
       }
       final innerMode = _modeFromBits(reader.readBits(3));
-      if (innerMode == ImageMode.extended ||
-          innerMode == ImageMode.regionsBg) {
+      if (innerMode == ImageMode.extended || innerMode == ImageMode.regionsBg) {
         throw const MCOImageInvalidPayloadException(
           'Invalid wrapped image mode',
         );
@@ -6565,11 +6464,7 @@ class MCOImageCodec {
         );
       }
     } else {
-      palette = _readV2LocalPalette(
-        reader,
-        profile,
-        excludedColor: background,
-      );
+      palette = _readV2LocalPalette(reader, profile, excludedColor: background);
     }
     final localBits = _localBits(palette.length);
     final rectCount = reader.readBitVarUint();
@@ -6655,8 +6550,7 @@ class MCOImageCodec {
     DynamicPaletteReferenceEncoding? referenceEncoding, {
     int? backgroundColor,
   }) {
-    final background =
-        backgroundColor ?? _readV2ColorRef(reader, profile);
+    final background = backgroundColor ?? _readV2ColorRef(reader, profile);
     final List<int> palette;
     if (profile.isDynamic) {
       if (referenceEncoding == null) {
@@ -6675,11 +6569,7 @@ class MCOImageCodec {
         );
       }
     } else {
-      palette = _readV2LocalPalette(
-        reader,
-        profile,
-        excludedColor: background,
-      );
+      palette = _readV2LocalPalette(reader, profile, excludedColor: background);
     }
 
     final pixelCount = width * height;
@@ -6745,14 +6635,11 @@ class MCOImageCodec {
       final isMatch = reader.readBits(1) != 0;
       if (isMatch) {
         final distance = _readCompactUint(reader) + 1;
-        final length =
-            _readCompactUint(reader) + _minLzMatchLength;
+        final length = _readCompactUint(reader) + _minLzMatchLength;
         if (distance <= 0 ||
             distance > result.length ||
             result.length + length > pixelCount) {
-          throw const MCOImageInvalidPayloadException(
-            'Invalid LZ pixel match',
-          );
+          throw const MCOImageInvalidPayloadException('Invalid LZ pixel match');
         }
         for (var i = 0; i < length; i++) {
           result.add(result[result.length - distance]);
@@ -7058,14 +6945,16 @@ class MCOImageCodec {
       }
     }
 
-    return localPixels.map((index) {
-      if (index >= palette.length) {
-        throw const MCOImageInvalidPayloadException(
-          'Bitplane color index out of range',
-        );
-      }
-      return palette[index];
-    }).toList(growable: false);
+    return localPixels
+        .map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Bitplane color index out of range',
+            );
+          }
+          return palette[index];
+        })
+        .toList(growable: false);
   }
 
   List<int> _decodeAdaptiveBitplanesBody(
@@ -7142,14 +7031,16 @@ class MCOImageCodec {
       }
     }
 
-    return localPixels.map((index) {
-      if (index >= palette.length) {
-        throw const MCOImageInvalidPayloadException(
-          'Adaptive bitplane color index out of range',
-        );
-      }
-      return palette[index];
-    }).toList(growable: false);
+    return localPixels
+        .map((index) {
+          if (index >= palette.length) {
+            throw const MCOImageInvalidPayloadException(
+              'Adaptive bitplane color index out of range',
+            );
+          }
+          return palette[index];
+        })
+        .toList(growable: false);
   }
 
   void _readAdaptiveBitplaneRuns(
@@ -7293,8 +7184,7 @@ class MCOImageCodec {
 
     while (row < rowCount) {
       final op = reader.readBits(_compactRowDeltaOpBits);
-      if (op == _compactRowDeltaOpRepeat ||
-          op == _compactRowDeltaOpRepeatRun) {
+      if (op == _compactRowDeltaOpRepeat || op == _compactRowDeltaOpRepeatRun) {
         final repeatCount = op == _compactRowDeltaOpRepeat
             ? 1
             : _readCompactUint(reader) + 2;
@@ -7925,8 +7815,7 @@ class MCOImageCodec {
       final isMatch = reader.readBits(1) != 0;
       if (isMatch) {
         final distance = _readCompactUint(reader) + 1;
-        final length =
-            _readCompactUint(reader) + _minLzMatchLength;
+        final length = _readCompactUint(reader) + _minLzMatchLength;
         if (distance <= 0 ||
             distance > result.length ||
             result.length + length > pixelCount) {
@@ -8142,9 +8031,7 @@ class MCOImageCodec {
           'Dynamic region rawGlobal is reserved',
         );
       }
-      final payloadBitLength = compactStream
-          ? reader.readBitVarUint()
-          : null;
+      final payloadBitLength = compactStream ? reader.readBitVarUint() : null;
       final payload = compactStream
           ? reader.readBytesByBits(payloadBitLength!)
           : reader.readAlignedBytes(reader.readBitVarUint());
@@ -8519,12 +8406,7 @@ class MCOImageCodec {
           );
         }
         writer.writeBits(localIndex(foreground), localBits);
-        _writeBiColorMask(
-          writer,
-          linear,
-          backgroundColor,
-          foreground,
-        );
+        _writeBiColorMask(writer, linear, backgroundColor, foreground);
         break;
       case ImageMode.rawGlobal:
       case ImageMode.extended:
@@ -9712,13 +9594,15 @@ class MCOImageCodec {
     }
     final sorted = colors.toSet().toList()..sort();
     final globalBits = _globalBits(profile);
-    final legacyBits = _bitVarUintBitLength(colors.length) +
-        colors.length * globalBits;
-    final bitmapBits = _bitVarUintBitLength(0) +
+    final legacyBits =
+        _bitVarUintBitLength(colors.length) + colors.length * globalBits;
+    final bitmapBits =
+        _bitVarUintBitLength(0) +
         _fixedPaletteDescriptorBits +
         _paletteSize(profile);
 
-    var deltaBits = _bitVarUintBitLength(0) +
+    var deltaBits =
+        _bitVarUintBitLength(0) +
         _fixedPaletteDescriptorBits +
         _bitVarUintBitLength(sorted.length) +
         globalBits;
@@ -9734,7 +9618,8 @@ class MCOImageCodec {
         runs.add(_PaletteRange(color, color));
       }
     }
-    var rangeBits = _bitVarUintBitLength(0) +
+    var rangeBits =
+        _bitVarUintBitLength(0) +
         _fixedPaletteDescriptorBits +
         _compactUintBitLength(runs.length - 1);
     for (final run in runs) {
@@ -10002,10 +9887,7 @@ class MCOImageCodec {
             _dynamicPaletteDescriptorBits,
           )
           ..writeBits(profileColorIds.length - 1, 6)
-          ..writeBits(
-            profileColorIds.first,
-            _dynamicProfileColorBits(profile),
-          );
+          ..writeBits(profileColorIds.first, _dynamicProfileColorBits(profile));
         for (var i = 1; i < profileColorIds.length; i++) {
           _writeCompactUint(
             writer,
@@ -10184,14 +10066,20 @@ class MCOImageCodec {
   ) {
     final descriptor = reader.readBits(_dynamicPaletteDescriptorBits);
     final profileColorIds = switch (descriptor) {
-      _dynamicPaletteDescriptorSortedDelta =>
-        _readDynamicSortedDeltaPalette(reader, profile),
-      _dynamicPaletteDescriptorRangeRuns =>
-        _readDynamicRangePalette(reader, profile),
+      _dynamicPaletteDescriptorSortedDelta => _readDynamicSortedDeltaPalette(
+        reader,
+        profile,
+      ),
+      _dynamicPaletteDescriptorRangeRuns => _readDynamicRangePalette(
+        reader,
+        profile,
+      ),
       _dynamicPaletteDescriptorProfileBitmap =>
         _readDynamicProfileBitmapPalette(reader, profile),
-      _dynamicPaletteDescriptorBankBitmaps =>
-        _readDynamicBankBitmapsPalette(reader, profile),
+      _dynamicPaletteDescriptorBankBitmaps => _readDynamicBankBitmapsPalette(
+        reader,
+        profile,
+      ),
       _ => throw const MCOImageInvalidPayloadException(
         'Unknown dynamic palette descriptor',
       ),
@@ -10208,9 +10096,7 @@ class MCOImageCodec {
   ) {
     final length = reader.readBits(6) + 1;
     final maxId = _dynamicProfileSize(profile) - 1;
-    final colors = <int>[
-      reader.readBits(_dynamicProfileColorBits(profile)),
-    ];
+    final colors = <int>[reader.readBits(_dynamicProfileColorBits(profile))];
     if (colors.first > maxId) {
       throw const MCOImageInvalidPayloadException(
         'Dynamic palette color id is out of range',
@@ -10690,10 +10576,7 @@ class MCOImageCodec {
         useVirtualBaseRow: useVirtualBaseRow,
       );
       if (repeatCount >= 2) {
-        writer.writeBits(
-          _compactRowDeltaOpRepeatRun,
-          _compactRowDeltaOpBits,
-        );
+        writer.writeBits(_compactRowDeltaOpRepeatRun, _compactRowDeltaOpBits);
         _writeCompactUint(writer, repeatCount - 2);
         row += repeatCount;
         continue;
@@ -10739,8 +10622,7 @@ class MCOImageCodec {
         useVirtualBaseRow: useVirtualBaseRow,
       );
       if (repeatCount >= 2) {
-        cost += _compactRowDeltaOpBits +
-            _compactUintBitLength(repeatCount - 2);
+        cost += _compactRowDeltaOpBits + _compactUintBitLength(repeatCount - 2);
         row += repeatCount;
         continue;
       }
@@ -10818,7 +10700,8 @@ class MCOImageCodec {
           predictor: predictor,
           changes: changes,
           useResidual: false,
-          bitCost: _compactRowDeltaOpBits +
+          bitCost:
+              _compactRowDeltaOpBits +
               (predictor == _rowDeltaPredictorSame
                   ? 0
                   : _compactPredictorBitCost(predictor)),
@@ -10844,7 +10727,8 @@ class MCOImageCodec {
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        bitCost: _compactRowDeltaOpBits +
+        bitCost:
+            _compactRowDeltaOpBits +
             predictorCost +
             _compactUintBitLength(changes.length - 1) +
             positionCost +
@@ -10868,7 +10752,8 @@ class MCOImageCodec {
           predictor: predictor,
           changes: changes,
           useResidual: sameScalar.useResidual,
-          bitCost: _compactRowDeltaOpBits +
+          bitCost:
+              _compactRowDeltaOpBits +
               predictorCost +
               _compactUintBitLength(changes.length - 1) +
               positionCost +
@@ -10883,7 +10768,8 @@ class MCOImageCodec {
       for (var i = 0; i < segments.length; i++) {
         final segment = segments[i];
         final gap = i == 0 ? segment.x : segment.x - previousEnd;
-        segmentGeometryCost += _compactUintBitLength(gap) +
+        segmentGeometryCost +=
+            _compactUintBitLength(gap) +
             _compactUintBitLength(segment.length - 1);
         previousEnd = segment.x + segment.length;
       }
@@ -10892,7 +10778,8 @@ class MCOImageCodec {
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        bitCost: _compactRowDeltaOpBits +
+        bitCost:
+            _compactRowDeltaOpBits +
             predictorCost +
             segmentGeometryCost +
             valuesEncoding.bitCost,
@@ -10905,7 +10792,8 @@ class MCOImageCodec {
         predictor: predictor,
         changes: changes,
         useResidual: valuesEncoding.useResidual,
-        bitCost: _compactRowDeltaOpBits +
+        bitCost:
+            _compactRowDeltaOpBits +
             predictorCost +
             _compactUintBitLength(changes.first.x) +
             _compactUintBitLength(span - 1) +
@@ -10975,7 +10863,10 @@ class MCOImageCodec {
     final absoluteValue = _sameRowDeltaChangeValue(changes);
     _CompactValueEncoding? best;
     if (absoluteValue != null) {
-      best = _CompactValueEncoding(false, valueBits + (directGrayscale ? 1 : 0));
+      best = _CompactValueEncoding(
+        false,
+        valueBits + (directGrayscale ? 1 : 0),
+      );
     }
     if (!directGrayscale) return best;
     int? sharedDelta;
@@ -11116,7 +11007,8 @@ class MCOImageCodec {
         _writeCompactUint(writer, span - 1);
         var changeIndex = 0;
         for (var offset = 0; offset < span; offset++) {
-          final changed = changeIndex < changes.length &&
+          final changed =
+              changeIndex < changes.length &&
               changes[changeIndex].x == start + offset;
           writer.writeBits(changed ? 1 : 0, 1);
           if (changed) changeIndex++;
@@ -12180,9 +12072,7 @@ class MCOImageCodec {
   }
 
   String _lzOptimizationCacheKey(List<int> pixels, int localBits) {
-    return '$localBits:${String.fromCharCodes(
-      pixels.map((pixel) => pixel + 1),
-    )}';
+    return '$localBits:${String.fromCharCodes(pixels.map((pixel) => pixel + 1))}';
   }
 
   int _lzPixelTokensBitCost(List<_LzPixelToken> tokens, int localBits) {
@@ -12245,8 +12135,7 @@ class MCOImageCodec {
           position + range.maxLength + 1,
         );
         if (result == null) continue;
-        final cost =
-            1 + range.bitCost + result.cost - position * localBits;
+        final cost = 1 + range.bitCost + result.cost - position * localBits;
         if (cost < bestCost ||
             (cost == bestCost && result.index > (bestStep?.end ?? -1))) {
           bestCost = cost;
@@ -12255,12 +12144,10 @@ class MCOImageCodec {
       }
 
       for (final match in matches[position]) {
-        for (
-          final range in _lzLengthCostRanges(
-            _minLzMatchLength,
-            match.maxLength,
-          )
-        ) {
+        for (final range in _lzLengthCostRanges(
+          _minLzMatchLength,
+          match.maxLength,
+        )) {
           final result = rawMin.query(
             position + range.minLength,
             position + range.maxLength + 1,
@@ -12290,9 +12177,7 @@ class MCOImageCodec {
       }
       final length = step.end - position;
       if (step.distance == 0) {
-        tokens.add(
-          _LzPixelToken.literal(pixels.sublist(position, step.end)),
-        );
+        tokens.add(_LzPixelToken.literal(pixels.sublist(position, step.end)));
       } else {
         tokens.add(_LzPixelToken.match(step.distance, length));
       }
@@ -12338,11 +12223,7 @@ class MCOImageCodec {
     return result;
   }
 
-  static int _lzMatchLength(
-    List<int> pixels,
-    int position,
-    int distance,
-  ) {
+  static int _lzMatchLength(List<int> pixels, int position, int distance) {
     var length = 0;
     while (position + length < pixels.length &&
         pixels[position + length] == pixels[position + length - distance]) {
@@ -12365,10 +12246,7 @@ class MCOImageCodec {
     ]) {
       final minLength = valueRange.min + valueOffset;
       if (minLength > maxLength) break;
-      final rangeMaxLength = math.min(
-        valueRange.max + valueOffset,
-        maxLength,
-      );
+      final rangeMaxLength = math.min(valueRange.max + valueOffset, maxLength);
       yield _LzLengthCostRange(
         minLength,
         rangeMaxLength,
@@ -12422,9 +12300,7 @@ class MCOImageCodec {
                 _compactUintBitLength(bestLength - _minLzMatchLength)
           : 0;
       final literalBits = bestLength >= _minLzMatchLength
-          ? 1 +
-                _compactUintBitLength(bestLength - 1) +
-                bestLength * localBits
+          ? 1 + _compactUintBitLength(bestLength - 1) + bestLength * localBits
           : 0;
       if (bestLength >= _minLzMatchLength && matchBits < literalBits) {
         flushLiterals();
@@ -12555,8 +12431,7 @@ class MCOImageCodec {
         3 +
             runs.fold<int>(
               0,
-              (sum, length) =>
-                  sum + _compactUintBitLength(length - 1),
+              (sum, length) => sum + _compactUintBitLength(length - 1),
             ),
         startingBit: startingBit,
         runs: runs,
@@ -12626,9 +12501,7 @@ class MCOImageCodec {
       var passPalette = bestPalette;
       var passCost = bestCost;
       for (var left = 0; left < bestPalette.length - 1; left++) {
-        final rightLimit = exhaustiveSwaps
-            ? bestPalette.length
-            : left + 2;
+        final rightLimit = exhaustiveSwaps ? bestPalette.length : left + 2;
         for (var right = left + 1; right < rightLimit; right++) {
           final candidate = List<int>.of(bestPalette);
           final value = candidate[left];
@@ -12702,9 +12575,10 @@ class MCOImageCodec {
   ) {
     return List<int>.of(palette)..sort((left, right) {
       if (profile.isFixed) return left.compareTo(right);
-      return _profileColorIdForGlobalIndex(profile, left)!.compareTo(
-        _profileColorIdForGlobalIndex(profile, right)!,
-      );
+      return _profileColorIdForGlobalIndex(
+        profile,
+        left,
+      )!.compareTo(_profileColorIdForGlobalIndex(profile, right)!);
     });
   }
 
@@ -12782,11 +12656,7 @@ class MCOImageCodec {
       remaining.remove(current);
       if (remaining.isEmpty) break;
       current = remaining.reduce((left, right) {
-        final leftDistance = _paletteRgbDistanceSquared(
-          profile,
-          current,
-          left,
-        );
+        final leftDistance = _paletteRgbDistanceSquared(profile, current, left);
         final rightDistance = _paletteRgbDistanceSquared(
           profile,
           current,
@@ -12852,10 +12722,7 @@ class MCOImageCodec {
     return cost;
   }
 
-  void _writeSparseBitplanePositions(
-    _BitWriter writer,
-    List<int> positions,
-  ) {
+  void _writeSparseBitplanePositions(_BitWriter writer, List<int> positions) {
     _writeCompactUint(writer, positions.length - 1);
     var previous = -1;
     for (final position in positions) {
@@ -13812,11 +13679,7 @@ class _LzMatchOption {
   final int maxLength;
   final int distanceBitCost;
 
-  const _LzMatchOption(
-    this.distance,
-    this.maxLength,
-    this.distanceBitCost,
-  );
+  const _LzMatchOption(this.distance, this.maxLength, this.distanceBitCost);
 }
 
 class _LzParseStep {

@@ -624,7 +624,10 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
 
     final host = _hostController.text.trim();
     final parsedPort = int.tryParse(_portController.text.trim());
-    if (host.isEmpty || parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
+    if (host.isEmpty ||
+        parsedPort == null ||
+        parsedPort < 1 ||
+        parsedPort > 65535) {
       return;
     }
 

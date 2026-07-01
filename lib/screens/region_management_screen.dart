@@ -30,8 +30,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   static final RegExp _validFetchedRegion = RegExp(r'^[a-z0-9-]{1,30}$');
 
   final RegionStore _regionStore = RegionStore();
-  final TextEditingController _defaultScopeController =
-      TextEditingController();
+  final TextEditingController _defaultScopeController = TextEditingController();
   List<Region> _regions = [];
   bool _isFetchingRegions = false;
   bool _isDefaultScopeBusy = false;

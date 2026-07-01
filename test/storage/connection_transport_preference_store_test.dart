@@ -6,8 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({
-      'last_connection_transport':
-          ConnectionTransportPreferenceStore.bluetooth,
+      'last_connection_transport': ConnectionTransportPreferenceStore.bluetooth,
     });
     PrefsManager.reset();
     ConnectionTransportPreferenceStore.resetCache();

@@ -59,9 +59,9 @@ class ChannelAppDataInbound {
   });
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
-        subtypeId: subtypeId,
-        version: version,
-      );
+    subtypeId: subtypeId,
+    version: version,
+  );
 }
 
 class ChannelBinaryDataHelper {
@@ -75,10 +75,8 @@ class ChannelBinaryDataHelper {
   static const int mcoImageDataType = 0xFFF0;
   static const int mcmpDataType = 0xFFF1;
   static const int appDataType = ChannelAppDataHelper.appDataType;
-  static const int mcoImageSubtype =
-      ChannelAppDataHelper.mcoImageSubtype;
-  static const int mcoImageV3Version =
-      ChannelAppDataHelper.mcoImageV3Version;
+  static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
+  static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -216,10 +214,7 @@ class ChannelBinaryDataHelper {
     required int bodyLength,
     required String senderName,
   }) {
-    return _envelopeLength(
-      bodyLength: bodyLength,
-      senderName: senderName,
-    );
+    return _envelopeLength(bodyLength: bodyLength, senderName: senderName);
   }
 
   static int appBinaryEnvelopeLength({
@@ -239,10 +234,7 @@ class ChannelBinaryDataHelper {
     return outgoingCommandHeaderLength + pathLength + envelopeLength;
   }
 
-  static int uncompressedBinaryPayloadLength(
-    String text,
-    String senderName,
-  ) {
+  static int uncompressedBinaryPayloadLength(String text, String senderName) {
     return channelDataHeaderLength +
         uncompressedPayloadLength(text, senderName);
   }
