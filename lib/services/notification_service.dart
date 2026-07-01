@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/mco_image_message.dart';
+import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_palette.dart';
 import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
@@ -276,11 +278,13 @@ class NotificationService {
       final image = MCOImageMessage.decodeMetadata(text.trim()).image;
       if (image == null) return null;
       final bytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
+      final rawIcon = _linuxRawIconDataFor(image);
       String? filePath;
       if (!kIsWeb &&
           (PlatformInfo.isAndroid ||
               PlatformInfo.isIOS ||
-              PlatformInfo.isMacOS)) {
+              PlatformInfo.isMacOS ||
+              PlatformInfo.isWindows)) {
         final directory = await getTemporaryDirectory();
         final timestamp = DateTime.now().microsecondsSinceEpoch;
         final file = File(
@@ -289,7 +293,11 @@ class NotificationService {
         await file.writeAsBytes(bytes, flush: true);
         filePath = file.path;
       }
-      return _MCOImageNotificationAttachment(bytes: bytes, filePath: filePath);
+      return _MCOImageNotificationAttachment(
+        bytes: bytes,
+        filePath: filePath,
+        linuxRawIcon: rawIcon,
+      );
     } catch (error) {
       debugPrint('Failed to build MCOimg notification attachment: $error');
       return null;
@@ -304,6 +312,84 @@ class NotificationService {
       return null;
     }
     return [DarwinNotificationAttachment(filePath)];
+  }
+
+  LinuxNotificationDetails? _linuxDetailsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final rawIcon = attachment?.linuxRawIcon;
+    if (rawIcon == null) {
+      return null;
+    }
+    return LinuxNotificationDetails(icon: ByteDataLinuxIcon(rawIcon));
+  }
+
+  WindowsNotificationDetails? _windowsDetailsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final filePath = attachment?.filePath;
+    if (filePath == null) {
+      return null;
+    }
+    return WindowsNotificationDetails(
+      images: [
+        WindowsImage(
+          Uri.file(filePath, windows: true),
+          altText: 'MCOimg',
+          placement: WindowsImagePlacement.hero,
+        ),
+      ],
+    );
+  }
+
+  LinuxRawIconData _linuxRawIconDataFor(MCOImage image) {
+    final palette = image.paletteProfile.isDynamic
+        ? MCOImageDynamicPalette.global512
+        : MCOImagePalette.colorsFor(image.paletteProfile);
+    final data = Uint8List(image.width * image.height * 4);
+    for (var i = 0; i < image.pixels.length; i++) {
+      final pixel = image.pixels[i];
+      final color = _colorForMcoPixel(image, pixel, palette);
+      final offset = i * 4;
+      data[offset] = _colorChannelToByte(color.r);
+      data[offset + 1] = _colorChannelToByte(color.g);
+      data[offset + 2] = _colorChannelToByte(color.b);
+      data[offset +
+          3] = image.transparentColor != null && pixel == image.transparentColor
+          ? 0
+          : _colorChannelToByte(color.a);
+    }
+    return LinuxRawIconData(
+      data: data,
+      width: image.width,
+      height: image.height,
+      channels: 4,
+      hasAlpha: true,
+    );
+  }
+
+  Color _colorForMcoPixel(MCOImage image, int pixel, List<Color> palette) {
+    if (image.paletteProfile.isDynamic) {
+      if (pixel < 0 ||
+          pixel >= MCOImageDynamicPalette.global512.length ||
+          MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                image.paletteProfile,
+                pixel,
+              ) ==
+              null) {
+        final whiteIndex = MCOImagePalette.whiteIndexFor(image.paletteProfile);
+        return MCOImageDynamicPalette.global512[whiteIndex];
+      }
+      return MCOImageDynamicPalette.global512[pixel];
+    }
+    if (pixel < 0 || pixel >= palette.length) {
+      return const Color(0x00000000);
+    }
+    return palette[pixel];
+  }
+
+  int _colorChannelToByte(double value) {
+    return (value * 255.0).round().clamp(0, 255).toInt();
   }
 
   Future<void> _showMessageNotificationImpl({
@@ -359,6 +445,8 @@ class NotificationService {
       android: androidDetails,
       iOS: iosDetails,
       macOS: macDetails,
+      linux: _linuxDetailsFor(mcoAttachment),
+      windows: _windowsDetailsFor(mcoAttachment),
     );
 
     try {
@@ -473,6 +561,8 @@ class NotificationService {
       android: androidDetails,
       iOS: iosDetails,
       macOS: macDetails,
+      linux: _linuxDetailsFor(mcoAttachment),
+      windows: _windowsDetailsFor(mcoAttachment),
     );
 
     final preview = mcoAttachment == null
@@ -794,10 +884,12 @@ class NotificationService {
 class _MCOImageNotificationAttachment {
   final Uint8List bytes;
   final String? filePath;
+  final LinuxRawIconData? linuxRawIcon;
 
   const _MCOImageNotificationAttachment({
     required this.bytes,
     required this.filePath,
+    required this.linuxRawIcon,
   });
 }
 
