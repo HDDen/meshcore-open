@@ -200,6 +200,7 @@ class AppSettings {
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
+  final bool backgroundTcpEnabled;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -477,6 +478,7 @@ class AppSettings {
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
+    this.backgroundTcpEnabled = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -580,6 +582,7 @@ class AppSettings {
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
+      'background_tcp_enabled': backgroundTcpEnabled,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -697,6 +700,7 @@ class AppSettings {
         json['shared_message_history_mode'],
       ),
       noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
+      backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -846,6 +850,7 @@ class AppSettings {
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
+    bool? backgroundTcpEnabled,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -933,6 +938,7 @@ class AppSettings {
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
       noRetransmissionWarningSeconds:
           noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
+      backgroundTcpEnabled: backgroundTcpEnabled ?? this.backgroundTcpEnabled,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

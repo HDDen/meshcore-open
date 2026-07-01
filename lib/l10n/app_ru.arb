@@ -2279,5 +2279,6 @@
   "settings_modSettingsNoRetraHeading": "Отмечать сообщения неотправленными, если не услышано ретрансляций за секунд:",
   "settings_modSettingsNoRetraDscr": "Внимание! Из-за механизма в прошивке ноды, сообщения для каналов весом более ~133 байт физически не могут получать подтверждения, и они всегда будут отмечены, как сбойные! Используйте эту опцию совместно с ограничением payload в настройках приложения!",
   "settings_selfTelemetryShow": "Просмотр датчиков",
-  "settings_modSettingsVisualChannelsUnreadSorting": "Сортировка каналов по непрочитанным сообщениям"
+  "settings_modSettingsVisualChannelsUnreadSorting": "Сортировка каналов по непрочитанным сообщениям",
+  "settings_modSettingsMessagingBackgroundTCP": "Удерживать TCP-соединение в фоне"
 }

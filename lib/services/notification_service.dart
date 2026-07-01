@@ -268,14 +268,32 @@ class NotificationService {
   }
 
   static bool isMcoImageNotificationText(String text) {
-    return MCOImageMessage.decodeMetadata(text.trim()).image != null;
+    return _mcoImagePayloadTextForNotification(text) != null;
+  }
+
+  static String? _mcoImagePayloadTextForNotification(String text) {
+    final trimmed = text.trim();
+    if (MCOImageMessage.decodeMetadata(trimmed).image != null) {
+      return trimmed;
+    }
+    final separatorIndex = trimmed.indexOf(': ');
+    if (separatorIndex <= 0 || separatorIndex + 2 >= trimmed.length) {
+      return null;
+    }
+    final messageText = trimmed.substring(separatorIndex + 2).trimLeft();
+    if (MCOImageMessage.decodeMetadata(messageText).image != null) {
+      return messageText;
+    }
+    return null;
   }
 
   Future<_MCOImageNotificationAttachment?> _tryBuildMcoImageAttachment(
     String text,
   ) async {
     try {
-      final image = MCOImageMessage.decodeMetadata(text.trim()).image;
+      final imageText = _mcoImagePayloadTextForNotification(text);
+      if (imageText == null) return null;
+      final image = MCOImageMessage.decodeMetadata(imageText).image;
       if (image == null) return null;
       final bytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
       final rawIcon = _linuxRawIconDataFor(image);
@@ -336,7 +354,7 @@ class NotificationService {
         WindowsImage(
           Uri.file(filePath, windows: true),
           altText: 'MCOimg',
-          placement: WindowsImagePlacement.hero,
+          placement: WindowsImagePlacement.appLogoOverride,
         ),
       ],
     );

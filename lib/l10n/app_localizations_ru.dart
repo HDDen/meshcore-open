@@ -5495,4 +5495,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsVisualChannelsUnreadSorting =>
       'Сортировка каналов по непрочитанным сообщениям';
+
+  @override
+  String get settings_modSettingsMessagingBackgroundTCP =>
+      'Удерживать TCP-соединение в фоне';
 }

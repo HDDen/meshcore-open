@@ -134,7 +134,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "de": [
@@ -259,7 +260,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "es": [
@@ -397,7 +399,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "fr": [
@@ -535,7 +538,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "hu": [
@@ -673,7 +677,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "it": [
@@ -891,7 +896,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "ja": [
@@ -1029,7 +1035,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "ko": [
@@ -1167,7 +1174,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "nl": [
@@ -1385,7 +1393,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "pl": [
@@ -1523,7 +1532,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "pt": [
@@ -1741,7 +1751,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "sk": [
@@ -1879,7 +1890,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "sl": [
@@ -2017,7 +2029,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "sv": [
@@ -2235,7 +2248,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "uk": [
@@ -2373,7 +2387,8 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ],
 
   "zh": [
@@ -2511,6 +2526,7 @@
     "settings_modSettingsNoRetraHeading",
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
-    "settings_modSettingsVisualChannelsUnreadSorting"
+    "settings_modSettingsVisualChannelsUnreadSorting",
+    "settings_modSettingsMessagingBackgroundTCP"
   ]
 }

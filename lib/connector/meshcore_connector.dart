@@ -300,6 +300,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   static const int _defaultMaxContacts = 350;
   static const int _defaultMaxChannels = 40;
+  static const String _backgroundTcpReason = 'tcp-connection';
   int _maxContacts = _defaultMaxContacts;
   int _maxChannels = _defaultMaxChannels;
   int? _contactSyncTotal;
@@ -1783,6 +1784,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _handleAppSettingsChanged() {
     final settings = _appSettingsService?.settings;
+    _syncBackgroundTcpService();
     final noRetransmissionWarningSeconds =
         settings?.noRetransmissionWarningSeconds ?? 0;
     if (noRetransmissionWarningSeconds != _lastNoRetransmissionWarningSeconds) {
@@ -1798,6 +1800,21 @@ class MeshCoreConnector extends ChangeNotifier {
     _clearSharedMessageHistoryCache();
     _refreshActiveSharedMessageHistory();
     notifyListeners();
+  }
+
+  bool get _shouldKeepTcpInBackground {
+    return PlatformInfo.isAndroid &&
+        _activeTransport == MeshCoreTransportType.tcp &&
+        _state == MeshCoreConnectionState.connected &&
+        (_appSettingsService?.settings.backgroundTcpEnabled ?? false);
+  }
+
+  void _syncBackgroundTcpService() {
+    if (_shouldKeepTcpInBackground) {
+      unawaited(_backgroundService?.start(reason: _backgroundTcpReason));
+    } else {
+      unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
+    }
   }
 
   void _clearSharedMessageHistoryCache() {
@@ -2574,6 +2591,7 @@ class MeshCoreConnector extends ChangeNotifier {
       );
 
       _setState(MeshCoreConnectionState.connected);
+      _syncBackgroundTcpService();
       _pendingInitialChannelSync = true;
       _pendingInitialQueuedMessageSync = true;
       _pendingInitialContactsSync = true;
@@ -3534,6 +3552,7 @@ class MeshCoreConnector extends ChangeNotifier {
       tag: 'Connection',
     );
 
+    unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
     if (manual) {
       _manualDisconnect = true;
       _lastManualDisconnectTransport = transportAtDisconnect;

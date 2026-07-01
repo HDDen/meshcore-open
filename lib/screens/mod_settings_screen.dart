@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -340,6 +341,25 @@ class ModSettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (PlatformInfo.isAndroid)
+                  MeshCard(
+                    padding: EdgeInsets.zero,
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      secondary: const Icon(
+                        Icons.cloud_sync_outlined,
+                        size: 20,
+                      ),
+                      title: Text(
+                        context.l10n.settings_modSettingsMessagingBackgroundTCP,
+                      ),
+                      value: settings.backgroundTcpEnabled,
+                      onChanged: settingsService.setBackgroundTcpEnabled,
+                    ),
+                  ),
               ],
             );
           },

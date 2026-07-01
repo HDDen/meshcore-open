@@ -210,6 +210,10 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setBackgroundTcpEnabled(bool value) async {
+    await updateSettings(_settings.copyWith(backgroundTcpEnabled: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

@@ -5500,4 +5500,8 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settings_modSettingsVisualChannelsUnreadSorting =>
       'Channels sorting by unread messages';
+
+  @override
+  String get settings_modSettingsMessagingBackgroundTCP =>
+      'Keep TCP-connection alive in background';
 }
