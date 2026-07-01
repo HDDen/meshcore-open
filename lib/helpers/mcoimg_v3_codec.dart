@@ -303,6 +303,7 @@ class MCOImageV3Codec {
   static const List<MCOImageV3BlockAlgorithm> _regionCostBlockAlgorithms = [
     MCOImageV3BlockAlgorithm.rawLocal,
     MCOImageV3BlockAlgorithm.compactRle,
+    MCOImageV3BlockAlgorithm.lzPixels,
     MCOImageV3BlockAlgorithm.compactSparse,
     MCOImageV3BlockAlgorithm.bitplanes,
     MCOImageV3BlockAlgorithm.adaptiveBitplanes,
@@ -1571,6 +1572,7 @@ class MCOImageV3Codec {
             backgroundColor,
             algorithm,
             scan,
+            greedyLzOnly: reducedCostEvaluator,
           );
           if (block == null) {
             failed = true;
@@ -1658,6 +1660,7 @@ class MCOImageV3Codec {
               algorithm,
               scan,
               palette,
+              greedyLzOnly: reducedCostEvaluator,
             );
             if (block == null) {
               failed = true;
@@ -1716,6 +1719,7 @@ class MCOImageV3Codec {
           algorithm,
           scan,
           palette,
+          greedyLzOnly: reducedCostEvaluator,
         );
         if (block == null) continue;
         final blockBits = _individualRegionBlockBitLength(block);
@@ -1830,6 +1834,7 @@ class MCOImageV3Codec {
             backgroundColor,
             algorithm,
             scan,
+            greedyLzOnly: reducedCostEvaluator,
           );
           final individualBlock = individualBlocks[index];
           final commonBits =
@@ -1943,6 +1948,7 @@ class MCOImageV3Codec {
               algorithm,
               scan,
               palette,
+              greedyLzOnly: reducedCostEvaluator,
             );
             final individualBlock = individualBlocks[index];
             final commonBits =
@@ -2011,6 +2017,7 @@ class MCOImageV3Codec {
           backgroundColor,
           algorithm,
           scan,
+          greedyLzOnly: reducedCostEvaluator,
         );
         if (block == null) continue;
         final blockBits = _individualRegionBlockBitLength(block);
@@ -2209,8 +2216,9 @@ class MCOImageV3Codec {
     _V3PreparedRegion region,
     int backgroundColor,
     MCOImageV3BlockAlgorithm algorithm,
-    ScanMode scan,
-  ) {
+    ScanMode scan, {
+    bool greedyLzOnly = false,
+  }) {
     if (!_regionAlgorithmSupportsScan(algorithm, scan)) return null;
     final bounds = region.bounds;
     final linear = region.linearFor(scan);
@@ -2224,6 +2232,7 @@ class MCOImageV3Codec {
         backgroundColor: backgroundColor,
         rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
         backgroundInherited: true,
+        greedyLzOnly: greedyLzOnly,
       );
     } on MCOImageCodecException {
       return null;
@@ -2245,8 +2254,9 @@ class MCOImageV3Codec {
     int backgroundColor,
     MCOImageV3BlockAlgorithm algorithm,
     ScanMode scan,
-    List<int> palette,
-  ) {
+    List<int> palette, {
+    bool greedyLzOnly = false,
+  }) {
     if (!_regionAlgorithmSupportsScan(algorithm, scan)) return null;
     final bounds = region.bounds;
     final linear = region.linearFor(scan);
@@ -2259,6 +2269,7 @@ class MCOImageV3Codec {
         palette,
         backgroundColor: backgroundColor,
         rowLength: _rowLengthForScan(scan, bounds.width, bounds.height),
+        greedyLzOnly: greedyLzOnly,
       );
     } on MCOImageCodecException {
       return null;
@@ -2676,6 +2687,7 @@ class MCOImageV3Codec {
     required int backgroundColor,
     required int rowLength,
     bool backgroundInherited = false,
+    bool greedyLzOnly = false,
   }) {
     switch (algorithm) {
       case MCOImageV3BlockAlgorithm.rawGlobal:
@@ -2726,7 +2738,9 @@ class MCOImageV3Codec {
           indexOrderSensitive: false,
           includeTransitionOrder: true,
           writeBody: (bodyWriter, localPixels, bits) {
-            final tokens = _buildBestLzPixelTokens(localPixels, bits);
+            final tokens = greedyLzOnly
+                ? _buildGreedyLzPixelTokensCached(localPixels, bits)
+                : _buildBestLzPixelTokens(localPixels, bits);
             _writeLzPixelTokens(
               bodyWriter,
               tokens,
@@ -2991,6 +3005,7 @@ class MCOImageV3Codec {
     List<int> palette, {
     required int backgroundColor,
     required int rowLength,
+    bool greedyLzOnly = false,
   }) {
     final map = _localIndexMap(palette);
     final bits = _localBits(palette.length);
@@ -3063,7 +3078,9 @@ class MCOImageV3Codec {
         break;
       case MCOImageV3BlockAlgorithm.lzPixels:
         final pixels = localPixels();
-        final tokens = _buildBestLzPixelTokens(pixels, bits);
+        final tokens = greedyLzOnly
+            ? _buildGreedyLzPixelTokensCached(pixels, bits)
+            : _buildBestLzPixelTokens(pixels, bits);
         _writeLzPixelTokens(
           writer,
           tokens,
@@ -3684,7 +3701,14 @@ class MCOImageV3Codec {
           (_) => reader.readBits(1) != 0 ? foreground : backgroundColor,
         );
       case MCOImageV3BlockAlgorithm.rowRepeat:
-        return mapLocalPixels(_readRowRepeat(reader, count, width, bits));
+        return mapLocalPixels(
+          _readRowRepeat(
+            reader,
+            count,
+            _rowLengthForScan(scan, width, height),
+            bits,
+          ),
+        );
       default:
         throw const MCOImageInvalidPayloadException(
           'MCOimg v3 algorithm cannot use a shared region palette',
@@ -4201,18 +4225,36 @@ class MCOImageV3Codec {
     return tokens;
   }
 
-  List<_V3LzPixelToken> _buildBestLzPixelTokens(
+  _V3LzTokenCacheEntry _lzTokenCacheEntry(
     List<int> pixels,
     int localBits,
   ) {
     final cacheKey = _lzOptimizationCacheKey(pixels, localBits);
-    final entry = _lzTokenCache.entries.putIfAbsent(cacheKey, () {
+    return _lzTokenCache.entries.putIfAbsent(cacheKey, () {
       final greedyTokens = _buildGreedyLzPixelTokens(pixels, localBits);
       return _V3LzTokenCacheEntry(
         greedyTokens: greedyTokens,
-        greedyBitCost: _lzPixelTokensBitCost(greedyTokens, localBits, pixels.length),
+        greedyBitCost: _lzPixelTokensBitCost(
+          greedyTokens,
+          localBits,
+          pixels.length,
+        ),
       );
     });
+  }
+
+  List<_V3LzPixelToken> _buildGreedyLzPixelTokensCached(
+    List<int> pixels,
+    int localBits,
+  ) {
+    return _lzTokenCacheEntry(pixels, localBits).greedyTokens;
+  }
+
+  List<_V3LzPixelToken> _buildBestLzPixelTokens(
+    List<int> pixels,
+    int localBits,
+  ) {
+    final entry = _lzTokenCacheEntry(pixels, localBits);
 
     if (pixels.length > _maxOptimalLzPixels) {
       return entry.greedyTokens;
@@ -5007,7 +5049,10 @@ class MCOImageV3Codec {
     }
     add(_profileOrderLocalPalette(pixels, profile));
     if (indexOrderSensitive && includeTransitionOrder) {
-      final transitionPalette = _transitionLocalPalette(pixels);
+      final transitionPalette = _transitionLocalPalette(
+        pixels,
+        preferredFirstColor: preferredFirstColor,
+      );
       if (transitionPalette != null) add(transitionPalette);
     }
     if (indexOrderSensitive && includeRgbOrder) {
@@ -5019,12 +5064,14 @@ class MCOImageV3Codec {
       if (rgbPalette != null) add(rgbPalette);
     }
     if (indexOrderSensitive && includeBitplaneOptimizedOrder) {
-      final optimizedPalette = _bitplaneOptimizedLocalPalette(
+      final optimizedPalettes = _bitplaneOptimizedLocalPalettes(
         pixels,
         profile,
         preferredFirstColor: preferredFirstColor,
       );
-      if (optimizedPalette != null) add(optimizedPalette);
+      for (final optimizedPalette in optimizedPalettes) {
+        add(optimizedPalette);
+      }
     }
     return variants;
   }
@@ -5061,7 +5108,10 @@ class MCOImageV3Codec {
         color;
   }
 
-  static List<int>? _transitionLocalPalette(List<int> pixels) {
+  static List<int>? _transitionLocalPalette(
+    List<int> pixels, {
+    required int? preferredFirstColor,
+  }) {
     final colors = pixels.toSet().toList();
     if (colors.length < 2 || colors.length > 64) return null;
 
@@ -5085,8 +5135,12 @@ class MCOImageV3Codec {
       return byCount != 0 ? byCount : a.compareTo(b);
     });
     final remaining = colors.toSet();
-    final palette = <int>[colors.first];
-    remaining.remove(colors.first);
+    final firstColor =
+        preferredFirstColor != null && remaining.contains(preferredFirstColor)
+            ? preferredFirstColor
+            : colors.first;
+    final palette = <int>[firstColor];
+    remaining.remove(firstColor);
     while (remaining.isNotEmpty) {
       final previous = palette.last;
       var best = remaining.first;
@@ -5189,15 +5243,26 @@ class MCOImageV3Codec {
     return red * red + green * green + blue * blue;
   }
 
-  static List<int>? _bitplaneOptimizedLocalPalette(
+  static List<List<int>> _bitplaneOptimizedLocalPalettes(
     List<int> pixels,
     PaletteProfile profile, {
     required int? preferredFirstColor,
   }) {
     final basePalette = _localPalette(pixels);
-    if (basePalette.length < 2) return null;
+    if (basePalette.length < 2) return const <List<int>>[];
+
+    final backgroundFirstPalette =
+        preferredFirstColor != null && basePalette.contains(preferredFirstColor)
+            ? <int>[
+                preferredFirstColor,
+                ...basePalette.where(
+                  (color) => color != preferredFirstColor,
+                ),
+              ]
+            : null;
     final seeds = <List<int>>[
       basePalette,
+      ?backgroundFirstPalette,
       _profileOrderLocalPalette(pixels, profile),
       if (preferredFirstColor != null)
         _rgbOrderLocalPalette(
@@ -5206,21 +5271,24 @@ class MCOImageV3Codec {
               preferredFirstColor: preferredFirstColor,
             ) ??
             basePalette,
-      _transitionLocalPalette(pixels) ?? basePalette,
+      _transitionLocalPalette(
+            pixels,
+            preferredFirstColor: preferredFirstColor,
+          ) ??
+          basePalette,
     ];
-    List<int>? bestPalette;
-    var bestCost = 1 << 60;
-    final seen = <String>{};
+
+    final optimizedPalettes = <List<int>>[];
+    final seenSeeds = <String>{};
+    final seenOptimized = <String>{};
     for (final seed in seeds) {
-      if (!seen.add(seed.join(','))) continue;
+      if (!seenSeeds.add(seed.join(','))) continue;
       final optimized = _optimizeBitplanesPaletteOrder(pixels, seed);
-      final cost = _adaptiveBitplanesCost(pixels, optimized);
-      if (cost < bestCost) {
-        bestPalette = optimized;
-        bestCost = cost;
+      if (seenOptimized.add(optimized.join(','))) {
+        optimizedPalettes.add(optimized);
       }
     }
-    return bestPalette;
+    return optimizedPalettes;
   }
 
   static List<int> _optimizeBitplanesPaletteOrder(
