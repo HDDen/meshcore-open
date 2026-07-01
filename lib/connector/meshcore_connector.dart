@@ -7358,7 +7358,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final channelName = _channelDisplayName(dataFrame.channelIndex);
     final senderName = decoded?.senderName ?? appDecoded!.senderName;
     final isSelfDirect =
-        dataFrame.pathLength <= 0 &&
+        dataFrame.pathLength < 0 &&
         senderName.trim() == (_selfName ?? '').trim();
     if (isSelfDirect && !_isSelfChannelFilterBypassed(channelName)) {
       return;
