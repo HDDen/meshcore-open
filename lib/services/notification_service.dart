@@ -155,15 +155,22 @@ class NotificationService {
   }
 
   // Cached "are we allowed to post notifications" result. Null = not yet
-  // determined. Avoids calling _notifications.show() when it would only throw
-  // "You must request notifications permissions first" (every web build, and
-  // Android 13+ before the user grants the permission).
+  // determined. A positive Android grant can be cached, but a denied state is
+  // rechecked because the user can enable notifications in system settings
+  // while the app is running.
   bool? _canNotify;
 
   Future<bool> _ensureCanNotify() async {
-    if (!await _ensureInitialized()) return false;
+    if (!await _ensureInitialized()) {
+      return false;
+    }
     final cached = _canNotify;
-    if (cached != null) return cached;
+    if (cached == true) {
+      return true;
+    }
+    if (cached == false && !PlatformInfo.isAndroid) {
+      return false;
+    }
 
     // flutter_local_notifications has no web backend, so show() always throws.
     // Skip silently instead of logging an error per incoming message.

@@ -2139,13 +2139,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   tooltip: context.l10n.chat_sendGif,
                 ),
                 if (settings.canvasActive)
-                  GestureDetector(
+                  _CanvasLaunchButton(
+                    tooltip: context.l10n.chat_canvas,
+                    onPressed: () => _showCanvasEditor(maxBytes),
                     onLongPress: () => _showMcoImageGallery(maxBytes),
-                    child: IconButton(
-                      icon: const Icon(Icons.brush_outlined),
-                      onPressed: () => _showCanvasEditor(maxBytes),
-                      tooltip: context.l10n.chat_canvas,
-                    ),
                   ),
                 /*
                 IconButton(
@@ -3096,6 +3093,45 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       region = _connector?.getChannelRegion(channel.index) ?? '';
     });
+  }
+}
+
+class _CanvasLaunchButton extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback onPressed;
+  final VoidCallback onLongPress;
+
+  const _CanvasLaunchButton({
+    required this.tooltip,
+    required this.onPressed,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Semantics(
+      button: true,
+      label: tooltip,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+          child: InkResponse(
+            radius: 24,
+            onTap: onPressed,
+            onLongPress: () {
+              HapticFeedback.selectionClick();
+              onLongPress();
+            },
+            child: const Icon(Icons.brush_outlined),
+          ),
+        ),
+      ),
+    );
+    if (!PlatformInfo.isDesktop) {
+      return button;
+    }
+    return Tooltip(message: tooltip, child: button);
   }
 }
 

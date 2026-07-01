@@ -5467,6 +5467,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_defaultRegionScopeEmpty => 'Не задано';
 
   @override
+  String get settings_defaultRegionScopeWaitForSync =>
+      'Дождитесь конца синхронизации';
+
+  @override
   String get common_reset => 'Сбросить';
 
   @override

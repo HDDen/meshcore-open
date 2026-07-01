@@ -3069,6 +3069,7 @@
   "settings_defaultRegionScopeChanged": "Default region scope changed",
   "settings_defaultRegionScopeChangeFailed": "Change default region scope failed",
   "settings_defaultRegionScopeEmpty": "Currently unset",
+  "settings_defaultRegionScopeWaitForSync": "Please wait until synchronization complete",
   "common_reset": "Reset",
   "connection_autoconnect": "Autoconnect",
   "settings_modSettingsNoRetraInfo": "No retranslations heard for {time} seconds.",

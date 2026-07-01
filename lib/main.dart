@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart';
@@ -165,7 +167,7 @@ https://creativecommons.org/licenses/by/4.0/
   });
 }
 
-class MeshCoreApp extends StatelessWidget {
+class MeshCoreApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> _navigatorKey =
       GlobalKey<NavigatorState>();
 
@@ -201,30 +203,68 @@ class MeshCoreApp extends StatelessWidget {
   });
 
   @override
+  State<MeshCoreApp> createState() => _MeshCoreAppState();
+}
+
+class _MeshCoreAppState extends State<MeshCoreApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshNotificationPermissionState();
+    }
+  }
+
+  void _refreshNotificationPermissionState() {
+    if (!PlatformInfo.isAndroid) {
+      return;
+    }
+    final settings = widget.appSettingsService.settings;
+    if (!settings.notificationsEnabled ||
+        (!settings.notifyOnNewMessage &&
+            !settings.notifyOnNewChannelMessage)) {
+      return;
+    }
+    unawaited(NotificationService().areNotificationsEnabled());
+  }
+
+  @override
   Widget build(BuildContext context) {
     NotificationService().setTapHandler(_handleNotificationTap);
 
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: connector),
-        ChangeNotifierProvider.value(value: retryService),
-        ChangeNotifierProvider.value(value: pathHistoryService),
-        ChangeNotifierProvider.value(value: appSettingsService),
-        ChangeNotifierProvider.value(value: bleDebugLogService),
-        ChangeNotifierProvider.value(value: appDebugLogService),
-        ChangeNotifierProvider.value(value: chatTextScaleService),
-        ChangeNotifierProvider.value(value: translationService),
-        ChangeNotifierProvider.value(value: uiViewStateService),
-        Provider.value(value: storage),
-        Provider.value(value: mapTileCacheService),
-        ChangeNotifierProvider.value(value: timeoutPredictionService),
-        ChangeNotifierProvider.value(value: wardriveService),
+        ChangeNotifierProvider.value(value: widget.connector),
+        ChangeNotifierProvider.value(value: widget.retryService),
+        ChangeNotifierProvider.value(value: widget.pathHistoryService),
+        ChangeNotifierProvider.value(value: widget.appSettingsService),
+        ChangeNotifierProvider.value(value: widget.bleDebugLogService),
+        ChangeNotifierProvider.value(value: widget.appDebugLogService),
+        ChangeNotifierProvider.value(value: widget.chatTextScaleService),
+        ChangeNotifierProvider.value(value: widget.translationService),
+        ChangeNotifierProvider.value(value: widget.uiViewStateService),
+        Provider.value(value: widget.storage),
+        Provider.value(value: widget.mapTileCacheService),
+        ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
+        ChangeNotifierProvider.value(value: widget.wardriveService),
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {
           return MaterialApp(
             title: 'MeshCore Open (Advanced mod)',
-            navigatorKey: _navigatorKey,
+            navigatorKey: MeshCoreApp._navigatorKey,
             navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [
@@ -297,8 +337,9 @@ class MeshCoreApp extends StatelessWidget {
     String payload, {
     int attempt = 0,
   }) async {
-    final navigator = _navigatorKey.currentState;
-    if (navigator == null || _navigatorKey.currentContext == null) {
+    final navigator = MeshCoreApp._navigatorKey.currentState;
+    if (navigator == null ||
+        MeshCoreApp._navigatorKey.currentContext == null) {
       if (attempt >= 20) return;
       await Future<void>.delayed(const Duration(milliseconds: 150));
       return _handleNotificationTapWithRetry(payload, attempt: attempt + 1);
@@ -313,12 +354,12 @@ class MeshCoreApp extends StatelessWidget {
 
     switch (type) {
       case 'message':
-        final contacts = connector.allContacts.where(
+        final contacts = widget.connector.allContacts.where(
           (contact) => contact.publicKeyHex == id,
         );
         if (contacts.isEmpty) return;
         final contact = contacts.first;
-        final unread = connector.getUnreadCountForContact(contact);
+        final unread = widget.connector.getUnreadCountForContact(contact);
         await navigator.push(
           MaterialPageRoute(
             builder: (_) =>
@@ -329,12 +370,14 @@ class MeshCoreApp extends StatelessWidget {
       case 'channel':
         final channelIndex = int.tryParse(id);
         if (channelIndex == null) return;
-        final channels = connector.channels.where(
+        final channels = widget.connector.channels.where(
           (channel) => channel.index == channelIndex,
         );
         if (channels.isEmpty) return;
         final channel = channels.first;
-        final unread = connector.getUnreadCountForChannelIndex(channel.index);
+        final unread = widget.connector.getUnreadCountForChannelIndex(
+          channel.index,
+        );
         await navigator.push(
           MaterialPageRoute(
             builder: (_) =>

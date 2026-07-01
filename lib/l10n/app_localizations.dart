@@ -9352,6 +9352,12 @@ abstract class AppLocalizations {
   /// **'Currently unset'**
   String get settings_defaultRegionScopeEmpty;
 
+  /// No description provided for @settings_defaultRegionScopeWaitForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait until synchronization complete'**
+  String get settings_defaultRegionScopeWaitForSync;
+
   /// No description provided for @common_reset.
   ///
   /// In en, this message translates to:

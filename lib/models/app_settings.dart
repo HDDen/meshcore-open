@@ -515,7 +515,7 @@ class AppSettings {
     List<QuickAnswer>? quickAnswers,
     String? copyMsgPathTemplate,
     String? copyMsgPathFinalTemplate,
-    this.channelsSendAsBinary = false,
+    this.channelsSendAsBinary = true,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -779,7 +779,7 @@ class AppSettings {
       quickAnswers: normalizeQuickAnswers(json['quick_answers']),
       copyMsgPathTemplate: json['copy_msg_path_template'] as String?,
       copyMsgPathFinalTemplate: json['copy_msg_path_final_template'] as String?,
-      channelsSendAsBinary: json['channels_send_as_binary'] as bool? ?? false,
+      channelsSendAsBinary: json['channels_send_as_binary'] as bool? ?? true,
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:

@@ -34,6 +34,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   List<Region> _regions = [];
   bool _isFetchingRegions = false;
   bool _isDefaultScopeBusy = false;
+  bool _hasLoadedDefaultScope = false;
 
   String region = '';
 
@@ -66,6 +67,19 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final connector = context.watch<MeshCoreConnector>();
+    final isWaitingForDefaultScopeSync =
+        !_hasLoadedDefaultScope && _isWaitingForNodeSync(connector);
+    if (!_hasLoadedDefaultScope &&
+        !_isDefaultScopeBusy &&
+        !isWaitingForDefaultScopeSync) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasLoadedDefaultScope && !_isDefaultScopeBusy) {
+          unawaited(_loadDefaultRegionScope());
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings_regionManagement_screenTitle),
@@ -94,27 +108,41 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         children: [
           for (final region in _regions) _buildRegionTile(context, region),
           const SizedBox(height: 16),
-          _buildDefaultRegionScopeSection(context),
+          _buildDefaultRegionScopeSection(
+            context,
+            isWaitingForSync: isWaitingForDefaultScopeSync,
+          ),
         ],
       ),
     );
   }
 
+  bool _isWaitingForNodeSync(MeshCoreConnector connector) {
+    return connector.isConnected &&
+        (connector.isLoadingContacts ||
+            connector.isLoadingChannels ||
+            connector.isSyncingChannels ||
+            connector.isSyncingQueuedMessages);
+  }
+
   Future<void> _loadDefaultRegionScope() async {
     if (!mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    if (_isWaitingForNodeSync(connector)) return;
+
     setState(() {
       _isDefaultScopeBusy = true;
     });
 
     try {
-      final scope = await context
-          .read<MeshCoreConnector>()
-          .getDefaultRegionScope();
+      final scope = await connector.getDefaultRegionScope();
       if (!mounted) return;
       _defaultScopeController.text = scope ?? '';
+      _hasLoadedDefaultScope = true;
     } catch (_) {
       if (!mounted) return;
       _defaultScopeController.text = '';
+      _hasLoadedDefaultScope = true;
     } finally {
       if (mounted) {
         setState(() {
@@ -140,6 +168,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     try {
       await connector.setDefaultRegionScope(value.isEmpty ? null : value);
       if (!mounted) return;
+      _hasLoadedDefaultScope = true;
       _defaultScopeController.text = value.startsWith('#')
           ? value.substring(1)
           : value;
@@ -166,9 +195,15 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     await _saveDefaultRegionScope(reset: false);
   }
 
-  Widget _buildDefaultRegionScopeSection(BuildContext context) {
+  Widget _buildDefaultRegionScopeSection(
+    BuildContext context, {
+    required bool isWaitingForSync,
+  }) {
     final l10n = context.l10n;
-    final enabled = !_isDefaultScopeBusy;
+    final enabled = !_isDefaultScopeBusy && !isWaitingForSync;
+    final hintText = isWaitingForSync
+        ? l10n.settings_defaultRegionScopeWaitForSync
+        : l10n.settings_defaultRegionScopeEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +237,10 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
             controller: _defaultScopeController,
             enabled: enabled,
             decoration: InputDecoration(
-              hintText: l10n.settings_defaultRegionScopeEmpty,
+              hintText: hintText,
+              hintStyle: isWaitingForSync
+                  ? Theme.of(context).textTheme.bodySmall
+                  : null,
               border: const OutlineInputBorder(),
             ),
             inputFormatters: <TextInputFormatter>[

@@ -5484,6 +5484,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_defaultRegionScopeEmpty => 'Currently unset';
 
   @override
+  String get settings_defaultRegionScopeWaitForSync =>
+      'Please wait until synchronization complete';
+
+  @override
   String get common_reset => 'Reset';
 
   @override

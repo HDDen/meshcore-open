@@ -2272,6 +2272,7 @@
   "settings_defaultRegionScopeChanged": "Регион по умолчанию изменён",
   "settings_defaultRegionScopeChangeFailed": "Не удалось изменить регион",
   "settings_defaultRegionScopeEmpty": "Не задано",
+  "settings_defaultRegionScopeWaitForSync": "Дождитесь конца синхронизации",
   "common_reset": "Сбросить",
   "connection_autoconnect": "Автоподключение",
   "settings_modSettingsNoRetraInfo": "Не услышано ретрансляций за {time} сек.",
