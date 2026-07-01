@@ -144,6 +144,51 @@ class MCOImageV3Codec {
   static const int subtypeVersion =
       ChannelAppDataHelper.mcoImageV3SubtypeVersion;
 
+  /// Every v3 body starts with one transport-uniqueness byte:
+  ///   packetNonce(u8) | imageHeader | dimensions | container | body
+  ///
+  /// The nonce is intentionally outside the compressed bitstream. It does not
+  /// affect candidate selection and can be refreshed immediately before every
+  /// radio transmission without re-encoding the image.
+  static const int packetNonceLength = 1;
+
+  static int _packetNonceCounter =
+      DateTime.now().microsecondsSinceEpoch & 0xff;
+  static int? _lastPacketNonce;
+
+  static int nextPacketNonce() {
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    _packetNonceCounter = (_packetNonceCounter + 1) & 0xff;
+
+    var mixed = timestamp;
+    mixed ^= mixed >> 8;
+    mixed ^= mixed >> 16;
+    mixed ^= mixed >> 24;
+    mixed ^= mixed >> 32;
+    mixed ^= mixed >> 40;
+    mixed ^= _packetNonceCounter * 0x9d;
+
+    var nonce = mixed & 0xff;
+    if (nonce == _lastPacketNonce) {
+      nonce = (nonce + 1) & 0xff;
+    }
+    _lastPacketNonce = nonce;
+    return nonce;
+  }
+
+  /// Returns a copy of an encoded v3 body with a newly generated packet nonce.
+  /// The compressed image bytes remain unchanged.
+  static Uint8List refreshPacketNonce(Uint8List body, {int? nonce}) {
+    if (body.length < 4) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v3 payload too short',
+      );
+    }
+    final refreshed = Uint8List.fromList(body);
+    refreshed[0] = nonce ?? nextPacketNonce();
+    return refreshed;
+  }
+
   static bool isTextPayload(String text) => text.startsWith(textPrefix);
 
   static String textFromBody(Uint8List body) {
@@ -207,16 +252,16 @@ class MCOImageV3Codec {
   }
 
   static MCOImagePayloadInfo inspectBody(Uint8List body) {
-    if (body.length < 3) {
+    if (body.length < 4) {
       throw const MCOImageInvalidPayloadException(
         'MCOimg v3 payload too short',
       );
     }
-    final header = body[0];
+    final header = body[1];
     final scan = _scanFromHeader(header);
     final implicitWhiteBackground =
         (header & _implicitWhiteBackgroundFlag) != 0;
-    final reader = _V3BitReader(body, byteIndex: 1);
+    final reader = _V3BitReader(body, byteIndex: 2);
     _readDimensions(reader);
     final containerByte = reader.readBits(8);
     final container = _containerFromId(
@@ -616,8 +661,9 @@ class MCOImageV3Codec {
     bool includeNonScanCandidates = true,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
-    // v3 always optimizes and returns one canonical binary body.
-    // Text output is only an app-side im3: Base91 wrapper over these bytes.
+    // v3 optimizes one canonical compressed image body, then prefixes it with
+    // a one-byte packet nonce. Text output is an app-side im3: Base91 wrapper
+    // over the complete nonce-prefixed body.
     _validateImage(image);
     final result = _encodeNative(
       image,
@@ -685,18 +731,18 @@ class MCOImageV3Codec {
   }
 
   MCOImage decodeBody(Uint8List body) {
-    if (body.length < 3) {
+    if (body.length < 4) {
       throw const MCOImageInvalidPayloadException(
         'MCOimg v3 payload too short',
       );
     }
-    final header = body[0];
+    final header = body[1];
     final scan = _scanFromHeader(header);
     final hasTransparentColor = (header & _transparentFlag) != 0;
     final implicitWhiteBackground =
         (header & _implicitWhiteBackgroundFlag) != 0;
     final profile = _profileFromId(header & _profileMask);
-    final reader = _V3BitReader(body, byteIndex: 1);
+    final reader = _V3BitReader(body, byteIndex: 2);
     final dimensions = _readDimensions(reader);
     final width = dimensions.width;
     final height = dimensions.height;
@@ -893,9 +939,11 @@ class MCOImageV3Codec {
   }) {
     final previousDebugLogState = _candidateDebugLogActive;
     _candidateDebugLogActive = emitDebugLog;
+    final packetNonce = nextPacketNonce();
     try {
       return _encodeCandidates(
         image,
+        packetNonce: packetNonce,
         backgroundColor: backgroundColor,
         backgroundCandidates: backgroundCandidates,
         scanModes: scanModes,
@@ -910,6 +958,7 @@ class MCOImageV3Codec {
 
   MCOImageEncodeDiagnostics _encodeCandidates(
     MCOImage image, {
+    required int packetNonce,
     int? backgroundColor,
     List<MCOImageBackgroundCandidate>? backgroundCandidates,
     List<ScanMode>? scanModes,
@@ -943,15 +992,17 @@ class MCOImageV3Codec {
 
     void addCandidate(EncodedMCOImage? candidate) {
       if (candidate == null) return;
+      final packetCandidate = _withPacketNonce(candidate, packetNonce);
       if (bestCandidate == null ||
-          compareCandidates(candidate, bestCandidate!) < 0) {
-        bestCandidate = candidate;
+          compareCandidates(packetCandidate, bestCandidate!) < 0) {
+        bestCandidate = packetCandidate;
       }
       if (candidatesByPayload == null) return;
-      final payloadKey = String.fromCharCodes(candidate.payload);
+      final payloadKey = String.fromCharCodes(packetCandidate.payload);
       final existing = candidatesByPayload[payloadKey];
-      if (existing == null || compareCandidates(candidate, existing) < 0) {
-        candidatesByPayload[payloadKey] = candidate;
+      if (existing == null ||
+          compareCandidates(packetCandidate, existing) < 0) {
+        candidatesByPayload[payloadKey] = packetCandidate;
       }
     }
 
@@ -1225,6 +1276,45 @@ class MCOImageV3Codec {
       result: candidates.first,
       candidates: List<EncodedMCOImage>.unmodifiable(candidates),
       compressionLevel: effectiveCompressionLevel,
+    );
+  }
+
+  static EncodedMCOImage _withPacketNonce(
+    EncodedMCOImage candidate,
+    int packetNonce,
+  ) {
+    final payload = Uint8List(candidate.payload.length + packetNonceLength)
+      ..[0] = packetNonce
+      ..setRange(
+        packetNonceLength,
+        candidate.payload.length + packetNonceLength,
+        candidate.payload,
+      );
+    return EncodedMCOImage(
+      payload: payload,
+      text: candidate.text,
+      mode: candidate.mode,
+      scan: candidate.scan,
+      byteLength: payload.length,
+      charLength: candidate.charLength,
+      boundsPresent: candidate.boundsPresent,
+      boundsX: candidate.boundsX,
+      boundsY: candidate.boundsY,
+      boundsWidth: candidate.boundsWidth,
+      boundsHeight: candidate.boundsHeight,
+      backgroundColor: candidate.backgroundColor,
+      transparentColor: candidate.transparentColor,
+      regionCount: candidate.regionCount,
+      backgroundRank: candidate.backgroundRank,
+      codecVersion: candidate.codecVersion,
+      dynamicReferenceEncoding: candidate.dynamicReferenceEncoding,
+      localPaletteSize: candidate.localPaletteSize,
+      usedBankCount: candidate.usedBankCount,
+      bitsPerLocalPixel: candidate.bitsPerLocalPixel,
+      requestedEncodingVersion: candidate.requestedEncodingVersion,
+      actualEncodingVersion: candidate.actualEncodingVersion,
+      paletteKind: candidate.paletteKind,
+      container: candidate.container,
     );
   }
 

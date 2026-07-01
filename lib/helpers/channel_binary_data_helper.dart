@@ -14,10 +14,19 @@ class ChannelBinaryDataOutbound {
   final Uint8List payload;
   final ChannelBinaryDataKind kind;
 
+  /// Canonical text representation of the exact binary payload, when the
+  /// binary format also has a text fallback (currently MCOimg v3).
+  ///
+  /// For MCOimg v3 this contains the same packet nonce that is already present
+  /// in [payload], so the local outgoing message can be matched exactly to its
+  /// radio self-echo.
+  final String? canonicalText;
+
   const ChannelBinaryDataOutbound({
     required this.dataType,
     required this.payload,
     required this.kind,
+    this.canonicalText,
   });
 }
 
@@ -94,12 +103,16 @@ class ChannelBinaryDataHelper {
     try {
       final trimmedLeft = text.trimLeft();
       if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
+        final body = MCOImageV3Codec.refreshPacketNonce(
+          MCOImageV3Codec.bodyFromText(trimmedLeft),
+        );
         return _encodeAppEnvelope(
           subtypeId: mcoImageSubtype,
           version: mcoImageV3Version,
-          body: MCOImageV3Codec.bodyFromText(trimmedLeft),
+          body: body,
           senderName: senderName,
           kind: ChannelBinaryDataKind.mcoImageV3,
+          canonicalText: MCOImageV3Codec.textFromBody(body),
         );
       }
       if (trimmedLeft.startsWith(MCOImageCodec.prefix)) {
@@ -138,12 +151,14 @@ class ChannelBinaryDataHelper {
     required String senderName,
   }) {
     if (!canSend) return null;
+    final body = MCOImageV3Codec.refreshPacketNonce(image.body);
     return _encodeAppEnvelope(
       subtypeId: image.subtypeId,
       version: image.version,
-      body: image.body,
+      body: body,
       senderName: senderName,
       kind: ChannelBinaryDataKind.mcoImageV3,
+      canonicalText: MCOImageV3Codec.textFromBody(body),
     );
   }
 
@@ -358,6 +373,7 @@ class ChannelBinaryDataHelper {
     required Uint8List body,
     required String senderName,
     required ChannelBinaryDataKind kind,
+    String? canonicalText,
   }) {
     final Uint8List payload;
     try {
@@ -375,6 +391,7 @@ class ChannelBinaryDataHelper {
       dataType: appDataType,
       payload: payload,
       kind: kind,
+      canonicalText: canonicalText,
     );
   }
 
