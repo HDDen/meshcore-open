@@ -152,6 +152,29 @@
       margin: 0;
     }
 
+    .worker-options {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px;
+      gap: 10px 12px;
+      align-items: end;
+      margin-top: 12px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: color-mix(in srgb, CanvasText 4%, transparent);
+    }
+
+    .worker-options .worker-toggle {
+      align-self: center;
+      margin: 0;
+    }
+
+    .worker-policy {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
     .tool {
       display: inline-flex;
       align-items: center;
@@ -192,6 +215,41 @@
       margin: -4px 0 10px;
       padding: 6px 10px;
       font-size: 13px;
+    }
+
+    .used-colors-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 2px 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .used-colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .used-color-swatch {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+
+    .used-color-swatch.active {
+      outline-color: var(--accent);
+    }
+
+    .used-color-swatch.transparent-color {
+      box-shadow: 0 0 0 2px color-mix(in srgb, #f472b6 70%, transparent);
     }
 
     .swatch {
@@ -460,7 +518,7 @@
 <body>
   <main>
     <h1>MCO Image Codec Demo</h1>
-    <p>Draw a small indexed image, encode it to the <code>im:</code> message format, then decode and render it back.</p>
+    <p>Draw a small indexed image, encode it as legacy <code>im:</code> or current <code>im3:</code>, then decode and render it back.</p>
 
     <div class="layout">
       <section class="panel">
@@ -479,7 +537,8 @@
         <label style="margin-top: 12px;">
           Format version
           <select id="formatVersion">
-            <option value="2">v2</option>
+            <option value="3">v3</option>
+            <option value="2" selected>v2</option>
             <option value="1">v1 legacy</option>
           </select>
         </label>
@@ -493,6 +552,18 @@
           </select>
         </label>
 
+        <div id="workerOptions" class="worker-options">
+          <label class="inline-option worker-toggle">
+            <input id="useWorkers" type="checkbox">
+            <span>Use Workers</span>
+          </label>
+          <label>
+            Worker count
+            <input id="workerCount" type="number" min="1" max="8" value="2">
+          </label>
+          <div id="workerPolicy" class="worker-policy"></div>
+        </div>
+
         <label style="margin-top: 12px;">
           Palette profile
           <select id="palette"></select>
@@ -500,6 +571,10 @@
 
         <div id="palettePreview" class="palette"></div>
         <button id="paletteToggle" type="button" class="secondary palette-toggle" hidden>Show more</button>
+        <div class="used-colors-row" aria-live="polite">
+          <span id="usedColorsLabel">Used colors (0)</span>
+          <div id="usedColorsPreview" class="used-colors"></div>
+        </div>
 
         <div id="alphaControl" class="alpha-row">
           <span>Transparent color</span>
@@ -611,7 +686,23 @@
       </p>
 
       <pre><code>&lt;script src=&quot;./mcoimg-codec.global.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./mcoimg-v3-codec.global.js&quot;&gt;&lt;/script&gt;
 &lt;script src=&quot;./mcoimg-browser.global.js&quot;&gt;&lt;/script&gt;</code></pre>
+
+      <h3>Version-neutral API: v1/v2/v3</h3>
+      <pre><code>const text = await MCOImgBrowser.encodeCanvas(sourceCanvas, {
+  formatVersion: 3,
+  compressionLevel: 'extreme',
+  paletteProfile: MCOImg.PaletteProfile.master8,
+  transparentColor: null,
+  output: 'text', // text | binary | png | image | encoded
+  useWorkers: true,
+  workerCount: 4,
+});
+
+const binary = await MCOImgBrowser.convertPayload(text, { output: 'binary' });
+const png = await MCOImgBrowser.convertPayload(binary, { output: 'png' });
+const info = MCOImgBrowser.inspectPayload(text);</code></pre>
 
       <h3>1. Canvas → RGBA → im: text или binary</h3>
       <p>
@@ -826,6 +917,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
   </main>
 
   <script src="./mcoimg-codec.global.js"></script>
+  <script src="./mcoimg-v3-codec.global.js"></script>
   <script src="./mcoimg-browser.global.js"></script>
   <script>
     const {
@@ -850,14 +942,21 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     } = window.MCOImg;
 
     const codec = new MCOImageCodec();
+    const browserCodec = window.MCOImgBrowser;
     const editor = document.getElementById('editor');
     const decodedCanvas = document.getElementById('decoded');
     const formatVersionSelect = document.getElementById('formatVersion');
     const compressionLevelLabel = document.getElementById('compressionLevelLabel');
     const compressionLevelSelect = document.getElementById('compressionLevel');
+    const workerOptions = document.getElementById('workerOptions');
+    const useWorkersInput = document.getElementById('useWorkers');
+    const workerCountInput = document.getElementById('workerCount');
+    const workerPolicy = document.getElementById('workerPolicy');
     const paletteSelect = document.getElementById('palette');
     const palettePreview = document.getElementById('palettePreview');
     const paletteToggle = document.getElementById('paletteToggle');
+    const usedColorsLabel = document.getElementById('usedColorsLabel');
+    const usedColorsPreview = document.getElementById('usedColorsPreview');
     const encodedText = document.getElementById('encoded');
     const selectedColorText = document.getElementById('selectedColor');
     const encodedMeta = document.getElementById('encodedMeta');
@@ -882,6 +981,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       paletteProfile: PaletteProfile.master8,
       encodingVersion: MCOImageEncodingVersion.v2,
       compressionLevel: MCOImageCompressionLevel.high,
+      useWorkersForHigh: false,
+      workerCount: window.MCOImgBrowser.defaultWorkerCount(),
       pixels: [],
       selectedColor: 0,
       transparentColor: null,
@@ -911,6 +1012,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       paletteSelect.value = String(state.paletteProfile);
       formatVersionSelect.value = String(state.encodingVersion);
       compressionLevelSelect.value = String(state.compressionLevel);
+      workerCountInput.value = String(state.workerCount);
       state.selectedColor = blackIndexFor(state.paletteProfile);
       resetPixels();
       bindEvents();
@@ -925,7 +1027,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     function bindEvents() {
       formatVersionSelect.addEventListener('change', () => {
         state.encodingVersion = Number(formatVersionSelect.value);
-        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? '85' : '256';
         heightInput.max = widthInput.max;
         if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) {
           state.transparentColor = null;
@@ -944,7 +1046,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         renderPaletteOptions();
         formatVersionSelect.value = String(state.encodingVersion);
         compressionLevelLabel.hidden =
-          state.encodingVersion !== MCOImageEncodingVersion.v2;
+          state.encodingVersion === MCOImageEncodingVersion.v1Legacy;
         renderPaletteOptions();
         paletteSelect.value = String(state.paletteProfile);
         renderAll();
@@ -952,6 +1054,19 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
       compressionLevelSelect.addEventListener('change', () => {
         state.compressionLevel = Number(compressionLevelSelect.value);
+        renderAll();
+      });
+
+      useWorkersInput.addEventListener('change', () => {
+        if (state.compressionLevel === MCOImageCompressionLevel.high) {
+          state.useWorkersForHigh = useWorkersInput.checked;
+          renderAll();
+        }
+      });
+
+      workerCountInput.addEventListener('change', () => {
+        state.workerCount = clamp(Number(workerCountInput.value), 1, 8);
+        workerCountInput.value = String(state.workerCount);
         renderAll();
       });
 
@@ -998,7 +1113,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       });
       alphaSwatch.addEventListener('click', (event) => {
         event.preventDefault();
-        if (state.encodingVersion !== MCOImageEncodingVersion.v2) return;
+        if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) return;
         state.pickingTransparentColor = !state.pickingTransparentColor;
         renderAll();
       });
@@ -1110,9 +1225,49 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     }
 
     function selectedEncodingVersion() {
-      return state.encodingVersion === MCOImageEncodingVersion.v1Legacy
-        ? MCOImageEncodingVersion.v1Legacy
-        : MCOImageEncodingVersion.v2;
+      return state.encodingVersion;
+    }
+
+    function supportsTransparentColor() {
+      return selectedEncodingVersion() !== MCOImageEncodingVersion.v1Legacy;
+    }
+
+    function useWorkersForCurrentEncode() {
+      if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) return false;
+      if (state.compressionLevel === MCOImageCompressionLevel.extreme) return true;
+      if (state.compressionLevel === MCOImageCompressionLevel.high) {
+        return state.useWorkersForHigh;
+      }
+      return false;
+    }
+
+    function updateWorkerControls() {
+      const supportsCompression =
+        state.encodingVersion !== MCOImageEncodingVersion.v1Legacy;
+      workerOptions.hidden = !supportsCompression;
+      if (!supportsCompression) return;
+
+      const isExtreme =
+        state.compressionLevel === MCOImageCompressionLevel.extreme;
+      const isHigh = state.compressionLevel === MCOImageCompressionLevel.high;
+      useWorkersInput.disabled = !isHigh;
+      useWorkersInput.checked = isExtreme || (isHigh && state.useWorkersForHigh);
+      workerCountInput.disabled = !useWorkersInput.checked;
+      workerCountInput.value = String(state.workerCount);
+
+      if (isExtreme) {
+        workerPolicy.textContent =
+          'Extreme uses Workers automatically when the browser supports them.';
+      } else if (isHigh) {
+        workerPolicy.textContent =
+          'High is single-threaded by default; enable Workers explicitly.';
+      } else {
+        workerPolicy.textContent = 'Normal remains single-threaded.';
+      }
+      if (state.encodingVersion !== 3) {
+        workerPolicy.textContent +=
+          ' The current v1/v2 helper uses one cancellable worker; workerCount is reserved for the v3 partitioner.';
+      }
     }
 
     function clearPendingToolPoints() {
@@ -1198,7 +1353,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
       widthInput.value = String(state.width);
       heightInput.value = String(state.height);
-      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? '85' : '256';
       heightInput.max = widthInput.max;
       formatVersionSelect.value = String(state.encodingVersion);
       renderPaletteOptions();
@@ -1240,7 +1395,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     }
 
     function maxCanvasSizeForCurrentVersion() {
-      return selectedEncodingVersion() === MCOImageEncodingVersion.v2 ? 256 : 85;
+      return selectedEncodingVersion() === MCOImageEncodingVersion.v1Legacy ? 85 : 256;
     }
 
     function requestedCanvasSize() {
@@ -1634,6 +1789,24 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         segments.push({ start: safeStart, end: safeEnd, label, cssClass, description });
       };
 
+      if (String(encodedTextValue || '').trim().startsWith('im3:')) {
+        addSegment(0, Math.min(1, bytes.length), 'Subtype/version', 'hex-header', 'MCO Advanced app subtype 0x13');
+        addSegment(1, Math.min(2, bytes.length), 'Packet nonce', 'hex-control', 'One-byte v3 transport nonce');
+        addSegment(2, bytes.length, 'MCOimg v3 body', 'hex-body', 'v3 image header, dimensions, container, and compressed body');
+        details.push('version v3');
+        try {
+          const info = browserCodec.inspectPayload(encodedTextValue);
+          if (info?.algorithm) details.push(info.algorithm);
+        } catch (_) {
+          details.push('codec port pending');
+        }
+        return {
+          segments,
+          details,
+          summary: `${bytes.length} decoded bytes; ${details.join(', ')}`,
+        };
+      }
+
       addSegment(0, Math.min(4, bytes.length), 'Header', 'hex-header', 'Version, mode, scan, palette/profile, size');
       if (bytes.length < 4) {
         return {
@@ -1645,7 +1818,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
       let decodedImage = null;
       try {
-        decodedImage = codec.decode(encodedTextValue);
+        decodedImage = browserCodec.decodePayload(encodedTextValue);
       } catch (_) {
         decodedImage = null;
       }
@@ -1674,7 +1847,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         if (paletteKind === 1) details.push(referenceNameForBits(referenceEncoding));
         if (hasTransparentColor) details.push('transparent color');
 
-        const payloadInfo = MCOImageCodec.inspectPayload(encodedTextValue);
+        const payloadInfo = browserCodec.inspectPayload(encodedTextValue);
         if (payloadInfo?.algorithm) details.push(payloadInfo.algorithm);
         if (container === 1 || modeNameForBits(modeBits) === 'extended' ||
             (modeNameForBits(modeBits) === 'rawGlobal' &&
@@ -1827,8 +2000,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           return;
         }
 
-        const prefix = 'im:';
-        const bytes = Array.from(base91Decode(text.startsWith(prefix) ? text.slice(prefix.length) : text));
+        const bytes = Array.from(browserCodec.payloadToBinary(text));
         const parsed = parseBinarySegments(bytes, text);
         const segments = normalizeSegments(parsed.segments, bytes.length);
 
@@ -1869,28 +2041,34 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       }
     }
 
-    function savePng() {
+    async function encodeCurrentForOutput(outputTarget = 'text') {
+      const image = {
+        width: state.width,
+        height: state.height,
+        paletteProfile: state.paletteProfile,
+        pixels: state.pixels.slice(),
+        transparentColor:
+          selectedEncodingVersion() === MCOImageEncodingVersion.v1Legacy
+            ? null
+            : state.transparentColor,
+        encodingVersion: selectedEncodingVersion(),
+      };
+      const task = browserCodec.startCancellableEncode(image, {
+        formatVersion: selectedEncodingVersion(),
+        compressionLevel: state.compressionLevel,
+        outputTarget,
+        useWorkers: useWorkersForCurrentEncode(),
+        workerCount: state.workerCount,
+      });
+      return task.result;
+    }
+
+    async function savePng() {
       try {
-        const encoded = codec.encode({
-          width: state.width,
-          height: state.height,
-          paletteProfile: state.paletteProfile,
-          pixels: state.pixels,
-          transparentColor:
-            selectedEncodingVersion() === MCOImageEncodingVersion.v2
-              ? state.transparentColor
-              : null,
-          encodingVersion: selectedEncodingVersion(),
-        }, {
-          encodingVersion: selectedEncodingVersion(),
-          compressionLevel: state.compressionLevel,
-        });
-        const pngBytes = codec.convertTextPayload(
-          encoded.text,
-          MCOImageTextOutputFormat.png,
-        );
+        const encoded = await encodeCurrentForOutput('text');
+        const pngBytes = browserCodec.textToPngBytes(encoded.text);
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        window.MCOImgBrowser.downloadBytes(
+        browserCodec.downloadBytes(
           pngBytes,
           `mcoimg-canvas-${timestamp}.png`,
           'image/png',
@@ -1902,33 +2080,21 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       }
     }
 
-    function saveBinary() {
+    async function saveBinary() {
       try {
-        const bytes = codec.encodeBytes({
-          width: state.width,
-          height: state.height,
-          paletteProfile: state.paletteProfile,
-          pixels: state.pixels,
-          transparentColor:
-            selectedEncodingVersion() === MCOImageEncodingVersion.v2
-              ? state.transparentColor
-              : null,
-          encodingVersion: selectedEncodingVersion(),
-        }, {
-          encodingVersion: selectedEncodingVersion(),
-          compressionLevel: state.compressionLevel,
-        });
-        const blob = new Blob([bytes], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        link.href = url;
-        link.download = `mcoimg-canvas-${timestamp}.mcoimg.bin`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        encodedMeta.textContent = `Saved binary ${state.width}×${state.height}, ${bytes.length} bytes`;
+        const encoded = await encodeCurrentForOutput('binary');
+        const bytes = encoded.appPayloadWithoutSender
+          ? new Uint8Array(encoded.appPayloadWithoutSender)
+          : (encoded.payload
+            ? new Uint8Array(encoded.payload)
+            : browserCodec.payloadToBinary(encoded.text));
+        browserCodec.downloadBytes(
+          bytes,
+          `mcoimg-canvas-${new Date().toISOString().replace(/[:.]/g, '-')}.mcoimg.bin`,
+          'application/octet-stream',
+        );
+        encodedMeta.textContent =
+          `Saved binary ${state.width}×${state.height}, ${bytes.length} bytes`;
       } catch (error) {
         encodedMeta.textContent = `Binary export failed: ${error.message}`;
       }
@@ -2007,9 +2173,9 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       try {
         await nextPaintFrame();
         const bytes = new Uint8Array(await file.arrayBuffer());
-        const image = codec.decodeBytes(bytes);
+        const image = browserCodec.decodePayload(bytes, { input: 'binary' });
         applyDecodedImageToEditor(image);
-        encodedText.value = MCOImageCodec.prefix + window.MCOImg.base91Encode(bytes);
+        encodedText.value = browserCodec.payloadToText(bytes);
         drawMCOImage(decodedCanvas, image, { scale: 12 });
         renderAll();
         renderBinaryInspector(encodedText.value);
@@ -2213,8 +2379,9 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         paletteProfile: state.paletteProfile,
       });
       compressionLevelLabel.hidden =
-        state.encodingVersion !== MCOImageEncodingVersion.v2;
+        state.encodingVersion === MCOImageEncodingVersion.v1Legacy;
       compressionLevelSelect.value = String(state.compressionLevel);
+      updateWorkerControls();
       renderPalette();
       renderAlphaControl();
       showGridInput.checked = state.showGrid;
@@ -2224,7 +2391,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     }
 
     function renderAlphaControl() {
-      const supportsAlpha = state.encodingVersion === MCOImageEncodingVersion.v2;
+      const supportsAlpha = state.encodingVersion !== MCOImageEncodingVersion.v1Legacy;
       alphaControl.hidden = !supportsAlpha;
       if (!supportsAlpha) return;
 
@@ -2269,6 +2436,20 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       });
     }
 
+    function selectPaletteColor(paletteValue) {
+      if (supportsTransparentColor() && state.pickingTransparentColor) {
+        state.transparentColor = paletteValue;
+        state.pickingTransparentColor = false;
+        renderAll();
+        return;
+      }
+      state.selectedColor = paletteValue;
+      renderPalette();
+      renderAlphaControl();
+      renderUsedColors();
+      updateSelectedColorText();
+    }
+
     function renderPalette() {
       palettePreview.replaceChildren();
       const palette = getPalette(state.paletteProfile);
@@ -2280,28 +2461,62 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         swatch.classList.toggle('picking-alpha', state.pickingTransparentColor);
         swatch.style.background = argbToCss(color);
         swatch.title = `Color ${index}`;
-        swatch.addEventListener('click', () => {
-          if (
-            selectedEncodingVersion() === MCOImageEncodingVersion.v2 &&
-            state.pickingTransparentColor
-          ) {
-            state.transparentColor = paletteValue;
-            state.pickingTransparentColor = false;
-            renderAll();
-            return;
-          }
-          state.selectedColor = paletteValue;
-          renderPalette();
-          renderAlphaControl();
-          updateSelectedColorText();
-        });
+        swatch.dataset.colorValue = String(paletteValue);
+        swatch.addEventListener('click', () => selectPaletteColor(paletteValue));
         palettePreview.appendChild(swatch);
       });
       updateSelectedColorText();
       updatePaletteCollapse();
     }
 
+    function renderUsedColors() {
+      const counts = new Map();
+      for (const pixel of state.pixels) {
+        counts.set(pixel, (counts.get(pixel) || 0) + 1);
+      }
+      const paletteOrder = new Map();
+      const palette = getPalette(state.paletteProfile);
+      palette.forEach((_, index) => {
+        paletteOrder.set(
+          paletteValueForProfileColorId(state.paletteProfile, index),
+          index,
+        );
+      });
+      const usedColors = Array.from(counts.keys()).sort((a, b) => {
+        const orderA = paletteOrder.has(a) ? paletteOrder.get(a) : Number.MAX_SAFE_INTEGER;
+        const orderB = paletteOrder.has(b) ? paletteOrder.get(b) : Number.MAX_SAFE_INTEGER;
+        return orderA - orderB || a - b;
+      });
+
+      usedColorsLabel.textContent = `Used colors (${usedColors.length})`;
+      usedColorsPreview.replaceChildren();
+      for (const paletteValue of usedColors) {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = 'used-color-swatch';
+        swatch.classList.toggle('active', paletteValue === state.selectedColor);
+        swatch.classList.toggle(
+          'transparent-color',
+          state.transparentColor !== null && paletteValue === state.transparentColor,
+        );
+        swatch.style.background = argbToCss(colorValueToArgb(state.paletteProfile, paletteValue));
+        swatch.dataset.colorValue = String(paletteValue);
+        const transparencySuffix =
+          state.transparentColor !== null && paletteValue === state.transparentColor
+            ? ', transparent'
+            : '';
+        swatch.title = `Color ${paletteValue}: ${counts.get(paletteValue)} pixel(s)${transparencySuffix}`;
+        swatch.setAttribute(
+          'aria-label',
+          `Color ${paletteValue}, ${counts.get(paletteValue)} pixel(s)${transparencySuffix}`,
+        );
+        swatch.addEventListener('click', () => selectPaletteColor(paletteValue));
+        usedColorsPreview.appendChild(swatch);
+      }
+    }
+
     function renderEditor() {
+      renderUsedColors();
       editor.width = state.width * state.scale;
       editor.height = state.height * state.scale;
       const ctx = editor.getContext('2d');
@@ -2312,7 +2527,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         for (let x = 0; x < state.width; x++) {
           const pixel = state.pixels[y * state.width + x];
           if (
-            selectedEncodingVersion() === MCOImageEncodingVersion.v2 &&
+            supportsTransparentColor() &&
             state.transparentColor !== null &&
             pixel === state.transparentColor
           ) {
@@ -2386,31 +2601,46 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         paletteProfile: state.paletteProfile,
         pixels: state.pixels.slice(),
         transparentColor:
-          selectedEncodingVersion() === MCOImageEncodingVersion.v2
-            ? state.transparentColor
-            : null,
+          selectedEncodingVersion() === MCOImageEncodingVersion.v1Legacy
+            ? null
+            : state.transparentColor,
         encodingVersion: selectedEncodingVersion(),
       };
       const options = {
-        encodingVersion: selectedEncodingVersion(),
+        formatVersion: selectedEncodingVersion(),
         compressionLevel: state.compressionLevel,
+        useWorkers: useWorkersForCurrentEncode(),
+        workerCount: state.workerCount,
+        onProgress(progress) {
+          if (requestId !== state.encodeRequestId) return;
+          const percent = Number.isFinite(progress?.percent)
+            ? Math.round(progress.percent * 100)
+            : null;
+          encodedMeta.textContent = percent === null
+            ? 'Encoding…'
+            : `Encoding… ${percent}% (${progress.completed}/${progress.total})`;
+        },
       };
 
       try {
-        const task = window.MCOImgBrowser.startCancellableEncode(image, options);
+        const task = browserCodec.startCancellableEncode(image, options);
         state.encodeTask = task;
         task.result.then((encoded) => {
           if (requestId !== state.encodeRequestId || task.isCancelled) return;
           state.encodeTask = null;
           encodedText.value = encoded.text;
-          const payloadInfo = MCOImageCodec.inspectPayload(encoded.text);
+          const payloadInfo = browserCodec.inspectPayload(encoded.text);
           encodedMeta.textContent =
-            `${encoded.charLength} chars, ${encoded.byteLength} bytes, ` +
+            `${encoded.charLength ?? encoded.text.length} chars, ` +
+            `${encoded.byteLength ?? browserCodec.payloadToBinary(encoded.text).length} bytes, ` +
             `v${encoded.codecVersion || selectedEncodingVersion()} ` +
-            `${payloadInfo?.algorithm || encoded.modeName}/${encoded.scanName}` +
+            `${payloadInfo?.algorithm || encoded.modeName || 'payload'}` +
+            (encoded.scanName ? `/${encoded.scanName}` : '') +
             (encoded.paletteKind ? `, ${encoded.paletteKind}` : '') +
-            (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '');
-          drawMCOImage(decodedCanvas, codec.decode(encoded.text), { scale: 12 });
+            (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '') +
+            (task.workerCount > 0 ? `, workers=${task.workerCount}` : ', main thread');
+          const decoded = browserCodec.decodePayload(encoded.text);
+          drawMCOImage(decodedCanvas, decoded, { scale: 12 });
           renderBinaryInspector(encoded.text);
         }).catch((error) => {
           if (requestId !== state.encodeRequestId || task.isCancelled) return;
@@ -2428,7 +2658,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
     function decodeTextarea() {
       try {
-        const image = codec.decode(encodedText.value.trim());
+        const image = browserCodec.decodePayload(encodedText.value.trim());
         applyDecodedImageToEditor(image);
         drawMCOImage(decodedCanvas, image, { scale: 12 });
         renderAll();
@@ -2441,18 +2671,18 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       state.width = image.width;
       state.height = image.height;
       state.paletteProfile = image.paletteProfile;
-      state.encodingVersion = image.encodingVersion || MCOImageEncodingVersion.v1Legacy;
+      state.encodingVersion = image.encodingVersion || browserCodec.inferTextFormatVersion(encodedText.value.trim());
       state.transparentColor =
-        state.encodingVersion === MCOImageEncodingVersion.v2
-          ? image.transparentColor
-          : null;
+        state.encodingVersion === MCOImageEncodingVersion.v1Legacy
+          ? null
+          : image.transparentColor;
       state.pickingTransparentColor = false;
       state.paletteExpanded = false;
       state.pixels = image.pixels.slice();
       clearPendingToolPoints();
       clearCanvasHistory();
       state.selectedColor = blackIndexFor(state.paletteProfile);
-      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v2 ? '256' : '85';
+      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? '85' : '256';
       heightInput.max = widthInput.max;
       widthInput.value = String(state.width);
       heightInput.value = String(state.height);
@@ -2780,7 +3010,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         `Tool: ${state.tool}, selected color: ${state.selectedColor}` +
         (pendingCount > 0 ? `, points: ${pendingCount}` : '') +
         (
-          selectedEncodingVersion() === MCOImageEncodingVersion.v2
+          supportsTransparentColor()
             ? `, transparent: ${state.transparentColor === null ? 'none' : state.transparentColor}` +
               (state.pickingTransparentColor ? ' (pick from palette)' : '')
             : ''

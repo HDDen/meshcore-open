@@ -1103,8 +1103,8 @@
 
   function containerRank(candidate) {
     if (candidate.boundsPresent) return 0;
-    if (candidate.mode === ImageMode.regionsBg) return 1;
-    return 2;
+    if (candidate.mode === ImageMode.regionsBg) return 2;
+    return 1;
   }
 
   function toScanOrder(pixels, width, height, scan) {
@@ -1726,6 +1726,12 @@
   ]);
 
   function normalizeCompressionLevel(compressionLevel) {
+    if (typeof compressionLevel === 'string') {
+      const name = compressionLevel.trim().toLowerCase();
+      if (name === 'normal') return MCOImageCompressionLevel.normal;
+      if (name === 'extreme') return MCOImageCompressionLevel.extreme;
+      if (name === 'high') return MCOImageCompressionLevel.high;
+    }
     switch (Number(compressionLevel)) {
       case MCOImageCompressionLevel.normal:
         return MCOImageCompressionLevel.normal;
@@ -5518,6 +5524,3213 @@
     return debugEncodeV2Full(image, options);
   };
   // ---- End Dart-parity v2 encoder extension -------------------------------
+
+
+  // ---- Final Dart-parity v2 encoder completion ----------------------------
+  // This extension deliberately lives in the v1/v2 codec file. It completes
+  // the final Dart v2 wire format without coupling the legacy codec to v3.
+
+  function compactUintBitLengthParity(value) {
+    if (!Number.isInteger(value) || value < 0) {
+      throw new MCOImageInvalidInputError('Negative compact uint');
+    }
+    if (value <= 3) return 3;
+    if (value <= 19) return 6;
+    if (value <= 275) return 11;
+    return 3 + bitVarUintBitLength(value);
+  }
+
+  function intListsEqualParity(left, right) {
+    if (left.length !== right.length) return false;
+    for (let i = 0; i < left.length; i++) {
+      if (left[i] !== right[i]) return false;
+    }
+    return true;
+  }
+
+  function writeV2BackgroundRefParity(writer, profile, color) {
+    if (isImplicitWhite(profile, color)) return;
+    writeV2ColorRef(writer, profile, color);
+  }
+
+  function usesExtendedDynamicPaletteDescriptorParity(referenceEncoding) {
+    return referenceEncoding === DynamicPaletteReferenceEncoding.sortedDelta ||
+      referenceEncoding === DynamicPaletteReferenceEncoding.rangeRuns ||
+      referenceEncoding === DynamicPaletteReferenceEncoding.profileBitmap ||
+      referenceEncoding === DynamicPaletteReferenceEncoding.bankBitmaps;
+  }
+
+  function writeDynamicLocalPaletteBodyParity(writer, profile, profileColorIds, referenceEncoding) {
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.flat) {
+      const bits = dynamicProfileColorBits(profile);
+      for (const id of profileColorIds) writer.writeBits(id, bits);
+      return;
+    }
+    if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) {
+      if (profile !== PaletteProfile.dynamicGlobal512) {
+        throw new MCOImageInvalidInputError('Banked palette requires dynamicGlobal512');
+      }
+      const banks = Array.from(new Set(profileColorIds.map((id) => id >> 6))).sort((a, b) => a - b);
+      writeBitVarUint(writer, banks.length);
+      for (const bank of banks) writer.writeBits(bank, 3);
+      const bankBits = bitsForChoiceCount(banks.length);
+      for (const id of profileColorIds) {
+        writer.writeBits(banks.indexOf(id >> 6), bankBits);
+        writer.writeBits(id & 0x3f, 6);
+      }
+      return;
+    }
+    throw new MCOImageInvalidInputError('Extended dynamic palette descriptor has no inline body');
+  }
+
+  function writeV2FixedLocalPaletteParity(writer, colors, profile) {
+    if (isDynamicProfile(profile) || colors.length === 0) {
+      throw new MCOImageInvalidInputError('Compact fixed palette requires fixed non-empty colors');
+    }
+    const sorted = Array.from(new Set(colors)).sort((a, b) => a - b);
+    const globalBitsCount = __legacyGlobalBits(profile);
+    const legacyBits = bitVarUintBitLength(colors.length) + colors.length * globalBitsCount;
+    const bitmapBits = bitVarUintBitLength(0) + 2 + paletteSizeV2Aware(profile);
+    let deltaBits = bitVarUintBitLength(0) + 2 + bitVarUintBitLength(sorted.length) + globalBitsCount;
+    for (let i = 1; i < sorted.length; i++) {
+      deltaBits += compactUintBitLengthParity(sorted[i] - sorted[i - 1] - 1);
+    }
+    const runs = [];
+    for (const color of sorted) {
+      const last = runs[runs.length - 1];
+      if (last && last.end + 1 === color) last.end = color;
+      else runs.push({ start: color, end: color });
+    }
+    let rangeBits = bitVarUintBitLength(0) + 2 + compactUintBitLengthParity(runs.length - 1);
+    for (const run of runs) {
+      rangeBits += globalBitsCount + compactUintBitLengthParity(run.end - run.start);
+    }
+    const compactBits = Math.min(bitmapBits, deltaBits, rangeBits);
+    if (legacyBits <= compactBits) {
+      writeBitVarUint(writer, colors.length);
+      for (const color of colors) writer.writeBits(color, globalBitsCount);
+      return colors.slice();
+    }
+    writeBitVarUint(writer, 0);
+    if (bitmapBits <= deltaBits && bitmapBits <= rangeBits) {
+      writer.writeBits(0, 2);
+      const selected = new Set(sorted);
+      for (let color = 0; color < paletteSizeV2Aware(profile); color++) {
+        writer.writeBits(selected.has(color) ? 1 : 0, 1);
+      }
+    } else if (deltaBits <= rangeBits) {
+      writer.writeBits(1, 2);
+      writeBitVarUint(writer, sorted.length);
+      writer.writeBits(sorted[0], globalBitsCount);
+      for (let i = 1; i < sorted.length; i++) {
+        writeCompactUint(writer, sorted[i] - sorted[i - 1] - 1);
+      }
+    } else {
+      writer.writeBits(2, 2);
+      writeCompactUint(writer, runs.length - 1);
+      for (const run of runs) {
+        writer.writeBits(run.start, globalBitsCount);
+        writeCompactUint(writer, run.end - run.start);
+      }
+    }
+    return sorted;
+  }
+
+  function dynamicReferenceEncodingsParity(profile) {
+    if (!isDynamicProfile(profile)) return [null];
+    if (profile === PaletteProfile.dynamicGlobal512) {
+      return [
+        DynamicPaletteReferenceEncoding.flat,
+        DynamicPaletteReferenceEncoding.banked8x64,
+        DynamicPaletteReferenceEncoding.sortedDelta,
+        DynamicPaletteReferenceEncoding.rangeRuns,
+        DynamicPaletteReferenceEncoding.profileBitmap,
+        DynamicPaletteReferenceEncoding.bankBitmaps,
+      ];
+    }
+    return [
+      DynamicPaletteReferenceEncoding.flat,
+      DynamicPaletteReferenceEncoding.sortedDelta,
+      DynamicPaletteReferenceEncoding.rangeRuns,
+      DynamicPaletteReferenceEncoding.profileBitmap,
+    ];
+  }
+
+  function backgroundCandidatesParity(image, explicitBackground, exhaustiveSmallImage, publicCandidates) {
+    if (Array.isArray(publicCandidates)) {
+      const seen = new Set();
+      const result = [];
+      for (const candidate of publicCandidates) {
+        const color = Number(candidate && candidate.color);
+        const rank = Number(candidate && candidate.rank);
+        if (!Number.isInteger(color) || !Number.isInteger(rank) || seen.has(color)) continue;
+        seen.add(color);
+        result.push({ color, rank });
+      }
+      return result;
+    }
+    const result = [];
+    const seen = new Set();
+    const add = (color, rank) => {
+      if (!Number.isInteger(color)) return;
+      if (isDynamicProfile(image.paletteProfile)) {
+        if (profileColorIdForGlobalIndex(image.paletteProfile, color) == null) return;
+      } else if (color < 0 || color >= paletteSizeV2Aware(image.paletteProfile)) {
+        return;
+      }
+      if (seen.has(color)) return;
+      seen.add(color);
+      result.push({ color, rank });
+    };
+    if (explicitBackground != null) add(explicitBackground, 0);
+    add(isDynamicProfile(image.paletteProfile)
+      ? globalIndexForProfileColorId(image.paletteProfile, 0)
+      : 0, 1);
+    const counts = new Map();
+    for (const pixel of image.pixels) counts.set(pixel, (counts.get(pixel) || 0) + 1);
+    const colors = Array.from(counts.keys()).sort((a, b) => {
+      const byCount = counts.get(b) - counts.get(a);
+      return byCount !== 0 ? byCount : a - b;
+    });
+    for (let i = 0; i < Math.min(8, colors.length); i++) add(colors[i], 2 + i);
+    if (exhaustiveSmallImage && image.pixels.length <= 4096 && colors.length <= 64) {
+      for (let i = 0; i < colors.length; i++) add(colors[i], 2 + i);
+    }
+    return result;
+  }
+
+  function normalizeScanModesParity(value) {
+    if (value == null) return [ScanMode.h, ScanMode.v, ScanMode.s, ScanMode.sv];
+    if (!Array.isArray(value) || value.length === 0) {
+      throw new MCOImageInvalidInputError('scanModes must be a non-empty array');
+    }
+    const result = [];
+    const seen = new Set();
+    for (const item of value) {
+      let scan = item;
+      if (typeof item === 'string') scan = ScanMode[item.toLowerCase()];
+      if (!Number.isInteger(scan) || scan < ScanMode.h || scan > ScanMode.sv) {
+        throw new MCOImageInvalidInputError(`Unknown scan mode: ${item}`);
+      }
+      if (!seen.has(scan)) {
+        seen.add(scan);
+        result.push(scan);
+      }
+    }
+    return result;
+  }
+
+  function buildDynamicPaletteParity(profile, globalColors, backgroundColor, referenceEncoding) {
+    const ids = [];
+    for (const color of globalColors) {
+      const id = profileColorIdForGlobalIndex(profile, color);
+      if (id == null) return null;
+      ids.push(id);
+    }
+    const bgId = profileColorIdForGlobalIndex(profile, backgroundColor);
+    if (bgId == null) return null;
+    let palette = buildDynamicLocalPalette(profile, ids, bgId);
+    if (usesExtendedDynamicPaletteDescriptorParity(referenceEncoding)) {
+      palette = palette.slice().sort((a, b) => a - b);
+    }
+    return palette;
+  }
+
+  function prepareLocalPaletteParity(writer, profile, linear, backgroundColor, referenceEncoding, options = {}) {
+    const excludeBackground = options.excludeBackground === true;
+    const preferredFirst = options.preferredFirst === true;
+    const source = excludeBackground ? linear.filter((color) => color !== backgroundColor) : linear.slice();
+    if (source.length === 0) return null;
+    if (isDynamicProfile(profile)) {
+      const paletteIds = buildDynamicPaletteParity(profile, source, backgroundColor, referenceEncoding);
+      if (!paletteIds || paletteIds.length === 0 || paletteIds.length > MCOImageCodec.maxDynamicLocalPalette) return null;
+      writeDynamicLocalPalette(writer, profile, paletteIds, referenceEncoding);
+      const globalPalette = paletteIds.map((id) => globalIndexForProfileColorId(profile, id));
+      return {
+        palette: globalPalette,
+        paletteIds,
+        localBits: bitsForLocalPalette(paletteIds.length),
+        localIndex: new Map(globalPalette.map((color, index) => [color, index])),
+        usedBankCount: referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64
+          ? new Set(paletteIds.map((id) => id >> 6)).size
+          : null,
+      };
+    }
+    const local = buildLocalPalette(source, preferredFirst ? backgroundColor : null);
+    if (local.length === 0) return null;
+    const palette = writeV2FixedLocalPaletteParity(writer, local, profile);
+    return {
+      palette,
+      paletteIds: null,
+      localBits: bitsForLocalPalette(palette.length),
+      localIndex: new Map(palette.map((color, index) => [color, index])),
+      usedBankCount: null,
+    };
+  }
+
+  function tryBuildV2BlockBodyParity(linear, profile, mode, referenceEncoding, options) {
+    const rowLength = options.rowLength;
+    const backgroundColor = options.backgroundColor;
+    const writeSparseBackground = options.writeSparseBackground === true;
+    const dynamic = isDynamicProfile(profile);
+    if (dynamic && referenceEncoding == null) {
+      throw new MCOImageInvalidInputError('Dynamic block requires reference encoding');
+    }
+    if (!dynamic && referenceEncoding != null) return null;
+    const writer = new BitWriter();
+    if (mode === ImageMode.rawGlobal) {
+      if (dynamic) return null;
+      for (const pixel of linear) writer.writeBits(pixel, __legacyGlobalBits(profile));
+      return { payload: writer.toBytes(), localPaletteSize: null, usedBankCount: null, bitsPerLocalPixel: __legacyGlobalBits(profile) };
+    }
+    if (mode === ImageMode.biColorMask) {
+      if (dynamic && usesExtendedDynamicPaletteDescriptorParity(referenceEncoding)) return null;
+      const foreground = biColorForeground(linear, backgroundColor);
+      if (foreground == null) return null;
+      if (writeSparseBackground) writeV2BackgroundRefParity(writer, profile, backgroundColor);
+      writeV2ColorRef(writer, profile, foreground);
+      writeBiColorMask(writer, linear, backgroundColor, foreground);
+      let usedBankCount = null;
+      if (dynamic && referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) {
+        const bgId = profileColorIdForGlobalIndex(profile, backgroundColor);
+        const fgId = profileColorIdForGlobalIndex(profile, foreground);
+        usedBankCount = new Set([bgId >> 6, fgId >> 6]).size;
+      }
+      return { payload: writer.toBytes(), localPaletteSize: 2, usedBankCount, bitsPerLocalPixel: 1 };
+    }
+    const excludeBackground = mode === ImageMode.sparseBg;
+    if (excludeBackground && writeSparseBackground) writeV2BackgroundRefParity(writer, profile, backgroundColor);
+    const prepared = prepareLocalPaletteParity(
+      writer,
+      profile,
+      linear,
+      backgroundColor,
+      referenceEncoding,
+      { excludeBackground, preferredFirst: mode === ImageMode.rowDelta },
+    );
+    if (!prepared) return null;
+    const localPixels = linear.map((color) => prepared.localIndex.get(color));
+    if (!excludeBackground && localPixels.some((value) => value == null)) return null;
+    if (mode === ImageMode.rawLocal) {
+      for (const value of localPixels) writer.writeBits(value, prepared.localBits);
+    } else if (mode === ImageMode.rleLocal) {
+      const runs = buildRuns(localPixels);
+      writeBitVarUint(writer, runs.length);
+      for (const run of runs) {
+        writer.writeBits(run.color, prepared.localBits);
+        writeBitVarUint(writer, run.length);
+      }
+    } else if (mode === ImageMode.sparseBg) {
+      const segments = buildSparseSegmentsGeneric(linear, backgroundColor);
+      writeBitVarUint(writer, segments.length);
+      let pos = 0;
+      for (const segment of segments) {
+        writeBitVarUint(writer, segment.start - pos);
+        writer.writeBits(prepared.localIndex.get(segment.color), prepared.localBits);
+        writeBitVarUint(writer, segment.length);
+        pos = segment.start + segment.length;
+      }
+    } else if (mode === ImageMode.rowRepeat) {
+      writeRowRepeatBody(writer, localPixels, rowLength, prepared.localBits);
+    } else if (mode === ImageMode.rowDelta) {
+      writeDartRowDeltaBody(writer, localPixels, rowLength, prepared.localBits);
+    } else {
+      return null;
+    }
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function tryBuildV2PayloadParity(image, linear, mode, scan, referenceEncoding, options) {
+    const dataWidth = options.dataWidth;
+    const dataHeight = options.dataHeight;
+    const backgroundColor = options.backgroundColor;
+    const bounds = options.bounds || null;
+    const implicitWhite = isImplicitWhite(image.paletteProfile, backgroundColor) &&
+      (isDynamicProfile(image.paletteProfile) ||
+        (mode !== ImageMode.rawGlobal &&
+          (bounds != null || mode === ImageMode.sparseBg || mode === ImageMode.biColorMask)));
+    const block = tryBuildV2BlockBodyParity(linear, image.paletteProfile, mode, referenceEncoding, {
+      rowLength: rowLengthForScan(scan, dataWidth, dataHeight),
+      backgroundColor,
+      writeSparseBackground: bounds == null && !implicitWhite,
+    });
+    if (!block) return null;
+    const writer = new BitWriter();
+    writeV2Header(writer, {
+      profile: image.paletteProfile,
+      container: MCOImageCodec.containerBlock,
+      mode,
+      scan,
+      boundsPresent: bounds != null,
+      referenceEncoding,
+      implicitWhiteBackground: implicitWhite,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+    });
+    if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    if (bounds != null) {
+      // The regular bounds header only omits a white background when the
+      // implicit-white flag is actually present. Fixed rawGlobal blocks use
+      // the same context bit for solid-background signalling, so white must
+      // remain an explicit color reference there.
+      if (!implicitWhite) {
+        writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+      }
+      writeV2Bounds(writer, bounds);
+    }
+    writer.writeAlignedBytes(block.payload);
+    return { ...block, payload: writer.toBytes() };
+  }
+
+  function beginExtendedPayloadParity(image, scan, referenceEncoding, backgroundColor, bounds, options = {}) {
+    const writer = new BitWriter();
+    writeV2Header(writer, {
+      profile: image.paletteProfile,
+      container: MCOImageCodec.containerBlock,
+      mode: ImageMode.extended,
+      scan,
+      boundsPresent: bounds != null,
+      referenceEncoding,
+      implicitWhiteBackground: isImplicitWhite(image.paletteProfile, backgroundColor),
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+      unalignedExtendedBody: options.unalignedExtendedBody === true && !isDynamicProfile(image.paletteProfile),
+    });
+    if (image.transparentColor != null) writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    if (bounds != null) {
+      writeV2BackgroundRefParity(writer, image.paletteProfile, backgroundColor);
+      writeV2CompactBounds(writer, bounds, image.width, image.height);
+    }
+    if (isDynamicProfile(image.paletteProfile)) writer.alignToByte();
+    return writer;
+  }
+
+  function tryBuildV2CompactBoundsPayloadParity(image, linear, innerMode, scan, referenceEncoding, bounds, backgroundColor) {
+    if (bounds.area === 0 || innerMode === ImageMode.extended || innerMode === ImageMode.regionsBg) return null;
+    const block = tryBuildV2BlockBodyParity(linear, image.paletteProfile, innerMode, referenceEncoding, {
+      rowLength: rowLengthForScan(scan, bounds.width, bounds.height),
+      backgroundColor,
+      writeSparseBackground: false,
+    });
+    if (!block) return null;
+    const writer = beginExtendedPayloadParity(image, scan, referenceEncoding, backgroundColor, bounds);
+    writer.alignToByte();
+    writer.writeBits(ExtendedImageMode.wrappedBlock, 3);
+    writer.writeBits(modeBits(innerMode), 3);
+    writer.writeAlignedBytes(block.payload);
+    return { ...block, payload: writer.toBytes() };
+  }
+
+  function tryBuildV2CompactRlePayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, options.bounds || null,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.compactRle, 3);
+    const prepared = prepareLocalPaletteParity(
+      writer, image.paletteProfile, linear, options.backgroundColor, referenceEncoding,
+    );
+    if (!prepared) return null;
+    for (const run of buildRuns(linear)) {
+      writer.writeBits(prepared.localIndex.get(run.color), prepared.localBits);
+      writeCompactUint(writer, run.length - 1);
+    }
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function tryBuildV2CompactSparsePayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (linear.every((pixel) => pixel === options.backgroundColor)) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const segments = buildSparseSegmentsGeneric(linear, options.backgroundColor);
+    if (segments.length === 0) return null;
+    const bounds = options.bounds || null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, bounds,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.compactSparse, 3);
+    if (bounds == null) writeV2BackgroundRefParity(writer, image.paletteProfile, options.backgroundColor);
+    const prepared = prepareLocalPaletteParity(
+      writer, image.paletteProfile, linear, options.backgroundColor, referenceEncoding,
+      { excludeBackground: true },
+    );
+    if (!prepared) return null;
+    writeCompactUint(writer, segments.length - 1);
+    let pos = 0;
+    for (const segment of segments) {
+      writeCompactUint(writer, segment.start - pos);
+      writer.writeBits(prepared.localIndex.get(segment.color), prepared.localBits);
+      writeCompactUint(writer, segment.length - 1);
+      pos = segment.start + segment.length;
+    }
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function tryBuildV2QuadtreePayloadParity(image, pixels, dataWidth, dataHeight, backgroundColor, referenceEncoding, bounds = null) {
+    if (pixels.length !== dataWidth * dataHeight || pixels.length === 0) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, ScanMode.h, referenceEncoding, backgroundColor, bounds,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.quadtree, 3);
+    const prepared = prepareLocalPaletteParity(writer, image.paletteProfile, pixels, backgroundColor, referenceEncoding);
+    if (!prepared) return null;
+    const localPixels = pixels.map((color) => prepared.localIndex.get(color));
+    writeQuadtreeBody(writer, localPixels, dataWidth, dataHeight, prepared.localBits);
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function buildBitplaneRunsParity(pixels, bit) {
+    if (pixels.length === 0) return [];
+    const runs = [];
+    let current = (pixels[0] >> bit) & 1;
+    let length = 1;
+    for (let i = 1; i < pixels.length; i++) {
+      const value = (pixels[i] >> bit) & 1;
+      if (value === current) length++;
+      else {
+        runs.push(length);
+        current = value;
+        length = 1;
+      }
+    }
+    runs.push(length);
+    return runs;
+  }
+
+  function writeLegacyBitplanesBodyParity(writer, localPixels, localBits) {
+    for (let bit = 0; bit < localBits; bit++) {
+      const runs = buildBitplaneRunsParity(localPixels, bit);
+      const rleBits = 2 + runs.reduce((sum, length) => sum + compactUintBitLengthParity(length - 1), 0);
+      const rawBits = 1 + localPixels.length;
+      if (rleBits < rawBits) {
+        writer.writeBits(1, 1);
+        writer.writeBits((localPixels[0] >> bit) & 1, 1);
+        for (const length of runs) writeCompactUint(writer, length - 1);
+      } else {
+        writer.writeBits(0, 1);
+        for (const pixel of localPixels) writer.writeBits((pixel >> bit) & 1, 1);
+      }
+    }
+  }
+
+  function tryBuildV2BitplanesPayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, options.bounds || null,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.bitplanes, 3);
+    const prepared = prepareLocalPaletteParity(writer, image.paletteProfile, linear, options.backgroundColor, referenceEncoding);
+    if (!prepared) return null;
+    // Legacy bitplanes normally receive a length-prefixed palette. The decoder
+    // also accepts descriptor marker 0 emitted by compact palette writers.
+    const localPixels = linear.map((color) => prepared.localIndex.get(color));
+    writeLegacyBitplanesBodyParity(writer, localPixels, prepared.localBits);
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function mergeSolidRunsParity(runs, vertical) {
+    const merged = [];
+    const latestByShape = new Map();
+    for (const run of runs) {
+      const b = run.bounds;
+      const key = vertical ? `${b.y}:${b.height}:${run.color}` : `${b.x}:${b.width}:${run.color}`;
+      const previousIndex = latestByShape.get(key);
+      if (previousIndex != null) {
+        const previous = merged[previousIndex];
+        const touches = vertical
+          ? previous.bounds.x + previous.bounds.width === b.x
+          : previous.bounds.y + previous.bounds.height === b.y;
+        if (touches) {
+          merged[previousIndex] = {
+            color: run.color,
+            bounds: {
+              x: previous.bounds.x,
+              y: previous.bounds.y,
+              width: vertical ? previous.bounds.width + b.width : previous.bounds.width,
+              height: vertical ? previous.bounds.height : previous.bounds.height + b.height,
+              area: vertical
+                ? (previous.bounds.width + b.width) * previous.bounds.height
+                : previous.bounds.width * (previous.bounds.height + b.height),
+            },
+          };
+          continue;
+        }
+      }
+      latestByShape.set(key, merged.length);
+      merged.push(run);
+    }
+    return merged;
+  }
+
+  function solidRectVariantsParity(pixels, width, height, background, maxRects = 64) {
+    const horizontal = [];
+    for (let y = 0; y < height; y++) {
+      let x = 0;
+      while (x < width) {
+        const color = pixels[y * width + x];
+        if (color === background) { x++; continue; }
+        const start = x;
+        while (x < width && pixels[y * width + x] === color) x++;
+        horizontal.push({ color, bounds: { x: start, y, width: x - start, height: 1, area: x - start } });
+      }
+    }
+    const vertical = [];
+    for (let x = 0; x < width; x++) {
+      let y = 0;
+      while (y < height) {
+        const color = pixels[y * width + x];
+        if (color === background) { y++; continue; }
+        const start = y;
+        while (y < height && pixels[y * width + x] === color) y++;
+        vertical.push({ color, bounds: { x, y: start, width: 1, height: y - start, area: y - start } });
+      }
+    }
+    return [mergeSolidRunsParity(horizontal, false), mergeSolidRunsParity(vertical, true)]
+      .filter((rects) => rects.length > 0 && rects.length <= maxRects);
+  }
+
+  function tryBuildV2SolidRectsPayloadParity(image, backgroundColor, referenceEncoding) {
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    let best = null;
+    for (const rects of solidRectVariantsParity(image.pixels, image.width, image.height, backgroundColor)) {
+      const writer = beginExtendedPayloadParity(
+        image, ScanMode.h, referenceEncoding, backgroundColor, null,
+        { unalignedExtendedBody: true },
+      );
+      writer.writeBits(ExtendedImageMode.solidRects, 3);
+      writeV2BackgroundRefParity(writer, image.paletteProfile, backgroundColor);
+      const rectColors = rects.map((rect) => rect.color);
+      const prepared = prepareLocalPaletteParity(writer, image.paletteProfile, rectColors, backgroundColor, referenceEncoding);
+      if (!prepared) continue;
+      writeBitVarUint(writer, rects.length);
+      for (const rect of rects) {
+        writeV2CompactBounds(writer, rect.bounds, image.width, image.height);
+        writer.writeBits(prepared.localIndex.get(rect.color), prepared.localBits);
+      }
+      const payload = {
+        payload: writer.toBytes(),
+        localPaletteSize: prepared.palette.length,
+        usedBankCount: prepared.usedBankCount,
+        bitsPerLocalPixel: prepared.localBits,
+      };
+      if (best == null || payload.payload.length < best.payload.length) best = payload;
+    }
+    return best;
+  }
+
+  function lzPixelKeyParity(pixels, position) {
+    return (pixels[position] << 12) | (pixels[position + 1] << 6) | pixels[position + 2];
+  }
+
+  function addLzPixelPositionParity(positionsByKey, pixels, position) {
+    if (position + 3 > pixels.length) return;
+    const key = lzPixelKeyParity(pixels, position);
+    let positions = positionsByKey.get(key);
+    if (!positions) { positions = []; positionsByKey.set(key, positions); }
+    positions.push(position);
+    if (positions.length > 32) positions.shift();
+  }
+
+  function buildGreedyLzPixelTokensParity(pixels, localBits) {
+    const tokens = [];
+    const pending = [];
+    const positionsByKey = new Map();
+    const flush = () => {
+      if (pending.length === 0) return;
+      tokens.push({ match: false, literals: pending.splice(0) });
+    };
+    let position = 0;
+    while (position < pixels.length) {
+      let bestLength = 0;
+      let bestDistance = 0;
+      if (position + 3 <= pixels.length) {
+        const candidates = positionsByKey.get(lzPixelKeyParity(pixels, position));
+        if (candidates) {
+          for (let i = candidates.length - 1; i >= 0; i--) {
+            const previous = candidates[i];
+            const distance = position - previous;
+            let length = 3;
+            while (position + length < pixels.length &&
+                   pixels[previous + length] === pixels[position + length]) length++;
+            if (length > bestLength || (length === bestLength && distance < bestDistance)) {
+              bestLength = length;
+              bestDistance = distance;
+            }
+          }
+        }
+      }
+      const matchBits = bestLength >= 3
+        ? 1 + compactUintBitLengthParity(bestDistance - 1) + compactUintBitLengthParity(bestLength - 3)
+        : 0;
+      const literalBits = bestLength >= 3
+        ? 1 + compactUintBitLengthParity(bestLength - 1) + bestLength * localBits
+        : 0;
+      if (bestLength >= 3 && matchBits < literalBits) {
+        flush();
+        tokens.push({ match: true, distance: bestDistance, length: bestLength, literals: [] });
+        for (let i = 0; i < bestLength; i++) addLzPixelPositionParity(positionsByKey, pixels, position + i);
+        position += bestLength;
+      } else {
+        pending.push(pixels[position]);
+        addLzPixelPositionParity(positionsByKey, pixels, position);
+        position++;
+      }
+    }
+    flush();
+    return tokens;
+  }
+
+  function lzPixelTokensBitCostParity(tokens, localBits) {
+    let cost = 0;
+    for (const token of tokens) {
+      if (token.match) {
+        cost += 1 + compactUintBitLengthParity(token.distance - 1) + compactUintBitLengthParity(token.length - 3);
+      } else {
+        cost += 1 + compactUintBitLengthParity(token.literals.length - 1) + token.literals.length * localBits;
+      }
+    }
+    return cost;
+  }
+
+  function lzPixelTokensEqualParity(left, right) {
+    if (left.length !== right.length) return false;
+    for (let i = 0; i < left.length; i++) {
+      const a = left[i], b = right[i];
+      if (a.match !== b.match || a.distance !== b.distance || a.length !== b.length ||
+          !intListsEqualParity(a.literals || [], b.literals || [])) return false;
+    }
+    return true;
+  }
+
+  class LzRangeMinimumTreeParity {
+    constructor(length) {
+      this.size = 1;
+      while (this.size < length) this.size <<= 1;
+      this.cost = new Array(this.size * 2).fill(Number.POSITIVE_INFINITY);
+      this.index = new Array(this.size * 2).fill(-1);
+    }
+    update(position, value) {
+      let node = position + this.size;
+      this.cost[node] = value;
+      this.index[node] = position;
+      while ((node >>= 1) > 0) {
+        const left = node * 2, right = left + 1;
+        if (this.cost[left] < this.cost[right] ||
+            (this.cost[left] === this.cost[right] && this.index[left] > this.index[right])) {
+          this.cost[node] = this.cost[left]; this.index[node] = this.index[left];
+        } else {
+          this.cost[node] = this.cost[right]; this.index[node] = this.index[right];
+        }
+      }
+    }
+    query(start, end) {
+      if (start >= end) return null;
+      let left = start + this.size, right = end + this.size;
+      let bestCost = Number.POSITIVE_INFINITY, bestIndex = -1;
+      const consider = (node) => {
+        const cost = this.cost[node], index = this.index[node];
+        if (cost < bestCost || (cost === bestCost && index > bestIndex)) {
+          bestCost = cost; bestIndex = index;
+        }
+      };
+      while (left < right) {
+        if (left & 1) consider(left++);
+        if (right & 1) consider(--right);
+        left >>= 1; right >>= 1;
+      }
+      return bestIndex < 0 ? null : { cost: bestCost, index: bestIndex };
+    }
+  }
+
+  function lzLengthCostRangesParity(valueOffset, maxLength) {
+    if (maxLength < valueOffset) return [];
+    const result = [];
+    for (const range of [[0, 3], [4, 19], [20, 275], [276, 16383], [16384, 2097151]]) {
+      const minLength = range[0] + valueOffset;
+      if (minLength > maxLength) break;
+      result.push({
+        minLength,
+        maxLength: Math.min(range[1] + valueOffset, maxLength),
+        bitCost: compactUintBitLengthParity(range[0]),
+      });
+    }
+    return result;
+  }
+
+  function lzMatchLengthParity(pixels, position, distance) {
+    let length = 0;
+    while (position + length < pixels.length &&
+           pixels[position + length] === pixels[position + length - distance]) length++;
+    return length;
+  }
+
+  function buildLzMatchOptionsParity(pixels) {
+    const result = Array.from({ length: pixels.length }, () => []);
+    const positionsByKey = new Map();
+    for (let position = 0; position < pixels.length; position++) {
+      if (position + 3 <= pixels.length) {
+        const candidates = positionsByKey.get(lzPixelKeyParity(pixels, position));
+        if (candidates) {
+          const bestByDistanceCost = new Map();
+          const maxPossibleLength = pixels.length - position;
+          for (let i = candidates.length - 1; i >= 0; i--) {
+            const previous = candidates[i];
+            const distance = position - previous;
+            const distanceBitCost = compactUintBitLengthParity(distance - 1);
+            const existing = bestByDistanceCost.get(distanceBitCost);
+            if (existing && existing.maxLength === maxPossibleLength) continue;
+            const maxLength = lzMatchLengthParity(pixels, position, distance);
+            if (maxLength < 3) continue;
+            if (!existing || maxLength > existing.maxLength) {
+              bestByDistanceCost.set(distanceBitCost, { distance, maxLength, distanceBitCost });
+            }
+          }
+          result[position].push(...bestByDistanceCost.values());
+        }
+      }
+      addLzPixelPositionParity(positionsByKey, pixels, position);
+    }
+    return result;
+  }
+
+  function buildOptimalLzPixelTokensParity(pixels, localBits) {
+    if (pixels.length === 0) return [];
+    const matches = buildLzMatchOptionsParity(pixels);
+    const count = pixels.length;
+    const steps = new Array(count).fill(null);
+    const rawMin = new LzRangeMinimumTreeParity(count + 1);
+    const literalMin = new LzRangeMinimumTreeParity(count + 1);
+    rawMin.update(count, 0);
+    literalMin.update(count, count * localBits);
+    for (let position = count - 1; position >= 0; position--) {
+      let bestCost = Number.POSITIVE_INFINITY;
+      let bestStep = null;
+      const remaining = count - position;
+      for (const range of lzLengthCostRangesParity(1, remaining)) {
+        const found = literalMin.query(position + range.minLength, position + range.maxLength + 1);
+        if (!found) continue;
+        const cost = 1 + range.bitCost + found.cost - position * localBits;
+        if (cost < bestCost || (cost === bestCost && found.index > (bestStep ? bestStep.end : -1))) {
+          bestCost = cost;
+          bestStep = { end: found.index, distance: 0 };
+        }
+      }
+      for (const match of matches[position]) {
+        for (const range of lzLengthCostRangesParity(3, match.maxLength)) {
+          const found = rawMin.query(position + range.minLength, position + range.maxLength + 1);
+          if (!found) continue;
+          const cost = 1 + match.distanceBitCost + range.bitCost + found.cost;
+          if (cost < bestCost || (cost === bestCost && found.index > (bestStep ? bestStep.end : -1))) {
+            bestCost = cost;
+            bestStep = { end: found.index, distance: match.distance };
+          }
+        }
+      }
+      if (!bestStep) return null;
+      steps[position] = bestStep;
+      rawMin.update(position, bestCost);
+      literalMin.update(position, bestCost + position * localBits);
+    }
+    const tokens = [];
+    let position = 0;
+    while (position < count) {
+      const step = steps[position];
+      if (!step || step.end <= position || step.end > count) return null;
+      const length = step.end - position;
+      if (step.distance === 0) tokens.push({ match: false, literals: pixels.slice(position, step.end) });
+      else tokens.push({ match: true, distance: step.distance, length, literals: [] });
+      position = step.end;
+    }
+    return tokens;
+  }
+
+  function tryBuildV2LzPixelsPayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, options.bounds || null,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.lzPixels, 3);
+    const prepared = prepareLocalPaletteParity(writer, image.paletteProfile, linear, options.backgroundColor, referenceEncoding);
+    if (!prepared) return null;
+    const localPixels = linear.map((color) => prepared.localIndex.get(color));
+    const greedy = buildGreedyLzPixelTokensParity(localPixels, prepared.localBits);
+    let tokens = greedy;
+    if (options.optimizeParsing) {
+      if (localPixels.length > 1024) return null;
+      const key = `${prepared.localBits}:${String.fromCharCode(...localPixels.map((pixel) => pixel + 1))}`;
+      let optimal = options.optimalCache.get(key);
+      if (optimal === undefined) {
+        optimal = buildOptimalLzPixelTokensParity(localPixels, prepared.localBits);
+        options.optimalCache.set(key, optimal);
+      }
+      if (!optimal) return null;
+      const optimalCost = lzPixelTokensBitCostParity(optimal, prepared.localBits);
+      const greedyCost = lzPixelTokensBitCostParity(greedy, prepared.localBits);
+      if (optimalCost > greedyCost || (optimalCost === greedyCost && lzPixelTokensEqualParity(optimal, greedy))) return null;
+      tokens = optimal;
+    }
+    for (const token of tokens) {
+      writer.writeBits(token.match ? 1 : 0, 1);
+      if (token.match) {
+        writeCompactUint(writer, token.distance - 1);
+        writeCompactUint(writer, token.length - 3);
+      } else {
+        writeCompactUint(writer, token.literals.length - 1);
+        for (const value of token.literals) writer.writeBits(value, prepared.localBits);
+      }
+    }
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: prepared.palette.length,
+      usedBankCount: prepared.usedBankCount,
+      bitsPerLocalPixel: prepared.localBits,
+    };
+  }
+
+  function shortBitplaneRunBitLengthParity(length) {
+    if (length <= 0) throw new MCOImageInvalidInputError('Invalid bitplane run');
+    return length <= 3 ? length : 3 + compactUintBitLengthParity(length - 4);
+  }
+
+  function writeShortBitplaneRunLengthParity(writer, length) {
+    if (length <= 0) throw new MCOImageInvalidInputError('Invalid bitplane run');
+    if (length <= 3) {
+      writer.writeBits((1 << (length - 1)) - 1, length);
+    } else {
+      writer.writeBits(7, 3);
+      writeCompactUint(writer, length - 4);
+    }
+  }
+
+  function sparseBitplanePositionCostParity(positions) {
+    let cost = compactUintBitLengthParity(positions.length - 1);
+    let previous = -1;
+    for (const position of positions) {
+      cost += compactUintBitLengthParity(position - previous - 1);
+      previous = position;
+    }
+    return cost;
+  }
+
+  function writeSparseBitplanePositionsParity(writer, positions) {
+    writeCompactUint(writer, positions.length - 1);
+    let previous = -1;
+    for (const position of positions) {
+      writeCompactUint(writer, position - previous - 1);
+      previous = position;
+    }
+  }
+
+  function chooseAdaptiveBitplaneEncodingParity(pixels, bit) {
+    const runs = buildBitplaneRunsParity(pixels, bit);
+    const startingBit = (pixels[0] >> bit) & 1;
+    const ones = [], zeros = [];
+    for (let i = 0; i < pixels.length; i++) {
+      (((pixels[i] >> bit) & 1) === 0 ? zeros : ones).push(i);
+    }
+    const decisions = [
+      { mode: 'raw', bitCost: 1 + pixels.length, startingBit, runs },
+      {
+        mode: 'legacyRle',
+        bitCost: 3 + runs.reduce((sum, length) => sum + compactUintBitLengthParity(length - 1), 0),
+        startingBit, runs,
+      },
+      {
+        mode: 'shortRle',
+        bitCost: 4 + runs.reduce((sum, length) => sum + shortBitplaneRunBitLengthParity(length), 0),
+        startingBit, runs,
+      },
+    ];
+    if (ones.length === 0 || zeros.length === 0) {
+      decisions.push({ mode: ones.length === 0 ? 'constantZero' : 'constantOne', bitCost: 5, startingBit, runs });
+    } else {
+      decisions.push({ mode: 'sparseOne', bitCost: 5 + sparseBitplanePositionCostParity(ones), startingBit, runs, minorityPositions: ones });
+      decisions.push({ mode: 'sparseZero', bitCost: 5 + sparseBitplanePositionCostParity(zeros), startingBit, runs, minorityPositions: zeros });
+    }
+    let best = decisions[0];
+    for (let i = 1; i < decisions.length; i++) if (decisions[i].bitCost < best.bitCost) best = decisions[i];
+    return best;
+  }
+
+  function writeAdaptiveBitplanesBodyParity(writer, pixels, bitCount) {
+    for (let bit = 0; bit < bitCount; bit++) {
+      const decision = chooseAdaptiveBitplaneEncodingParity(pixels, bit);
+      if (decision.mode === 'raw') {
+        writer.writeBits(0, 1);
+        for (const pixel of pixels) writer.writeBits((pixel >> bit) & 1, 1);
+      } else if (decision.mode === 'legacyRle') {
+        writer.writeBits(1, 2);
+        writer.writeBits(decision.startingBit, 1);
+        for (const length of decision.runs) writeCompactUint(writer, length - 1);
+      } else if (decision.mode === 'shortRle') {
+        writer.writeBits(3, 3);
+        writer.writeBits(decision.startingBit, 1);
+        for (const length of decision.runs) writeShortBitplaneRunLengthParity(writer, length);
+      } else if (decision.mode === 'constantZero') {
+        writer.writeBits(7, 5);
+      } else if (decision.mode === 'constantOne') {
+        writer.writeBits(15, 5);
+      } else if (decision.mode === 'sparseOne') {
+        writer.writeBits(23, 5);
+        writeSparseBitplanePositionsParity(writer, decision.minorityPositions);
+      } else {
+        writer.writeBits(31, 5);
+        writeSparseBitplanePositionsParity(writer, decision.minorityPositions);
+      }
+    }
+  }
+
+  function orderPaletteByProfileIdParity(profile, palette) {
+    return palette.slice().sort((a, b) => isDynamicProfile(profile)
+      ? profileColorIdForGlobalIndex(profile, a) - profileColorIdForGlobalIndex(profile, b)
+      : a - b);
+  }
+
+  function optimizeTransitionPaletteOrderParity(pixels, palette, backgroundColor) {
+    if (palette.length < 3) return palette.slice();
+    const counts = new Map();
+    const transitions = new Map();
+    for (const color of pixels) counts.set(color, (counts.get(color) || 0) + 1);
+    for (let i = 1; i < pixels.length; i++) {
+      const left = pixels[i - 1], right = pixels[i];
+      if (left === right) continue;
+      if (!transitions.has(left)) transitions.set(left, new Map());
+      if (!transitions.has(right)) transitions.set(right, new Map());
+      transitions.get(left).set(right, (transitions.get(left).get(right) || 0) + 1);
+      transitions.get(right).set(left, (transitions.get(right).get(left) || 0) + 1);
+    }
+    const remaining = new Set(palette);
+    let current;
+    if (remaining.has(backgroundColor)) current = backgroundColor;
+    else {
+      current = palette[0];
+      for (const color of palette.slice(1)) if ((counts.get(current) || 0) < (counts.get(color) || 0)) current = color;
+    }
+    const result = [];
+    while (remaining.size > 0) {
+      result.push(current);
+      remaining.delete(current);
+      if (remaining.size === 0) break;
+      let next = null;
+      for (const color of remaining) {
+        if (next == null) { next = color; continue; }
+        const colorWeight = transitions.get(current)?.get(color) || 0;
+        const nextWeight = transitions.get(current)?.get(next) || 0;
+        if (colorWeight !== nextWeight) {
+          if (colorWeight > nextWeight) next = color;
+        } else {
+          const colorCount = counts.get(color) || 0;
+          const nextCount = counts.get(next) || 0;
+          if (colorCount > nextCount || (colorCount === nextCount && color < next)) next = color;
+        }
+      }
+      current = next;
+    }
+    return result;
+  }
+
+  function paletteArgbParity(profile, color) {
+    return isDynamicProfile(profile) ? DynamicGlobal512Current[color] : MCOImagePalettes[profile][color];
+  }
+
+  function paletteRgbDistanceSquaredParity(profile, left, right) {
+    const a = paletteArgbParity(profile, left) >>> 0;
+    const b = paletteArgbParity(profile, right) >>> 0;
+    const red = ((a >>> 16) & 0xff) - ((b >>> 16) & 0xff);
+    const green = ((a >>> 8) & 0xff) - ((b >>> 8) & 0xff);
+    const blue = (a & 0xff) - (b & 0xff);
+    return red * red + green * green + blue * blue;
+  }
+
+  function orderPaletteByRgbParity(profile, pixels, palette, backgroundColor) {
+    if (palette.length < 3) return palette.slice();
+    const counts = new Map();
+    for (const color of pixels) counts.set(color, (counts.get(color) || 0) + 1);
+    const remaining = new Set(palette);
+    let current;
+    if (remaining.has(backgroundColor)) current = backgroundColor;
+    else {
+      current = palette[0];
+      for (const color of palette.slice(1)) if ((counts.get(current) || 0) < (counts.get(color) || 0)) current = color;
+    }
+    const result = [];
+    while (remaining.size > 0) {
+      result.push(current);
+      remaining.delete(current);
+      if (remaining.size === 0) break;
+      let next = null;
+      for (const color of remaining) {
+        if (next == null) { next = color; continue; }
+        const distance = paletteRgbDistanceSquaredParity(profile, current, color);
+        const nextDistance = paletteRgbDistanceSquaredParity(profile, current, next);
+        if (distance < nextDistance) next = color;
+        else if (distance === nextDistance) {
+          const count = counts.get(color) || 0, nextCount = counts.get(next) || 0;
+          if (count > nextCount || (count === nextCount && color < next)) next = color;
+        }
+      }
+      current = next;
+    }
+    return result;
+  }
+
+  function adaptiveBitplanesCostParity(pixels, palette) {
+    const indexByColor = new Map(palette.map((color, index) => [color, index]));
+    const local = pixels.map((color) => indexByColor.get(color));
+    let cost = 0;
+    for (let bit = 0; bit < bitsForLocalPalette(palette.length); bit++) {
+      cost += chooseAdaptiveBitplaneEncodingParity(local, bit).bitCost;
+    }
+    return cost;
+  }
+
+  function optimizeBitplanesPaletteOrderParity(pixels, palette) {
+    if (palette.length < 2) return palette.slice();
+    let bestPalette = palette.slice();
+    let bestCost = adaptiveBitplanesCostParity(pixels, bestPalette);
+    const exhaustive = palette.length <= 8;
+    const passCount = exhaustive ? 2 : 1;
+    for (let pass = 0; pass < passCount; pass++) {
+      let improved = false;
+      let passPalette = bestPalette;
+      let passCost = bestCost;
+      for (let left = 0; left < bestPalette.length - 1; left++) {
+        const rightLimit = exhaustive ? bestPalette.length : left + 2;
+        for (let right = left + 1; right < rightLimit; right++) {
+          const candidate = bestPalette.slice();
+          [candidate[left], candidate[right]] = [candidate[right], candidate[left]];
+          const cost = adaptiveBitplanesCostParity(pixels, candidate);
+          if (cost < passCost) {
+            passPalette = candidate;
+            passCost = cost;
+            improved = true;
+          }
+        }
+      }
+      if (!improved) break;
+      bestPalette = passPalette;
+      bestCost = passCost;
+    }
+    return bestPalette;
+  }
+
+  function optimizeBitplanesPaletteOrderMultiStartParity(profile, pixels, palette, backgroundColor, allowLargeImage) {
+    if (palette.length < 3 || (!allowLargeImage && pixels.length > 4096)) return palette.slice();
+    const seeds = [
+      palette.slice(),
+      orderPaletteByProfileIdParity(profile, palette),
+      orderPaletteByRgbParity(profile, pixels, palette, backgroundColor),
+      optimizeTransitionPaletteOrderParity(pixels, palette, backgroundColor),
+    ];
+    const unique = [];
+    const seen = new Set();
+    for (const seed of seeds) {
+      const key = seed.join(',');
+      if (!seen.has(key)) { seen.add(key); unique.push(seed); }
+    }
+    const baseline = optimizeBitplanesPaletteOrderParity(pixels, palette);
+    let bestExistingCost = adaptiveBitplanesCostParity(pixels, palette);
+    for (const existing of [...unique, baseline]) bestExistingCost = Math.min(bestExistingCost, adaptiveBitplanesCostParity(pixels, existing));
+    let bestMulti = null;
+    let bestMultiCost = bestExistingCost;
+    for (const seed of unique.slice(1)) {
+      const optimized = optimizeBitplanesPaletteOrderParity(pixels, seed);
+      const cost = adaptiveBitplanesCostParity(pixels, optimized);
+      if (cost < bestMultiCost) { bestMulti = optimized; bestMultiCost = cost; }
+    }
+    return bestMulti || palette.slice();
+  }
+
+  function isGrayscaleProfileParity(profile) {
+    return profile === PaletteProfile.grayscale8 || profile === PaletteProfile.grayscale16 || profile === PaletteProfile.grayscale32;
+  }
+
+  function supportsAlternativeAdaptivePaletteOrdersParity(profile, referenceEncoding) {
+    return !isDynamicProfile(profile) || referenceEncoding === DynamicPaletteReferenceEncoding.flat;
+  }
+
+  function tryBuildV2AdaptiveBitplanesPayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (options.directGrayscale && options.directDynamicProfile) return null;
+    if (options.directGrayscale && !isGrayscaleProfileParity(image.paletteProfile)) return null;
+    if (options.directDynamicProfile && !isDynamicProfile(image.paletteProfile)) return null;
+    if ((options.directGrayscale || options.directDynamicProfile) && options.paletteOrder !== 'frequency') return null;
+    if (options.directDynamicProfile && referenceEncoding !== DynamicPaletteReferenceEncoding.flat) return null;
+    if (isDynamicProfile(image.paletteProfile) && referenceEncoding != null && usesExtendedDynamicPaletteDescriptorParity(referenceEncoding)) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, options.bounds || null,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.bitplanes, 3);
+    if (options.directGrayscale) {
+      writer.writeBits(0xc0, 8);
+      const bits = __legacyGlobalBits(image.paletteProfile);
+      writeAdaptiveBitplanesBodyParity(writer, linear, bits);
+      return { payload: writer.toBytes(), localPaletteSize: null, usedBankCount: null, bitsPerLocalPixel: bits };
+    }
+    if (options.directDynamicProfile) {
+      const profilePixels = linear.map((color) => profileColorIdForGlobalIndex(image.paletteProfile, color));
+      const bits = dynamicProfileColorBits(image.paletteProfile);
+      writer.writeBits(0xc0, 8);
+      writeAdaptiveBitplanesBodyParity(writer, profilePixels, bits);
+      return {
+        payload: writer.toBytes(),
+        localPaletteSize: dynamicProfileSize(image.paletteProfile),
+        usedBankCount: null,
+        bitsPerLocalPixel: bits,
+      };
+    }
+    let palette;
+    if (isDynamicProfile(image.paletteProfile)) {
+      const ids = buildDynamicPaletteParity(image.paletteProfile, linear, options.backgroundColor, referenceEncoding);
+      if (!ids || ids.length === 0 || ids.length > 64) return null;
+      palette = ids.map((id) => globalIndexForProfileColorId(image.paletteProfile, id));
+    } else {
+      palette = buildLocalPalette(linear);
+    }
+    let ordered = palette.slice();
+    if (options.paletteOrder === 'optimized') ordered = optimizeBitplanesPaletteOrderParity(linear, palette);
+    else if (options.paletteOrder === 'profileId') ordered = orderPaletteByProfileIdParity(image.paletteProfile, palette);
+    else if (options.paletteOrder === 'rgb') ordered = orderPaletteByRgbParity(image.paletteProfile, linear, palette, options.backgroundColor);
+    else if (options.paletteOrder === 'transition') ordered = optimizeTransitionPaletteOrderParity(linear, palette, options.backgroundColor);
+    else if (options.paletteOrder === 'multiStart') {
+      ordered = optimizeBitplanesPaletteOrderMultiStartParity(
+        image.paletteProfile, linear, palette, options.backgroundColor, options.allowLargeMultiStart === true,
+      );
+    }
+    if (options.paletteOrder !== 'frequency' && intListsEqualParity(ordered, palette)) return null;
+    writer.writeBits(0x80 | (ordered.length - 1), 8);
+    let usedBankCount = null;
+    if (isDynamicProfile(image.paletteProfile)) {
+      const ids = ordered.map((color) => profileColorIdForGlobalIndex(image.paletteProfile, color));
+      writeDynamicLocalPaletteBodyParity(writer, image.paletteProfile, ids, referenceEncoding);
+      if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) usedBankCount = new Set(ids.map((id) => id >> 6)).size;
+    } else {
+      for (const color of ordered) writer.writeBits(color, __legacyGlobalBits(image.paletteProfile));
+    }
+    const localIndex = new Map(ordered.map((color, index) => [color, index]));
+    const localPixels = linear.map((color) => localIndex.get(color));
+    const localBits = bitsForLocalPalette(ordered.length);
+    writeAdaptiveBitplanesBodyParity(writer, localPixels, localBits);
+    return {
+      payload: writer.toBytes(),
+      localPaletteSize: ordered.length,
+      usedBankCount,
+      bitsPerLocalPixel: localBits,
+    };
+  }
+
+  const CompactRowDeltaParity = Object.freeze({
+    repeat: 0, raw: 1, indexed: 2, sameScalar: 3,
+    segments: 4, trimmedMask: 5, repeatRun: 6, predicted: 7,
+  });
+
+  function compactPredictorBitCostParity(predictor) {
+    return predictor === RowDelta.predSame ? 1 : 2;
+  }
+
+  function compactChangePositionsBitCostParity(changes) {
+    let cost = 0, previousX = -1;
+    for (const change of changes) {
+      cost += compactUintBitLengthParity(change.x - previousX - 1);
+      previousX = change.x;
+    }
+    return cost;
+  }
+
+  function compactRepeatedRowCountParity(values, rowLength, startRow, useVirtualBaseRow) {
+    const rowCount = Math.floor(values.length / rowLength);
+    let count = 0;
+    for (let row = startRow; row < rowCount; row++) {
+      const rowStart = row * rowLength;
+      let same = true;
+      for (let x = 0; x < rowLength; x++) {
+        const expected = row === 0 && useVirtualBaseRow ? 0 : values[rowStart - rowLength + x];
+        if (values[rowStart + x] !== expected) { same = false; break; }
+      }
+      if (!same) break;
+      count++;
+    }
+    return count;
+  }
+
+  function grayscaleDeltaCodeParity(delta) {
+    if (delta === 0) throw new MCOImageInvalidInputError('Zero grayscale delta');
+    return delta > 0 ? delta * 2 - 1 : -delta * 2;
+  }
+
+  function compactGrayscaleDeltaParity(values, rowLength, row, change, predictor, useVirtualBaseRow) {
+    const predicted = rowDeltaPredictedValue(
+      values, rowLength, row, change.x, row * rowLength - rowLength, useVirtualBaseRow, predictor,
+    );
+    return change.value - predicted;
+  }
+
+  function bestCompactValueEncodingParity(values, rowLength, row, changes, valueBits, predictor, useVirtualBaseRow, directGrayscale) {
+    const absoluteCost = changes.length * valueBits;
+    if (!directGrayscale) return { useResidual: false, bitCost: absoluteCost };
+    let residualCost = 0;
+    for (const change of changes) {
+      residualCost += compactUintBitLengthParity(
+        grayscaleDeltaCodeParity(compactGrayscaleDeltaParity(values, rowLength, row, change, predictor, useVirtualBaseRow)) - 1,
+      );
+    }
+    return residualCost < absoluteCost
+      ? { useResidual: true, bitCost: 1 + residualCost }
+      : { useResidual: false, bitCost: 1 + absoluteCost };
+  }
+
+  function bestCompactSameScalarEncodingParity(values, rowLength, row, changes, valueBits, predictor, useVirtualBaseRow, directGrayscale) {
+    const absoluteValue = sameRowDeltaChangeValue(changes);
+    let best = absoluteValue == null ? null : { useResidual: false, bitCost: valueBits + (directGrayscale ? 1 : 0) };
+    if (!directGrayscale) return best;
+    let sharedDelta = null;
+    for (const change of changes) {
+      const delta = compactGrayscaleDeltaParity(values, rowLength, row, change, predictor, useVirtualBaseRow);
+      if (sharedDelta != null && sharedDelta !== delta) return best;
+      sharedDelta = delta;
+    }
+    const residual = { useResidual: true, bitCost: 1 + compactUintBitLengthParity(grayscaleDeltaCodeParity(sharedDelta) - 1) };
+    return best == null || residual.bitCost < best.bitCost ? residual : best;
+  }
+
+  function bestCompactRowDeltaDecisionParity(values, rowLength, valueBits, row, useVirtualBaseRow, directGrayscale) {
+    let best = {
+      op: CompactRowDeltaParity.raw,
+      predictor: RowDelta.predSame,
+      changes: [],
+      useResidual: false,
+      bitCost: 3 + rowLength * valueBits,
+    };
+    for (const predictor of rowDeltaPredictorsForRow(row, useVirtualBaseRow, true)) {
+      const changes = rowDeltaChanges(values, rowLength, row, useVirtualBaseRow, predictor);
+      if (changes.length === 0) {
+        const decision = {
+          op: predictor === RowDelta.predSame ? CompactRowDeltaParity.repeat : CompactRowDeltaParity.predicted,
+          predictor,
+          changes,
+          useResidual: false,
+          bitCost: 3 + (predictor === RowDelta.predSame ? 0 : compactPredictorBitCostParity(predictor)),
+        };
+        if (decision.bitCost < best.bitCost) best = decision;
+        continue;
+      }
+      const predictorCost = compactPredictorBitCostParity(predictor);
+      const positionCost = compactChangePositionsBitCostParity(changes);
+      const valuesEncoding = bestCompactValueEncodingParity(
+        values, rowLength, row, changes, valueBits, predictor, useVirtualBaseRow, directGrayscale,
+      );
+      const indexed = {
+        op: CompactRowDeltaParity.indexed,
+        predictor,
+        changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: 3 + predictorCost + compactUintBitLengthParity(changes.length - 1) + positionCost + valuesEncoding.bitCost,
+      };
+      if (indexed.bitCost < best.bitCost) best = indexed;
+      const sameScalar = bestCompactSameScalarEncodingParity(
+        values, rowLength, row, changes, valueBits, predictor, useVirtualBaseRow, directGrayscale,
+      );
+      if (sameScalar) {
+        const decision = {
+          op: CompactRowDeltaParity.sameScalar,
+          predictor,
+          changes,
+          useResidual: sameScalar.useResidual,
+          bitCost: 3 + predictorCost + compactUintBitLengthParity(changes.length - 1) + positionCost + sameScalar.bitCost,
+        };
+        if (decision.bitCost < best.bitCost) best = decision;
+      }
+      const segments = rowDeltaSegments(changes);
+      let segmentGeometryCost = compactUintBitLengthParity(segments.length - 1);
+      let previousEnd = 0;
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        const gap = i === 0 ? segment.x : segment.x - previousEnd;
+        segmentGeometryCost += compactUintBitLengthParity(gap) + compactUintBitLengthParity(segment.length - 1);
+        previousEnd = segment.x + segment.length;
+      }
+      const segmentDecision = {
+        op: CompactRowDeltaParity.segments,
+        predictor,
+        changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: 3 + predictorCost + segmentGeometryCost + valuesEncoding.bitCost,
+      };
+      if (segmentDecision.bitCost < best.bitCost) best = segmentDecision;
+      const span = changes[changes.length - 1].x - changes[0].x + 1;
+      const maskDecision = {
+        op: CompactRowDeltaParity.trimmedMask,
+        predictor,
+        changes,
+        useResidual: valuesEncoding.useResidual,
+        bitCost: 3 + predictorCost + compactUintBitLengthParity(changes[0].x) +
+          compactUintBitLengthParity(span - 1) + span + valuesEncoding.bitCost,
+      };
+      if (maskDecision.bitCost < best.bitCost) best = maskDecision;
+    }
+    return best;
+  }
+
+  function compactRowDeltaBodyBitCostParity(values, rowLength, valueBits, directGrayscale, useVirtualBaseRow) {
+    let cost = useVirtualBaseRow ? 0 : rowLength * valueBits;
+    const rowCount = Math.floor(values.length / rowLength);
+    let row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      const repeatCount = compactRepeatedRowCountParity(values, rowLength, row, useVirtualBaseRow);
+      if (repeatCount >= 2) {
+        cost += 3 + compactUintBitLengthParity(repeatCount - 2);
+        row += repeatCount;
+      } else {
+        cost += bestCompactRowDeltaDecisionParity(values, rowLength, valueBits, row, useVirtualBaseRow, directGrayscale).bitCost;
+        row++;
+      }
+    }
+    return cost;
+  }
+
+  function writeCompactRowDeltaPredictorParity(writer, predictor) {
+    if (predictor === RowDelta.predSame) writer.writeBits(0, 1);
+    else {
+      writer.writeBits(1, 1);
+      writer.writeBits(predictor === RowDelta.predLeft ? 0 : 1, 1);
+    }
+  }
+
+  function writeCompactChangePositionsParity(writer, changes) {
+    let previousX = -1;
+    for (const change of changes) {
+      writeCompactUint(writer, change.x - previousX - 1);
+      previousX = change.x;
+    }
+  }
+
+  function writeCompactChangedValuesParity(writer, values, rowLength, valueBits, row, changes, predictor, useVirtualBaseRow, useResidual) {
+    for (const change of changes) {
+      if (useResidual) {
+        const delta = compactGrayscaleDeltaParity(values, rowLength, row, change, predictor, useVirtualBaseRow);
+        writeCompactUint(writer, grayscaleDeltaCodeParity(delta) - 1);
+      } else {
+        writer.writeBits(change.value, valueBits);
+      }
+    }
+  }
+
+  function writeCompactRowDeltaDecisionParity(writer, values, rowLength, valueBits, row, decision, useVirtualBaseRow, directGrayscale) {
+    writer.writeBits(decision.op, 3);
+    if (decision.op === CompactRowDeltaParity.repeat) return;
+    if (decision.op === CompactRowDeltaParity.raw) {
+      const start = row * rowLength;
+      for (let x = 0; x < rowLength; x++) writer.writeBits(values[start + x], valueBits);
+      return;
+    }
+    writeCompactRowDeltaPredictorParity(writer, decision.predictor);
+    if (decision.op === CompactRowDeltaParity.predicted) return;
+    if (directGrayscale) writer.writeBits(decision.useResidual ? 1 : 0, 1);
+    const changes = decision.changes;
+    if (decision.op === CompactRowDeltaParity.indexed) {
+      writeCompactUint(writer, changes.length - 1);
+      writeCompactChangePositionsParity(writer, changes);
+      writeCompactChangedValuesParity(writer, values, rowLength, valueBits, row, changes, decision.predictor, useVirtualBaseRow, decision.useResidual);
+    } else if (decision.op === CompactRowDeltaParity.sameScalar) {
+      writeCompactUint(writer, changes.length - 1);
+      writeCompactChangePositionsParity(writer, changes);
+      if (decision.useResidual) {
+        const delta = compactGrayscaleDeltaParity(values, rowLength, row, changes[0], decision.predictor, useVirtualBaseRow);
+        writeCompactUint(writer, grayscaleDeltaCodeParity(delta) - 1);
+      } else writer.writeBits(changes[0].value, valueBits);
+    } else if (decision.op === CompactRowDeltaParity.segments) {
+      const segments = rowDeltaSegments(changes);
+      writeCompactUint(writer, segments.length - 1);
+      let previousEnd = 0;
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        writeCompactUint(writer, i === 0 ? segment.x : segment.x - previousEnd);
+        writeCompactUint(writer, segment.length - 1);
+        previousEnd = segment.x + segment.length;
+      }
+      writeCompactChangedValuesParity(writer, values, rowLength, valueBits, row, changes, decision.predictor, useVirtualBaseRow, decision.useResidual);
+    } else if (decision.op === CompactRowDeltaParity.trimmedMask) {
+      const start = changes[0].x;
+      const span = changes[changes.length - 1].x - start + 1;
+      writeCompactUint(writer, start);
+      writeCompactUint(writer, span - 1);
+      let changeIndex = 0;
+      for (let offset = 0; offset < span; offset++) {
+        const changed = changeIndex < changes.length && changes[changeIndex].x === start + offset;
+        writer.writeBits(changed ? 1 : 0, 1);
+        if (changed) changeIndex++;
+      }
+      writeCompactChangedValuesParity(writer, values, rowLength, valueBits, row, changes, decision.predictor, useVirtualBaseRow, decision.useResidual);
+    } else {
+      throw new MCOImageInvalidInputError('Invalid compact row-delta op');
+    }
+  }
+
+  function writeCompactRowDeltaBodyParity(writer, values, rowLength, valueBits, directGrayscale) {
+    const rawFirstCost = compactRowDeltaBodyBitCostParity(values, rowLength, valueBits, directGrayscale, false);
+    const virtualCost = compactRowDeltaBodyBitCostParity(values, rowLength, valueBits, directGrayscale, true);
+    const useVirtualBaseRow = virtualCost < rawFirstCost;
+    writer.writeBits(useVirtualBaseRow ? 1 : 0, 1);
+    if (!useVirtualBaseRow) for (let x = 0; x < rowLength; x++) writer.writeBits(values[x], valueBits);
+    const rowCount = Math.floor(values.length / rowLength);
+    let row = useVirtualBaseRow ? 0 : 1;
+    while (row < rowCount) {
+      const repeatCount = compactRepeatedRowCountParity(values, rowLength, row, useVirtualBaseRow);
+      if (repeatCount >= 2) {
+        writer.writeBits(CompactRowDeltaParity.repeatRun, 3);
+        writeCompactUint(writer, repeatCount - 2);
+        row += repeatCount;
+      } else {
+        const decision = bestCompactRowDeltaDecisionParity(values, rowLength, valueBits, row, useVirtualBaseRow, directGrayscale);
+        writeCompactRowDeltaDecisionParity(writer, values, rowLength, valueBits, row, decision, useVirtualBaseRow, directGrayscale);
+        row++;
+      }
+    }
+  }
+
+  function tryBuildV2CompactRowDeltaPayloadParity(image, linear, scan, referenceEncoding, options) {
+    if (linear.length !== options.dataWidth * options.dataHeight || linear.length === 0) return null;
+    if (options.directGrayscale && !isGrayscaleProfileParity(image.paletteProfile)) return null;
+    if (options.paletteOrder !== 'frequency' && isDynamicProfile(image.paletteProfile) && referenceEncoding !== DynamicPaletteReferenceEncoding.flat) return null;
+    if (isDynamicProfile(image.paletteProfile) ? referenceEncoding == null : referenceEncoding != null) return null;
+    const writer = beginExtendedPayloadParity(
+      image, scan, referenceEncoding, options.backgroundColor, options.bounds || null,
+      { unalignedExtendedBody: true },
+    );
+    writer.writeBits(ExtendedImageMode.compactRowDelta, 3);
+    writer.writeBits(options.directGrayscale ? 1 : 0, 1);
+    let values, valueBits, localPaletteSize = null, usedBankCount = null;
+    if (options.directGrayscale) {
+      values = linear.slice();
+      valueBits = __legacyGlobalBits(image.paletteProfile);
+    } else if (isDynamicProfile(image.paletteProfile)) {
+      const profilePixels = linear.map((color) => profileColorIdForGlobalIndex(image.paletteProfile, color));
+      const backgroundId = profileColorIdForGlobalIndex(image.paletteProfile, options.backgroundColor);
+      let palette = buildDynamicLocalPalette(image.paletteProfile, profilePixels, backgroundId);
+      if (options.paletteOrder !== 'frequency') {
+        const optimized = optimizeTransitionPaletteOrderParity(profilePixels, palette, backgroundId);
+        if (intListsEqualParity(optimized, palette)) return null;
+        palette = optimized;
+      }
+      if (usesExtendedDynamicPaletteDescriptorParity(referenceEncoding)) palette = palette.slice().sort((a, b) => a - b);
+      if (palette.length === 0 || palette.length > 64) return null;
+      writeDynamicLocalPalette(writer, image.paletteProfile, palette, referenceEncoding);
+      const localIndex = new Map(palette.map((color, index) => [color, index]));
+      values = profilePixels.map((color) => localIndex.get(color));
+      valueBits = bitsForLocalPalette(palette.length);
+      localPaletteSize = palette.length;
+      if (referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64) usedBankCount = new Set(palette.map((id) => id >> 6)).size;
+    } else {
+      let palette = buildLocalPalette(linear, options.backgroundColor);
+      if (options.paletteOrder !== 'frequency') {
+        const optimized = optimizeTransitionPaletteOrderParity(linear, palette, options.backgroundColor);
+        if (intListsEqualParity(optimized, palette)) return null;
+        palette = optimized;
+      }
+      palette = writeV2FixedLocalPaletteParity(writer, palette, image.paletteProfile);
+      const localIndex = new Map(palette.map((color, index) => [color, index]));
+      values = linear.map((color) => localIndex.get(color));
+      valueBits = bitsForLocalPalette(palette.length);
+      localPaletteSize = palette.length;
+    }
+    writeCompactRowDeltaBodyParity(
+      writer, values, rowLengthForScan(scan, options.dataWidth, options.dataHeight), valueBits, options.directGrayscale,
+    );
+    return { payload: writer.toBytes(), localPaletteSize, usedBankCount, bitsPerLocalPixel: valueBits };
+  }
+
+  function addV2CandidateParity(state, built, mode, scan, meta) {
+    if (!built) return;
+    const candidate = candidateFromV2Payload(built.payload, mode, scan, {
+      bounds: meta.bounds || null,
+      backgroundColor: meta.backgroundColor,
+      transparentColor: meta.image.transparentColor,
+      backgroundRank: meta.backgroundRank,
+      dynamicReferenceEncoding: meta.referenceEncoding,
+      localPaletteSize: built.localPaletteSize,
+      bitsPerLocalPixel: built.bitsPerLocalPixel,
+      paletteProfile: meta.image.paletteProfile,
+      regionCount: built.regionCount,
+      container: meta.container,
+    });
+    candidate.usedBankCount = built.usedBankCount ?? null;
+    state.candidates.push(candidate);
+    if (isBetterCandidate(candidate, state.best, state.outputTarget)) state.best = candidate;
+  }
+
+  function adaptiveVariantsParity(profile, referenceEncoding, suffix = '') {
+    const variants = [
+      { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'frequency', container: `adaptive-bitplanes${suffix}` },
+      { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'optimized', container: `adaptive-bitplanes-optimized${suffix}` },
+    ];
+    if (supportsAlternativeAdaptivePaletteOrdersParity(profile, referenceEncoding)) {
+      variants.push(
+        { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'profileId', container: `adaptive-bitplanes-profile-order${suffix}` },
+        { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'rgb', container: `adaptive-bitplanes-rgb-order${suffix}` },
+        { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'transition', container: `adaptive-bitplanes-transition-order${suffix}` },
+        { directGrayscale: false, directDynamicProfile: false, paletteOrder: 'multiStart', container: `adaptive-bitplanes-multistart${suffix}` },
+      );
+    }
+    if (isGrayscaleProfileParity(profile)) {
+      variants.push({ directGrayscale: true, directDynamicProfile: false, paletteOrder: 'frequency', container: `direct-grayscale-bitplanes${suffix}` });
+    }
+    if (isDynamicProfile(profile) && referenceEncoding === DynamicPaletteReferenceEncoding.flat) {
+      variants.push({ directGrayscale: false, directDynamicProfile: true, paletteOrder: 'frequency', container: `direct-dynamic-bitplanes${suffix}` });
+    }
+    return variants;
+  }
+
+  function rowDeltaVariantsParity(profile, referenceEncoding, suffix = '') {
+    const variants = [
+      { directGrayscale: false, paletteOrder: 'frequency', container: `compact-row-delta${suffix}` },
+    ];
+    if (!isDynamicProfile(profile) || referenceEncoding === DynamicPaletteReferenceEncoding.flat) {
+      variants.push({ directGrayscale: false, paletteOrder: 'transition', container: `compact-row-delta-palette-optimized${suffix}` });
+    }
+    if (isGrayscaleProfileParity(profile)) {
+      variants.push({ directGrayscale: true, paletteOrder: 'frequency', container: `grayscale-row-delta${suffix}` });
+    }
+    return variants;
+  }
+
+  // ---- Final Dart-parity v2 Regions completion ---------------------------
+
+  function regionsDoNotOverlapParity(regions) {
+    for (let i = 0; i < regions.length; i++) {
+      const a = regions[i];
+      for (let j = i + 1; j < regions.length; j++) {
+        const b = regions[j];
+        if (a.x < b.x + b.width && a.x + a.width > b.x &&
+            a.y < b.y + b.height && a.y + a.height > b.y) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function blockPayloadBetterParity(candidate, current) {
+    if (current == null) return true;
+    if (candidate.bitLength !== current.bitLength) {
+      return candidate.bitLength < current.bitLength;
+    }
+    return MCOImageCodec.modeTieOrder.indexOf(candidate.mode) <
+      MCOImageCodec.modeTieOrder.indexOf(current.mode);
+  }
+
+  function writeLzTokensParity(writer, tokens, localBits) {
+    for (const token of tokens) {
+      if (token.match) {
+        writer.writeBits(1, 1);
+        writeCompactUint(writer, token.distance - 1);
+        writeCompactUint(writer, token.length - 3);
+      } else {
+        writer.writeBits(0, 1);
+        writeCompactUint(writer, token.literals.length - 1);
+        for (const value of token.literals) writer.writeBits(value, localBits);
+      }
+    }
+  }
+
+  function sharedPaletteExtendedBodiesParity(localPixels, localBits, backgroundIndex, width, height, rowLength) {
+    if (localPixels.length === 0) return [];
+    const result = [];
+    const finish = (writer, label) => ({
+      payload: writer.toBytes(),
+      bitLength: writer.bitLength,
+      mode: ImageMode.extended,
+      label,
+    });
+
+    {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.compactRle, 3);
+      for (const run of buildRuns(localPixels)) {
+        writer.writeBits(run.color, localBits);
+        writeCompactUint(writer, run.length - 1);
+      }
+      result.push(finish(writer, 'compact-rle'));
+    }
+
+    if (backgroundIndex != null && localPixels.some((value) => value !== backgroundIndex)) {
+      const segments = buildSparseSegmentsGeneric(localPixels, backgroundIndex);
+      if (segments.length > 0) {
+        const writer = new BitWriter();
+        writer.writeBits(ExtendedImageMode.compactSparse, 3);
+        writeCompactUint(writer, segments.length - 1);
+        let position = 0;
+        for (const segment of segments) {
+          writeCompactUint(writer, segment.start - position);
+          writer.writeBits(segment.color, localBits);
+          writeCompactUint(writer, segment.length - 1);
+          position = segment.start + segment.length;
+        }
+        result.push(finish(writer, 'compact-sparse'));
+      }
+    }
+
+    {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.bitplanes, 3);
+      writeAdaptiveBitplanesBodyParity(writer, localPixels, localBits);
+      result.push(finish(writer, 'bitplanes'));
+    }
+
+    {
+      const greedy = buildGreedyLzPixelTokensParity(localPixels, localBits);
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.lzPixels, 3);
+      writeLzTokensParity(writer, greedy, localBits);
+      result.push(finish(writer, 'lz-greedy'));
+
+      if (localPixels.length <= 1024) {
+        const optimal = buildOptimalLzPixelTokensParity(localPixels, localBits);
+        if (optimal != null) {
+          const optimalCost = lzPixelTokensBitCostParity(optimal, localBits);
+          const greedyCost = lzPixelTokensBitCostParity(greedy, localBits);
+          if (optimalCost < greedyCost ||
+              (optimalCost === greedyCost && !lzPixelTokensEqualParity(optimal, greedy))) {
+            const optimalWriter = new BitWriter();
+            optimalWriter.writeBits(ExtendedImageMode.lzPixels, 3);
+            writeLzTokensParity(optimalWriter, optimal, localBits);
+            result.push(finish(optimalWriter, 'lz-optimal'));
+          }
+        }
+      }
+    }
+
+    if (width > 0 && height > 0 && localPixels.length === width * height) {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.quadtree, 3);
+      writeQuadtreeBody(writer, localPixels, width, height, localBits);
+      result.push(finish(writer, 'quadtree'));
+    }
+
+    if (rowLength > 0 && localPixels.length % rowLength === 0) {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.compactRowDelta, 3);
+      writer.writeBits(0, 1);
+      writeCompactRowDeltaBodyParity(writer, localPixels, rowLength, localBits, false);
+      result.push(finish(writer, 'compact-row-delta'));
+    }
+
+    return result;
+  }
+
+  function fixedExtendedBlockBodiesParity(linear, profile, backgroundColor, width, height, rowLength) {
+    if (isDynamicProfile(profile) || linear.length === 0) return [];
+    const result = [];
+    const finish = (writer, label, paletteLength, bits) => ({
+      payload: writer.toBytes(),
+      bitLength: writer.bitLength,
+      mode: ImageMode.extended,
+      label,
+      localPaletteSize: paletteLength,
+      bitsPerLocalPixel: bits,
+    });
+
+    const makePalette = (writer, source, preferredFirst = null) => {
+      const local = buildLocalPalette(source, preferredFirst);
+      if (local.length === 0) return null;
+      const palette = writeV2FixedLocalPaletteParity(writer, local, profile);
+      return {
+        palette,
+        index: new Map(palette.map((color, index) => [color, index])),
+        bits: bitsForLocalPalette(palette.length),
+      };
+    };
+
+    {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.compactRle, 3);
+      const prepared = makePalette(writer, linear);
+      if (prepared) {
+        for (const run of buildRuns(linear)) {
+          writer.writeBits(prepared.index.get(run.color), prepared.bits);
+          writeCompactUint(writer, run.length - 1);
+        }
+        result.push(finish(writer, 'compact-rle', prepared.palette.length, prepared.bits));
+      }
+    }
+
+    if (linear.some((value) => value !== backgroundColor)) {
+      const segments = buildSparseSegmentsGeneric(linear, backgroundColor);
+      const source = linear.filter((value) => value !== backgroundColor);
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.compactSparse, 3);
+      const prepared = makePalette(writer, source);
+      if (prepared && segments.length > 0) {
+        writeCompactUint(writer, segments.length - 1);
+        let position = 0;
+        for (const segment of segments) {
+          writeCompactUint(writer, segment.start - position);
+          writer.writeBits(prepared.index.get(segment.color), prepared.bits);
+          writeCompactUint(writer, segment.length - 1);
+          position = segment.start + segment.length;
+        }
+        result.push(finish(writer, 'compact-sparse', prepared.palette.length, prepared.bits));
+      }
+    }
+
+    {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.bitplanes, 3);
+      const prepared = makePalette(writer, linear);
+      if (prepared) {
+        const values = linear.map((color) => prepared.index.get(color));
+        writeLegacyBitplanesBodyParity(writer, values, prepared.bits);
+        result.push(finish(writer, 'bitplanes', prepared.palette.length, prepared.bits));
+      }
+    }
+
+    {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.lzPixels, 3);
+      const prepared = makePalette(writer, linear);
+      if (prepared) {
+        const values = linear.map((color) => prepared.index.get(color));
+        const greedy = buildGreedyLzPixelTokensParity(values, prepared.bits);
+        writeLzTokensParity(writer, greedy, prepared.bits);
+        result.push(finish(writer, 'lz-greedy', prepared.palette.length, prepared.bits));
+
+        if (values.length <= 1024) {
+          const optimal = buildOptimalLzPixelTokensParity(values, prepared.bits);
+          if (optimal != null) {
+            const optimalCost = lzPixelTokensBitCostParity(optimal, prepared.bits);
+            const greedyCost = lzPixelTokensBitCostParity(greedy, prepared.bits);
+            if (optimalCost < greedyCost ||
+                (optimalCost === greedyCost && !lzPixelTokensEqualParity(optimal, greedy))) {
+              const optimalWriter = new BitWriter();
+              optimalWriter.writeBits(ExtendedImageMode.lzPixels, 3);
+              const optimalPrepared = makePalette(optimalWriter, linear);
+              writeLzTokensParity(optimalWriter, optimal, optimalPrepared.bits);
+              result.push(finish(
+                optimalWriter,
+                'lz-optimal',
+                optimalPrepared.palette.length,
+                optimalPrepared.bits,
+              ));
+            }
+          }
+        }
+      }
+    }
+
+    if (width > 0 && height > 0 && linear.length === width * height) {
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.quadtree, 3);
+      const prepared = makePalette(writer, linear);
+      if (prepared) {
+        const values = linear.map((color) => prepared.index.get(color));
+        writeQuadtreeBody(writer, values, width, height, prepared.bits);
+        result.push(finish(writer, 'quadtree', prepared.palette.length, prepared.bits));
+      }
+    }
+
+    const addRowDelta = (directGrayscale, transitionOrder) => {
+      if (directGrayscale && !isGrayscaleProfileParity(profile)) return;
+      const writer = new BitWriter();
+      writer.writeBits(ExtendedImageMode.compactRowDelta, 3);
+      writer.writeBits(directGrayscale ? 1 : 0, 1);
+      let values;
+      let valueBits;
+      let paletteLength = null;
+      if (directGrayscale) {
+        values = linear.slice();
+        valueBits = __legacyGlobalBits(profile);
+      } else {
+        let palette = buildLocalPalette(linear, backgroundColor);
+        if (transitionOrder) {
+          const optimized = optimizeTransitionPaletteOrderParity(linear, palette, backgroundColor);
+          if (intListsEqualParity(optimized, palette)) return;
+          palette = optimized;
+        }
+        palette = writeV2FixedLocalPaletteParity(writer, palette, profile);
+        paletteLength = palette.length;
+        valueBits = bitsForLocalPalette(palette.length);
+        const index = new Map(palette.map((color, i) => [color, i]));
+        values = linear.map((color) => index.get(color));
+      }
+      writeCompactRowDeltaBodyParity(writer, values, rowLength, valueBits, directGrayscale);
+      result.push(finish(
+        writer,
+        directGrayscale ? 'compact-row-delta-direct' :
+          (transitionOrder ? 'compact-row-delta-transition' : 'compact-row-delta'),
+        paletteLength,
+        valueBits,
+      ));
+    };
+    if (rowLength > 0 && linear.length % rowLength === 0) {
+      addRowDelta(false, false);
+      addRowDelta(false, true);
+      addRowDelta(true, false);
+    }
+
+    return result;
+  }
+
+  function tryBuildFixedSharedBlockBodyParity(linear, mode, backgroundColor, localIndexByColor, rowLength) {
+    const writer = new BitWriter();
+    const localPixels = linear.map((color) => {
+      const index = localIndexByColor.get(color);
+      if (index == null) throw new MCOImageInvalidInputError('Fixed shared palette is missing a color');
+      return index;
+    });
+    const localBits = bitsForLocalPalette(localIndexByColor.size);
+    if (mode === ImageMode.rawLocal) {
+      for (const index of localPixels) writer.writeBits(index, localBits);
+    } else if (mode === ImageMode.rleLocal) {
+      const runs = buildRuns(localPixels);
+      writeBitVarUint(writer, runs.length);
+      for (const run of runs) {
+        writer.writeBits(run.color, localBits);
+        writeBitVarUint(writer, run.length);
+      }
+    } else if (mode === ImageMode.sparseBg) {
+      const backgroundIndex = localIndexByColor.get(backgroundColor);
+      if (backgroundIndex == null) return null;
+      const segments = buildSparseSegmentsGeneric(localPixels, backgroundIndex);
+      writeBitVarUint(writer, segments.length);
+      let position = 0;
+      for (const segment of segments) {
+        writeBitVarUint(writer, segment.start - position);
+        writer.writeBits(segment.color, localBits);
+        writeBitVarUint(writer, segment.length);
+        position = segment.start + segment.length;
+      }
+    } else if (mode === ImageMode.rowRepeat) {
+      writeRowRepeatBody(writer, localPixels, rowLength, localBits);
+    } else if (mode === ImageMode.rowDelta) {
+      writeDartRowDeltaBody(writer, localPixels, rowLength, localBits);
+    } else if (mode === ImageMode.biColorMask) {
+      const foreground = biColorForeground(linear, backgroundColor);
+      if (foreground == null) return null;
+      const foregroundIndex = localIndexByColor.get(foreground);
+      if (foregroundIndex == null) return null;
+      writer.writeBits(foregroundIndex, localBits);
+      writeBiColorMask(writer, linear, backgroundColor, foreground);
+    } else {
+      return null;
+    }
+    return { payload: writer.toBytes(), bitLength: writer.bitLength, mode };
+  }
+
+  function bestSharedRegionBlockParity(
+    regionPixels,
+    width,
+    height,
+    profile,
+    backgroundColor,
+    localIndex,
+    includeExtendedBlocks,
+    dynamic,
+  ) {
+    let best = null;
+    for (const scan of Object.values(ScanMode)) {
+      const linear = toScanOrder(regionPixels, width, height, scan);
+      const rowLength = rowLengthForScan(scan, width, height);
+      for (const mode of MCOImageCodec.dynamicBlockModes) {
+        const block = dynamic
+          ? tryBuildDynamicSharedBlockBody(
+              linear, profile, mode, backgroundColor, localIndex, rowLength,
+            )
+          : tryBuildFixedSharedBlockBodyParity(
+              linear, mode, backgroundColor, localIndex, rowLength,
+            );
+        if (!block) continue;
+        const candidate = {
+          payload: block.payload,
+          bitLength: block.bitLength ?? block.payload.length * 8,
+          mode,
+          scan,
+        };
+        if (blockPayloadBetterParity(candidate, best)) best = candidate;
+      }
+      if (includeExtendedBlocks) {
+        const localPixels = linear.map((color) => {
+          if (dynamic) {
+            const id = profileColorIdForGlobalIndex(profile, color);
+            return localIndex.get(id);
+          }
+          return localIndex.get(color);
+        });
+        const backgroundKey = dynamic
+          ? profileColorIdForGlobalIndex(profile, backgroundColor)
+          : backgroundColor;
+        const backgroundIndex = localIndex.get(backgroundKey);
+        for (const block of sharedPaletteExtendedBodiesParity(
+          localPixels,
+          bitsForLocalPalette(localIndex.size),
+          backgroundIndex,
+          width,
+          height,
+          rowLength,
+        )) {
+          const candidate = { ...block, scan };
+          if (blockPayloadBetterParity(candidate, best)) best = candidate;
+        }
+      }
+    }
+    if (!best) throw new MCOImageTooLargeError('Shared region could not be encoded');
+    return best;
+  }
+
+  function bestUnsharedFixedRegionBlockParity(
+    regionPixels,
+    width,
+    height,
+    profile,
+    backgroundColor,
+    includeExtendedBlocks,
+  ) {
+    let best = null;
+    for (const scan of Object.values(ScanMode)) {
+      const linear = toScanOrder(regionPixels, width, height, scan);
+      const rowLength = rowLengthForScan(scan, width, height);
+      for (const mode of MCOImageCodec.v2BlockModes) {
+        const block = tryBuildV2BlockBodyParity(linear, profile, mode, null, {
+          rowLength,
+          backgroundColor,
+          writeSparseBackground: false,
+        });
+        if (!block) continue;
+        const candidate = {
+          payload: block.payload,
+          bitLength: block.payload.length * 8,
+          mode,
+          scan,
+        };
+        if (blockPayloadBetterParity(candidate, best)) best = candidate;
+      }
+      if (includeExtendedBlocks) {
+        for (const block of fixedExtendedBlockBodiesParity(
+          linear, profile, backgroundColor, width, height, rowLength,
+        )) {
+          const candidate = { ...block, scan };
+          if (blockPayloadBetterParity(candidate, best)) best = candidate;
+        }
+      }
+    }
+    if (!best) throw new MCOImageTooLargeError('Fixed region could not be encoded');
+    return best;
+  }
+
+  function mostCommonRegionHeaderParity(regionBlocks) {
+    const counts = new Map();
+    for (const item of regionBlocks) {
+      const key = `${item.block.mode}:${item.block.scan}`;
+      const previous = counts.get(key);
+      counts.set(key, {
+        mode: item.block.mode,
+        scan: item.block.scan,
+        count: (previous?.count || 0) + 1,
+      });
+    }
+    const values = Array.from(counts.values());
+    values.sort((left, right) => {
+      if (left.count !== right.count) return right.count - left.count;
+      const leftMode = MCOImageCodec.modeTieOrder.indexOf(left.mode);
+      const rightMode = MCOImageCodec.modeTieOrder.indexOf(right.mode);
+      if (leftMode !== rightMode) return leftMode - rightMode;
+      return left.scan - right.scan;
+    });
+    return values[0] || null;
+  }
+
+  function tryBuildV2RegionsPayloadFromRegionsParity(
+    image,
+    backgroundColor,
+    referenceEncoding,
+    regions,
+    maxRegions,
+    options,
+  ) {
+    const compactGeometry = options.compactGeometry === true;
+    const compactStream = options.compactStream === true;
+    const compactStreamCommon = options.compactStreamCommonBlockHeader === true;
+    const sharedFixedPalette = options.sharedFixedPalette === true;
+    const includeExtendedBlocks = options.includeExtendedFixedBlocks === true;
+    if (regions.length === 0 || regions.length > maxRegions || !regionsDoNotOverlapParity(regions)) return null;
+    if (isDynamicProfile(image.paletteProfile) && referenceEncoding == null) {
+      throw new MCOImageInvalidInputError('Dynamic v2 regions require reference encoding');
+    }
+    if (!isDynamicProfile(image.paletteProfile) && referenceEncoding != null) return null;
+    if (sharedFixedPalette && isDynamicProfile(image.paletteProfile)) return null;
+    if (compactStreamCommon && !compactStream) return null;
+
+    const writer = new BitWriter();
+    const implicitWhite = isImplicitWhite(image.paletteProfile, backgroundColor);
+    writeV2Header(writer, {
+      profile: image.paletteProfile,
+      container: MCOImageCodec.containerRegions,
+      mode: (compactGeometry || compactStream) ? ImageMode.extended : ImageMode.rawGlobal,
+      scan: compactStreamCommon
+        ? MCOImageCodec.regionsVariantCompactStreamCommon
+        : compactStream
+          ? MCOImageCodec.regionsVariantCompactStream
+          : (compactGeometry ? MCOImageCodec.regionsVariantCompactGeometry : ScanMode.h),
+      boundsPresent: false,
+      referenceEncoding,
+      implicitWhiteBackground: implicitWhite,
+      width: image.width,
+      height: image.height,
+      hasTransparentColor: image.transparentColor != null,
+      sharedFixedRegionsPalette: sharedFixedPalette,
+    });
+    if (image.transparentColor != null) {
+      writeV2ColorRef(writer, image.paletteProfile, image.transparentColor);
+    }
+
+    const implicitFixed = sharedFixedPalette && implicitWhite;
+    if (sharedFixedPalette) writer.writeBits(implicitFixed ? 1 : 0, 1);
+    if (isDynamicProfile(image.paletteProfile) || implicitFixed) {
+      writeV2BackgroundRefParity(writer, image.paletteProfile, backgroundColor);
+    } else {
+      writeV2ColorRef(writer, image.paletteProfile, backgroundColor);
+    }
+
+    let localIndex = null;
+    let localPaletteSize = null;
+    let usedBankCount = null;
+    let bitsPerLocalPixel = null;
+    if (isDynamicProfile(image.paletteProfile)) {
+      const allColors = [];
+      for (const region of regions) {
+        allColors.push(...cropPixels(image.pixels, image.width, region));
+      }
+      const paletteIds = buildDynamicPaletteParity(
+        image.paletteProfile, allColors, backgroundColor, referenceEncoding,
+      );
+      if (!paletteIds || paletteIds.length === 0 ||
+          paletteIds.length > MCOImageCodec.maxDynamicLocalPalette) return null;
+      writeDynamicLocalPalette(writer, image.paletteProfile, paletteIds, referenceEncoding);
+      localIndex = new Map(paletteIds.map((id, index) => [id, index]));
+      localPaletteSize = paletteIds.length;
+      bitsPerLocalPixel = bitsForLocalPalette(paletteIds.length);
+      usedBankCount = referenceEncoding === DynamicPaletteReferenceEncoding.banked8x64
+        ? new Set(paletteIds.map((id) => id >> 6)).size
+        : null;
+    } else if (sharedFixedPalette) {
+      const colors = [];
+      for (const region of regions) colors.push(...cropPixels(image.pixels, image.width, region));
+      const local = buildLocalPalette(colors, backgroundColor);
+      if (local.length === 0) return null;
+      const palette = writeV2FixedLocalPaletteParity(writer, local, image.paletteProfile);
+      localIndex = new Map(palette.map((color, index) => [color, index]));
+      localPaletteSize = palette.length;
+      bitsPerLocalPixel = bitsForLocalPalette(palette.length);
+    }
+
+    const regionBlocks = [];
+    const blockCache = options.cache?.blocks;
+    const sharedPaletteKey = localIndex == null
+      ? ''
+      : Array.from(localIndex.keys()).join(',');
+    for (const region of regions) {
+      const cacheKey = [
+        isDynamicProfile(image.paletteProfile) ? 'dynamic' : (sharedFixedPalette ? 'shared-fixed' : 'fixed'),
+        includeExtendedBlocks ? 1 : 0,
+        region.x, region.y, region.width, region.height,
+        sharedPaletteKey,
+      ].join('|');
+      let block = blockCache?.get(cacheKey);
+      if (!block) {
+        const pixels = cropPixels(image.pixels, image.width, region);
+        block = isDynamicProfile(image.paletteProfile)
+          ? bestSharedRegionBlockParity(
+              pixels, region.width, region.height, image.paletteProfile,
+              backgroundColor, localIndex, includeExtendedBlocks, true,
+            )
+          : sharedFixedPalette
+            ? bestSharedRegionBlockParity(
+                pixels, region.width, region.height, image.paletteProfile,
+                backgroundColor, localIndex, includeExtendedBlocks, false,
+              )
+            : bestUnsharedFixedRegionBlockParity(
+                pixels, region.width, region.height, image.paletteProfile,
+                backgroundColor, includeExtendedBlocks,
+              );
+        blockCache?.set(cacheKey, block);
+      }
+      regionBlocks.push({ region, block });
+    }
+
+    const commonHeader = compactStreamCommon
+      ? mostCommonRegionHeaderParity(regionBlocks)
+      : null;
+    if (compactGeometry || compactStream) {
+      writer.writeBits(regions.length - 1, bitsForChoiceCount(MCOImageCodec.maxV2Regions));
+    } else {
+      writeBitVarUint(writer, regions.length);
+    }
+    if (commonHeader) {
+      writer.writeBits(modeBits(commonHeader.mode), 3);
+      writer.writeBits(scanBits(commonHeader.scan), 2);
+    }
+    for (const item of regionBlocks) {
+      const { region, block } = item;
+      if (compactGeometry || compactStream) {
+        writeV2CompactBounds(writer, region, image.width, image.height);
+      } else {
+        writeBitVarUint(writer, region.x);
+        writeBitVarUint(writer, region.y);
+        writeBitVarUint(writer, region.width);
+        writeBitVarUint(writer, region.height);
+      }
+      if (compactStream) {
+        if (commonHeader) {
+          const usesCommon = block.mode === commonHeader.mode && block.scan === commonHeader.scan;
+          writer.writeBits(usesCommon ? 0 : 1, 1);
+          if (!usesCommon) {
+            writer.writeBits(modeBits(block.mode), 3);
+            writer.writeBits(scanBits(block.scan), 2);
+          }
+        } else {
+          writer.writeBits(modeBits(block.mode), 3);
+          writer.writeBits(scanBits(block.scan), 2);
+        }
+        writeBitVarUint(writer, block.bitLength);
+        writer.writeBitsFromBytes(block.payload, block.bitLength);
+      } else {
+        writer.writeAlignedByte((modeBits(block.mode) << 5) | (scanBits(block.scan) << 3));
+        writeBitVarUint(writer, block.payload.length);
+        writer.writeAlignedBytes(block.payload);
+      }
+    }
+
+    return {
+      payload: writer.toBytes(),
+      regionCount: regions.length,
+      localPaletteSize,
+      usedBankCount,
+      bitsPerLocalPixel,
+      diagnosticContainer: options.diagnosticContainer || 'regions',
+    };
+  }
+
+  function sortedRegionsParity(regions) {
+    return regions.slice().sort((left, right) =>
+      (left.y - right.y) ||
+      (left.x - right.x) ||
+      (left.height - right.height) ||
+      (left.width - right.width));
+  }
+
+  function unionBoundsParity(left, right) {
+    const x = Math.min(left.x, right.x);
+    const y = Math.min(left.y, right.y);
+    const maxX = Math.max(left.x + left.width, right.x + right.width);
+    const maxY = Math.max(left.y + left.height, right.y + right.height);
+    return { x, y, width: maxX - x, height: maxY - y,
+      area: (maxX - x) * (maxY - y) };
+  }
+
+  function tightBoundsInRectParity(pixels, fullWidth, backgroundColor, rect) {
+    let minX = rect.x + rect.width;
+    let minY = rect.y + rect.height;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        if (pixels[y * fullWidth + x] === backgroundColor) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < minX || maxY < minY) return null;
+    const width = maxX - minX + 1;
+    const height = maxY - minY + 1;
+    return { x: minX, y: minY, width, height, area: width * height };
+  }
+
+  function tightSplitRegionParity(pixels, fullWidth, backgroundColor, region, vertical, cut) {
+    const first = vertical
+      ? { x: region.x, y: region.y, width: cut, height: region.height }
+      : { x: region.x, y: region.y, width: region.width, height: cut };
+    const second = vertical
+      ? { x: region.x + cut, y: region.y, width: region.width - cut, height: region.height }
+      : { x: region.x, y: region.y + cut, width: region.width, height: region.height - cut };
+    return [
+      tightBoundsInRectParity(pixels, fullWidth, backgroundColor, first),
+      tightBoundsInRectParity(pixels, fullWidth, backgroundColor, second),
+    ].filter(Boolean);
+  }
+
+  function addRegionSplitNeighborParity(output, regions, replacedIndex, original, parts) {
+    if (parts.length !== 2) return;
+    const savedArea = original.area - parts[0].area - parts[1].area;
+    if (savedArea <= 0) return;
+    const candidate = [];
+    for (let i = 0; i < regions.length; i++) if (i !== replacedIndex) candidate.push(regions[i]);
+    candidate.push(...parts);
+    if (!regionsDoNotOverlapParity(candidate)) return;
+    output.push({ regions: sortedRegionsParity(candidate), heuristic: -savedArea });
+  }
+
+  function regionBeamNeighborsForParity(
+    pixels,
+    fullWidth,
+    backgroundColor,
+    regions,
+    maxRegions,
+    useExtremeSearch,
+  ) {
+    const merge = [];
+    if (regions.length > 1) {
+      for (let left = 0; left < regions.length - 1; left++) {
+        for (let right = left + 1; right < regions.length; right++) {
+          const merged = unionBoundsParity(regions[left], regions[right]);
+          const candidate = [];
+          for (let i = 0; i < regions.length; i++) {
+            if (i !== left && i !== right) candidate.push(regions[i]);
+          }
+          candidate.push(merged);
+          if (!regionsDoNotOverlapParity(candidate)) continue;
+          merge.push({
+            regions: sortedRegionsParity(candidate),
+            heuristic: merged.area - regions[left].area - regions[right].area,
+          });
+        }
+      }
+    }
+    merge.sort((a, b) => a.heuristic - b.heuristic);
+
+    const split = [];
+    if (regions.length < maxRegions) {
+      for (let index = 0; index < regions.length; index++) {
+        const region = regions[index];
+        for (let cut = 1; cut < region.width; cut++) {
+          addRegionSplitNeighborParity(
+            split,
+            regions,
+            index,
+            region,
+            tightSplitRegionParity(
+              pixels, fullWidth, backgroundColor, region, true, cut,
+            ),
+          );
+        }
+        for (let cut = 1; cut < region.height; cut++) {
+          addRegionSplitNeighborParity(
+            split,
+            regions,
+            index,
+            region,
+            tightSplitRegionParity(
+              pixels, fullWidth, backgroundColor, region, false, cut,
+            ),
+          );
+        }
+      }
+    }
+    split.sort((a, b) => a.heuristic - b.heuristic);
+
+    const limit = useExtremeSearch ? 32 : 8;
+    const perKind = Math.max(1, Math.floor(limit / 2));
+    const result = [];
+    const seen = new Set();
+    for (const neighbor of [
+      ...merge.slice(0, perKind),
+      ...split.slice(0, perKind),
+    ]) {
+      const key = regionListKey(neighbor.regions);
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(neighbor.regions);
+      }
+    }
+    return result;
+  }
+
+  function regionPayloadByteCostParity(
+    image,
+    backgroundColor,
+    referenceEncoding,
+    regions,
+    maxRegions,
+    includeExtendedBlocks,
+    cache,
+  ) {
+    const layoutKey = `${includeExtendedBlocks ? 1 : 0}|${regionListKey(regions)}`;
+    if (cache?.payloadCosts?.has(layoutKey)) return cache.payloadCosts.get(layoutKey);
+    let best = null;
+    const consider = (payload) => {
+      if (payload && (best == null || payload.payload.length < best)) {
+        best = payload.payload.length;
+      }
+    };
+    for (const compactGeometry of [false, true]) {
+      const base = { compactGeometry, includeExtendedFixedBlocks: false, cache };
+      consider(tryBuildV2RegionsPayloadFromRegionsParity(
+        image, backgroundColor, referenceEncoding, regions, maxRegions, base,
+      ));
+      if (includeExtendedBlocks) {
+        consider(tryBuildV2RegionsPayloadFromRegionsParity(
+          image, backgroundColor, referenceEncoding, regions, maxRegions,
+          { ...base, includeExtendedFixedBlocks: true, cache },
+        ));
+        if (compactGeometry) {
+          for (const common of [false, true]) {
+            consider(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              { compactGeometry: true, compactStream: true,
+                compactStreamCommonBlockHeader: common,
+                includeExtendedFixedBlocks: false, cache },
+            ));
+            consider(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              { compactGeometry: true, compactStream: true,
+                compactStreamCommonBlockHeader: common,
+                includeExtendedFixedBlocks: true, cache },
+            ));
+          }
+        }
+      }
+      if (!isDynamicProfile(image.paletteProfile)) {
+        consider(tryBuildV2RegionsPayloadFromRegionsParity(
+          image, backgroundColor, referenceEncoding, regions, maxRegions,
+          { ...base, sharedFixedPalette: true, cache },
+        ));
+        if (includeExtendedBlocks) {
+          consider(tryBuildV2RegionsPayloadFromRegionsParity(
+            image, backgroundColor, referenceEncoding, regions, maxRegions,
+            { ...base, sharedFixedPalette: true, includeExtendedFixedBlocks: true, cache },
+          ));
+          if (compactGeometry) {
+            for (const common of [false, true]) {
+              consider(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                { compactGeometry: true, compactStream: true,
+                  compactStreamCommonBlockHeader: common,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: false, cache },
+              ));
+              consider(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                { compactGeometry: true, compactStream: true,
+                  compactStreamCommonBlockHeader: common,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true, cache },
+              ));
+            }
+          }
+        }
+      }
+    }
+    if (cache?.payloadCosts) cache.payloadCosts.set(layoutKey, best);
+    return best;
+  }
+
+  function findPayloadOptimizedRegionVariantsParity(
+    image,
+    backgroundColor,
+    referenceEncoding,
+    initialVariants,
+    maxRegions,
+    useExtremeSearch,
+    includeExtendedBlocks,
+    cache,
+  ) {
+    const seen = new Set();
+    const initial = [];
+    for (const regions of initialVariants) {
+      if (regions.length === 0 || regions.length > maxRegions ||
+          !regionsDoNotOverlapParity(regions)) continue;
+      const normalized = sortedRegionsParity(regions);
+      const key = regionListKey(normalized);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const cost = regionPayloadByteCostParity(
+        image, backgroundColor, referenceEncoding, normalized, maxRegions,
+        includeExtendedBlocks,
+        cache,
+      );
+      if (cost != null) initial.push({ regions: normalized, cost });
+    }
+    if (initial.length === 0) return [];
+    initial.sort((a, b) => a.cost - b.cost);
+    const bestExistingCost = initial[0].cost;
+    const beamWidth = useExtremeSearch ? 10 : 3;
+    const beamDepth = useExtremeSearch ? 8 : 2;
+    const resultLimit = useExtremeSearch ? 10 : 3;
+    const budget = useExtremeSearch ? 1536 : Number.POSITIVE_INFINITY;
+    let evaluated = initial.length;
+    let beam = initial.slice(0, beamWidth);
+    const improved = [];
+    let exhausted = false;
+    for (let depth = 0; depth < beamDepth; depth++) {
+      const next = [];
+      for (const state of beam) {
+        const neighbors = regionBeamNeighborsForParity(
+          image.pixels,
+          image.width,
+          backgroundColor,
+          state.regions,
+          maxRegions,
+          useExtremeSearch,
+        );
+        for (const regions of neighbors) {
+          if (evaluated >= budget) { exhausted = true; break; }
+          const key = regionListKey(regions);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          evaluated++;
+          const cost = regionPayloadByteCostParity(
+            image, backgroundColor, referenceEncoding, regions, maxRegions,
+            includeExtendedBlocks,
+            cache,
+          );
+          if (cost == null) continue;
+          const candidate = { regions, cost };
+          next.push(candidate);
+          if (cost < bestExistingCost) improved.push(candidate);
+        }
+        if (exhausted) break;
+      }
+      if (next.length === 0) break;
+      next.sort((a, b) => a.cost - b.cost);
+      beam = next.slice(0, beamWidth);
+      if (exhausted) break;
+    }
+    improved.sort((a, b) => a.cost - b.cost);
+    const result = [];
+    const resultKeys = new Set();
+    for (const state of improved) {
+      const key = regionListKey(state.regions);
+      if (!resultKeys.has(key)) {
+        resultKeys.add(key);
+        result.push(state);
+      }
+      if (result.length >= resultLimit) break;
+    }
+    return result;
+  }
+
+
+  function tryBuildV2RegionsPayloadsParity(
+    image,
+    backgroundColor,
+    referenceEncoding,
+    maxRegions,
+    options = {},
+  ) {
+    if (maxRegions === 0) return [];
+    const connected = findRegions(image.pixels, image.width, image.height, backgroundColor);
+    const split = splitRegionsByEmptyLines(
+      image.pixels, image.width, backgroundColor, connected, maxRegions,
+    );
+    const sparseSplit = splitRegionsBySparseLines(
+      image.pixels, image.width, backgroundColor, connected, maxRegions, 2,
+    );
+    const greedy = findGreedyRectRegionVariants(
+      image.pixels, image.width, image.height, backgroundColor, maxRegions,
+    );
+    const variants = [];
+    const seen = new Set();
+    for (const regions of [connected, ...(split.length ? [split] : []),
+      ...(sparseSplit.length ? [sparseSplit] : []), ...greedy]) {
+      if (regions.length === 0) continue;
+      const key = regionListKey(regions);
+      if (!seen.has(key)) {
+        seen.add(key);
+        variants.push(regions);
+      }
+    }
+
+    const regionCache = { blocks: new Map(), payloadCosts: new Map() };
+    const beamVariantKeys = new Set();
+
+    // Match the Dart v2 bounded payload-cost beam and append any new layouts
+    // after the deterministic connected/split/greedy variants.
+    const useBoundedExtreme = options.useExtremeSearch === true &&
+      image.pixels.length <= 1536 && connected.length <= 20;
+    const beamMaxRegions = useBoundedExtreme ? Math.min(maxRegions, 20) : maxRegions;
+    if ((useBoundedExtreme || image.pixels.length <= 4096) &&
+        (!isDynamicProfile(image.paletteProfile) ||
+          referenceEncoding === DynamicPaletteReferenceEncoding.flat)) {
+      const beamStates = findPayloadOptimizedRegionVariantsParity(
+        image,
+        backgroundColor,
+        referenceEncoding,
+        variants,
+        beamMaxRegions,
+        useBoundedExtreme,
+        options.includeExtendedFixedBlocks === true,
+        regionCache,
+      );
+      for (const state of beamStates) {
+        const key = regionListKey(state.regions);
+        if (!seen.has(key)) {
+          seen.add(key);
+          variants.push(state.regions);
+          beamVariantKeys.add(key);
+        }
+      }
+    }
+
+    // Keep every valid Regions payload in the same generation order as Dart.
+    // Candidate tie-breaks therefore never depend on worker timing, diagnostic
+    // labels, or an internal "best Regions" preselection.
+    const payloads = [];
+    const add = (payload) => {
+      if (payload) payloads.push(payload);
+    };
+
+    for (const regions of variants) {
+      const isBeam = beamVariantKeys.has(regionListKey(regions));
+      for (const compactGeometry of [false, true]) {
+        const baseOptions = {
+          compactGeometry,
+          includeExtendedFixedBlocks: false,
+          diagnosticContainer: isBeam ? 'regions-beam' : 'regions',
+          cache: regionCache,
+        };
+        add(tryBuildV2RegionsPayloadFromRegionsParity(
+          image, backgroundColor, referenceEncoding, regions, maxRegions, baseOptions,
+        ));
+
+        if (options.includeExtendedFixedBlocks) {
+          add(tryBuildV2RegionsPayloadFromRegionsParity(
+            image, backgroundColor, referenceEncoding, regions, maxRegions,
+            {
+              ...baseOptions,
+              includeExtendedFixedBlocks: true,
+              diagnosticContainer: isBeam ? 'regions-beam-extended' : 'regions-extended',
+            },
+          ));
+
+          if (compactGeometry) {
+            add(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              {
+                compactGeometry: true,
+                compactStream: true,
+                includeExtendedFixedBlocks: false,
+                diagnosticContainer: isBeam
+                  ? 'regions-beam-compact-stream'
+                  : 'regions-compact-stream',
+                cache: regionCache,
+              },
+            ));
+            add(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              {
+                compactGeometry: true,
+                compactStream: true,
+                compactStreamCommonBlockHeader: true,
+                includeExtendedFixedBlocks: false,
+                diagnosticContainer: isBeam
+                  ? 'regions-beam-compact-stream-common'
+                  : 'regions-compact-stream-common',
+                cache: regionCache,
+              },
+            ));
+            add(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              {
+                compactGeometry: true,
+                compactStream: true,
+                includeExtendedFixedBlocks: true,
+                diagnosticContainer: isBeam
+                  ? 'regions-beam-compact-stream-extended'
+                  : 'regions-compact-stream-extended',
+                cache: regionCache,
+              },
+            ));
+            add(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              {
+                compactGeometry: true,
+                compactStream: true,
+                compactStreamCommonBlockHeader: true,
+                includeExtendedFixedBlocks: true,
+                diagnosticContainer: isBeam
+                  ? 'regions-beam-compact-stream-common-extended'
+                  : 'regions-compact-stream-common-extended',
+                cache: regionCache,
+              },
+            ));
+          }
+        }
+
+        if (!isDynamicProfile(image.paletteProfile)) {
+          add(tryBuildV2RegionsPayloadFromRegionsParity(
+            image, backgroundColor, referenceEncoding, regions, maxRegions,
+            {
+              ...baseOptions,
+              sharedFixedPalette: true,
+              diagnosticContainer: isBeam
+                ? 'regions-beam-shared-fixed'
+                : 'regions-shared-fixed',
+            },
+          ));
+
+          if (options.includeExtendedFixedBlocks) {
+            add(tryBuildV2RegionsPayloadFromRegionsParity(
+              image, backgroundColor, referenceEncoding, regions, maxRegions,
+              {
+                ...baseOptions,
+                sharedFixedPalette: true,
+                includeExtendedFixedBlocks: true,
+                diagnosticContainer: isBeam
+                  ? 'regions-beam-shared-fixed-extended'
+                  : 'regions-shared-fixed-extended',
+              },
+            ));
+
+            if (compactGeometry) {
+              add(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                {
+                  compactGeometry: true,
+                  compactStream: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: false,
+                  diagnosticContainer: isBeam
+                    ? 'regions-beam-shared-fixed-compact-stream'
+                    : 'regions-shared-fixed-compact-stream',
+                  cache: regionCache,
+                },
+              ));
+              add(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                {
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: false,
+                  diagnosticContainer: isBeam
+                    ? 'regions-beam-shared-fixed-compact-stream-common'
+                    : 'regions-shared-fixed-compact-stream-common',
+                  cache: regionCache,
+                },
+              ));
+              add(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                {
+                  compactGeometry: true,
+                  compactStream: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true,
+                  diagnosticContainer: isBeam
+                    ? 'regions-beam-shared-fixed-compact-stream-extended'
+                    : 'regions-shared-fixed-compact-stream-extended',
+                  cache: regionCache,
+                },
+              ));
+              add(tryBuildV2RegionsPayloadFromRegionsParity(
+                image, backgroundColor, referenceEncoding, regions, maxRegions,
+                {
+                  compactGeometry: true,
+                  compactStream: true,
+                  compactStreamCommonBlockHeader: true,
+                  sharedFixedPalette: true,
+                  includeExtendedFixedBlocks: true,
+                  diagnosticContainer: isBeam
+                    ? 'regions-beam-shared-fixed-compact-stream-common-extended'
+                    : 'regions-shared-fixed-compact-stream-common-extended',
+                  cache: regionCache,
+                },
+              ));
+            }
+          }
+        }
+      }
+    }
+    return payloads;
+  }
+
+  function decodeSharedCompactRowDeltaParity(reader, width, height, palette, rowLength) {
+    const directGrayscale = reader.readBits(1) !== 0;
+    if (directGrayscale) {
+      throw new MCOImageInvalidPayloadError('Shared compact row delta cannot use direct grayscale');
+    }
+    const valueBits = bitsForLocalPalette(palette.length);
+    const maxValue = palette.length - 1;
+    const count = width * height;
+    if (rowLength <= 0 || count % rowLength !== 0) {
+      throw new MCOImageInvalidPayloadError('Invalid shared compact row geometry');
+    }
+    const virtualBase = reader.readBits(1) !== 0;
+    const values = new Array(count).fill(0);
+    const rows = count / rowLength;
+    let row = virtualBase ? 0 : 1;
+    if (!virtualBase) {
+      for (let x = 0; x < rowLength; x++) {
+        const value = reader.readBits(valueBits);
+        if (value > maxValue) throw new MCOImageInvalidPayloadError('Shared row value out of range');
+        values[x] = value;
+      }
+    }
+    const predictorValue = (rowIndex, x, predictor) => {
+      if (rowIndex === 0 && virtualBase) return 0;
+      const sourceX = predictor === 0 ? x : predictor === 1 ? x + 1 : x - 1;
+      if (sourceX < 0 || sourceX >= rowLength) return 0;
+      return values[(rowIndex - 1) * rowLength + sourceX];
+    };
+    const copyPredicted = (rowIndex, predictor) => {
+      const start = rowIndex * rowLength;
+      for (let x = 0; x < rowLength; x++) values[start + x] = predictorValue(rowIndex, x, predictor);
+    };
+    const readPredictor = () => reader.readBits(1) === 0 ? 0 : (reader.readBits(1) === 0 ? 1 : 2);
+    while (row < rows) {
+      const op = reader.readBits(3);
+      if (op === 0 || op === 6) {
+        const repeat = op === 0 ? 1 : readCompactUint(reader) + 2;
+        if (row + repeat > rows) throw new MCOImageInvalidPayloadError('Shared row repeat exceeds row count');
+        for (let i = 0; i < repeat; i++, row++) copyPredicted(row, 0);
+        continue;
+      }
+      if (op === 1) {
+        const start = row * rowLength;
+        for (let x = 0; x < rowLength; x++) {
+          const value = reader.readBits(valueBits);
+          if (value > maxValue) throw new MCOImageInvalidPayloadError('Shared raw row value out of range');
+          values[start + x] = value;
+        }
+        row++;
+        continue;
+      }
+      const predictor = readPredictor();
+      if (row === 0 && virtualBase && predictor !== 0) {
+        throw new MCOImageInvalidPayloadError('Shifted shared virtual predictor');
+      }
+      copyPredicted(row, predictor);
+      if (op === 7) { row++; continue; }
+      const positions = [];
+      if (op === 2 || op === 3) {
+        const changes = readCompactUint(reader) + 1;
+        if (changes > rowLength) throw new MCOImageInvalidPayloadError('Too many shared row changes');
+        let previous = -1;
+        for (let i = 0; i < changes; i++) {
+          const x = previous + readCompactUint(reader) + 1;
+          if (x >= rowLength) throw new MCOImageInvalidPayloadError('Shared row change out of range');
+          positions.push(x);
+          previous = x;
+        }
+      } else if (op === 4) {
+        const segments = readCompactUint(reader) + 1;
+        let previousEnd = 0;
+        for (let i = 0; i < segments; i++) {
+          const start = (i === 0 ? 0 : previousEnd) + readCompactUint(reader);
+          const length = readCompactUint(reader) + 1;
+          if (start < previousEnd || start + length > rowLength) {
+            throw new MCOImageInvalidPayloadError('Invalid shared row segment');
+          }
+          for (let x = start; x < start + length; x++) positions.push(x);
+          previousEnd = start + length;
+        }
+      } else if (op === 5) {
+        const start = readCompactUint(reader);
+        const span = readCompactUint(reader) + 1;
+        if (start + span > rowLength) throw new MCOImageInvalidPayloadError('Invalid shared row mask');
+        for (let offset = 0; offset < span; offset++) {
+          if (reader.readBits(1) !== 0) positions.push(start + offset);
+        }
+        if (positions.length === 0) throw new MCOImageInvalidPayloadError('Empty shared row mask');
+      } else {
+        throw new MCOImageInvalidPayloadError('Unknown shared compact row delta op');
+      }
+      const start = row * rowLength;
+      if (op === 3) {
+        const value = reader.readBits(valueBits);
+        if (value > maxValue) throw new MCOImageInvalidPayloadError('Shared row scalar out of range');
+        for (const x of positions) values[start + x] = value;
+      } else {
+        for (const x of positions) {
+          const value = reader.readBits(valueBits);
+          if (value > maxValue) throw new MCOImageInvalidPayloadError('Shared row value out of range');
+          values[start + x] = value;
+        }
+      }
+      row++;
+    }
+    return values.map((value) => palette[value]);
+  }
+
+  function decodeSharedExtendedRegionBodyParity(reader, width, height, palette, background, rowLength) {
+    const submode = reader.readBits(3);
+    const count = width * height;
+    const localBits = bitsForLocalPalette(palette.length);
+    if (submode === ExtendedImageMode.compactRle) {
+      const result = [];
+      while (result.length < count) {
+        const index = reader.readBits(localBits);
+        const length = readCompactUint(reader) + 1;
+        if (index >= palette.length || result.length + length > count) {
+          throw new MCOImageInvalidPayloadError('Invalid shared compact RLE');
+        }
+        for (let i = 0; i < length; i++) result.push(palette[index]);
+      }
+      return result;
+    }
+    if (submode === ExtendedImageMode.compactSparse) {
+      const segments = readCompactUint(reader) + 1;
+      const result = new Array(count).fill(background);
+      let position = 0;
+      for (let i = 0; i < segments; i++) {
+        position += readCompactUint(reader);
+        const index = reader.readBits(localBits);
+        const length = readCompactUint(reader) + 1;
+        if (index >= palette.length || position + length > count) {
+          throw new MCOImageInvalidPayloadError('Invalid shared compact sparse');
+        }
+        for (let j = 0; j < length; j++) result[position + j] = palette[index];
+        position += length;
+      }
+      return result;
+    }
+    if (submode === ExtendedImageMode.lzPixels) {
+      const result = [];
+      while (result.length < count) {
+        if (reader.readBits(1) !== 0) {
+          const distance = readCompactUint(reader) + 1;
+          const length = readCompactUint(reader) + 3;
+          if (distance > result.length || result.length + length > count) {
+            throw new MCOImageInvalidPayloadError('Invalid shared LZ match');
+          }
+          for (let i = 0; i < length; i++) result.push(result[result.length - distance]);
+        } else {
+          const length = readCompactUint(reader) + 1;
+          if (result.length + length > count) throw new MCOImageInvalidPayloadError('Invalid shared LZ literal');
+          for (let i = 0; i < length; i++) {
+            const index = reader.readBits(localBits);
+            if (index >= palette.length) throw new MCOImageInvalidPayloadError('Shared LZ color out of range');
+            result.push(palette[index]);
+          }
+        }
+      }
+      return result;
+    }
+    if (submode === ExtendedImageMode.quadtree) {
+      const result = new Array(count).fill(palette[0]);
+      const node = (x, y, w, h) => {
+        if (reader.readBits(1) !== 0) {
+          const index = reader.readBits(localBits);
+          if (index >= palette.length) throw new MCOImageInvalidPayloadError('Shared quadtree color out of range');
+          for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) result[(y + dy) * width + x + dx] = palette[index];
+          }
+          return;
+        }
+        if (w === 1 && h === 1) throw new MCOImageInvalidPayloadError('Shared quadtree splits one pixel');
+        if (w === 1) {
+          const top = Math.floor(h / 2);
+          node(x, y, w, top);
+          node(x, y + top, w, h - top);
+          return;
+        }
+        if (h === 1) {
+          const left = Math.floor(w / 2);
+          node(x, y, left, h);
+          node(x + left, y, w - left, h);
+          return;
+        }
+        const left = Math.floor(w / 2);
+        const top = Math.floor(h / 2);
+        node(x, y, left, top);
+        node(x + left, y, w - left, top);
+        node(x, y + top, left, h - top);
+        node(x + left, y + top, w - left, h - top);
+      };
+      node(0, 0, width, height);
+      return result;
+    }
+    if (submode === ExtendedImageMode.bitplanes) {
+      return decodeAdaptiveBitplanesBody(reader, width, height, palette);
+    }
+    if (submode === ExtendedImageMode.compactRowDelta) {
+      return decodeSharedCompactRowDeltaParity(reader, width, height, palette, rowLength);
+    }
+    throw new MCOImageInvalidPayloadError(`Unsupported shared extended region submode ${submode}`);
+  }
+
+  const __decodeV2DynamicRegionBodyBeforeParity = decodeV2DynamicRegionBody;
+  decodeV2DynamicRegionBody = function(reader, width, height, palette, background, mode, options) {
+    if (mode === ImageMode.extended) {
+      return decodeSharedExtendedRegionBodyParity(
+        reader, width, height, palette, background, options.rowLength,
+      );
+    }
+    return __decodeV2DynamicRegionBodyBeforeParity(
+      reader, width, height, palette, background, mode, options,
+    );
+  };
+
+  tryBuildV2RegionsPayload = tryBuildV2RegionsPayloadsParity;
+
+
+  function debugEncodeV2Parity(image, options = {}) {
+    validateImageAny(image);
+    const compressionLevel = normalizeCompressionLevel(options.compressionLevel ?? MCOImageCodec.defaultCompressionLevel);
+    const useHigh = compressionLevel !== MCOImageCompressionLevel.normal;
+    const useExtreme = compressionLevel === MCOImageCompressionLevel.extreme;
+    let maxRegions = options.maxRegions ?? MCOImageCodec.defaultMaxRegions;
+    if (!Number.isInteger(maxRegions) || maxRegions < 0) throw new MCOImageInvalidInputError('maxRegions must be >= 0');
+    maxRegions = Math.min(maxRegions, MCOImageCodec.maxV2Regions);
+    const effectiveMaxRegions = useHigh && maxRegions === MCOImageCodec.defaultMaxRegions
+      ? MCOImageCodec.maxV2Regions
+      : (useHigh ? maxRegions : Math.min(maxRegions, MCOImageCodec.defaultMaxRegions));
+    const backgroundColor = options.backgroundColor;
+    if (backgroundColor != null) validateColorAny(backgroundColor, image.paletteProfile, 'backgroundColor');
+    const preferred = backgroundColor ?? image.transparentColor;
+    const bgs = backgroundCandidatesParity(
+      image,
+      preferred,
+      useHigh,
+      options.backgroundCandidates,
+    );
+    if (bgs.length === 0) throw new MCOImageInvalidInputError('No valid background candidates');
+    const refs = dynamicReferenceEncodingsParity(image.paletteProfile);
+    const scans = normalizeScanModesParity(options.scanModes);
+    const includeNonScanCandidates = options.includeNonScanCandidates !== false;
+    const blockModes = isDynamicProfile(image.paletteProfile)
+      ? MCOImageCodec.dynamicBlockModes
+      : MCOImageCodec.v2BlockModes;
+    const state = {
+      candidates: [],
+      best: null,
+      outputTarget: options.outputTarget ?? MCOImageOutputTarget.text,
+    };
+    const optimalCache = new Map();
+
+    for (const background of bgs) {
+      const bg = background.color;
+      const bounds = findBounds(image.pixels, image.width, image.height, bg);
+      if (includeNonScanCandidates) {
+        for (const ref of refs) {
+          addV2CandidateParity(state, tryBuildSolidBackgroundPayload(image, bg, ref), ImageMode.rawGlobal, ScanMode.h, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'solid-bg',
+          });
+          const regionPayloads = tryBuildV2RegionsPayload(
+            image,
+            bg,
+            ref,
+            effectiveMaxRegions,
+            {
+              compactStream: true,
+              compactStreamCommon: true,
+              includeExtendedFixedBlocks: useHigh,
+              useExtremeSearch: useExtreme && background.rank <= 5,
+            },
+          );
+          for (const regions of regionPayloads) {
+            addV2CandidateParity(state, regions, ImageMode.regionsBg, ScanMode.h, {
+              image,
+              backgroundColor: bg,
+              backgroundRank: background.rank,
+              referenceEncoding: ref,
+              container: regions.diagnosticContainer || 'regions',
+            });
+          }
+          addV2CandidateParity(state, tryBuildV2SolidRectsPayloadParity(image, bg, ref), ImageMode.extended, ScanMode.h, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'solid-rects',
+          });
+          addV2CandidateParity(state, tryBuildV2QuadtreePayloadParity(
+            image, image.pixels, image.width, image.height, bg, ref,
+          ), ImageMode.extended, ScanMode.h, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'quadtree',
+          });
+          if (bounds.area > 0 && bounds.area < image.width * image.height) {
+            const cropped = cropPixels(image.pixels, image.width, bounds);
+            addV2CandidateParity(state, tryBuildV2QuadtreePayloadParity(
+              image, cropped, bounds.width, bounds.height, bg, ref, bounds,
+            ), ImageMode.extended, ScanMode.h, {
+              image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'quadtree-bounds',
+            });
+          }
+        }
+      }
+
+      for (const scan of scans) {
+        const linear = toScanOrder(image.pixels, image.width, image.height, scan);
+        for (const mode of blockModes) {
+          for (const ref of refs) {
+            addV2CandidateParity(state, tryBuildV2PayloadParity(image, linear, mode, scan, ref, {
+              dataWidth: image.width, dataHeight: image.height, backgroundColor: bg,
+            }), mode, scan, {
+              image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'block',
+            });
+          }
+        }
+        for (const ref of refs) {
+          const fullOptions = { dataWidth: image.width, dataHeight: image.height, backgroundColor: bg, optimalCache };
+          addV2CandidateParity(state, tryBuildV2CompactRlePayloadParity(image, linear, scan, ref, fullOptions), ImageMode.extended, scan, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'compact-rle',
+          });
+          addV2CandidateParity(state, tryBuildV2CompactSparsePayloadParity(image, linear, scan, ref, fullOptions), ImageMode.extended, scan, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'compact-sparse',
+          });
+          for (const optimal of [false, true]) {
+            addV2CandidateParity(state, tryBuildV2LzPixelsPayloadParity(image, linear, scan, ref, {
+              ...fullOptions, optimizeParsing: optimal,
+            }), ImageMode.extended, scan, {
+              image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref,
+              container: optimal ? 'lz-pixels-optimal' : 'lz-pixels',
+            });
+          }
+          addV2CandidateParity(state, tryBuildV2BitplanesPayloadParity(image, linear, scan, ref, fullOptions), ImageMode.extended, scan, {
+            image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'bitplanes',
+          });
+          for (const variant of adaptiveVariantsParity(image.paletteProfile, ref)) {
+            addV2CandidateParity(state, tryBuildV2AdaptiveBitplanesPayloadParity(image, linear, scan, ref, {
+              ...fullOptions,
+              directGrayscale: variant.directGrayscale,
+              directDynamicProfile: variant.directDynamicProfile,
+              paletteOrder: variant.paletteOrder,
+              allowLargeMultiStart: useHigh,
+            }), ImageMode.extended, scan, {
+              image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: variant.container,
+            });
+          }
+          for (const variant of rowDeltaVariantsParity(image.paletteProfile, ref)) {
+            addV2CandidateParity(state, tryBuildV2CompactRowDeltaPayloadParity(image, linear, scan, ref, {
+              ...fullOptions,
+              directGrayscale: variant.directGrayscale,
+              paletteOrder: variant.paletteOrder,
+            }), ImageMode.extended, scan, {
+              image, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: variant.container,
+            });
+          }
+        }
+
+        if (bounds.area > 0 && bounds.area < image.width * image.height) {
+          const cropped = cropPixels(image.pixels, image.width, bounds);
+          const boundedLinear = toScanOrder(cropped, bounds.width, bounds.height, scan);
+          for (const mode of blockModes) {
+            for (const ref of refs) {
+              const bounded = tryBuildV2PayloadParity(image, boundedLinear, mode, scan, ref, {
+                dataWidth: bounds.width, dataHeight: bounds.height, backgroundColor: bg, bounds,
+              });
+              addV2CandidateParity(state, bounded, mode, scan, {
+                image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'block',
+              });
+              addV2CandidateParity(state, tryBuildV2CompactBoundsPayloadParity(
+                image, boundedLinear, mode, scan, ref, bounds, bg,
+              ), ImageMode.extended, scan, {
+                image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'compact-bounds',
+              });
+            }
+          }
+          for (const ref of refs) {
+            const boundedOptions = {
+              dataWidth: bounds.width,
+              dataHeight: bounds.height,
+              backgroundColor: bg,
+              bounds,
+              optimalCache,
+            };
+            addV2CandidateParity(state, tryBuildV2CompactRlePayloadParity(image, boundedLinear, scan, ref, boundedOptions), ImageMode.extended, scan, {
+              image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'compact-rle-bounds',
+            });
+            addV2CandidateParity(state, tryBuildV2CompactSparsePayloadParity(image, boundedLinear, scan, ref, boundedOptions), ImageMode.extended, scan, {
+              image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'compact-sparse-bounds',
+            });
+            for (const optimal of [false, true]) {
+              addV2CandidateParity(state, tryBuildV2LzPixelsPayloadParity(image, boundedLinear, scan, ref, {
+                ...boundedOptions, optimizeParsing: optimal,
+              }), ImageMode.extended, scan, {
+                image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref,
+                container: optimal ? 'lz-pixels-optimal-bounds' : 'lz-pixels-bounds',
+              });
+            }
+            addV2CandidateParity(state, tryBuildV2BitplanesPayloadParity(image, boundedLinear, scan, ref, boundedOptions), ImageMode.extended, scan, {
+              image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: 'bitplanes-bounds',
+            });
+            for (const variant of adaptiveVariantsParity(image.paletteProfile, ref, '-bounds')) {
+              addV2CandidateParity(state, tryBuildV2AdaptiveBitplanesPayloadParity(image, boundedLinear, scan, ref, {
+                ...boundedOptions,
+                directGrayscale: variant.directGrayscale,
+                directDynamicProfile: variant.directDynamicProfile,
+                paletteOrder: variant.paletteOrder,
+                allowLargeMultiStart: useHigh,
+              }), ImageMode.extended, scan, {
+                image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: variant.container,
+              });
+            }
+            for (const variant of rowDeltaVariantsParity(image.paletteProfile, ref, '-bounds')) {
+              addV2CandidateParity(state, tryBuildV2CompactRowDeltaPayloadParity(image, boundedLinear, scan, ref, {
+                ...boundedOptions,
+                directGrayscale: variant.directGrayscale,
+                paletteOrder: variant.paletteOrder,
+              }), ImageMode.extended, scan, {
+                image, bounds, backgroundColor: bg, backgroundRank: background.rank, referenceEncoding: ref, container: variant.container,
+              });
+            }
+          }
+        }
+      }
+    }
+    if (!state.best) throw new MCOImageTooLargeError('Image uses too many colors for local palette');
+    return {
+      result: state.best,
+      candidates: Object.freeze(state.candidates.slice()),
+      compressionLevel,
+    };
+  }
+
+  // Final public override: v1 remains untouched; v2 uses the completed port.
+  MCOImageCodec.prototype.debugEncode = function(imageLike, options = {}) {
+    const image = imageLike instanceof MCOImage ? imageLike : new MCOImage(imageLike);
+    const version = normalizeEncodingVersion(options.encodingVersion ?? image.encodingVersion);
+    if (version === MCOImageEncodingVersion.v1Legacy) {
+      if (image.transparentColor != null) throw new MCOImageInvalidInputError('Legacy v1 encoding does not support transparency');
+      if (isDynamicProfile(image.paletteProfile)) throw new MCOImageInvalidInputError('Legacy v1 encoding supports fixed palettes only');
+      return __legacyDebugEncode.call(this, image, { ...options, encodingVersion: MCOImageEncodingVersion.v1Legacy });
+    }
+    return debugEncodeV2Parity(image, options);
+  };
+
+  MCOImageCodec.backgroundCandidatesFor = function(imageLike, options = {}) {
+    const image = imageLike instanceof MCOImage ? imageLike : new MCOImage(imageLike);
+    validateImageAny(image);
+    const compressionLevel = normalizeCompressionLevel(options.compressionLevel ?? MCOImageCodec.defaultCompressionLevel);
+    const preferred = options.backgroundColor ?? image.transparentColor;
+    return backgroundCandidatesParity(image, preferred, compressionLevel !== MCOImageCompressionLevel.normal, null)
+      .map((candidate) => ({ color: candidate.color, rank: candidate.rank }));
+  };
+  // ---- End final Dart-parity v2 encoder completion ------------------------
 
 
   // ---- Universal RGBA / text / binary conversion helpers -----------------

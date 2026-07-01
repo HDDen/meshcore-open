@@ -1,302 +1,277 @@
-# MCO image codec
+# MCOimg codec format overview
 
-`MCOImageCodec` encodes small palette-indexed images into compact text strings
-for MeshCore/LoRa messages.
+MCOimg stores small palette-indexed images for MeshCore/LoRa transport. The
+codec is lossless relative to the prepared palette-index array: it compresses
+indexes, dimensions, transparency metadata and layout information, but it does
+not resize or dither an arbitrary bitmap by itself.
 
-The codec is binary-first: metadata and bit-packed pixels are written into a
-binary payload, then wrapped in basE91 text.
+The repository contains three wire versions:
 
-## Prefix
+| Version | Status | Text prefix | Binary/channel route | Maximum size |
+| --- | --- | --- | --- | --- |
+| v1 | legacy read compatibility | `im:` | legacy `0xFFF0` route | `85×85` |
+| v2 | legacy compatibility | `im:` | legacy `0xFFF0` route | `256×256` |
+| v3 | current | `im3:` | official MCO Advanced `0x0120`, subtype/version `0x13` | `256×256` |
 
-Every encoded image starts with:
+New messages should use v3. v1/v2 decoding remains useful for stored messages
+and older clients.
 
-```text
-im:
-```
+## Text and binary representations
 
-Everything after the prefix is basE91 text.
+### v1/v2
 
-The prefix is intentionally human-readable so chat/rendering code can detect an
-image payload without decoding arbitrary message text.
-
-## basE91
-
-basE91 packs arbitrary binary bytes into printable text more densely than base64.
-The codec uses the canonical 91-character alphabet; the final character is a
-double quote, which is required for standard basE91 encoding.
-
-## Version overview
-
-Two format families are supported:
-
-| Version    | Role          | Max size  | Palettes        | Transparency            | Notes                                    |
-| ---        | ---           | ---       | ---             | ---                     | ---                                      |
-| v1 legacy  | compatibility | `85×85`   | fixed only      | no                      | Older binary format with 2-bit mode ids. |
-| v2 current | default       | `256×256` | fixed + dynamic | optional explicit color | Adds 3-bit mode ids, dynamic palettes, row-delta, regions, and transparent color flag. |
-
-Decoders should keep v1 support so older messages remain readable. Encoders
-should prefer v2 unless compatibility with older clients is required.
-
-## Common concepts
-
-### Pixels
-
-The image stores a `width`, `height`, `paletteProfile`, and a flat `pixels`
-array in row-major order before scan-order conversion.
-
-Fixed palette pixels are profile-local color indexes. For example, `master8`
-pixels are `0..7`.
-
-Dynamic palette pixels are global dynamic palette indexes. The v2 dynamic
-encoder transmits a compact local palette referencing only the dynamic colors
-used by the payload.
-
-### Scan orders
-
-The encoder tries all scan orders and chooses the shortest final payload.
-
-- `H`: rows
-- `V`: columns
-- `S`: row serpentine
-- `SV`: column serpentine
-
-### Bit packing
-
-Bits are written LSB-first inside each byte.
-
-Legacy aligned varuint values are byte-aligned. v2 block-internal varuint values
-are bit-level LEB128-style bytes: each varuint byte is written as 8 bits at the
-current bit position, without forcing byte alignment first.
-
-## v1 legacy format
-
-v1 is retained for compatibility. It supports fixed palettes only and has no
-explicit transparent color.
-
-### v1 header
+Legacy text is:
 
 ```text
-byte 0:
-bits 7..6  version = 0 or 1
-bits 5..4  mode
-bits 3..2  scan order
-bit  1     background flag
-bit  0     bounds flag for version >= 1; reserved/must be 0 for version 0
-
-byte 1:
-bits 7..4  fixed palette profile id
-bits 3..0  container id for version >= 1; reserved/must be 0 for version 0
-
-byte 2: width - 1
-byte 3: height - 1
+im:<base91 legacy binary payload>
 ```
 
-Version 0 payloads are the older block-only shape. Version 1 keeps the legacy
-mode layout but can use the low nibble container field and bounds flag where
-implemented.
+### v3
 
-### v1 modes
-
-v1 uses 2-bit mode ids:
-
-- `RAW_GLOBAL`: bit-packed global palette indexes.
-- `RAW_LOCAL`: frequency-sorted local palette plus bit-packed local indexes.
-- `RLE_LOCAL`: local palette plus run-length encoded local indexes.
-- `SPARSE_BG`: background color plus sparse non-background segments.
-
-### v1 limitations
-
-- Fixed palettes only.
-- No explicit `transparentColor`.
-- Maximum canvas dimension is `85`.
-- Fewer block modes than v2.
-
-## v2 current format
-
-v2 is the default/current format.
-
-### v2 header
+The canonical v3 app payload is:
 
 ```text
-byte 0:
-bits 7..6  version = 2
-bits 5..3  mode
-bits 2..1  scan order
-bit  0     bounds flag
-
-byte 1:
-bit  7     palette kind: 0 = fixed, 1 = dynamic
-bit  6     container: 0 = block, 1 = regions
-bit  5     dynamic reference encoding
-bit  4     transparent color flag
-bits 3..0  profile id within the selected palette kind
-
-byte 2: width - 1
-byte 3: height - 1
+0x13 | v3 body
 ```
 
-If the transparent color flag is set, a color reference is written after the
-header. The reference uses the selected palette profile.
+The high nibble of `0x13` is the MCOimg subtype (`0x01`); the low nibble is the
+content version (`0x03`). The text representation encodes that complete app
+payload:
 
-If bounds are present, the payload also stores the background color and cropped
-bounds before the block body. Pixels outside the bounds are filled with the
-background color.
+```text
+im3:<base91 of 0x13 | v3 body>
+```
 
-### v2 palette profiles
+The official MeshCore channel envelope under `data_type = 0x0120` is:
+
+```text
+senderNameLength(varuint) | senderName(UTF-8) | 0x13 | v3 body
+```
+
+A `.bin` file produced by the version-neutral JavaScript helper is the canonical
+app payload including `0x13`. The bare body is a low-level codec representation.
+
+## Common image model
+
+An image has:
+
+- `width` and `height`;
+- `paletteProfile`;
+- a row-major `pixels` array;
+- optional `transparentColor`.
+
+Fixed palette pixels are profile-local indexes. Dynamic profiles store Dynamic
+Global palette indexes; blocks can transmit compact local references to only the
+colors they use.
+
+Transparency is one optional palette value, not a separate alpha bitmap. Pixels
+matching `transparentColor` render with alpha zero; other pixels remain opaque.
+
+## Palette profiles
 
 Fixed profiles:
 
-- `mono`
-- `grayscale8`
-- `grayscale16`
-- `grayscale32`
-- `master4`
-- `master8`
-- `master16`
-- `master32`
-- `master64`
+- `mono`;
+- `master4`, `master8`, `master16`, `master32`, `master64`;
+- `grayscale8`, `grayscale16`, `grayscale32`.
 
 Dynamic profiles:
 
-- `dynamicGlobal8`
-- `dynamicGlobal16`
-- `dynamicGlobal32`
-- `dynamicGlobal64`
-- `dynamicGlobal128`
-- `dynamicGlobal256`
-- `dynamicGlobal512`
+- `dynamicGlobal8`, `dynamicGlobal16`, `dynamicGlobal32`;
+- `dynamicGlobal64`, `dynamicGlobal128`, `dynamicGlobal256`;
+- `dynamicGlobal512`.
 
-Dynamic profiles use global dynamic palette indexes in the image pixel array.
-The local palette transmitted inside a v2 payload maps those global indexes to
-small local indexes for the selected block.
+Dynamic profiles may choose flat, bitmap, sorted-delta, range-run or banked
+reference descriptors, depending on which exact representation is shortest.
 
-`dynamicGlobal512` can use either flat references or the `banked8x64` reference
-encoding where that is shorter.
+## Scan orders
 
-### v2 block modes
+The encoder can test four scan orders:
 
-v2 uses 3-bit mode ids:
+- `H`: rows left-to-right;
+- `V`: columns top-to-bottom;
+- `S`: row serpentine;
+- `SV`: column serpentine.
 
-- `RAW_GLOBAL`: fixed palettes only; bit-packed global indexes.
-- `RAW_LOCAL`: local palette plus bit-packed local indexes.
-- `RLE_LOCAL`: local palette plus run-length encoded local indexes.
-- `SPARSE_BG`: background color plus sparse non-background segments.
-- `BI_COLOR_MASK`: background/foreground color plus a 1-bit mask.
-- `ROW_REPEAT`: first row plus repeat/raw flags for following rows.
-- `ROW_DELTA`: local palette plus per-row delta operations.
-- `REGIONS_BG`: reserved as the regions container mode.
+Algorithms that are scan-independent use canonical horizontal headers in v3.
 
-The encoder tries all valid modes and scan orders and chooses the shortest final
-`im:<base91>` string.
+## MCOimg v3 body preamble
 
-### Local palette ordering
-
-For v2 local-palette modes, the background color is preferred as the first local
-palette entry when it is present. Remaining colors are ordered by descending
-frequency, then by numeric color id. This stable ordering is important for
-Dart/JS byte parity because local indexes affect row-delta costs.
-
-### Row-delta body
-
-`ROW_DELTA` is optimized for pixel art and small edits between neighboring rows.
-
-The body starts with two flags:
+The v3 body begins with:
 
 ```text
-1 bit  use virtual base row
-1 bit  allow shift predictors
+byte 0: packet nonce
+byte 1:
+  bit 7      transparent-color flag
+  bit 6      implicit-white-background flag
+  bits 5..4  scan order
+  bits 3..0  palette profile
+
+following bits:
+  canonical dimension encoding
+  container/context byte
+  optional transparent-color reference
+  container body
 ```
 
-Each row is encoded with one of these 2-bit operations:
+The packet nonce is outside the compressed bitstream and can be changed without
+re-encoding the image.
 
-- `RAW`: write the entire local row.
-- `REPEAT`: copy the predicted previous row.
-- `DELTA`: write changed positions and new values.
-- `EXTENDED`: use one of the extended row encodings.
+### Canonical dimensions
 
-When shift predictors are enabled, rows can predict from:
+The first two dimension bits select one of four encodings:
 
-- same previous row position;
-- previous row shifted left;
-- previous row shifted right.
+- square up to 64;
+- non-square rectangle up to `32×32`;
+- larger rectangle with both sides up to 64;
+- extended square/rectangle up to `256×256`.
 
-Extended row encodings include:
+The decoder rejects longer non-canonical alternatives for a size that fits a
+shorter form.
 
-- full change mask;
-- changed segments;
-- same-color change mask.
+### Container/context byte
 
-### Regions container
+The high three bits select one of eight top-level containers. The low five bits
+carry container-specific context, such as a block algorithm or compact color
+reference.
 
-The v2 regions container splits an image into multiple rectangular regions over
-a background. Each region can choose its own best block mode and scan order.
-This is useful for sparse pixel art, separated shapes, or images with empty
-areas.
+## v3 containers
 
-The encoder can also split regions by empty lines and sparse lines, then choose
-the shortest candidate.
+1. `block`
+2. `compactBlock`
+3. `boundsBlock`
+4. `compactBoundsBlock`
+5. `regions`
+6. `compactRegionsStream`
+7. `solidBackground`
+8. `solidRects`
 
-### Explicit transparency
+Bounds containers encode a cropped non-background rectangle. Regions containers
+encode multiple rectangular areas over a background and can share palettes or
+block headers. Solid containers cover constant images and collections of solid
+rectangles with minimal overhead.
 
-v2 can store one optional transparent color. It is not an alpha bitmap.
+## v3 block algorithms
 
-When `transparentColor` is set, every pixel equal to that palette value should be
-rendered with alpha `0`; all other pixels remain opaque. v1 cannot encode
-transparent color.
+The current v3 grammar has 16 block algorithms:
 
-## Candidate selection
+1. `rawGlobal`
+2. `rawLocal`
+3. `compactRle`
+4. `compactSparse`
+5. `biColorMask`
+6. `rowRepeat`
+7. `lzPixels`
+8. `quadtree`
+9. `bitplanes`
+10. `adaptiveBitplanes`
+11. `directBitplanes`
+12. `compactRowDelta`
+13. `directRowDelta`
+14. `rowDelta`
+15. `varUintRle`
+16. `varUintSparse`
 
-The encoder builds multiple candidates, including different backgrounds, bounds,
-scan orders, block modes, and region layouts. It then chooses the shortest final
-basE91 string.
+Regions may use individual headers, a common header, a hybrid common/individual
+plan, and shared local palettes. The final encoder compares exact serialized
+candidate lengths and applies a deterministic tie-break.
 
-When candidates have the same length, a stable tie order is used so Dart and JS
-make the same choice where possible.
+## Compression levels
 
-Current v2 mode tie preference is:
+JavaScript and Dart use the same values:
 
 ```text
-BI_COLOR_MASK
-SPARSE_BG
-ROW_REPEAT
-ROW_DELTA
-RLE_LOCAL
-RAW_LOCAL
-RAW_GLOBAL
-REGIONS_BG
+High    = 0
+Normal  = 1
+Extreme = 2
 ```
 
-## API sketch
+- Normal limits expensive search while retaining practical candidate families.
+- High enables the full non-Extreme candidate search and stronger Regions plans.
+- Extreme adds a bounded reduced-cost Regions beam and exact reranking of the
+  best layouts.
+
+The JavaScript v3 implementation can split deterministic candidate partitions
+across Web Workers. Extreme uses workers automatically when available; High can
+use them with `useWorkers: true`. Completion order never changes comparison
+order or the selected payload.
+
+## Strict v3 validation
+
+The v3 decoder rejects:
+
+- invalid palette/profile references;
+- impossible container/algorithm combinations;
+- non-canonical dimensions;
+- invalid local palette descriptors;
+- non-zero padding bits;
+- trailing bytes;
+- illegal scan modes;
+- malformed Regions geometry or streams.
+
+This strictness prevents multiple wire encodings for the same structural form
+and helps maintain Dart/JavaScript parity.
+
+## JavaScript API
+
+Load compatibility, v3 and browser helpers in order:
+
+```html
+<script src="mcoimg-codec.global.js"></script>
+<script src="mcoimg-v3-codec.global.js"></script>
+<script src="mcoimg-browser.global.js"></script>
+```
+
+Encode a canvas:
+
+```js
+const text = await MCOImgBrowser.encodeCanvas(canvas, {
+  formatVersion: 3,
+  compressionLevel: 'high',
+  paletteProfile: MCOImgV3.PaletteProfile.master8,
+  output: 'text',
+});
+```
+
+Convert or inspect any canonical text/binary payload:
+
+```js
+const binary = await MCOImgBrowser.convertPayload(text, { output: 'binary' });
+const png = await MCOImgBrowser.convertPayload(binary, { output: 'png' });
+const image = MCOImgBrowser.decodePayload(text);
+const metadata = MCOImgBrowser.inspectPayload(text);
+```
+
+Use the low-level codec when the bare v3 body or nonce operation is needed:
+
+```js
+const codec = new MCOImgV3.MCOImageV3Codec();
+const encoded = codec.encode(image, {
+  compressionLevel: 'extreme',
+});
+
+const decoded = codec.decodeBody(encoded.body);
+const refreshedBody = MCOImgV3.MCOImageV3Codec.refreshPacketNonce(encoded.body);
+```
+
+## Dart API
+
+The current Dart implementation is `lib/helpers/mcoimg_v3_codec.dart`:
 
 ```dart
-final codec = MCOImageCodec();
-
-final image = MCOImage(
-  width: 11,
-  height: 11,
-  paletteProfile: PaletteProfile.master8,
-  pixels: List<int>.filled(11 * 11, 0),
-  transparentColor: null,
-  encodingVersion: MCOImageEncodingVersion.v2,
+final codec = MCOImageV3Codec();
+final encoded = codec.encode(
+  image,
+  compressionLevel: mcoImageCompressionLevelHigh,
 );
 
-final encoded = codec.encode(image, maxChars: 172);
-print(encoded.text); // im:<base91Payload>
-
-final decoded = codec.decode(encoded.text);
-print(decoded.width);
-print(decoded.height);
-print(decoded.pixels);
+final appPayload = encoded.toAppPayloadWithoutSender(); // 0x13 | body
+final decoded = codec.decodeBody(encoded.body);
 ```
 
-The JavaScript API mirrors this shape through `window.MCOImg`.
+The legacy implementation remains in `lib/helpers/mcoimg_codec.dart`.
 
-## Losslessness
+## Migration
 
-The codec is lossless relative to the already prepared palette index array. It
-does not resize, dither, quantize, or convert normal bitmap images by itself.
-
-Bitmap import and dynamic-palette reduction are editor/demo responsibilities.
-For example, an importer may map RGB pixels to the closest palette color and may
-limit dynamic imports to the inline local palette limit before calling
-`MCOImageCodec.encode`.
+See `docs/mcoimg-js/MIGRATION_V3.md` for rollout order, payload distinctions,
+Worker deployment and deprecation boundaries.

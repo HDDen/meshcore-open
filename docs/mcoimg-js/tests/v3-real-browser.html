@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>MCOimg v3 real browser integration</title>
+</head>
+<body>
+  <pre id="result" data-status="running">running</pre>
+  <script src="../mcoimg-codec.global.js"></script>
+  <script src="../mcoimg-v3-codec.global.js"></script>
+  <script src="../mcoimg-browser.global.js"></script>
+  <script type="module">
+    'use strict';
+
+    const output = document.getElementById('result');
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+    }
+
+    function same(left, right) {
+      return left.length === right.length &&
+        Array.from(left).every((value, index) => value === right[index]);
+    }
+
+    function concat(...parts) {
+      const length = parts.reduce((sum, part) => sum + part.length, 0);
+      const result = new Uint8Array(length);
+      let offset = 0;
+      for (const part of parts) {
+        result.set(part, offset);
+        offset += part.length;
+      }
+      return result;
+    }
+
+    async function run() {
+      const browser = window.MCOImgBrowser;
+      const v3 = window.MCOImgV3;
+      assert(browser && v3, 'codec globals were not loaded');
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 6;
+      canvas.height = 5;
+      const context = canvas.getContext('2d');
+      assert(context, '2D canvas context is unavailable');
+      const palette = [
+        '#ffffff', '#8d8d8d', '#000000', '#fe2400',
+        '#f1d100', '#47c000', '#3d69ff', '#7900ff',
+      ];
+      const pixels = [
+        0, 0, 3, 3, 0, 0,
+        0, 3, 3, 3, 3, 0,
+        6, 6, 0, 0, 5, 5,
+        6, 0, 2, 2, 0, 5,
+        0, 0, 2, 2, 0, 0,
+      ];
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          context.fillStyle = palette[pixels[y * canvas.width + x]];
+          context.fillRect(x, y, 1, 1);
+        }
+      }
+
+      const baseOptions = {
+        formatVersion: 3,
+        paletteProfile: v3.PaletteProfile.master8,
+        compressionLevel: 'normal',
+        packetNonce: 0x42,
+        useWorkers: false,
+      };
+      const text = await browser.encodeCanvas(canvas, { ...baseOptions, output: 'text' });
+      const binary = await browser.convertPayload(text, { output: 'binary' });
+      const textAgain = await browser.convertPayload(binary, { output: 'text' });
+      const image = await browser.convertPayload(text, { output: 'image' });
+      const png = await browser.convertPayload(text, { output: 'png' });
+      const textFromPng = await browser.convertPayload(png, { ...baseOptions, output: 'text' });
+      const imageFromPng = browser.decodePayload(textFromPng);
+
+      assert(text.startsWith('im3:'), 'v3 text prefix mismatch');
+      assert(textAgain === text, 'text/binary conversion was not reversible');
+      assert(image.encodingVersion === 3, 'decoded image version mismatch');
+      assert(image.width === canvas.width && image.height === canvas.height, 'decoded size mismatch');
+      assert(same(image.pixels, pixels), 'decoded pixels mismatch');
+      assert(browser.hasPngSignature(png), 'PNG signature mismatch');
+      assert(same(imageFromPng.pixels, pixels), 'PNG import changed palette pixels');
+
+      const workerImage = {
+        width: 10,
+        height: 8,
+        paletteProfile: v3.PaletteProfile.master8,
+        pixels: Array(80).fill(0),
+        transparentColor: null,
+      };
+      for (let y = 1; y < 4; y++) {
+        for (let x = 1; x < 5; x++) workerImage.pixels[y * 10 + x] = 3;
+      }
+      for (let y = 5; y < 7; y++) {
+        for (let x = 6; x < 9; x++) workerImage.pixels[y * 10 + x] = 6;
+      }
+      workerImage.pixels[2 * 10 + 8] = 2;
+
+      const workerOptions = {
+        formatVersion: 3,
+        compressionLevel: 'extreme',
+        packetNonce: 0x55,
+        workerCount: 3,
+        codecScriptUrl: new URL('../mcoimg-v3-codec.global.js', location.href).href,
+        v3WorkerScriptUrl: new URL('../mcoimg-v3-worker.global.js', location.href).href,
+      };
+      const synchronous = new v3.MCOImageV3Codec().encode(workerImage, {
+        ...workerOptions,
+        useWorkers: false,
+      });
+      const progress = [];
+      const task = browser.startCancellableEncode(workerImage, {
+        ...workerOptions,
+        onProgress: (event) => progress.push(event),
+      });
+      const parallel = await task.result;
+      assert(task.workerCount === 3, 'real browser worker count mismatch');
+      assert(task.totalPartitions > 1, 'real browser plan was not partitioned');
+      assert(same(parallel.body, synchronous.body), 'real workers changed the winning payload');
+      assert(progress.length > 0, 'real workers emitted no progress');
+      assert(progress.some((event) => event.percent === 1), 'real workers did not reach 100%');
+
+      const cancelled = browser.startCancellableEncode(workerImage, {
+        ...workerOptions,
+        packetNonce: 0x56,
+      });
+      cancelled.cancel();
+      let cancellationName = null;
+      try {
+        await cancelled.result;
+      } catch (error) {
+        cancellationName = error.name;
+      }
+      assert(cancellationName === 'AbortError', 'real worker cancellation mismatch');
+
+      const sender = new TextEncoder().encode('Browser');
+      const envelope = concat(
+        Uint8Array.of(sender.length),
+        sender,
+        parallel.appPayloadWithoutSender,
+      );
+      const channelPacket = concat(Uint8Array.of(3, 0x20, 0x01), envelope);
+      const packetInfo = browser.inspectMcoImageChannelPacket(channelPacket, {
+        formatVersion: 3,
+      });
+      assert(packetInfo.layout === 'channelData', 'channel packet auto detection mismatch');
+      assert(packetInfo.dataType === 0x0120, 'channel data type mismatch');
+      assert(packetInfo.subtypeVersion === 0x13, 'channel subtype/version mismatch');
+      assert(same(packetInfo.body, parallel.body), 'channel body extraction mismatch');
+
+      const metadata = browser.inspectPayload(text);
+      const summary = {
+        conversions: {
+          textBinaryText: 'ok',
+          textImage: 'ok',
+          textPng: 'ok',
+          pngText: 'ok',
+          pngBytes: png.length,
+        },
+        workers: {
+          workerCount: task.workerCount,
+          partitions: task.totalPartitions,
+          deterministic: 'ok',
+          progressEvents: progress.length,
+          cancellation: cancellationName,
+        },
+        channel: {
+          dataType: `0x${packetInfo.dataType.toString(16).padStart(4, '0')}`,
+          subtypeVersion: `0x${packetInfo.subtypeVersion.toString(16).padStart(2, '0')}`,
+          senderName: packetInfo.senderName,
+        },
+        metadata: {
+          width: metadata.width,
+          height: metadata.height,
+          container: metadata.containerName,
+          algorithm: metadata.blockAlgorithmName,
+        },
+      };
+      output.dataset.status = 'pass';
+      output.textContent = JSON.stringify(summary, null, 2);
+      document.title = 'PASS - MCOimg v3 real browser integration';
+    }
+
+    try {
+      await run();
+    } catch (error) {
+      output.dataset.status = 'fail';
+      output.textContent = error && error.stack ? error.stack : String(error);
+      document.title = 'FAIL - MCOimg v3 real browser integration';
+    }
+  </script>
+</body>
+</html>
