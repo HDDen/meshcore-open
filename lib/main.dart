@@ -206,8 +206,7 @@ class MeshCoreApp extends StatefulWidget {
   State<MeshCoreApp> createState() => _MeshCoreAppState();
 }
 
-class _MeshCoreAppState extends State<MeshCoreApp>
-    with WidgetsBindingObserver {
+class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -233,8 +232,7 @@ class _MeshCoreAppState extends State<MeshCoreApp>
     }
     final settings = widget.appSettingsService.settings;
     if (!settings.notificationsEnabled ||
-        (!settings.notifyOnNewMessage &&
-            !settings.notifyOnNewChannelMessage)) {
+        (!settings.notifyOnNewMessage && !settings.notifyOnNewChannelMessage)) {
       return;
     }
     unawaited(NotificationService().areNotificationsEnabled());
@@ -338,8 +336,7 @@ class _MeshCoreAppState extends State<MeshCoreApp>
     int attempt = 0,
   }) async {
     final navigator = MeshCoreApp._navigatorKey.currentState;
-    if (navigator == null ||
-        MeshCoreApp._navigatorKey.currentContext == null) {
+    if (navigator == null || MeshCoreApp._navigatorKey.currentContext == null) {
       if (attempt >= 20) return;
       await Future<void>.delayed(const Duration(milliseconds: 150));
       return _handleNotificationTapWithRetry(payload, attempt: attempt + 1);
