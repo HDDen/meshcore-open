@@ -2233,7 +2233,12 @@ class MCOImageV3Codec {
           includeTransitionOrder: true,
           writeBody: (bodyWriter, localPixels, bits) {
             final tokens = _buildBestLzPixelTokens(localPixels, bits);
-            _writeLzPixelTokens(bodyWriter, tokens, bits);
+            _writeLzPixelTokens(
+              bodyWriter,
+              tokens,
+              bits,
+              localPixels.length,
+            );
           },
         );
         break;
@@ -2542,7 +2547,12 @@ class MCOImageV3Codec {
       case MCOImageV3BlockAlgorithm.lzPixels:
         final pixels = localPixels();
         final tokens = _buildBestLzPixelTokens(pixels, bits);
-        _writeLzPixelTokens(writer, tokens, bits);
+        _writeLzPixelTokens(
+          writer,
+          tokens,
+          bits,
+          pixels.length,
+        );
         break;
       case MCOImageV3BlockAlgorithm.quadtree:
         if (rowLength <= 0 ||
@@ -2658,10 +2668,19 @@ class MCOImageV3Codec {
         while (result.length < count) {
           final isMatch = reader.readBits(1) != 0;
           if (isMatch) {
-            final distance = reader.readCompactUint() + 1;
-            final length = reader.readCompactUint() + _minLzMatchLength;
-            if (distance <= 0 ||
-                distance > result.length ||
+            final remaining = count - result.length;
+            if (result.isEmpty || remaining < _minLzMatchLength) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel match',
+              );
+            }
+            final distance =
+                reader.readRangeCompactUint(result.length - 1) + 1;
+            final length = reader.readRangeCompactUint(
+                  remaining - _minLzMatchLength,
+                ) +
+                _minLzMatchLength;
+            if (distance > result.length ||
                 result.length + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Invalid LZ pixel match',
@@ -2671,7 +2690,10 @@ class MCOImageV3Codec {
               result.add(result[result.length - distance]);
             }
           } else {
-            final length = reader.readCompactUint() + 1;
+            final length = reader.readRangeCompactUint(
+                  count - result.length - 1,
+                ) +
+                1;
             if (result.length + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Invalid LZ pixel literal length',
@@ -2965,10 +2987,19 @@ class MCOImageV3Codec {
         while (result.length < count) {
           final isMatch = reader.readBits(1) != 0;
           if (isMatch) {
-            final distance = reader.readCompactUint() + 1;
-            final length = reader.readCompactUint() + _minLzMatchLength;
-            if (distance <= 0 ||
-                distance > result.length ||
+            final remaining = count - result.length;
+            if (result.isEmpty || remaining < _minLzMatchLength) {
+              throw const MCOImageInvalidPayloadException(
+                'Invalid LZ pixel match',
+              );
+            }
+            final distance =
+                reader.readRangeCompactUint(result.length - 1) + 1;
+            final length = reader.readRangeCompactUint(
+                  remaining - _minLzMatchLength,
+                ) +
+                _minLzMatchLength;
+            if (distance > result.length ||
                 result.length + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Invalid LZ pixel match',
@@ -2978,7 +3009,10 @@ class MCOImageV3Codec {
               result.add(result[result.length - distance]);
             }
           } else {
-            final length = reader.readCompactUint() + 1;
+            final length = reader.readRangeCompactUint(
+                  count - result.length - 1,
+                ) +
+                1;
             if (result.length + length > count) {
               throw const MCOImageInvalidPayloadException(
                 'Invalid LZ pixel literal length',
@@ -3530,14 +3564,24 @@ class MCOImageV3Codec {
         }
       }
 
+      final remaining = pixels.length - position;
       final matchBits = bestLength >= _minLzMatchLength
           ? 1 +
-                _compactUintBitLength(bestDistance - 1) +
-                _compactUintBitLength(bestLength - _minLzMatchLength)
+                _rangeCompactUintBitLength(
+                  bestDistance - 1,
+                  position - 1,
+                ) +
+                _rangeCompactUintBitLength(
+                  bestLength - _minLzMatchLength,
+                  remaining - _minLzMatchLength,
+                )
           : 0;
       final literalBits = bestLength >= _minLzMatchLength
           ? 1 +
-                _compactUintBitLength(bestLength - 1) +
+                _rangeCompactUintBitLength(
+                  bestLength - 1,
+                  remaining - 1,
+                ) +
                 bestLength * localBits
           : 0;
       if (bestLength >= _minLzMatchLength && matchBits < literalBits) {
@@ -3571,7 +3615,7 @@ class MCOImageV3Codec {
       final greedyTokens = _buildGreedyLzPixelTokens(pixels, localBits);
       return _V3LzTokenCacheEntry(
         greedyTokens: greedyTokens,
-        greedyBitCost: _lzPixelTokensBitCost(greedyTokens, localBits),
+        greedyBitCost: _lzPixelTokensBitCost(greedyTokens, localBits, pixels.length),
       );
     });
 
@@ -3583,7 +3627,11 @@ class MCOImageV3Codec {
       entry.optimalTokens = _buildOptimalLzPixelTokens(pixels, localBits);
       entry.optimalBitCost = entry.optimalTokens == null
           ? null
-          : _lzPixelTokensBitCost(entry.optimalTokens!, localBits);
+          : _lzPixelTokensBitCost(
+              entry.optimalTokens!,
+              localBits,
+              pixels.length,
+            );
       entry.optimalComputed = true;
     }
 
@@ -3635,41 +3683,109 @@ class MCOImageV3Codec {
     _V3BitWriter writer,
     List<_V3LzPixelToken> tokens,
     int localBits,
+    int totalLength,
   ) {
+    var produced = 0;
     for (final token in tokens) {
+      final remaining = totalLength - produced;
       if (token.isMatch) {
+        if (produced <= 0 ||
+            token.distance <= 0 ||
+            token.distance > produced ||
+            token.length < _minLzMatchLength ||
+            token.length > remaining) {
+          throw const MCOImageInvalidInputException(
+            'Invalid LZ pixel match token',
+          );
+        }
         writer
           ..writeBits(1, 1)
-          ..writeCompactUint(token.distance - 1)
-          ..writeCompactUint(token.length - _minLzMatchLength);
+          ..writeRangeCompactUint(
+            token.distance - 1,
+            produced - 1,
+          )
+          ..writeRangeCompactUint(
+            token.length - _minLzMatchLength,
+            remaining - _minLzMatchLength,
+          );
+        produced += token.length;
       } else {
+        final length = token.literals.length;
+        if (length <= 0 || length > remaining) {
+          throw const MCOImageInvalidInputException(
+            'Invalid LZ pixel literal token',
+          );
+        }
         writer
           ..writeBits(0, 1)
-          ..writeCompactUint(token.literals.length - 1);
+          ..writeRangeCompactUint(
+            length - 1,
+            remaining - 1,
+          );
         for (final color in token.literals) {
           writer.writeBits(color, localBits);
         }
+        produced += length;
       }
+    }
+    if (produced != totalLength) {
+      throw const MCOImageInvalidInputException(
+        'LZ pixel tokens do not fill the block',
+      );
     }
   }
 
   static int _lzPixelTokensBitCost(
     List<_V3LzPixelToken> tokens,
     int localBits,
+    int totalLength,
   ) {
     var cost = 0;
+    var produced = 0;
     for (final token in tokens) {
+      final remaining = totalLength - produced;
       if (token.isMatch) {
+        if (produced <= 0 ||
+            token.distance <= 0 ||
+            token.distance > produced ||
+            token.length < _minLzMatchLength ||
+            token.length > remaining) {
+          throw const MCOImageInvalidInputException(
+            'Invalid LZ pixel match token',
+          );
+        }
         cost +=
             1 +
-            _compactUintBitLength(token.distance - 1) +
-            _compactUintBitLength(token.length - _minLzMatchLength);
+            _rangeCompactUintBitLength(
+              token.distance - 1,
+              produced - 1,
+            ) +
+            _rangeCompactUintBitLength(
+              token.length - _minLzMatchLength,
+              remaining - _minLzMatchLength,
+            );
+        produced += token.length;
       } else {
+        final length = token.literals.length;
+        if (length <= 0 || length > remaining) {
+          throw const MCOImageInvalidInputException(
+            'Invalid LZ pixel literal token',
+          );
+        }
         cost +=
             1 +
-            _compactUintBitLength(token.literals.length - 1) +
-            token.literals.length * localBits;
+            _rangeCompactUintBitLength(
+              length - 1,
+              remaining - 1,
+            ) +
+            length * localBits;
+        produced += length;
       }
+    }
+    if (produced != totalLength) {
+      throw const MCOImageInvalidInputException(
+        'LZ pixel tokens do not fill the block',
+      );
     }
     return cost;
   }
@@ -3693,7 +3809,13 @@ class MCOImageV3Codec {
       _V3LzParseStep? bestStep;
       final remaining = pixelCount - position;
 
-      for (final range in _lzLengthCostRanges(1, remaining)) {
+      for (
+        final range in _lzLengthCostRanges(
+          1,
+          remaining,
+          remaining,
+        )
+      ) {
         final result = literalMin.query(
           position + range.minLength,
           position + range.maxLength + 1,
@@ -3713,6 +3835,7 @@ class MCOImageV3Codec {
           final range in _lzLengthCostRanges(
             _minLzMatchLength,
             match.maxLength,
+            remaining,
           )
         ) {
           final result = rawMin.query(
@@ -3778,7 +3901,10 @@ class MCOImageV3Codec {
           for (var i = candidates.length - 1; i >= 0; i--) {
             final previous = candidates[i];
             final distance = position - previous;
-            final distanceBitCost = _compactUintBitLength(distance - 1);
+            final distanceBitCost = _rangeCompactUintBitLength(
+              distance - 1,
+              position - 1,
+            );
             final existing = bestByDistanceCost[distanceBitCost];
             if (existing?.maxLength == maxPossibleLength) continue;
             final maxLength = _lzMatchLength(pixels, position, distance);
@@ -3814,9 +3940,24 @@ class MCOImageV3Codec {
 
   static Iterable<_V3LzLengthCostRange> _lzLengthCostRanges(
     int valueOffset,
-    int maxLength,
+    int candidateMaxLength,
+    int remainingLength,
   ) sync* {
-    if (maxLength < valueOffset) return;
+    if (candidateMaxLength < valueOffset ||
+        candidateMaxLength > remainingLength) {
+      return;
+    }
+
+    final maxValue = remainingLength - valueOffset;
+    if (maxValue <= 7) {
+      yield _V3LzLengthCostRange(
+        valueOffset,
+        candidateMaxLength,
+        maxValue.bitLength,
+      );
+      return;
+    }
+
     for (final valueRange in const [
       (min: 0, max: 3),
       (min: 4, max: 19),
@@ -3825,10 +3966,10 @@ class MCOImageV3Codec {
       (min: 16384, max: 2097151),
     ]) {
       final minLength = valueRange.min + valueOffset;
-      if (minLength > maxLength) break;
+      if (minLength > candidateMaxLength) break;
       final rangeMaxLength = math.min(
         valueRange.max + valueOffset,
-        maxLength,
+        candidateMaxLength,
       );
       yield _V3LzLengthCostRange(
         minLength,
@@ -4673,8 +4814,14 @@ class MCOImageV3Codec {
           writer
             ..writeBits(3, 3)
             ..writeBits(decision.startingBit, 1);
+          var consumed = 0;
           for (final length in decision.runs) {
-            _writeShortBitplaneRunLength(writer, length);
+            _writeShortBitplaneRunLength(
+              writer,
+              length,
+              pixels.length - consumed,
+            );
+            consumed += length;
           }
           break;
         case _V3AdaptiveBitplaneMode.constantZero:
@@ -4811,11 +4958,7 @@ class MCOImageV3Codec {
       ),
       _V3AdaptiveBitplaneDecision(
         _V3AdaptiveBitplaneMode.shortRle,
-        4 +
-            runs.fold<int>(
-              0,
-              (sum, length) => sum + _shortBitplaneRunBitLength(length),
-            ),
+        4 + _shortBitplaneRunsBitCost(runs, pixels.length),
         startingBit: startingBit,
         runs: runs,
       ),
@@ -4870,7 +5013,10 @@ class MCOImageV3Codec {
     var position = 0;
     while (position < pixelCount) {
       final length = shortLengths
-          ? _readShortBitplaneRunLength(reader)
+          ? _readShortBitplaneRunLength(
+              reader,
+              pixelCount - position,
+            )
           : reader.readRangeCompactUint(pixelCount - position - 1) + 1;
       if (length <= 0 || position + length > pixelCount) {
         throw const MCOImageInvalidPayloadException(
@@ -4971,31 +5117,91 @@ class MCOImageV3Codec {
   static void _writeShortBitplaneRunLength(
     _V3BitWriter writer,
     int length,
+    int remainingLength,
   ) {
-    if (length <= 0) {
+    if (length <= 0 ||
+        remainingLength <= 0 ||
+        length > remainingLength) {
       throw const MCOImageInvalidInputException('Invalid bitplane run');
     }
     if (length <= 3) {
       writer.writeBits((1 << (length - 1)) - 1, length);
       return;
     }
-    writer.writeBits(7, 3);
-    writer.writeCompactUint(length - 4);
+    writer
+      ..writeBits(7, 3)
+      ..writeRangeCompactUint(
+        length - 4,
+        remainingLength - 4,
+      );
   }
 
-  static int _readShortBitplaneRunLength(_V3BitReader reader) {
+  static int _readShortBitplaneRunLength(
+    _V3BitReader reader,
+    int remainingLength,
+  ) {
+    if (remainingLength <= 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid remaining bitplane run length',
+      );
+    }
     if (reader.readBits(1) == 0) return 1;
+    if (remainingLength < 2) {
+      throw const MCOImageInvalidPayloadException(
+        'Bitplane run exceeds remaining pixels',
+      );
+    }
     if (reader.readBits(1) == 0) return 2;
+    if (remainingLength < 3) {
+      throw const MCOImageInvalidPayloadException(
+        'Bitplane run exceeds remaining pixels',
+      );
+    }
     if (reader.readBits(1) == 0) return 3;
-    return reader.readCompactUint() + 4;
+    if (remainingLength < 4) {
+      throw const MCOImageInvalidPayloadException(
+        'Bitplane run exceeds remaining pixels',
+      );
+    }
+    return reader.readRangeCompactUint(remainingLength - 4) + 4;
   }
 
-  static int _shortBitplaneRunBitLength(int length) {
-    if (length <= 0) {
+  static int _shortBitplaneRunsBitCost(
+    List<int> runs,
+    int totalLength,
+  ) {
+    var cost = 0;
+    var consumed = 0;
+    for (final length in runs) {
+      cost += _shortBitplaneRunBitLength(
+        length,
+        totalLength - consumed,
+      );
+      consumed += length;
+    }
+    if (consumed != totalLength) {
+      throw const MCOImageInvalidInputException(
+        'Short bitplane runs do not fill the input',
+      );
+    }
+    return cost;
+  }
+
+  static int _shortBitplaneRunBitLength(
+    int length,
+    int remainingLength,
+  ) {
+    if (length <= 0 ||
+        remainingLength <= 0 ||
+        length > remainingLength) {
       throw const MCOImageInvalidInputException('Invalid bitplane run');
     }
     if (length <= 3) return length;
-    return 3 + _compactUintBitLength(length - 4);
+    return 3 +
+        _rangeCompactUintBitLength(
+          length - 4,
+          remainingLength - 4,
+        );
   }
 
   static void _writeCompactRowDeltaBody(
