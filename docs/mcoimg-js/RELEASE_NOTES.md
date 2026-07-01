@@ -5,6 +5,12 @@ MCOimg v3 plus the retained v1/v2 compatibility codec and browser demo.
 
 ## Patch fixes after release candidate
 
+- fixed the v3 decoded-preview adapter in the HTML demo: successful v3 encoding
+  no longer passes `encodingVersion: 3` into the legacy v1/v2 `MCOImage`
+  wrapper and therefore no longer reports `Unknown encoding version`;
+- automatic candidate recalculation in the demo now uses a trailing 2-second
+  debounce after canvas/image changes; each new change cancels an active encode
+  and restarts the delay;
 - the demo now shows the colors actually present on the canvas, including a
   live count, per-color pixel counts in tooltips and a marker for the active
   transparent color;

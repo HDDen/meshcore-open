@@ -194,7 +194,90 @@ async function run(browser) {
           );
         }
 
-        return { usedColors: usedColors.length, transparentColor: selectedValue };
+        // A settings change is immediate and also clears the pending alpha encode,
+        // giving the debounce check a clean starting point.
+        compression.value = '1';
+        compression.dispatchEvent(new Event('change', { bubbles: true }));
+        await wait(250);
+
+        const metaEvents = [];
+        const metaObserver = new MutationObserver(() => {
+          metaEvents.push({
+            time: performance.now(),
+            text: document.getElementById('encodedMeta').textContent,
+          });
+        });
+        metaObserver.observe(document.getElementById('encodedMeta'), {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+
+        document.getElementById('sample').click();
+        await wait(1050);
+        document.getElementById('clear').click();
+        const lastCanvasChangeAt = performance.now();
+
+        await wait(1150);
+        const earlyEncode = metaEvents.find((event) =>
+          event.time >= lastCanvasChangeAt && event.text.startsWith('Encoding…')
+        );
+        if (earlyEncode) {
+          throw new Error('Canvas encoding started before the restarted 2-second debounce elapsed');
+        }
+
+        const debounceDeadline = Date.now() + 3000;
+        let encodeStart = null;
+        while (!encodeStart && Date.now() < debounceDeadline) {
+          encodeStart = metaEvents.find((event) =>
+            event.time >= lastCanvasChangeAt && event.text.startsWith('Encoding…')
+          );
+          if (!encodeStart) await wait(25);
+        }
+        if (!encodeStart) {
+          metaObserver.disconnect();
+          throw new Error('Encoding did not start after the restarted canvas debounce');
+        }
+        const debounceDelay = encodeStart.time - lastCanvasChangeAt;
+        if (debounceDelay < 1900 || debounceDelay > 3000) {
+          metaObserver.disconnect();
+          throw new Error('Unexpected canvas debounce delay: ' + debounceDelay.toFixed(1) + ' ms');
+        }
+
+        const completionDeadline = Date.now() + 15000;
+        let finalMeta = document.getElementById('encodedMeta').textContent;
+        while (Date.now() < completionDeadline && finalMeta.startsWith('Encoding')) {
+          await wait(25);
+          finalMeta = document.getElementById('encodedMeta').textContent;
+        }
+        metaObserver.disconnect();
+        if (finalMeta.startsWith('Encoding')) {
+          throw new Error('Debounced v3 encoding did not finish');
+        }
+        if (finalMeta.includes('Unknown encoding version')) {
+          throw new Error('v3 preview rendering leaked into the legacy MCOImage wrapper');
+        }
+        if (!/^[0-9]+ chars, [0-9]+ bytes, v3 /.test(finalMeta)) {
+          throw new Error('Unexpected final v3 encoding status: ' + finalMeta);
+        }
+        const decodedCanvas = document.getElementById('decoded');
+        if (decodedCanvas.width <= 0 || decodedCanvas.height <= 0) {
+          throw new Error('Decoded v3 preview canvas was not rendered');
+        }
+
+        document.getElementById('decode').click();
+        await wait(50);
+        const decodeMeta = document.getElementById('encodedMeta').textContent;
+        if (decodeMeta.includes('Unknown encoding version')) {
+          throw new Error('Textarea v3 decode preview leaked into the legacy MCOImage wrapper');
+        }
+
+        return {
+          usedColors: usedColors.length,
+          transparentColor: selectedValue,
+          debounceDelay: Math.round(debounceDelay),
+          finalMeta,
+        };
       })()`,
       awaitPromise: true,
       returnByValue: true,
@@ -210,7 +293,8 @@ async function run(browser) {
     const result = evaluation.result && evaluation.result.value;
     console.log(
       `MCOimg demo UI: PASS (used colors=${result.usedColors}, ` +
-      `v3 transparent color=${result.transparentColor})`,
+      `v3 transparent color=${result.transparentColor}, ` +
+      `canvas debounce=${result.debounceDelay}ms, preview status=${result.finalMeta})`,
     );
   } catch (error) {
     const events = cdp && cdp.events.length ? `\nDevTools events:\n${JSON.stringify(cdp.events, null, 2)}` : '';

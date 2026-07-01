@@ -1004,6 +1004,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       scale: 24,
       encodeTask: null,
       encodeRequestId: 0,
+      encodeDebounceTimer: null,
     };
 
     function init() {
@@ -1072,7 +1073,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
       paletteSelect.addEventListener('change', () => {
         changePaletteProfile(Number(paletteSelect.value));
-        renderAll();
+        renderAll({ encodeMode: 'debounced' });
       });
 
       document.getElementById('trimEmpty').addEventListener('click', trimEmptyCanvas);
@@ -1115,13 +1116,13 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         event.preventDefault();
         if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) return;
         state.pickingTransparentColor = !state.pickingTransparentColor;
-        renderAll();
+        renderAll({ encodeMode: 'none' });
       });
       alphaClear.addEventListener('click', (event) => {
         event.preventDefault();
         state.transparentColor = null;
         state.pickingTransparentColor = false;
-        renderAll();
+        renderAll({ encodeMode: 'debounced' });
       });
       document.getElementById('toolPencil').addEventListener('click', () => selectTool('pencil'));
       document.getElementById('toolFill').addEventListener('click', () => selectTool('fill'));
@@ -1358,7 +1359,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       formatVersionSelect.value = String(state.encodingVersion);
       renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function undoCanvasAction() {
@@ -1462,7 +1463,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       resizeCanvasScaled(nextWidth, nextHeight);
       rememberCanvasAction(before, captureCanvasSnapshot());
       clearPendingToolPoints();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function cropCanvasSize() {
@@ -1472,7 +1473,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       cropOrExpandCanvasState(nextWidth, nextHeight);
       rememberCanvasAction(before, captureCanvasSnapshot());
       clearPendingToolPoints();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function trimEmptyCanvas() {
@@ -1521,7 +1522,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       widthInput.value = String(targetWidth);
       heightInput.value = String(targetHeight);
       rememberCanvasAction(before, captureCanvasSnapshot());
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function syncCanvasStateFromInputs() {
@@ -1648,7 +1649,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
             paletteValueForProfileColorId(state.paletteProfile, value);
         }
       }
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function argbToRgbaComponents(argb) {
@@ -2176,8 +2177,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         const image = browserCodec.decodePayload(bytes, { input: 'binary' });
         applyDecodedImageToEditor(image);
         encodedText.value = browserCodec.payloadToText(bytes);
-        drawMCOImage(decodedCanvas, image, { scale: 12 });
-        renderAll();
+        drawDecodedImage(decodedCanvas, image, { scale: 12 });
+        renderAll({ encodeMode: 'debounced' });
         renderBinaryInspector(encodedText.value);
         encodedMeta.textContent = `Loaded binary ${image.width}×${image.height}, ${bytes.length} bytes`;
       } catch (error) {
@@ -2365,18 +2366,19 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           width: state.width,
           height: state.height,
         });
-        renderAll();
+        renderAll({ encodeMode: 'debounced' });
       } catch (error) {
         console.log('[mcoimg-demo] apply loaded image failed', error);
         encodedMeta.textContent = `Image import failed: ${error.message}`;
       }
     }
 
-    function renderAll() {
+    function renderAll({ encodeMode = 'immediate' } = {}) {
       console.log('[mcoimg-demo] renderAll', {
         width: state.width,
         height: state.height,
         paletteProfile: state.paletteProfile,
+        encodeMode,
       });
       compressionLevelLabel.hidden =
         state.encodingVersion === MCOImageEncodingVersion.v1Legacy;
@@ -2387,7 +2389,11 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       showGridInput.checked = state.showGrid;
       updateHistoryButtons();
       renderEditor();
-      encodeCurrent();
+      if (encodeMode === 'debounced') {
+        scheduleEncodeCurrent();
+      } else if (encodeMode === 'immediate') {
+        encodeCurrent();
+      }
     }
 
     function renderAlphaControl() {
@@ -2440,7 +2446,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       if (supportsTransparentColor() && state.pickingTransparentColor) {
         state.transparentColor = paletteValue;
         state.pickingTransparentColor = false;
-        renderAll();
+        renderAll({ encodeMode: 'debounced' });
         return;
       }
       state.selectedColor = paletteValue;
@@ -2557,6 +2563,24 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       drawPendingToolMarkers(ctx);
     }
 
+    function drawDecodedImage(canvas, image, options = {}) {
+      // The shared renderer belongs to the legacy v1/v2 module and wraps plain
+      // inputs in MCOImage. That wrapper intentionally rejects wire version 3,
+      // although the renderer itself only needs dimensions, palette indexes and
+      // transparency. Strip the v3 marker before crossing that compatibility
+      // boundary, just as the PNG adapter does in mcoimg-browser.global.js.
+      const renderableImage = Number(image?.encodingVersion) === 3
+        ? {
+            width: image.width,
+            height: image.height,
+            paletteProfile: image.paletteProfile,
+            pixels: image.pixels,
+            transparentColor: image.transparentColor,
+          }
+        : image;
+      drawMCOImage(canvas, renderableImage, options);
+    }
+
     function drawPendingToolMarkers(ctx) {
       const pending = [
         state.lineStartIndex,
@@ -2584,6 +2608,15 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       ctx.restore();
     }
 
+    const encodeDebounceDelayMs = 2000;
+
+    function cancelScheduledEncode() {
+      if (state.encodeDebounceTimer !== null) {
+        clearTimeout(state.encodeDebounceTimer);
+        state.encodeDebounceTimer = null;
+      }
+    }
+
     function cancelEncodeTask() {
       if (state.encodeTask && typeof state.encodeTask.cancel === 'function') {
         state.encodeTask.cancel();
@@ -2591,7 +2624,19 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       state.encodeTask = null;
     }
 
+    function scheduleEncodeCurrent() {
+      cancelScheduledEncode();
+      state.encodeRequestId += 1;
+      cancelEncodeTask();
+      encodedMeta.textContent = 'Encoding starts 2 seconds after the last canvas change…';
+      state.encodeDebounceTimer = setTimeout(() => {
+        state.encodeDebounceTimer = null;
+        encodeCurrent();
+      }, encodeDebounceDelayMs);
+    }
+
     function encodeCurrent() {
+      cancelScheduledEncode();
       const requestId = ++state.encodeRequestId;
       cancelEncodeTask();
       encodedMeta.textContent = 'Encoding…';
@@ -2640,7 +2685,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
             (state.transparentColor !== null ? `, alpha=${state.transparentColor}` : '') +
             (task.workerCount > 0 ? `, workers=${task.workerCount}` : ', main thread');
           const decoded = browserCodec.decodePayload(encoded.text);
-          drawMCOImage(decodedCanvas, decoded, { scale: 12 });
+          drawDecodedImage(decodedCanvas, decoded, { scale: 12 });
           renderBinaryInspector(encoded.text);
         }).catch((error) => {
           if (requestId !== state.encodeRequestId || task.isCancelled) return;
@@ -2660,8 +2705,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       try {
         const image = browserCodec.decodePayload(encodedText.value.trim());
         applyDecodedImageToEditor(image);
-        drawMCOImage(decodedCanvas, image, { scale: 12 });
-        renderAll();
+        drawDecodedImage(decodedCanvas, image, { scale: 12 });
+        renderAll({ encodeMode: 'debounced' });
       } catch (error) {
         encodedMeta.textContent = error.message;
       }
@@ -2738,7 +2783,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
       state.pixels = nextPixels;
       clearPendingToolPoints();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function handleLineTool(index) {
@@ -2841,7 +2886,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
       state.pixels = nextPixels;
       clearPendingToolPoints();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function handleRectangleTool(index) {
@@ -2893,7 +2938,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       if (changed) rememberPixelCanvasAction(beforePixels, nextPixels);
       state.pixels = nextPixels;
       clearPendingToolPoints();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function shiftCanvas(dx, dy) {
@@ -2912,14 +2957,14 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       state.pixels = nextPixels;
       clearPendingToolPoints();
       clearCanvasHistory();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function clearCanvas() {
       resetPixels();
       clearPendingToolPoints();
       clearCanvasHistory();
-      renderAll();
+      renderAll({ encodeMode: 'debounced' });
     }
 
     function paintCell(event) {
@@ -2942,7 +2987,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         floodFill(x, y, state.selectedColor);
         rememberPixelCanvasAction(beforePixels, state.pixels);
         clearPendingToolPoints();
-        renderAll();
+        renderAll({ encodeMode: 'debounced' });
         return;
       }
 
@@ -2964,7 +3009,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       if (state.pixels[index] !== state.selectedColor) {
         state.pixels[index] = state.selectedColor;
         renderEditor();
-        encodeCurrent();
+        scheduleEncodeCurrent();
       }
     }
 
