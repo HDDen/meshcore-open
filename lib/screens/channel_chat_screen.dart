@@ -2881,9 +2881,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     _lastChannelSendAt = DateTime.now();
     _lastChannelSentText = message.text;
+    final mcoImageV3 = _mcoImageV3ForResend(message.text);
     connector.sendChannelMessage(
       widget.channel,
       message.text,
+      mcoImageV3: mcoImageV3,
       originalText: message.originalText,
       translatedLanguageCode: message.translatedLanguageCode,
       translationModelId: message.translationModelId,
@@ -2895,6 +2897,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       context,
       content: Text(context.l10n.chat_retryingMessage),
     );
+  }
+
+  EncodedMCOImageV3? _mcoImageV3ForResend(String text) {
+    final trimmedLeft = text.trimLeft();
+    if (!MCOImageV3Codec.isTextPayload(trimmedLeft)) {
+      return null;
+    }
+    try {
+      final body = MCOImageV3Codec.bodyFromText(trimmedLeft);
+      final payloadInfo = MCOImageV3Codec.inspectText(trimmedLeft);
+      final candidate = EncodedMCOImage(
+        payload: body,
+        text: trimmedLeft,
+        mode: ImageMode.extended,
+        scan: ScanMode.h,
+        byteLength: body.length,
+        charLength: trimmedLeft.length,
+        codecVersion: MCOImageV3Codec.version,
+        requestedEncodingVersion: MCOImageEncodingVersion.v3,
+        actualEncodingVersion: MCOImageEncodingVersion.v3,
+        paletteKind: 'v3',
+        container: payloadInfo?.algorithm ?? 'v3',
+      );
+      return EncodedMCOImageV3(
+        body: body,
+        byteLength: body.length,
+        encodedCandidate: candidate,
+      );
+    } on MCOImageCodecException {
+      return null;
+    }
   }
 
   int? _remainingResendWaitSeconds(ChannelMessage message) {

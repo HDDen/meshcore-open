@@ -8583,6 +8583,21 @@ class MeshCoreConnector extends ChangeNotifier {
     List<ChannelMessage> messages,
     ChannelMessage incoming,
   ) {
+    // Binary channel data has no protocol timestamp, so manual resend of the
+    // same MCOimg payload produces the same packet hash as the previous send.
+    // Prefer the newest not-yet-repeated self-echo target before exact hash
+    // matching, otherwise the retransmission can be merged into the old
+    // message. Command ACK may already have promoted the new resend from
+    // pending to sent before the radio repeat arrives.
+    for (int i = messages.length - 1; i >= 0; i--) {
+      final existing = messages[i];
+      if (existing.isOutgoing &&
+          existing.repeatCount == 0 &&
+          _isChannelRepeat(existing, incoming)) {
+        return i;
+      }
+    }
+
     // First pass: match by packet hash (exact dedup)
     final incomingHash = incoming.packetHash;
     if (incomingHash != null) {
