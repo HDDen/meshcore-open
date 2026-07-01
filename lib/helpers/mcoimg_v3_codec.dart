@@ -37,8 +37,16 @@ enum MCOImageV3BlockAlgorithm {
   rowRepeat,
   lzPixels,
   quadtree,
+
+  // Intentionally separate wire grammars:
+  // bitplanes:         0 = raw, 1 = legacy RLE + starting bit
+  // adaptiveBitplanes: 0 = raw, 10/110/111xx = adaptive modes
+  //
+  // Combining them under one ID would require an extra discriminator bit
+  // or make at least one existing encoding longer.
   bitplanes,
   adaptiveBitplanes,
+
   directBitplanes,
   compactRowDelta,
   directRowDelta;
@@ -354,11 +362,10 @@ class MCOImageV3Codec {
     List<MCOImageBackgroundCandidate>? backgroundCandidates,
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
-    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
-    // v3 is stored/transmitted as binary body. Text output is an app-side
-    // im3: wrapper over the same body for contact messages.
+    // v3 always optimizes and returns one canonical binary body.
+    // Text output is only an app-side im3: Base91 wrapper over these bytes.
     _validateImage(image);
     final result = _encodeNative(
       image,
@@ -366,7 +373,6 @@ class MCOImageV3Codec {
       backgroundCandidates: backgroundCandidates,
       scanModes: scanModes,
       includeNonScanCandidates: includeNonScanCandidates,
-      outputTarget: outputTarget,
       compressionLevel: compressionLevel,
     );
     return EncodedMCOImageV3(
@@ -382,7 +388,6 @@ class MCOImageV3Codec {
     List<MCOImageBackgroundCandidate>? backgroundCandidates,
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
-    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
     _validateImage(image);
@@ -392,7 +397,6 @@ class MCOImageV3Codec {
       backgroundCandidates: backgroundCandidates,
       scanModes: scanModes,
       includeNonScanCandidates: includeNonScanCandidates,
-      outputTarget: outputTarget,
       compressionLevel: compressionLevel,
     );
   }
@@ -583,7 +587,6 @@ class MCOImageV3Codec {
     List<MCOImageBackgroundCandidate>? backgroundCandidates,
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
-    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
     return _debugEncodeNative(
@@ -592,7 +595,6 @@ class MCOImageV3Codec {
       backgroundCandidates: backgroundCandidates,
       scanModes: scanModes,
       includeNonScanCandidates: includeNonScanCandidates,
-      outputTarget: outputTarget,
       compressionLevel: compressionLevel,
     ).result;
   }
@@ -603,7 +605,6 @@ class MCOImageV3Codec {
     List<MCOImageBackgroundCandidate>? backgroundCandidates,
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
-    MCOImageOutputTarget outputTarget = MCOImageOutputTarget.binary,
     int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
     _lzTokenCache = _V3LzTokenCache();
@@ -2263,6 +2264,9 @@ class MCOImageV3Codec {
           },
         );
         break;
+      // Keep the legacy and adaptive bitplane candidates independent.
+      // The adaptive prefix is not a strict wire-compatible superset:
+      // its legacy-RLE branch costs one extra prefix bit per RLE plane.
       case MCOImageV3BlockAlgorithm.bitplanes:
         _writeBestLocalPaletteBlock(
           writer,

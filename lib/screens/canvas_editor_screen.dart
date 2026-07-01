@@ -208,7 +208,6 @@ EncodedMCOImage _encodeMCOImageRequest(_MCOImageEncodeRequest request) {
           backgroundCandidates: request.backgroundCandidates,
           scanModes: request.scanModes,
           includeNonScanCandidates: request.includeNonScanCandidates,
-          outputTarget: request.outputTarget,
           compressionLevel: request.compressionLevel,
         )
         .encodedCandidate;
@@ -244,7 +243,6 @@ MCOImageEncodeDiagnostics _debugEncodeMCOImageRequest(
       backgroundCandidates: request.backgroundCandidates,
       scanModes: request.scanModes,
       includeNonScanCandidates: request.includeNonScanCandidates,
-      outputTarget: request.outputTarget,
       compressionLevel: request.compressionLevel,
     );
   }
