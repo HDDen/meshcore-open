@@ -2221,6 +2221,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'bytes=${encoded.byteLength}; '
       'chars=${encoded.charLength}; '
       'elapsed=${_formatPayloadRefreshElapsed(elapsed)}; '
+      'algorithm=${_encodingAlgorithmLabel(encoded)}; '
       'container=${encoded.container}; '
       'mode=${encoded.mode.name}; '
       'scan=${encoded.scan.name}; '
@@ -2362,6 +2363,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return parts.join(' | ');
   }
 
+  String _encodingAlgorithmLabel(EncodedMCOImage candidate) {
+    if (candidate.actualEncodingVersion == MCOImageEncodingVersion.v3) {
+      try {
+        return MCOImageV3Codec.inspectBody(candidate.payload).algorithm;
+      } on MCOImageCodecException {
+        return candidate.mode.name;
+      }
+    }
+    return candidate.container;
+  }
+
   String _encodingContainerLabel(EncodedMCOImage candidate) {
     final container = candidate.container;
     if (container.startsWith('compactRegionsStream')) {
@@ -2370,6 +2382,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           ? ''
           : ' ${suffix.substring(1).replaceAll('-', ' ')}';
       return 'Regions compact$details x${candidate.regionCount}';
+    }
+    if (candidate.actualEncodingVersion == MCOImageEncodingVersion.v3) {
+      final algorithm = _encodingAlgorithmLabel(candidate);
+      return algorithm == 'Regions'
+          ? 'Regions x${candidate.regionCount}'
+          : algorithm;
     }
     return switch (candidate.container) {
       'regions' => 'Regions x${candidate.regionCount}',
@@ -3699,6 +3717,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             'candidates=${diagnostics.candidates.length}; '
             '${isBest ? 'BEST' : 'not-best'}; '
             '${slice.label}; '
+            'algorithm=${_encodingAlgorithmLabel(result)}; '
             'container=${result.container}; '
             'mode=${result.mode.name}; '
             'scan=${result.scan.name}; '
@@ -3770,6 +3789,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'bytes=${best.byteLength}; '
         'chars=${best.charLength}; '
         'COMPLETE; '
+        'algorithm=${_encodingAlgorithmLabel(best)}; '
         'container=${best.container}; '
         'mode=${best.mode.name}; '
         'scan=${best.scan.name}; '

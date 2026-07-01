@@ -945,6 +945,7 @@ class MCOImageV3Codec {
     final total = candidates.length;
     for (var index = 0; index < total; index++) {
       final candidate = candidates[index];
+      final algorithm = _candidateAlgorithmLabel(candidate);
       final completed = index + 1;
       final percentage = total == 0 ? 100.0 : completed * 100 / total;
       debugPrint(
@@ -953,7 +954,8 @@ class MCOImageV3Codec {
         'bytes=${candidate.byteLength}; '
         'chars=${candidate.charLength}; '
         '${index == 0 ? 'BEST' : 'not-best'}; '
-        'v3 ${candidate.container}; '
+        'v3 $algorithm; '
+        'algorithm=$algorithm; '
         'container=${candidate.container}; '
         'mode=${candidate.mode.name}; '
         'scan=${candidate.scan.name}; '
@@ -961,6 +963,16 @@ class MCOImageV3Codec {
         'bgRank=${candidate.backgroundRank}; '
         'bounds=${candidate.boundsPresent};',
       );
+    }
+  }
+
+  static String _candidateAlgorithmLabel(
+    EncodedMCOImage candidate,
+  ) {
+    try {
+      return inspectBody(candidate.payload).algorithm;
+    } on MCOImageCodecException {
+      return candidate.mode.name;
     }
   }
 
