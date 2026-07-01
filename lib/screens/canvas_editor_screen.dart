@@ -3355,12 +3355,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Future<void> _saveCanvasToPng() async {
     try {
       final bytes = await _renderCanvasPngBytes();
-      final timestamp = DateTime.now()
-          .toUtc()
-          .toIso8601String()
-          .replaceAll(':', '-')
-          .replaceAll('.', '-');
-      final fileName = 'meshcore_canvas_$timestamp.png';
+      final fileName = MCOImageFileSaver.pngFileName();
       final location = await file_selector.getSaveLocation(
         suggestedName: fileName,
         acceptedTypeGroups: const [
@@ -3416,15 +3411,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Future<bool> _shareCanvasPngFallback() async {
     try {
       final bytes = await _renderCanvasPngBytes();
+      final fileName = MCOImageFileSaver.pngFileName();
       await SharePlus.instance.share(
         ShareParams(
-          files: [
-            XFile.fromData(
-              bytes,
-              mimeType: 'image/png',
-              name: 'meshcore_canvas.png',
-            ),
-          ],
+          files: [XFile.fromData(bytes, mimeType: 'image/png', name: fileName)],
+          fileNameOverrides: [fileName],
         ),
       );
       return true;

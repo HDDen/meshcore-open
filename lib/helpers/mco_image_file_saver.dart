@@ -37,11 +37,7 @@ class MCOImageFileSaver {
       ).saveTo(location.path);
       return true;
     } catch (_) {
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile.fromData(bytes, mimeType: 'image/png', name: fileName)],
-        ),
-      );
+      await _shareBytes(bytes, fileName, mimeType: 'image/png');
       return true;
     }
   }
@@ -80,19 +76,26 @@ class MCOImageFileSaver {
       ).saveTo(location.path);
       return true;
     } catch (_) {
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [
-            XFile.fromData(
-              payload,
-              mimeType: 'application/octet-stream',
-              name: fileName,
-            ),
-          ],
-        ),
+      await _shareBytes(
+        payload,
+        fileName,
+        mimeType: 'application/octet-stream',
       );
       return true;
     }
+  }
+
+  static Future<void> _shareBytes(
+    Uint8List bytes,
+    String fileName, {
+    required String mimeType,
+  }) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, mimeType: mimeType, name: fileName)],
+        fileNameOverrides: [fileName],
+      ),
+    );
   }
 
   static Future<Uint8List> _renderOriginalPngBytes(MCOImage image) async {
@@ -148,20 +151,30 @@ class MCOImageFileSaver {
   }
 
   static String _fileName() {
-    final timestamp = DateTime.now()
-        .toUtc()
-        .toIso8601String()
-        .replaceAll(':', '-')
-        .replaceAll('.', '-');
-    return 'meshcore_canvas_$timestamp.png';
+    return pngFileName();
   }
 
   static String _binaryFileName() {
-    final timestamp = DateTime.now()
-        .toUtc()
-        .toIso8601String()
-        .replaceAll(':', '-')
-        .replaceAll('.', '-');
-    return 'meshcore_canvas_$timestamp.mcoimg.bin';
+    return binaryFileName();
+  }
+
+  static String pngFileName() {
+    return '${_timestampFileStem()}.mcoimg.png';
+  }
+
+  static String binaryFileName() {
+    return '${_timestampFileStem()}.mcoimg.bin';
+  }
+
+  static String _timestampFileStem() {
+    final now = DateTime.now();
+    final year = now.year.toString().padLeft(4, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return '$year-$month-$day'
+        '_$hour-$minute-$second';
   }
 }

@@ -98,7 +98,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
               title: Text(context.l10n.chat_canvasSave),
               onTap: () {
                 Navigator.pop(sheetContext);
-                unawaited(_saveItemPng(item));
+                unawaited(_saveItem(item));
               },
             ),
             ListTile(
@@ -134,9 +134,13 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     unawaited(_saveItems());
   }
 
-  Future<void> _saveItemPng(MCOImageGalleryItem item) async {
+  Future<void> _saveItem(MCOImageGalleryItem item) async {
     try {
-      await MCOImageFileSaver.savePngBytes(item.pngBytes);
+      if (item.showPngFallback) {
+        await MCOImageFileSaver.savePngBytes(item.pngBytes);
+      } else {
+        await MCOImageFileSaver.saveBinaryPayload(item.binaryPayload);
+      }
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
