@@ -4435,8 +4435,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isConnected || text.isEmpty) return;
     final shouldDeferForSync = _shouldDeferChannelSendForSync;
     final hasExplicitMcoImageV3 =
-        preparedMcoImageV3Outbound?.kind ==
-            ChannelBinaryDataKind.mcoImageV3 ||
+        preparedMcoImageV3Outbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
         (mcoImageV3 != null && ChannelBinaryDataHelper.canSend);
 
     // Check if this is a reaction - if so, process it immediately instead of adding as a message.
@@ -4489,7 +4488,8 @@ class MeshCoreConnector extends ChangeNotifier {
         : await _outgoingChannelRegionForMessage(channel.index);
     if (!isConnected) return;
 
-    final binaryOutbound = preparedMcoImageV3Outbound ??
+    final binaryOutbound =
+        preparedMcoImageV3Outbound ??
         (hasExplicitMcoImageV3
             ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
                 image: mcoImageV3!,

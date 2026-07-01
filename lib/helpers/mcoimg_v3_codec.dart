@@ -152,8 +152,7 @@ class MCOImageV3Codec {
   /// radio transmission without re-encoding the image.
   static const int packetNonceLength = 1;
 
-  static int _packetNonceCounter =
-      DateTime.now().microsecondsSinceEpoch & 0xff;
+  static int _packetNonceCounter = DateTime.now().microsecondsSinceEpoch & 0xff;
   static int? _lastPacketNonce;
 
   static int nextPacketNonce() {
