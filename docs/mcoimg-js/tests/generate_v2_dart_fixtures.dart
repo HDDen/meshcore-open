@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../../../lib/helpers/mcoimg_codec.dart';
+import 'package:meshcore_open/helpers/mcoimg_codec.dart';
 
 int _compressionLevel(String name) {
   return switch (name.toLowerCase()) {

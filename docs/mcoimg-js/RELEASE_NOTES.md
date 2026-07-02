@@ -88,3 +88,22 @@ does not require Playwright, Puppeteer or npm installation.
 Serve the demo and Worker scripts over HTTP(S). Direct `file://` opening can
 prevent Worker loading in modern browsers. `useWorkers: false` remains a fully
 deterministic fallback.
+
+## Dart canvas editor: binary import reuse
+
+- Loading an MCOimg `.bin` in `lib/screens/canvas_editor_screen.dart` now adopts
+  the already encoded payload as the current candidate instead of immediately
+  re-running the candidate search.
+- For v3, import refreshes only the first one-byte packet nonce; bytes after the
+  nonce remain unchanged.
+- The imported payload stays cached until pixels or encoding settings actually
+  change. Legacy v1/v2 payload bytes are preserved exactly.
+- Any `.bin` filename accepted by the file picker is handled as an MCOimg binary,
+  not only names ending in `.mcoimg.bin`.
+
+## Dart analyzer cleanup
+
+- Replaced relative imports from `docs/mcoimg-js/tests/*.dart` into `lib/` with
+  `package:meshcore_open/...` imports.
+- This removes all eight `avoid_relative_lib_imports` diagnostics reported by
+  `flutter analyze` for the Dart↔JavaScript fixture tools.

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import '../../../lib/helpers/mcoimg_types.dart';
-import '../../../lib/helpers/mcoimg_v3_codec.dart';
+import 'package:meshcore_open/helpers/mcoimg_types.dart';
+import 'package:meshcore_open/helpers/mcoimg_v3_codec.dart';
 
 PaletteProfile _paletteProfile(String name) {
   return PaletteProfile.values.firstWhere(

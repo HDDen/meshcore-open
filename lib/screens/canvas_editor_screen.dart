@@ -175,6 +175,13 @@ class _MCOImageEncodeCacheKey {
   }
 }
 
+class _ImportedMcoBinary {
+  final MCOImage image;
+  final EncodedMCOImage encoded;
+
+  const _ImportedMcoBinary({required this.image, required this.encoded});
+}
+
 class _ExtremeEncodeSlice {
   final _MCOImageEncodeRequest request;
   final String label;
@@ -2367,6 +2374,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   String _encodingAlgorithmLabel(EncodedMCOImage candidate) {
+    const importedPrefix = 'imported-bin:';
+    if (candidate.container.startsWith(importedPrefix)) {
+      return candidate.container.substring(importedPrefix.length);
+    }
     if (candidate.actualEncodingVersion == MCOImageEncodingVersion.v3) {
       try {
         return MCOImageV3Codec.inspectBody(candidate.payload).algorithm;
@@ -2379,6 +2390,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   String _encodingContainerLabel(EncodedMCOImage candidate) {
     final container = candidate.container;
+    const importedPrefix = 'imported-bin:';
+    if (container.startsWith(importedPrefix)) {
+      return container.substring(importedPrefix.length);
+    }
     if (container.startsWith('compactRegionsStream')) {
       final suffix = container.substring('compactRegionsStream'.length);
       final details = suffix.isEmpty
@@ -3100,21 +3115,41 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       shouldRestorePendingRefreshOnError =
           _cancelPayloadCalculationBeforeCanvasReplacement();
       final bytes = await file.readAsBytes();
-      if (file.name.toLowerCase().endsWith('.mcoimg.bin')) {
-        final image = _decodeMcoImageBinaryPayload(bytes);
+      if (file.name.toLowerCase().endsWith('.bin')) {
+        final imported = _decodeMcoImageBinaryForImport(bytes);
+
+        // The imported payload is already the winning encoded candidate. Wait
+        // until any encoder for the previous canvas has fully stopped, then
+        // adopt the payload directly instead of scheduling another candidate
+        // search. For v3 the helper below changes only the one-byte packet
+        // nonce; the compressed image bitstream remains byte-for-byte intact.
+        await _cancelCurrentEncoding();
         if (!mounted) return;
+
         _clearCanvasHistory();
+        shouldRestorePendingRefreshOnError = false;
         setState(() {
-          _loadInitialImage(image);
+          _loadInitialImage(imported.image);
           _lineStartIndex = null;
           _ovalFirstIndex = null;
           _ovalSecondIndex = null;
           _rectangleFirstIndex = null;
           _rectangleSecondIndex = null;
+          _payloadRefreshPending = false;
+          _payloadRefreshInProgress = false;
+          _payloadRefreshProgressPercent = null;
+          _payloadRefreshElapsed = null;
+          _payloadRefreshStopwatch = null;
+          _currentEncodedCandidate = imported.encoded;
+          _currentEncodedCacheKey = _MCOImageEncodeCacheKey.fromRequest(
+            _buildEncodeRequest(),
+          );
+          _currentPayloadChars = _displayPayloadSizeForEncoded(
+            imported.encoded,
+          );
         });
-        _markPayloadDirty();
-        unawaited(_saveCanvasPalette(image.paletteProfile));
-        unawaited(_saveCanvasSize(image.width, image.height));
+        unawaited(_saveCanvasPalette(imported.image.paletteProfile));
+        unawaited(_saveCanvasSize(imported.image.width, imported.image.height));
         return;
       }
 
@@ -3147,12 +3182,72 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  MCOImage _decodeMcoImageBinaryPayload(Uint8List payload) {
-    try {
-      return MCOImageV3Codec().decodeAppPayloadWithoutSender(payload);
-    } on MCOImageCodecException {
-      return _codec.decode(MCOImageCodec.textFromBinaryPayload(payload));
+  _ImportedMcoBinary _decodeMcoImageBinaryForImport(Uint8List payload) {
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      payload,
+    );
+    if (appPayload != null &&
+        appPayload.subtypeId == MCOImageV3Codec.subtypeId &&
+        appPayload.version == MCOImageV3Codec.version) {
+      try {
+        // A v3 .bin already contains the selected compressed representation.
+        // Refresh only the transport-uniqueness byte used to avoid identical
+        // retransmission payloads; do not invoke the image encoder.
+        final body = MCOImageV3Codec.refreshPacketNonce(appPayload.body);
+        final image = MCOImageV3Codec().decodeBody(body);
+        final info = MCOImageV3Codec.inspectBody(body);
+        final text = MCOImageV3Codec.textFromBody(body);
+        final scanId = (body[1] >> 4) & 0x03;
+        final scan = ScanMode.values[scanId];
+        return _ImportedMcoBinary(
+          image: image,
+          encoded: EncodedMCOImage(
+            payload: body,
+            text: text,
+            mode: ImageMode.extended,
+            scan: scan,
+            byteLength: body.length,
+            charLength: text.length,
+            transparentColor: image.transparentColor,
+            codecVersion: MCOImageV3Codec.version,
+            requestedEncodingVersion: MCOImageEncodingVersion.v3,
+            actualEncodingVersion: MCOImageEncodingVersion.v3,
+            paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+            container: 'imported-bin:${info.algorithm}',
+          ),
+        );
+      } on MCOImageCodecException {
+        // A legacy v1/v2 payload may coincidentally start with 0x13. Preserve
+        // the old fallback behaviour and try the legacy decoder below.
+      }
     }
+
+    final binaryPayload = Uint8List.fromList(payload);
+    final text = MCOImageCodec.textFromBinaryPayload(binaryPayload);
+    final image = _codec.decode(text);
+    final info = MCOImageCodec.inspectPayload(text);
+    if (info == null) {
+      throw const MCOImageInvalidPayloadException(
+        'Invalid MCOimg binary payload',
+      );
+    }
+    return _ImportedMcoBinary(
+      image: image,
+      encoded: EncodedMCOImage(
+        payload: binaryPayload,
+        text: text,
+        mode: ImageMode.extended,
+        scan: ScanMode.h,
+        byteLength: binaryPayload.length,
+        charLength: text.length,
+        transparentColor: image.transparentColor,
+        codecVersion: info.version,
+        requestedEncodingVersion: image.encodingVersion,
+        actualEncodingVersion: image.encodingVersion,
+        paletteKind: image.paletteProfile.isDynamic ? 'dynamic' : 'fixed',
+        container: 'imported-bin:${info.algorithm}',
+      ),
+    );
   }
 
   Future<_ImportedCanvasImage> _imageBytesToCanvasPixels(
