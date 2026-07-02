@@ -367,7 +367,7 @@ const int pathHashSize = 1;
 const int maxNameSize = 32;
 const int maxFrameSize = 172;
 const int maxChannelDataLength = maxFrameSize - 9;
-const int appProtocolVersion = 4;
+const int appProtocolVersion = 14;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
 const int _sendTextMsgOverheadBytes =
@@ -749,8 +749,20 @@ Uint8List buildRebootFrame() {
 }
 
 // Build CMD_SYNC_NEXT_MESSAGE frame
-Uint8List buildSyncNextMessageFrame() {
-  return Uint8List.fromList([cmdSyncNextMessage]);
+Uint8List buildSyncNextMessageFrame({
+  int? ackFragmentId,
+  int? ackFragmentIndex,
+}) {
+  if (ackFragmentId == null || ackFragmentIndex == null) {
+    return Uint8List.fromList([cmdSyncNextMessage]);
+  }
+  return Uint8List.fromList(<int>[
+    cmdSyncNextMessage,
+    0x01,
+    ackFragmentId & 0xFF,
+    (ackFragmentId >> 8) & 0xFF,
+    ackFragmentIndex & 0xFF,
+  ]);
 }
 
 // Build CMD_GET_CHANNEL frame

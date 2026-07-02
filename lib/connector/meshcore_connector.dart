@@ -21,9 +21,11 @@ import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/frame_fragment_reassembler.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/queued_fragment_ack_tracker.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -228,6 +230,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
   final StreamController<Uint8List> _receivedFramesController =
       StreamController<Uint8List>.broadcast();
+  final FrameFragmentReassembler _frameFragmentReassembler =
+      FrameFragmentReassembler();
+  final QueuedFragmentAckTracker _queuedFragmentAckTracker =
+      QueuedFragmentAckTracker();
 
   Uint8List? _selfPublicKey;
   String? _selfName;
@@ -514,6 +520,8 @@ class MeshCoreConnector extends ChangeNotifier {
   CompanionRadioStats? get latestRadioStats => _latestRadioStats;
 
   bool get supportsCompanionRadioStats => (_firmwareVerCode ?? 0) >= 8;
+
+  bool get _supportsQueuedFragmentAck => (_firmwareVerCode ?? 0) >= 14;
 
   bool get radioStatsAirActivityPulse {
     final sw = _airtimeBumpStopwatch;
@@ -1722,6 +1730,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _translationService = translationService;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
+    _frameFragmentReassembler.onWarning = (message) {
+      _appDebugLogService?.warn(message, tag: 'Protocol');
+    };
     _backgroundService = backgroundService;
     _timeoutPredictionService = timeoutPredictionService;
     _usbManager.setDebugLogService(_appDebugLogService);
@@ -3430,6 +3441,8 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _resetConnectionHandshakeState() {
+    _frameFragmentReassembler.clear();
+    _queuedFragmentAckTracker.clear();
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -3469,6 +3482,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _deferQueuedContactMessagesUntilContacts = false;
     _isProcessingDeferredQueuedContactMessages = false;
     _queuedMessageSyncInFlight = false;
+    _queuedFragmentAckTracker.clearAwaitingSyncResponse();
     _deferredQueuedContactMessageFrames.clear();
     _pendingQueueSync = false;
     _queueSyncTimeout?.cancel();
@@ -3563,6 +3577,8 @@ class MeshCoreConnector extends ChangeNotifier {
       _lastManualDisconnectTransport = null;
     }
     _setState(MeshCoreConnectionState.disconnecting);
+    _frameFragmentReassembler.clear();
+    _queuedFragmentAckTracker.clear();
     _stopBatteryPolling();
     _stopRadioStatsPolling();
 
@@ -5325,8 +5341,13 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     try {
-      await sendFrame(buildSyncNextMessageFrame());
+      final frame = _queuedFragmentAckTracker.buildSyncNextMessageFrameFor(
+        supportsFragmentAck: _supportsQueuedFragmentAck,
+      );
+      _queuedFragmentAckTracker.markSyncRequestSent();
+      await sendFrame(frame);
     } catch (e) {
+      _queuedFragmentAckTracker.clearAwaitingSyncResponse();
       debugPrint('[QueueSync] Error sending sync request: $e');
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
@@ -5346,12 +5367,14 @@ class MeshCoreConnector extends ChangeNotifier {
       // Retry
       _queueSyncRetries++;
       _queuedMessageSyncInFlight = false;
+      _queuedFragmentAckTracker.clearAwaitingSyncResponse();
       _requestNextQueuedMessage();
     } else {
       // Max retries reached, give up
       debugPrint('[QueueSync] Max retries reached, stopping sync');
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
+      _queuedFragmentAckTracker.clearAwaitingSyncResponse();
       _queueSyncRetries = 0;
       notifyListeners();
       _continueAfterQueuedMessageSync();
@@ -5684,7 +5707,27 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastRxBeforeFrame = _lastRxTime;
     _lastRxTime = DateTime.now();
 
-    final frame = Uint8List.fromList(data);
+    final incomingFrame = Uint8List.fromList(data);
+    final isResponseToSyncNextMessage =
+        _queuedFragmentAckTracker.takeSyncResponseContext(incomingFrame);
+    final result = _frameFragmentReassembler.ingestDetailed(incomingFrame);
+    final acceptedFragment = result.acceptedFragment;
+    if (isResponseToSyncNextMessage && acceptedFragment != null) {
+      _queuedFragmentAckTracker.recordQueuedFragment(
+        acceptedFragment,
+        supportsFragmentAck: _supportsQueuedFragmentAck,
+      );
+      if (result.frames.isEmpty) {
+        _handleQueuedMessageReceived();
+      }
+    }
+    for (final frame in result.frames) {
+      _handleCompanionFrame(frame);
+    }
+  }
+
+  void _handleCompanionFrame(Uint8List frame) {
+    if (frame.isEmpty) return;
     _receivedFramesController.add(frame);
     _bleDebugLogService?.logFrame(frame, outgoing: false);
 
