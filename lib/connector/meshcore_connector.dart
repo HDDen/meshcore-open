@@ -5708,6 +5708,13 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastRxTime = DateTime.now();
 
     final incomingFrame = Uint8List.fromList(data);
+    if (incomingFrame[0] == FrameFragmentReassembler.fragmentFrameType) {
+      _bleDebugLogService?.logFrame(
+        incomingFrame,
+        outgoing: false,
+        note: 'raw fragment len=${incomingFrame.length}',
+      );
+    }
     final isResponseToSyncNextMessage =
         _queuedFragmentAckTracker.takeSyncResponseContext(incomingFrame);
     final result = _frameFragmentReassembler.ingestDetailed(incomingFrame);

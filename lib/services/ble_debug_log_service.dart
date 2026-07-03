@@ -166,6 +166,8 @@ class BleDebugLogService extends ChangeNotifier {
         return 'CMD_REBOOT';
       case cmdGetBattAndStorage:
         return 'CMD_GET_BATT_AND_STORAGE';
+      case cmdDeviceQuery:
+        return 'CMD_DEVICE_QUERY';
       case cmdSendLogin:
         return 'CMD_SEND_LOGIN';
       case cmdGetChannel:
@@ -209,6 +211,8 @@ class BleDebugLogService extends ChangeNotifier {
         return 'RESP_CODE_NO_MORE_MESSAGES';
       case respCodeBattAndStorage:
         return 'RESP_CODE_BATT_AND_STORAGE';
+      case respCodeDeviceInfo:
+        return 'RESP_CODE_DEVICE_INFO';
       case respCodeContactMsgRecvV3:
         return 'RESP_CODE_CONTACT_MSG_RECV_V3';
       case respCodeChannelMsgRecvV3:
@@ -242,6 +246,8 @@ class BleDebugLogService extends ChangeNotifier {
         return 'PUSH_CODE_LOG_RX_DATA';
       case pushCodeNewAdvert:
         return 'PUSH_CODE_NEW_ADVERT';
+      case 0x91:
+        return 'PACKET_FRAME_FRAGMENT';
       default:
         return null;
     }
@@ -249,6 +255,25 @@ class BleDebugLogService extends ChangeNotifier {
 
   String _frameDetail(int code, Uint8List frame) {
     switch (code) {
+      case cmdDeviceQuery:
+        if (frame.length >= 2) {
+          return ' • appTarget=${frame[1]}';
+        }
+        return '';
+      case cmdSyncNextMessage:
+        if (frame.length >= 5 && (frame[1] & 0x01) != 0) {
+          final fragmentId = frame[2] | (frame[3] << 8);
+          final fragmentIndex = frame[4];
+          return ' • ackFragment=$fragmentId/$fragmentIndex';
+        }
+        return '';
+      case respCodeDeviceInfo:
+        if (frame.length >= 2) {
+          final firmware = frame[1];
+          final fragments = firmware >= 14 ? 'yes' : 'no';
+          return ' • firmware=$firmware fragments=$fragments';
+        }
+        return '';
       case respCodeSent:
         if (frame.length >= 10) {
           final timeoutMs = readUint32LE(frame, 6);
@@ -269,6 +294,20 @@ class BleDebugLogService extends ChangeNotifier {
         if (frame.length >= 3) {
           final mv = readUint16LE(frame, 1);
           return ' • ${mv}mV';
+        }
+        return '';
+      case 0x91:
+        if (frame.length >= 10) {
+          final fragmentId = frame[1] | (frame[2] << 8);
+          final fragmentIndex = frame[3];
+          final fragmentCount = frame[4];
+          final originalType = frame[5];
+          final originalLength = frame[6] | (frame[7] << 8);
+          final offset = frame[8] | (frame[9] << 8);
+          final chunkLength = frame.length - 10;
+          return ' • id=$fragmentId part=${fragmentIndex + 1}/$fragmentCount'
+              ' type=0x${originalType.toRadixString(16).padLeft(2, '0')}'
+              ' len=$originalLength offset=$offset chunk=$chunkLength';
         }
         return '';
       default:
