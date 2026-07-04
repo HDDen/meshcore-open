@@ -365,9 +365,13 @@ const int signatureSize = 64;
 const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
-const int maxFrameSize = 172;
-const int maxChannelDataLength = maxFrameSize - 9;
 const int appProtocolVersion = 14;
+const int legacyMaxFrameSize = 172;
+const int v14MaxFrameSize = 176;
+// Companion protocol v14 matches firmware MAX_FRAME_SIZE.
+const int maxFrameSize =
+    appProtocolVersion >= 14 ? v14MaxFrameSize : legacyMaxFrameSize;
+const int maxChannelDataLength = maxFrameSize - 9;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
 const int _sendTextMsgOverheadBytes =

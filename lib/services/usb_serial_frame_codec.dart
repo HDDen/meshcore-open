@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
+import '../connector/meshcore_protocol.dart';
+
 const int usbSerialTxFrameStart = 0x3c;
 const int usbSerialRxFrameStart = 0x3e;
 const int usbSerialHeaderLength = 3;
-const int usbSerialMaxPayloadLength = 172;
+const int usbSerialMaxPayloadLength = maxFrameSize;
 
 Uint8List wrapUsbSerialTxFrame(Uint8List payload) {
   if (payload.length > usbSerialMaxPayloadLength) {
