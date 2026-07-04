@@ -30,7 +30,15 @@ class ChannelRegionStore with ChannelNameKeyedStore {
         await prefs.remove(legacyKey);
       }
     }
-    return region ?? '';
+    final normalized = region?.trim() ?? '';
+    if (normalized.isEmpty) {
+      await clearRegion(channelIndex);
+      return '';
+    }
+    if (normalized != region) {
+      await prefs.setString(key, normalized);
+    }
+    return normalized;
   }
 
   Future<String> saveRegion(int channelIndex, String region) async {
@@ -41,11 +49,17 @@ class ChannelRegionStore with ChannelNameKeyedStore {
       return '';
     }
 
+    final normalized = region.trim();
+    if (normalized.isEmpty) {
+      await clearRegion(channelIndex);
+      return '';
+    }
+
     final prefs = PrefsManager.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return '';
-    await prefs.setString(key, region);
-    return region;
+    await prefs.setString(key, normalized);
+    return normalized;
   }
 
   Future<void> clearRegion(int channelIndex) async {

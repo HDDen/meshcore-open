@@ -1543,10 +1543,15 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> setChannelRegion(int channelIndex, String region) async {
-    _channelRegions[channelIndex] = await _channelRegionStore.saveRegion(
+    final normalized = await _channelRegionStore.saveRegion(
       channelIndex,
       region,
     );
+    if (normalized.isEmpty) {
+      _channelRegions.remove(channelIndex);
+    } else {
+      _channelRegions[channelIndex] = normalized;
+    }
     notifyListeners();
   }
 
@@ -1949,7 +1954,11 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelQuickAnswerIds[channelIndex] = quickAnswerIds;
     _channelWidgetColor[channelIndex] = widgetColor;
     _channelWidgetTextColor[channelIndex] = widgetTextColor;
-    _channelRegions[channelIndex] = region;
+    if (region.isEmpty) {
+      _channelRegions.remove(channelIndex);
+    } else {
+      _channelRegions[channelIndex] = region;
+    }
   }
 
   /// After an incoming DM or channel message, wait before TX so we do not
