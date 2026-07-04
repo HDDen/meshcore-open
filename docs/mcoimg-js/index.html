@@ -526,19 +526,19 @@
         <div class="field-grid">
           <label>
             Width
-            <input id="width" type="number" min="1" max="85" value="11">
+            <input id="width" type="number" min="1" max="256" value="11">
           </label>
           <label>
             Height
-            <input id="height" type="number" min="1" max="85" value="11">
+            <input id="height" type="number" min="1" max="256" value="11">
           </label>
         </div>
 
         <label style="margin-top: 12px;">
           Format version
           <select id="formatVersion">
-            <option value="3">v3</option>
-            <option value="2" selected>v2</option>
+            <option value="3" selected>v3</option>
+            <option value="2">v2</option>
             <option value="1">v1 legacy</option>
           </select>
         </label>
@@ -554,7 +554,7 @@
 
         <div id="workerOptions" class="worker-options">
           <label class="inline-option worker-toggle">
-            <input id="useWorkers" type="checkbox">
+            <input id="useWorkers" type="checkbox" checked>
             <span>Use Workers</span>
           </label>
           <label>
@@ -975,13 +975,98 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     const undoButton = document.getElementById('undoCanvas');
     const redoButton = document.getElementById('redoCanvas');
 
+    const DemoPreferencesStorageKey = 'mcoimg-demo-preferences-v1';
+
+    function readDemoPreferences() {
+      try {
+        const raw = window.localStorage.getItem(DemoPreferencesStorageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function writeDemoPreferences() {
+      try {
+        window.localStorage.setItem(DemoPreferencesStorageKey, JSON.stringify({
+          encodingVersion: state.encodingVersion,
+          compressionLevel: state.compressionLevel,
+          paletteProfile: state.paletteProfile,
+          useWorkers: state.useWorkers,
+          showGrid: state.showGrid,
+        }));
+      } catch (_) {
+        // localStorage may be unavailable in private or embedded contexts.
+      }
+    }
+
+    function isKnownEncodingVersion(value) {
+      return value === MCOImageEncodingVersion.v1Legacy ||
+        value === MCOImageEncodingVersion.v2 ||
+        value === 3;
+    }
+
+    function isKnownCompressionLevel(value) {
+      return value === MCOImageCompressionLevel.normal ||
+        value === MCOImageCompressionLevel.high ||
+        value === MCOImageCompressionLevel.extreme;
+    }
+
+    function isKnownPaletteProfile(value) {
+      return PaletteDisplayOrder.includes(value);
+    }
+
+    function applyStoredDemoPreferences() {
+      const preferences = readDemoPreferences();
+      if (!preferences) return;
+
+      const encodingVersion = Number(preferences.encodingVersion);
+      const compressionLevel = Number(preferences.compressionLevel);
+      const paletteProfile = Number(preferences.paletteProfile);
+
+      if (isKnownEncodingVersion(encodingVersion)) {
+        state.encodingVersion = encodingVersion;
+      }
+      if (isKnownCompressionLevel(compressionLevel)) {
+        state.compressionLevel = compressionLevel;
+      }
+      if (isKnownPaletteProfile(paletteProfile)) {
+        state.paletteProfile = paletteProfile;
+      }
+      if (typeof preferences.useWorkers === 'boolean') {
+        state.useWorkers = preferences.useWorkers;
+      }
+      if (typeof preferences.showGrid === 'boolean') {
+        state.showGrid = preferences.showGrid;
+      }
+
+      if (
+        state.encodingVersion === MCOImageEncodingVersion.v1Legacy &&
+        isDynamicProfile(state.paletteProfile)
+      ) {
+        state.paletteProfile = PaletteProfile.master8;
+      }
+    }
+
+    function syncVersionLimits() {
+      const maxSize = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? 85 : 256;
+      widthInput.max = String(maxSize);
+      heightInput.max = String(maxSize);
+      state.width = clamp(state.width, 1, maxSize);
+      state.height = clamp(state.height, 1, maxSize);
+      widthInput.value = String(state.width);
+      heightInput.value = String(state.height);
+    }
+
     const state = {
       width: 11,
       height: 11,
       paletteProfile: PaletteProfile.master8,
-      encodingVersion: MCOImageEncodingVersion.v2,
+      encodingVersion: 3,
       compressionLevel: MCOImageCompressionLevel.high,
-      useWorkersForHigh: false,
+      useWorkers: true,
       workerCount: window.MCOImgBrowser.defaultWorkerCount(),
       pixels: [],
       selectedColor: 0,
@@ -1005,14 +1090,19 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       encodeTask: null,
       encodeRequestId: 0,
       encodeDebounceTimer: null,
+      loadedSourceFileName: null,
     };
 
     function init() {
       console.log('[mcoimg-demo] init start');
+      applyStoredDemoPreferences();
+      syncVersionLimits();
       renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
       formatVersionSelect.value = String(state.encodingVersion);
       compressionLevelSelect.value = String(state.compressionLevel);
+      useWorkersInput.checked = state.useWorkers;
+      showGridInput.checked = state.showGrid;
       workerCountInput.value = String(state.workerCount);
       state.selectedColor = blackIndexFor(state.paletteProfile);
       resetPixels();
@@ -1028,8 +1118,6 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     function bindEvents() {
       formatVersionSelect.addEventListener('change', () => {
         state.encodingVersion = Number(formatVersionSelect.value);
-        widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? '85' : '256';
-        heightInput.max = widthInput.max;
         if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) {
           state.transparentColor = null;
           state.pickingTransparentColor = false;
@@ -1040,29 +1128,33 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
             );
           }
         }
-        state.width = clamp(state.width, 1, Number(widthInput.max));
-        state.height = clamp(state.height, 1, Number(heightInput.max));
-        widthInput.value = String(state.width);
-        heightInput.value = String(state.height);
+        syncVersionLimits();
         renderPaletteOptions();
         formatVersionSelect.value = String(state.encodingVersion);
         compressionLevelLabel.hidden =
           state.encodingVersion === MCOImageEncodingVersion.v1Legacy;
         renderPaletteOptions();
         paletteSelect.value = String(state.paletteProfile);
+        writeDemoPreferences();
         renderAll();
       });
 
       compressionLevelSelect.addEventListener('change', () => {
         state.compressionLevel = Number(compressionLevelSelect.value);
+        if (
+          state.compressionLevel === MCOImageCompressionLevel.high ||
+          state.compressionLevel === MCOImageCompressionLevel.extreme
+        ) {
+          state.useWorkers = true;
+        }
+        writeDemoPreferences();
         renderAll();
       });
 
       useWorkersInput.addEventListener('change', () => {
-        if (state.compressionLevel === MCOImageCompressionLevel.high) {
-          state.useWorkersForHigh = useWorkersInput.checked;
-          renderAll();
-        }
+        state.useWorkers = useWorkersInput.checked;
+        writeDemoPreferences();
+        renderAll();
       });
 
       workerCountInput.addEventListener('change', () => {
@@ -1073,6 +1165,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
       paletteSelect.addEventListener('change', () => {
         changePaletteProfile(Number(paletteSelect.value));
+        writeDemoPreferences();
         renderAll({ encodeMode: 'debounced' });
       });
 
@@ -1096,6 +1189,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         }
       });
       imageFileInput.addEventListener('change', loadImageFile);
+      document.addEventListener('paste', handleClipboardImagePaste);
       document.getElementById('savePng').addEventListener('click', savePng);
       document.getElementById('saveBinary').addEventListener('click', saveBinary);
       imageFileInput.addEventListener('cancel', () => {
@@ -1110,6 +1204,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       });
       showGridInput.addEventListener('change', () => {
         state.showGrid = showGridInput.checked;
+        writeDemoPreferences();
         renderEditor();
       });
       alphaSwatch.addEventListener('click', (event) => {
@@ -1235,9 +1330,11 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
     function useWorkersForCurrentEncode() {
       if (state.encodingVersion === MCOImageEncodingVersion.v1Legacy) return false;
-      if (state.compressionLevel === MCOImageCompressionLevel.extreme) return true;
-      if (state.compressionLevel === MCOImageCompressionLevel.high) {
-        return state.useWorkersForHigh;
+      if (
+        state.compressionLevel === MCOImageCompressionLevel.high ||
+        state.compressionLevel === MCOImageCompressionLevel.extreme
+      ) {
+        return state.useWorkers;
       }
       return false;
     }
@@ -1251,17 +1348,18 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       const isExtreme =
         state.compressionLevel === MCOImageCompressionLevel.extreme;
       const isHigh = state.compressionLevel === MCOImageCompressionLevel.high;
-      useWorkersInput.disabled = !isHigh;
-      useWorkersInput.checked = isExtreme || (isHigh && state.useWorkersForHigh);
-      workerCountInput.disabled = !useWorkersInput.checked;
+      const supportsWorkers = isHigh || isExtreme;
+      useWorkersInput.disabled = !supportsWorkers;
+      useWorkersInput.checked = supportsWorkers && state.useWorkers;
+      workerCountInput.disabled = !supportsWorkers || !state.useWorkers;
       workerCountInput.value = String(state.workerCount);
 
       if (isExtreme) {
         workerPolicy.textContent =
-          'Extreme uses Workers automatically when the browser supports them.';
+          'Extreme enables Workers automatically when selected; you can disable them explicitly.';
       } else if (isHigh) {
         workerPolicy.textContent =
-          'High is single-threaded by default; enable Workers explicitly.';
+          'High enables Workers automatically when selected; you can disable them explicitly.';
       } else {
         workerPolicy.textContent = 'Normal remains single-threaded.';
       }
@@ -1352,13 +1450,11 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       state.pickingTransparentColor = false;
       clearPendingToolPoints();
 
-      widthInput.value = String(state.width);
-      heightInput.value = String(state.height);
-      widthInput.max = state.encodingVersion === MCOImageEncodingVersion.v1Legacy ? '85' : '256';
-      heightInput.max = widthInput.max;
+      syncVersionLimits();
       formatVersionSelect.value = String(state.encodingVersion);
       renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
+      writeDemoPreferences();
       renderAll({ encodeMode: 'debounced' });
     }
 
@@ -1667,6 +1763,47 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
     function bytesToHex(bytes) {
       return Array.from(bytes).map(byteToHex).join(' ');
+    }
+
+    function normalizeLoadedSourceFileName(fileName) {
+      if (typeof fileName !== 'string') return null;
+      const trimmed = fileName.trim();
+      if (!trimmed) return null;
+      const normalized = trimmed.split(/[\/]/).pop();
+      return normalized || null;
+    }
+
+    function loadedSourceFileStem(fileName) {
+      const normalized = normalizeLoadedSourceFileName(fileName);
+      if (!normalized) return null;
+      const lower = normalized.toLowerCase();
+      if (lower.endsWith('.mcoimg.bin')) {
+        const stem = normalized.slice(0, -'.mcoimg.bin'.length);
+        return stem || null;
+      }
+      const lastDot = normalized.lastIndexOf('.');
+      if (lastDot > 0) {
+        return normalized.slice(0, lastDot);
+      }
+      return normalized;
+    }
+
+    function setLoadedSourceFileName(fileName) {
+      state.loadedSourceFileName = normalizeLoadedSourceFileName(fileName);
+    }
+
+    function clearLoadedSourceFileName() {
+      state.loadedSourceFileName = null;
+    }
+
+    function suggestedDownloadName(kind) {
+      const extension = kind === 'png' ? '.png' : '.mcoimg.bin';
+      const sourceStem = loadedSourceFileStem(state.loadedSourceFileName);
+      if (sourceStem) {
+        return `${sourceStem}${extension}`;
+      }
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      return `mcoimg-canvas-${timestamp}${extension}`;
     }
 
     function bitsForChoiceCount(count) {
@@ -2068,10 +2205,9 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       try {
         const encoded = await encodeCurrentForOutput('text');
         const pngBytes = browserCodec.textToPngBytes(encoded.text);
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         browserCodec.downloadBytes(
           pngBytes,
-          `mcoimg-canvas-${timestamp}.png`,
+          suggestedDownloadName('png'),
           'image/png',
         );
         encodedMeta.textContent =
@@ -2091,7 +2227,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
             : browserCodec.payloadToBinary(encoded.text));
         browserCodec.downloadBytes(
           bytes,
-          `mcoimg-canvas-${new Date().toISOString().replace(/[:.]/g, '-')}.mcoimg.bin`,
+          suggestedDownloadName('binary'),
           'application/octet-stream',
         );
         encodedMeta.textContent =
@@ -2115,6 +2251,55 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       return new Promise((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(resolve));
       });
+    }
+
+    function imageBlobFromClipboardEvent(event) {
+      const clipboardData = event && event.clipboardData;
+      if (!clipboardData) return null;
+
+      for (const item of Array.from(clipboardData.items || [])) {
+        if (!item || !String(item.type || '').toLowerCase().startsWith('image/')) {
+          continue;
+        }
+        const blob = typeof item.getAsFile === 'function' ? item.getAsFile() : null;
+        if (blob) return blob;
+      }
+
+      for (const file of Array.from(clipboardData.files || [])) {
+        if (file && String(file.type || '').toLowerCase().startsWith('image/')) {
+          return file;
+        }
+      }
+      return null;
+    }
+
+    function handleClipboardImagePaste(event) {
+      const imageBlob = imageBlobFromClipboardEvent(event);
+      if (!imageBlob) return;
+
+      event.preventDefault();
+      const image = new Image();
+      const objectUrl = URL.createObjectURL(imageBlob);
+      setCanvasImporting(true);
+
+      image.onload = async () => {
+        URL.revokeObjectURL(objectUrl);
+        try {
+          await nextPaintFrame();
+          applyLoadedImage(image, {
+            sourceFileName: null,
+            importLabel: 'Pasted',
+          });
+        } finally {
+          setCanvasImporting(false);
+        }
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        setCanvasImporting(false);
+        encodedMeta.textContent = 'Clipboard image could not be loaded';
+      };
+      image.src = objectUrl;
     }
 
     function loadImageFile(event) {
@@ -2145,7 +2330,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         setCanvasImporting(true);
         try {
           await nextPaintFrame();
-          applyLoadedImage(image);
+          applyLoadedImage(image, { sourceFileName: file.name });
         } finally {
           setCanvasImporting(false);
         }
@@ -2175,7 +2360,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         await nextPaintFrame();
         const bytes = new Uint8Array(await file.arrayBuffer());
         const image = browserCodec.decodePayload(bytes, { input: 'binary' });
-        applyDecodedImageToEditor(image);
+        applyDecodedImageToEditor(image, { sourceFileName: file.name });
         encodedText.value = browserCodec.payloadToText(bytes);
         drawDecodedImage(decodedCanvas, image, { scale: 12 });
         renderAll({ encodeMode: 'debounced' });
@@ -2270,7 +2455,10 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       return bestColorValue;
     }
 
-    function applyLoadedImage(image) {
+    function applyLoadedImage(
+      image,
+      { sourceFileName = null, importLabel = 'Imported' } = {},
+    ) {
       console.log('[mcoimg-demo] apply loaded image start');
       try {
         const sourceWidth = image.naturalWidth || image.width;
@@ -2356,11 +2544,16 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         }
 
         state.pixels = nextPixels;
+        if (sourceFileName) {
+          setLoadedSourceFileName(sourceFileName);
+        } else {
+          clearLoadedSourceFileName();
+        }
         clearPendingToolPoints();
         clearCanvasHistory();
         encodedMeta.textContent = wasClamped
-          ? `Imported ${sourceWidth}×${sourceHeight}, fitted to ${state.width}×${state.height}`
-          : `Imported ${state.width}×${state.height}`;
+          ? `${importLabel} ${sourceWidth}×${sourceHeight}, fitted to ${state.width}×${state.height}`
+          : `${importLabel} ${state.width}×${state.height}`;
         console.log('[mcoimg-demo] loaded image applied', {
           pixels: state.pixels.length,
           width: state.width,
@@ -2712,7 +2905,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       }
     }
 
-    function applyDecodedImageToEditor(image) {
+    function applyDecodedImageToEditor(image, { sourceFileName = null } = {}) {
       state.width = image.width;
       state.height = image.height;
       state.paletteProfile = image.paletteProfile;
@@ -2724,6 +2917,11 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       state.pickingTransparentColor = false;
       state.paletteExpanded = false;
       state.pixels = image.pixels.slice();
+      if (sourceFileName) {
+        setLoadedSourceFileName(sourceFileName);
+      } else {
+        clearLoadedSourceFileName();
+      }
       clearPendingToolPoints();
       clearCanvasHistory();
       state.selectedColor = blackIndexFor(state.paletteProfile);
@@ -2734,6 +2932,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       formatVersionSelect.value = String(state.encodingVersion);
       renderPaletteOptions();
       paletteSelect.value = String(state.paletteProfile);
+      writeDemoPreferences();
     }
 
     function plotLineInto(pixels, fromX, fromY, toX, toY) {
@@ -2962,6 +3161,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
     function clearCanvas() {
       resetPixels();
+      clearLoadedSourceFileName();
       clearPendingToolPoints();
       clearCanvasHistory();
       renderAll({ encodeMode: 'debounced' });

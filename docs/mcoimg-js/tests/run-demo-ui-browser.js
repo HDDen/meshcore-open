@@ -126,6 +126,26 @@ async function run(browser) {
     await cdp.send('Runtime.enable');
     await cdp.send('Log.enable');
     let demoHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+    const localStorageShim = `<script>
+      (() => {
+        const store = new Map();
+        const storage = {
+          getItem(key) { return store.has(key) ? store.get(key) : null; },
+          setItem(key, value) { store.set(key, String(value)); },
+          removeItem(key) { store.delete(key); },
+          clear() { store.clear(); },
+        };
+        try {
+          Object.defineProperty(window, 'localStorage', {
+            configurable: true,
+            value: storage,
+          });
+        } catch (_) {
+          window.localStorage = storage;
+        }
+      })();
+    <\/script>`;
+    demoHtml = demoHtml.replace('</head>', localStorageShim + '</head>');
     for (const scriptName of [
       'mcoimg-codec.global.js',
       'mcoimg-v3-codec.global.js',
@@ -156,15 +176,139 @@ async function run(browser) {
         }
 
         const compression = document.getElementById('compressionLevel');
+        const format = document.getElementById('formatVersion');
+        const workers = document.getElementById('useWorkers');
+        const grid = document.getElementById('showGrid');
+        const palette = document.getElementById('palette');
+        if (format.value !== '3') throw new Error('Default codec version is not v3: ' + format.value);
+        if (compression.value !== '0') throw new Error('Default compression is not High: ' + compression.value);
+        if (!workers.checked) throw new Error('Workers are not enabled by default for High');
+
         compression.value = '1';
         compression.dispatchEvent(new Event('change', { bubbles: true }));
-        const format = document.getElementById('formatVersion');
+        compression.value = '0';
+        compression.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!workers.checked) throw new Error('Switching to High did not enable Workers');
+        workers.click();
+        compression.value = '2';
+        compression.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!workers.checked) throw new Error('Switching to Extreme did not enable Workers');
+        workers.click();
+        format.value = '2';
+        format.dispatchEvent(new Event('change', { bubbles: true }));
+        if (grid.checked) grid.click();
+        const persistedPalette = palette.options.length > 1 ? palette.options[1].value : palette.value;
+        palette.value = persistedPalette;
+        palette.dispatchEvent(new Event('change', { bubbles: true }));
+        const stored = JSON.parse(localStorage.getItem('mcoimg-demo-preferences-v1'));
+        if (
+          stored.encodingVersion !== 2 ||
+          stored.compressionLevel !== 2 ||
+          stored.paletteProfile !== Number(persistedPalette) ||
+          stored.useWorkers !== false ||
+          stored.showGrid !== false
+        ) {
+          throw new Error('Demo preferences were not written to localStorage correctly: ' + JSON.stringify(stored));
+        }
+        state.encodingVersion = 3;
+        state.compressionLevel = MCOImageCompressionLevel.high;
+        state.paletteProfile = PaletteProfile.master8;
+        state.useWorkers = true;
+        state.showGrid = true;
+        applyStoredDemoPreferences();
+        if (
+          state.encodingVersion !== 2 ||
+          state.compressionLevel !== MCOImageCompressionLevel.extreme ||
+          state.paletteProfile !== Number(persistedPalette) ||
+          state.useWorkers !== false ||
+          state.showGrid !== false
+        ) {
+          throw new Error('Demo preferences were not restored from localStorage correctly');
+        }
+
+        compression.value = '1';
+        compression.dispatchEvent(new Event('change', { bubbles: true }));
         format.value = '3';
         format.dispatchEvent(new Event('change', { bubbles: true }));
         await wait(50);
 
         const initialUsed = document.querySelectorAll('#usedColorsPreview .used-color-swatch').length;
         if (initialUsed < 1) throw new Error('Used-colors list is empty after initialization');
+
+        const importedCanvas = document.createElement('canvas');
+        importedCanvas.width = 11;
+        importedCanvas.height = 11;
+        const importedCanvasContext = importedCanvas.getContext('2d');
+        importedCanvasContext.fillStyle = '#ff0000';
+        importedCanvasContext.fillRect(0, 0, 11, 11);
+        const importedImage = new Image();
+        importedImage.src = importedCanvas.toDataURL('image/png');
+        await new Promise((resolve, reject) => {
+          importedImage.onload = resolve;
+          importedImage.onerror = () => reject(new Error('Test image for filename import could not be loaded'));
+        });
+        applyLoadedImage(importedImage, { sourceFileName: 'foo.png' });
+        await wait(50);
+        const importedPngName = suggestedDownloadName('png');
+        const importedBinName = suggestedDownloadName('binary');
+        if (importedPngName !== 'foo.png' || importedBinName !== 'foo.mcoimg.bin') {
+          throw new Error(
+            'Imported source filename was not reused for downloads: ' +
+            importedPngName + ' / ' + importedBinName,
+          );
+        }
+        const clipboardCanvas = document.createElement('canvas');
+        clipboardCanvas.width = 300;
+        clipboardCanvas.height = 12;
+        const clipboardContext = clipboardCanvas.getContext('2d');
+        clipboardContext.fillStyle = '#0000ff';
+        clipboardContext.fillRect(0, 0, clipboardCanvas.width, clipboardCanvas.height);
+        const clipboardBlob = await new Promise((resolve, reject) => {
+          clipboardCanvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Clipboard test canvas could not be converted to PNG'));
+          }, 'image/png');
+        });
+        const pasteEvent = new Event('paste', { bubbles: true, cancelable: true });
+        Object.defineProperty(pasteEvent, 'clipboardData', {
+          value: {
+            items: [{
+              type: 'image/png',
+              getAsFile: () => new File([clipboardBlob], 'clipboard.png', { type: 'image/png' }),
+            }],
+            files: [],
+          },
+        });
+        document.dispatchEvent(pasteEvent);
+        const pasteDeadline = Date.now() + 5000;
+        while (state.importingImage && Date.now() < pasteDeadline) {
+          await wait(25);
+        }
+        if (state.importingImage) {
+          throw new Error('Clipboard image import did not finish');
+        }
+        if (!pasteEvent.defaultPrevented) {
+          throw new Error('Clipboard image paste did not prevent the browser default');
+        }
+        if (state.width !== 256 || state.height !== 12) {
+          throw new Error(
+            'Clipboard image did not resize/clamp the canvas: ' +
+            state.width + 'x' + state.height,
+          );
+        }
+        const pastedBinName = suggestedDownloadName('binary');
+        if (!/^mcoimg-canvas-.*\.mcoimg\.bin$/.test(pastedBinName)) {
+          throw new Error(
+            'Clipboard image incorrectly retained the loaded source filename: ' + pastedBinName,
+          );
+        }
+
+        document.getElementById('clear').click();
+        await wait(50);
+        const clearedBinName = suggestedDownloadName('binary');
+        if (!/^mcoimg-canvas-.*\.mcoimg\.bin$/.test(clearedBinName)) {
+          throw new Error('Clear canvas did not restore default binary naming: ' + clearedBinName);
+        }
 
         document.getElementById('sample').click();
         await wait(50);
@@ -275,6 +419,7 @@ async function run(browser) {
         return {
           usedColors: usedColors.length,
           transparentColor: selectedValue,
+          pastedCanvasSize: state.width + 'x' + state.height,
           debounceDelay: Math.round(debounceDelay),
           finalMeta,
         };
@@ -294,6 +439,7 @@ async function run(browser) {
     console.log(
       `MCOimg demo UI: PASS (used colors=${result.usedColors}, ` +
       `v3 transparent color=${result.transparentColor}, ` +
+      `clipboard paste=${result.pastedCanvasSize}, ` +
       `canvas debounce=${result.debounceDelay}ms, preview status=${result.finalMeta})`,
     );
   } catch (error) {
