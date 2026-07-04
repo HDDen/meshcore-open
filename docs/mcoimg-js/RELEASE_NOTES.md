@@ -124,3 +124,10 @@ deterministic fallback.
   `Show grid` are persisted in `localStorage` and restored after page reload.
 - Invalid or unavailable `localStorage` data is ignored safely and falls back
   to the built-in defaults.
+
+### HTML demo file import reliability
+
+- The **Load image/bin** button now uses the standard hidden file-input `click()` path instead of `showPicker()`.
+- The selected input value is cleared only after the file has been fully read and applied, so the first selection cannot be invalidated early.
+- Raster imports now await a single decode/load pipeline and display an explicit import error instead of silently doing nothing.
+- The real-browser UI test covers the very first PNG selection through the file input.

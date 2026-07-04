@@ -237,18 +237,34 @@ async function run(browser) {
 
         const importedCanvas = document.createElement('canvas');
         importedCanvas.width = 11;
-        importedCanvas.height = 11;
+        importedCanvas.height = 7;
         const importedCanvasContext = importedCanvas.getContext('2d');
         importedCanvasContext.fillStyle = '#ff0000';
-        importedCanvasContext.fillRect(0, 0, 11, 11);
-        const importedImage = new Image();
-        importedImage.src = importedCanvas.toDataURL('image/png');
-        await new Promise((resolve, reject) => {
-          importedImage.onload = resolve;
-          importedImage.onerror = () => reject(new Error('Test image for filename import could not be loaded'));
+        importedCanvasContext.fillRect(0, 0, importedCanvas.width, importedCanvas.height);
+        const importedBlob = await new Promise((resolve, reject) => {
+          importedCanvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('First file-picker test canvas could not be converted to PNG'));
+          }, 'image/png');
         });
-        applyLoadedImage(importedImage, { sourceFileName: 'foo.png' });
-        await wait(50);
+        const fileInput = document.getElementById('imageFile');
+        const selectedFiles = new DataTransfer();
+        selectedFiles.items.add(new File([importedBlob], 'foo.png', { type: 'image/png' }));
+        fileInput.files = selectedFiles.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        const firstImportDeadline = Date.now() + 5000;
+        while (state.importingImage && Date.now() < firstImportDeadline) {
+          await wait(25);
+        }
+        if (state.importingImage) {
+          throw new Error('First PNG file selection did not finish importing');
+        }
+        if (state.width !== 11 || state.height !== 7) {
+          throw new Error(
+            'First PNG file selection did not replace/resize the canvas: ' +
+            state.width + 'x' + state.height,
+          );
+        }
         const importedPngName = suggestedDownloadName('png');
         const importedBinName = suggestedDownloadName('binary');
         if (importedPngName !== 'foo.png' || importedBinName !== 'foo.mcoimg.bin') {
@@ -444,6 +460,7 @@ async function run(browser) {
         return {
           usedColors: usedColors.length,
           transparentColor: selectedValue,
+          firstFileImport: '11x7',
           pastedCanvasSize: state.width + 'x' + state.height,
           debounceDelay: Math.round(debounceDelay),
           finalMeta,
@@ -465,6 +482,7 @@ async function run(browser) {
     console.log(
       `MCOimg demo UI: PASS (used colors=${result.usedColors}, ` +
       `v3 transparent color=${result.transparentColor}, ` +
+      `first file=${result.firstFileImport}, ` +
       `clipboard paste=${result.pastedCanvasSize}, ` +
       `canvas debounce=${result.debounceDelay}ms, preview status=${result.finalMeta}, saveBinary=${result.savedBinaryName})`,
     );

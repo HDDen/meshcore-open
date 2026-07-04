@@ -1182,13 +1182,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           paletteProfile: state.paletteProfile,
         });
         imageFileInput.value = '';
-        if (typeof imageFileInput.showPicker === 'function') {
-          console.log('[mcoimg-demo] using showPicker');
-          imageFileInput.showPicker();
-        } else {
-          console.log('[mcoimg-demo] using click fallback');
-          imageFileInput.click();
-        }
+        console.log('[mcoimg-demo] using input.click()');
+        imageFileInput.click();
       });
       imageFileInput.addEventListener('change', loadImageFile);
       document.addEventListener('paste', handleClipboardImagePaste);
@@ -2331,46 +2326,79 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       image.src = objectUrl;
     }
 
-    function loadImageFile(event) {
-      const file = event.target.files && event.target.files[0];
+    async function loadImageFile(event) {
+      const input = event.currentTarget || event.target;
+      const file = input.files && input.files[0];
       console.log('[mcoimg-demo] file input change', {
         hasFile: !!file,
         fileName: file && file.name,
         fileType: file && file.type,
         fileSize: file && file.size,
       });
-      event.target.value = '';
       if (!file) return;
 
-      if (isMCOImageBinaryFile(file)) {
-        loadMCOImageBinaryFile(file);
-        return;
+      setCanvasImporting(true);
+      try {
+        await nextPaintFrame();
+        if (isMCOImageBinaryFile(file)) {
+          await loadMCOImageBinaryFile(file, { manageImportingState: false });
+          return;
+        }
+        await loadRasterImageFile(file);
+      } catch (error) {
+        console.log('[mcoimg-demo] file import failed', error);
+        encodedMeta.textContent = `File import failed: ${error.message}`;
+      } finally {
+        input.value = '';
+        setCanvasImporting(false);
       }
+    }
 
-      const image = new Image();
+    async function loadRasterImageFile(file) {
       const objectUrl = URL.createObjectURL(file);
       console.log('[mcoimg-demo] object url created', objectUrl);
-      image.onload = async () => {
-        console.log('[mcoimg-demo] image onload', {
+      try {
+        const image = new Image();
+        const loadPromise = waitForImageLoad(image);
+        image.src = objectUrl;
+        if (typeof image.decode === 'function') {
+          try {
+            await image.decode();
+          } catch (_) {
+            // Some supported formats reject decode() but still finish through load.
+          }
+        }
+        await loadPromise;
+        console.log('[mcoimg-demo] image decoded', {
           naturalWidth: image.naturalWidth,
           naturalHeight: image.naturalHeight,
         });
+        applyLoadedImage(image, { sourceFileName: file.name });
+      } finally {
         URL.revokeObjectURL(objectUrl);
-        setCanvasImporting(true);
-        try {
-          await nextPaintFrame();
-          applyLoadedImage(image, { sourceFileName: file.name });
-        } finally {
-          setCanvasImporting(false);
-        }
-      };
-      image.onerror = () => {
-        console.log('[mcoimg-demo] image onerror');
-        URL.revokeObjectURL(objectUrl);
-        setCanvasImporting(false);
-        encodedMeta.textContent = 'Image file could not be loaded';
-      };
-      image.src = objectUrl;
+      }
+    }
+
+    function waitForImageLoad(image) {
+      if (image.complete && (image.naturalWidth || image.width) > 0) {
+        return Promise.resolve();
+      }
+      return new Promise((resolve, reject) => {
+        const cleanup = () => {
+          image.removeEventListener('load', handleLoad);
+          image.removeEventListener('error', handleError);
+        };
+        const handleLoad = () => {
+          cleanup();
+          resolve();
+        };
+        const handleError = () => {
+          cleanup();
+          reject(new Error('Image file could not be decoded'));
+        };
+        image.addEventListener('load', handleLoad, { once: true });
+        image.addEventListener('error', handleError, { once: true });
+      });
     }
 
     function isMCOImageBinaryFile(file) {
@@ -2379,14 +2407,17 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       return name.endsWith('.mcoimg.bin') || (!file.type.startsWith('image/') && !looksLikeImage);
     }
 
-    async function loadMCOImageBinaryFile(file) {
+    async function loadMCOImageBinaryFile(
+      file,
+      { manageImportingState = true } = {},
+    ) {
       console.log('[mcoimg-demo] loading mcoimg binary file', {
         fileName: file.name,
         fileSize: file.size,
       });
-      setCanvasImporting(true);
+      if (manageImportingState) setCanvasImporting(true);
       try {
-        await nextPaintFrame();
+        if (manageImportingState) await nextPaintFrame();
         const bytes = new Uint8Array(await file.arrayBuffer());
         const image = browserCodec.decodePayload(bytes, { input: 'binary' });
         applyDecodedImageToEditor(image, { sourceFileName: file.name });
@@ -2399,7 +2430,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         console.log('[mcoimg-demo] mcoimg binary import failed', error);
         encodedMeta.textContent = `Binary import failed: ${error.message}`;
       } finally {
-        setCanvasImporting(false);
+        if (manageImportingState) setCanvasImporting(false);
       }
     }
 
