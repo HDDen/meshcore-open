@@ -151,6 +151,11 @@ The demo policy is:
 - canvas/image changes use a trailing 2-second debounce: every subsequent
   change cancels the active encode, invalidates its result and restarts the
   delay. Encoding-option changes remain immediate.
+- an `image/*` clipboard item pasted with Ctrl+V replaces the canvas and is
+  resized with the same format limits as a loaded image. Clipboard imports are
+  intentionally unnamed, so downloads use the timestamp-based default name;
+- file imports retain their basename for PNG and `.mcoimg.bin` downloads until
+  Clear, clipboard paste or another unnamed import resets it.
 
 The v1/v2 helper uses one cancellable Worker. MCOimg v3 splits independent
 candidate families, backgrounds and scan/background pairs into stable
@@ -347,8 +352,9 @@ cancellation:
 CHROME_BIN=/path/to/chromium node docs/mcoimg-js/tests/run-v3-real-browser.js
 ```
 
-To run only the interactive demo UI regression (used-colors list, the v3
-transparent-color picker and the restarted 2-second canvas debounce):
+To run only the interactive demo UI regression (file-derived download names,
+clipboard image paste/resizing, used-colors list, the v3 transparent-color
+picker and the restarted 2-second canvas debounce):
 
 ```bash
 CHROME_BIN=/path/to/chromium node docs/mcoimg-js/tests/run-demo-ui-browser.js

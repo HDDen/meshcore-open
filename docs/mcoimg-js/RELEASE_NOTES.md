@@ -5,6 +5,13 @@ MCOimg v3 plus the retained v1/v2 compatibility codec and browser demo.
 
 ## Patch fixes after release candidate
 
+- added image paste from the system clipboard to the HTML demo: an `image/*`
+  clipboard item replaces the current canvas, resizes it with the active format
+  limit, clears undo/redo history and uses the normal unnamed-canvas download
+  naming rather than retaining a previously loaded filename;
+- downloads after a file import reuse the imported basename with the requested
+  output extension, while Clear and clipboard imports restore timestamp-based
+  names;
 - fixed the v3 decoded-preview adapter in the HTML demo: successful v3 encoding
   no longer passes `encodingVersion: 3` into the legacy v1/v2 `MCOImage`
   wrapper and therefore no longer reports `Unknown encoding version`;
@@ -107,3 +114,13 @@ deterministic fallback.
   `package:meshcore_open/...` imports.
 - This removes all eight `avoid_relative_lib_imports` diagnostics reported by
   `flutter analyze` for the Dart↔JavaScript fixture tools.
+
+## HTML demo defaults and persistent preferences
+
+- The demo now starts with MCOimg v3 selected by default.
+- Selecting High or Extreme compression automatically enables `Use Workers`;
+  the checkbox can still be disabled manually afterward.
+- Codec version, compression level, palette profile, `Use Workers`, and
+  `Show grid` are persisted in `localStorage` and restored after page reload.
+- Invalid or unavailable `localStorage` data is ignored safely and falls back
+  to the built-in defaults.

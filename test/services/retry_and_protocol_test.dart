@@ -82,6 +82,30 @@ void main() {
   final Uint8List recipientKey = _makeRecipientKey();
 
   // -------------------------------------------------------------------------
+  group('buildSetFloodScopeFrame — normalization', () {
+    test('empty and whitespace region reset scope override', () {
+      expect(
+        buildSetFloodScopeFrame(''),
+        orderedEquals(<int>[cmdSetFloodScope, 0]),
+      );
+      expect(
+        buildSetFloodScopeFrame('   '),
+        orderedEquals(<int>[cmdSetFloodScope, 0]),
+      );
+    });
+
+    test('region names are trimmed before hashing', () {
+      final plain = buildSetFloodScopeFrame('EU');
+      final padded = buildSetFloodScopeFrame('  EU  ');
+
+      expect(padded, orderedEquals(plain));
+      expect(plain.length, equals(18));
+      expect(plain[0], equals(cmdSetFloodScope));
+      expect(plain[1], equals(0));
+    });
+  });
+
+  // -------------------------------------------------------------------------
   group('computeExpectedAckHash — attempt masking', () {
     test('attempts 0–3 all produce different hashes', () {
       final hashes = List.generate(

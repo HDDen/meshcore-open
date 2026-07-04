@@ -262,7 +262,10 @@ class _GalleryTile extends StatelessWidget {
                 child: Center(
                   child: showPng
                       ? Image.memory(item.pngBytes, fit: BoxFit.contain)
-                      : MCOImageMessage(image: image, maxSize: 96),
+                      : FittedBox(
+                          fit: BoxFit.contain,
+                          child: MCOImageMessage(image: image, maxSize: 96),
+                        ),
                 ),
               ),
               const SizedBox(height: 8),

@@ -1133,12 +1133,13 @@ Uint8List buildSendTelemetryReq(Uint8List? pubKey) {
 //Build CMD_SET_FLOOD_SCOPE
 // Format: [cmd][scope]
 Uint8List buildSetFloodScopeFrame(String region) {
-  if (region == '') {
+  final normalized = region.trim();
+  if (normalized.isEmpty) {
     // reset scope
     return Uint8List.fromList([cmdSetFloodScope, 0]);
   }
 
-  final name = region.startsWith('#') ? region : '#$region';
+  final name = normalized.startsWith('#') ? normalized : '#$normalized';
   final hash = crypto.sha256.convert(utf8.encode(name)).bytes;
   final scope = Uint8List.fromList(hash.sublist(0, 16));
 
