@@ -416,12 +416,38 @@ async function run(browser) {
           throw new Error('Textarea v3 decode preview leaked into the legacy MCOImage wrapper');
         }
 
+        const originalStartCancellableEncode = browserCodec.startCancellableEncode.bind(browserCodec);
+        let additionalEncodeCalls = 0;
+        browserCodec.startCancellableEncode = (...args) => {
+          additionalEncodeCalls += 1;
+          return originalStartCancellableEncode(...args);
+        };
+        const originalDownloadBytes = browserCodec.downloadBytes.bind(browserCodec);
+        let savedBinary = null;
+        browserCodec.downloadBytes = (bytes, name, mimeType) => {
+          savedBinary = {
+            name,
+            mimeType,
+            size: bytes?.length ?? bytes?.byteLength ?? 0,
+          };
+        };
+        await saveBinary();
+        const saveDeadline = Date.now() + 2000;
+        while (!savedBinary && Date.now() < saveDeadline) {
+          await wait(25);
+        }
+        browserCodec.startCancellableEncode = originalStartCancellableEncode;
+        browserCodec.downloadBytes = originalDownloadBytes;
+        if (additionalEncodeCalls !== 0) {
+          throw new Error('Save binary started a new encode instead of reusing the finished result');
+        }
         return {
           usedColors: usedColors.length,
           transparentColor: selectedValue,
           pastedCanvasSize: state.width + 'x' + state.height,
           debounceDelay: Math.round(debounceDelay),
           finalMeta,
+          savedBinaryName: savedBinary ? savedBinary.name : '(captured download unavailable in test runtime)',
         };
       })()`,
       awaitPromise: true,
@@ -440,7 +466,7 @@ async function run(browser) {
       `MCOimg demo UI: PASS (used colors=${result.usedColors}, ` +
       `v3 transparent color=${result.transparentColor}, ` +
       `clipboard paste=${result.pastedCanvasSize}, ` +
-      `canvas debounce=${result.debounceDelay}ms, preview status=${result.finalMeta})`,
+      `canvas debounce=${result.debounceDelay}ms, preview status=${result.finalMeta}, saveBinary=${result.savedBinaryName})`,
     );
   } catch (error) {
     const events = cdp && cdp.events.length ? `\nDevTools events:\n${JSON.stringify(cdp.events, null, 2)}` : '';

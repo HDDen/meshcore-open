@@ -1091,6 +1091,8 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       encodeRequestId: 0,
       encodeDebounceTimer: null,
       loadedSourceFileName: null,
+      cachedEncodedResult: null,
+      cachedEncodedRequestId: 0,
     };
 
     function init() {
@@ -2179,6 +2181,23 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       }
     }
 
+    function clearCachedEncodedResult() {
+      state.cachedEncodedResult = null;
+      state.cachedEncodedRequestId = 0;
+    }
+
+    function setCachedEncodedResult(encoded, requestId) {
+      state.cachedEncodedResult = encoded || null;
+      state.cachedEncodedRequestId = requestId || 0;
+    }
+
+    function canReuseCachedEncodedResult() {
+      return !!state.cachedEncodedResult &&
+        state.cachedEncodedRequestId === state.encodeRequestId &&
+        state.encodeDebounceTimer === null &&
+        !state.encodeTask;
+    }
+
     async function encodeCurrentForOutput(outputTarget = 'text') {
       const image = {
         width: state.width,
@@ -2201,9 +2220,19 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       return task.result;
     }
 
+    async function getCurrentEncodedForSave() {
+      if (canReuseCachedEncodedResult()) {
+        return state.cachedEncodedResult;
+      }
+      if (state.encodeTask && state.encodeDebounceTimer === null) {
+        return state.encodeTask.result;
+      }
+      return encodeCurrentForOutput('text');
+    }
+
     async function savePng() {
       try {
-        const encoded = await encodeCurrentForOutput('text');
+        const encoded = await getCurrentEncodedForSave();
         const pngBytes = browserCodec.textToPngBytes(encoded.text);
         browserCodec.downloadBytes(
           pngBytes,
@@ -2219,7 +2248,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
 
     async function saveBinary() {
       try {
-        const encoded = await encodeCurrentForOutput('binary');
+        const encoded = await getCurrentEncodedForSave();
         const bytes = encoded.appPayloadWithoutSender
           ? new Uint8Array(encoded.appPayloadWithoutSender)
           : (encoded.payload
@@ -2820,6 +2849,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     function scheduleEncodeCurrent() {
       cancelScheduledEncode();
       state.encodeRequestId += 1;
+      clearCachedEncodedResult();
       cancelEncodeTask();
       encodedMeta.textContent = 'Encoding starts 2 seconds after the last canvas change…';
       state.encodeDebounceTimer = setTimeout(() => {
@@ -2831,6 +2861,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     function encodeCurrent() {
       cancelScheduledEncode();
       const requestId = ++state.encodeRequestId;
+      clearCachedEncodedResult();
       cancelEncodeTask();
       encodedMeta.textContent = 'Encoding…';
       const image = {
@@ -2866,6 +2897,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         task.result.then((encoded) => {
           if (requestId !== state.encodeRequestId || task.isCancelled) return;
           state.encodeTask = null;
+          setCachedEncodedResult(encoded, requestId);
           encodedText.value = encoded.text;
           const payloadInfo = browserCodec.inspectPayload(encoded.text);
           encodedMeta.textContent =
