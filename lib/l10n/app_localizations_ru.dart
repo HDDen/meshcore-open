@@ -312,7 +312,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scanner_tapToScan =>
-      'Нажмите «Поиск», чтобы найти устройства MeshCore';
+      'Нажмите «Сканирование», чтобы найти устройства MeshCore';
 
   @override
   String scanner_connectionFailed(String error) {

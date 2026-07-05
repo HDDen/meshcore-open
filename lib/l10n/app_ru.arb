@@ -60,7 +60,7 @@
   "scanner_notConnected": "Не подключено",
   "scanner_connectedTo": "Подключено к {deviceName}",
   "scanner_searchingDevices": "Поиск устройств MeshCore...",
-  "scanner_tapToScan": "Нажмите «Поиск», чтобы найти устройства MeshCore",
+  "scanner_tapToScan": "Нажмите «Сканирование», чтобы найти устройства MeshCore",
   "scanner_connectionFailed": "Подключение не удалось: {error}",
   "scanner_stop": "Стоп",
   "scanner_scan": "Сканирование",

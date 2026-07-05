@@ -23,6 +23,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   final VoidCallback onSendSelfContact;
   final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
+  final VoidCallback onPickLocationFromMap;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
@@ -33,6 +34,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
     required this.onSendSelfContact,
     required this.onSendMyLocation,
     required this.onSendContact,
+    required this.onPickLocationFromMap,
     required this.onSendGif,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
@@ -64,6 +66,10 @@ class ChatAdditionalActionsButton extends StatelessWidget {
           Navigator.pop(sheetContext);
           onSendContact();
         },
+        onPickLocationFromMap: () {
+          Navigator.pop(sheetContext);
+          onPickLocationFromMap();
+        },
         onSendGif: () {
           Navigator.pop(sheetContext);
           onSendGif();
@@ -86,6 +92,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
   final VoidCallback onSendSelfContact;
   final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
+  final VoidCallback onPickLocationFromMap;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
@@ -96,6 +103,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
     required this.onSendSelfContact,
     required this.onSendMyLocation,
     required this.onSendContact,
+    required this.onPickLocationFromMap,
     required this.onSendGif,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
@@ -123,6 +131,11 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
               leading: const Icon(Icons.contact_page_outlined),
               title: Text(context.l10n.chat_sendContact),
               onTap: onSendContact,
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_location_alt_outlined),
+              title: Text(context.l10n.chat_locationFromMap),
+              onTap: onPickLocationFromMap,
             ),
             ListTile(
               leading: const Icon(Icons.gif_box_outlined),

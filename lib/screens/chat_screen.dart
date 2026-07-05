@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
@@ -632,6 +633,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 onSendMyLocation: () =>
                     unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
+                onPickLocationFromMap: () =>
+                    unawaited(_pickAndInsertLocationFromMap()),
                 onSendGif: () => _showGifPicker(context),
                 onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
                 onOpenMcoImageGallery: () =>
@@ -805,6 +808,20 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _insertMyLocation(MeshCoreConnector connector) async {
     final location = await connector.refreshSelfLocation();
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  Future<void> _pickAndInsertLocationFromMap() async {
+    final location = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MapScreen(locationPickerMode: true),
+      ),
+    );
     if (!mounted || location == null) return;
     _insertTextIntoComposer(
       '${location.latitude.toStringAsFixed(6)},'

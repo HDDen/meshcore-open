@@ -56,6 +56,7 @@ class MapScreen extends StatefulWidget {
   final String? highlightMarkerKey;
   final double highlightZoom;
   final bool hideBackButton;
+  final bool locationPickerMode;
 
   const MapScreen({
     super.key,
@@ -64,6 +65,7 @@ class MapScreen extends StatefulWidget {
     this.highlightMarkerKey,
     this.highlightZoom = 15.0,
     this.hideBackButton = false,
+    this.locationPickerMode = false,
   });
 
   @override
@@ -943,6 +945,10 @@ class _MapScreenState extends State<MapScreen>
                           : const KeyboardOptions.disabled(),
                     ),
                     onTap: (_, latLng) {
+                      if (widget.locationPickerMode) {
+                        Navigator.pop(context, latLng);
+                        return;
+                      }
                       if (_isSelectingPoi) {
                         setState(() {
                           _isSelectingPoi = false;
@@ -960,6 +966,7 @@ class _MapScreenState extends State<MapScreen>
                       _selectWardriveCoverageAt(wardrive, latLng);
                     },
                     onSecondaryTap: (tapPosition, latLng) {
+                      if (widget.locationPickerMode) return;
                       unawaited(
                         _showWardriveCoverageBlockMenu(
                           wardrive: wardrive,
@@ -969,6 +976,10 @@ class _MapScreenState extends State<MapScreen>
                       );
                     },
                     onLongPress: (tapPosition, latLng) {
+                      if (widget.locationPickerMode) {
+                        Navigator.pop(context, latLng);
+                        return;
+                      }
                       if (_isSelectingPoi) {
                         setState(() {
                           _isSelectingPoi = false;

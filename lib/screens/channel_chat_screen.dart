@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/screens/region_management_screen.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:provider/provider.dart';
@@ -1938,6 +1939,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Future<void> _pickAndInsertLocationFromMap() async {
+    final location = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MapScreen(locationPickerMode: true),
+      ),
+    );
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
   Future<void> _pickAndInsertContact() async {
     final contact = await Navigator.push<Contact>(
       context,
@@ -2263,6 +2278,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onSendMyLocation: () =>
                         unawaited(_insertMyLocation(connector)),
                     onSendContact: () => _pickAndInsertContact(),
+                    onPickLocationFromMap: () =>
+                        unawaited(_pickAndInsertLocationFromMap()),
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
                     onOpenMcoImageGallery: () =>
