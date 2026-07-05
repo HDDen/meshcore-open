@@ -82,6 +82,7 @@ class SharedContactMessage extends StatelessWidget {
               foregroundColor: scheme.onSecondaryContainer,
             ),
           ),
+          const SizedBox(height: 5),
         ],
       ),
     );
