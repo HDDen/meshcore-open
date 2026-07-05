@@ -4528,10 +4528,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contacts_floodAdvert => 'Flood Advert';
 
   @override
-  String get contacts_copyAdvertToClipboard => 'Copy Advert to Clipboard';
+  String get contacts_copyAdvertToClipboard => 'Copy self-link «meshcore://»';
 
   @override
-  String get contacts_addContactFromClipboard => 'Add Contact from Clipboard';
+  String get contacts_addContactFromClipboard =>
+      'Add Contact by «meshcore://» link from clipboard';
 
   @override
   String get contacts_ShareContact => 'Copy contact to Clipboard';
@@ -5442,6 +5443,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chat_sureToReplaceContact =>
       'Contact is already exists, replace it?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
 
   @override
   String get chat_contactIsYou => 'It is you';

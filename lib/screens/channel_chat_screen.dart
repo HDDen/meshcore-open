@@ -53,6 +53,7 @@ import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/shared_contact_message.dart';
@@ -592,15 +593,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'clearChat',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.delete, size: 20, color: Colors.red),
-                      const SizedBox(width: 12),
-                      Text(
-                        context.l10n.contact_clearChat,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.delete,
+                    iconColor: Colors.red,
+                    text: context.l10n.contact_clearChat,
+                    textStyle: const TextStyle(color: Colors.red),
                   ),
                 ),
               ],

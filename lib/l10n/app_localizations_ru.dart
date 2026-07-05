@@ -4596,11 +4596,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_copyAdvertToClipboard =>
-      'Копировать анонс в буфер обмена';
+      'Копировать self-ссылку «meshcore://»';
 
   @override
   String get contacts_addContactFromClipboard =>
-      'Добавить контакт из буфера обмена';
+      'Добавить контакт из ссылки «meshcore://» из буфера обмена';
 
   @override
   String get contacts_ShareContact => 'Копировать контакт в буфер обмена';
@@ -5537,6 +5537,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_sureToReplaceContact => 'Контакт уже существует, заменить?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Добавить контакт по ключу';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Тип контакта';
 
   @override
   String get chat_contactIsYou => 'Это ваш собственный контакт';

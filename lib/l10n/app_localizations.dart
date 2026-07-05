@@ -7945,13 +7945,13 @@ abstract class AppLocalizations {
   /// No description provided for @contacts_copyAdvertToClipboard.
   ///
   /// In en, this message translates to:
-  /// **'Copy Advert to Clipboard'**
+  /// **'Copy self-link «meshcore://»'**
   String get contacts_copyAdvertToClipboard;
 
   /// No description provided for @contacts_addContactFromClipboard.
   ///
   /// In en, this message translates to:
-  /// **'Add Contact from Clipboard'**
+  /// **'Add Contact by «meshcore://» link from clipboard'**
   String get contacts_addContactFromClipboard;
 
   /// No description provided for @contacts_ShareContact.
@@ -9477,6 +9477,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact is already exists, replace it?'**
   String get chat_sureToReplaceContact;
+
+  /// No description provided for @contacts_addContactByPubkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact by pubkey'**
+  String get contacts_addContactByPubkey;
+
+  /// No description provided for @contacts_addContactByPubkey_contactType.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact type'**
+  String get contacts_addContactByPubkey_contactType;
 
   /// No description provided for @chat_contactIsYou.
   ///

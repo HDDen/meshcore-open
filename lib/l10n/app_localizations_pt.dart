@@ -5520,6 +5520,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Contact is already exists, replace it?';
 
   @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
+
+  @override
   String get chat_contactIsYou => 'It is you';
 
   @override

@@ -34,6 +34,7 @@ import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/themed_map_tile_layer.dart';
 import '../widgets/wardrive_status_panel.dart';
@@ -828,12 +829,9 @@ class _MapScreenState extends State<MapScreen>
                         connector.selfLatitude != null &&
                         connector.selfLongitude != null)
                       PopupMenuItem(
-                        child: Row(
-                          children: [
-                            const Icon(Icons.radar),
-                            const SizedBox(width: 8),
-                            Text(context.l10n.contacts_pathTrace),
-                          ],
+                        child: PopupMenuRow(
+                          icon: Icons.radar,
+                          text: context.l10n.contacts_pathTrace,
                         ),
                         onTap: () => _startPath(
                           LatLng(
@@ -844,12 +842,9 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     if (!_isBuildingPathTrace)
                       PopupMenuItem(
-                        child: Row(
-                          children: [
-                            const LosIcon(),
-                            const SizedBox(width: 8),
-                            Text(context.l10n.map_lineOfSight),
-                          ],
+                        child: PopupMenuRow(
+                          leading: const LosIcon(),
+                          text: context.l10n.map_lineOfSight,
                         ),
                         onTap: () {
                           final candidates = <LineOfSightEndpoint>[];
@@ -889,25 +884,17 @@ class _MapScreenState extends State<MapScreen>
                         },
                       ),
                     PopupMenuItem(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.logout,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.common_disconnect),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.logout,
+                        iconColor: Theme.of(context).colorScheme.error,
+                        text: context.l10n.common_disconnect,
                       ),
                       onTap: () => _disconnect(context, connector),
                     ),
                     PopupMenuItem(
-                      child: Row(
-                        children: [
-                          const Icon(Icons.settings),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.settings_title),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.settings_title,
                       ),
                       onTap: () => Navigator.push(
                         context,

@@ -31,6 +31,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
@@ -255,35 +256,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               // context, which is deactivated by then.
               itemBuilder: (menuContext) => [
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.logout,
-                        color: Theme.of(menuContext).colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(menuContext.l10n.common_disconnect),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.logout,
+                    iconColor: Theme.of(menuContext).colorScheme.error,
+                    text: menuContext.l10n.common_disconnect,
                   ),
                   onTap: () => _disconnect(context),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.groups),
-                      const SizedBox(width: 8),
-                      Text(menuContext.l10n.community_manageCommunities),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.groups,
+                    text: menuContext.l10n.community_manageCommunities,
                   ),
                   onTap: () => _showManageCommunitiesDialog(context),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.settings),
-                      const SizedBox(width: 8),
-                      Text(menuContext.l10n.settings_title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.settings,
+                    text: menuContext.l10n.settings_title,
                   ),
                   onTap: () => Navigator.push(
                     context,

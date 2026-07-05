@@ -34,6 +34,7 @@ import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -411,12 +412,9 @@ class _ContactsScreenState extends State<ContactsScreen>
               tooltip: context.l10n.contacts_moreOptions,
               itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person_add_rounded),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.discoveredContacts_Title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.person_add_rounded,
+                    text: context.l10n.discoveredContacts_Title,
                   ),
                   onTap: () => Navigator.push(
                     context,
@@ -426,23 +424,17 @@ class _ContactsScreenState extends State<ContactsScreen>
                   ),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.paste),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_addContactFromClipboard),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.paste,
+                    text: context.l10n.contacts_addContactFromClipboard,
                   ),
                   onTap: () => _contactImport(),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.connect_without_contact),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_zeroHopAdvert),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.connect_without_contact,
+                    text: context.l10n.contacts_zeroHopAdvert,
                   ),
                   onTap: () => {
                     connector.sendSelfAdvert(flood: false),
@@ -453,12 +445,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                   },
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.cell_tower),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_floodAdvert),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.cell_tower,
+                    text: context.l10n.contacts_floodAdvert,
                   ),
                   onTap: () => {
                     connector.sendSelfAdvert(flood: true),
@@ -469,36 +458,25 @@ class _ContactsScreenState extends State<ContactsScreen>
                   },
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.copy),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_copyAdvertToClipboard),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.copy,
+                    text: context.l10n.contacts_copyAdvertToClipboard,
                   ),
                   onTap: () => _contactExport(Uint8List.fromList([])),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.logout,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.common_disconnect),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.logout,
+                    iconColor: Theme.of(context).colorScheme.error,
+                    text: context.l10n.common_disconnect,
                   ),
                   onTap: () => _disconnect(context, connector),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.settings),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.settings_title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.settings,
+                    text: context.l10n.settings_title,
                   ),
                   onTap: () => Navigator.push(
                     context,

@@ -40,6 +40,7 @@ import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'contacts_screen.dart';
@@ -318,45 +319,32 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'info',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.info_outline, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_info),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.info_outline,
+                        text: context.l10n.contact_info,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'telemetry',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.bar_chart, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_telemetry),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.bar_chart,
+                        text: context.l10n.contact_telemetry,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'settings',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.settings, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_settings),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.contact_settings,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'clearChat',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, size: 20, color: Colors.red),
-                          const SizedBox(width: 12),
-                          Text(
-                            context.l10n.contact_clearChat,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.delete,
+                        iconColor: Colors.red,
+                        text: context.l10n.contact_clearChat,
+                        textStyle: const TextStyle(color: Colors.red),
                       ),
                     ),
                   ],

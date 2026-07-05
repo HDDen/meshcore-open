@@ -15,6 +15,7 @@ import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/popup_menu_row.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum DiscoverySortOption { lastSeen, name, type }
@@ -100,15 +101,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           PopupMenuButton(
             itemBuilder: (context) => [
               PopupMenuItem(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(context.l10n.discoveredContacts_deleteContactAll),
-                  ],
+                child: PopupMenuRow(
+                  icon: Icons.delete,
+                  iconColor: Theme.of(context).colorScheme.error,
+                  text: context.l10n.discoveredContacts_deleteContactAll,
                 ),
                 onTap: () {
                   _deleteContacts(context, connector);
