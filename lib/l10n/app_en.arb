@@ -3084,5 +3084,12 @@
   "settings_modSettingsNoRetraDscr": "Attention! Due to a mechanism in a node's firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!",
   "settings_selfTelemetryShow": "Check sensors",
   "settings_modSettingsVisualChannelsUnreadSorting": "Channels sorting by unread messages",
-  "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background"
+  "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background",
+  "chat_MCOimgOpenGallery": "Open MCOimg gallery",
+  "chat_additionalActions": "Chat actions menu",
+  "mcogallery_common": "Common",
+  "mcogallery_addPack": "Add package",
+  "mcogallery_removePack": "Remove package",
+  "mcogallery_addGroup": "Add group",
+  "mcogallery_removeGroup": "Remove group"
 }

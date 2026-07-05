@@ -9405,6 +9405,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep TCP-connection alive in background'**
   String get settings_modSettingsMessagingBackgroundTCP;
+
+  /// No description provided for @chat_MCOimgOpenGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Open MCOimg gallery'**
+  String get chat_MCOimgOpenGallery;
+
+  /// No description provided for @chat_additionalActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat actions menu'**
+  String get chat_additionalActions;
+
+  /// No description provided for @mcogallery_common.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get mcogallery_common;
+
+  /// No description provided for @mcogallery_addPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add package'**
+  String get mcogallery_addPack;
+
+  /// No description provided for @mcogallery_removePack.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove package'**
+  String get mcogallery_removePack;
+
+  /// No description provided for @mcogallery_addGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add group'**
+  String get mcogallery_addGroup;
+
+  /// No description provided for @mcogallery_removeGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove group'**
+  String get mcogallery_removeGroup;
 }
 
 class _AppLocalizationsDelegate

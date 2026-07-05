@@ -135,7 +135,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "de": [
@@ -261,7 +268,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "es": [
@@ -400,7 +414,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "fr": [
@@ -539,7 +560,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "hu": [
@@ -678,7 +706,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "it": [
@@ -897,7 +932,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "ja": [
@@ -1036,7 +1078,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "ko": [
@@ -1175,7 +1224,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "nl": [
@@ -1394,7 +1450,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "pl": [
@@ -1533,7 +1596,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "pt": [
@@ -1752,7 +1822,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "sk": [
@@ -1891,7 +1968,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "sl": [
@@ -2030,7 +2114,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "sv": [
@@ -2249,7 +2340,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "uk": [
@@ -2388,7 +2486,14 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ],
 
   "zh": [
@@ -2527,6 +2632,13 @@
     "settings_modSettingsNoRetraDscr",
     "settings_selfTelemetryShow",
     "settings_modSettingsVisualChannelsUnreadSorting",
-    "settings_modSettingsMessagingBackgroundTCP"
+    "settings_modSettingsMessagingBackgroundTCP",
+    "chat_MCOimgOpenGallery",
+    "chat_additionalActions",
+    "mcogallery_common",
+    "mcogallery_addPack",
+    "mcogallery_removePack",
+    "mcogallery_addGroup",
+    "mcogallery_removeGroup"
   ]
 }

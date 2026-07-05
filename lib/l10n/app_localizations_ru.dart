@@ -5499,4 +5499,25 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
       'Удерживать TCP-соединение в фоне';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Открыть галерею MCOimg';
+
+  @override
+  String get chat_additionalActions => 'Меню действий';
+
+  @override
+  String get mcogallery_common => 'Общее';
+
+  @override
+  String get mcogallery_addPack => 'Добавить пакет';
+
+  @override
+  String get mcogallery_removePack => 'Удалить пакет';
+
+  @override
+  String get mcogallery_addGroup => 'Добавить группу';
+
+  @override
+  String get mcogallery_removeGroup => 'Удалить группу';
 }

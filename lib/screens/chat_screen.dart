@@ -36,6 +36,7 @@ import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
+import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/byte_count_input.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
@@ -621,24 +622,13 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.gif_box),
-              onPressed: () => _showGifPicker(context),
-              tooltip: context.l10n.chat_sendGif,
+            ChatAdditionalActionsButton(
+              canvasActive: settings.canvasActive,
+              onSendGif: () => _showGifPicker(context),
+              onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
+              onOpenMcoImageGallery: () =>
+                  _showMcoImageGallery(connector, maxBytes),
             ),
-            if (settings.canvasActive)
-              _CanvasLaunchButton(
-                tooltip: context.l10n.chat_canvas,
-                onPressed: () => _showCanvasEditor(connector, maxBytes),
-                onLongPress: () => _showMcoImageGallery(connector, maxBytes),
-              ),
-            /*
-            IconButton(
-              icon: const Icon(Icons.photo_library_outlined),
-              onPressed: () => _showMcoImageGallery(connector, maxBytes),
-              tooltip: 'MCOimg',
-            ),
-            */
             if (settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
@@ -1780,45 +1770,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     final reactionText = ReactionHelper.encodeReaction(hash, emojiIndex);
     connector.sendMessage(_resolveContact(connector), reactionText);
-  }
-}
-
-class _CanvasLaunchButton extends StatelessWidget {
-  final String tooltip;
-  final VoidCallback onPressed;
-  final VoidCallback onLongPress;
-
-  const _CanvasLaunchButton({
-    required this.tooltip,
-    required this.onPressed,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final button = Semantics(
-      button: true,
-      label: tooltip,
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Center(
-          child: InkResponse(
-            radius: 24,
-            onTap: onPressed,
-            onLongPress: () {
-              HapticFeedback.selectionClick();
-              onLongPress();
-            },
-            child: const Icon(Icons.brush_outlined),
-          ),
-        ),
-      ),
-    );
-    if (!PlatformInfo.isDesktop) {
-      return button;
-    }
-    return Tooltip(message: tooltip, child: button);
   }
 }
 
