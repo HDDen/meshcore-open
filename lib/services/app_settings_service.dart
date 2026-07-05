@@ -4,6 +4,7 @@ import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/app_logger.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 
 class AppSettingsService extends ChangeNotifier {
@@ -32,28 +33,49 @@ class AppSettingsService extends ChangeNotifier {
     if (jsonStr != null) {
       try {
         final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-        _settings = AppSettings.fromJson(json);
-        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+        final loadedSettings = AppSettings.fromJson(json);
+        _settings = _normalizeRuntimeDependentSettings(loadedSettings);
+        _applyRuntimeSettings();
+        if (_settings.channelsSendAsBinary !=
+            loadedSettings.channelsSendAsBinary) {
+          await _saveSettings();
+        }
         notifyListeners();
       } catch (e) {
         // If parsing fails, use defaults
-        _settings = AppSettings();
-        Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+        _settings = _normalizeRuntimeDependentSettings(AppSettings());
+        _applyRuntimeSettings();
       }
     } else {
-      _settings = AppSettings();
-      Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+      _settings = _normalizeRuntimeDependentSettings(AppSettings());
+      _applyRuntimeSettings();
     }
   }
 
   Future<void> updateSettings(AppSettings newSettings) async {
-    _settings = newSettings;
-    Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+    _settings = _normalizeRuntimeDependentSettings(newSettings);
+    _applyRuntimeSettings();
     notifyListeners();
 
+    await _saveSettings();
+  }
+
+  Future<void> _saveSettings() async {
     final prefs = PrefsManager.instance;
     final jsonStr = jsonEncode(_settings.toJson());
     await prefs.setString(_settingsKey, jsonStr);
+  }
+
+  AppSettings _normalizeRuntimeDependentSettings(AppSettings settings) {
+    if (!ChannelBinaryDataHelper.isAvailable && settings.channelsSendAsBinary) {
+      return settings.copyWith(channelsSendAsBinary: false);
+    }
+    return settings;
+  }
+
+  void _applyRuntimeSettings() {
+    Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
+    ChannelBinaryDataHelper.sendEnabled = _settings.channelsSendAsBinary;
   }
 
   Future<void> setClearPathOnMaxRetry(bool value) async {
@@ -70,6 +92,12 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setMapShowOtherNodes(bool value) async {
     await updateSettings(_settings.copyWith(mapShowOtherNodes: value));
+  }
+
+  Future<void> setPathTraceHighTimeoutEnabled(bool value) async {
+    await updateSettings(
+      _settings.copyWith(pathTraceHighTimeoutEnabled: value),
+    );
   }
 
   Future<void> setMapShowOverlaps(bool value) async {
@@ -100,8 +128,90 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(enableMessageTracing: value));
   }
 
+  Future<void> setEnableTimeSeconds(bool value) async {
+    await updateSettings(_settings.copyWith(enableTimeSeconds: value));
+  }
+
   Future<void> setShowKeyboardHidingButton(bool value) async {
     await updateSettings(_settings.copyWith(showKeyboardHidingButton: value));
+  }
+
+  Future<void> setCanvasActive(bool value) async {
+    await updateSettings(_settings.copyWith(canvasActive: value));
+  }
+
+  Future<void> setCanvasShowLockButton(bool value) async {
+    await updateSettings(_settings.copyWith(canvasShowLockButton: value));
+  }
+
+  Future<void> setShowHops(bool value) async {
+    await updateSettings(_settings.copyWith(showHops: value));
+  }
+
+  Future<void> setHideChannelIndexIndicator(bool value) async {
+    await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
+  }
+
+  Future<void> setHideMapZoomControls(bool value) async {
+    await updateSettings(_settings.copyWith(hideMapZoomControls: value));
+  }
+
+  Future<void> setShowMcoImageResolution(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageResolution: value));
+  }
+
+  Future<void> setShowMcoImageFormat(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageFormat: value));
+  }
+
+  Future<void> setShowMcoImageAlgorithm(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageAlgorithm: value));
+  }
+
+  Future<void> setShowMcoImageBytes(bool value) async {
+    await updateSettings(_settings.copyWith(showMcoImageBytes: value));
+  }
+
+  Future<void> setShowCompressionRatio(bool value) async {
+    await updateSettings(_settings.copyWith(showCompressionRatio: value));
+  }
+
+  Future<void> setCompressionRatioWithSenderName(bool value) async {
+    await updateSettings(
+      _settings.copyWith(compressionRatioWithSenderName: value),
+    );
+  }
+
+  Future<void> setShowMessageRegion(bool value) async {
+    await updateSettings(_settings.copyWith(showMessageRegion: value));
+  }
+
+  Future<void> setChannelsUnreadSorting(bool value) async {
+    await updateSettings(_settings.copyWith(channelsUnreadSorting: value));
+  }
+
+  Future<void> setIncomingQuoteAsMentions(bool value) async {
+    await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
+  }
+
+  Future<void> setSimplifiedMentions(bool value) async {
+    await updateSettings(_settings.copyWith(simplifiedMentions: value));
+  }
+
+  Future<void> setSharedMessageHistoryMode(
+    SharedMessageHistoryMode value,
+  ) async {
+    await updateSettings(_settings.copyWith(sharedMessageHistoryMode: value));
+  }
+
+  Future<void> setNoRetransmissionWarningSeconds(int value) async {
+    await updateSettings(
+      _settings.copyWith(noRetransmissionWarningSeconds: value),
+    );
+  }
+
+  Future<void> setBackgroundTcpEnabled(bool value) async {
+    await updateSettings(_settings.copyWith(backgroundTcpEnabled: value));
   }
 
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
@@ -355,6 +465,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(translationEnabled: value));
   }
 
+  Future<void> setAutoTranslateIncomingMessages(bool value) async {
+    await updateSettings(
+      _settings.copyWith(autoTranslateIncomingMessages: value),
+    );
+  }
+
   Future<void> setTranslationTargetLanguageCode(String? value) async {
     await updateSettings(
       _settings.copyWith(translationTargetLanguageCode: value),
@@ -397,6 +513,43 @@ class AppSettingsService extends ChangeNotifier {
         ),
       ),
     );
+  }
+
+  Future<void> setQuickAnswers(List<QuickAnswer> value) async {
+    await updateSettings(
+      _settings.copyWith(
+        // Keep stored replies normalized so empty rows never leak into UI lists.
+        quickAnswers: AppSettings.normalizeQuickAnswers(value),
+      ),
+    );
+  }
+
+  Future<void> setCopyMsgPathTemplate(String value) async {
+    await updateSettings(
+      _settings.copyWith(
+        copyMsgPathTemplate: AppSettings.normalizeCopyMsgPathTemplate(value),
+      ),
+    );
+  }
+
+  Future<void> setCopyMsgPathTemplates({
+    required String hopTemplate,
+    required String finalTemplate,
+  }) async {
+    await updateSettings(
+      _settings.copyWith(
+        copyMsgPathTemplate: AppSettings.normalizeCopyMsgPathTemplate(
+          hopTemplate,
+        ),
+        copyMsgPathFinalTemplate: AppSettings.normalizeCopyMsgPathFinalTemplate(
+          finalTemplate,
+        ),
+      ),
+    );
+  }
+
+  Future<void> setChannelsSendAsBinary(bool value) async {
+    await updateSettings(_settings.copyWith(channelsSendAsBinary: value));
   }
 
   Future<void> setSendingDelayForCancellationSeconds(int value) async {

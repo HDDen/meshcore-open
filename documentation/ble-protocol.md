@@ -56,6 +56,7 @@ enum MeshCoreConnectionState {
     - `Lilygo`
     - `HT-`
     - `LowMesh_MC_`
+    - `NRF52`
 2. **Connect** with 15-second timeout (6 seconds on Linux)
 3. **Request MTU** 185 bytes (non-web only)
 4. **Discover services** and locate NUS
@@ -115,13 +116,16 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 32 | CMD_SET_CHANNEL | Set channel name and PSK |
 | 36 | CMD_SEND_TRACE_PATH | Request path trace |
 | 38 | CMD_SET_OTHER_PARAMS | Set misc parameters |
-| 39 | CMD_GET_TELEMETRY_REQ | Request sensor telemetry |
+| 39 | CMD_SEND_TELEMETRY_REQ | Request sensor telemetry |
 | 40 | CMD_GET_CUSTOM_VAR | Get custom variables |
 | 41 | CMD_SET_CUSTOM_VAR | Set a custom variable |
 | 50 | CMD_SEND_BINARY_REQ | Send binary request |
+| 54 | CMD_SET_FLOOD_SCOPE | Set flood routing scope (v8+) |
+| 56 | CMD_GET_STATS | Request companion radio stats |
 | 57 | CMD_SEND_ANON_REQ | Send anonymous request |
 | 58 | CMD_SET_AUTO_ADD_CONFIG | Set auto-add configuration |
 | 59 | CMD_GET_AUTO_ADD_CONFIG | Get auto-add configuration |
+| 61 | CMD_SET_PATH_HASH_MODE | Set path hash width (bytes per hop) |
 
 ## Response / Push Codes (Device → App)
 
@@ -145,6 +149,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 17 | RESP_CODE_CHANNEL_MSG_RECV_V3 | Incoming channel message (v3) |
 | 18 | RESP_CODE_CHANNEL_INFO | Channel definition |
 | 21 | RESP_CODE_CUSTOM_VARS | Custom variables |
+| 24 | RESP_CODE_STATS | Companion radio stats |
 | 25 | RESP_CODE_AUTO_ADD_CONFIG | Auto-add flags |
 | 0x80 | PUSH_CODE_ADVERT | Known contact re-seen |
 | 0x81 | PUSH_CODE_PATH_UPDATED | Better path found; carries the 32-byte public key of the updated contact |

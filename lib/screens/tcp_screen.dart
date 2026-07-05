@@ -1,16 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import '../storage/connection_transport_preference_store.dart';
+import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/mesh_ui.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'contacts_screen.dart';
+import 'channels_screen.dart';
 import 'usb_screen.dart';
 
 class TcpScreen extends StatefulWidget {
@@ -20,17 +24,23 @@ class TcpScreen extends StatefulWidget {
   State<TcpScreen> createState() => _TcpScreenState();
 }
 
-class _TcpScreenState extends State<TcpScreen> {
+class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
+  final ConnectionTransportPreferenceStore _transportPreferenceStore =
+      ConnectionTransportPreferenceStore();
   late final TextEditingController _hostController;
   late final TextEditingController _portController;
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
   late final VoidCallback _connectionListener;
-  bool _navigatedToContacts = false;
+  bool _navigatedToChannels = false;
+  bool _autoconnectEnabled = false;
+  bool _startupAutoconnectAttempted = false;
+  bool _isAutoconnecting = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _settingsService = context.read<AppSettingsService>();
     _hostController = TextEditingController(
       text: _settingsService.settings.tcpServerAddress,
@@ -45,18 +55,25 @@ class _TcpScreenState extends State<TcpScreen> {
     _connectionListener = () {
       if (!mounted) return;
       if (_connector.state == MeshCoreConnectionState.disconnected) {
-        _navigatedToContacts = false;
+        _navigatedToChannels = false;
       }
     };
     _connector.addListener(_connectionListener);
+    _autoconnectEnabled = _transportPreferenceStore.isAutoconnectEnabled(
+      ConnectionTransportPreferenceStore.tcp,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_maybeAutoconnect(startup: true));
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
-    if (!_navigatedToContacts &&
+    if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,16 +83,23 @@ class _TcpScreenState extends State<TcpScreen> {
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_maybeAutoconnect());
+    }
+  }
+
   Future<void> _handleSuccessfulTcpConnection() async {
     if (!mounted) return;
-    _navigatedToContacts = true;
+    _navigatedToChannels = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
     await _settingsService.recordTcpConnection(host, port);
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ContactsScreen()),
+      MaterialPageRoute(builder: (_) => const ChannelsScreen()),
     );
   }
 
@@ -97,22 +121,41 @@ class _TcpScreenState extends State<TcpScreen> {
             final isConnecting =
                 connector.state == MeshCoreConnectionState.connecting &&
                 connector.activeTransport == MeshCoreTransportType.tcp;
+            // Connect is only available from a fully disconnected state —
+            // scanning, connecting, or an active session must settle first.
             final isButtonDisabled =
-                isConnecting ||
-                connector.state == MeshCoreConnectionState.scanning;
-            return Column(
+                connector.state != MeshCoreConnectionState.disconnected;
+            return ListView(
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
-                _buildStatusBar(context, connector),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
+                // Status header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Align(
+                      key: ValueKey(connector.state),
+                      alignment: Alignment.centerLeft,
+                      child: _buildStatusChip(context, connector),
+                    ),
+                  ),
+                ),
+
+                // Transport switcher
+                _buildTransportLinks(context),
+
+                // Connection form
+                const SectionHeader('TCP / IP'),
+                MeshCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TextField(
                         controller: _hostController,
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpHostLabel,
                           hintText: context.l10n.tcpHostHint,
-                          border: const OutlineInputBorder(),
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.url,
@@ -123,15 +166,39 @@ class _TcpScreenState extends State<TcpScreen> {
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpPortLabel,
                           hintText: context.l10n.tcpPortHint,
-                          border: const OutlineInputBorder(),
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.number,
                       ),
+                      const SizedBox(height: 8),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(context.l10n.connection_autoconnect),
+                        value: _autoconnectEnabled,
+                        onChanged: isConnecting
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _autoconnectEnabled = value;
+                                });
+                                unawaited(
+                                  _transportPreferenceStore
+                                      .setAutoconnectEnabled(
+                                        ConnectionTransportPreferenceStore.tcp,
+                                        value,
+                                      ),
+                                );
+                              },
+                      ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
                         key: const Key('tcp_connect_button'),
-                        onPressed: isButtonDisabled ? null : _connectTcp,
+                        onPressed: isButtonDisabled
+                            ? null
+                            : () {
+                                HapticFeedback.lightImpact();
+                                _connectTcp();
+                              },
                         icon: isConnecting
                             ? const SizedBox(
                                 width: 18,
@@ -162,45 +229,102 @@ class _TcpScreenState extends State<TcpScreen> {
                     ],
                   ),
                 ),
+
+                // Last used endpoint
+                if (connector.activeTcpEndpoint != null &&
+                    connector.isTcpTransportConnected) ...[
+                  const SectionHeader('CONNECTED TO'),
+                  MeshCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lan,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            connector.activeTcpEndpoint!,
+                            style: MeshTheme.mono(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             );
           },
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerRight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (PlatformInfo.supportsUsbSerial)
-                FloatingActionButton.extended(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const UsbScreen()),
-                    );
-                  },
-                  heroTag: 'tcp_usb_action',
-                  extendedPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  icon: const Icon(Icons.usb),
-                  label: Text(context.l10n.connectionChoiceUsbLabel),
-                ),
-              if (PlatformInfo.supportsUsbSerial) const SizedBox(width: 12),
-              FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.of(context).maybePop();
-                },
-                heroTag: 'tcp_ble_action',
-                extendedPadding: const EdgeInsets.symmetric(horizontal: 12),
-                icon: const Icon(Icons.bluetooth),
-                label: Text(context.l10n.connectionChoiceBluetoothLabel),
-              ),
-            ],
-          ),
+    );
+  }
+
+  Widget _buildStatusChip(BuildContext context, MeshCoreConnector connector) {
+    final l10n = context.l10n;
+
+    if (connector.isTcpTransportConnected) {
+      return StatusChip(
+        label: l10n.scanner_connectedTo(connector.activeTcpEndpoint ?? 'TCP'),
+        color: MeshPalette.signal,
+      );
+    } else if (connector.state == MeshCoreConnectionState.connecting &&
+        connector.activeTransport == MeshCoreTransportType.tcp) {
+      return StatusChip(
+        label: l10n.tcpStatus_connectingTo(
+          '${_hostController.text}:${_portController.text}',
         ),
+        color: MeshPalette.warn,
+        pulse: true,
+      );
+    } else if (connector.state == MeshCoreConnectionState.disconnecting &&
+        connector.activeTransport == MeshCoreTransportType.tcp) {
+      return StatusChip(
+        label: l10n.scanner_disconnecting,
+        color: MeshPalette.warn,
+        pulse: true,
+      );
+    } else {
+      return StatusChip(
+        label: l10n.tcpStatus_notConnected,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+    }
+  }
+
+  Widget _buildTransportLinks(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          if (PlatformInfo.supportsUsbSerial)
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const UsbScreen()),
+                );
+              },
+              icon: const Icon(Icons.usb),
+              label: Text(context.l10n.connectionChoiceUsbLabel),
+            ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.bluetooth),
+            label: Text(context.l10n.connectionChoiceBluetoothLabel),
+          ),
+        ],
       ),
     );
   }
@@ -310,57 +434,6 @@ class _TcpScreenState extends State<TcpScreen> {
         const SizedBox(height: 6),
         Text(date, style: detailStyle),
       ],
-    );
-  }
-
-  Widget _buildStatusBar(BuildContext context, MeshCoreConnector connector) {
-    final l10n = context.l10n;
-    String statusText;
-    Color statusColor;
-
-    if (connector.isTcpTransportConnected) {
-      statusText = l10n.scanner_connectedTo(
-        connector.activeTcpEndpoint ?? 'TCP',
-      );
-      statusColor = Colors.green;
-    } else if (connector.state == MeshCoreConnectionState.connecting &&
-        connector.activeTransport == MeshCoreTransportType.tcp) {
-      statusText = l10n.tcpStatus_connectingTo(
-        '${_hostController.text}:${_portController.text}',
-      );
-      statusColor = Colors.orange;
-    } else if (connector.state == MeshCoreConnectionState.disconnecting &&
-        connector.activeTransport == MeshCoreTransportType.tcp) {
-      statusText = l10n.scanner_disconnecting;
-      statusColor = Colors.orange;
-    } else {
-      statusText = l10n.tcpStatus_notConnected;
-      statusColor = Colors.grey;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      color: statusColor.withValues(alpha: 0.1),
-      child: Row(
-        children: [
-          Icon(Icons.circle, size: 12, color: statusColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                statusText,
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -538,7 +611,41 @@ class _TcpScreenState extends State<TcpScreen> {
     return '$day-$month-${value.year} $hour:$minute:$second';
   }
 
-  Future<void> _connectTcp() async {
+  Future<void> _maybeAutoconnect({bool startup = false}) async {
+    if (!mounted || !_autoconnectEnabled || _isAutoconnecting) return;
+    if (startup) {
+      if (_startupAutoconnectAttempted) return;
+      _startupAutoconnectAttempted = true;
+    }
+    if (_connector.state != MeshCoreConnectionState.disconnected) return;
+    if (_connector.shouldSuppressAutoconnect(MeshCoreTransportType.tcp)) {
+      return;
+    }
+
+    final host = _hostController.text.trim();
+    final parsedPort = int.tryParse(_portController.text.trim());
+    if (host.isEmpty ||
+        parsedPort == null ||
+        parsedPort < 1 ||
+        parsedPort > 65535) {
+      return;
+    }
+
+    setState(() {
+      _isAutoconnecting = true;
+    });
+    try {
+      await _connectTcp(showErrors: false);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAutoconnecting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _connectTcp({bool showErrors = true}) async {
     if (_connector.state == MeshCoreConnectionState.connecting ||
         _connector.state == MeshCoreConnectionState.connected ||
         _connector.state == MeshCoreConnectionState.disconnecting) {
@@ -548,11 +655,11 @@ class _TcpScreenState extends State<TcpScreen> {
     final host = _hostController.text.trim();
     final parsedPort = int.tryParse(_portController.text.trim());
     if (host.isEmpty) {
-      _showError(context.l10n.tcpErrorHostRequired);
+      if (showErrors) _showError(context.l10n.tcpErrorHostRequired);
       return;
     }
     if (parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
-      _showError(context.l10n.tcpErrorPortInvalid);
+      if (showErrors) _showError(context.l10n.tcpErrorPortInvalid);
       return;
     }
 
@@ -566,7 +673,7 @@ class _TcpScreenState extends State<TcpScreen> {
       await _handleSuccessfulTcpConnection();
     } catch (error) {
       if (!mounted) return;
-      _showError(_friendlyErrorMessage(error));
+      if (showErrors) _showError(_friendlyErrorMessage(error));
     }
   }
 
@@ -575,7 +682,7 @@ class _TcpScreenState extends State<TcpScreen> {
     showDismissibleSnackBar(
       context,
       content: Text(message),
-      backgroundColor: Colors.red,
+      backgroundColor: Theme.of(context).colorScheme.error,
     );
   }
 

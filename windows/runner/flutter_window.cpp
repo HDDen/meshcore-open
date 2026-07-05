@@ -1,5 +1,9 @@
 #include "flutter_window.h"
 
+#include <flutter/method_channel.h>
+#include <flutter/standard_method_codec.h>
+#include <windows.h>
+
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
@@ -25,6 +29,7 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  RegisterWindowActivationChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -39,8 +44,47 @@ bool FlutterWindow::OnCreate() {
   return true;
 }
 
+void FlutterWindow::RegisterWindowActivationChannel() {
+  auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(),
+      "meshcore_open/window_activation",
+      &flutter::StandardMethodCodec::GetInstance());
+
+  channel->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() == "restoreAndFocus") {
+          RestoreAndFocus();
+          result->Success();
+          return;
+        }
+        result->NotImplemented();
+      });
+
+  window_activation_channel_ = std::move(channel);
+}
+
+void FlutterWindow::RestoreAndFocus() {
+  HWND window = GetHandle();
+  if (window == nullptr) {
+    return;
+  }
+
+  if (::IsIconic(window)) {
+    ::ShowWindow(window, SW_RESTORE);
+  } else {
+    ::ShowWindow(window, SW_SHOW);
+  }
+  ::BringWindowToTop(window);
+  ::SetActiveWindow(window);
+  ::SetForegroundWindow(window);
+  ::SetFocus(window);
+}
+
 void FlutterWindow::OnDestroy() {
   if (flutter_controller_) {
+    window_activation_channel_.reset();
     flutter_controller_ = nullptr;
   }
 

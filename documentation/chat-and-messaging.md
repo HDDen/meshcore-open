@@ -18,17 +18,15 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 
 - **Title**: Contact name
 - **Subtitle**: Current routing path label (e.g., "2 hops", "flood (auto)", "direct (forced)") and unread count. Tapping the subtitle shows the full path details.
-- **Action buttons**:
-  - **Routing mode** (waves icon): Switch between Auto, Direct, and Flood routing
-  - **Path management** (timeline icon): View recent paths with hop count, round-trip time, age, and success count. Paths are color-coded by direct repeater (green/yellow/red/blue for ranked repeaters, grey for unknown). Tap a path to activate it (the device verifies and confirms via snackbar), long-press to view full path details, set custom paths, or force flood mode. A warning banner appears when history reaches 100 entries.
-  - **Info** (info icon): Contact info dialog showing type, path, GPS coordinates, public key, and SMAZ compression toggle
+- **Action button**:
+  - **Overflow menu** (⋮ icon): Contains Routing, Info, Telemetry, Settings, and Clear Chat. Routing opens the routing sheet where you can switch between Auto, Direct, and Flood routing and manage recent paths (hop count, round-trip time, age, success count, color-coded by repeater). Info shows a dialog with contact type, path, GPS coordinates, and public key.
 
 ### Message List
 
 - Scrollable list with newest messages at the bottom
 - **Outgoing messages**: Right-aligned, primary color background. **Failed messages** change to a red-toned error container background
 - **Incoming messages**: Left-aligned, grey background with a colored avatar (initial letter or first emoji of sender name; color is deterministic from a hash of the sender name)
-- Bubble width capped at 65% of screen width
+- Bubble width capped at 72% of screen width
 - Hyperlinks rendered as tappable green underlined text
 - **Pinch-to-zoom**: Two-finger zoom (0.8x–1.8x) and double-tap to reset
 - **Jump to bottom**: Floating button appears when scrolled away from the bottom
@@ -87,7 +85,7 @@ When a direct message is sent:
 
 1. The app computes an expected ACK hash: `SHA256([timestamp][attempt][text][selfPubKey])[0:4]` — matching the firmware's hash calculation. If SMAZ compression is enabled, the compressed text (not the original) is hashed
 2. On device acknowledgment (`RESP_CODE_SENT`), the message transitions to "sent" and a timeout timer starts
-3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate)
+3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise from the device's own `est_timeout` in `RESP_CODE_SENT` (clamped to the physics range); otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate). The result is capped at 45 seconds.
 4. On timeout, the message is retried with **exponential backoff**: `1000 × 2^retryCount` ms (1s, 2s, 4s, 8s, 16s...)
 5. **Max retries**: Configurable (default 5, range 2–10)
 6. After max retries, the message is marked "failed" — but a **30-second grace window** remains during which a late ACK can still resolve the message to "delivered"
@@ -114,8 +112,9 @@ Add emoji reactions to incoming messages (not your own):
 | Action | Availability | Description |
 |---|---|---|
 | Add reaction | Incoming messages only | Opens emoji picker |
-| View path | Mobile: tap bubble directly; Desktop: long-press/right-click menu | Shows message routing path |
+| View path | All platforms: long-press/right-click menu | Shows message routing path |
 | Copy | All messages | Copies text to clipboard |
+| Translate | Incoming messages only (when translation is enabled and not yet translated) | Translates the message on-demand using the on-device model |
 | Mark as Unread | Incoming messages only | Marks this message and all subsequent incoming messages as unread |
 | Delete | All messages | Removes locally (not from mesh) |
 | Retry | Failed outgoing messages | Re-sends the message |

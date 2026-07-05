@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
@@ -10,8 +11,10 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/app_settings_service.dart';
 import '../services/repeater_command_service.dart';
+import '../theme/mesh_theme.dart';
 import '../utils/battery_utils.dart';
-import '../widgets/path_management_dialog.dart';
+import '../widgets/mesh_ui.dart';
+import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
 class RepeaterStatusScreen extends StatefulWidget {
@@ -64,8 +67,6 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     _commandService = RepeaterCommandService(connector);
     _setupMessageListener();
-    // Defer until after the first frame so any notifyListeners() triggered
-    // during preparePathForContactSend doesn't fire mid-build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _loadStatus();
     });
@@ -81,12 +82,8 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
 
   void _setupMessageListener() {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-
-    // Listen for incoming text messages from the repeater
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
-
-      // Check if it's a text message response
       if (frame[0] == pushCodeStatusResponse) {
         _handleStatusResponse(frame);
       } else if (frame[0] == respCodeContactMsgRecv ||
@@ -118,11 +115,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final parsed = parseContactMessageText(frame);
     if (parsed == null) return;
     if (!_matchesRepeaterPrefix(parsed.senderPrefix)) return;
-
-    // Notify command service of response (for retry handling)
     _commandService?.handleResponse(widget.repeater, parsed.text);
-
-    // Parse status responses
     _parseStatusResponse(parsed.text);
     _recordStatusResult(true);
   }
@@ -131,7 +124,6 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     if (frame.length < 8) return;
     final prefix = frame.sublist(2, 8);
     if (!_matchesRepeaterPrefix(prefix)) return;
-
     if (frame.length < _statusResponseBytes) return;
 
     final data = ByteData.sublistView(
@@ -254,14 +246,9 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
           _dupFlood = _asInt(data['dup_flood']);
           _dupDirect = _asInt(data['dup_direct']);
         }
-      } catch (_) {
-        // Ignore parse failures for non-JSON responses.
-      }
+      } catch (_) {}
     }
-
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadStatus() async {
@@ -302,9 +289,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       var messageBytes = frame.length >= _statusResponseBytes
           ? frame.length
           : _statusResponseBytes;
-      if (messageBytes < maxFrameSize) {
-        messageBytes = maxFrameSize;
-      }
+      if (messageBytes < maxFrameSize) messageBytes = maxFrameSize;
       final timeoutMs = connector.calculateTimeout(
         pathLength: pathLengthValue,
         messageBytes: messageBytes,
@@ -312,26 +297,21 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       _statusTimeout?.cancel();
       _statusTimeout = Timer(Duration(milliseconds: timeoutMs), () {
         if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.repeater_statusRequestTimeout),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
         _recordStatusResult(false);
       });
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
+        setState(() => _isLoading = false);
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.repeater_errorLoadingStatus(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
       _recordStatusResult(false);
@@ -345,268 +325,6 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final repeater = _resolveRepeater(connector);
     connector.recordRepeaterPathResult(repeater, selection, success, null);
     _pendingStatusSelection = null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final connector = context.watch<MeshCoreConnector>();
-    final repeater = _resolveRepeater(connector);
-    final isFloodMode = repeater.pathOverride == -1;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.repeater_statusTitle),
-            Text(
-              repeater.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-            tooltip: l10n.repeater_routingMode,
-            onSelected: (mode) async {
-              if (mode == 'flood') {
-                await connector.setPathOverride(repeater, pathLen: -1);
-              } else {
-                await connector.setPathOverride(repeater, pathLen: null);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'auto',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.auto_mode,
-                      size: 20,
-                      color: !isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_autoUseSavedPath,
-                      style: TextStyle(
-                        fontWeight: !isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'flood',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.waves,
-                      size: 20,
-                      color: isFloodMode
-                          ? Theme.of(context).primaryColor
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.repeater_forceFloodMode,
-                      style: TextStyle(
-                        fontWeight: isFloodMode
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: l10n.repeater_pathManagement,
-            onPressed: () =>
-                PathManagementDialog.show(context, contact: repeater),
-          ),
-          IconButton(
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadStatus,
-            tooltip: l10n.repeater_refresh,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: _loadStatus,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildSystemInfoCard(),
-              const SizedBox(height: 16),
-              _buildRadioStatsCard(),
-              const SizedBox(height: 16),
-              _buildPacketStatsCard(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSystemInfoCard() {
-    final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_systemInformation,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            _buildInfoRow(l10n.repeater_battery, _batteryText()),
-            _buildInfoRow(l10n.repeater_clockAtLogin, _clockText()),
-            _buildInfoRow(l10n.repeater_uptime, _formatDuration(_uptimeSecs)),
-            _buildInfoRow(l10n.repeater_queueLength, _formatValue(_queueLen)),
-            _buildInfoRow(l10n.repeater_debugFlags, _formatValue(_debugFlags)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRadioStatsCard() {
-    final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.radio,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_radioStatistics,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            _buildInfoRow(
-              l10n.repeater_lastRssi,
-              _formatValue(_lastRssi, suffix: ' dB'),
-            ),
-            _buildInfoRow(l10n.repeater_lastSnr, _formatSnr(_lastSnr)),
-            _buildInfoRow(
-              l10n.repeater_noiseFloor,
-              _formatValue(_noiseFloor, suffix: ' dB'),
-            ),
-            _buildInfoRow(l10n.repeater_txAirtime, _formatDuration(_txAirSecs)),
-            _buildInfoRow(l10n.repeater_rxAirtime, _formatDuration(_rxAirSecs)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPacketStatsCard() {
-    final l10n = context.l10n;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.analytics,
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.repeater_packetStatistics,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            _buildInfoRow(l10n.repeater_sent, _packetTxText()),
-            _buildInfoRow(l10n.repeater_received, _packetRxText()),
-            _buildInfoRow(l10n.repeater_duplicates, _duplicateText()),
-            _buildInfoRow(l10n.repeater_chanUtil, _chanUtilText()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 130,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w400),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   int? _asInt(dynamic value) {
@@ -715,4 +433,222 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     if (snr == null) return '—';
     return snr.toStringAsFixed(2);
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final connector = context.watch<MeshCoreConnector>();
+    final repeater = _resolveRepeater(connector);
+    final isFloodMode = repeater.pathOverride == -1;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.repeater_statusTitle),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(isFloodMode ? Icons.waves : Icons.route),
+            tooltip: l10n.repeater_routingMode,
+            onPressed: () =>
+                ContactRoutingSheet.show(context, contact: repeater),
+          ),
+          IconButton(
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _loadStatus,
+            tooltip: l10n.repeater_refresh,
+          ),
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: RefreshIndicator(
+          onRefresh: _loadStatus,
+          child: _isLoading && _batteryMv == null
+              ? const Center(child: CircularProgressIndicator())
+              : _buildBody(l10n, repeater.name),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(dynamic l10n, String name) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        // ── System ─────────────────────────────────────────────────────────
+        SectionHeader(l10n.repeater_systemInformation),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _buildStatGrid([
+            _StatItem(
+              icon: Icons.battery_std,
+              label: l10n.repeater_battery,
+              value: _batteryText(),
+              color: _batteryColor(),
+            ),
+            _StatItem(
+              icon: Icons.timer_outlined,
+              label: l10n.repeater_uptime,
+              value: _formatDuration(_uptimeSecs),
+              color: MeshPalette.blue,
+            ),
+            _StatItem(
+              icon: Icons.schedule,
+              label: l10n.repeater_clockAtLogin,
+              value: _clockText(),
+              color: scheme.onSurfaceVariant,
+            ),
+            _StatItem(
+              icon: Icons.inbox,
+              label: l10n.repeater_queueLength,
+              value: _formatValue(_queueLen),
+              color: scheme.onSurfaceVariant,
+            ),
+            _StatItem(
+              icon: Icons.bug_report_outlined,
+              label: l10n.repeater_debugFlags,
+              value: _formatValue(_debugFlags),
+              color: _debugFlags != null && _debugFlags! > 0
+                  ? MeshPalette.warn
+                  : scheme.onSurfaceVariant,
+            ),
+          ]),
+        ),
+
+        // ── Radio ──────────────────────────────────────────────────────────
+        SectionHeader(l10n.repeater_radioStatistics),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _buildStatGrid([
+            _StatItem(
+              icon: Icons.signal_cellular_alt,
+              label: l10n.repeater_lastRssi,
+              value: _formatValue(_lastRssi, suffix: ' dB'),
+              color: MeshPalette.blue,
+            ),
+            _StatItem(
+              icon: Icons.waves,
+              label: l10n.repeater_lastSnr,
+              value: _formatSnr(_lastSnr),
+              color: MeshTheme.snrColor(_lastSnr, blocked: false),
+            ),
+            _StatItem(
+              icon: Icons.noise_control_off,
+              label: l10n.repeater_noiseFloor,
+              value: _formatValue(_noiseFloor, suffix: ' dB'),
+              color: scheme.onSurfaceVariant,
+            ),
+            _StatItem(
+              icon: Icons.upload,
+              label: l10n.repeater_txAirtime,
+              value: _formatDuration(_txAirSecs),
+              color: MeshPalette.warn,
+            ),
+            _StatItem(
+              icon: Icons.download,
+              label: l10n.repeater_rxAirtime,
+              value: _formatDuration(_rxAirSecs),
+              color: MeshPalette.signal,
+            ),
+          ]),
+        ),
+
+        // ── Packets ────────────────────────────────────────────────────────
+        SectionHeader(l10n.repeater_packetStatistics),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _buildStatGrid([
+            _StatItem(
+              icon: Icons.send,
+              label: l10n.repeater_sent,
+              value: _packetTxText(),
+              color: MeshPalette.blue,
+            ),
+            _StatItem(
+              icon: Icons.call_received,
+              label: l10n.repeater_received,
+              value: _packetRxText(),
+              color: MeshPalette.signal,
+            ),
+            _StatItem(
+              icon: Icons.content_copy,
+              label: l10n.repeater_duplicates,
+              value: _duplicateText(),
+              color: scheme.onSurfaceVariant,
+            ),
+            _StatItem(
+              icon: Icons.percent,
+              label: l10n.repeater_chanUtil,
+              value: _chanUtilText(),
+              color: _chanUtil != null && _chanUtil! > 80
+                  ? MeshPalette.alert
+                  : _chanUtil != null && _chanUtil! > 50
+                  ? MeshPalette.warn
+                  : MeshPalette.signal,
+            ),
+          ]),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Color _batteryColor() {
+    final connector = context.watch<MeshCoreConnector>();
+    final batteryMv =
+        connector.getRepeaterBatteryMillivolts(widget.repeater.publicKeyHex) ??
+        _batteryMv;
+    if (batteryMv == null) {
+      return Theme.of(context).colorScheme.onSurfaceVariant;
+    }
+    final percent = estimateBatteryPercentFromMillivolts(
+      batteryMv,
+      _batteryChemistry(),
+    );
+    if (percent < 20) return MeshPalette.alert;
+    if (percent < 40) return MeshPalette.warn;
+    return MeshPalette.signal;
+  }
+
+  Widget _buildStatGrid(List<_StatItem> items) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 2.2,
+      children: items
+          .map(
+            (item) => StatTile(
+              icon: item.icon,
+              label: item.label,
+              value: item.value,
+              color: item.color,
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _StatItem {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 }

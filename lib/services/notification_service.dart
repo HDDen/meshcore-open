@@ -1,21 +1,35 @@
+import 'dart:async';
 import 'dart:io' show Platform, File;
 import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
+import '../widgets/mco_image_message.dart';
+import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_palette.dart';
 import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
+
+typedef NotificationTapHandler = FutureOr<void> Function(String payload);
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
+  static const MethodChannel _settingsChannel = MethodChannel(
+    'mco_advanced/notification_settings',
+  );
+
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  NotificationTapHandler? _tapHandler;
+  String? _pendingTapPayload;
 
   // Locale for localized notification strings
   Locale _locale = const Locale('en');
@@ -25,7 +39,20 @@ class NotificationService {
     _locale = locale;
   }
 
+  void setTapHandler(NotificationTapHandler handler) {
+    _tapHandler = handler;
+    final pendingPayload = _pendingTapPayload;
+    if (pendingPayload == null) return;
+    _pendingTapPayload = null;
+    unawaited(Future<void>.sync(() => handler(pendingPayload)));
+  }
+
   AppLocalizations get _l10n => lookupAppLocalizations(_locale);
+
+  String _logSafe(String value) {
+    final sanitized = value.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), ' ');
+    return Uri.encodeComponent(sanitized);
+  }
 
   // Rate limiting to prevent notification storms
   // (Added after getting notification-flooded while evaluating RF flood management. The irony.)
@@ -93,8 +120,25 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
       _isInitialized = true;
+      await _handleLaunchNotificationTap();
     } catch (e) {
       debugPrint('Error initializing notifications: $e');
+    }
+  }
+
+  Future<void> _handleLaunchNotificationTap() async {
+    try {
+      final launchDetails = await _notifications
+          .getNotificationAppLaunchDetails();
+      final response = launchDetails?.notificationResponse;
+      final payload = response?.payload;
+      if (launchDetails?.didNotificationLaunchApp == true &&
+          payload != null &&
+          payload.isNotEmpty) {
+        _dispatchNotificationTapPayload(payload);
+      }
+    } catch (e) {
+      debugPrint('Failed to read launch notification payload: $e');
     }
   }
 
@@ -114,6 +158,65 @@ class NotificationService {
     return _isInitialized;
   }
 
+  // Cached "are we allowed to post notifications" result. Null = not yet
+  // determined. A positive Android grant can be cached, but a denied state is
+  // rechecked because the user can enable notifications in system settings
+  // while the app is running.
+  bool? _canNotify;
+
+  Future<bool> _ensureCanNotify() async {
+    if (!await _ensureInitialized()) {
+      return false;
+    }
+    final cached = _canNotify;
+    if (cached == true) {
+      return true;
+    }
+    if (cached == false && !PlatformInfo.isAndroid) {
+      return false;
+    }
+
+    // flutter_local_notifications has no web backend, so show() always throws.
+    // Skip silently instead of logging an error per incoming message.
+    if (kIsWeb) return _canNotify = false;
+
+    // On Android 13+ notifications require an explicit grant; reflect the real
+    // OS state so we don't spam failed show() calls when denied.
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      return _canNotify = enabled ?? false;
+    }
+
+    // iOS/macOS request permission during initialize(); desktop has no gate.
+    return _canNotify = true;
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    if (!await _ensureInitialized()) return false;
+    if (kIsWeb) return false;
+
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      _canNotify = enabled ?? false;
+      return _canNotify!;
+    }
+
+    return true;
+  }
+
+  Future<void> openAppNotificationSettings() async {
+    if (!PlatformInfo.isAndroid) return;
+    await _settingsChannel.invokeMethod<void>('openNotificationSettings');
+  }
+
   Future<bool> requestPermissions() async {
     if (!_isInitialized) {
       await initialize();
@@ -126,7 +229,8 @@ class NotificationService {
         >();
     if (androidPlugin != null) {
       final granted = await androidPlugin.requestNotificationsPermission();
-      return granted ?? false;
+      _canNotify = granted ?? false;
+      return _canNotify!;
     }
 
     // iOS permissions are requested during initialization
@@ -140,7 +244,8 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      return granted ?? false;
+      _canNotify = granted ?? false;
+      return _canNotify!;
     }
 
     return true;
@@ -156,7 +261,153 @@ class NotificationService {
     if (RegExp(r'^g:[A-Za-z0-9_-]+$').hasMatch(trimmed)) {
       return 'Sent a GIF';
     }
+    if (isMcoImageNotificationText(trimmed)) {
+      return 'MCOimg';
+    }
     return text;
+  }
+
+  static bool isMcoImageNotificationText(String text) {
+    return _mcoImagePayloadTextForNotification(text) != null;
+  }
+
+  static String? _mcoImagePayloadTextForNotification(String text) {
+    final trimmed = text.trim();
+    if (MCOImageMessage.decodeMetadata(trimmed).image != null) {
+      return trimmed;
+    }
+    final separatorIndex = trimmed.indexOf(': ');
+    if (separatorIndex <= 0 || separatorIndex + 2 >= trimmed.length) {
+      return null;
+    }
+    final messageText = trimmed.substring(separatorIndex + 2).trimLeft();
+    if (MCOImageMessage.decodeMetadata(messageText).image != null) {
+      return messageText;
+    }
+    return null;
+  }
+
+  Future<_MCOImageNotificationAttachment?> _tryBuildMcoImageAttachment(
+    String text,
+  ) async {
+    try {
+      final imageText = _mcoImagePayloadTextForNotification(text);
+      if (imageText == null) return null;
+      final image = MCOImageMessage.decodeMetadata(imageText).image;
+      if (image == null) return null;
+      final bytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
+      final rawIcon = _linuxRawIconDataFor(image);
+      String? filePath;
+      if (!kIsWeb &&
+          (PlatformInfo.isAndroid ||
+              PlatformInfo.isIOS ||
+              PlatformInfo.isMacOS ||
+              PlatformInfo.isWindows)) {
+        final directory = await getTemporaryDirectory();
+        final timestamp = DateTime.now().microsecondsSinceEpoch;
+        final file = File(
+          '${directory.path}/mcoimg_notification_$timestamp.png',
+        );
+        await file.writeAsBytes(bytes, flush: true);
+        filePath = file.path;
+      }
+      return _MCOImageNotificationAttachment(
+        bytes: bytes,
+        filePath: filePath,
+        linuxRawIcon: rawIcon,
+      );
+    } catch (error) {
+      debugPrint('Failed to build MCOimg notification attachment: $error');
+      return null;
+    }
+  }
+
+  List<DarwinNotificationAttachment>? _darwinAttachmentsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final filePath = attachment?.filePath;
+    if (filePath == null) {
+      return null;
+    }
+    return [DarwinNotificationAttachment(filePath)];
+  }
+
+  LinuxNotificationDetails? _linuxDetailsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final rawIcon = attachment?.linuxRawIcon;
+    if (rawIcon == null) {
+      return null;
+    }
+    return LinuxNotificationDetails(icon: ByteDataLinuxIcon(rawIcon));
+  }
+
+  WindowsNotificationDetails? _windowsDetailsFor(
+    _MCOImageNotificationAttachment? attachment,
+  ) {
+    final filePath = attachment?.filePath;
+    if (filePath == null) {
+      return null;
+    }
+    return WindowsNotificationDetails(
+      images: [
+        WindowsImage(
+          Uri.file(filePath, windows: true),
+          altText: 'MCOimg',
+          placement: WindowsImagePlacement.appLogoOverride,
+        ),
+      ],
+    );
+  }
+
+  LinuxRawIconData _linuxRawIconDataFor(MCOImage image) {
+    final palette = image.paletteProfile.isDynamic
+        ? MCOImageDynamicPalette.global512
+        : MCOImagePalette.colorsFor(image.paletteProfile);
+    final data = Uint8List(image.width * image.height * 4);
+    for (var i = 0; i < image.pixels.length; i++) {
+      final pixel = image.pixels[i];
+      final color = _colorForMcoPixel(image, pixel, palette);
+      final offset = i * 4;
+      data[offset] = _colorChannelToByte(color.r);
+      data[offset + 1] = _colorChannelToByte(color.g);
+      data[offset + 2] = _colorChannelToByte(color.b);
+      data[offset +
+          3] = image.transparentColor != null && pixel == image.transparentColor
+          ? 0
+          : _colorChannelToByte(color.a);
+    }
+    return LinuxRawIconData(
+      data: data,
+      width: image.width,
+      height: image.height,
+      channels: 4,
+      hasAlpha: true,
+    );
+  }
+
+  Color _colorForMcoPixel(MCOImage image, int pixel, List<Color> palette) {
+    if (image.paletteProfile.isDynamic) {
+      if (pixel < 0 ||
+          pixel >= MCOImageDynamicPalette.global512.length ||
+          MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                image.paletteProfile,
+                pixel,
+              ) ==
+              null) {
+        final whiteIndex = MCOImagePalette.whiteIndexFor(image.paletteProfile);
+        return MCOImageDynamicPalette.global512[whiteIndex];
+      }
+      return MCOImageDynamicPalette.global512[pixel];
+    }
+    if (pixel < 0 || pixel >= palette.length) {
+      return const Color(0x00000000);
+    }
+    return palette[pixel];
+  }
+
+  int _colorChannelToByte(double value) {
+    return (value * 255.0).round().clamp(0, 255).toInt();
   }
 
   Future<void> _showMessageNotificationImpl({
@@ -165,7 +416,11 @@ class NotificationService {
     String? contactId,
     int? badgeCount,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
+    final mcoAttachment = await _tryBuildMcoImageAttachment(message);
+    final body = mcoAttachment == null
+        ? formatNotificationText(message)
+        : 'MCOimg';
 
     final androidDetails = AndroidNotificationDetails(
       'messages',
@@ -175,6 +430,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       number: badgeCount,
+      largeIcon: mcoAttachment == null
+          ? null
+          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
+      styleInformation: mcoAttachment == null
+          ? null
+          : BigPictureStyleInformation(
+              ByteArrayAndroidBitmap(mcoAttachment.bytes),
+              contentTitle: contactName,
+              summaryText: 'MCOimg',
+              hideExpandedLargeIcon: true,
+            ),
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -182,6 +448,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -189,19 +456,22 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: macDetails,
+      linux: _linuxDetailsFor(mcoAttachment),
+      windows: _windowsDetailsFor(mcoAttachment),
     );
 
     try {
       await _notifications.show(
         id: contactId?.hashCode ?? 0,
         title: contactName,
-        body: formatNotificationText(message),
+        body: body,
         notificationDetails: notificationDetails,
         payload: 'message:$contactId',
       );
@@ -215,7 +485,7 @@ class NotificationService {
     required String contactType,
     String? contactId,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     const androidDetails = AndroidNotificationDetails(
       'adverts',
@@ -248,7 +518,7 @@ class NotificationService {
       await _notifications.show(
         id: contactId != null
             ? 'advert:$contactId'.hashCode
-            : DateTime.now().millisecondsSinceEpoch,
+            : DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF,
         title: _l10n.notification_newTypeDiscovered(contactType),
         body: contactName,
         notificationDetails: notificationDetails,
@@ -265,7 +535,8 @@ class NotificationService {
     int? channelIndex,
     int? badgeCount,
   }) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
+    final mcoAttachment = await _tryBuildMcoImageAttachment(message);
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -275,6 +546,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       number: badgeCount,
+      largeIcon: mcoAttachment == null
+          ? null
+          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
+      styleInformation: mcoAttachment == null
+          ? null
+          : BigPictureStyleInformation(
+              ByteArrayAndroidBitmap(mcoAttachment.bytes),
+              contentTitle: channelName,
+              summaryText: 'MCOimg',
+              hideExpandedLargeIcon: true,
+            ),
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -282,6 +564,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -289,22 +572,29 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
+      attachments: _darwinAttachmentsFor(mcoAttachment),
     );
 
     final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: macDetails,
+      linux: _linuxDetailsFor(mcoAttachment),
+      windows: _windowsDetailsFor(mcoAttachment),
     );
 
-    final preview = formatNotificationText(message.trim());
+    final preview = mcoAttachment == null
+        ? formatNotificationText(message.trim())
+        : 'MCOimg';
     final body = preview.isEmpty
         ? _l10n.notification_receivedNewMessage
         : preview;
 
     try {
       await _notifications.show(
-        id: channelIndex?.hashCode ?? DateTime.now().millisecondsSinceEpoch,
+        id:
+            channelIndex?.hashCode ??
+            DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF,
         title: channelName,
         body: body,
         notificationDetails: notificationDetails,
@@ -322,11 +612,11 @@ class NotificationService {
   String _getNotificationIdentifier(_PendingNotification n) {
     switch (n.type) {
       case _NotificationType.advert:
-        return n.body;
+        return _logSafe(n.body);
       case _NotificationType.message:
-        return 'from: ${n.title}';
+        return 'from: ${_logSafe(n.title)}';
       case _NotificationType.channelMessage:
-        return 'in: ${n.title}';
+        return 'in: ${_logSafe(n.title)}';
     }
   }
 
@@ -334,9 +624,17 @@ class NotificationService {
     final payload = response.payload;
     if (payload != null) {
       debugPrint('Notification tapped: $payload');
-      // Handle navigation based on payload
-      // This can be extended to navigate to specific screens
+      _dispatchNotificationTapPayload(payload);
     }
+  }
+
+  void _dispatchNotificationTapPayload(String payload) {
+    final handler = _tapHandler;
+    if (handler == null) {
+      _pendingTapPayload = payload;
+      return;
+    }
+    unawaited(Future<void>.sync(() => handler(payload)));
   }
 
   Future<void> cancelAll() async {
@@ -543,7 +841,7 @@ class NotificationService {
   }
 
   Future<void> _showBatchSummary(List<_PendingNotification> batch) async {
-    if (!await _ensureInitialized()) return;
+    if (!await _ensureCanNotify()) return;
 
     // Group by type
     final messages = batch
@@ -572,7 +870,7 @@ class NotificationService {
 
     // Show first few device names in batch summary for debugging (only if adverts exist)
     final deviceInfo = adverts.isNotEmpty
-        ? ' (${adverts.take(5).map((n) => n.body).join(', ')}${adverts.length > 5 ? ', ...' : ''})'
+        ? ' (${adverts.take(5).map((n) => _logSafe(n.body)).join(', ')}${adverts.length > 5 ? ', ...' : ''})'
         : '';
     debugPrint('[Notification] batch summary: ${parts.join(", ")}$deviceInfo');
 
@@ -599,6 +897,18 @@ class NotificationService {
       debugPrint('Failed to show batch summary notification: $e');
     }
   }
+}
+
+class _MCOImageNotificationAttachment {
+  final Uint8List bytes;
+  final String? filePath;
+  final LinuxRawIconData? linuxRawIcon;
+
+  const _MCOImageNotificationAttachment({
+    required this.bytes,
+    required this.filePath,
+    required this.linuxRawIcon,
+  });
 }
 
 // Helper class for pending notifications

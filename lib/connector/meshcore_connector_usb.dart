@@ -19,6 +19,7 @@ class MeshCoreUsbManager {
   String? get activePortKey => _activePortKey;
   String? get activePortDisplayLabel => _activePortLabel ?? _activePortKey;
   bool get isConnected => _service.isConnected;
+  Object? get lastError => _service.lastError;
   Stream<Uint8List> get frameStream => _service.frameStream;
 
   // --- Configuration ---

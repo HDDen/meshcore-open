@@ -4,31 +4,33 @@
   "nav_contacts": "Kapcsolatok",
   "nav_channels": "Csatornák",
   "nav_map": "Térkép",
-  "common_cancel": "Át kell venni",
-  "common_ok": "Rendben",
-  "common_connect": "Kapcsolódj",
-  "common_unknownDevice": "Tudatlan eszköz",
-  "common_save": "Mentés",
+  "common_cancel": "Mégsem",
+  "common_ok": "RENDBEN",
+  "common_connect": "Csatlakozás",
+  "common_unknownDevice": "Ismeretlen eszköz",
+  "common_save": "Megtakarítás",
   "common_delete": "Töröl",
-  "common_deleteAll": "Minden törlés",
-  "common_close": "Bezárás",
+  "common_deleteAll": "Összes törlése",
+  "common_close": "Közeli",
   "common_edit": "Szerkesztés",
-  "common_add": "Hozzáad",
-  "common_settings": "Beállítások",
-  "common_disconnect": "Csatlakozást megszakasztani",
-  "common_connected": "Kapcsolódó",
-  "common_disconnected": "Elválasztva",
-  "common_create": "Készítsd",
+  "common_add": "Hozzáadás",
+  "common_settings": "Beállítások elemre",
+  "common_disconnect": "Leválasztás",
+  "common_connected": "Csatlakozva",
+  "common_disconnected": "Szétkapcsolt",
+  "common_create": "Teremt",
   "common_continue": "Folytatás",
-  "common_share": "Ossza meg",
+  "common_share": "Részesedés",
   "common_copy": "Másolat",
-  "common_retry": "Újrapróbálja",
+  "common_retry": "Próbálja újra",
   "common_hide": "Elrejt",
-  "common_remove": "Eltávolít",
+  "common_remove": "Távolítsa el",
   "common_enable": "Engedélyezés",
-  "common_disable": "Leteteszt",
-  "common_reboot": "Újraindítás",
-  "common_loading": "Betöltés...",
+  "common_disable": "Letiltás",
+  "common_autoRefresh": "Automatikus frissítés",
+  "common_interval": "Intervallum",
+  "common_reboot": "Indítsa újra",
+  "common_loading": "Terhelés...",
   "common_notAvailable": "—",
   "common_voltageValue": "{volts} V",
   "@common_voltageValue": {
@@ -46,17 +48,17 @@
       }
     }
   },
-  "scanner_title": "MeshCore nyitott",
+  "scanner_title": "MeshCore Open",
   "connectionChoiceUsbLabel": "USB",
   "connectionChoiceBluetoothLabel": "Bluetooth",
   "connectionChoiceTcpLabel": "TCP",
-  "tcpScreenTitle": "TCP-n keresztül kapcsolódjon",
-  "tcpHostLabel": "IP-cím",
-  "tcpHostHint": "192.168.40.10",
-  "tcpPortLabel": "Múzeum",
+  "tcpScreenTitle": "Csatlakozzon TCP-n keresztül",
+  "tcpHostLabel": "Végpont",
+  "tcpHostHint": "192.168.40.10 / example.com",
+  "tcpPortLabel": "Kikötő",
   "tcpPortHint": "5000",
-  "tcpStatus_notConnected": "Adja meg a célpontot, majd kapcsolja össze.",
-  "tcpStatus_connectingTo": "Kapcsolat a {endpoint}-hez...",
+  "tcpStatus_notConnected": "Adja meg a végpontot, és csatlakozzon",
+  "tcpStatus_connectingTo": "Csatlakozás a következőhöz: {endpoint}...",
   "@tcpStatus_connectingTo": {
     "placeholders": {
       "endpoint": {
@@ -64,10 +66,10 @@
       }
     }
   },
-  "tcpErrorHostRequired": "Az IP-címet meg kell adni.",
-  "tcpErrorPortInvalid": "Az érték 1 és 65535 között kell lennie.",
-  "tcpErrorUnsupported": "A TCP-protokoll nem támogatott ez a platformon.",
-  "tcpErrorTimedOut": "A TCP-kapcsolat időtúllépett.",
+  "tcpErrorHostRequired": "Házigazda szükséges.",
+  "tcpErrorPortInvalid": "A portnak 1 és 65535 között kell lennie.",
+  "tcpErrorUnsupported": "A TCP-átvitel nem támogatott ezen a platformon.",
+  "tcpErrorTimedOut": "A TCP-kapcsolat időtúllépése lejárt.",
   "tcpConnectionFailed": "A TCP-kapcsolat sikertelen: {error}",
   "@tcpConnectionFailed": {
     "placeholders": {
@@ -76,28 +78,28 @@
       }
     }
   },
-  "usbScreenTitle": "USB-en keresztül csatlakoztassuk",
-  "usbScreenSubtitle": "Válasszon egy azonosított soros eszközt, és közvetlenül csatlakoztassa a MeshCore-hoz.",
-  "usbScreenStatus": "Válasszon egy USB-es eszközt",
-  "usbScreenNote": "Az USB-es soros kommunikáció a támogatott Android eszközökön és asztali rendszereken is elérhető.",
-  "usbScreenEmptyState": "Nincs USB eszköz megtalálva. Csatlakoztasson egyet, majd frissítse a rendszert.",
-  "usbErrorPermissionDenied": "A USB-es hozzáférés megtagadva.",
-  "usbErrorDeviceMissing": "Az kiválasztott USB eszköz már nem elérhető.",
-  "usbErrorInvalidPort": "Válasszon egy érvényes USB-eszközt.",
-  "usbErrorBusy": "Egy másik USB-csatlakozás kérése már folyamatban van.",
-  "usbErrorNotConnected": "Nincs csatlakoztatott USB eszköz.",
-  "usbErrorOpenFailed": "Nem sikerült megnyitni a kiválasztott USB-eszközöt.",
-  "usbErrorConnectFailed": "Nem sikerült kapcsolatot létesíteni a kiválasztott USB-eszközhöz.",
-  "usbErrorUnsupported": "Ez a platform nem támogat USB-es soros kommunikációt.",
-  "usbErrorAlreadyActive": "Az USB-kapcsolat már be van állítva.",
-  "usbErrorNoDeviceSelected": "Nincs kiválasztva USB eszköz.",
-  "usbErrorPortClosed": "Az USB-kapcsolat nem aktív.",
-  "usbErrorConnectTimedOut": "Kapcsolódás sikertelen. Ellenőrizze, hogy a eszköz rendelkezik-e USB-hez tartozó firmware-rel.",
-  "usbFallbackDeviceName": "Web-szériás eszköz",
-  "usbStatus_notConnected": "Válasszon egy USB-es eszközt",
-  "usbStatus_connecting": "USB eszközhez való csatlakozás...",
-  "usbStatus_searching": "USB eszközök keresése...",
-  "usbConnectionFailed": "USB-kapcsolat sikertelen: {error}",
+  "usbScreenTitle": "Csatlakoztassa USB-n keresztül",
+  "usbScreenSubtitle": "Válasszon egy észlelt soros eszközt, és csatlakozzon közvetlenül a MeshCore csomóponthoz.",
+  "usbScreenStatus": "Válasszon ki egy USB-eszközt",
+  "usbScreenNote": "Az USB-soros aktív a támogatott Android-eszközökön és asztali platformokon.",
+  "usbScreenEmptyState": "Nem található USB-eszköz. Csatlakoztasson egyet, és frissítse.",
+  "usbErrorPermissionDenied": "Az USB-engedély megtagadva.",
+  "usbErrorDeviceMissing": "A kiválasztott USB-eszköz már nem érhető el.",
+  "usbErrorInvalidPort": "Válasszon ki egy érvényes USB-eszközt.",
+  "usbErrorBusy": "Egy másik USB-csatlakozási kérelem már folyamatban van.",
+  "usbErrorNotConnected": "Nincs USB-eszköz csatlakoztatva.",
+  "usbErrorOpenFailed": "Nem sikerült megnyitni a kiválasztott USB-eszközt.",
+  "usbErrorConnectFailed": "Nem sikerült csatlakozni a kiválasztott USB-eszközhöz.",
+  "usbErrorUnsupported": "Az USB-soros nem támogatott ezen a platformon.",
+  "usbErrorAlreadyActive": "Az USB-kapcsolat már aktív.",
+  "usbErrorNoDeviceSelected": "Nem lett kiválasztva USB-eszköz.",
+  "usbErrorPortClosed": "Az USB-csatlakozás nincs nyitva.",
+  "usbErrorConnectTimedOut": "A kapcsolat időtúllépése lejárt. Győződjön meg arról, hogy az eszköz rendelkezik USB Companion firmware-rel.",
+  "usbFallbackDeviceName": "Web soros eszköz",
+  "usbStatus_notConnected": "Válasszon ki egy USB-eszközt",
+  "usbStatus_connecting": "Csatlakozás USB-eszközhöz...",
+  "usbStatus_searching": "USB-eszközök keresése...",
+  "usbConnectionFailed": "USB csatlakozás sikertelen: {error}",
   "@usbConnectionFailed": {
     "placeholders": {
       "error": {
@@ -105,11 +107,11 @@
       }
     }
   },
-  "scanner_scanning": "Készülékek keresése...",
-  "scanner_connecting": "Kapcsolódás...",
-  "scanner_disconnecting": "Kapcsolat megszakad...",
-  "scanner_notConnected": "Nem csatlakozva",
-  "scanner_connectedTo": "Kapcsolódik a {deviceName}-hez",
+  "scanner_scanning": "Eszközök keresése...",
+  "scanner_connecting": "Csatlakozás...",
+  "scanner_disconnecting": "Leválasztás...",
+  "scanner_notConnected": "Nincs csatlakoztatva",
+  "scanner_connectedTo": "Csatlakozva a következőhöz: {deviceName}",
   "@scanner_connectedTo": {
     "placeholders": {
       "deviceName": {
@@ -118,8 +120,8 @@
     }
   },
   "scanner_searchingDevices": "MeshCore eszközök keresése...",
-  "scanner_tapToScan": "A Tap Scan funkció segítségével kereshet MeshCore eszközöket.",
-  "scanner_connectionFailed": "Kapcsolódás sikertelen: {error}",
+  "scanner_tapToScan": "Koppintson a Scan elemre a MeshCore-eszközök megkereséséhez",
+  "scanner_connectionFailed": "A csatlakozás sikertelen: {error}",
   "@scanner_connectionFailed": {
     "placeholders": {
       "error": {
@@ -127,66 +129,66 @@
       }
     }
   },
-  "scanner_stop": "Megállj",
-  "scanner_scan": "Szkenálás",
-  "scanner_bluetoothOff": "A Bluetooth kikapcsolva",
-  "scanner_bluetoothOffMessage": "Kérjük, kapcsolja be a Bluetooth-ot, hogy eszközök keresése lehessen.",
+  "scanner_stop": "Stop",
+  "scanner_scan": "Letapogatás",
+  "scanner_bluetoothOff": "Bluetooth ki van kapcsolva",
+  "scanner_bluetoothOffMessage": "Kérjük, kapcsolja be a Bluetooth-t az eszközök kereséséhez",
   "scanner_chromeRequired": "Chrome böngésző szükséges",
-  "scanner_chromeRequiredMessage": "Ez az alkalmazás a Bluetooth funkcióhoz Google Chrome-ot vagy Chromium alapú böngészőt igényel.",
-  "scanner_enableBluetooth": "Engedje be a Bluetooth funkciót",
+  "scanner_chromeRequiredMessage": "Ehhez a webes alkalmazáshoz Google Chrome vagy Chromium-alapú böngésző szükséges a Bluetooth támogatásához.",
+  "scanner_enableBluetooth": "Bluetooth engedélyezése",
   "device_quickSwitch": "Gyors váltás",
   "device_meshcore": "MeshCore",
-  "settings_title": "Beállítások",
-  "settings_deviceInfo": "A készülék információi",
-  "settings_appSettings": "Alkalmazási beállítások",
-  "settings_appSettingsSubtitle": "Értesítések, üzenetküldés és térképi beállítások",
-  "settings_nodeSettings": "Műközép beállítások",
-  "settings_nodeName": "Vonal neve",
-  "settings_nodeNameNotSet": "Nem megállapított",
-  "settings_nodeNameHint": "Adja meg a csomópont nevét",
-  "settings_nodeNameUpdated": "Neve frissítve",
+  "settings_title": "Beállítások elemre",
+  "settings_deviceInfo": "Készülék Info",
+  "settings_appSettings": "Alkalmazásbeállítások",
+  "settings_appSettingsSubtitle": "Értesítések, üzenetküldés és térképbeállítások",
+  "settings_nodeSettings": "Csomópont beállításai",
+  "settings_nodeName": "Csomópont neve",
+  "settings_nodeNameNotSet": "Nincs beállítva",
+  "settings_nodeNameHint": "Írja be a csomópont nevét",
+  "settings_nodeNameUpdated": "Név frissítve",
   "settings_radioSettings": "Rádióbeállítások",
-  "settings_radioSettingsSubtitle": "Frekvencia, teljesítmény, szélesítési tényező",
-  "settings_radioSettingsUpdated": "A rádió beállítások frissítve",
-  "settings_location": "Helyszín",
+  "settings_radioSettingsSubtitle": "Frekvencia, teljesítmény, szórási tényező",
+  "settings_radioSettingsUpdated": "A rádió beállításai frissítve",
+  "settings_location": "hely",
   "settings_locationSubtitle": "GPS koordináták",
-  "settings_locationUpdated": "A helyzet és a GPS beállítások frissítve",
-  "settings_locationBothRequired": "Kérjük, adja meg a földrajzi szélességet és hosszúságot.",
-  "settings_locationInvalid": "Érvénytelen szélesszög vagy hosszszög.",
-  "settings_locationGPSEnable": "GPS engedélyezve",
-  "settings_locationGPSEnableSubtitle": "Lehetővé teszi, hogy a GPS automatikusan frissítse a helyzetet.",
-  "settings_locationIntervalSec": "GPS-számolási intervallum (másodpercek)",
-  "settings_locationIntervalInvalid": "Az intervallum legalább 60 másodpercnek, de legfeljebb 86400 másodpercnak kell lennie.",
-  "settings_latitude": "Nyugat-–––––––––––––––––––––––––––––––",
-  "settings_longitude": "hosszúság",
-  "settings_contactSettings": "Kapcsolat beállítások",
-  "settings_contactSettingsSubtitle": "Beállítások, amelyek meghatározzák, hogyan lehet új kapcsolatokat hozzáadni.",
-  "settings_privacyMode": "Adatvédelem mód",
-  "settings_privacyModeSubtitle": "Elrejtsük a nevét/a helyszínt az űrianyagokban",
-  "settings_privacyModeToggle": "Engedje be a privát üzemmódot, hogy elrejtse a nevét és a helyét az online hirdetésekben.",
-  "settings_privacyModeEnabled": "Adatvédelem mód beállítva",
-  "settings_privacyModeDisabled": "Adatvédelem mód kikapcsolva",
-  "settings_actions": "Tevékenységek",
-  "settings_deleteAllPaths": "Delete All Paths",
-  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
+  "settings_locationUpdated": "A hely- és GPS-beállítások frissítve",
+  "settings_locationBothRequired": "Adja meg a szélességi és hosszúsági fokokat is.",
+  "settings_locationInvalid": "Érvénytelen szélesség vagy hosszúság.",
+  "settings_locationGPSEnable": "GPS engedélyezése",
+  "settings_locationGPSEnableSubtitle": "Lehetővé teszi a GPS számára a hely automatikus frissítését.",
+  "settings_locationIntervalSec": "GPS intervallum (másodperc)",
+  "settings_locationIntervalInvalid": "Az intervallumnak legalább 60 másodpercnek kell lennie, és kevesebbnek kell lennie 86 400 másodpercnél.",
+  "settings_latitude": "Szélesség",
+  "settings_longitude": "Hosszúság",
+  "settings_contactSettings": "Kapcsolati beállítások",
+  "settings_contactSettingsSubtitle": "A névjegyek hozzáadásának beállításai.",
+  "settings_privacyMode": "Adatvédelmi mód",
+  "settings_privacyModeSubtitle": "Név/hely elrejtése a hirdetésekben",
+  "settings_privacyModeToggle": "Kapcsolja be az adatvédelmi módot, hogy elrejtse nevét és tartózkodási helyét a hirdetésekben.",
+  "settings_privacyModeEnabled": "Az adatvédelmi mód engedélyezve",
+  "settings_privacyModeDisabled": "Az adatvédelmi mód letiltva",
+  "settings_actions": "Akciók",
+  "settings_deleteAllPaths": "Az összes elérési út törlése",
+  "settings_deleteAllPathsSubtitle": "Törölje az összes elérési utat a névjegyekből.",
   "settings_sendAdvertisement": "Hirdetés küldése",
-  "settings_sendAdvertisementSubtitle": "A nyilvános megjelenés",
-  "settings_advertisementSent": "Hirdetés elküldve",
-  "settings_syncTime": "Szinkronizációs idő",
-  "settings_syncTimeSubtitle": "Állítsa a készülék időzítését a telefon időjére",
-  "settings_timeSynchronized": "Időben szinkronizált",
-  "settings_refreshContacts": "Újraindítsd a kapcsolatok listát",
-  "settings_refreshContactsSubtitle": "Újra töltse a kontaktlista-adatokat a készülékről",
-  "settings_rebootDevice": "Újraindítás",
-  "settings_rebootDeviceSubtitle": "Indítsa újra a MeshCore eszközt.",
-  "settings_rebootDeviceConfirm": "Biztosan szeretné újraindítani a készüléket? Ebben az esetben a kapcsolat megszűnik.",
+  "settings_sendAdvertisementSubtitle": "Jelenlét a közvetítésben most",
+  "settings_advertisementSent": "Reklám elküldve",
+  "settings_syncTime": "Szinkronizálási idő",
+  "settings_syncTimeSubtitle": "Az eszköz órájának beállítása a telefon idejére",
+  "settings_timeSynchronized": "Idő szinkronizálva",
+  "settings_refreshContacts": "Névjegyek frissítése",
+  "settings_refreshContactsSubtitle": "Névjegylista újratöltése az eszközről",
+  "settings_rebootDevice": "Eszköz újraindítása",
+  "settings_rebootDeviceSubtitle": "Indítsa újra a MeshCore eszközt",
+  "settings_rebootDeviceConfirm": "Biztosan újra akarja indítani az eszközt? Megszakad a kapcsolat.",
   "settings_debug": "Hibakeresés",
   "settings_bleDebugLog": "BLE hibaelhárítási napló",
   "settings_bleDebugLogSubtitle": "BLE parancsok, válaszok és alapvető adatok",
-  "settings_appDebugLog": "App-debug log",
-  "settings_appDebugLogSubtitle": "Programozási hibajelzések",
-  "settings_about": "Ról",
-  "settings_aboutVersion": "MeshCore Open (Advanced mod) {version} verzió",
+  "settings_appDebugLog": "Alkalmazás hibakeresési naplója",
+  "settings_appDebugLogSubtitle": "Alkalmazás hibakeresési üzenetei",
+  "settings_about": "Körülbelül",
+  "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "@settings_aboutVersion": {
     "placeholders": {
       "version": {
@@ -194,29 +196,29 @@
       }
     }
   },
-  "settings_aboutLegalese": "2026-os MeshCore nyílt forráskódú projekt",
-  "settings_aboutDescription": "Egy nyílt forráskódú Flutter kliens a MeshCore LoRa hálózati eszközök számára.",
+  "settings_aboutLegalese": "2026 MeshCore nyílt forráskódú projekt",
+  "settings_aboutDescription": "Nyílt forráskódú Flutter kliens MeshCore LoRa mesh hálózati eszközökhöz.",
   "settings_aboutOpenMeteoAttribution": "LOS magassági adatok: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Név",
-  "settings_infoId": "Az azonosító",
+  "settings_infoId": "ID",
   "settings_infoStatus": "Állapot",
-  "settings_infoBattery": "Akku",
-  "settings_infoPublicKey": "Nyelvkönyv",
-  "settings_infoContactsCount": "Kapcsolatok száma",
-  "settings_infoChannelCount": "Csatorna száma",
-  "settings_presets": "Előre beállított beállítások",
+  "settings_infoBattery": "Akkumulátor",
+  "settings_infoPublicKey": "Nyilvános kulcs",
+  "settings_infoContactsCount": "Névjegyek száma",
+  "settings_infoChannelCount": "Csatornaszám",
+  "settings_presets": "Előbeállítások",
   "settings_frequency": "Frekvencia (MHz)",
-  "settings_frequencyHelper": "300,0 – 2500,0",
+  "settings_frequencyHelper": "300,0 - 2500,0",
   "settings_frequencyInvalid": "Érvénytelen frekvencia (300-2500 MHz)",
-  "settings_bandwidth": "Kapacitás",
-  "settings_spreadingFactor": "Terjesztési tényező",
+  "settings_bandwidth": "Sávszélesség",
+  "settings_spreadingFactor": "Spreading Factor",
   "settings_codingRate": "Kódolási sebesség",
   "settings_txPower": "TX teljesítmény (dBm)",
-  "settings_txPowerHelper": "0 – 22",
+  "settings_txPowerHelper": "0-22",
   "settings_txPowerInvalid": "Érvénytelen TX teljesítmény (0-22 dBm)",
-  "settings_clientRepeat": "Autonóm rendszer újra",
-  "settings_clientRepeatSubtitle": "Engedje, hogy ez a eszköz mások számára is ismételje a hálózati csomagokat.",
-  "settings_clientRepeatFreqWarning": "A hálózat nélküli kommunikációhoz 433, 869 vagy 918 MHz frekvenciát igényel.",
+  "settings_clientRepeat": "Hálózaton kívüli ismétlés",
+  "settings_clientRepeatSubtitle": "Engedélyezze az eszköznek, hogy megismételje a mesh-csomagokat mások számára",
+  "settings_clientRepeatFreqWarning": "A hálózaton kívüli ismétlés 433, 869 vagy 918 MHz frekvenciát igényel",
   "settings_error": "Hiba: {message}",
   "@settings_error": {
     "placeholders": {
@@ -225,62 +227,62 @@
       }
     }
   },
-  "appSettings_title": "Alkalmazási beállítások",
+  "appSettings_title": "Alkalmazásbeállítások",
   "appSettings_appearance": "Megjelenés",
   "appSettings_theme": "Téma",
-  "appSettings_themeSystem": "Alapértékek",
-  "appSettings_themeLight": "Világítás",
+  "appSettings_themeSystem": "Rendszer alapértelmezett",
+  "appSettings_themeLight": "Fény",
   "appSettings_themeDark": "Sötét",
   "appSettings_language": "Nyelv",
-  "appSettings_languageSystem": "Alapértékek",
-  "appSettings_languageEn": "Angol",
-  "appSettings_languageFr": "Francia",
-  "appSettings_languageEs": "Spanyol",
-  "appSettings_languageDe": "Német",
-  "appSettings_languagePl": "Lengyel",
-  "appSettings_languageSl": "szlovén nyelv",
-  "appSettings_languagePt": "Portugál",
-  "appSettings_languageIt": "Olasz",
-  "appSettings_languageZh": "Kínai",
-  "appSettings_languageSv": "Svéd",
-  "appSettings_languageNl": "Hollandi",
-  "appSettings_languageSk": "Szlovén nyelvre fordítás",
-  "appSettings_languageBg": "Bulgár",
-  "appSettings_languageRu": "Orosz",
-  "appSettings_languageUk": "Украинский",
-  "appSettings_enableMessageTracing": "Engedje meg a üzenetek nyomon követését",
-  "appSettings_enableMessageTracingSubtitle": "Adja meg a üzenetek részletes útvonal- és időzítési adatokat.",
+  "appSettings_languageSystem": "Rendszer alapértelmezett",
+  "appSettings_languageEn": "angol",
+  "appSettings_languageFr": "Français",
+  "appSettings_languageEs": "Español",
+  "appSettings_languageDe": "Deutsch",
+  "appSettings_languagePl": "Polski",
+  "appSettings_languageSl": "Slovenščina",
+  "appSettings_languagePt": "Português",
+  "appSettings_languageIt": "Italiano",
+  "appSettings_languageZh": "中文",
+  "appSettings_languageSv": "Svenska",
+  "appSettings_languageNl": "Nederlands",
+  "appSettings_languageSk": "Slovenčina",
+  "appSettings_languageBg": "Български",
+  "appSettings_languageRu": "Русский",
+  "appSettings_languageUk": "Українська",
+  "appSettings_enableMessageTracing": "Üzenetkövetés engedélyezése",
+  "appSettings_enableMessageTracingSubtitle": "Az üzenetek részletes útválasztási és időzítési metaadatainak megjelenítése",
   "appSettings_notifications": "Értesítések",
-  "appSettings_enableNotifications": "Engedélyezze az értesítéseket",
-  "appSettings_enableNotificationsSubtitle": "Kapjon értesítéseket üzenetekről és hirdetésekről.",
-  "appSettings_notificationPermissionDenied": "A értesítési engedély megtagadva",
-  "appSettings_notificationsEnabled": "A figyelmeztetések engedélyezve",
-  "appSettings_notificationsDisabled": "A figyelmeztetések kikapcsolva",
-  "appSettings_messageNotifications": "Üzenet értesítések",
-  "appSettings_messageNotificationsSubtitle": "A figyelmeztetést megjelenítve, amikor új üzenet érkezik",
-  "appSettings_channelMessageNotifications": "Csatorna-üzenetek értesítése",
-  "appSettings_channelMessageNotificationsSubtitle": "A figyelmeztetést megjelenítve, amikor új üzenet érkezik a csatornáról",
-  "appSettings_advertisementNotifications": "Reklám értesítések",
-  "appSettings_advertisementNotificationsSubtitle": "A figyelmeztetést megjelenítve, amikor új csomópontok kerülnek felfedezésre.",
-  "appSettings_messaging": "Üzenetek küldése",
-  "appSettings_clearPathOnMaxRetry": "Egyértelmű út a Max Retry funkció használatával",
-  "appSettings_clearPathOnMaxRetrySubtitle": "A kapcsolat visszaállítás 5 sikertelen továbbítás után",
-  "appSettings_pathsWillBeCleared": "Ha 5-szer sikertelenül próbálunk, a útvonalat automatikusan tisztítjuk.",
-  "appSettings_pathsWillNotBeCleared": "A utak automatikusan nem tisztítódnak.",
-  "appSettings_autoRouteRotation": "Autóútok forgása",
-  "appSettings_autoRouteRotationSubtitle": "Válasszon a legjobb útvonalak között, vagy válassza a vízözön-módot.",
-  "appSettings_autoRouteRotationEnabled": "Az automatikus útvonalváltás engedélyezve",
-  "appSettings_autoRouteRotationDisabled": "Az automatikus útvonal-választás funkció kikapcsolva.",
-  "appSettings_maxRouteWeight": "Maximális útvonal súly",
-  "appSettings_maxRouteWeightSubtitle": "A lehető legnagyobb súly, amit egy útvonal sikeres szállítmányok során összegyűjthet.",
-  "appSettings_initialRouteWeight": "A kezdeti útvonal súlya",
-  "appSettings_initialRouteWeightSubtitle": "Az új, felfedezett útvonalakhoz tartozó kezdeti súly",
-  "appSettings_routeWeightSuccessIncrement": "Sikerhez vezető növelés",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "A sikeresen teljesített útvonalhoz hozzáadott súly.",
-  "appSettings_routeWeightFailureDecrement": "Hibás súly csökkenése",
-  "appSettings_routeWeightFailureDecrementSubtitle": "A jártatásból eltávolított súly, ami a sikertelen szállítás következménye.",
-  "appSettings_maxMessageRetries": "Maximális üzenetek újraküldési próbálkozások",
-  "appSettings_maxMessageRetriesSubtitle": "A próbálkozások száma, mielőtt egy üzenetet hibásnak jelölünk.",
+  "appSettings_enableNotifications": "Értesítések engedélyezése",
+  "appSettings_enableNotificationsSubtitle": "Értesítések fogadása üzenetekről és hirdetésekről",
+  "appSettings_notificationPermissionDenied": "Értesítési engedély megtagadva",
+  "appSettings_notificationsEnabled": "Értesítések engedélyezve",
+  "appSettings_notificationsDisabled": "Az értesítések letiltva",
+  "appSettings_messageNotifications": "Üzenetértesítések",
+  "appSettings_messageNotificationsSubtitle": "Értesítés megjelenítése új üzenetek fogadásakor",
+  "appSettings_channelMessageNotifications": "Csatorna üzenetek értesítései",
+  "appSettings_channelMessageNotificationsSubtitle": "Értesítés megjelenítése csatornaüzenetek fogadásakor",
+  "appSettings_advertisementNotifications": "Reklám Értesítések",
+  "appSettings_advertisementNotificationsSubtitle": "Értesítés megjelenítése új csomópontok felfedezésekor",
+  "appSettings_messaging": "Üzenetküldés",
+  "appSettings_clearPathOnMaxRetry": "Útvonal törlése a Max. újrapróbálkozásnál",
+  "appSettings_clearPathOnMaxRetrySubtitle": "Állítsa vissza a kapcsolati elérési utat 5 sikertelen küldési kísérlet után",
+  "appSettings_pathsWillBeCleared": "Az elérési utak 5 sikertelen újrapróbálkozás után törlődnek",
+  "appSettings_pathsWillNotBeCleared": "Az útvonalak nem törlődnek automatikusan",
+  "appSettings_autoRouteRotation": "Auto Route Rotation",
+  "appSettings_autoRouteRotationSubtitle": "Váltson a legjobb útvonalak és az elárasztási mód között",
+  "appSettings_autoRouteRotationEnabled": "Az automatikus útvonalforgatás engedélyezve",
+  "appSettings_autoRouteRotationDisabled": "Az automatikus útvonalforgatás letiltva",
+  "appSettings_maxRouteWeight": "Maximális útvonalsúly",
+  "appSettings_maxRouteWeightSubtitle": "Maximális súly, amelyet egy útvonal felhalmozhat a sikeres szállításokból",
+  "appSettings_initialRouteWeight": "Az útvonal kezdeti súlya",
+  "appSettings_initialRouteWeightSubtitle": "Kezdősúly az újonnan felfedezett utakhoz",
+  "appSettings_routeWeightSuccessIncrement": "Siker súlynövekedés",
+  "appSettings_routeWeightSuccessIncrementSubtitle": "Súly hozzáadva egy útvonalhoz a sikeres szállítás után",
+  "appSettings_routeWeightFailureDecrement": "Hiba súlycsökkentés",
+  "appSettings_routeWeightFailureDecrementSubtitle": "Sikertelen szállítás után eltávolított súly az útvonalról",
+  "appSettings_maxMessageRetries": "Üzenet újrapróbálkozások maximális száma",
+  "appSettings_maxMessageRetriesSubtitle": "Az üzenet sikertelenként való megjelölése előtti újrapróbálkozások száma",
   "path_routeWeight": "{weight}/{max}",
   "@path_routeWeight": {
     "placeholders": {
@@ -292,9 +294,9 @@
       }
     }
   },
-  "appSettings_battery": "Akku",
-  "appSettings_batteryChemistry": "Aakkum töltés kémia",
-  "appSettings_batteryChemistryPerDevice": "Beállítások {deviceName}-hez",
+  "appSettings_battery": "Akkumulátor",
+  "appSettings_batteryChemistry": "Akkumulátor kémia",
+  "appSettings_batteryChemistryPerDevice": "Beállítás eszközenként ({deviceName})",
   "@appSettings_batteryChemistryPerDevice": {
     "placeholders": {
       "deviceName": {
@@ -302,20 +304,20 @@
       }
     }
   },
-  "appSettings_batteryChemistryConnectFirst": "Csatlakozzon egy eszközhez, hogy kiválassza",
+  "appSettings_batteryChemistryConnectFirst": "A választáshoz csatlakozzon egy eszközhöz",
   "appSettings_batteryNmc": "18650 NMC (3,0-4,2 V)",
-  "appSettings_batteryLifepo4": "LiFePO4 (2,6–3,65 V)",
+  "appSettings_batteryLifepo4": "LiFePO4 (2,6-3,65 V)",
   "appSettings_batteryLipo": "LiPo (3,0-4,2 V)",
   "appSettings_mapDisplay": "Térkép megjelenítése",
-  "appSettings_showRepeaters": "Megismétlés",
-  "appSettings_showRepeatersSubtitle": "A térképen megjelenítsük a repeater-eket.",
-  "appSettings_showChatNodes": "Megjeleníts kommunikációs pontokat",
-  "appSettings_showChatNodesSubtitle": "A chat-szobákat megjelenítsük a térképen",
-  "appSettings_showOtherNodes": "Mutasson további csomópontokat",
-  "appSettings_showOtherNodesSubtitle": "Mutassa meg a többi hálózati elemet a térképen",
-  "appSettings_timeFilter": "Időbeli szűrés",
-  "appSettings_timeFilterShowAll": "Mutassa meg az összes csomópontot",
-  "appSettings_timeFilterShowLast": "Mutasson az utolsó {hours} órából származó adatokat.",
+  "appSettings_showRepeaters": "Ismétlők megjelenítése",
+  "appSettings_showRepeatersSubtitle": "Az átjátszó csomópontok megjelenítése a térképen",
+  "appSettings_showChatNodes": "Chat csomópontok megjelenítése",
+  "appSettings_showChatNodesSubtitle": "A csevegési csomópontok megjelenítése a térképen",
+  "appSettings_showOtherNodes": "Más csomópontok megjelenítése",
+  "appSettings_showOtherNodesSubtitle": "Más csomóponttípusok megjelenítése a térképen",
+  "appSettings_timeFilter": "Időszűrő",
+  "appSettings_timeFilterShowAll": "Az összes csomópont megjelenítése",
+  "appSettings_timeFilterShowLast": "Az elmúlt {hours} óra csomópontjainak megjelenítése",
   "@appSettings_timeFilterShowLast": {
     "placeholders": {
       "hours": {
@@ -324,18 +326,18 @@
     }
   },
   "appSettings_mapTimeFilter": "Térkép időszűrő",
-  "appSettings_showNodesDiscoveredWithin": "Megjeleníts olyan węzveket, amelyek a következő területen lettek felfedezve:",
-  "appSettings_allTime": "Minden időpont",
-  "appSettings_lastHour": "Az utolsó óra",
-  "appSettings_last6Hours": "Az utóban 6 óra",
-  "appSettings_last24Hours": "Az utóbbi 24 óra",
-  "appSettings_lastWeek": "A múlt héten",
-  "appSettings_offlineMapCache": "Offline térkép tárolás",
+  "appSettings_showNodesDiscoveredWithin": "Itt talált csomópontok megjelenítése:",
+  "appSettings_allTime": "Minden alkalommal",
+  "appSettings_lastHour": "Utolsó óra",
+  "appSettings_last6Hours": "Utolsó 6 óra",
+  "appSettings_last24Hours": "Az elmúlt 24 óra",
+  "appSettings_lastWeek": "Múlt héten",
+  "appSettings_offlineMapCache": "Offline térképgyorsítótár",
   "appSettings_unitsTitle": "Egységek",
-  "appSettings_unitsMetric": "Méter (m / kilométer)",
-  "appSettings_unitsImperial": "Királyi (láb / mérföld)",
-  "appSettings_noAreaSelected": "Nincs kiválasztott terület.",
-  "appSettings_areaSelectedZoom": "Kiválasztott terület (zoom: {minZoom}-{maxZoom})",
+  "appSettings_unitsMetric": "Metrikus (m/km)",
+  "appSettings_unitsImperial": "birodalmi (ft/mi)",
+  "appSettings_noAreaSelected": "Nincs kiválasztott terület",
+  "appSettings_areaSelectedZoom": "Kijelölt terület (nagyítás {minZoom}-{maxZoom})",
   "@appSettings_areaSelectedZoom": {
     "placeholders": {
       "minZoom": {
@@ -347,16 +349,16 @@
     }
   },
   "appSettings_debugCard": "Hibakeresés",
-  "appSettings_appDebugLogging": "App-ban történő hibakereséshez használt naplózás",
-  "appSettings_appDebugLoggingSubtitle": "Log alkalmazás hibaelhárítási üzenetek",
-  "appSettings_appDebugLoggingEnabled": "Az alkalmazás hibaelhárítási naplózás engedélyezve",
-  "appSettings_appDebugLoggingDisabled": "Az alkalmazás hibaelhárítási naplózatának bekapcsolása kiküszöbölve",
+  "appSettings_appDebugLogging": "Alkalmazások hibakeresési naplózása",
+  "appSettings_appDebugLoggingSubtitle": "A hibaelhárításhoz naplózza az alkalmazás hibakeresési üzeneteit",
+  "appSettings_appDebugLoggingEnabled": "Alkalmazások hibakeresési naplózása engedélyezve",
+  "appSettings_appDebugLoggingDisabled": "Az alkalmazáshibakeresési naplózás letiltva",
   "contacts_title": "Kapcsolatok",
-  "contacts_noContacts": "Jelenleg még nincs kapcsolat.",
-  "contacts_contactsWillAppear": "A kapcsolatok megjelennek, amikor a eszközök hirdetnek.",
-  "contacts_unread": "Olvasatlan",
-  "contacts_searchContactsNoNumber": "Kapcsolatok keresése...",
-  "contacts_searchContacts": "Keresés {number}-ban {str}…",
+  "contacts_noContacts": "Még nincsenek elérhetőségek",
+  "contacts_contactsWillAppear": "A névjegyek akkor jelennek meg, amikor az eszközök hirdetnek",
+  "contacts_unread": "Nem olvasott",
+  "contacts_searchContactsNoNumber": "Névjegyek keresése...",
+  "contacts_searchContacts": "Keresés a {number}{str} névjegyekben...",
   "@contacts_searchContacts": {
     "placeholders": {
       "number": {
@@ -367,7 +369,7 @@
       }
     }
   },
-  "contacts_searchFavorites": "Keresés {number}{str}... Kedvencek",
+  "contacts_searchFavorites": "Keresés a {number}{str} Kedvencek között...",
   "@contacts_searchFavorites": {
     "placeholders": {
       "number": {
@@ -378,7 +380,7 @@
       }
     }
   },
-  "contacts_searchUsers": "Search {number}{str} Users...",
+  "contacts_searchUsers": "Keresés a {number}{str} felhasználók között...",
   "@contacts_searchUsers": {
     "placeholders": {
       "number": {
@@ -389,7 +391,7 @@
       }
     }
   },
-  "contacts_searchRepeaters": "Keresés {number}-on, {str} típusú adóállomások között...",
+  "contacts_searchRepeaters": "Keresés a {number}{str} átjátszók között...",
   "@contacts_searchRepeaters": {
     "placeholders": {
       "number": {
@@ -400,7 +402,7 @@
       }
     }
   },
-  "contacts_searchRoomServers": "Keresés {number}-ban {str}...",
+  "contacts_searchRoomServers": "Keresés a {number}{str} szobaszervereken...",
   "@contacts_searchRoomServers": {
     "placeholders": {
       "number": {
@@ -411,10 +413,10 @@
       }
     }
   },
-  "contacts_noUnreadContacts": "Nincs olvasatlan üzenetek",
-  "contacts_noContactsFound": "Nincs megtalálva semmilyen kapcsolat vagy csoport.",
-  "contacts_deleteContact": "Kapcsolattól töröl",
-  "contacts_removeConfirm": "Hogy töröljem a {contactName} nevű személyt a kontaktlistából?",
+  "contacts_noUnreadContacts": "Nincsenek olvasatlan névjegyek",
+  "contacts_noContactsFound": "Nem található névjegy vagy csoport",
+  "contacts_deleteContact": "Névjegy törlése",
+  "contacts_removeConfirm": "Eltávolítja a {contactName} alkalmazást a névjegyek közül?",
   "@contacts_removeConfirm": {
     "placeholders": {
       "contactName": {
@@ -422,13 +424,13 @@
       }
     }
   },
-  "contacts_manageRepeater": "Ellenőriző eszköz kezelése",
-  "contacts_manageRoom": "A szobai szerver kezelése",
-  "contacts_roomLogin": "Szoba szerverbe való bejelentkezés",
-  "contacts_openChat": "Nyitott beszélgetés",
-  "contacts_editGroup": "Edit csoport",
+  "contacts_manageRepeater": "Repeater kezelése",
+  "contacts_manageRoom": "Szobaszerver kezelése",
+  "contacts_roomLogin": "Szobaszerver bejelentkezés",
+  "contacts_openChat": "Nyissa meg a Chat lehetőséget",
+  "contacts_editGroup": "Csoport szerkesztése",
   "contacts_deleteGroup": "Csoport törlése",
-  "contacts_deleteGroupConfirm": "Hogy töröljem a \"{groupName}\"-t?",
+  "contacts_deleteGroupConfirm": "Eltávolítja a következőt: \"{groupName}\"?",
   "@contacts_deleteGroupConfirm": {
     "placeholders": {
       "groupName": {
@@ -438,9 +440,9 @@
   },
   "contacts_newGroup": "Új csoport",
   "contacts_groupName": "Csoport neve",
-  "contacts_groupNameRequired": "A csoportnak meg kell adni a nevét.",
-  "contacts_groupNameReserved": "Ez a csoportnév foglalt",
-  "contacts_groupAlreadyExists": "A \"{name}\" nevű csoport már létezik.",
+  "contacts_groupNameRequired": "A csoportnév megadása kötelező",
+  "contacts_groupNameReserved": "Ez a csoportnév fenntartva",
+  "contacts_groupAlreadyExists": "A \"{name}\" csoport már létezik",
   "@contacts_groupAlreadyExists": {
     "placeholders": {
       "name": {
@@ -448,11 +450,11 @@
       }
     }
   },
-  "contacts_filterContacts": "Szűrj kontaktokat...",
-  "contacts_noContactsMatchFilter": "Nincs találat a megadott szűrés alapján.",
+  "contacts_filterContacts": "Névjegyek szűrése...",
+  "contacts_noContactsMatchFilter": "Egyetlen névjegy sem felel meg a szűrőnek",
   "contacts_noMembers": "Nincsenek tagok",
-  "contacts_lastSeenNow": "utóbbi időben",
-  "contacts_lastSeenMinsAgo": "~ {minutes} perc",
+  "contacts_lastSeenNow": "nemrég",
+  "contacts_lastSeenMinsAgo": "~ {minutes} min.",
   "@contacts_lastSeenMinsAgo": {
     "placeholders": {
       "minutes": {
@@ -460,7 +462,7 @@
       }
     }
   },
-  "contacts_lastSeenHourAgo": "Kb. 1 óra",
+  "contacts_lastSeenHourAgo": "~ 1 óra",
   "contacts_lastSeenHoursAgo": "~ {hours} óra",
   "@contacts_lastSeenHoursAgo": {
     "placeholders": {
@@ -469,8 +471,8 @@
       }
     }
   },
-  "contacts_lastSeenDayAgo": "Kb. 1 nap",
-  "contacts_lastSeenDaysAgo": "~ {days} days",
+  "contacts_lastSeenDayAgo": "~ 1 nap",
+  "contacts_lastSeenDaysAgo": "~ {days} nap",
   "@contacts_lastSeenDaysAgo": {
     "placeholders": {
       "days": {
@@ -479,11 +481,11 @@
     }
   },
   "channels_title": "Csatornák",
-  "channels_noChannelsConfigured": "Nincs konfigurált csatorna.",
-  "channels_addPublicChannel": "Hozzon létre nyilvános csatornát",
-  "channels_searchChannels": "Keresési opciók...",
-  "channels_noChannelsFound": "Nincs megtalálható csatorna",
-  "channels_channelIndex": "{index}-os csatorna",
+  "channels_noChannelsConfigured": "Nincsenek konfigurálva csatornák",
+  "channels_addPublicChannel": "Nyilvános csatorna hozzáadása",
+  "channels_searchChannels": "Csatornák keresése...",
+  "channels_noChannelsFound": "Nem található csatorna",
+  "channels_channelIndex": "Csatorna {index}",
   "@channels_channelIndex": {
     "placeholders": {
       "index": {
@@ -491,13 +493,13 @@
       }
     }
   },
-  "channels_public": "A nyilvánosság számára",
-  "channels_private": "Személyes",
+  "channels_public": "Nyilvános",
+  "channels_private": "Magán",
   "channels_editChannel": "Csatorna szerkesztése",
-  "channels_muteChannel": "Csendes csatorna",
-  "channels_unmuteChannel": "Engedje be a hangot",
-  "channels_deleteChannel": "Mozdony törlése",
-  "channels_deleteChannelConfirm": "Törlés {name}? Ez nem visszafordítható.",
+  "channels_muteChannel": "Csatorna némítása",
+  "channels_unmuteChannel": "Csatorna némításának feloldása",
+  "channels_deleteChannel": "Csatorna törlése",
+  "channels_deleteChannelConfirm": "Törli a következőt: \"{name}\"? Ezt nem lehet visszavonni.",
   "@channels_deleteChannelConfirm": {
     "placeholders": {
       "name": {
@@ -505,7 +507,7 @@
       }
     }
   },
-  "channels_channelDeleteFailed": "Nem sikerült törölni a \"{name}\" nevű csatornát.",
+  "channels_channelDeleteFailed": "Nem sikerült törölni a \"{name}\" csatornát",
   "@channels_channelDeleteFailed": {
     "placeholders": {
       "name": {
@@ -513,7 +515,7 @@
       }
     }
   },
-  "channels_channelDeleted": "A \"{name}\" nevű csatorna törölve",
+  "channels_channelDeleted": "A \"{name}\" csatorna törölve",
   "@channels_channelDeleted": {
     "placeholders": {
       "name": {
@@ -521,15 +523,15 @@
       }
     }
   },
-  "channels_addChannel": "Csatorna hozzáadása",
-  "channels_channelIndexLabel": "Csatorna index",
+  "channels_addChannel": "Csatorna hozzáadása lehetőségre",
+  "channels_channelIndexLabel": "Csatorna indexe",
   "channels_channelName": "Csatorna neve",
-  "channels_usePublicChannel": "Használja a nyilvános csatornát",
-  "channels_standardPublicPsk": "Általános, állami által finanszírozott PSK",
-  "channels_pskHex": "PSK (Hexadecimális kód)",
-  "channels_generateRandomPsk": "Véletlenszerűen generáljon PSK-t",
-  "channels_enterChannelName": "Kérjük, adja meg egy csatorna nevét",
-  "channels_pskMustBe32Hex": "A PSK 32-bázisú hexadecimális karakterből áll.",
+  "channels_usePublicChannel": "Nyilvános csatorna használata",
+  "channels_standardPublicPsk": "Normál nyilvános PSK",
+  "channels_pskHex": "PSK (Hex)",
+  "channels_generateRandomPsk": "Véletlenszerű PSK generálása",
+  "channels_enterChannelName": "Kérjük, adja meg a csatorna nevét",
+  "channels_pskMustBe32Hex": "A PSK-nak 32 hexadecimális karakterből kell állnia",
   "channels_channelAdded": "A \"{name}\" csatorna hozzáadva",
   "@channels_channelAdded": {
     "placeholders": {
@@ -538,7 +540,7 @@
       }
     }
   },
-  "channels_editChannelTitle": "Módosítsd a csatornát {index}",
+  "channels_editChannelTitle": "Csatorna szerkesztése {index}",
   "@channels_editChannelTitle": {
     "placeholders": {
       "index": {
@@ -546,24 +548,24 @@
       }
     }
   },
-  "channels_smazCompression": "SMAZ kompresszió",
-  "channels_cyr2latCompression": "Cyr2Lat kompresszió",
-  "channels_cyr2latCompressionDscr": "Néhány Cirill betűt Latin betűkkel helyettesít küldéskor.",
-  "channels_cyr2latSettingsHeading": "Cyr2Lat beállítások",
-  "channels_cyr2latSettingsSubheading": "Helyettesítési lista",
-  "channels_cyr2latSettingsDscr": "A karakterhelyettesítési JSON-konfiguráció szerkesztése",
-  "channels_cyr2latSettingsDialogHint": "JSON-csere táblázat",
-  "channels_cyr2latSettingsDialogWrongJSON": "Hibás JSON: {error}",
-  "settings_cyr2latProfileAdd": "Cyr2Lat-profil hozzáadása",
+  "channels_smazCompression": "SMAZ tömörítés",
+  "channels_cyr2latCompression": "Cyr2Lat tömörítés",
+  "channels_cyr2latCompressionDscr": "Küldéskor egyes cirill karaktereket latin karakterekre cserél.",
+  "channels_cyr2latSettingsHeading": "Cyr2Lat beállítás",
+  "channels_cyr2latSettingsSubheading": "A helyettesítők listája",
+  "channels_cyr2latSettingsDscr": "Szerkessze a karaktercsere JSON-konfigurációját",
+  "channels_cyr2latSettingsDialogHint": "JSON cseretérkép",
+  "channels_cyr2latSettingsDialogWrongJSON": "Érvénytelen JSON: {error}",
+  "settings_cyr2latProfileAdd": "Cyr2Lat profil hozzáadása",
   "settings_cyr2latProfileName": "Profil neve",
-  "settings_cyr2latProfileNameEmpty": "A profil neve nem lehet üres",
-  "settings_cyr2latProfileAdded": "A profil hozzáadása sikeres",
-  "settings_cyr2latProfileUpdated": "A profil frissítése sikeres",
-  "settings_cyr2latProfileEdit": "Cyr2Lat profil szerkesztése",
+  "settings_cyr2latProfileNameEmpty": "A profilnév nem lehet üres",
+  "settings_cyr2latProfileAdded": "A profil sikeresen hozzáadva",
+  "settings_cyr2latProfileUpdated": "A profil sikeresen frissítve",
+  "settings_cyr2latProfileEdit": "Szerkessze a Cyr2Lat profilt",
   "settings_cyr2latProfileDelete": "Cyr2Lat profil törlése",
-  "settings_cyr2latProfileDeleted": "A profil törlése sikeresen megtörtént",
-  "settings_cyr2latProfileDeleteDscr": "Biztosan törölni szeretné a \"{name}\" profilt?",
-  "channels_channelUpdated": "A {name} csatorna frissítve",
+  "settings_cyr2latProfileDeleted": "A profil sikeresen törölve",
+  "settings_cyr2latProfileDeleteDscr": "Biztos benne, hogy törölni kívánja a(z) \"{name}\" profilt?",
+  "channels_channelUpdated": "A \"{name}\" csatorna frissítve",
   "@channels_channelUpdated": {
     "placeholders": {
       "name": {
@@ -571,28 +573,32 @@
       }
     }
   },
-  "channels_publicChannelAdded": "A nyilvános csatorna hozzáadva",
-  "channels_sortBy": "Szűrés",
-  "channels_sortManual": "Használati útmutató",
+  "channels_publicChannelAdded": "Nyilvános csatorna hozzáadva",
+  "channels_sortBy": "Rendezés",
+  "channels_sortManual": "Kézikönyv",
   "channels_sortAZ": "A-Z",
-  "channels_sortLatestMessages": "Legfrissebb üzenetek",
-  "channels_sortUnread": "Olvasatlan",
-  "channels_createPrivateChannel": "Létrehoz egy privát csatornát",
-  "channels_createPrivateChannelDesc": "Titkos kulcs segítségével védelem.",
-  "channels_joinPrivateChannel": "Csatlakozzon egy privát csatornához",
-  "channels_joinPrivateChannelDesc": "Kézzel adja meg a titkos kulcsot.",
+  "channels_sortLatestMessages": "Legújabb üzenetek",
+  "channels_sortUnread": "Nem olvasott",
+  "channels_createPrivateChannel": "Hozzon létre egy privát csatornát",
+  "channels_createPrivateChannelDesc": "Titkos kulccsal biztosítva.",
+  "channels_joinPrivateChannel": "Csatlakozz egy privát csatornához",
+  "channels_joinPrivateChannelDesc": "Adjon meg kézzel egy titkos kulcsot.",
   "channels_joinPublicChannel": "Csatlakozzon a nyilvános csatornához",
   "channels_joinPublicChannelDesc": "Bárki csatlakozhat ehhez a csatornához.",
-  "channels_joinHashtagChannel": "Csatlakozzon egy hashtage-os csatornához",
-  "channels_joinHashtagChannelDesc": "Bárkinek lehet csatlakoznia a hashtagekhez tartozó csatornához.",
-  "channels_scanQrCode": "Scanned egy QR-kódot",
+  "channels_joinHashtagChannel": "Csatlakozz egy Hashtag csatornához",
+  "channels_joinHashtagChannelDesc": "Bárki csatlakozhat a hashtag csatornákhoz.",
+  "channels_scanQrCode": "QR-kód beolvasása",
   "channels_scanQrCodeComingSoon": "Hamarosan",
   "channels_enterHashtag": "Írja be a hashtaget",
-  "channels_hashtagHint": "pl. #csapat",
-  "chat_noMessages": "Még nincs üzenet.",
-  "chat_sendMessageToStart": "Küldj egy üzenetet, hogy elindulj!",
-  "chat_originalMessageNotFound": "A eredeti üzenet nem található.",
-  "chat_replyingTo": "Replying to {name}",
+  "channels_hashtagHint": "például #csapat",
+  "channels_changeWidgetColor": "Widget színe",
+  "channels_changeWidgetTextColor": "A widget szövegének színe",
+  "channels_changeGroupEmpty": "Itt egyelőre üres",
+  "channels_allowOrderingInGroup": "Csatornák rendezésének engedélyezése a csoporton belül",
+  "chat_noMessages": "Még nincsenek üzenetek",
+  "chat_sendMessageToStart": "A kezdéshez küldjön üzenetet",
+  "chat_originalMessageNotFound": "Az eredeti üzenet nem található",
+  "chat_replyingTo": "Válasz erre: {name}",
   "@chat_replyingTo": {
     "placeholders": {
       "name": {
@@ -600,7 +606,7 @@
       }
     }
   },
-  "chat_replyTo": "Reply to {name}",
+  "chat_replyTo": "Válasz erre: {name}",
   "@chat_replyTo": {
     "placeholders": {
       "name": {
@@ -608,8 +614,8 @@
       }
     }
   },
-  "chat_location": "Helyszín",
-  "chat_sendMessageTo": "Küldj üzenetet {contactName}-nek",
+  "chat_location": "hely",
+  "chat_sendMessageTo": "Üzenet küldése a következő címre: {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
       "contactName": {
@@ -617,8 +623,8 @@
       }
     }
   },
-  "chat_typeMessage": "Írjon üzenetet...",
-  "chat_messageTooLong": "A üzenet túl hosszú (a maximális {maxBytes} bájt).",
+  "chat_typeMessage": "Írjon be egy üzenetet...",
+  "chat_messageTooLong": "Az üzenet túl hosszú (max. {maxBytes} bájt).",
   "@chat_messageTooLong": {
     "placeholders": {
       "maxBytes": {
@@ -628,8 +634,8 @@
   },
   "chat_messageCopied": "Üzenet másolva",
   "chat_messageDeleted": "Üzenet törölve",
-  "chat_retryingMessage": "Újrapróbálási üzenet",
-  "chat_retryCount": "Újrapróbál {current}/{max}",
+  "chat_retryingMessage": "Üzenet újrapróbálkozása",
+  "chat_retryCount": "Próbálja újra {current}/{max}",
   "@chat_retryCount": {
     "placeholders": {
       "current": {
@@ -640,32 +646,32 @@
       }
     }
   },
-  "chat_sendGif": "Küldj GIF-ot",
+  "chat_sendGif": "GIF küldése",
   "chat_reply": "Válasz",
-  "chat_addReaction": "Hozzon létre reakciót",
-  "chat_me": "Én",
-  "emojiCategorySmileys": "Emoji",
-  "emojiCategoryGestures": "Testmozgások",
-  "emojiCategoryHearts": "Szívak",
-  "emojiCategoryObjects": "Tárgyak",
-  "gifPicker_title": "Válasszon egy GIF-et",
+  "chat_addReaction": "Reakció hozzáadása",
+  "chat_me": "Nekem",
+  "emojiCategorySmileys": "Hangulatjelek",
+  "emojiCategoryGestures": "Gesztusok",
+  "emojiCategoryHearts": "Szívek",
+  "emojiCategoryObjects": "Objektumok",
+  "gifPicker_title": "Válassz egy GIF-et",
   "gifPicker_searchHint": "GIF-ek keresése...",
-  "gifPicker_poweredBy": "Forrás: GIPHY",
-  "gifPicker_noGifsFound": "Nincsenek GIF-ek megtalálva.",
-  "gifPicker_failedLoad": "Nem sikerült betölteni a GIF-fájlokat.",
-  "gifPicker_failedSearch": "Nem sikerült a GIF-eket megtalálni.",
-  "gifPicker_noInternet": "Nincs internetkapcsolat.",
-  "debugLog_appTitle": "App-debug log",
-  "debugLog_bleTitle": "BLE hibajelentő napló",
-  "debugLog_copyLog": "Másolat napló",
-  "debugLog_clearLog": "Jelzett napló",
-  "debugLog_copied": "Hibajelentő napló másolva",
-  "debugLog_bleCopied": "BLE-log másolva",
-  "debugLog_noEntries": "Jelenleg még nem léteznek hibaelhárítási naplókat.",
-  "debugLog_enableInSettings": "Engedje be az alkalmazás hibaelhárítási naplózását a beállítások menüben.",
+  "gifPicker_poweredBy": "Üzemeltető: GIPHY",
+  "gifPicker_noGifsFound": "Nem található GIF",
+  "gifPicker_failedLoad": "Nem sikerült betölteni a GIF-eket",
+  "gifPicker_failedSearch": "Nem sikerült a GIF-ek keresése",
+  "gifPicker_noInternet": "Nincs internet kapcsolat",
+  "debugLog_appTitle": "Alkalmazás hibakeresési naplója",
+  "debugLog_bleTitle": "BLE hibakeresési napló",
+  "debugLog_copyLog": "Napló másolása",
+  "debugLog_clearLog": "Napló törlése",
+  "debugLog_copied": "Hibakeresési napló másolva",
+  "debugLog_bleCopied": "BLE napló másolva",
+  "debugLog_noEntries": "Még nincsenek hibakeresési naplók",
+  "debugLog_enableInSettings": "Engedélyezze az alkalmazás hibakeresési bejelentkezési beállításait",
   "debugLog_frames": "Keretek",
-  "debugLog_rawLogRx": "Az eredeti Log-RX",
-  "debugLog_noBleActivity": "Jelenleg nincs BLE-hez kapcsolódó tevékenység.",
+  "debugLog_rawLogRx": "Nyers Log-RX",
+  "debugLog_noBleActivity": "Még nincs BLE tevékenység",
   "debugFrame_length": "Keret hossza: {count} bájt",
   "@debugFrame_length": {
     "placeholders": {
@@ -682,8 +688,8 @@
       }
     }
   },
-  "debugFrame_textMessageHeader": "Címzett:",
-  "debugFrame_destinationPubKey": "- Célhely: {pubKey}",
+  "debugFrame_textMessageHeader": "Szöveges üzenet keret:",
+  "debugFrame_destinationPubKey": "- Cél PubKey: {pubKey}",
   "@debugFrame_destinationPubKey": {
     "placeholders": {
       "pubKey": {
@@ -699,7 +705,7 @@
       }
     }
   },
-  "debugFrame_flags": "- Jelvények: 0x{value}",
+  "debugFrame_flags": "- Zászlók: 0x{value}",
   "@debugFrame_flags": {
     "placeholders": {
       "value": {
@@ -707,7 +713,7 @@
       }
     }
   },
-  "debugFrame_textType": "- Tartalom típusa: {type} ({label})",
+  "debugFrame_textType": "- Szöveg típusa: {type} ({label})",
   "@debugFrame_textType": {
     "placeholders": {
       "type": {
@@ -718,9 +724,9 @@
       }
     }
   },
-  "debugFrame_textTypeCli": "Parancssori felület (CLI)",
-  "debugFrame_textTypePlain": "Egyszerű, alap, hagyományos",
-  "debugFrame_text": "- Tartalom: \"{text}\"",
+  "debugFrame_textTypeCli": "CLI",
+  "debugFrame_textTypePlain": "Egyszerű",
+  "debugFrame_text": "- Szöveg: \"{text}\"",
   "@debugFrame_text": {
     "placeholders": {
       "text": {
@@ -728,7 +734,7 @@
       }
     }
   },
-  "debugFrame_hexDump": "Hex-dump:",
+  "debugFrame_hexDump": "Hex dump:",
   "chat_pathManagement": "Útvonal-kezelés",
   "chat_ShowAllPaths": "Mutasson meg minden útvonalat",
   "chat_routingMode": "Útvonal-kezelési mód",
@@ -747,17 +753,17 @@
     }
   },
   "chat_successes": "sikerek",
-  "chat_removePath": "Törölje a elérési útvonalat",
-  "chat_noPathHistoryYet": "Még nincs útvonal-történet.\nKüldjön egy üzenetet, hogy megtudja a lehetséges útvonalakat.",
+  "chat_removePath": "Távolítsa el az útvonalat",
+  "chat_noPathHistoryYet": "Még nincs úttörténet.\nÜzenet küldése utak felfedezéséhez.",
   "chat_pathActions": "Céltúrások:",
   "chat_setCustomPath": "Beállítsd a saját útvonalat",
   "chat_setCustomPathSubtitle": "Kézzel megadott útvonal",
   "chat_clearPath": "Egyértelmű út",
   "chat_clearPathSubtitle": "A parancs új küldéskor újra kell aktivizálnia.",
-  "chat_pathCleared": "Útvonal cleared. A következő üzenet újból feltérképezheti az útvonalat.",
+  "chat_pathCleared": "Út megtisztítva. A következő üzenet újra felfedezi az útvonalat.",
   "chat_floodModeSubtitle": "Használja a \"útvonal\" kapcsolót az alkalmazás sávjában.",
   "chat_floodModeEnabled": "Árvízvédelmi mód bekapcsolva. A visszaállítás a alkalmazásban található útvonal ikon segítségével.",
-  "chat_fullPath": "Teljes elérési út",
+  "chat_fullPath": "Teljes útvonal",
   "chat_pathDetailsNotAvailable": "Az útvonal részletei még nem elérhetők. Próbálja meg küldeni egy üzenetet, hogy frissítse az információkat.",
   "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
   "@chat_pathSetHops": {
@@ -770,16 +776,16 @@
       }
     }
   },
-  "chat_pathSavedLocally": "Helyileg mentve. Kapcsolódjon a szinkronizáláshoz.",
-  "chat_pathDeviceConfirmed": "A készülék megvan.",
-  "chat_pathDeviceNotConfirmed": "A készülék még nem bizonyított.",
-  "chat_type": "Típus",
-  "chat_path": "Út",
-  "chat_publicKey": "Nyelvkönyv",
-  "chat_compressOutgoingMessages": "A küldött üzenetek tömörítése",
-  "chat_floodForced": "Áradás (kényszerített)",
-  "chat_directForced": "Közvetlen (erélyes)",
-  "chat_hopsForced": "{count} ánusz (erővel)",
+  "chat_pathSavedLocally": "Helyben mentve. Csatlakozás a szinkronizáláshoz.",
+  "chat_pathDeviceConfirmed": "Az eszköz megerősítve.",
+  "chat_pathDeviceNotConfirmed": "Az eszköz még nincs megerősítve.",
+  "chat_type": "Írja be",
+  "chat_path": "Útvonal",
+  "chat_publicKey": "Nyilvános kulcs",
+  "chat_compressOutgoingMessages": "A kimenő üzenetek tömörítése",
+  "chat_floodForced": "Árvíz (kényszerített)",
+  "chat_directForced": "Közvetlen (kényszerített)",
+  "chat_hopsForced": "{count} ugrás (kényszerített)",
   "@chat_hopsForced": {
     "placeholders": {
       "count": {
@@ -787,9 +793,9 @@
       }
     }
   },
-  "chat_floodAuto": "Vízosztás (autó)",
+  "chat_floodAuto": "Árvíz (automatikus)",
   "chat_direct": "Közvetlen",
-  "chat_poiShared": "Közös erőforrás",
+  "chat_poiShared": "POI megosztva",
   "chat_unread": "Olvasatlan: {count}",
   "@chat_unread": {
     "placeholders": {
@@ -798,10 +804,10 @@
       }
     }
   },
-  "chat_openLink": "Nyisd meg a linket?",
-  "chat_openLinkConfirmation": "Szeretnéd megnyitni ezt a linket a böngésződben?",
+  "chat_openLink": "Link megnyitása?",
+  "chat_openLinkConfirmation": "Meg akarja nyitni ezt a hivatkozást a böngészőjében?",
   "chat_open": "Nyitott",
-  "chat_couldNotOpenLink": "Nem sikerült megnyitni a hivat: {url}",
+  "chat_couldNotOpenLink": "Nem sikerült megnyitni a linket: {url}",
   "@chat_couldNotOpenLink": {
     "placeholders": {
       "url": {
@@ -809,13 +815,13 @@
       }
     }
   },
-  "chat_invalidLink": "Érvénytelen hivatkozás formátum",
-  "map_title": "Grafikus ábrázás",
-  "map_lineOfSight": "Látási vonal",
-  "map_losScreenTitle": "Látási vonal",
-  "map_noNodesWithLocation": "Nincs olyan adatpont, amelyhez helyszín-információk tartoznak.",
-  "map_nodesNeedGps": "A pontoknak meg kell osztaniuk GPS koordinátáikat, hogy megjelenjenek a térképen.",
-  "map_nodesCount": "Csúcsok: {count}",
+  "chat_invalidLink": "Érvénytelen linkformátum",
+  "map_title": "Csomópont térkép",
+  "map_lineOfSight": "Látóvonal",
+  "map_losScreenTitle": "Látóvonal",
+  "map_noNodesWithLocation": "Nincsenek helyadatokkal rendelkező csomópontok",
+  "map_nodesNeedGps": "A csomópontoknak meg kell osztaniuk GPS-koordinátáikat\nhogy megjelenjen a térképen",
+  "map_nodesCount": "Csomópontok: {count}",
   "@map_nodesCount": {
     "placeholders": {
       "count": {
@@ -823,7 +829,7 @@
       }
     }
   },
-  "map_pinsCount": "Csapok: {count}",
+  "map_pinsCount": "Pins: {count}",
   "@map_pinsCount": {
     "placeholders": {
       "count": {
@@ -833,26 +839,26 @@
   },
   "map_chat": "Csevegés",
   "map_repeater": "Ismétlő",
-  "map_room": "szoba",
+  "map_room": "Szoba",
   "map_sensor": "Érzékelő",
-  "map_pinDm": "Jel (DM)",
-  "map_pinPrivate": "Titkos (privát)",
-  "map_pinPublic": "Jelmez (nyilvános)",
-  "map_lastSeen": "Utoljára látva",
-  "map_disconnectConfirm": "Biztosan szeretné kiírni ezt a készüléket?",
-  "map_from": "Attól",
+  "map_pinDm": "Pin (DM)",
+  "map_pinPrivate": "Pin (privát)",
+  "map_pinPublic": "Pin (nyilvános)",
+  "map_lastSeen": "Utoljára látott",
+  "map_disconnectConfirm": "Biztosan le akarja kapcsolni ezt az eszközt?",
+  "map_from": "Tól",
   "map_source": "Forrás",
-  "map_flags": "Zászló",
-  "map_shareMarkerHere": "Osztja ezt a tartalmat itt",
-  "map_setAsMyLocation": "Állítsa be a jelenlegi helyzetemként",
-  "map_pinLabel": "Címkét ragasztani",
+  "map_flags": "Zászlók",
+  "map_shareMarkerHere": "Oszd meg a jelölőt itt",
+  "map_setAsMyLocation": "Beállítás helyemként",
+  "map_pinLabel": "Kitűzött címke",
   "map_label": "Címke",
-  "map_pointOfInterest": "Érdekes hely",
-  "map_sendToContact": "Kapcsolatfelvételi űrlap",
-  "map_sendToChannel": "Küldés a csatornán",
-  "map_noChannelsAvailable": "Nincs elérhető csatorna.",
-  "map_publicLocationShare": "Térköz, nyilvános hely",
-  "map_publicLocationShareConfirm": "Most egy helyszínt megosztasz a {channelLabel} csatornán. Ez a csatorna nyilvános, és bárki, aki rendelkezik a PSK-val, megtekintheti.",
+  "map_pointOfInterest": "Érdekes pont",
+  "map_sendToContact": "Elküldés a kapcsolattartónak",
+  "map_sendToChannel": "Küldés a csatornára",
+  "map_noChannelsAvailable": "Nincs elérhető csatorna",
+  "map_publicLocationShare": "Nyilvános helymegosztás",
+  "map_publicLocationShareConfirm": "Arra készül, hogy megosszon egy helyet itt: {channelLabel}. Ez a csatorna nyilvános, és a PSK birtokában bárki láthatja.",
   "@map_publicLocationShareConfirm": {
     "placeholders": {
       "channelLabel": {
@@ -860,33 +866,33 @@
       }
     }
   },
-  "map_connectToShareMarkers": "Kapcsolódjon egy eszközhöz, hogy megoszthassa a vonalzókat.",
-  "map_filterNodes": "Szűrési pontok",
-  "map_nodeTypes": "Vonalak típusai",
-  "map_chatNodes": "Csevegési pontok",
-  "map_repeaters": "Újraküldők",
+  "map_connectToShareMarkers": "Csatlakozzon egy eszközhöz a jelölők megosztásához",
+  "map_filterNodes": "Csomópontok szűrése",
+  "map_nodeTypes": "Csomópont típusok",
+  "map_chatNodes": "Chat csomópontok",
+  "map_repeaters": "Ismétlők",
   "map_otherNodes": "Egyéb csomópontok",
-  "map_keyPrefix": "Kulcsfontosságú előtag",
-  "map_filterByKeyPrefix": "Szűrj a kulcsos előtér szerint",
-  "map_publicKeyPrefix": "Névfelhasználó kulc-prefix",
+  "map_keyPrefix": "Kulcselőtag",
+  "map_filterByKeyPrefix": "Szűrés kulcs előtagja szerint",
+  "map_publicKeyPrefix": "Nyilvános kulcs előtagja",
   "map_markers": "Jelölők",
-  "map_showSharedMarkers": "Mutassa meg a közös jeleket",
-  "map_showGuessedLocations": "Megjelenítsa a megjósolt csomópontok helyét",
-  "map_showDiscoveryContacts": "Megjelenítse a Discovery-nál elérhet kontaktokat",
-  "map_guessedLocation": "Tippolt hely",
-  "map_lastSeenTime": "Utoljára megjelent idő",
-  "map_sharedPin": "Gemeinsames PIN-kód",
-  "map_joinRoom": "Csatlakozás a szobához",
-  "map_manageRepeater": "Ellenőriző eszköz kezelése",
-  "map_tapToAdd": "Nyomj meg a csomópontokhoz, hogy hozzáadd őket az útvonalhoz.",
-  "map_runTrace": "Útvonal követés",
-  "map_removeLast": "Törölj utolsó",
-  "map_pathTraceCancelled": "Az útvonal követés megszakadt.",
-  "mapCache_title": "Offline térkép tárolás",
-  "mapCache_selectAreaFirst": "Válasszon egy területet, amelyet először cache-oljon.",
-  "mapCache_noTilesToDownload": "Nincsenek letölthető tile-ok ebben a területben.",
-  "mapCache_downloadTilesTitle": "Letöltsd a tile-okat",
-  "mapCache_downloadTilesPrompt": "Töltse le {count} darab tile-t offline használatra?",
+  "map_showSharedMarkers": "Megosztott jelölők megjelenítése",
+  "map_showGuessedLocations": "Talált csomópont-helyek megjelenítése",
+  "map_showDiscoveryContacts": "Felfedezési névjegyek megjelenítése",
+  "map_guessedLocation": "Talált hely",
+  "map_lastSeenTime": "Utoljára látott időpont",
+  "map_sharedPin": "Megosztott gombostű",
+  "map_joinRoom": "Csatlakozz a szobához",
+  "map_manageRepeater": "Repeater kezelése",
+  "map_tapToAdd": "Érintse meg a csomópontokat, hogy hozzáadja őket az útvonalhoz.",
+  "map_runTrace": "Futtatási útvonal nyomkövetése",
+  "map_removeLast": "Utolsó eltávolítása",
+  "map_pathTraceCancelled": "Útvonal nyomkövetés törölve.",
+  "mapCache_title": "Offline térképgyorsítótár",
+  "mapCache_selectAreaFirst": "Válassza ki a gyorsítótárba helyezendő területet",
+  "mapCache_noTilesToDownload": "Ehhez a területhez nem lehet letölteni csempét",
+  "mapCache_downloadTilesTitle": "Csempe letöltése",
+  "mapCache_downloadTilesPrompt": "Letölti a {count} csempét offline használatra?",
   "@mapCache_downloadTilesPrompt": {
     "placeholders": {
       "count": {
@@ -895,7 +901,7 @@
     }
   },
   "mapCache_downloadAction": "Letöltés",
-  "mapCache_cachedTiles": "Tárolt {count} darab",
+  "mapCache_cachedTiles": "Gyorsítótárazott {count} csempe",
   "@mapCache_cachedTiles": {
     "placeholders": {
       "count": {
@@ -903,7 +909,7 @@
       }
     }
   },
-  "mapCache_cachedTilesWithFailed": "Cached {downloaded} tiles ({failed} failed)",
+  "mapCache_cachedTilesWithFailed": "Gyorsítótárazott {downloaded} csempe ({failed} sikertelen)",
   "@mapCache_cachedTilesWithFailed": {
     "placeholders": {
       "downloaded": {
@@ -914,14 +920,14 @@
       }
     }
   },
-  "mapCache_clearOfflineCacheTitle": "Tiszta offline tárhely",
-  "mapCache_clearOfflineCachePrompt": "Távolítsa el az összes tárolt térképmegjelenítőt?",
-  "mapCache_offlineCacheCleared": "A helyi memóriát töröltük.",
-  "mapCache_noAreaSelected": "Nincs kiválasztott terület.",
-  "mapCache_cacheArea": "Tároló terület",
-  "mapCache_useCurrentView": "Használja a jelenlegi nézetet",
+  "mapCache_clearOfflineCacheTitle": "Offline gyorsítótár törlése",
+  "mapCache_clearOfflineCachePrompt": "Eltávolítja az összes gyorsítótárazott térképcsempét?",
+  "mapCache_offlineCacheCleared": "Offline gyorsítótár törölve",
+  "mapCache_noAreaSelected": "Nincs kiválasztott terület",
+  "mapCache_cacheArea": "Gyorsítótár terület",
+  "mapCache_useCurrentView": "Az aktuális nézet használata",
   "mapCache_zoomRange": "Zoom tartomány",
-  "mapCache_estimatedTiles": "Becsült kerámiák: {count}",
+  "mapCache_estimatedTiles": "Becsült csempék: {count}",
   "@mapCache_estimatedTiles": {
     "placeholders": {
       "count": {
@@ -940,8 +946,8 @@
       }
     }
   },
-  "mapCache_downloadTilesButton": "Letöltsd a tile-okat",
-  "mapCache_clearCacheButton": "Ósztótt adatokat",
+  "mapCache_downloadTilesButton": "Letöltés csempe",
+  "mapCache_clearCacheButton": "Törölje a gyorsítótárat",
   "mapCache_failedDownloads": "Sikertelen letöltések: {count}",
   "@mapCache_failedDownloads": {
     "placeholders": {
@@ -950,7 +956,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "É {north}, D {south}, K {east}, Ny {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -967,8 +973,8 @@
       }
     }
   },
-  "time_justNow": "Most",
-  "time_minutesAgo": "{minutes} perckel ezelőtt",
+  "time_justNow": "Éppen most",
+  "time_minutesAgo": "{minutes} perce",
   "@time_minutesAgo": {
     "placeholders": {
       "minutes": {
@@ -976,7 +982,7 @@
       }
     }
   },
-  "time_hoursAgo": "{hours} óva",
+  "time_hoursAgo": "{hours}órája",
   "@time_hoursAgo": {
     "placeholders": {
       "hours": {
@@ -984,7 +990,7 @@
       }
     }
   },
-  "time_daysAgo": "{days}d ago",
+  "time_daysAgo": "{days}napja",
   "@time_daysAgo": {
     "placeholders": {
       "days": {
@@ -993,32 +999,32 @@
     }
   },
   "time_hour": "óra",
-  "time_hours": "órák",
+  "time_hours": "óra",
   "time_day": "nap",
-  "time_days": "napok",
-  "time_week": "het",
-  "time_weeks": "het, hetek",
+  "time_days": "napokon",
+  "time_week": "hét",
+  "time_weeks": "hét",
   "time_month": "hónap",
-  "time_months": "hónapok",
-  "time_minutes": "percek",
-  "time_allTime": "Bármely időpont",
-  "dialog_disconnect": "Csatlakozást megszakasztani",
-  "dialog_disconnectConfirm": "Biztosan szeretné kiírni ezt a készüléket?",
-  "login_repeaterLogin": "Ismételt bejelentkezés",
-  "login_roomLogin": "Szoba szerverbe való bejelentkezés",
+  "time_months": "hónap",
+  "time_minutes": "jegyzőkönyv",
+  "time_allTime": "Minden idők",
+  "dialog_disconnect": "Leválasztás",
+  "dialog_disconnectConfirm": "Biztosan le akarja kapcsolni ezt az eszközt?",
+  "login_repeaterLogin": "Ismétlő bejelentkezés",
+  "login_roomLogin": "Szobaszerver bejelentkezés",
   "login_password": "Jelszó",
   "login_enterPassword": "Adja meg a jelszót",
-  "login_savePassword": "Mentse el a jelszót",
-  "login_savePasswordSubtitle": "A jelszó biztonságosan tárolódik ezen a készüléken.",
-  "login_repeaterDescription": "Adja meg a repeater (ismétítő) jelszót, hogy hozzáférhessen a beállításokhoz és az állapot információkhoz.",
-  "login_roomDescription": "Adja meg a belépési kódot, hogy hozzáférhessen a beállításokhoz és az állapot információkhoz.",
-  "login_routing": "Útvonal meghatározás",
-  "login_routingMode": "Útvonal-kezelési mód",
-  "login_autoUseSavedPath": "Automatikus (az eddigi útvonal használata)",
-  "login_forceFloodMode": "Erőforrás-alapú áramlás mód",
+  "login_savePassword": "Jelszó mentése",
+  "login_savePasswordSubtitle": "A jelszó biztonságosan lesz tárolva ezen az eszközön",
+  "login_repeaterDescription": "Adja meg az ismétlő jelszavát a vendég vagy adminisztrátori hozzáféréshez.",
+  "login_roomDescription": "Adja meg a szoba jelszavát a vendég vagy adminisztrátori hozzáféréshez.",
+  "login_routing": "Útválasztás",
+  "login_routingMode": "Útválasztási mód",
+  "login_autoUseSavedPath": "Automatikus (mentett útvonal használata)",
+  "login_forceFloodMode": "Force Flood mód",
   "login_managePaths": "Útvonalak kezelése",
   "login_login": "Bejelentkezés",
-  "login_attempt": "Megpróbálás {current}/{max}-adik",
+  "login_attempt": "Kísérlet {current}/{max}",
   "@login_attempt": {
     "placeholders": {
       "current": {
@@ -1029,7 +1035,7 @@
       }
     }
   },
-  "login_failed": "Belépés sikertelen: {error}",
+  "login_failed": "Sikertelen bejelentkezés: {error}",
   "@login_failed": {
     "placeholders": {
       "error": {
@@ -1037,9 +1043,9 @@
       }
     }
   },
-  "login_failedMessage": "Belépés sikertelen. Vagy a jelszó helytelen, vagy a hálózati kapcsolat nem létesül.",
-  "common_reload": "Újra töltés",
-  "common_clear": "Egyértelmű",
+  "login_failedMessage": "Sikertelen bejelentkezés. Vagy hibás a jelszó, vagy az átjátszó nem érhető el.",
+  "common_reload": "Újratöltés",
+  "common_clear": "Világos",
   "path_currentPath": "Jelenlegi útvonal: {path}",
   "@path_currentPath": {
     "placeholders": {
@@ -1063,7 +1069,7 @@
   "path_labelHexPrefixes": "Út (hex-prefixek)",
   "path_helperMaxHops": "A maximális hossz 64 karakter. Minden előző rész 2 hatos számjegyből áll (1 bájt).",
   "path_selectFromContacts": "Válasszon a kontaktlista elembek közül:",
-  "path_noRepeatersFound": "Nincs megtalálva semmilyen ismétlődő vagy helyiség-szolgáltató szervert.",
+  "path_noRepeatersFound": "Nem található átjátszó vagy szobaszerver.",
   "path_customPathsRequire": "Az egyedi útvonalaknak szükségük van átjáró pontokra, amelyek képesek üzeneteket továbbítani.",
   "path_invalidHexPrefixes": "Érvénytelen hexadecimális előtagok: {prefixes}",
   "@path_invalidHexPrefixes": {
@@ -1075,27 +1081,27 @@
   },
   "path_tooLong": "Az út túl hosszú. A maximális engedélyezett lépések száma 64.",
   "path_setPath": "Útvonal meghatározása",
-  "repeater_management": "Adatkapcsolás kezelése",
-  "room_management": "Szoba-szerver kezelés",
-  "repeater_managementTools": "Menedzsmentes eszközök",
+  "repeater_management": "Repeater Management",
+  "room_management": "Szobaszerver-kezelés",
+  "repeater_managementTools": "Kezelőeszközök",
   "repeater_status": "Állapot",
-  "repeater_statusSubtitle": "Megtekintheted a repeater állapotát, statisztikáit és a környező eszközök adatait.",
-  "repeater_telemetry": "Adatvisszaadás",
-  "repeater_telemetrySubtitle": "Tekintsük a szenzorok és a rendszer állapotának adatát",
-  "repeater_cli": "Parancssori felület (CLI)",
-  "repeater_cliSubtitle": "Küldj parancsokat a repeaternek.",
+  "repeater_statusSubtitle": "Tekintse meg az átjátszó állapotát, a statisztikákat és a szomszédokat",
+  "repeater_telemetry": "Telemetria",
+  "repeater_telemetrySubtitle": "Tekintse meg az érzékelők telemetriáját és a rendszerstatisztikát",
+  "repeater_cli": "CLI",
+  "repeater_cliSubtitle": "Parancsok küldése az átjátszónak",
   "repeater_neighbors": "Szomszédok",
-  "repeater_neighborsSubtitle": "Tekintsük a nullás lépésű szomszédokat.",
-  "repeater_settings": "Beállítások",
-  "repeater_settingsSubtitle": "Állítsa be a repeater paramétereket",
-  "repeater_statusTitle": "Adatkapcsolódás állapot",
-  "repeater_routingMode": "Útvonal-kezelési mód",
+  "repeater_neighborsSubtitle": "Tekintse meg a zero hop szomszédokat.",
+  "repeater_settings": "Beállítások elemre",
+  "repeater_settingsSubtitle": "Állítsa be az ismétlő paramétereit",
+  "repeater_statusTitle": "Repeater állapota",
+  "repeater_routingMode": "Útválasztási mód",
   "repeater_autoUseSavedPath": "Automatikus (az eddigi útvonal használata)",
   "repeater_forceFloodMode": "Erőforrás-alapú áramlás mód",
   "repeater_pathManagement": "Útvonal-kezelés",
-  "repeater_refresh": "Újrafriszol",
-  "repeater_statusRequestTimeout": "Az állapotkérés időtúlt.",
-  "repeater_errorLoadingStatus": "Hiba a státusz betöltés közben: {error}",
+  "repeater_refresh": "Frissítés",
+  "repeater_statusRequestTimeout": "Az állapotkérelem időtúllépése lejárt.",
+  "repeater_errorLoadingStatus": "Hiba az állapot betöltésekor: {error}",
   "@repeater_errorLoadingStatus": {
     "placeholders": {
       "error": {
@@ -1104,22 +1110,22 @@
     }
   },
   "repeater_systemInformation": "Rendszerinformációk",
-  "repeater_battery": "Akku",
+  "repeater_battery": "Akkumulátor",
   "repeater_clockAtLogin": "Óra (bejelentkezéskor)",
-  "repeater_uptime": "A rendszer elérhetősége",
-  "repeater_queueLength": "Várakozási sor hossza",
-  "repeater_debugFlags": "Hibakeresési beállítások",
-  "repeater_radioStatistics": "Rádió statisztika",
-  "repeater_lastRssi": "Utolsó RSSI érték",
+  "repeater_uptime": "Üzemidő",
+  "repeater_queueLength": "Sor hossza",
+  "repeater_debugFlags": "Debug Flags",
+  "repeater_radioStatistics": "Rádióstatisztika",
+  "repeater_lastRssi": "Utolsó RSSI",
   "repeater_lastSnr": "Utolsó SNR",
-  "repeater_noiseFloor": "Háttérzaj szint",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
-  "repeater_packetStatistics": "Csomagok statisztikája",
-  "repeater_sent": "Elküldve",
-  "repeater_received": "Megérkezett",
-  "repeater_duplicates": "Duplák",
-  "repeater_daysHoursMinsSecs": "{days} days {hours}h {minutes}m {seconds}s",
+  "repeater_noiseFloor": "Zajpadló",
+  "repeater_txAirtime": "TX műsoridő",
+  "repeater_rxAirtime": "RX műsoridő",
+  "repeater_packetStatistics": "Csomagstatisztika",
+  "repeater_sent": "Küldött",
+  "repeater_received": "Fogadva",
+  "repeater_duplicates": "Ismétlődések",
+  "repeater_daysHoursMinsSecs": "{days} nap {hours}ó {minutes}p {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -1164,7 +1170,7 @@
       }
     }
   },
-  "repeater_duplicatesFloodDirect": "Áradás: {flood}, Közvetlen: {direct}",
+  "repeater_duplicatesFloodDirect": "Árvíz: {flood}, Közvetlen: {direct}",
   "@repeater_duplicatesFloodDirect": {
     "placeholders": {
       "flood": {
@@ -1183,36 +1189,36 @@
       }
     }
   },
-  "repeater_settingsTitle": "Adatátvisszaadási beállítások",
+  "repeater_settingsTitle": "Repeater beállítások",
   "repeater_basicSettings": "Alapbeállítások",
-  "repeater_repeaterName": "Adóállomás neve",
-  "repeater_repeaterNameHelper": "Ez a repeater neve",
-  "repeater_adminPassword": "Adminisztrátori jelszó",
-  "repeater_adminPasswordHelper": "Teljes jogosultságú jelszó",
-  "repeater_guestPassword": "Vendég felhasználói név/jelszó",
-  "repeater_guestPasswordHelper": "Csak olvasási jogosítást biztosító jelszó",
+  "repeater_repeaterName": "Ismétlő neve",
+  "repeater_repeaterNameHelper": "Az átjátszó megjelenítési neve",
+  "repeater_adminPassword": "Admin jelszó",
+  "repeater_adminPasswordHelper": "Teljes hozzáférési jelszó",
+  "repeater_guestPassword": "Vendégjelszó",
+  "repeater_guestPasswordHelper": "Csak olvasható hozzáférési jelszó",
   "repeater_radioSettings": "Rádióbeállítások",
   "repeater_frequencyMhz": "Frekvencia (MHz)",
-  "repeater_frequencyHelper": "300–2500 MHz",
-  "repeater_txPower": "TX Power",
+  "repeater_frequencyHelper": "300-2500 MHz",
+  "repeater_txPower": "TX teljesítmény",
   "repeater_txPowerHelper": "1-30 dBm",
-  "repeater_bandwidth": "Adatkapacitás",
-  "repeater_spreadingFactor": "Terjesztési tényező",
+  "repeater_bandwidth": "Sávszélesség",
+  "repeater_spreadingFactor": "Spreading Factor",
   "repeater_codingRate": "Kódolási sebesség",
-  "repeater_locationSettings": "Helyszínbeállítások",
-  "repeater_latitude": "Nyugat–keleti szélesség",
-  "repeater_latitudeHelper": "Desztes fokok (pl. 37,7749)",
-  "repeater_longitude": "hosszúság",
-  "repeater_longitudeHelper": "Desztes fokok (pl. -122.4194)",
+  "repeater_locationSettings": "Helybeállítások",
+  "repeater_latitude": "Szélesség",
+  "repeater_latitudeHelper": "Tizedes fokozatok (pl. 37,7749)",
+  "repeater_longitude": "Hosszúság",
+  "repeater_longitudeHelper": "Tizedes fokok (pl. -122,4194)",
   "repeater_features": "Jellemzők",
-  "repeater_packetForwarding": "Csomagok továbbítás",
-  "repeater_packetForwardingSubtitle": "Engedje, hogy a repeater továbbítsa a csomagokat.",
-  "repeater_guestAccess": "Vendégek számára elérhető",
-  "repeater_guestAccessSubtitle": "Engedje meg a vendégek számára, hogy csak olvassák a tartalmat",
-  "repeater_privacyMode": "Adatvédelem mód",
-  "repeater_privacyModeSubtitle": "Elrejtse a nevét/a helyszínt az űrlapon",
+  "repeater_packetForwarding": "Csomagtovábbítás",
+  "repeater_packetForwardingSubtitle": "Ismétlő engedélyezése a csomagok továbbításához",
+  "repeater_guestAccess": "Vendég hozzáférés",
+  "repeater_guestAccessSubtitle": "Csak olvasási hozzáférés engedélyezése a vendégek számára",
+  "repeater_privacyMode": "Adatvédelmi mód",
+  "repeater_privacyModeSubtitle": "Név/hely elrejtése a hirdetésekben",
   "repeater_advertisementSettings": "Reklámbeállítások",
-  "repeater_localAdvertInterval": "Helyi hirdetés időtartama",
+  "repeater_localAdvertInterval": "Helyi hirdetési intervallum",
   "repeater_localAdvertIntervalMinutes": "{minutes} perc",
   "@repeater_localAdvertIntervalMinutes": {
     "placeholders": {
@@ -1221,7 +1227,7 @@
       }
     }
   },
-  "repeater_floodAdvertInterval": "Vízosztály-hirdetés időtartama",
+  "repeater_floodAdvertInterval": "Árvízi hirdetési intervallum",
   "repeater_floodAdvertIntervalHours": "{hours} óra",
   "@repeater_floodAdvertIntervalHours": {
     "placeholders": {
@@ -1230,18 +1236,18 @@
       }
     }
   },
-  "repeater_encryptedAdvertInterval": "Kódolt hirdetés-szünet",
+  "repeater_encryptedAdvertInterval": "Titkosított hirdetési időköz",
   "repeater_dangerZone": "Veszélyzóna",
-  "repeater_rebootRepeater": "Újraindítás",
-  "repeater_rebootRepeaterSubtitle": "Indítsa újra a repeater-t.",
-  "repeater_rebootRepeaterConfirm": "Biztosan szeretné újraindítani ezt a repeatert?",
-  "repeater_regenerateIdentityKey": "Újra generálja az azonosító kulcsot",
-  "repeater_regenerateIdentityKeySubtitle": "Új nyilvános/személyes kulcs-párt generáljon",
-  "repeater_regenerateIdentityKeyConfirm": "Ez új azonosítást fog létrehozni a repeater számára. Folytatni?",
-  "repeater_eraseFileSystem": "Törölje a fájlrendszert",
-  "repeater_eraseFileSystemSubtitle": "Formázza a duplázó fájlrendszert.",
-  "repeater_eraseFileSystemConfirm": "FIGYELEM: Ez törli az összes adatot a repeater-en. Ez nem visszafordítható!",
-  "repeater_eraseSerialOnly": "Az Erase funkció csak a soros konzolon érhető el.",
+  "repeater_rebootRepeater": "Reboot Repeater",
+  "repeater_rebootRepeaterSubtitle": "Indítsa újra az átjátszó eszközt",
+  "repeater_rebootRepeaterConfirm": "Biztosan újraindítja ezt az átjátszót?",
+  "repeater_regenerateIdentityKey": "Identitáskulcs újragenerálása",
+  "repeater_regenerateIdentityKeySubtitle": "Új nyilvános/privát kulcspár létrehozása",
+  "repeater_regenerateIdentityKeyConfirm": "Ez új identitást generál az átjátszó számára. Folytatja?",
+  "repeater_eraseFileSystem": "Fájlrendszer törlése",
+  "repeater_eraseFileSystemSubtitle": "Formázza meg az átjátszó fájlrendszert",
+  "repeater_eraseFileSystemConfirm": "FIGYELMEZTETÉS: Ezzel törli az átjátszón lévő összes adatot. Ezt nem lehet visszavonni!",
+  "repeater_eraseSerialOnly": "A törlés csak soros konzolon érhető el.",
   "repeater_commandSent": "Parancs elküldve: {command}",
   "@repeater_commandSent": {
     "placeholders": {
@@ -1250,7 +1256,7 @@
       }
     }
   },
-  "repeater_errorSendingCommand": "Hibás parancs küldés: {error}",
+  "repeater_errorSendingCommand": "Hiba a parancs küldésekor: {error}",
   "@repeater_errorSendingCommand": {
     "placeholders": {
       "error": {
@@ -1258,23 +1264,23 @@
       }
     }
   },
-  "repeater_confirm": "Beküldve",
-  "repeater_settingsSaved": "Beállítások sikeresen mentve",
-  "repeater_rxGain": "Nagyobb RX-jel erősítés",
-  "repeater_rxGainHelper": "Magasabb érzékenység, nagyobb áramfelvétel (csak SX1262/SX1268 esetén)",
-  "repeater_refreshRxGain": "Újraindított, fokozott RX hatás",
-  "repeater_multiAcks": "Többszörös visszaigazolások",
-  "repeater_multiAcksSubtitle": "Ismerje el üzeneteket több úton is, hogy biztosítsa a jobb átadást.",
-  "repeater_refreshMultiAcks": "Frissítse a többször is kapott visszaigazolásokat.",
-  "repeater_networkHealth": "Hálózati állapot",
-  "repeater_loopDetect": "Ciklusok azonosítása",
-  "repeater_loopDetectHelper": "Készíts olyan \"vízfolyást\" megjelenítő csomagokat, amelyek úgy néznek ki, mint egy hibaút.",
-  "repeater_loopDetectOff": "Le, kikap",
+  "repeater_confirm": "Erősítse meg",
+  "repeater_settingsSaved": "A beállítások sikeresen elmentve",
+  "repeater_rxGain": "Megnövelt RX nyereség",
+  "repeater_rxGainHelper": "Nagyobb érzékenység, nagyobb áramfelvétel (csak SX1262/SX1268)",
+  "repeater_refreshRxGain": "Frissítse a megnövelt RX-erősítést",
+  "repeater_multiAcks": "Multi-ACK",
+  "repeater_multiAcksSubtitle": "Nyugtázza az üzeneteket több úton a jobb kézbesítés érdekében",
+  "repeater_refreshMultiAcks": "Többszörös ACK-ek frissítése",
+  "repeater_networkHealth": "Hálózat állapota",
+  "repeater_loopDetect": "Hurokérzékelés",
+  "repeater_loopDetectHelper": "Dobd el az útválasztó huroknak tűnő árvízcsomagokat",
+  "repeater_loopDetectOff": "Le",
   "repeater_loopDetectMinimal": "Minimális",
-  "repeater_loopDetectModerate": "Közepes",
+  "repeater_loopDetectModerate": "Mérsékelt",
   "repeater_loopDetectStrict": "Szigorú",
-  "repeater_dutyCycle": "Munka- és pihenőidő aránya",
-  "repeater_dutyCycleHelper": "A maximális időszámítás százalékos aránya",
+  "repeater_dutyCycle": "Üzemi ciklus",
+  "repeater_dutyCycleHelper": "A műsoridő maximális százaléka",
   "repeater_dutyCyclePercent": "{percent}%",
   "@repeater_dutyCyclePercent": {
     "placeholders": {
@@ -1284,30 +1290,30 @@
     }
   },
   "repeater_ownerInfo": "Üzemeltető információ",
-  "repeater_ownerInfoHelper": "A nyilvánosan elérhető metadatak a repeaterhez",
-  "repeater_refreshOwnerInfo": "Frissítse az üzemeltető adatokat",
-  "repeater_floodMax": "A vízmaximumos ugrások",
-  "repeater_floodMaxHelper": "A legmagasabb szám, amely egy vízszint-csomagban szerepelhet (0-64)",
-  "repeater_advancedSettings": "Haladó",
-  "repeater_advancedSettingsSubtitle": "Erkélő kapcsolók tapasztalt kezelők számára",
-  "repeater_pathHashMode": "Út-hash mód",
-  "repeater_pathHashModeHelper": "A byte-ok, amelyek az alábbi repeater-ek azonosítójának kódolására szolgálnak a flood-útvonal/ciklus-észlelő címkékben. 0=1 byte (256 azonosító, akár 64 útvonal), 1=2 byte (65 000 azonosító, akár 32 útvonal), 2=3 byte (16 millió azonosító, akár 21 útvonal). A v1.13-as verziótól kezdődően és az azt követő verziókban a több byte-os útvonalak megszűntek – csak egyetlen útvonal létesül, miután a hálózat a v1.14-es verzióra vagy az azt követő verzióra frissült.",
-  "repeater_txDelay": "Flood TX késés",
-  "repeater_txDelayHelper": "Újraküldési intervallum árvíz esetén, amely a csomag átviteli idejének (0-2, alapérték 0,5) szorzata. Minél nagyobb az érték, annál kevesebb ütközés, de lassabb a továbbítás.",
-  "repeater_directTxDelay": "Közvetlen TX késés",
-  "repeater_directTxDelayHelper": "A közvetlen (nem tömeges) forgalomhoz tartozó adatcsomagok újrádiózására szolgáló intervallum, amely a csomag átviteli idejének (0-2, alapértelmezett érték 0,3) szorzata.",
-  "repeater_intThresh": "Interferencia határ",
-  "repeater_intThreshHelper": "A határt a rádió zajszintjének kalibrálására állították, így elutasítja a fenti szint feletti interferenciákat. 0 kikapcsol – csak akkor állítsa be, ha zajos frekvencián RX hibákat észlel.",
-  "repeater_agcResetInterval": "AGC visszazárási intervallum",
-  "repeater_agcResetIntervalHelper": "Mennyi időnként kell a rádió automatikus hangerőszabályozását visszaállítani, hogy kijavítsa a problémát? A visszaállítás időtartama: másoderek, amely 4-szeresével osztható. A 0 érték a periodikus visszaállítás kikapcsolását jelzi.",
-  "repeater_actionsTitle": "Tevékenységek",
-  "repeater_sendAdvert": "Eljuttass flood hirdetést",
-  "repeater_sendAdvertSubtitle": "Terjesztse egy árvíz elleni reklámot a hálózaton keresztül.",
-  "repeater_sendAdvertZeroHop": "Küldj egy közvetlen hirdetést",
-  "repeater_sendAdvertZeroHopSubtitle": "Adja közzé egyetlen átjáró hirdetést (nincs átjátszás).",
-  "repeater_clockSync": "Synchronizálja az órát",
-  "repeater_clockSyncSubtitle": "Állítsa be a telefon időzítését a repeaterhez.",
-  "repeater_actionSucceeded": "{action} sikert aratott",
+  "repeater_ownerInfoHelper": "Nyilvános metaadatok ehhez az átjátszóhoz",
+  "repeater_refreshOwnerInfo": "Frissítse az operátor adatait",
+  "repeater_floodMax": "Árvíz max ugrás",
+  "repeater_floodMaxHelper": "Maximum ugrások, amelyeket egy árvízcsomag utazhat (0-64)",
+  "repeater_advancedSettings": "Fejlett",
+  "repeater_advancedSettingsSubtitle": "Hangológombok tapasztalt kezelőknek",
+  "repeater_pathHashMode": "Útvonal hash mód",
+  "repeater_pathHashModeHelper": "Az átjátszó azonosítójának elárasztási útvonal/hurokészlelési címkékbe való kódolására használt bájtok. 0 = 1 bájt (256 azonosító, legfeljebb 64 ugrás), 1 = 2 bájt (65 000 azonosító, legfeljebb 32 ugrás), 2 = 3 bájt (16 millió azonosító, legfeljebb 21 ugrás). A v1.13 és régebbi firmware eldobja a többbájtos elérési utat – csak akkor emelje meg, ha a hálózat a v1.14+ verziót használja.",
+  "repeater_txDelay": "Áradási TX késleltetés",
+  "repeater_txDelayHelper": "Újraküldési térköz az árvízi forgalomhoz, a csomag sugárzási idejének szorzójaként (0-2, alapértelmezett 0,5). Magasabb = kevesebb ütközés, de lassabb szállítás.",
+  "repeater_directTxDelay": "Közvetlen TX késleltetés",
+  "repeater_directTxDelayHelper": "A közvetlen (nem elárasztásos) forgalom újraküldési távolsága a csomag sugárzási idejének szorzójaként (0-2, alapértelmezett 0,3).",
+  "repeater_intThresh": "Interferencia küszöb",
+  "repeater_intThreshHelper": "A küszöbérték átkerült a rádió zajszint-kalibrációjához, így az e szint feletti interferenciát elutasítja. 0 letilt – csak akkor emel, ha zajos sávban RX hibákat lát.",
+  "repeater_agcResetInterval": "AGC reset intervallum",
+  "repeater_agcResetIntervalHelper": "Milyen gyakran kell visszaállítani a rádió automatikus erősítésszabályozását, hogy helyreálljon a beragadt erősítési állapotból. A másodpercek, 4 többszörösére csökkentve. 0 letiltja az időszakos visszaállításokat.",
+  "repeater_actionsTitle": "Akciók",
+  "repeater_sendAdvert": "Árvízhirdetés küldése",
+  "repeater_sendAdvertSubtitle": "Adjon árvízreklámot a hálózaton keresztül",
+  "repeater_sendAdvertZeroHop": "Zéró ugrású hirdetés küldése",
+  "repeater_sendAdvertZeroHopSubtitle": "Egyugrásos hirdetés sugárzása (közvetítés nélkül)",
+  "repeater_clockSync": "Óra szinkronizálása most",
+  "repeater_clockSyncSubtitle": "Tolja a telefon idejét az átjátszóhoz",
+  "repeater_actionSucceeded": "{action} sikerült",
   "@repeater_actionSucceeded": {
     "placeholders": {
       "action": {
@@ -1326,8 +1332,8 @@
       }
     }
   },
-  "repeater_settingsSavedRebootNeeded": "Beállítások mentve – újraindítsa a repeatert, hogy alkalmazza",
-  "repeater_settingsPartialFailure": "Bizonyos beállítások nem sikerültek: {failures}",
+  "repeater_settingsSavedRebootNeeded": "A beállítások mentve – az átjátszó újraindítása az alkalmazáshoz",
+  "repeater_settingsPartialFailure": "Néhány beállítás nem sikerült: {failures}",
   "@repeater_settingsPartialFailure": {
     "placeholders": {
       "failures": {
@@ -1335,7 +1341,7 @@
       }
     }
   },
-  "repeater_errorSavingSettings": "Hibás beállítások mentése: {error}",
+  "repeater_errorSavingSettings": "Hiba a beállítások mentésekor: {error}",
   "@repeater_errorSavingSettings": {
     "placeholders": {
       "error": {
@@ -1343,12 +1349,12 @@
       }
     }
   },
-  "repeater_refreshBasicSettings": "Visszaállítás az alapértékekre",
-  "repeater_refreshRadioSettings": "Frissítse a rádió beállításait",
-  "repeater_refreshTxPower": "Újraindítás TX-támogatással",
-  "repeater_refreshPacketForwarding": "Csomagok továbbításának frissítése",
-  "repeater_refreshGuestAccess": "Újraindítás vendégHozzáférés",
-  "repeater_refreshPrivacyMode": "Visszaállítás a magánéletvédő módra",
+  "repeater_refreshBasicSettings": "Frissítse az alapvető beállításokat",
+  "repeater_refreshRadioSettings": "Frissítse a rádióbeállításokat",
+  "repeater_refreshTxPower": "TX teljesítmény frissítése",
+  "repeater_refreshPacketForwarding": "Csomagtovábbítás frissítése",
+  "repeater_refreshGuestAccess": "Vendég hozzáférés frissítése",
+  "repeater_refreshPrivacyMode": "Frissítse az adatvédelmi módot",
   "repeater_refreshed": "{label} frissítve",
   "@repeater_refreshed": {
     "placeholders": {
@@ -1357,7 +1363,7 @@
       }
     }
   },
-  "repeater_errorRefreshing": "Hiba a {label} frissítés közben",
+  "repeater_errorRefreshing": "Hiba a {label} frissítésekor",
   "@repeater_errorRefreshing": {
     "placeholders": {
       "label": {
@@ -1365,17 +1371,17 @@
       }
     }
   },
-  "repeater_cliTitle": "CLI (parancssori felület)",
-  "repeater_debugNextCommand": "Hibakeresés, következő parancs",
-  "repeater_commandHelp": "Segítség",
-  "repeater_clearHistory": "Egyértelmű történet",
-  "repeater_noCommandsSent": "Még egyik parancsot sem küldtünk.",
-  "repeater_typeCommandOrUseQuick": "Írja be a parancsot alább, vagy használja a gyors parancsokat.",
+  "repeater_cliTitle": "Repeater CLI",
+  "repeater_debugNextCommand": "Debug Next Command",
+  "repeater_commandHelp": "Command Help",
+  "repeater_clearHistory": "Törölje az előzményeket",
+  "repeater_noCommandsSent": "Még nem küldtek parancsot",
+  "repeater_typeCommandOrUseQuick": "Írjon be egy parancsot alább, vagy használjon gyorsparancsokat",
   "repeater_enterCommandHint": "Írja be a parancsot...",
   "repeater_previousCommand": "Előző parancs",
   "repeater_nextCommand": "Következő parancs",
-  "repeater_enterCommandFirst": "Add meg először egy parancsot",
-  "repeater_cliCommandFrameTitle": "CLI parancssor felépítése",
+  "repeater_enterCommandFirst": "Először írjon be egy parancsot",
+  "repeater_cliCommandFrameTitle": "CLI parancskeret",
   "repeater_cliCommandError": "Hiba: {error}",
   "@repeater_cliCommandError": {
     "placeholders": {
@@ -1384,81 +1390,81 @@
       }
     }
   },
-  "repeater_cliQuickGetName": "Kapcsold össze a nevet",
-  "repeater_cliQuickGetRadio": "Szerezd a rádiót",
-  "repeater_cliQuickGetTx": "Szerezd a TX-t",
+  "repeater_cliQuickGetName": "Get Name",
+  "repeater_cliQuickGetRadio": "Szerezz rádiót",
+  "repeater_cliQuickGetTx": "Szerezd meg a TX-et",
   "repeater_cliQuickNeighbors": "Szomszédok",
-  "repeater_cliQuickVersion": "Verzió",
-  "repeater_cliQuickAdvertise": "Hirdetés",
-  "repeater_cliQuickClock": "óra",
-  "repeater_cliHelpAdvert": "Elküldi egy hirdetési csomagot",
-  "repeater_cliHelpReboot": "Újraindítja a készüléket. (Kérjük, vegye figyelembe, hogy valószínűleg \"Időhiba\" üzenetet fog kapni, ami normális)",
-  "repeater_cliHelpClock": "A jelenlegi időt mutatja az egyes eszközök karórája alapján.",
-  "repeater_cliHelpPassword": "Új adminisztrációs jelszót állít be a eszköz számára.",
-  "repeater_cliHelpVersion": "Megjeleníti a készülék verzióját és a szoftver verziószámát.",
-  "repeater_cliHelpClearStats": "Visszaállítja a különböző statisztikai mérőszámokat a nullára.",
-  "repeater_cliHelpSetAf": "Beállítja az idő-szabályozási tényezőt.",
-  "repeater_cliHelpSetTx": "Beállítja a LoRa átviteli teljesítményt dBm-ben (a rendszer újraindításával alkalmazható).",
-  "repeater_cliHelpSetRepeat": "Engedélyezi vagy tiltja meg a repeater szerepet ezen a csomón.",
-  "repeater_cliHelpSetAllowReadOnly": "(Szoba szerver) Ha \"igen\", akkor üres jelszóval történő bejelentkezés engedélyezett lesz, de nem lehet üzeneteket küldeni a szobában. (Csak olvasási funkció)",
-  "repeater_cliHelpSetFloodMax": "Beállítja a bejövő adatcsomagok maximális számát (ha ez a érték nagyobb vagy egyenlő a maximális értékkel, a csomag nem továbbítódik).",
-  "repeater_cliHelpSetIntThresh": "Beállítja az interferencia határértéket (dB-ben). Az alapérték 14. Ha 0-ra állítja, kiküntheti a csatornák közötti interferencia detektálást.",
-  "repeater_cliHelpSetAgcResetInterval": "Beállítja az intervallumot, amely a \"Automatikus gain\" szabályozó újraindításához szükséges. Beállítás értéke 0, ha a funkciót le kell tiltani.",
-  "repeater_cliHelpSetMultiAcks": "Engedélyezi vagy kikapcsolja a „dupla visszaigazolás” funkciót.",
-  "repeater_cliHelpSetAdvertInterval": "Beállítja az időzítő intervallumot percenként, hogy egy helyi (nincs átjáró) hirdetési csomagot küldjen. Beállítás értéke 0, ha a funkciót le szeretné tiltani.",
-  "repeater_cliHelpSetFloodAdvertInterval": "Beállítja az időzítő intervallumot órában, hogy egy \"áramló\" hirdetési üzenetet küldjön. Beállítás értéke 0, ha a funkciót kikapcsolni kell.",
-  "repeater_cliHelpSetGuestPassword": "Beállítja/frissíti a vendég felhasználói fiókot. (Ez lehetővé teszi a visszatérő felhasználók számára, hogy a \"Statistika lekérdezése\" kérést elküldjék)",
-  "repeater_cliHelpSetName": "Megadja az űrlap neve.",
-  "repeater_cliHelpSetLat": "Beállítja az hirdetés térképen megjelenő pont koordinátájának (tizedes fokokban) a latitude-ját.",
-  "repeater_cliHelpSetLon": "Beállítja az hirdetés térképen megjelenő hosszúság koordinátát (tizedes fokokban).",
-  "repeater_cliHelpSetRadio": "Teljesen új rádióparamétereket állít be, és azokat a beállításokba menti. Az alkalmazásához \"újraindítás\" parancs szükséges.",
-  "repeater_cliHelpSetRxDelay": "Beállítások (kísérleti): Alapérték (legalább 1 értékre kell állítani, hogy hatás legyen), amely alapján a fogadott csomagokhoz enyhe késést alkalmazunk, a jelet ereje/pontszám alapján. 0-ra állítva a funkciót lekapcsoljuk.",
-  "repeater_cliHelpSetTxDelay": "Beállítja egy tényezőt, amely a légköri idővel szorozva, egy áramlás-üzem módú csomaghoz, valamint egy véletlenszerű slot-rendszerhez, hogy késleltesse a továbbítását. (az ütközések valószínűségének csökkentése érdekében)",
-  "repeater_cliHelpSetDirectTxDelay": "Hasonló a txdelay-hez, de ebben az esetben egy véletlenszerű késést alkalmazunk a közvetlen módú csomagok továbbításakor.",
-  "repeater_cliHelpSetBridgeEnabled": "Engedélyez/Tiltás a híd funkciójának.",
-  "repeater_cliHelpSetBridgeDelay": "Állíts be egy késleztatást a csomagok újbóli továbbításakor.",
-  "repeater_cliHelpSetBridgeSource": "Döntse el, hogy a híd fogadott vagy elküldött csomagokat fogja-e továbbítani.",
-  "repeater_cliHelpSetBridgeBaud": "Állítsa be a soros kommunikáció sebességét az RS232 hídok számára.",
-  "repeater_cliHelpSetBridgeSecret": "Állítsa be a titkos kapcsolatot az ESPNOW hídokhoz.",
-  "repeater_cliHelpSetAdcMultiplier": "Lehetővé teszi a felhasználónak, hogy egyedi tényezőt állíts be a riportolt akkumulátor feszültségének módosításához (ez csak bizonyos alkatrészeken támogatott).",
-  "repeater_cliHelpTempRadio": "Időjárás szerinti rádióparamétereket állít be a megadott időtartamra, majd visszaállítja az eredeti beállításokat. (Nem menti a beállításokat a beállítások részben).",
-  "repeater_cliHelpSetPerm": "A ACL-t módosítja. Ha a \"permissions\" érték 0, akkor eltávolítja a megfelelő bejegyzést (a pubkey előtag alapján). Új bejegyzést hoz létre, ha a pubkey-hex teljes hossza, és jelenleg nem szerepel az ACL-ben. A bejegyzést frissíti a megfelelő pubkey előtag alapján. A engedélyek különbözőek a különböző firmware szerepek között, de az alsó 2 bit a következő értékeket képviseli: 0 (Vendég), 1 (Csak olvasás), 2 (Olvasás és írás), 3 (Adminisztrátor)",
-  "repeater_cliHelpGetBridgeType": "Kapcsolatok: hid típusú, RS232, ESPNOW",
-  "repeater_cliHelpLogStart": "Elindítja a csomagok naplózását a fájlrendszerbe.",
-  "repeater_cliHelpLogStop": "Megállítja a csomagok naplózását a fájlrendszerbe.",
-  "repeater_cliHelpLogErase": "Törli a fájlrendszerből a csomagok log-fájljait.",
-  "repeater_cliHelpNeighbors": "Mutat egy listát, amely tartalmazza a más repeater-ek által hallott adatok listáját, amelyek 0-hop hirdetések révén érhetők el. Minden sor az alábbi formát követi: id-prefix-hex:timestamp:snr-times-4",
-  "repeater_cliHelpNeighborRemove": "Törli az első, a megadott kulcs-prefix (hexadecimális formában) alapján megegyező bejegyzést a szomszédok listájából.",
-  "repeater_cliHelpRegion": "(sorozat) Lista az összes meghatározott területet és a jelenlegi árvízvédelmi engedélyeket.",
-  "repeater_cliHelpRegionLoad": "FIGYELEM: ez egy speciális, több parancsot tartalmazó futtatás. Minden következő parancs egy területtel kapcsolatos, amely egyenletes szóközökkel (a szülő-gyermek kapcsolatot jelző) megkülönböztethető. A parancs végrehajtása egy üres sor/parancs küldésével történik.",
-  "repeater_cliHelpRegionGet": "Keresések egy adott név előtérrel (vagy \"*\" globális hatókörre). Válasz: \"-> region-név (szülő-név) 'F'\"",
-  "repeater_cliHelpRegionPut": "Hozzáad vagy frissíti egy régió definíciót megadott néven.",
-  "repeater_cliHelpRegionRemove": "Eltávolítja a megadott nevet használó régió-definíciót. (pontosan meg kell egyeznie, és nem lehet gyermekrégiója)",
-  "repeater_cliHelpRegionAllowf": "Beállítja a megadott területre vonatkozó \"víz\" jogosultságot. (A globális/régi beállítások esetén a \"*\" jelölő)",
-  "repeater_cliHelpRegionDenyf": "Eltávolítja a megadott területre vonatkozó \"F\"lood (víz) engedélyt. (FIGYELEM: jelenleg nem javasolt ezt a globális/régi verzióban használni!!)",
-  "repeater_cliHelpRegionHome": "Visszaállítja a jelenlegi „otthoni” régiót. (Ez a beállítás még nem került alkalmazásra, csak jövőbeli használatra fenyelve)",
-  "repeater_cliHelpRegionHomeSet": "Beállítja a \"házi\" régiót.",
-  "repeater_cliHelpRegionSave": "Megőrzi a régió listát/térképet a tárolóban.",
-  "repeater_cliHelpGps": "Megadja a GPS állapotát. Ha a GPS kikapcsolva van, akkor csak \"ki\" választot ad, ha be van, akkor \"be\", \"állapot\", \"pozíció\", \"satellitok száma\" értékeket ad.",
-  "repeater_cliHelpGpsOnOff": "Engedi a GPS működés állapotát.",
-  "repeater_cliHelpGpsSync": "A hálózati időt az GPS óra időjével szinkronizálja.",
-  "repeater_cliHelpGpsSetLoc": "Beállítja a węsz pozícióját GPS koordináták alapján, és menti a beállításokat.",
-  "repeater_cliHelpGpsAdvert": "Adja meg a hirdetés konfigurációjának helyszín-információját:\n- none: ne tartalmazza a helyszínt a hirdetésekben\n- share: megosztja a GPS-helyszínt (SensorManager-ből)\n- prefs: hirdeti a beállításokban tárolt helyszínt",
-  "repeater_cliHelpGpsAdvertSet": "Beállítja a hirdetés helyszín-specifikus beállításait.",
-  "repeater_commandsListTitle": "Parancsok listája",
-  "repeater_commandsListNote": "FIGYELEM: a különböző \"set ...\" parancsok mellett létezik egy \"get ...\" parancs is.",
+  "repeater_cliQuickVersion": "Változat",
+  "repeater_cliQuickAdvertise": "Hirdet",
+  "repeater_cliQuickClock": "Óra",
+  "repeater_cliHelpAdvert": "Reklámcsomagot küld",
+  "repeater_cliHelpReboot": "Újraindítja az eszközt. (megjegyzendő, hogy \"Időtúllépés\" jelenik meg, ami normális)",
+  "repeater_cliHelpClock": "Megjeleníti az aktuális időt az eszköz órájánként.",
+  "repeater_cliHelpPassword": "Új rendszergazdai jelszót állít be az eszközhöz.",
+  "repeater_cliHelpVersion": "Megmutatja az eszköz verzióját és a firmware felépítési dátumát.",
+  "repeater_cliHelpClearStats": "Nullára állítja a különböző statisztikai számlálókat.",
+  "repeater_cliHelpSetAf": "Beállítja a műsoridő-tényezőt.",
+  "repeater_cliHelpSetTx": "A LoRa adási teljesítményét dBm-ben állítja be. (újraindítás az alkalmazáshoz)",
+  "repeater_cliHelpSetRepeat": "Engedélyezi vagy letiltja a csomópont ismétlő szerepét.",
+  "repeater_cliHelpSetAllowReadOnly": "(Szobaszerver) Ha 'be', akkor az üres jelszó bejelentkezés engedélyezett, de nem lehet postázni a szobába. (csak olvasható)",
+  "repeater_cliHelpSetFloodMax": "Beállítja a bejövő árvízcsomag ugrásainak maximális számát (ha >= max, a csomag nem kerül továbbításra)",
+  "repeater_cliHelpSetIntThresh": "Beállítja az interferencia küszöböt (DB-ben). Az alapértelmezett érték 14. Állítsa 0-ra a csatornainterferencia-érzékelés letiltásához.",
+  "repeater_cliHelpSetAgcResetInterval": "Beállítja az Auto Gain Controller alaphelyzetbe állításának intervallumát. A letiltáshoz állítsa 0-ra.",
+  "repeater_cliHelpSetMultiAcks": "Engedélyezi vagy letiltja a „dupla ACK” funkciót.",
+  "repeater_cliHelpSetAdvertInterval": "Beállítja a helyi (nulla ugrású) hirdetési csomag küldésének időzítési időközét percekben. A letiltáshoz állítsa 0-ra.",
+  "repeater_cliHelpSetFloodAdvertInterval": "Beállítja az időzítő intervallumát órákban az árvízhirdetési csomag küldéséhez. A letiltáshoz állítsa 0-ra.",
+  "repeater_cliHelpSetGuestPassword": "Beállítja/frissíti a vendég jelszavát. (Repeaterek esetén a vendégbejelentkezés elküldheti a \"Statisztikák lekérése\" kérést)",
+  "repeater_cliHelpSetName": "Beállítja a hirdetés nevét.",
+  "repeater_cliHelpSetLat": "Beállítja a hirdetéstérkép szélességi fokát. (tizedes fok)",
+  "repeater_cliHelpSetLon": "Beállítja a hirdetési térkép hosszúsági fokát. (tizedes fok)",
+  "repeater_cliHelpSetRadio": "Teljesen új rádióparamétereket állít be, és elmenti a beállításokhoz. Az alkalmazáshoz \"reboot\" parancs szükséges.",
+  "repeater_cliHelpSetRxDelay": "Beállítja a (kísérleti) bázist (az effektushoz > 1-nek kell lennie) a fogadott csomagok enyhe késleltetéséhez, a jelerősség/pontszám alapján. A letiltáshoz állítsa 0-ra.",
+  "repeater_cliHelpSetTxDelay": "Beállít egy tényezőt, megszorozva az adásidővel egy elárasztásos módú csomaghoz és egy véletlenszerű résrendszerhez, hogy késleltesse a továbbítását. (az ütközések valószínűségének csökkentése érdekében)",
+  "repeater_cliHelpSetDirectTxDelay": "Ugyanaz, mint a txdelay, de véletlenszerű késleltetés alkalmazására a közvetlen módú csomagok továbbítására.",
+  "repeater_cliHelpSetBridgeEnabled": "Bridge engedélyezése/letiltása.",
+  "repeater_cliHelpSetBridgeDelay": "Állítsa be a késleltetést a csomagok újraküldése előtt.",
+  "repeater_cliHelpSetBridgeSource": "Válassza ki, hogy a híd újraküldje-e a fogadott vagy továbbított csomagokat.",
+  "repeater_cliHelpSetBridgeBaud": "Soros kapcsolat átviteli sebességének beállítása rs232 hidakhoz.",
+  "repeater_cliHelpSetBridgeSecret": "Állítsa be a hídtitkot espnow hidakhoz.",
+  "repeater_cliHelpSetAdcMultiplier": "Egyéni tényezőt állít be a jelentett akkumulátorfeszültség beállításához (csak bizonyos kártyákon támogatott).",
+  "repeater_cliHelpTempRadio": "Ideiglenes rádióparamétereket állít be a megadott számú percre, majd visszaáll az eredeti rádióparaméterekre. (NEM menti a beállításokba).",
+  "repeater_cliHelpSetPerm": "Módosítja az ACL-t. Eltávolítja a megfelelő bejegyzést (pubkey előtag alapján), ha az „engedélyek” értéke nulla. Új bejegyzést ad hozzá, ha a pubkey-hex teljes hosszúságú, és jelenleg nincs az ACL-ben. Frissíti a bejegyzést a pubkey előtag egyeztetésével. Az engedélybitek firmware-szerepkörönként változnak, de az alacsony 2 bit a következő: 0 (Vendég), 1 (Csak olvasható), 2 (Olvasás, írás), 3 (Adminisztrátor)",
+  "repeater_cliHelpGetBridgeType": "Hidatípust nem kap, rs232, espnow",
+  "repeater_cliHelpLogStart": "Elindítja a csomagnaplózást a fájlrendszerbe.",
+  "repeater_cliHelpLogStop": "Leállítja a csomagok naplózását a fájlrendszerbe.",
+  "repeater_cliHelpLogErase": "Törli a csomagnaplókat a fájlrendszerből.",
+  "repeater_cliHelpNeighbors": "Megjeleníti a nulla ugrású hirdetéseken keresztül hallható egyéb átjátszó csomópontok listáját. Minden sor id-prefix-hex:timestamp:snr-times-4",
+  "repeater_cliHelpNeighborRemove": "Eltávolítja az első egyező bejegyzést (a pubkey előtag (hex) alapján) a szomszédok listájából.",
+  "repeater_cliHelpRegion": "(csak soros) Felsorolja az összes meghatározott régiót és az aktuális árvízi engedélyeket.",
+  "repeater_cliHelpRegionLoad": "MEGJEGYZÉS: ez egy speciális többparancsos hívás. Minden következő parancs egy régiónév (szóközökkel behúzva a szülőhierarchiát jelölve, legalább egy szóközzel). Üres sor/parancs küldésével megszűnik.",
+  "repeater_cliHelpRegionGet": "Régiót keres adott név előtaggal (vagy \"*\" a globális hatókörhöz). A válasz a következővel: \"-> régiónév (szülőnév) 'F'\"",
+  "repeater_cliHelpRegionPut": "Adott névvel rendelkező régiódefiníció hozzáadása vagy frissítése.",
+  "repeater_cliHelpRegionRemove": "Eltávolítja a megadott nevű régiódefiníciót. (pontosan meg kell egyeznie, és nem lehetnek alárendelt régiók)",
+  "repeater_cliHelpRegionAllowf": "Beállítja az 'F'lood engedélyt az adott régióhoz. (\"*\" a globális/örökölt hatókörre)",
+  "repeater_cliHelpRegionDenyf": "Eltávolítja az 'F'lood engedélyt az adott régióhoz. (MEGJEGYZÉS: ebben a szakaszban NEM tanácsos ezt használni a globális/örökölt hatókörön!!)",
+  "repeater_cliHelpRegionHome": "Az aktuális „otthoni” régióval válaszol. (A megjegyzés még bárhol érvényes, jövőre fenntartva)",
+  "repeater_cliHelpRegionHomeSet": "Beállítja az „otthoni” régiót.",
+  "repeater_cliHelpRegionSave": "Megőrzi a régiólistát/leképezést a tárhelyen.",
+  "repeater_cliHelpGps": "Megadja a gps állapotát. Ha a gps ki van kapcsolva, akkor csak kikapcsolva válaszol, ha be van kapcsolva, akkor válaszol: be, állapot, javítás, sat count",
+  "repeater_cliHelpGpsOnOff": "Bekapcsolja a gps tápellátási állapotát.",
+  "repeater_cliHelpGpsSync": "Szinkronizálja a csomópont idejét a gps órával.",
+  "repeater_cliHelpGpsSetLoc": "Beállítja a csomópont pozícióját a gps koordinátákra és menti a beállításokat.",
+  "repeater_cliHelpGpsAdvert": "Megadja a csomópont helyhirdetési konfigurációját:\n- nincs: ne adja meg a helyet a hirdetésekben\n- megosztás: GPS hely megosztása (a SensorManagerből)\n- preferenciák: a beállításokban tárolt hely hirdetése",
+  "repeater_cliHelpGpsAdvertSet": "Beállítja a helyhirdetés konfigurációját.",
+  "repeater_commandsListTitle": "Parancslista",
+  "repeater_commandsListNote": "MEGJEGYZÉS: a különféle \"set ...\" parancsokhoz van egy \"get ...\" parancs is.",
   "repeater_general": "Általános",
-  "repeater_settingsCategory": "Beállítások",
+  "repeater_settingsCategory": "Beállítások elemre",
   "repeater_bridge": "Híd",
-  "repeater_logging": "Naplózás",
-  "repeater_neighborsRepeaterOnly": "Szomszédok (Csak ismétlő funkció)",
-  "repeater_regionManagementRepeaterOnly": "Regionális menedzsment (Csak egyirányú kommunikáció)",
-  "repeater_regionNote": "Region-specifikus parancsokat vezettek be a régiók definiálására és a hozzájuk tartozó engedélyek kezelésére.",
-  "repeater_gpsManagement": "GPS-vezérlés",
-  "repeater_gpsNote": "Az GPS-al kapcsolatos funkciók lehetővé teszik a helyszín-személyesítéssel kapcsolatos feladatok kezelését.",
-  "telemetry_receivedData": "Kapott adatokat a szenzorokról",
-  "telemetry_requestTimeout": "Az adatkapcsolati kérés sikertelen.",
-  "telemetry_errorLoading": "Hiba az adatok begyűjtésében: {error}",
+  "repeater_logging": "Fakitermelés",
+  "repeater_neighborsRepeaterOnly": "Szomszédok (csak átjátszó)",
+  "repeater_regionManagementRepeaterOnly": "Régiókezelés (csak ismétlő)",
+  "repeater_regionNote": "Régióparancsok kerültek bevezetésre a régiódefiníciók és engedélyek kezelésére.",
+  "repeater_gpsManagement": "GPS kezelés",
+  "repeater_gpsNote": "A gps parancs bevezetésre került a helyhez kapcsolódó témák kezeléséhez.",
+  "telemetry_receivedData": "Fogadott telemetriai adatok",
+  "telemetry_requestTimeout": "A telemetriai kérés időtúllépése lejárt.",
+  "telemetry_errorLoading": "Hiba a telemetria betöltésekor: {error}",
   "@telemetry_errorLoading": {
     "placeholders": {
       "error": {
@@ -1466,8 +1472,45 @@
       }
     }
   },
-  "telemetry_noData": "Nincsenek elérhető telemetriadatok.",
-  "telemetry_channelTitle": "{channel} csatorna",
+  "telemetry_digitalInputLabel": "Digitális bemenet",
+  "telemetry_digitalOutputLabel": "Digitális kimenet",
+  "telemetry_analogInputLabel": "Analóg bemenet",
+  "telemetry_analogOutputLabel": "Analóg kimenet",
+  "telemetry_genericLabel": "Általános érzékelő",
+  "telemetry_luminosityLabel": "Fényesség",
+  "telemetry_presenceLabel": "Jelenlét",
+  "telemetry_humidityLabel": "Nedvesség",
+  "telemetry_accelerometerLabel": "Gyorsulásmérő",
+  "telemetry_pressureLabel": "Nyomás",
+  "telemetry_altitudeLabel": "Magasság",
+  "telemetry_frequencyLabel": "Frekvencia",
+  "telemetry_percentageLabel": "Százalék",
+  "telemetry_concentrationLabel": "Koncentráció",
+  "telemetry_powerLabel": "Hatalom",
+  "telemetry_distanceLabel": "Távolság",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Irány",
+  "telemetry_timeLabel": "Idő",
+  "telemetry_gyrometerLabel": "Girométer",
+  "telemetry_colourLabel": "Szín",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Kapcsoló",
+  "telemetry_polylineLabel": "Vonallánc",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Mennyiséget kér",
+  "telemetry_error": "Nem sikerült lekérni az adatokat",
+  "telemetry_noData": "Nincsenek telemetriai adatok.",
+  "telemetry_channelTitle": "Csatorna {channel}",
   "@telemetry_channelTitle": {
     "placeholders": {
       "channel": {
@@ -1475,7 +1518,7 @@
       }
     }
   },
-  "telemetry_batteryLabel": "Akku",
+  "telemetry_batteryLabel": "Akkumulátor",
   "telemetry_voltageLabel": "Feszültség",
   "telemetry_mcuTemperatureLabel": "MCU hőmérséklet",
   "telemetry_temperatureLabel": "Hőmérséklet",
@@ -1507,7 +1550,7 @@
       }
     }
   },
-  "telemetry_temperatureValue": "{celsius} °C / {fahrenheit} °F",
+  "telemetry_temperatureValue": "{celsius}°C / {fahrenheit}°F",
   "@telemetry_temperatureValue": {
     "placeholders": {
       "celsius": {
@@ -1518,9 +1561,9 @@
       }
     }
   },
-  "neighbors_receivedData": "Kapott szomszédok adatait",
-  "neighbors_requestTimedOut": "A szomszédok kérik, hogy tiltsák le a kamerát.",
-  "neighbors_errorLoading": "Hiba a szomszédok betöltésében: {error}",
+  "neighbors_receivedData": "Szomszédok adatok fogadása",
+  "neighbors_requestTimedOut": "A szomszédok kérése lejárt.",
+  "neighbors_errorLoading": "Hiba a szomszédok betöltésekor: {error}",
   "@neighbors_errorLoading": {
     "placeholders": {
       "error": {
@@ -1528,9 +1571,9 @@
       }
     }
   },
-  "neighbors_repeatersNeighbors": "Ismétlő eszközök, szomszédok",
-  "neighbors_noData": "Nincsenek elérhető szomszédokról adatok.",
-  "neighbors_unknownContact": "Tudatlan {pubkey}",
+  "neighbors_repeatersNeighbors": "Ismétlők Szomszédok",
+  "neighbors_noData": "A szomszédokról nem állnak rendelkezésre adatok.",
+  "neighbors_unknownContact": "Ismeretlen {pubkey}",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -1538,7 +1581,7 @@
       }
     }
   },
-  "neighbors_heardAgo": "Értsd: {time} sitten",
+  "neighbors_heardAgo": "Hallva: {time} ezelőtt",
   "@neighbors_heardAgo": {
     "placeholders": {
       "time": {
@@ -1546,18 +1589,18 @@
       }
     }
   },
-  "channelPath_title": "Csomagok útvonala",
-  "channelPath_viewMap": "Megtekinthető térkép",
+  "channelPath_title": "Csomag elérési útja",
+  "channelPath_viewMap": "Térkép megtekintése",
   "channelPath_otherObservedPaths": "Egyéb megfigyelt utak",
-  "channelPath_repeaterHops": "Adat továbbító lépések",
-  "channelPath_noHopDetails": "Ez a csomag nem tartalmaz részletes információkat a \"hop\" (vagy más hasonló) szót használó kifejezésekről.",
+  "channelPath_repeaterHops": "Repeater Hops",
+  "channelPath_noHopDetails": "Ennél a csomagnál a komlórészletek nincsenek megadva.",
   "channelPath_messageDetails": "Üzenet részletei",
-  "channelPath_senderLabel": "Megküldő",
+  "channelPath_senderLabel": "Feladó",
   "channelPath_timeLabel": "Idő",
-  "channelPath_repeatsLabel": "Ismétli",
-  "channelPath_pathLabel": "Útvonal {index}",
+  "channelPath_repeatsLabel": "Ismétlődik",
+  "channelPath_pathLabel": "{index} elérési út",
   "channelPath_observedLabel": "Megfigyelt",
-  "channelPath_observedPathTitle": "Megfigyelt útvonal: {index} • {hops}",
+  "channelPath_observedPathTitle": "Megfigyelt útvonal {index} • {hops}",
   "@channelPath_observedPathTitle": {
     "placeholders": {
       "index": {
@@ -1568,7 +1611,7 @@
       }
     }
   },
-  "channelPath_noLocationData": "Nincs helyszínadat.",
+  "channelPath_noLocationData": "Nincsenek helyadatok",
   "channelPath_timeWithDate": "{day}/{month} {time}",
   "@channelPath_timeWithDate": {
     "placeholders": {
@@ -1591,10 +1634,10 @@
       }
     }
   },
-  "channelPath_unknownPath": "Megfejt",
+  "channelPath_unknownPath": "Ismeretlen",
   "channelPath_floodPath": "Árvíz",
   "channelPath_directPath": "Közvetlen",
-  "channelPath_observedZeroOf": "0-ból {total}",
+  "channelPath_observedZeroOf": "0 / {total} ugrás",
   "@channelPath_observedZeroOf": {
     "placeholders": {
       "total": {
@@ -1602,7 +1645,7 @@
       }
     }
   },
-  "channelPath_observedSomeOf": "{observed} of {total} hops",
+  "channelPath_observedSomeOf": "{observed} / {total} ugrás",
   "@channelPath_observedSomeOf": {
     "placeholders": {
       "observed": {
@@ -1614,8 +1657,8 @@
     }
   },
   "channelPath_mapTitle": "Útvonal térkép",
-  "channelPath_noRepeaterLocations": "Ez a útvonal nem támogat repeater-t.",
-  "channelPath_primaryPath": "Útvonal {index} (Elsődleges)",
+  "channelPath_noRepeaterLocations": "Nincs elérhető átjátszó hely ehhez az útvonalhoz.",
+  "channelPath_primaryPath": "{index} elérési út (elsődleges)",
   "@channelPath_primaryPath": {
     "placeholders": {
       "index": {
@@ -1630,8 +1673,8 @@
       }
     }
   },
-  "channelPath_pathLabelTitle": "Út",
-  "channelPath_observedPathHeader": "Megfigyelt útvonal",
+  "channelPath_pathLabelTitle": "Útvonal",
+  "channelPath_observedPathHeader": "Megfigyelt ösvény",
   "channelPath_selectedPathLabel": "{label} • {prefixes}",
   "@channelPath_selectedPathLabel": {
     "placeholders": {
@@ -1643,14 +1686,14 @@
       }
     }
   },
-  "channelPath_noHopDetailsAvailable": "Ez a csomag nem tartalmaz részletes információkat a szállításhoz.",
-  "channelPath_unknownRepeater": "Tudatlan erősítő",
-  "community_title": "Helyi közösség",
-  "community_create": "Teremtsd meg a közösséget",
-  "community_createDesc": "Légyon létre egy új közösséget, és osszák meg QR-kód segítségével.",
-  "community_join": "Csatlakozjon",
-  "community_joinTitle": "Csatlakozzon a közösséghez",
-  "community_joinConfirmation": "Szeretne csatlakozni a közösséghez, {name}?",
+  "channelPath_noHopDetailsAvailable": "Ehhez a csomaghoz nem állnak rendelkezésre ugrási részletek.",
+  "channelPath_unknownRepeater": "Ismeretlen Repeater",
+  "community_title": "Közösség",
+  "community_create": "Közösség létrehozása",
+  "community_createDesc": "Hozzon létre egy új közösséget, és ossza meg QR-kóddal.",
+  "community_join": "Csatlakozik",
+  "community_joinTitle": "Csatlakozz a közösséghez",
+  "community_joinConfirmation": "Szeretnél csatlakozni a \"{name}\" közösséghez?",
   "@community_joinConfirmation": {
     "placeholders": {
       "name": {
@@ -1658,14 +1701,14 @@
       }
     }
   },
-  "community_scanQr": "QR-kód olvasó a közösség számára",
-  "community_scanInstructions": "Fordítsa a kamerát egy közösségi QR-kód irányába.",
-  "community_showQr": "Megjelenítse a QR-kódot",
-  "community_publicChannel": "Összetartó, közösségi",
-  "community_hashtagChannel": "Helyi hashtaget",
-  "community_name": "Helyi közösség neve",
-  "community_enterName": "Kérjük, a közösség nevét írja be.",
-  "community_created": "A \"{name}\" nevű közösség létrehozva",
+  "community_scanQr": "Scan Community QR",
+  "community_scanInstructions": "Irányítsa a kamerát egy közösségi QR-kódra",
+  "community_showQr": "QR-kód megjelenítése",
+  "community_publicChannel": "Közösségi Nyilvános",
+  "community_hashtagChannel": "Közösségi hashtag",
+  "community_name": "Közösség neve",
+  "community_enterName": "Adja meg a közösség nevét",
+  "community_created": "A \"{name}\" közösség létrehozva",
   "@community_created": {
     "placeholders": {
       "name": {
@@ -1673,7 +1716,7 @@
       }
     }
   },
-  "community_joined": "Csatlakozott a {name} közösséghez",
+  "community_joined": "Csatlakozott a \"{name}\" közösséghez",
   "@community_joined": {
     "placeholders": {
       "name": {
@@ -1681,8 +1724,8 @@
       }
     }
   },
-  "community_qrTitle": "Osszpontosítás a közösségben",
-  "community_qrInstructions": "Scanned this QR-kódot, hogy csatlakozhat a {name} csoporthoz.",
+  "community_qrTitle": "Közösség megosztása",
+  "community_qrInstructions": "Olvassa be ezt a QR-kódot a \"{name}\" csoporthoz való csatlakozáshoz",
   "@community_qrInstructions": {
     "placeholders": {
       "name": {
@@ -1690,10 +1733,10 @@
       }
     }
   },
-  "community_hashtagPrivacyHint": "A közösségi hashtagekhez tartozó csatornák csak a közösség tagjai számára érhetők el.",
+  "community_hashtagPrivacyHint": "A közösségi hashtag csatornákhoz csak a közösség tagjai csatlakozhatnak",
   "community_invalidQrCode": "Érvénytelen közösségi QR-kód",
-  "community_alreadyMember": "Már tag vagy",
-  "community_alreadyMemberMessage": "Már tagja {name}-nek.",
+  "community_alreadyMember": "Már tag",
+  "community_alreadyMemberMessage": "Ön már tagja a(z) \"{name}\".",
   "@community_alreadyMemberMessage": {
     "placeholders": {
       "name": {
@@ -1701,13 +1744,13 @@
       }
     }
   },
-  "community_addPublicChannel": "Hozzon létre egy közösségi nyilvános csatornát",
-  "community_addPublicChannelHint": "Automatikusan hozzon létre ezt a csatornát a közösség számára.",
-  "community_noCommunities": "Még egyik közösség sem csatlakozott.",
-  "community_scanOrCreate": "Scelle egy QR-kódot, vagy hozzon létre egy közösséget, hogy elinduljon.",
+  "community_addPublicChannel": "Közösségi nyilvános csatorna hozzáadása",
+  "community_addPublicChannelHint": "Nyilvános csatorna automatikus hozzáadása ehhez a közösséghez",
+  "community_noCommunities": "Még nem csatlakozott közösség",
+  "community_scanOrCreate": "Olvassa be a QR-kódot, vagy hozzon létre egy közösséget a kezdéshez",
   "community_manageCommunities": "Közösségek kezelése",
-  "community_delete": "Hagyományos közösségi élet",
-  "community_deleteConfirm": "Hagyom {name}-et?",
+  "community_delete": "Kilépés a közösségből",
+  "community_deleteConfirm": "Kilép a(z) „{name}” programból?",
   "@community_deleteConfirm": {
     "placeholders": {
       "name": {
@@ -1715,7 +1758,7 @@
       }
     }
   },
-  "community_deleteChannelsWarning": "Ezem törli is {count} csatornát és a hozzá tartozó üzeneteket.",
+  "community_deleteChannelsWarning": "Ezzel {count} csatornát és azok üzeneteit is törli.",
   "@community_deleteChannelsWarning": {
     "placeholders": {
       "count": {
@@ -1723,7 +1766,7 @@
       }
     }
   },
-  "community_deleted": "A közösség, amely {name}",
+  "community_deleted": "Kilépett a \"{name}\" közösségből",
   "@community_deleted": {
     "placeholders": {
       "name": {
@@ -1731,8 +1774,8 @@
       }
     }
   },
-  "community_regenerateSecret": "Titkos visszaállítás",
-  "community_regenerateSecretConfirm": "Újra kell generálni a titkos kulcsot {name} számára? Minden tagnak be kell szkennelnie az új QR-kódot, hogy továbbra is kommunikálhasson.",
+  "community_regenerateSecret": "Regeneráld a Titkot",
+  "community_regenerateSecretConfirm": "Újragenerálja a titkos kulcsot a következőhöz: \"{name}\"? A kommunikáció folytatásához minden tagnak be kell olvasnia az új QR-kódot.",
   "@community_regenerateSecretConfirm": {
     "placeholders": {
       "name": {
@@ -1740,8 +1783,8 @@
       }
     }
   },
-  "community_regenerate": "Újraalakítás",
-  "community_secretRegenerated": "Titkos kulcs megújult {name} számára.",
+  "community_regenerate": "Regenerátum",
+  "community_secretRegenerated": "Titok újra létrehozva a következőhöz: \"{name}\"",
   "@community_secretRegenerated": {
     "placeholders": {
       "name": {
@@ -1749,8 +1792,8 @@
       }
     }
   },
-  "community_updateSecret": "Frissítési titok",
-  "community_secretUpdated": "Titkos információ frissítve {name} számára",
+  "community_updateSecret": "Frissítse a Titkot",
+  "community_secretUpdated": "Titok frissítve a következőhöz: \"{name}\"",
   "@community_secretUpdated": {
     "placeholders": {
       "name": {
@@ -1758,7 +1801,7 @@
       }
     }
   },
-  "community_scanToUpdateSecret": "Scanned a új QR-kódot, hogy frissítsük a {name} számára megőrzött titkos információt.",
+  "community_scanToUpdateSecret": "Olvassa be az új QR-kódot a „{name}” titkának frissítéséhez",
   "@community_scanToUpdateSecret": {
     "placeholders": {
       "name": {
@@ -1766,14 +1809,14 @@
       }
     }
   },
-  "community_addHashtagChannel": "Adjon egy közösségi hashtaget",
-  "community_addHashtagChannelDesc": "Hozz létre egy hashtage-os csatornát ennek a közösségnek",
-  "community_selectCommunity": "Válasszon közösséget",
+  "community_addHashtagChannel": "Közösségi hashtag hozzáadása",
+  "community_addHashtagChannelDesc": "Adj hozzá egy hashtag-csatornát ehhez a közösséghez",
+  "community_selectCommunity": "Válassza a Közösség lehetőséget",
   "community_regularHashtag": "Rendszeres hashtag",
-  "community_regularHashtagDesc": "Önmagas szintű hashtaget (bárki csatlakozhat)",
-  "community_communityHashtag": "Helyi hashtaget",
-  "community_communityHashtagDesc": "Csak a közösség tagjai számára",
-  "community_forCommunity": "{name} számára",
+  "community_regularHashtagDesc": "Nyilvános hashtag (bárki csatlakozhat)",
+  "community_communityHashtag": "Közösségi hashtag",
+  "community_communityHashtagDesc": "Privát a közösség tagjai számára",
+  "community_forCommunity": "{name}",
   "@community_forCommunity": {
     "placeholders": {
       "name": {
@@ -1782,28 +1825,28 @@
     }
   },
   "listFilter_tooltip": "Szűrés és rendezés",
-  "listFilter_sortBy": "Szűrés",
-  "listFilter_latestMessages": "Legfrissebb üzenetek",
-  "listFilter_heardRecently": "Úgy hallottam, hogy...",
+  "listFilter_sortBy": "Rendezés",
+  "listFilter_latestMessages": "Legújabb üzenetek",
+  "listFilter_heardRecently": "Nemrég hallottam",
   "listFilter_az": "A-Z",
   "listFilter_filters": "Szűrők",
-  "listFilter_all": "Mind",
+  "listFilter_all": "Minden",
   "listFilter_favorites": "Kedvencek",
-  "listFilter_addToFavorites": "Megerősítés kívánságlistára",
-  "listFilter_removeFromFavorites": "Törölj a kedvencekből",
+  "listFilter_addToFavorites": "Hozzáadás a kedvencekhez",
+  "listFilter_removeFromFavorites": "Eltávolítás a kedvencek közül",
   "listFilter_users": "Felhasználók",
-  "listFilter_repeaters": "Újraküldők",
-  "listFilter_roomServers": "Szoba-szolgálatok",
+  "listFilter_repeaters": "Ismétlők",
+  "listFilter_roomServers": "Szobaszerverek",
   "listFilter_unreadOnly": "Csak olvasatlan",
   "listFilter_newGroup": "Új csoport",
   "pathTrace_you": "Te",
-  "pathTrace_failed": "A útvonal követése sikertelen.",
-  "pathTrace_notAvailable": "Az útvonal követési funkció nem elérhető.",
-  "pathTrace_refreshTooltip": "Út mentesség frissítése.",
-  "pathTrace_someHopsNoLocation": "Egy vagy több búzavirág hiányozik a helyszínéről!",
-  "pathTrace_clearTooltip": "Egyértelmű út.",
-  "losSelectStartEnd": "Válassza ki a kezdő és a végpontokat a LOS-hoz.",
-  "losRunFailed": "A látószög ellenőrzése sikertelen: {error}",
+  "pathTrace_failed": "Az útvonal nyomon követése nem sikerült.",
+  "pathTrace_notAvailable": "Útvonal nyomkövetés nem érhető el.",
+  "pathTrace_refreshTooltip": "Path Trace frissítése.",
+  "pathTrace_someHopsNoLocation": "Egy vagy több komló helye hiányzik!",
+  "pathTrace_clearTooltip": "Tiszta útvonal.",
+  "losSelectStartEnd": "Válassza ki a LOS kezdő és záró csomópontját.",
+  "losRunFailed": "A rálátás ellenőrzése sikertelen: {error}",
   "@losRunFailed": {
     "placeholders": {
       "error": {
@@ -1811,13 +1854,13 @@
       }
     }
   },
-  "losClearAllPoints": "Teljesen tisztázzuk az összes pontot",
-  "losRunToViewElevationProfile": "Használja a LOS-t, hogy megtekinthesse a magasságkülönbségek diagramját.",
+  "losClearAllPoints": "Törölje az összes pontot",
+  "losRunToViewElevationProfile": "Futtassa a LOS-t a magassági profil megtekintéséhez",
   "losMenuTitle": "LOS menü",
-  "losMenuSubtitle": "A térképen található pontok kiválasztására vagy a térképen hosszúra nyomva, hogy egyedi pontokat definiálhassunk.",
-  "losShowDisplayNodes": "Megjelenítsen a megjelenítési egységeket",
+  "losMenuSubtitle": "Érintse meg a csomópontokat, vagy tartsa lenyomva a térképet az egyéni pontokhoz",
+  "losShowDisplayNodes": "Megjelenítési csomópontok megjelenítése",
   "losCustomPoints": "Egyedi pontok",
-  "losCustomPointLabel": "Egyedi {index}",
+  "losCustomPointLabel": "Egyéni {index}",
   "@losCustomPointLabel": {
     "placeholders": {
       "index": {
@@ -1825,8 +1868,8 @@
       }
     }
   },
-  "losPointA": "A pont A",
-  "losPointB": "Pont B",
+  "losPointA": "A pont",
+  "losPointB": "B pont",
   "losAntennaA": "Antenna A: {value} {unit}",
   "@losAntennaA": {
     "placeholders": {
@@ -1838,7 +1881,7 @@
       }
     }
   },
-  "losAntennaB": "Antenna B: {value} {unit}",
+  "losAntennaB": "B antenna: {value} {unit}",
   "@losAntennaB": {
     "placeholders": {
       "value": {
@@ -1849,9 +1892,9 @@
       }
     }
   },
-  "losRun": "Futtass a LOS-on",
-  "losNoElevationData": "Nincsenek emelkedési adatok.",
-  "losProfileClear": "{distance} {distanceUnit}, clear LOS, min clearance {clearance} {heightUnit}",
+  "losRun": "Futtassa a LOS-t",
+  "losNoElevationData": "Nincsenek magassági adatok",
+  "losProfileClear": "{distance} {distanceUnit}, tiszta LOS, minimális távolság {clearance} {heightUnit}",
   "@losProfileClear": {
     "placeholders": {
       "distance": {
@@ -1868,7 +1911,7 @@
       }
     }
   },
-  "losProfileBlocked": "{distance} {distanceUnit}, amelyet {obstruction} akadályoz meg {heightUnit}-ban",
+  "losProfileBlocked": "{distance} {distanceUnit}, blokkolta: {obstruction} {heightUnit}",
   "@losProfileBlocked": {
     "placeholders": {
       "distance": {
@@ -1887,7 +1930,7 @@
   },
   "losStatusChecking": "LOS: ellenőrzés...",
   "losStatusNoData": "LOS: nincs adat",
-  "losStatusSummary": "LOS: {clear}/{total} tisztított, {blocked} blokkolt, {unknown} ismeretlen",
+  "losStatusSummary": "LOS: {clear}/{total} tiszta, {blocked} blokkolva, {unknown} ismeretlen",
   "@losStatusSummary": {
     "placeholders": {
       "clear": {
@@ -1904,20 +1947,20 @@
       }
     }
   },
-  "losErrorElevationUnavailable": "Az alábbi minták esetében nem áll rendelkezésre magasságadat.",
-  "losErrorInvalidInput": "Hibás vagy hiányos táblázatok a LOS (Loss of Signal) számításához.",
-  "losRenameCustomPoint": "Állítsa meg a saját pont nevét",
+  "losErrorElevationUnavailable": "Egy vagy több mintához nem állnak rendelkezésre magassági adatok.",
+  "losErrorInvalidInput": "Érvénytelen pontok/emelkedési adatok a LOS számításhoz.",
+  "losRenameCustomPoint": "Egyéni pont átnevezése",
   "losPointName": "Pont neve",
-  "losShowPanelTooltip": "Megjelenítse a LOS paneelt",
-  "losHidePanelTooltip": "Rejtse el a LOS paneelt",
-  "losElevationAttribution": "Magasságadatok: Open-Meteo (CC BY 4.0)",
-  "losLegendRadioHorizon": "Radio Horizont",
-  "losLegendLosBeam": "LOS jelzés",
-  "losLegendTerrain": "Terület",
-  "losFrequencyLabel": "Hatósság",
-  "losFrequencyInfoTooltip": "Lásd a számítás részleteit",
-  "losFrequencyDialogTitle": "A rádióhullámok hatótávolságának kiszámítása",
-  "losFrequencyDialogDescription": "A {baselineK} értékből kezdve, {baselineFreq} MHz-os frekvencián, a számítás az aktuális {frequencyMHz} MHz-os sávhoz igazítja a k-tényezőt, amely meghatározza a görbös rádióhatótávolság határát.",
+  "losShowPanelTooltip": "LOS panel megjelenítése",
+  "losHidePanelTooltip": "LOS panel elrejtése",
+  "losElevationAttribution": "Magassági adatok: Open-Meteo (CC BY 4.0)",
+  "losLegendRadioHorizon": "Rádióhorizont",
+  "losLegendLosBeam": "LOS gerenda",
+  "losLegendTerrain": "Terep",
+  "losFrequencyLabel": "Frekvencia",
+  "losFrequencyInfoTooltip": "Tekintse meg a számítás részleteit",
+  "losFrequencyDialogTitle": "Rádióhorizont számítás",
+  "losFrequencyDialogDescription": "A k={baselineK} értéktől kezdve {baselineFreq} MHz-en a számítás az aktuális {frequencyMHz} MHz-es sávhoz igazítja a k-tényezőt, amely meghatározza az ívelt rádióhorizont-sapkát.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -1935,14 +1978,14 @@
       }
     }
   },
-  "contacts_pathTrace": "Útvonal követése",
+  "contacts_pathTrace": "Út nyom",
   "contacts_ping": "Ping",
-  "contacts_repeaterPathTrace": "Az útvonal követése a repeaterig",
-  "contacts_repeaterPing": "Ping-szinkronizáló",
-  "contacts_roomPathTrace": "Kapcsolat a szobai szerverrel",
-  "contacts_roomPing": "Ping-szolgáló szerver",
-  "contacts_chatTraceRoute": "Útvonal meghatározása",
-  "contacts_pathTraceTo": "Keresse meg a {name} címét.",
+  "contacts_repeaterPathTrace": "Útvonal nyomkövetése az átjátszóhoz",
+  "contacts_repeaterPing": "Ping átjátszó",
+  "contacts_roomPathTrace": "Útvonal nyomkövetése a szobaszerverhez",
+  "contacts_roomPing": "Ping szoba szerver",
+  "contacts_chatTraceRoute": "Út nyomvonala",
+  "contacts_pathTraceTo": "Útvonal nyomon követése ide: {name}",
   "@contacts_pathTraceTo": {
     "placeholders": {
       "name": {
@@ -1950,21 +1993,21 @@
       }
     }
   },
-  "contacts_clipboardEmpty": "A kiválasztott szöveg üres.",
-  "contacts_invalidAdvertFormat": "Érvénytelen kontaktinformáció",
-  "contacts_contactImported": "Kapcsolat létrejött.",
-  "contacts_contactImportFailed": "Nem sikerült a kapcsolatot importálni.",
-  "contacts_zeroHopAdvert": "Zero Hop reklám",
-  "contacts_floodAdvert": "Árvízre vonatkozó hirdetés",
-  "contacts_copyAdvertToClipboard": "Másolja a hirdetést a kiválasztási ablakba",
-  "contacts_addContactFromClipboard": "Adjon hozzá egy kapcsolatot a kiválasztott listából",
-  "contacts_ShareContact": "Másolja a kapcsolatot a kiválasztóba",
-  "contacts_ShareContactZeroHop": "Ossza meg a kapcsolatot hirdetés segítségével",
-  "contacts_zeroHopContactAdvertSent": "Kapcsolatot a hirdetésen keresztül.",
-  "contacts_zeroHopContactAdvertFailed": "Nem sikerült a kapcsolatot elküldeni.",
-  "contacts_contactAdvertCopied": "A hirdetés másolva a vágólapra.",
-  "contacts_contactAdvertCopyFailed": "Az hirdetés másolása a vágólapra sikertelen.",
-  "notification_activityTitle": "MeshCore tevékenységek",
+  "contacts_clipboardEmpty": "A vágólap üres.",
+  "contacts_invalidAdvertFormat": "Érvénytelen kapcsolattartási adatok",
+  "contacts_contactImported": "A névjegy importálása megtörtént.",
+  "contacts_contactImportFailed": "Nem sikerült importálni a névjegyet.",
+  "contacts_zeroHopAdvert": "Zero Hop hirdetés",
+  "contacts_floodAdvert": "Árvíz hirdetés",
+  "contacts_copyAdvertToClipboard": "Hirdetés másolása a vágólapra",
+  "contacts_addContactFromClipboard": "Névjegy hozzáadása a vágólapról",
+  "contacts_ShareContact": "Névjegy másolása a vágólapra",
+  "contacts_ShareContactZeroHop": "Kapcsolat megosztása hirdetéssel",
+  "contacts_zeroHopContactAdvertSent": "Az elérhetőséget hirdetéssel küldték el.",
+  "contacts_zeroHopContactAdvertFailed": "Nem sikerült elküldeni a névjegyet.",
+  "contacts_contactAdvertCopied": "A hirdetés a vágólapra másolva.",
+  "contacts_contactAdvertCopyFailed": "A hirdetés vágólapra másolása nem sikerült.",
+  "notification_activityTitle": "MeshCore tevékenység",
   "notification_messagesCount": "{count} {count, plural, =1{üzenet} other{üzenetek}}",
   "@notification_messagesCount": {
     "placeholders": {
@@ -1989,7 +2032,7 @@
       }
     }
   },
-  "notification_newTypeDiscovered": "Új {contactType} megtalálva",
+  "notification_newTypeDiscovered": "Új {contactType} felfedezve",
   "@notification_newTypeDiscovered": {
     "placeholders": {
       "contactType": {
@@ -1997,58 +2040,58 @@
       }
     }
   },
-  "notification_receivedNewMessage": "Új üzenetet kaptam",
-  "settings_gpxExportRepeaters": "Külső eszközök / helyi szerver a GPX formátumba",
-  "settings_gpxExportRepeatersSubtitle": "Exportálható repeater/szobaterm-szerver, amely egy GPX fájlban tárolja a helyzetet.",
-  "settings_gpxExportContacts": "GPX export funkciók",
-  "settings_gpxExportContactsSubtitle": "Az export funkció lehetővé teszi, hogy a GPS fájlban megadott helyszínen is megőrizzük az útvonalat.",
-  "settings_gpxExportAll": "Exportálja az összes kapcsolatot GPX formátumban.",
-  "settings_gpxExportAllSubtitle": "Az összes elérhetőséget, amelyekhez egy helyszín tartozik, egy GPX fájlba exportálja.",
-  "settings_gpxExportSuccess": "A GPX fájl sikeresen exportálva lett.",
-  "settings_gpxExportNoContacts": "Nincs exportálható kapcsolatok.",
-  "settings_gpxExportNotAvailable": "Nem támogatott a jelenlegi eszközön/rendszeren.",
-  "settings_gpxExportError": "Hiba történt az export során.",
-  "settings_gpxExportRepeatersRoom": "Adatátvisszaadó eszközök és helyiségi szerverek helyei",
-  "settings_gpxExportChat": "Kapcsolódó helyszínek",
-  "settings_gpxExportAllContacts": "Az összes kapcsolat helyszíne",
-  "settings_gpxExportShareText": "A meshcore-open-ból exportált térkéadatumok",
-  "settings_gpxExportShareSubject": "meshcore-open GPX formátumú térképi adatok export",
-  "snrIndicator_nearByRepeaters": "Helyszíni erősítők",
-  "snrIndicator_lastSeen": "Utoljára, amikor látták",
-  "contactsSettings_title": "Kapcsolatok beállításai",
+  "notification_receivedNewMessage": "Új üzenet érkezett",
+  "settings_gpxExportRepeaters": "Ismétlők / szobaszerver exportálása GPX-be",
+  "settings_gpxExportRepeatersSubtitle": "Exportálja az átjátszókat / szobaszervereket a hellyel GPX-fájlba.",
+  "settings_gpxExportContacts": "Exportáljon társokat a GPX-be",
+  "settings_gpxExportContactsSubtitle": "A hellyel rendelkező kísérőket GPX-fájlba exportálja.",
+  "settings_gpxExportAll": "Az összes névjegy exportálása a GPX-be",
+  "settings_gpxExportAllSubtitle": "A hellyel rendelkező összes névjegyet GPX-fájlba exportálja.",
+  "settings_gpxExportSuccess": "A GPX fájl sikeresen exportálva.",
+  "settings_gpxExportNoContacts": "Nincsenek exportálandó névjegyek.",
+  "settings_gpxExportNotAvailable": "Az Ön eszköze/OS nem támogatja",
+  "settings_gpxExportError": "Hiba történt az exportálás során.",
+  "settings_gpxExportRepeatersRoom": "Repeater és szobaszerver helyei",
+  "settings_gpxExportChat": "Társ helyek",
+  "settings_gpxExportAllContacts": "Minden kapcsolattartó hely",
+  "settings_gpxExportShareText": "A térképadatok a meshcore-openből exportálva",
+  "settings_gpxExportShareSubject": "meshcore-open GPX térképadatok exportálása",
+  "snrIndicator_nearByRepeaters": "Közeli átjátszók",
+  "snrIndicator_lastSeen": "Utoljára látott",
+  "contactsSettings_title": "Névjegyek beállításai",
   "contactsSettings_autoAddTitle": "Automatikus felfedezés",
-  "contactsSettings_otherTitle": "Egyéb kapcsolattal kapcsolatos beállítások",
-  "contactsSettings_autoAddUsersTitle": "Automatikus felhasználói hozzáadás",
-  "contactsSettings_autoAddUsersSubtitle": "Engedje, hogy a segítő automatikusan hozzáadja az új felhasználókat.",
-  "contactsSettings_autoAddRepeatersTitle": "Automatikus visszatöltés",
-  "contactsSettings_autoAddRepeatersSubtitle": "Engedje, hogy a segítő eszköz automatikusan hozzáadja az új, megtalált jelzőállomásokat.",
-  "contactsSettings_autoAddRoomServersTitle": "Automatikus szobák szerverek hozzáadása",
-  "contactsSettings_autoAddRoomServersSubtitle": "Engedje, hogy a segítő automatikusan hozzáadja az új, megtalált hálózati szervereket.",
-  "contactsSettings_autoAddSensorsTitle": "Automatikus érzékelők hozzáadása",
-  "contactsSettings_autoAddSensorsSubtitle": "Engedje, hogy a kísérő automatikusan hozzáadja az új, megtalált szenzorokat.",
-  "contactsSettings_overwriteOldestTitle": "Felülírja a legrégebbet",
-  "contactsSettings_overwriteOldestSubtitle": "Amikor a névsor telítődik, a legidősebb, de még nem kedvencként jelölt személyt helyettesíti egy újabb.",
-  "discoveredContacts_Title": "Megtalált kapcsolatok",
-  "discoveredContacts_noMatching": "Nincs megegyező kapcsolat.",
-  "discoveredContacts_searchHint": "Keress új kapcsolatokat",
+  "contactsSettings_otherTitle": "Egyéb kapcsolattartási beállítások",
+  "contactsSettings_autoAddUsersTitle": "Felhasználók automatikus hozzáadása",
+  "contactsSettings_autoAddUsersSubtitle": "Engedélyezze a társ számára, hogy automatikusan hozzáadja a felfedezett felhasználókat.",
+  "contactsSettings_autoAddRepeatersTitle": "Ismétlők automatikus hozzáadása",
+  "contactsSettings_autoAddRepeatersSubtitle": "Engedélyezze a társnak, hogy automatikusan hozzáadja a felfedezett ismétlőket.",
+  "contactsSettings_autoAddRoomServersTitle": "Szobaszerverek automatikus hozzáadása",
+  "contactsSettings_autoAddRoomServersSubtitle": "Engedélyezze a társ számára, hogy automatikusan hozzáadja a felfedezett szobaszervereket.",
+  "contactsSettings_autoAddSensorsTitle": "Érzékelők automatikus hozzáadása",
+  "contactsSettings_autoAddSensorsSubtitle": "Engedélyezze a társ számára a felfedezett érzékelők automatikus hozzáadását.",
+  "contactsSettings_overwriteOldestTitle": "A legrégebbi felülírása",
+  "contactsSettings_overwriteOldestSubtitle": "Amikor a névjegylista megtelik, a legrégebbi, nem kedvenc névjegy lecserélődik.",
+  "discoveredContacts_Title": "Felfedezett kapcsolatok",
+  "discoveredContacts_noMatching": "Nincsenek megfelelő névjegyek",
+  "discoveredContacts_searchHint": "Keresés a talált névjegyek között",
   "discoveredContacts_contactAdded": "Kapcsolat hozzáadva",
-  "discoveredContacts_addContact": "Adjon személyhez",
-  "discoveredContacts_copyContact": "Másolja a kapcsolatot a vágólapra",
-  "discoveredContacts_deleteContact": "Törölj a feltalált kapcsolatot",
-  "discoveredContacts_deleteContactAll": "Törölj minden megtalált kapcsolatot",
-  "discoveredContacts_deleteContactAllContent": "Biztos, hogy szeretné törölni az összes eddig megtalált kapcsolatot?",
-  "chat_sendCooldown": "Kérjük, várjon egy pillanatot, mielőtt újra elküldené.",
-  "appSettings_jumpToOldestUnread": "Jelentkezzen az legörebb, olvasatlan üzenetre",
-  "appSettings_jumpToOldestUnreadSubtitle": "Amikor egy új csevet indítunk, amelyben vannak olvashatatlan üzenetek, görgessük a listát, hogy a legelső, olvashatatlan üzenet megjelenjen, nem pedig az utolsó.",
-  "appSettings_languageHu": "Magyar",
-  "appSettings_languageJa": "Japán",
-  "appSettings_languageKo": "Koreai",
-  "radioStats_tooltip": "Rádió és hálózati statisztikák",
-  "radioStats_screenTitle": "Rádió statisztikák",
-  "radioStats_notConnected": "Csatlakozzon egy eszközhöz, hogy megtekinthesse a rádió adatok statisztikáit.",
-  "radioStats_firmwareTooOld": "A rádió statisztikákhoz v8 vagy újabb verziójú szoftver szükséges.",
-  "radioStats_waiting": "Adatokra vár…",
-  "radioStats_noiseFloor": "Háttérzaj szint: {noiseDbm} dBm",
+  "discoveredContacts_addContact": "Névjegy hozzáadása elemre",
+  "discoveredContacts_copyContact": "Névjegy másolása a vágólapra",
+  "discoveredContacts_deleteContact": "A felfedezett névjegy törlése",
+  "discoveredContacts_deleteContactAll": "Törölje az összes felfedezett névjegyet",
+  "discoveredContacts_deleteContactAllContent": "Biztosan törli az összes felfedezett névjegyet?",
+  "chat_sendCooldown": "Kérjük, várjon egy pillanatot, mielőtt újra elküldi.",
+  "appSettings_jumpToOldestUnread": "Ugrás a legrégebbi olvasatlanra",
+  "appSettings_jumpToOldestUnreadSubtitle": "Ha olvasatlan üzeneteket tartalmazó csevegést nyit meg, görgessen az első olvasatlanra a legutóbbi helyett.",
+  "appSettings_languageHu": "magyar",
+  "appSettings_languageJa": "japán",
+  "appSettings_languageKo": "koreai",
+  "radioStats_tooltip": "Rádió és mesh statisztika",
+  "radioStats_screenTitle": "Rádió statisztika",
+  "radioStats_notConnected": "Csatlakozzon egy eszközhöz a rádióstatisztikák megtekintéséhez.",
+  "radioStats_firmwareTooOld": "A rádióstatisztikákhoz v8-as vagy újabb firmware szükséges.",
+  "radioStats_waiting": "Várakozás az adatokra…",
+  "radioStats_noiseFloor": "Zajszint: {noiseDbm} dBm",
   "@radioStats_noiseFloor": {
     "placeholders": {
       "noiseDbm": {
@@ -2056,7 +2099,7 @@
       }
     }
   },
-  "radioStats_lastRssi": "Utolsó RSSI érték: {rssiDbm} dBm",
+  "radioStats_lastRssi": "Utolsó RSSI: {rssiDbm} dBm",
   "@radioStats_lastRssi": {
     "placeholders": {
       "rssiDbm": {
@@ -2072,7 +2115,7 @@
       }
     }
   },
-  "radioStats_txAir": "TX-es idő (összesen): {seconds} másodperc",
+  "radioStats_txAir": "TX műsoridő (összesen): {seconds} s",
   "@radioStats_txAir": {
     "placeholders": {
       "seconds": {
@@ -2080,7 +2123,7 @@
       }
     }
   },
-  "radioStats_rxAir": "RX használat időtartama (összesen): {seconds} s",
+  "radioStats_rxAir": "RX műsoridő (összesen): {seconds} s",
   "@radioStats_rxAir": {
     "placeholders": {
       "seconds": {
@@ -2088,8 +2131,8 @@
       }
     }
   },
-  "radioStats_chartCaption": "Háttérzaj szint (dBm) a legutóbbi minták alapján.",
-  "radioStats_stripNoise": "Háttérzaj szint: {noiseDbm} dBm",
+  "radioStats_chartCaption": "Zajszint (dBm) a legutóbbi mintákhoz képest.",
+  "radioStats_stripNoise": "Zajszint: {noiseDbm} dBm",
   "@radioStats_stripNoise": {
     "placeholders": {
       "noiseDbm": {
@@ -2097,34 +2140,34 @@
       }
     }
   },
-  "radioStats_stripWaiting": "Rádió adatok begyűjtése…",
-  "radioStats_settingsTile": "Rádió statisztikák",
-  "radioStats_settingsSubtitle": "Háttérzaj, RSSI, zaj-sűrűség, és a használat időtartama",
-  "settings_denyAll": "Elutasítom",
-  "settings_privacySettingsDescription": "Válassza ki, hogy az eszközének melyik információkat oszt meg másokkal.",
-  "settings_privacySubtitle": "Ellenőrizd, hogy milyen információkat osztanak meg.",
-  "settings_privacy": "Adatvédelem beállítások",
-  "settings_allowByContact": "Lehetővé teszi a kapcsolatok kezelését",
-  "settings_allowAll": "Engedje meg mindent",
-  "settings_telemetryBaseMode": "Adatkapcsolati alapállapot",
-  "settings_telemetryLocationMode": "Adatkapcsolási helyszín mód",
-  "settings_telemetryEnvironmentMode": "Adatkapcsolati környezeti mód",
-  "settings_advertLocation": "Reklám megjelenési hely",
-  "settings_advertLocationSubtitle": "A hirdetés tartalmazza a helyszínt.",
-  "settings_telemetryModeUpdated": "A telemetriamód frissítve",
-  "contact_info": "Kapcsolattartási információk",
-  "contact_settings": "Kapcsolat beállítások",
-  "contact_telemetry": "Adatvisszaadás",
-  "contact_lastSeen": "Utoljára, amikor látták",
-  "contact_clearChat": "Tiszta beszélgetés",
-  "contact_teleBase": "Adatgyűjtő központ",
-  "contact_teleBaseSubtitle": "Engedje meg a akkumulátor töltöttségi szintjének és alapvető adatoknak megosztását.",
-  "contact_teleLoc": "Adatkapcsolati helyszín",
-  "contact_teleLocSubtitle": "Engedje meg a helyadatok megosztását",
-  "contact_teleEnv": "Adatkapcsolati környezet",
-  "contact_teleEnvSubtitle": "Engedje meg az érzékelő adatok megosztását",
-  "map_showOverlaps": "Az ismétlő kulcsok ütköznek",
-  "map_runTraceWithReturnPath": "Visszaforduljon az eredeti úton.",
+  "radioStats_stripWaiting": "Rádióstatisztikák lekérése…",
+  "radioStats_settingsTile": "Rádió statisztika",
+  "radioStats_settingsSubtitle": "Zajszint, RSSI, SNR és műsoridő",
+  "settings_denyAll": "Mindent tagadni",
+  "settings_privacySettingsDescription": "Válassza ki, hogy eszköze milyen információkat ossza meg másokkal.",
+  "settings_privacySubtitle": "Szabályozza, hogy milyen információkat osztanak meg.",
+  "settings_privacy": "Adatvédelmi beállítások",
+  "settings_allowByContact": "Engedélyezés kapcsolatjelző jelzőkkel",
+  "settings_allowAll": "Minden engedélyezése",
+  "settings_telemetryBaseMode": "Telemetriai alapmód",
+  "settings_telemetryLocationMode": "Telemetriás helymeghatározási mód",
+  "settings_telemetryEnvironmentMode": "Telemetriás környezeti mód",
+  "settings_advertLocation": "Hirdetés helye",
+  "settings_advertLocationSubtitle": "A hirdetésben szerepeljen a helyszín.",
+  "settings_telemetryModeUpdated": "Telemetriai mód frissítve",
+  "contact_info": "Elérhetőségi adatok",
+  "contact_settings": "Kapcsolati beállítások",
+  "contact_telemetry": "Telemetria",
+  "contact_lastSeen": "Utoljára látott",
+  "contact_clearChat": "Csevegés törlése",
+  "contact_teleBase": "Telemetriai bázis",
+  "contact_teleBaseSubtitle": "Az akkumulátor töltöttségi szintjének és az alapvető telemetria megosztásának engedélyezése",
+  "contact_teleLoc": "Telemetriás hely",
+  "contact_teleLocSubtitle": "Helyadatok megosztásának engedélyezése",
+  "contact_teleEnv": "Telemetriai környezet",
+  "contact_teleEnvSubtitle": "A környezetérzékelő adatainak megosztásának engedélyezése",
+  "map_showOverlaps": "Repeater Key átfedések",
+  "map_runTraceWithReturnPath": "Térj vissza ugyanazon az úton.",
   "@translation_downloadFailed": {
     "placeholders": {
       "error": {
@@ -2133,26 +2176,29 @@
     }
   },
   "translation_title": "Fordítás",
-  "translation_enableTitle": "Engedje meg a fordítást",
-  "translation_enableSubtitle": "Fordítsa az érkező üzeneteket, és lehetővé tegye a küldés előtti fordítást.",
-  "translation_composerTitle": "Fordítsa el, mielőtt elküldi",
-  "translation_composerSubtitle": "Ellenőrzi a zeneszerző fordítási ikon alapértékét.",
+  "translation_enableTitle": "Fordítás engedélyezése",
+  "translation_enableSubtitle": "Fordítsa le a bejövő üzeneteket, és engedélyezze a küldés előtti fordítást.",
+  "translation_composerTitle": "Küldés előtt fordítsa le",
+  "translation_composerSubtitle": "Szabályozza a zeneszerző fordítási ikonjának alapértelmezett állapotát.",
+  "translation_autoIncomingTitle": "A bejövő üzenetek automatikus fordítása",
+  "translation_autoIncomingSubtitle": "Automatikusan lefordítja az üzeneteket értesítésekhez, csevegéshez vagy csatornához.",
+  "translation_translateMessage": "Üzenet fordítása",
   "translation_targetLanguage": "Célnyelv",
-  "translation_useAppLanguage": "Használja az alkalmazás nyelvének beállítását.",
+  "translation_useAppLanguage": "Használja az alkalmazás nyelvét",
   "translation_downloadedModelLabel": "Letöltött modell",
-  "translation_presetModelLabel": "Előre definiált Hugging Face-modell",
-  "translation_manualUrlLabel": "Manuális modell URL",
-  "translation_downloadModel": "Letöltés",
+  "translation_presetModelLabel": "Előre beállított átölelő arc modell",
+  "translation_manualUrlLabel": "Kézi modell URL",
+  "translation_downloadModel": "Modell letöltése",
   "translation_downloading": "Letöltés...",
-  "translation_working": "Munkában vagyok...",
-  "translation_stop": "Halt",
-  "translation_mergingChunks": "A letöltött részek összeállítása a végleges fájlba...",
-  "translation_downloadedModels": "Letöltött modelok",
-  "translation_deleteModel": "Törölje a modellt",
+  "translation_working": "Dolgozó...",
+  "translation_stop": "Stop",
+  "translation_mergingChunks": "Letöltött darabok egyesítése a végső fájlba...",
+  "translation_downloadedModels": "Letöltött modellek",
+  "translation_deleteModel": "Modell törlése",
   "translation_modelDownloaded": "Fordítási modell letöltve.",
   "translation_downloadStopped": "A letöltés leállt.",
   "translation_downloadFailed": "Letöltés sikertelen: {error}",
-  "translation_enterUrlFirst": "Addon először egy modell URL-t.",
+  "translation_enterUrlFirst": "Először adja meg a modell URL-jét.",
   "@scanner_linuxPairingPinPrompt": {
     "placeholders": {
       "deviceName": {
@@ -2160,9 +2206,9 @@
       }
     }
   },
-  "scanner_linuxPairingShowPin": "Megjelenítse a PIN-kódot",
-  "scanner_linuxPairingPinPrompt": "Adja meg a(z) {deviceName} PIN-kódját (hagyja üresen, ha nincs).",
-  "scanner_linuxPairingHidePin": "Rejtse el a PIN-kódot",
+  "scanner_linuxPairingShowPin": "PIN-kód megjelenítése",
+  "scanner_linuxPairingPinPrompt": "Írja be a {deviceName} PIN-kódját (ha nincs, hagyja üresen).",
+  "scanner_linuxPairingHidePin": "PIN elrejtése",
   "scanner_linuxPairingPinTitle": "Bluetooth párosítási PIN",
   "@translation_translateTo": {
     "placeholders": {
@@ -2171,102 +2217,102 @@
       }
     }
   },
-  "translation_translateBeforeSending": "Fordítsa el, mielőtt elküldi",
-  "translation_composerEnabledHint": "A üzenetek fordítását a küldés előtt elvégezzük.",
-  "translation_messageTranslation": "Üzenet fordítása",
-  "translation_composerDisabledHint": "Küldj üzeneteket az eredeti, nyomtatott nyelven.",
-  "translation_translateTo": "Fordítás {language}-ra",
+  "translation_translateBeforeSending": "Küldés előtt fordítsa le",
+  "translation_composerEnabledHint": "Az üzeneteket elküldés előtt lefordítják.",
+  "translation_messageTranslation": "Üzenet fordítás",
+  "translation_composerDisabledHint": "Üzeneteket küldhet az eredeti gépelt nyelven.",
+  "translation_translateTo": "Fordítás {language}",
   "translation_translationOptions": "Fordítási lehetőségek",
-  "translation_systemLanguage": "Rendszer nyelvé",
+  "translation_systemLanguage": "Rendszer nyelve",
   "repeater_cliQuickClockSync": "Óra szinkronizálás",
-  "repeater_cliQuickDiscovery": "Fedezd fel a szomszédokat",
+  "repeater_cliQuickDiscovery": "Fedezze fel a szomszédokat",
   "@repeater_clockSyncAfterLogin": {
     "description": "Repeater setting: auto sync device clock after successful login"
   },
   "@repeater_clockSyncAfterLoginSubtitle": {
     "description": "Repeater setting subtitle: describes the clock sync after login behavior"
   },
-  "repeater_clockSyncAfterLoginSubtitle": "Automatikusan küldje el a \"óra szinkronizálás\" üzenetet a sikeres bejelentkezés után.",
+  "repeater_clockSyncAfterLoginSubtitle": "„Óraszinkronizálás” automatikus küldése sikeres bejelentkezés után",
   "repeater_clockSyncAfterLogin": "Óra szinkronizálás bejelentkezés után",
-  "repeater_guestTools": "Vendégek számára elérhető eszközök",
-  "room_guest": "Szoba szerver információk",
+  "repeater_guestTools": "Vendégeszközök",
+  "room_guest": "Szobaszerver információ",
   "chat_sendMessage": "Üzenet küldése",
-  "repeater_guest": "Adatok a repeaterről",
-  "repeater_getCategory": "Szereplő értékek",
-  "repeater_powerMgmt": "Energiahatékonyság, energiafelhasználás optimalizálása",
+  "repeater_guest": "Ismétlő információ",
+  "repeater_getCategory": "Szerezzen értékeket",
+  "repeater_powerMgmt": "Energiagazdálkodás",
   "repeater_sensors": "Érzékelők",
-  "repeater_cliHelpPowerOff": "Át kapcsolja a készüléket. (nincs válasz elvárás)",
-  "repeater_cliHelpClkReboot": "Visszaállítja az órát egy ismert időpontra, majd újraindítja a készüléket.",
-  "repeater_cliHelpAdvertZeroHop": "Küld egy közvetlen szomszédoknak szóló hirdetést, amely közvetlen kapcsolatot igényel.",
-  "repeater_cliHelpStartOta": "Elindítja a vezeték nélküli útvonalon történő firmware frissítést a támogatott kártyákon.",
-  "repeater_cliHelpTime": "Beállítja a eszköz óráját a megadott Unix-időpont (Unix epoch) időpontra. Az óra nem tud visszanyúlni.",
-  "repeater_cliHelpBoard": "Megjeleníti a gyártó nevét/a hardver azonosítóját.",
-  "repeater_cliHelpDiscoverNeighbors": "Kérést küld a közeli eszközöknek, hogy azok is megtalálják egymást. (Csak egy repeater eszköz számára)",
-  "repeater_cliHelpPowersaving": "Megmutatja, hogy a takarékos üzemmód engedélyezve van-e vagy nem.",
-  "repeater_cliHelpPowersavingOnOff": "Engedélyezi vagy kikapcsolja a takarékos üzemmódot (ha támogatott).",
-  "repeater_cliHelpErase": "(Csak sorozatban) Formázza a eszköz fájlrendszerét. Eltávolítja az összes beállítást és a kapcsolatokat.",
-  "repeater_cliHelpSetDutyCycle": "Beállítja a maximális engedélyezett átviteli időtartamot százalékban (1-100). Belsőleg módosítja az időtartam-szabályozást.",
-  "repeater_cliHelpSetPrvKey": "(Csak sorozatban) Cseréli a eszköz egyedi kulcsát. Az alkalmazáshoz újraindítás szükséges. Új nyilvános kulcsot generál.",
-  "repeater_cliHelpSetRadioRxGain": "(Csak SX126x család) A növelt RX erősítést be- és kikapcsolható, így a nagyobb áramfelvétel esetén is javítható a érzékenység.",
-  "repeater_cliHelpSetOwnerInfo": "Megadja az üvegezésben megjelenő tulajdonos elérhetőségeinek szövegét. Használja a '|' karaktert új sorok elválasztására.",
-  "repeater_cliHelpSetPathHashMode": "Beállítja a hálózati útvonal-hash módot. 0 = régebbi, 1 = szabványos, 2 = szigorú. Hatással van a hálózati útvonalak megadatalására.",
-  "repeater_cliHelpSetLoopDetect": "Beállítja a hibaforrás-keresés érzékenységét: kikapcsolva, minimális, közepes vagy szigorú.",
-  "repeater_cliHelpSetFreq": "(Csak soros mód) Gyorsan beállítja a frekvenciát. A rendszer újraindítás szükséges. A teljes rádióparaméterek beállításához a \"rádió beállítás\" funkciót javaslom.",
-  "repeater_cliHelpSetBridgeChannel": "(Csak ESPNow híd esetén) Beállítja a híd által használt WiFi-csatornát (1-14).",
+  "repeater_cliHelpPowerOff": "Kikapcsolja a készüléket. (nem várható válasz)",
+  "repeater_cliHelpClkReboot": "Visszaállítja az órát egy ismert korszakra, és újraindítja az eszközt.",
+  "repeater_cliHelpAdvertZeroHop": "Zéró ugrású hirdetést küld (csak a közvetlen szomszédok számára).",
+  "repeater_cliHelpStartOta": "Elindít egy vezeték nélküli firmware-frissítést a támogatott kártyákon.",
+  "repeater_cliHelpTime": "Beállítja az eszköz óráját a megadott Unix korszak másodpercekre. Az óra nem tud visszafelé mozogni.",
+  "repeater_cliHelpBoard": "Megmutatja a kártya gyártóját/hardver azonosítóját.",
+  "repeater_cliHelpDiscoverNeighbors": "Csomópont-felderítési kérelmet küld a közeli szomszédoknak. (Csak ismétlő)",
+  "repeater_cliHelpPowersaving": "Megmutatja, hogy az energiatakarékos mód be vagy ki van-e kapcsolva.",
+  "repeater_cliHelpPowersavingOnOff": "Engedélyezi vagy letiltja az energiatakarékos módot (ahol támogatott).",
+  "repeater_cliHelpErase": "(Csak soros) Formázza az eszköz fájlrendszerét. Törli az összes beállítást és névjegyet.",
+  "repeater_cliHelpSetDutyCycle": "Beállítja a maximális megengedett átviteli munkaciklust százalékban (1-100). Belsőleg állítja be a műsoridőtényezőt.",
+  "repeater_cliHelpSetPrvKey": "(Csak soros) Lecseréli az eszközazonosító privát kulcsot. Újraindítás szükséges az alkalmazáshoz. Új nyilvános kulcsot generál.",
+  "repeater_cliHelpSetRadioRxGain": "(csak SX126x) Bekapcsolja a megnövelt RX-erősítést a jobb érzékenység érdekében nagyobb áramfelvétel mellett.",
+  "repeater_cliHelpSetOwnerInfo": "Beállítja a hirdetésekben szereplő tulajdonos elérhetőségi adatait. A '|' használata újsorokhoz.",
+  "repeater_cliHelpSetPathHashMode": "Beállítja az útvonal-kivonat módot. 0 = örökölt, 1 = szabványos, 2 = szigorú. Befolyásolja az útválasztási útvonalak egyeztetését.",
+  "repeater_cliHelpSetLoopDetect": "Beállítja az útválasztási hurok észlelésének érzékenységét: ki, minimális, közepes vagy szigorú.",
+  "repeater_cliHelpSetFreq": "(Csak soros) Gyorsan beállítja csak a frekvenciát. Újraindítás szükséges. A „rádió beállítása” előnyben részesítse a teljes rádióparamétereket.",
+  "repeater_cliHelpSetBridgeChannel": "(Csak ESPNow bridge) Beállítja a híd által használt WiFi csatornát (1-14).",
   "repeater_cliHelpGetName": "Megjeleníti a konfigurált csomópont nevét.",
-  "repeater_cliHelpGetRole": "Megmutatja a firmware funkcióját (repeater, szobai szerver stb.).",
-  "repeater_cliHelpGetPublicKey": "Megjeleníti a eszköz nyilvános kulcsát.",
-  "repeater_cliHelpGetPrvKey": "(Csak soros mód) Megjeleníti a eszköz privát kulcsát. Kezelje titkos információként.",
-  "repeater_cliHelpGetRepeat": "Megmutatja, hogy a csomagok továbbításának (repeater funkció) engedélyezve van-e vagy nem.",
-  "repeater_cliHelpGetTx": "Megmutatja a jelenlegi TX (átvitel) teljesítményt dBm-ben.",
-  "repeater_cliHelpGetFreq": "Megjeleníti a konfigurált rádiófrekvenciát MHz-ben.",
-  "repeater_cliHelpGetRadio": "Megjeleníti az összes rádióparamétert: frekvencia, sávszélesség, széttétező tényező, kódolási ráta.",
-  "repeater_cliHelpGetRadioRxGain": "(Csak SX126x családra) Megjeleníti az RX erősítés állapotát.",
-  "repeater_cliHelpGetAf": "Megmutatja az aktuális időadó tényezőt.",
-  "repeater_cliHelpGetDutyCycle": "Megmutatja az aktuális engedélyezett működési ciklust százalékban.",
-  "repeater_cliHelpGetIntThresh": "Megmutatja a csatornák közötti interferencia szintjét dB-ben.",
-  "repeater_cliHelpGetAgcResetInterval": "Megmutatja az AGC (automatikus gain-kontroll) visszaállítási időt másodpercekben.",
-  "repeater_cliHelpGetMultiAcks": "Megmutatja, hogy a kettős visszaigazolás (double-ACK) mód engedélyezve van-e (1), vagy kikapcsolva (0).",
-  "repeater_cliHelpGetAllowReadOnly": "Megmutatja, hogy a vendég csak olvasási jogosítást engedélyez-e.",
-  "repeater_cliHelpGetAdvertInterval": "Megmutatja a helyi hirdetés időtartamát percenként.",
-  "repeater_cliHelpGetFloodAdvertInterval": "Megmutatja az aktuális időzítést, amikor megjelenik a vízparti reklám, órákonként.",
-  "repeater_cliHelpGetGuestPassword": "Megjeleníti a konfigurált vendégjelszót.",
-  "repeater_cliHelpGetLat": "Megjeleníti a beállított szélességet.",
-  "repeater_cliHelpGetLon": "Megjeleníti a beállított hosszúságot.",
-  "repeater_cliHelpGetRxDelay": "Megmutatja az alapértéket a késéshez.",
-  "repeater_cliHelpGetTxDelay": "Megmutatja a vízszint-érzékelő jelátviteli késésének tényezőjét.",
-  "repeater_cliHelpGetDirectTxDelay": "Megmutatja a közvetlen módban használt késés tényezőt.",
-  "repeater_cliHelpGetFloodMax": "Megmutatja a maximális vízszint-emelkedés mértékét.",
-  "repeater_cliHelpGetOwnerInfo": "Megjeleníti az tulajdonos elérhetőségének szövegét.",
-  "repeater_cliHelpGetPathHashMode": "Megjeleníti a hash-alapú mód (0/1/2) beállításokat.",
-  "repeater_cliHelpGetLoopDetect": "Mutatja a cikkszám-azonosító érzékenységet.",
-  "repeater_cliHelpGetAcl": "(Csak sorozat) A repeateren található hozzáférési szabályok listája.",
+  "repeater_cliHelpGetRole": "Megmutatja a firmware szerepkörét (Repeater, Room Server stb.).",
+  "repeater_cliHelpGetPublicKey": "Megjeleníti az eszköz nyilvános kulcsát.",
+  "repeater_cliHelpGetPrvKey": "(Csak soros) Az eszköz privát kulcsát mutatja. Kezelje titokként.",
+  "repeater_cliHelpGetRepeat": "Megmutatja, hogy a csomagtovábbítás (ismétlő szerepkör) be vagy ki van-e kapcsolva.",
+  "repeater_cliHelpGetTx": "Az aktuális TX teljesítményt mutatja dBm-ben.",
+  "repeater_cliHelpGetFreq": "Megjeleníti a beállított rádiófrekvenciát MHz-ben.",
+  "repeater_cliHelpGetRadio": "A teljes rádióparamétereket mutatja: frekvencia, sávszélesség, szórási tényező, kódolási sebesség.",
+  "repeater_cliHelpGetRadioRxGain": "(csak SX126x) Megjeleníti az RX megnövelt erősítési állapotát.",
+  "repeater_cliHelpGetAf": "Megmutatja az aktuális műsoridőt.",
+  "repeater_cliHelpGetDutyCycle": "Megjeleníti az aktuális megengedett munkaciklust százalékban.",
+  "repeater_cliHelpGetIntThresh": "A csatorna interferencia küszöbértékét mutatja dB-ben.",
+  "repeater_cliHelpGetAgcResetInterval": "Az AGC reset intervallumát mutatja másodpercben.",
+  "repeater_cliHelpGetMultiAcks": "Megmutatja, hogy a dupla ACK mód be van-e kapcsolva (1) vagy ki (0).",
+  "repeater_cliHelpGetAllowReadOnly": "Megmutatja, hogy a vendég csak olvasási hozzáférés engedélyezett-e.",
+  "repeater_cliHelpGetAdvertInterval": "A helyi hirdetési intervallumot mutatja percben.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Megjeleníti az árvízhirdetés intervallumát órákban.",
+  "repeater_cliHelpGetGuestPassword": "Megjeleníti a beállított vendégjelszót.",
+  "repeater_cliHelpGetLat": "Megjeleníti a beállított szélességi fokot.",
+  "repeater_cliHelpGetLon": "A beállított hosszúságot mutatja.",
+  "repeater_cliHelpGetRxDelay": "Az rxdelay alapértékét mutatja.",
+  "repeater_cliHelpGetTxDelay": "Megjeleníti az elárasztási mód txdelay tényezőjét.",
+  "repeater_cliHelpGetDirectTxDelay": "A közvetlen módú txdelay tényezőt mutatja.",
+  "repeater_cliHelpGetFloodMax": "Megmutatja a maximális elárasztási ugrás számát.",
+  "repeater_cliHelpGetOwnerInfo": "Megjeleníti a tulajdonos kapcsolatfelvételi adatait.",
+  "repeater_cliHelpGetPathHashMode": "Az elérési út-kivonat módot mutatja (0/1/2).",
+  "repeater_cliHelpGetLoopDetect": "A hurokérzékelés érzékenységét mutatja.",
+  "repeater_cliHelpGetAcl": "(Csak soros) Felsorolja a hozzáférés-vezérlési bejegyzéseket az átjátszón.",
   "repeater_cliHelpGetBridgeEnabled": "Megmutatja, hogy a híd engedélyezve van-e.",
-  "repeater_cliHelpGetBridgeDelay": "Megmutatja a hídon bekövetkező késést másodpercben.",
-  "repeater_cliHelpGetBridgeSource": "Megmutatja, hogy a híd RX vagy TX csomagokat fogad-e.",
-  "repeater_cliHelpGetBridgeBaud": "(Csak RS232 híd) Megjeleníti a híd sebességét.",
-  "repeater_cliHelpGetBridgeChannel": "(Csak ESPNow híd) Megjeleníti a híd által használt WiFi csatornát.",
-  "repeater_cliHelpGetBridgeSecret": "(Csak ESPNow híd esetén) Megjeleníti a híd által megosztott titkos kulcsot.",
-  "repeater_cliHelpGetBootloaderVer": "(Csak NRF52 esetén) Megjeleníti a bootloader verzióját.",
-  "repeater_cliHelpGetAdcMultiplier": "A bemeneti feszültség-átalakító (akkumulátor-feszültség-szabályozó) működését mutatja.",
-  "repeater_cliHelpGetPwrMgtSupport": "Megállapítja, hogy a felügyelet rendelkezik-e energiahatékonysági támogatással.",
-  "repeater_cliHelpGetPwrMgtSource": "Megmutatja az aktuális energiaforrást: külső vagy akkumulátor.",
-  "repeater_cliHelpGetPwrMgtBootReason": "Megjeleníti az utolsó újraindítás és leállítás okait.",
-  "repeater_cliHelpGetPwrMgtBootMv": "Megjeleníti a rendszerindításkor mért akkumulátor feszültséget millivoltban (mV).",
-  "repeater_cliHelpSensorGet": "Beolvas egy felhasználó által definiált szenzor beállítást kulcs segítségével.",
-  "repeater_cliHelpSensorSet": "Egyedi szenzorbeállítások létrehozása.",
-  "repeater_cliHelpSensorList": "Összesíti az összes egyedi szenzor beállításot, oldalanként, opcionális kezdő index alapján.",
-  "repeater_cliHelpRegionDefault": "Megmutatja a jelenlegi alapértelmezett régió határait.",
-  "repeater_cliHelpRegionDefaultSet": "Beállítja az alapértelmezett régió hatókörét. Használja a \"<null>\" értéket a törléshez.",
-  "repeater_cliHelpRegionListAllowed": "Felhasználható területek, ahol árvíz esetén forgalmat engedélyeznek.",
-  "repeater_cliHelpRegionListDenied": "Felhasznál, amelyek elutasítják a árvíz okozta forgalmat.",
-  "repeater_cliHelpStatsPackets": "(Csak sorozat) A csomagok szintjén történő statisztikát mutat.",
-  "repeater_cliHelpStatsRadio": "(Csak sorozat) Mutat rádióstatisztikákat.",
-  "repeater_cliHelpStatsCore": "(Csak soros mód) A főfirmware-adatokat mutatja.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
-  "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "repeater_cliHelpGetBridgeDelay": "A híd késleltetését mutatja ms-ban.",
+  "repeater_cliHelpGetBridgeSource": "Megmutatja, hogy a híd RX vagy TX csomagokat naplóz-e.",
+  "repeater_cliHelpGetBridgeBaud": "(csak RS232 híd) A híd adatátviteli sebességét mutatja.",
+  "repeater_cliHelpGetBridgeChannel": "(csak ESPNow bridge) A híd WiFi csatornáját mutatja.",
+  "repeater_cliHelpGetBridgeSecret": "(Csak ESPNow bridge) Megjeleníti a híd megosztott titkát.",
+  "repeater_cliHelpGetBootloaderVer": "(Csak NRF52) A rendszerbetöltő verzióját mutatja.",
+  "repeater_cliHelpGetAdcMultiplier": "Az ADC szorzót mutatja (akkumulátor-feszültség skálázás).",
+  "repeater_cliHelpGetPwrMgtSupport": "Beszámol arról, hogy a testület rendelkezik-e hatalomkezelési támogatással.",
+  "repeater_cliHelpGetPwrMgtSource": "Az aktuális áramforrást mutatja: külső vagy akkumulátor.",
+  "repeater_cliHelpGetPwrMgtBootReason": "Megmutatja a legutóbbi alaphelyzetbe állítás és leállítás okait.",
+  "repeater_cliHelpGetPwrMgtBootMv": "Megmutatja a rendszerindítási akkumulátorfeszültséget mV-ban.",
+  "repeater_cliHelpSensorGet": "Kulcs segítségével beolvassa az egyéni szenzorbeállítást.",
+  "repeater_cliHelpSensorSet": "Egyéni szenzorbeállítást ír.",
+  "repeater_cliHelpSensorList": "Felsorolja az összes egyéni érzékelőbeállítást, oldalszámozással az opcionális kezdőindexből.",
+  "repeater_cliHelpRegionDefault": "Megjeleníti az aktuális alapértelmezett régióhatókört.",
+  "repeater_cliHelpRegionDefaultSet": "Beállítja az alapértelmezett régió hatókört. A törléshez használja a \"<null>\" parancsot.",
+  "repeater_cliHelpRegionListAllowed": "Felsorolja azokat a régiókat, amelyek lehetővé teszik az árvízi forgalmat.",
+  "repeater_cliHelpRegionListDenied": "Felsorolja azokat a régiókat, amelyek megtagadják az árvízi forgalmat.",
+  "repeater_cliHelpStatsPackets": "(Csak soros) Csomag szintű statisztikákat jelenít meg.",
+  "repeater_cliHelpStatsRadio": "(Csak soros) Rádióstatisztikák megjelenítése.",
+  "repeater_cliHelpStatsCore": "(Csak soros) Az alapvető firmware-statisztikák megjelenítése.",
+  "common_done": "Kész",
+  "background_serviceTitle": "MeshCore fut",
+  "background_serviceText": "A BLE-kapcsolat fenntartása",
+  "appSettings_translationModelDeleted": "Törölve {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2274,7 +2320,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Nem sikerült törölni: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2282,7 +2328,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Nem sikerült frissíteni a csatornát: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2290,20 +2336,20 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
+  "map_type": "Írja be",
+  "map_path": "Útvonal",
+  "map_location": "hely",
+  "map_estLocation": "Becsült hely",
+  "map_publicKey": "Nyilvános kulcs",
+  "map_publicKeyPrefixHint": "pl. ab12",
+  "contact_typeChat": "Csevegés",
+  "contact_typeRepeater": "Ismétlő",
+  "contact_typeRoom": "Szoba",
+  "contact_typeSensor": "Érzékelő",
+  "contact_typeUnknown": "Ismeretlen",
+  "channels_via": "ezen keresztül: {path}",
   "chat_score": "Score",
-  "settings_multiAck": "Többszörös visszaigazolások",
+  "settings_multiAck": "Multi-ACK",
   "map_sharedAt": "Megosztva",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2342,12 +2388,487 @@
   },
   "losSelectedObstructionTitle": "Kiválasztott akadály",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losBlockedSpotsHint": "A blokkolt területet megjelölve, hogy a térképen kiemeljük.",
-  "losBlockedSpotsTitle": "Foglalhatatlan területek",
-  "losSelectedObstructionDetails": "Elakadt a {obstruction} miatt, {heightUnit} magasságban, {distanceFromA} méterrel A-tól és {distanceFromB} méterrel B-től ({distanceUnit}).",
-  "chat_markAsUnread": "Merekje olvashatóként",
+  "losBlockedSpotsHint": "Koppintson egy blokkolt helyre, hogy kijelölje azt a térképen.",
+  "losBlockedSpotsTitle": "Blokkolt helyek",
+  "losSelectedObstructionDetails": "Letiltja: {obstruction} {heightUnit}, {distanceFromA} A-tól és {distanceFromB} B-től ({distanceUnit}).",
+  "chat_markAsUnread": "Megjelölés olvasatlanként",
   "chat_newMessages": "Új üzenetek",
-  "settings_companionDebugLog": "Párhuzamos hibakeresési napló",
-  "settings_companionDebugLogSubtitle": "BLE/TCP/USB parancsok, válaszok és alapvető adatok",
-  "repeater_chanUtil": "Csatorna-használat"
+  "settings_companionDebugLog": "Companion Debug Log",
+  "settings_companionDebugLogSubtitle": "BLE/TCP/USB parancsok, válaszok és nyers adatok",
+  "repeater_chanUtil": "Csatornahasználat",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_delivered": "Szállítva",
+  "common_undo": "Visszavonás",
+  "messageStatus_sent": "Küldött",
+  "messageStatus_pending": "Küldés",
+  "messageStatus_failed": "Nem sikerült elküldeni",
+  "messageStatus_repeated": "– ismételte Heard",
+  "contacts_moreOptions": "További lehetőségek",
+  "contacts_searchOpen": "Névjegyek keresése",
+  "contacts_searchClose": "Keresés bezárása",
+  "routing_title": "Útválasztás",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Árvíz",
+  "routing_modeManual": "Kézikönyv",
+  "routing_modeAutoHint": "Automatikusan kiválasztja a legismertebb utat, és elárasztja, ha nem ismert.",
+  "routing_modeFloodHint": "Minden átjátszón keresztül sugároz. A legmegbízhatóbb, de több műsoridőt használ.",
+  "routing_modeManualHint": "Mindig pontosan az Ön által megadott útvonalon küld.",
+  "routing_currentRoute": "Jelenlegi útvonal",
+  "routing_directNoHops": "Közvetlen – nincs átjátszó ugrás",
+  "routing_noPathYet": "Még nincs út. A következő üzenet elárasztja az útvonalat.",
+  "routing_floodBroadcast": "Minden átjátszón keresztül sugározd",
+  "routing_editPath": "Útvonal szerkesztése",
+  "routing_forgetPath": "Felejtsd el az utat",
+  "routing_knownPaths": "Ismert utak",
+  "routing_knownPathsHint": "Koppintson egy elérési útra a váltáshoz.",
+  "routing_inUse": "Használatban",
+  "routing_qualityStrong": "Erős első ugrás",
+  "routing_qualityGood": "Jó első ugrás",
+  "routing_qualityFair": "Tisztességes első ugrás",
+  "routing_qualityWorked": "Szállított",
+  "routing_qualityFlood": "Árvízen keresztül hallatszott",
+  "routing_qualityUntested": "Nem tesztelt",
+  "routing_neverWorked": "soha nem erősítették meg",
+  "routing_floodDelivery": "Árvízi szállítás",
+  "pathEditor_title": "Építsd meg az útvonalat",
+  "pathEditor_hopCounter": "{count} 64 ugrásból",
+  "pathEditor_noHops": "Még nincs ugrás. Koppintson az alábbi ismétlőkre, ha sorrendben szeretné felvenni őket, vagy mentse ugrás nélkül a közvetlen küldéshez.",
+  "pathEditor_addHops": "Sorrendben adjuk hozzá a komlót",
+  "pathEditor_searchRepeaters": "Ismétlő keresése",
+  "pathEditor_advancedHex": "Haladó: nyers hexadecimális útvonal",
+  "pathEditor_hexLabel": "Hexadecimális előtagok",
+  "pathEditor_hexHelper": "Két hexadecimális karakter ugrásonként, vesszővel elválasztva",
+  "pathEditor_invalidTokens": "Érvénytelen: {tokens}",
+  "routing_lastWorked": "dolgozott {when}",
+  "routing_deliveryCounts": "{successes} kézbesítve, {failures} sikertelen",
+  "pathEditor_tooManyHops": "Maximum 64 ugrás",
+  "pathEditor_usePath": "Használja ezt az utat",
+  "pathEditor_removeHop": "Távolítsa el az ugrást",
+  "pathEditor_unknownHop": "Ismeretlen átjátszó",
+  "map_zoomIn": "Nagyítás",
+  "map_zoomOut": "Kicsinyítés",
+  "map_centerMap": "Középső térkép",
+  "chrome_bluetoothRequiresChromium": "A Web Bluetooth használatához Chromium böngésző szükséges",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS megerősítve",
+  "pathTrace_legendInferred": "Kikövetkeztetett pozíció",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanner_bluetoothWebUnsupported": "A Bluetooth nem érhető el a böngészőben. Inkább csatlakoztasson USB-n keresztül.",
+  "map_online": "Online",
+  "map_searchHint": "Keresés a csomópont nevében vagy azonosítójában",
+  "map_activity": "Tevékenység",
+  "map_recent": "Legutóbbi",
+  "map_stale": "Állott",
+  "map_visible": "Látható",
+  "map_hidden": "Rejtett",
+  "map_centerOnNode": "Középre a csomóponton",
+  "map_details": "Részletek",
+  "map_noGps": "Nincs GPS",
+  "map_noResults": "Nincsenek megfelelő csomópontok",
+  "pathMap_viewSingle": "Egyetlen",
+  "pathMap_viewCombined": "Kombinált",
+  "pathMap_play": "Játék",
+  "pathMap_pause": "Szünet",
+  "pathMap_replay": "Visszajátszás",
+  "pathMap_stepBack": "Előző ugrás",
+  "pathMap_stepForward": "Következő ugrás",
+  "pathMap_animationOn": "Csomaganimáció megjelenítése",
+  "pathMap_animationOff": "Csomaganimáció elrejtése",
+  "pathMap_hopOf": "{current} ugrás / {total}",
+  "pathMap_observedPaths": "Megfigyelt útvonalak: {count}",
+  "pathMap_primary": "Elsődleges",
+  "pathMap_alternate": "Alt {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 ugrás} other{{count} ugrás}}",
+  "pathMap_legendShared": "Megosztott szegmens",
+  "pathMap_legendEstimated": "Becsült szegmens",
+  "pathMap_sharedNodeCount": "{count} elérési út használja",
+  "pathMap_partialAnimation": "{count, plural, =1{1 ugrásnak nincs helyadata — a megjelenített útvonal részleges} other{{count} ugrásnak nincs helyadata — a megjelenített útvonal részleges}}",
+  "pathMap_showAllPaths": "Összes megjelenítése",
+  "pathMap_hidePath": "Útvonal elrejtése",
+  "pathMap_showPath": "Útvonal megjelenítése",
+  "pathMap_collapsePanel": "Panel összecsukása",
+  "pathMap_expandPanel": "Panel kibontása",
+  "pathMap_noLocation": "Nincs hely",
+  "pathMap_followPacket": "Nézet zárolása a csomaghoz",
+  "pathMap_unfollowPacket": "A nézet feloldása a csomagból",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "tcpBookmarksLabel": "Legutóbbi kapcsolatok",
+  "tcpBookmarksSetName": "Könyvjelző nevének beállítása",
+  "tcpBookmarksFavouritesSubtitle": "Ha kedvencként van megjelölve, nem törlődik a kapcsolati előzményekből",
+  "settings_channelResendTimeoutTitle": "Kézi újraküldési késleltetés",
+  "settings_channelResendTimeoutSubtitle": "Hatással van a kimenő üzenetek duplikált megjelenítését megszüntető belső mechanizmusra is",
+  "settings_channelMaxbytesOutgoingTitle": "Kimenő csatorna-payload korlátozása, bájt",
+  "settings_channelMaxbytesOutgoingSubtitle": "A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. USB esetén ez a határ körülbelül 155 bájt.",
+  "settings_quickAnswersTitle": "Gyors válaszok",
+  "settings_quickAnswersSubtitle": "Gyors válaszként kiválasztható kifejezések listája. Ezeket a névjegyekhez/csatornákhoz lehet rendelni a beállításaikban.",
+  "settings_quickAnswersAddText": "Kérjük, adja meg a szöveget",
+  "settings_quickAnswersEditText": "Válasz szerkesztése",
+  "settings_quickAnswersSelect": "Ezeknek a válaszoknak az engedélyezése",
+  "settings_quickAnswersExists": "Már létezik",
+  "settings_quickAnswersNotAdded": "Ehhez a csevegéshez még nem adott hozzá gyors válaszokat!",
+  "appSettings_enableTimeSeconds": "Másodpercek megjelenítése az üzenetadatokban",
+  "appSettings_showKeyboardHidingButton": "Billentyűzet elrejtése gomb megjelenítése",
+  "settings_mcmpTextLimit": "MCMP szövegbeillesztési korlát",
+  "settings_sendingDelayForCancellation": "Küldési késleltetés visszavonáshoz",
+  "settings_useSendingDelay": "Küldési késleltetés használata",
+  "chat_cancelSend": "küldés megszakítása",
+  "settings_doNotFilterMessagesOnChannels": "Ne szűrje a saját üzeneteket a csatornákon",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Alapértelmezés szerint a saját csomópont üzeneteit figyelmen kívül hagyja az alkalmazás. Ez problémákat okoz néhány beépített TerminalCLI-t használó firmware esetén",
+  "chat_retryingMessageWait": "Újraküldés előtt várjon {seconds} másodpercet",
+  "channels_mcmpCompression": "MCMP tömörítés",
+  "channels_mcmpCompressionDescription": "mesh-compressor modell használata",
+  "settings_quickAnswersSendAtSelect": "Küldés kiválasztáskor",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Indítás",
+  "map_wardriveStop": "Leállítás",
+  "map_wardriveZeroHopDiscovery": "Nulla ugrásos felderítés",
+  "map_wardriveDiscoverySent": "Wardrive felderítési kérés elküldve.",
+  "map_wardriveUploadCancelled": "Wardrive feltöltés megszakítva.",
+  "map_wardriveDiscoveryFailed": "Wardrive felderítés sikertelen: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Kérések: {requests}  Válaszok: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Utolsó kérés: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "Telefon GPS: még nincs frissítve",
+  "map_wardrivePhoneGpsError": "Telefon GPS: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "Telefon GPS: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Még nincs felderítési válasz.",
+  "map_wardriveDataTooltip": "Wardrive adatok",
+  "map_wardriveUploadData": "Adatok feltöltése",
+  "map_wardriveManageUploadSites": "Feltöltési helyek kezelése",
+  "map_wardriveAutoUpload": "Automatikus feltöltés",
+  "map_wardriveScreenWakelock": "Képernyő ébren tartása",
+  "map_wardriveExport": "Exportálás",
+  "map_wardriveImport": "Importálás",
+  "map_wardriveAutoDiscovery": "Automatikus felderítés",
+  "map_wardriveSecondsSuffix": "mp",
+  "map_wardriveSamplesSaved": "Mentett minták: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Automatikus felderítés: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Minta mentése: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Lefedettségi cellák: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Automatikus feltöltés bekapcsolva.",
+  "map_wardriveAutoUploadDisabled": "Automatikus feltöltés kikapcsolva.",
+  "map_wardriveNoSamplesToUpload": "Nincs feltölthető wardrive minta.",
+  "map_wardriveUploadingSamples": "Minták feltöltése...",
+  "map_wardriveUploadingTo": "Feltöltés ide: {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "{current}/{total}. csomag",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "{sent}/{total} küldése",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cél: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Kapcsolatra várakozás",
+  "map_wardriveUploadConnectionEstablished": "Kapcsolat létrejött, feltöltés",
+  "map_wardriveUploadProcessingServer": "Adatok feltöltve, szerver feldolgoz",
+  "map_wardriveUploadServerResponse": "A szerver feldolgozta az adatokat, válasz: {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "A feltöltés időtúllépett; ezen a helyen elküldöttként jelölve",
+  "map_wardriveUploadServerError": "Szerverhiba: {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Feltöltési hiba: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive feltöltés sikertelen: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Feltöltés kész",
+  "map_wardriveUploadResults": "Feltöltési eredmények",
+  "map_wardriveSamplesUploaded": "{count} minta feltöltve",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Válassza ki a feltöltési helyeket:",
+  "map_wardriveNoUploadSitesConfigured": "Nincs feltöltési hely beállítva",
+  "map_wardriveAddSite": "Hely hozzáadása",
+  "map_wardriveUploadSitesUpdated": "Feltöltési helyek frissítve.",
+  "map_wardriveAddUploadSite": "Feltöltési hely hozzáadása",
+  "map_wardriveEditUploadSite": "Feltöltési hely szerkesztése",
+  "map_wardriveNameLabel": "Név",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Feltöltési csomagméret",
+  "map_wardriveUploadBatchSizeInvalid": "Adjon meg {min} és {max} közötti értéket",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Időtúllépés sikeresnek vétele",
+  "map_wardriveNameRequired": "A név kötelező",
+  "map_wardriveNameExists": "Ez a név már létezik",
+  "map_wardriveValidUrlRequired": "Érvényes URL szükséges",
+  "map_wardriveDeleteSite": "Hely törlése",
+  "map_wardriveDeleteSiteConfirm": "Törli ezt: „{name}”?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Nincs exportálható wardrive minta.",
+  "map_wardriveExportShareText": "meshcore-open wardrive minták",
+  "map_wardriveSamplesExported": "Wardrive minták JSON-fájlba exportálva.",
+  "map_wardriveExportFailed": "Wardrive exportálás sikertelen: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Wardrive minták importálása",
+  "map_wardriveImportHint": "Illessze be ide az exportált wardrive JSON-t",
+  "map_wardriveNoNewSamplesImported": "Nem lett új wardrive minta importálva.",
+  "map_wardriveSamplesImported": "{count} wardrive minta importálva.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive importálás sikertelen: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Nincs törölhető wardrive minta.",
+  "map_wardriveClearSamplesTitle": "Törli a wardrive mintákat?",
+  "map_wardriveClearSamplesConfirm": "Ez {count} mentett mintát töröl erről az eszközről.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive minták törölve.",
+  "channelPath_outgoingSentByRadioAt": "Várakozás rádiós továbbításra, mp"
 }

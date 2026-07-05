@@ -91,3 +91,12 @@ keystore.properties
 
 # Cloudflare Wrangler
 .wrangler
+
+# Claude Code local working dir (worktrees, jobs, settings)
+.claude/
+__build-apk
+__build-ios
+
+# except
+!docs/mcoimg-js
+!docs/mcoimg-js/mcoimg-codec.global.js

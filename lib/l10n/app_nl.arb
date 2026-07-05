@@ -33,6 +33,8 @@
   "common_remove": "Verwijderen",
   "common_enable": "Activeren",
   "common_disable": "Uitschakelen",
+  "common_autoRefresh": "Automatisch vernieuwen",
+  "common_interval": "Tijdsinterval",
   "common_reboot": "Herstarten",
   "common_loading": "Laden...",
   "common_notAvailable": "—",
@@ -158,6 +160,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Laatste verbindingen",
+  "tcpBookmarksSetName": "Naam voor bladwijzer instellen",
+  "tcpBookmarksFavouritesSubtitle": "Wanneer gemarkeerd als favoriet, wordt deze niet uit de verbindingsgeschiedenis verwijderd",
+  "settings_channelResendTimeoutTitle": "Handmatige vertraging voor opnieuw verzenden",
+  "settings_channelResendTimeoutSubtitle": "Beïnvloedt ook het interne mechanisme om dubbele weergave van uitgaande berichten te voorkomen",
+  "settings_channelMaxbytesOutgoingTitle": "Uitgaande payload voor kanalen beperken, bytes",
+  "settings_channelMaxbytesOutgoingSubtitle": "De limiet houdt rekening met de berichttekst plus de naam van de afzender. Er is waargenomen dat zodra een bericht een bepaald aantal bytes overschrijdt, bevestigingen voor pakket-herhaling niet meer worden verzonden. Dit is vooral merkbaar bij BLE-verbindingen. De geschatte drempel waarbij bevestigingen nog werken is 139 bytes. Voor USB is deze limiet ongeveer 155 bytes.",
+  "settings_quickAnswersTitle": "Snelle antwoorden",
+  "settings_quickAnswersSubtitle": "Een lijst met zinnen die als snelle antwoorden kunnen worden geselecteerd. Ze worden toegewezen aan contacten/kanalen in hun instellingen.",
+  "settings_quickAnswersAddText": "Voer je tekst in",
+  "settings_quickAnswersEditText": "Antwoord bewerken",
+  "settings_quickAnswersSelect": "Deze antwoorden inschakelen",
+  "settings_quickAnswersExists": "Bestaat al",
+  "settings_quickAnswersNotAdded": "Je hebt nog geen snelle antwoorden voor deze chat toegevoegd!",
+  "appSettings_enableTimeSeconds": "Seconden tonen in berichtinformatie",
+  "appSettings_showKeyboardHidingButton": "Knop voor toetsenbord verbergen tonen",
+  "settings_mcmpTextLimit": "MCMP-tekstplaklimiet",
+  "settings_sendingDelayForCancellation": "Verzendvertraging voor annuleren",
+  "settings_useSendingDelay": "Verzendvertraging gebruiken",
+  "chat_cancelSend": "verzenden annuleren",
+  "settings_doNotFilterMessagesOnChannels": "Eigen berichten in kanalen niet filteren",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Standaard worden eigen berichten van je node genegeerd. Dit veroorzaakt problemen bij sommige firmwares met ingebouwde TerminalCLI",
+  "chat_retryingMessageWait": "Wacht {seconds} seconden voordat je opnieuw verzendt",
+  "channels_mcmpCompression": "MCMP-compressie",
+  "channels_mcmpCompressionDescription": "Gebruikt het mesh-compressor-model",
   "appSettings_title": "App Instellingen",
   "appSettings_appearance": "Uiterlijk",
   "appSettings_theme": "Thema",
@@ -1105,7 +1132,7 @@
   "repeater_advancedSettings": "Geavanceerd",
   "repeater_advancedSettingsSubtitle": "Regelhendels voor ervaren gebruikers",
   "repeater_pathHashMode": "Hash-modus voor paden",
-  "repeater_pathHashModeHelper": "Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID's, tot 64 hops), 1=2 bytes (65.000 ID's, tot 32 hops), 2=3 bytes (16 miljoen ID's, tot 21 hops). Versies 1.13 en ouder gebruiken multi-byte paden – alleen na het activeren van het netwerk.",
+  "repeater_pathHashModeHelper": "Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID's, tot 64 hops), 1=2 bytes (65.000 ID's, tot 32 hops), 2=3 bytes (16 miljoen ID's, tot 21 hops). Firmware vóór v1.14 gebruikte altijd 1-byte paden; v1.14 en nieuwer kunnen worden ingesteld op 2- of 3-byte paden.",
   "repeater_txDelay": "Vertraging bij Flood TX",
   "repeater_txDelayHelper": "Herzendinterval voor verkeer tijdens overstromingen, als een veelvoud van de tijd die het pakket nodig heeft (0-2, standaard 0.5). Een hoger getal betekent minder botsingen, maar ook een langere leveringstijd.",
   "repeater_directTxDelay": "Directe vertraging",
@@ -1280,6 +1307,43 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Digitale ingang",
+  "telemetry_digitalOutputLabel": "Digitale uitgang",
+  "telemetry_analogInputLabel": "Analoge ingang",
+  "telemetry_analogOutputLabel": "Analoge uitgang",
+  "telemetry_genericLabel": "Algemene sensor",
+  "telemetry_luminosityLabel": "Lichtsterkte",
+  "telemetry_presenceLabel": "Aanwezigheid",
+  "telemetry_humidityLabel": "Luchtvochtigheid",
+  "telemetry_accelerometerLabel": "Versnellingsmeter",
+  "telemetry_pressureLabel": "Druk",
+  "telemetry_altitudeLabel": "Hoogte",
+  "telemetry_frequencyLabel": "Frequentie",
+  "telemetry_percentageLabel": "Percentage",
+  "telemetry_concentrationLabel": "Concentratie",
+  "telemetry_powerLabel": "Vermogen",
+  "telemetry_distanceLabel": "Afstand",
+  "telemetry_energyLabel": "Energie",
+  "telemetry_directionLabel": "Richting",
+  "telemetry_timeLabel": "Tijd",
+  "telemetry_gyrometerLabel": "Gyrometer",
+  "telemetry_colourLabel": "Kleur",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Schakelaar",
+  "telemetry_polylineLabel": "Polylijn",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Aantal aanvragen",
+  "telemetry_error": "Kan gegevens niet ophalen",
   "telemetry_noData": "Geen telemetriedata beschikbaar.",
   "telemetry_channelTitle": "Kanaal {channel}",
   "@telemetry_channelTitle": {
@@ -1469,6 +1533,10 @@
   "channels_scanQrCodeComingSoon": "Komt later",
   "channels_enterHashtag": "Voer hashtag in",
   "channels_hashtagHint": "bijv. #team",
+  "channels_changeWidgetColor": "Widgetkleur",
+  "channels_changeWidgetTextColor": "Tekstkleur van widget",
+  "channels_changeGroupEmpty": "Hier is het voorlopig leeg",
+  "channels_allowOrderingInGroup": "Kanalen ordenen binnen de groep toestaan",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2101,6 +2169,9 @@
   "translation_composerTitle": "Vertaal voor verzending",
   "translation_composerSubtitle": "Stelt de standaardstatus van het pictogram voor de vertaling van de componist in.",
   "translation_useAppLanguage": "Gebruik de taal van de app",
+  "translation_autoIncomingTitle": "Berichten automatisch vertalen",
+  "translation_autoIncomingSubtitle": "Vertaalt berichten automatisch voor meldingen en voor chats of kanalen.",
+  "translation_translateMessage": "Bericht vertalen",
   "translation_targetLanguage": "Doeltaal",
   "translation_downloadedModelLabel": "Gedownloade model",
   "translation_presetModelLabel": "Voorgeprogrammeerd Hugging Face-model",
@@ -2311,5 +2382,192 @@
   "chat_newMessages": "Nieuwe berichten",
   "chat_markAsUnread": "Markeer als ongelezen",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB commando's, antwoorden en ruwe data",
-  "repeater_chanUtil": "Gebruik van het kanaal"
+  "repeater_chanUtil": "Gebruik van het kanaal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Verzonden",
+  "common_undo": "Achterhalen/Annuleren",
+  "messageStatus_delivered": "Leverd",
+  "messageStatus_pending": "Verzenden",
+  "messageStatus_failed": "Niet verzonden",
+  "messageStatus_repeated": "Hearsay, herhaald",
+  "contacts_moreOptions": "Meer opties",
+  "contacts_searchOpen": "Zoek contactpersonen",
+  "contacts_searchClose": "Zoeken",
+  "routing_title": "Routeplanning",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Overstroming",
+  "routing_modeManual": "Handleiding",
+  "routing_modeAutoHint": "Selecteert automatisch het bekendste pad, en gebruikt een flood-algoritme als er geen bekend pad is.",
+  "routing_modeFloodHint": "Uitzendingen via elke zender. De meest betrouwbare methode, maar vereist meer uitzendtijd.",
+  "routing_modeManualHint": "Stuurt altijd de exacte route die u heeft aangegeven.",
+  "routing_currentRoute": "Huidige route",
+  "routing_directNoHops": "Direct – zonder tussenliggende schakels",
+  "routing_noPathYet": "Er is nog geen route gevonden. De berichten blijven binnenkomen totdat een route is ontdekt.",
+  "routing_floodBroadcast": "Uitgestoten via elke zender.",
+  "routing_editPath": "Pad bewerken",
+  "routing_forgetPath": "Vergeet het pad",
+  "routing_knownPaths": "Bekende routes",
+  "routing_knownPathsHint": "Maak een route om er naartoe te gaan.",
+  "routing_inUse": "In gebruik",
+  "routing_qualityStrong": "Sterke eerste sprong",
+  "routing_qualityGood": "Een goede eerste stap",
+  "routing_qualityFair": "Een goede eerste hop",
+  "routing_qualityWorked": "Is geleverd",
+  "routing_qualityFlood": "Hears via een overstroming",
+  "routing_qualityUntested": "Niet getest",
+  "routing_neverWorked": "nooit bevestigd",
+  "routing_deliveryCounts": "{successes} zijn behaald, {failures} zijn mislukt",
+  "routing_floodDelivery": "Levering bij overstroming",
+  "pathEditor_title": "Pad creëren",
+  "pathEditor_hopCounter": "{count} van 64 hopgranen",
+  "pathEditor_noHops": "Er zijn nog geen hop toegevoegd. Klik op de onderstaande knoppen om ze in de juiste volgorde toe te voegen, of sla de bestelling op zonder hop om deze direct te versturen.",
+  "pathEditor_addHops": "Voeg hop toe in de juiste volgorde.",
+  "pathEditor_searchRepeaters": "Zoek naar herhaaldelijke zenders",
+  "pathEditor_advancedHex": "Geavanceerd: ruwe hex-pad",
+  "pathEditor_hexLabel": "Hex-voorkanten",
+  "pathEditor_hexHelper": "Twee hex-tekens per stap, gescheiden door komma's",
+  "pathEditor_invalidTokens": "Ongeldig: {tokens}",
+  "pathEditor_tooManyHops": "Maximaal 64 hopken",
+  "pathEditor_usePath": "Gebruik deze route.",
+  "pathEditor_removeHop": "Verwijder de hop",
+  "pathEditor_unknownHop": "Onbekend type zender",
+  "map_zoomIn": "Inzoomen",
+  "routing_lastWorked": "worked {when}",
+  "map_zoomOut": "Inzoomen",
+  "map_centerMap": "Centraal overzicht",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth vereist een Chromium-browser.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS-locatie bevestigd",
+  "pathTrace_legendInferred": "Afgeleide positie",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_activity": "Activiteit",
+  "map_searchHint": "Zoek op naam of ID van de knoop",
+  "scanner_bluetoothWebUnsupported": "Bluetooth is niet beschikbaar in de browser. Verbind dan via USB.",
+  "map_online": "Online",
+  "map_recent": "Recent",
+  "map_stale": "Verouderd",
+  "map_visible": "Zichtbaar",
+  "map_hidden": "Verborgen",
+  "map_centerOnNode": "Centreer op node",
+  "map_details": "Details",
+  "map_noGps": "Geen GPS",
+  "map_noResults": "Geen overeenkomende nodes",
+  "pathMap_viewSingle": "Enkel",
+  "pathMap_viewCombined": "Gezamenlijk",
+  "pathMap_play": "Afspelen",
+  "pathMap_pause": "Pauze",
+  "pathMap_replay": "Herhalen",
+  "pathMap_stepBack": "Vorige hop",
+  "pathMap_stepForward": "Volgende hop",
+  "pathMap_animationOn": "Pakketanimatie tonen",
+  "pathMap_animationOff": "Pakketanimatie verbergen",
+  "pathMap_hopOf": "Hop {current} van {total}",
+  "pathMap_observedPaths": "Waargenomen paden: {count}",
+  "pathMap_primary": "Primair",
+  "pathMap_alternate": "Alternatief {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "pathMap_legendShared": "Gedeeld segment",
+  "pathMap_legendEstimated": "Geschat segment",
+  "pathMap_sharedNodeCount": "Gebruikt door {count} paden",
+  "pathMap_partialAnimation": "{count, plural, =1{1 hop heeft geen locatie — het weergegeven pad is onvolledig} other{{count} hops hebben geen locatie — het weergegeven pad is onvolledig}}",
+  "pathMap_showAllPaths": "Toon alles",
+  "pathMap_hidePath": "Verberg pad",
+  "pathMap_showPath": "Toon pad",
+  "pathMap_collapsePanel": "Paneel inklappen",
+  "pathMap_expandPanel": "Paneel uitklappen",
+  "pathMap_noLocation": "Geen locatie",
+  "pathMap_followPacket": "Weergave vergrendelen op pakket",
+  "pathMap_unfollowPacket": "Weergave ontgrendelen van pakket",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

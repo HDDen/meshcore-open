@@ -1,0 +1,702 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/l10n/l10n.dart';
+import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/storage/region_store.dart';
+import 'package:provider/provider.dart';
+
+Future<void> pushRegionManagementScreen(BuildContext context) {
+  return Navigator.push(
+    context,
+    MaterialPageRoute<void>(
+      builder: (context) => const RegionManagementScreen(),
+    ),
+  );
+}
+
+class RegionManagementScreen extends StatefulWidget {
+  const RegionManagementScreen({super.key});
+
+  @override
+  State<RegionManagementScreen> createState() => _RegionManagementScreenState();
+}
+
+class _RegionManagementScreenState extends State<RegionManagementScreen> {
+  static final RegExp _validFetchedRegion = RegExp(r'^[a-z0-9-]{1,30}$');
+
+  final RegionStore _regionStore = RegionStore();
+  final TextEditingController _defaultScopeController = TextEditingController();
+  List<Region> _regions = [];
+  bool _isFetchingRegions = false;
+  bool _isDefaultScopeBusy = false;
+  bool _hasLoadedDefaultScope = false;
+
+  String region = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final connector = context.read<MeshCoreConnector>();
+    _regionStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    _loadRegions();
+    unawaited(_loadDefaultRegionScope());
+  }
+
+  @override
+  void dispose() {
+    _defaultScopeController.dispose();
+    super.dispose();
+  }
+
+  void _loadRegions() {
+    context.read<MeshCoreConnector>().loadChannelSettings();
+
+    final regions = _regionStore.loadRegions();
+    if (mounted) {
+      setState(() {
+        _regions = regions;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final connector = context.watch<MeshCoreConnector>();
+    final isWaitingForDefaultScopeSync =
+        !_hasLoadedDefaultScope && _isWaitingForNodeSync(connector);
+    if (!_hasLoadedDefaultScope &&
+        !_isDefaultScopeBusy &&
+        !isWaitingForDefaultScopeSync) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasLoadedDefaultScope && !_isDefaultScopeBusy) {
+          unawaited(_loadDefaultRegionScope());
+        }
+      });
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.settings_regionManagement_screenTitle),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: l10n.settings_regionAddRegion,
+            icon: const Icon(Icons.add),
+            onPressed: () => _showAddRegionDialog(context),
+          ),
+          IconButton(
+            tooltip: l10n.settings_regionFetchRegions,
+            icon: _isFetchingRegions
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.travel_explore),
+            onPressed: _isFetchingRegions ? null : _showFetchRegionsDialog,
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
+        children: [
+          for (final region in _regions) _buildRegionTile(context, region),
+          const SizedBox(height: 16),
+          _buildDefaultRegionScopeSection(
+            context,
+            isWaitingForSync: isWaitingForDefaultScopeSync,
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isWaitingForNodeSync(MeshCoreConnector connector) {
+    return connector.isConnected &&
+        (connector.isLoadingContacts ||
+            connector.isLoadingChannels ||
+            connector.isSyncingChannels ||
+            connector.isSyncingQueuedMessages);
+  }
+
+  Future<void> _loadDefaultRegionScope() async {
+    if (!mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    if (_isWaitingForNodeSync(connector)) return;
+
+    setState(() {
+      _isDefaultScopeBusy = true;
+    });
+
+    try {
+      final scope = await connector.getDefaultRegionScope();
+      if (!mounted) return;
+      _defaultScopeController.text = scope ?? '';
+      _hasLoadedDefaultScope = true;
+    } catch (_) {
+      if (!mounted) return;
+      _defaultScopeController.text = '';
+      _hasLoadedDefaultScope = true;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDefaultScopeBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveDefaultRegionScope({required bool reset}) async {
+    if (_isDefaultScopeBusy) return;
+    final l10n = context.l10n;
+    final connector = context.read<MeshCoreConnector>();
+    final value = reset ? '' : _defaultScopeController.text.trim();
+    if (reset) {
+      _defaultScopeController.clear();
+    }
+
+    setState(() {
+      _isDefaultScopeBusy = true;
+    });
+
+    try {
+      await connector.setDefaultRegionScope(value.isEmpty ? null : value);
+      if (!mounted) return;
+      _hasLoadedDefaultScope = true;
+      _defaultScopeController.text = value.startsWith('#')
+          ? value.substring(1)
+          : value;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_defaultRegionScopeChanged)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_defaultRegionScopeChangeFailed)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDefaultScopeBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _setDefaultRegionScopeFromRegion(Region region) async {
+    if (_isDefaultScopeBusy) return;
+    _defaultScopeController.text = region;
+    await _saveDefaultRegionScope(reset: false);
+  }
+
+  Widget _buildDefaultRegionScopeSection(
+    BuildContext context, {
+    required bool isWaitingForSync,
+  }) {
+    final l10n = context.l10n;
+    final enabled = !_isDefaultScopeBusy && !isWaitingForSync;
+    final hintText = isWaitingForSync
+        ? l10n.settings_defaultRegionScopeWaitForSync
+        : l10n.settings_defaultRegionScopeEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  l10n.settings_defaultRegionScope,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              if (_isDefaultScopeBusy) ...[
+                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Opacity(
+          opacity: enabled ? 1 : 0.55,
+          child: TextField(
+            controller: _defaultScopeController,
+            enabled: enabled,
+            decoration: InputDecoration(
+              hintText: hintText,
+              hintStyle: isWaitingForSync
+                  ? Theme.of(context).textTheme.bodySmall
+                  : null,
+              border: const OutlineInputBorder(),
+            ),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp("[#a-z0-9-]")),
+            ],
+            maxLength: 30,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+              child: TextButton(
+                onPressed: enabled
+                    ? () => _saveDefaultRegionScope(reset: true)
+                    : null,
+                child: Text(
+                  l10n.common_reset,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: FilledButton(
+                onPressed: enabled
+                    ? () => _saveDefaultRegionScope(reset: false)
+                    : null,
+                child: Text(
+                  l10n.common_save,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showAddRegionDialog(BuildContext context) {
+    final l10n = context.l10n;
+    final controller = TextEditingController(text: region);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settings_regionName),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textInputAction: TextInputAction.send,
+          onSubmitted: (_) => _handleAddRegion(controller.text, context),
+          decoration: InputDecoration(
+            hintText: l10n.settings_regionNameHint,
+            border: const OutlineInputBorder(),
+          ),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp("[a-z0-9-]")),
+          ],
+          maxLength: 30,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => _handleAddRegion(controller.text, context),
+            child: Text(l10n.common_add),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showFetchRegionsDialog() async {
+    if (_isFetchingRegions) return;
+
+    setState(() {
+      _isFetchingRegions = true;
+    });
+
+    Set<Region> fetchedRegions = {};
+    try {
+      fetchedRegions = await _fetchRegionsFromRepeaters();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingRegions = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final sortedRegions = fetchedRegions.toList()..sort();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.settings_regionFetchRegions),
+        content: sortedRegions.isEmpty
+            ? Text(l10n.settings_regionFetchRegionsFail)
+            : StatefulBuilder(
+                builder: (context, setDialogState) {
+                  return SizedBox(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: sortedRegions.length,
+                      itemBuilder: (context, index) {
+                        final fetchedRegion = sortedRegions[index];
+                        final alreadyExists = _regions.contains(fetchedRegion);
+                        return Card(
+                          child: ListTile(
+                            title: Text(fetchedRegion),
+                            trailing: TextButton(
+                              style: alreadyExists
+                                  ? TextButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).disabledColor,
+                                    )
+                                  : null,
+                              onPressed: () {
+                                if (alreadyExists) {
+                                  _showDialogSnackBar(
+                                    context,
+                                    l10n.settings_regionFetchRegionsAlreadyExists,
+                                  );
+                                  return;
+                                }
+
+                                _regionStore.addRegion(fetchedRegion);
+                                _loadRegions();
+                                setDialogState(() {});
+                              },
+                              child: Text(l10n.common_add),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.common_close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDialogSnackBar(BuildContext context, String message) {
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+
+    final theme = Theme.of(context);
+    final entry = OverlayEntry(
+      builder: (context) => Positioned(
+        left: 16,
+        right: 16,
+        bottom: 32,
+        child: SafeArea(
+          child: Material(
+            color: theme.colorScheme.inverseSurface,
+            elevation: 6,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Text(
+                message,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onInverseSurface,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Timer(const Duration(seconds: 3), entry.remove);
+  }
+
+  Future<Set<Region>> _fetchRegionsFromRepeaters() async {
+    final connector = context.read<MeshCoreConnector>();
+    final repeaters = await _discoverNearbyRepeaters(connector);
+    final regions = <Region>{};
+
+    for (final repeater in repeaters) {
+      if (!mounted || !connector.isConnected) break;
+      regions.addAll(await _requestRegionsFromRepeater(connector, repeater));
+    }
+
+    return regions;
+  }
+
+  Future<List<Contact>> _discoverNearbyRepeaters(
+    MeshCoreConnector connector,
+  ) async {
+    final repeaters = connector.contacts
+        .where((contact) => contact.type == advTypeRepeater)
+        .toList();
+    if (repeaters.isEmpty || !connector.isConnected) return <Contact>[];
+
+    StreamSubscription<Uint8List>? subscription;
+    Timer? timeout;
+    final completer = Completer<Set<String>>();
+    final respondingPrefixes = <String>{};
+    final tag = DateTime.now().microsecondsSinceEpoch & 0xFFFFFFFF;
+
+    void complete() {
+      if (completer.isCompleted) return;
+      timeout?.cancel();
+      subscription?.cancel();
+      completer.complete(respondingPrefixes);
+    }
+
+    subscription = connector.receivedFrames.listen((frame) {
+      if (frame.isEmpty || completer.isCompleted) return;
+
+      final reader = BufferReader(frame);
+      try {
+        if (reader.readByte() != pushCodeControlData) return;
+        if (reader.remaining < 9) return;
+        reader.skipBytes(3); // SNR, RSSI, path_len from companion firmware.
+
+        final payloadType = reader.readByte();
+        if (((payloadType >> 4) & 0x0F) != controlSubtypeDiscoverResp ||
+            (payloadType & 0x0F) != advTypeRepeater) {
+          return;
+        }
+
+        reader.skipBytes(1); // Inbound SNR reported by the responding repeater.
+        if (reader.readUInt32LE() != tag) return;
+
+        final publicKeyPrefix = reader.readRemainingBytes();
+        if (publicKeyPrefix.isEmpty) return;
+        respondingPrefixes.add(pubKeyToHex(publicKeyPrefix));
+      } catch (_) {
+        // Ignore malformed discovery frames; another response may still arrive.
+      }
+    });
+
+    try {
+      final payload = buildDiscoveryRequestPayload(tag, prefixOnly: true);
+      await connector.sendFrame(buildSendControlDataFrame(payload));
+      timeout = Timer(const Duration(seconds: 10), complete);
+      final prefixes = await completer.future;
+      return repeaters.where((contact) {
+        final contactKey = contact.publicKeyHex.toLowerCase();
+        return prefixes.any((prefix) => contactKey.startsWith(prefix));
+      }).toList();
+    } catch (_) {
+      timeout?.cancel();
+      await subscription.cancel();
+      return <Contact>[];
+    }
+  }
+
+  Future<Set<Region>> _requestRegionsFromRepeater(
+    MeshCoreConnector connector,
+    Contact repeater,
+  ) async {
+    StreamSubscription<Uint8List>? subscription;
+    Timer? timeout;
+    final completer = Completer<Set<Region>>();
+    int? expectedTag;
+    final originalPath = Uint8List.fromList(repeater.path);
+    final originalPathLength = repeater.pathLength;
+    var pathChangedForRequest = false;
+
+    void complete(Set<Region> regions) {
+      if (completer.isCompleted) return;
+      timeout?.cancel();
+      subscription?.cancel();
+      completer.complete(regions);
+    }
+
+    void restartTimeout(Duration duration) {
+      timeout?.cancel();
+      timeout = Timer(duration, () => complete(<Region>{}));
+    }
+
+    try {
+      final replyPath = Uint8List(0);
+      const replyHopCount = 0;
+      await connector.setContactPath(repeater, replyPath, replyHopCount);
+      pathChangedForRequest = true;
+
+      subscription = connector.receivedFrames.listen((frame) {
+        if (frame.isEmpty || completer.isCompleted) return;
+
+        final reader = BufferReader(frame);
+        try {
+          final cmd = reader.readByte();
+          if (cmd == respCodeSent) {
+            reader.skipBytes(1);
+            expectedTag = reader.readUInt32LE();
+            final estimatedTimeoutMs = reader.readUInt32LE();
+            restartTimeout(
+              Duration(
+                milliseconds: estimatedTimeoutMs > 0
+                    ? estimatedTimeoutMs + 2000
+                    : 10000,
+              ),
+            );
+            return;
+          }
+
+          if (cmd == respCodeErr) {
+            complete(<Region>{});
+            return;
+          }
+
+          if (cmd != pushCodeBinaryResponse || expectedTag == null) return;
+
+          reader.skipBytes(1);
+          final tag = reader.readUInt32LE();
+          if (tag != expectedTag) return;
+
+          complete(_parseRegionsResponse(reader.readRemainingBytes()));
+        } catch (_) {
+          complete(<Region>{});
+        }
+      });
+
+      restartTimeout(const Duration(seconds: 10));
+      final frame = buildSendAnonReqFrame(
+        repeater.publicKey,
+        requestType: anonReqTypeRegions,
+        replyPath: replyPath,
+        replyHopCount: replyHopCount,
+        pathHashWidth: connector.pathHashByteWidth,
+      );
+      await connector.sendFrame(frame);
+      final regions = await completer.future;
+      if (pathChangedForRequest && connector.isConnected) {
+        await _restoreRepeaterPath(
+          connector,
+          repeater,
+          originalPathLength,
+          originalPath,
+        );
+      }
+      return regions;
+    } catch (_) {
+      timeout?.cancel();
+      subscription?.cancel();
+      if (pathChangedForRequest && connector.isConnected) {
+        await _restoreRepeaterPath(
+          connector,
+          repeater,
+          originalPathLength,
+          originalPath,
+        );
+      }
+      return <Region>{};
+    }
+  }
+
+  Future<void> _restoreRepeaterPath(
+    MeshCoreConnector connector,
+    Contact repeater,
+    int originalPathLength,
+    Uint8List originalPath,
+  ) async {
+    if (originalPathLength < 0) {
+      await connector.clearContactPath(repeater);
+      return;
+    }
+    await connector.setContactPath(repeater, originalPath, originalPathLength);
+  }
+
+  Set<Region> _parseRegionsResponse(Uint8List frame) {
+    if (frame.length <= 4) return <Region>{};
+    final names = utf8
+        .decode(frame.sublist(4), allowMalformed: true)
+        .replaceAll('\x00', '')
+        .split(',');
+    return names
+        .map((name) => name.trim())
+        .where((name) => _validFetchedRegion.hasMatch(name))
+        .toSet();
+  }
+
+  void _handleAddRegion(Region region, BuildContext context) {
+    Navigator.pop(context);
+    _regionStore.addRegion(region);
+    _loadRegions();
+  }
+
+  Widget _buildRegionTile(BuildContext context, Region region) {
+    return Card(
+      key: ValueKey(region),
+      child: ListTile(
+        dense: false,
+        title: Text(region),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.l10n.settings_defaultRegionScope,
+              icon: const Icon(Icons.public),
+              onPressed: _isDefaultScopeBusy
+                  ? null
+                  : () => _setDefaultRegionScopeFromRegion(region),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _isDefaultScopeBusy
+                  ? null
+                  : () => _confirmDelete(context, region),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, Region region) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.settings_deleteRegion),
+        content: Text(context.l10n.settings_deleteRegionConfirm(region)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _regionStore.removeRegion(region);
+              _loadRegions();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.settings_regionDeleted)),
+              );
+            },
+            child: Text(
+              context.l10n.common_delete,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -34,6 +34,8 @@
   "common_remove": "Прибрати",
   "common_enable": "Увімкнути",
   "common_disable": "Вимкнути",
+  "common_autoRefresh": "Автооновлення",
+  "common_interval": "Інтервал",
   "common_reboot": "Перезавантажити",
   "common_loading": "Завантаження...",
   "common_notAvailable": "—",
@@ -159,6 +161,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Останні підключення",
+  "tcpBookmarksSetName": "Задати назву закладки",
+  "tcpBookmarksFavouritesSubtitle": "Якщо позначено як обране, воно не видаляється з історії підключень",
+  "settings_channelResendTimeoutTitle": "Затримка ручного повторного надсилання",
+  "settings_channelResendTimeoutSubtitle": "Також впливає на внутрішній механізм усунення дубльованого показу вихідних повідомлень",
+  "settings_channelMaxbytesOutgoingTitle": "Обмежити вихідний payload для каналів, байти",
+  "settings_channelMaxbytesOutgoingSubtitle": "Ліміт враховує текст повідомлення разом з іменем відправника. Було помічено, що коли повідомлення перевищує певну кількість байтів, підтвердження ретрансляції пакетів перестають передаватися. Це особливо помітно для BLE-підключень. Орієнтовний поріг, за якого підтвердження ще працюють, становить 139 байтів. Для USB цей ліміт становить приблизно 155 байтів.",
+  "settings_quickAnswersTitle": "Швидкі відповіді",
+  "settings_quickAnswersSubtitle": "Список фраз, доступних для вибору як швидкі відповіді. Вони призначаються контактам/каналам у їхніх налаштуваннях.",
+  "settings_quickAnswersAddText": "Будь ласка, введіть текст",
+  "settings_quickAnswersEditText": "Редагувати відповідь",
+  "settings_quickAnswersSelect": "Увімкнути ці відповіді",
+  "settings_quickAnswersExists": "Вже існує",
+  "settings_quickAnswersNotAdded": "Ви ще не додали швидкі відповіді для цього чату!",
+  "appSettings_enableTimeSeconds": "Показувати секунди в інформації про повідомлення",
+  "appSettings_showKeyboardHidingButton": "Показувати кнопку приховування клавіатури",
+  "settings_mcmpTextLimit": "Ліміт вставлення тексту MCMP",
+  "settings_sendingDelayForCancellation": "Затримка надсилання для скасування",
+  "settings_useSendingDelay": "Використовувати затримку надсилання",
+  "chat_cancelSend": "скасувати надсилання",
+  "settings_doNotFilterMessagesOnChannels": "Не фільтрувати власні повідомлення в каналах",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "За замовчуванням власні повідомлення з вашої ноди ігноруються. Це спричиняє проблеми на деяких прошивках із вбудованим TerminalCLI",
+  "chat_retryingMessageWait": "Зачекайте {seconds} секунд перед повторним надсиланням",
+  "channels_mcmpCompression": "Стиснення MCMP",
+  "channels_mcmpCompressionDescription": "Використання моделі mesh-compressor",
   "appSettings_title": "Налаштування застосунку",
   "appSettings_appearance": "Вигляд",
   "appSettings_theme": "Тема",
@@ -1115,7 +1142,7 @@
   "repeater_advancedSettings": "Просунутий",
   "repeater_advancedSettingsSubtitle": "Регулювальні ручки для досвідчених операторів",
   "repeater_pathHashMode": "Режим хешування шляху",
-  "repeater_pathHashModeHelper": "Байти, що використовуються для кодування ідентифікатора цього ретранслятора в тегах для виявлення потоків/петлі. 0=1 байт (256 ідентифікаторів, до 64 перехідів), 1=2 байти (65 000 ідентифікаторів, до 32 перехідів), 2=3 байти (16 мільйонів ідентифікаторів, до 21 переходу). Версії 1.13 та старіші не підтримують багатобайтні шляхи — вони активуються лише після того, як мережа буде оновлена до версії 1.14+.",
+  "repeater_pathHashModeHelper": "Байти, що використовуються для кодування ідентифікатора цього ретранслятора в тегах flood-шляху/виявлення петель. 0=1 байт (256 ідентифікаторів, до 64 переходів), 1=2 байти (65 000 ідентифікаторів, до 32 переходів), 2=3 байти (16 мільйонів ідентифікаторів, до 21 переходу). Прошивки до v1.14 завжди використовували 1-байтові шляхи; v1.14 і новіші можна налаштувати на 2- або 3-байтові шляхи.",
   "repeater_txDelay": "Затримка у Flood, штат Техас",
   "repeater_txDelayHelper": "Повторне надсилання з урахуванням навантаження від потоків транспорту, як множник від часу передачі пакета (0-2, за замовчуванням 0,5). Чим вище значення, тим менше конфліктів, але повільніше передавання.",
   "repeater_directTxDelay": "Пряме затримка TX",
@@ -1291,6 +1318,78 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Цифровий вхід",
+  "telemetry_digitalOutputLabel": "Цифровий вихід",
+  "telemetry_analogInputLabel": "Аналоговий вхід",
+  "telemetry_analogOutputLabel": "Аналоговий вихід",
+  "telemetry_genericLabel": "Загальний датчик",
+  "telemetry_luminosityLabel": "Освітленість",
+  "telemetry_presenceLabel": "Присутність",
+  "telemetry_humidityLabel": "Вологість",
+  "telemetry_accelerometerLabel": "Акселерометр",
+  "telemetry_pressureLabel": "Тиск",
+  "telemetry_altitudeLabel": "Висота",
+  "telemetry_frequencyLabel": "Частота",
+  "telemetry_percentageLabel": "Відсоток",
+  "telemetry_concentrationLabel": "Концентрація",
+  "telemetry_powerLabel": "Потужність",
+  "telemetry_distanceLabel": "Відстань",
+  "telemetry_energyLabel": "Енергія",
+  "telemetry_directionLabel": "Напрямок",
+  "telemetry_timeLabel": "Час",
+  "telemetry_gyrometerLabel": "Гірометр",
+  "telemetry_colourLabel": "Колір",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Перемикач",
+  "telemetry_polylineLabel": "Полілінія",
+  "telemetry_altitudeValue": "{meters} м",
+  "telemetry_frequencyValue": "{hertz} Гц",
+  "telemetry_pressureValue": "{hpa} гПа",
+  "telemetry_luminosityValue": "{lux} лк",
+  "telemetry_powerValue": "{watts} Вт",
+  "telemetry_distanceValue": "{meters} м",
+  "telemetry_energyValue": "{kilowattHours} кВт⋅год",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_digitalInputLabel": "Цифровий вхід",
+  "telemetry_digitalOutputLabel": "Цифровий вихід",
+  "telemetry_analogInputLabel": "Аналоговий вхід",
+  "telemetry_analogOutputLabel": "Аналоговий вихід",
+  "telemetry_genericLabel": "Загальний датчик",
+  "telemetry_luminosityLabel": "Освітленість",
+  "telemetry_presenceLabel": "Присутність",
+  "telemetry_humidityLabel": "Вологість",
+  "telemetry_accelerometerLabel": "Акселерометр",
+  "telemetry_pressureLabel": "Тиск",
+  "telemetry_altitudeLabel": "Висота",
+  "telemetry_frequencyLabel": "Частота",
+  "telemetry_percentageLabel": "Відсоток",
+  "telemetry_concentrationLabel": "Концентрація",
+  "telemetry_powerLabel": "Потужність",
+  "telemetry_distanceLabel": "Відстань",
+  "telemetry_energyLabel": "Енергія",
+  "telemetry_directionLabel": "Напрямок",
+  "telemetry_timeLabel": "Час",
+  "telemetry_gyrometerLabel": "Гірометр",
+  "telemetry_colourLabel": "Колір",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Перемикач",
+  "telemetry_polylineLabel": "Полілінія",
+  "telemetry_altitudeValue": "{meters} м",
+  "telemetry_frequencyValue": "{hertz} Гц",
+  "telemetry_pressureValue": "{hpa} гПа",
+  "telemetry_luminosityValue": "{lux} лк",
+  "telemetry_powerValue": "{watts} Вт",
+  "telemetry_distanceValue": "{meters} м",
+  "telemetry_energyValue": "{kilowattHours} кВт⋅год",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Кількість запитів",
+  "telemetry_error": "Не вдалося отримати дані",
   "telemetry_noData": "Дані телеметрії недоступні.",
   "telemetry_channelTitle": "Канал {channel}",
   "@telemetry_channelTitle": {
@@ -1480,6 +1579,10 @@
   "channels_scanQrCodeComingSoon": "Скоро буде",
   "channels_enterHashtag": "Введіть хештег",
   "channels_hashtagHint": "напр. #команда",
+  "channels_changeWidgetColor": "Колір віджета",
+  "channels_changeWidgetTextColor": "Колір тексту віджета",
+  "channels_changeGroupEmpty": "Тут поки порожньо",
+  "channels_allowOrderingInGroup": "Дозволити впорядкування каналів у групі",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2109,6 +2212,9 @@
   "translation_enableTitle": "Увімкнути переклад",
   "translation_enableSubtitle": "Перекладати отримані повідомлення та дозволяти попередній переклад перед відправкою.",
   "translation_composerSubtitle": "Контролює стан ікон перекладу, який використовується за замовчуванням.",
+  "translation_autoIncomingTitle": "Автоматично перекладати повідомлення",
+  "translation_autoIncomingSubtitle": "Автоматично перекладає повідомлення для сповіщень, а також для чатів і каналів.",
+  "translation_translateMessage": "Перекласти повідомлення",
   "translation_targetLanguage": "Цільова мова",
   "translation_useAppLanguage": "Використовувати мову застосунку",
   "translation_downloadedModelLabel": "Завантажений шаблон",
@@ -2291,5 +2397,455 @@
   "settings_companionDebugLogSubtitle": "Команди, відповіді та необроблена інформація для протоколів BLE/TCP/USB",
   "chat_newMessages": "Нові повідомлення",
   "chat_markAsUnread": "Позначити як непрочитане",
-  "repeater_chanUtil": "Використання каналу"
+  "repeater_chanUtil": "Використання каналу",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_delivered": "Доставлено",
+  "messageStatus_sent": "Надіслано",
+  "common_undo": "Скасувати",
+  "messageStatus_pending": "Надсилання",
+  "messageStatus_failed": "Не вдалося надіслати",
+  "messageStatus_repeated": "Почув неодноразово",
+  "contacts_moreOptions": "Більше можливостей",
+  "contacts_searchOpen": "Пошук контактів",
+  "contacts_searchClose": "Закрити пошук",
+  "routing_title": "Маршрутизація",
+  "routing_modeAuto": "Автомобіль",
+  "routing_modeFlood": "Повені",
+  "routing_modeManual": "Інструкція",
+  "routing_modeAutoHint": "Автоматично обирає найкращий відомий шлях, та у разі відсутності відомого шляху, використовує алгоритм \"занурення\".",
+  "routing_modeFloodHint": "Передавання через усі ретранслятори. Найбільш надійний спосіб, але потребує більше часу.",
+  "routing_modeManualHint": "Завжди доставляє точно за вказаним вами маршрутом.",
+  "routing_currentRoute": "Поточний маршрут",
+  "routing_directNoHops": "Пряме з'єднання – без проміжних ретрансляторів",
+  "routing_noPathYet": "Поки що немає жодного шляху. Повідомлення продовжуються надходити, поки не буде знайдено маршрут.",
+  "routing_floodBroadcast": "Поширення через усі ретранслятори",
+  "routing_editPath": "Редагувати шлях",
+  "routing_forgetPath": "Забудь про шлях",
+  "routing_knownPaths": "Відомі маршрути",
+  "routing_knownPathsHint": "Виберіть опцію, щоб переключитися на неї.",
+  "routing_inUse": "У робочому стані",
+  "routing_qualityStrong": "Сильний перший стрибок",
+  "routing_qualityGood": "Чудова перша спроба",
+  "routing_qualityFair": "Перший, але вдалий, крок",
+  "routing_qualityWorked": "Доставлено",
+  "routing_qualityFlood": "Дізнався через новини",
+  "routing_qualityUntested": "Не протестовано",
+  "routing_neverWorked": "ніколи не підтверджено",
+  "routing_floodDelivery": "Доставка під час повені",
+  "pathEditor_title": "Створити маршрут",
+  "pathEditor_hopCounter": "{count} з 64 штук хмелю",
+  "pathEditor_noHops": "Ще не додано хміль. Натисніть на відповідні кнопки, щоб додати його в потрібному порядку, або збережіть рецепт без хмілю, щоб відправити його безпосередньо.",
+  "pathEditor_addHops": "Додавайте хміль у наступній послідовності.",
+  "pathEditor_searchRepeaters": "Пошук повторювачів",
+  "pathEditor_advancedHex": "Просунутий рівень: пряма шлях у форматі шестнадцяткової системи.",
+  "pathEditor_hexLabel": "Префікси для шестнадцяткової системи числення",
+  "pathEditor_hexHelper": "Два шестизначні символи на кожний крок, розділені комами",
+  "pathEditor_invalidTokens": "Неправильно: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_tooManyHops": "Максимум 64 хмелеві колоди",
+  "pathEditor_usePath": "Використовуйте цей шлях",
+  "pathEditor_removeHop": "Видалити хміль",
+  "pathEditor_unknownHop": "Невідомий ретранслятор",
+  "map_zoomIn": "Увійти в режим збільшення",
+  "map_zoomOut": "Видалити зум",
+  "map_centerMap": "Карта центру",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth вимагає браузера на основі Chromium",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS підтверджено",
+  "pathTrace_legendInferred": "Висновок щодо положення",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanner_bluetoothWebUnsupported": "Bluetooth недоступний у браузері. Підключіться через USB.",
+  "map_searchHint": "Назва або ID вузла",
+  "map_activity": "Активність",
+  "map_online": "Онлайн",
+  "map_recent": "Нещодавні",
+  "map_stale": "Застаріло",
+  "map_visible": "Видимий",
+  "map_hidden": "Прихований",
+  "map_centerOnNode": "Центрувати на вузлі",
+  "map_details": "Деталі",
+  "map_noGps": "Без GPS",
+  "map_noResults": "Не знайдено відповідних вузлів",
+  "pathMap_viewSingle": "Один",
+  "pathMap_viewCombined": "Об'єднаний",
+  "pathMap_play": "Відтворити",
+  "pathMap_pause": "Призупинити",
+  "pathMap_replay": "Повтор",
+  "pathMap_stepForward": "Наступний перехід",
+  "pathMap_stepBack": "Попередній перехід",
+  "pathMap_animationOn": "Відобразити анімацію пакета",
+  "pathMap_animationOff": "Приховати анімацію пакета",
+  "pathMap_hopOf": "Перехід {current} з {total}",
+  "pathMap_observedPaths": "Зафіксовані маршрути: {count}",
+  "pathMap_primary": "Основний",
+  "pathMap_alternate": "Альт. {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 перехід} few{{count} переходи} many{{count} переходів} other{{count} переходів}}",
+  "pathMap_legendShared": "Об'єднаний сегмент",
+  "pathMap_legendEstimated": "Орієнтовний сегмент",
+  "pathMap_sharedNodeCount": "Використовується {count} шляхами",
+  "pathMap_partialAnimation": "{count, plural, =1{1 перехід не має геопозиції — показаний шлях є частковим} few{{count} переходи не мають геопозиції — показаний шлях є частковим} many{{count} переходів не мають геопозиції — показаний шлях є частковим} other{{count} переходів не мають геопозиції — показаний шлях є частковим}}",
+  "pathMap_showAllPaths": "Показати все",
+  "pathMap_hidePath": "Приховати шлях",
+  "pathMap_showPath": "Показати шлях",
+  "pathMap_collapsePanel": "Згорнути панель",
+  "pathMap_expandPanel": "Розгорнути панель",
+  "pathMap_noLocation": "Без геопозиції",
+  "pathMap_followPacket": "Прив'язати вигляд до пакету",
+  "pathMap_unfollowPacket": "Відв'язати вигляд від пакету",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "settings_quickAnswersSendAtSelect": "Надсилати при виборі",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Старт",
+  "map_wardriveStop": "Стоп",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Запит wardrive discovery надіслано.",
+  "map_wardriveUploadCancelled": "Вивантаження wardrive скасовано.",
+  "map_wardriveDiscoveryFailed": "Wardrive discovery не вдалося: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Запити: {requests}  Відповіді: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Останній запит: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS телефона: ще не оновлено",
+  "map_wardrivePhoneGpsError": "GPS телефона: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS телефона: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Відповідей discovery ще немає.",
+  "map_wardriveDataTooltip": "Дані wardrive",
+  "map_wardriveUploadData": "Вивантажити дані",
+  "map_wardriveManageUploadSites": "Керування сайтами вивантаження",
+  "map_wardriveAutoUpload": "Автовивантаження",
+  "map_wardriveScreenWakelock": "Не вимикати екран",
+  "map_wardriveExport": "Експорт",
+  "map_wardriveImport": "Імпорт",
+  "map_wardriveAutoDiscovery": "Авто discovery",
+  "map_wardriveSecondsSuffix": "с",
+  "map_wardriveSamplesSaved": "Збережено семплів: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Авто discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Збереження семпла: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Комірок покриття: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Автовивантаження увімкнено.",
+  "map_wardriveAutoUploadDisabled": "Автовивантаження вимкнено.",
+  "map_wardriveNoSamplesToUpload": "Немає wardrive-семплів для вивантаження.",
+  "map_wardriveUploadingSamples": "Вивантаження семплів...",
+  "map_wardriveUploadingTo": "Вивантаження на {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Пакет {current} з {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Надсилання {sent} з {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Ціль: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Очікування з’єднання",
+  "map_wardriveUploadConnectionEstablished": "З’єднання встановлено, вивантаження",
+  "map_wardriveUploadProcessingServer": "Дані вивантажено, сервер обробляє",
+  "map_wardriveUploadServerResponse": "Сервер обробив дані, відповідь {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Вивантаження перевищило таймаут; позначено як надіслане для цього сайту",
+  "map_wardriveUploadServerError": "Помилка сервера {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Помилка вивантаження: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Вивантаження wardrive не вдалося: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Вивантаження завершено",
+  "map_wardriveUploadResults": "Результати вивантаження",
+  "map_wardriveSamplesUploaded": "Вивантажено семплів: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Виберіть сайти для вивантаження:",
+  "map_wardriveNoUploadSitesConfigured": "Сайти вивантаження не налаштовано",
+  "map_wardriveAddSite": "Додати сайт",
+  "map_wardriveUploadSitesUpdated": "Сайти вивантаження оновлено.",
+  "map_wardriveAddUploadSite": "Додати сайт вивантаження",
+  "map_wardriveEditUploadSite": "Редагувати сайт вивантаження",
+  "map_wardriveNameLabel": "Назва",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Розмір пакета вивантаження",
+  "map_wardriveUploadBatchSizeInvalid": "Використовуйте значення від {min} до {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Вважати таймаут успіхом",
+  "map_wardriveNameRequired": "Назва обов’язкова",
+  "map_wardriveNameExists": "Назва вже існує",
+  "map_wardriveValidUrlRequired": "Потрібен коректний URL",
+  "map_wardriveDeleteSite": "Видалити сайт",
+  "map_wardriveDeleteSiteConfirm": "Видалити «{name}»?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Немає wardrive-семплів для експорту.",
+  "map_wardriveExportShareText": "wardrive-семпли meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive-семпли експортовано у JSON-файл.",
+  "map_wardriveExportFailed": "Експорт wardrive не вдався: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Імпорт wardrive-семплів",
+  "map_wardriveImportHint": "Вставте експортований wardrive JSON сюди",
+  "map_wardriveNoNewSamplesImported": "Нових wardrive-семплів не імпортовано.",
+  "map_wardriveSamplesImported": "Імпортовано wardrive-семплів: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Імпорт wardrive не вдався: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Немає wardrive-семплів для очищення.",
+  "map_wardriveClearSamplesTitle": "Очистити wardrive-семпли?",
+  "map_wardriveClearSamplesConfirm": "Це видалить {count} збережених семплів з цього пристрою.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive-семпли очищено.",
+  "channelPath_outgoingSentByRadioAt": "Очікувало передавання через радіо, с"
 }

@@ -49,6 +49,21 @@ class ChatScrollController extends ScrollController {
     }
   }
 
+  bool scrollBy(double delta) {
+    if (!hasClients) return false;
+    final pos = position;
+    final target = (pos.pixels + delta)
+        .clamp(pos.minScrollExtent, pos.maxScrollExtent)
+        .toDouble();
+    if (target == pos.pixels) return true;
+    animateTo(
+      target,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+    );
+    return true;
+  }
+
   /// Jumps toward an off-screen message so that lazy ListView.builder builds
   /// items near it. Only visible + cacheExtent items have real heights, so we
   /// use proportion of maxScrollExtent (itself an estimate from built items'

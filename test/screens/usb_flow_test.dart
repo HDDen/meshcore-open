@@ -157,10 +157,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final context = tester.element(find.byType(ScannerScreen));
+    final l10n = AppLocalizations.of(context);
     if (PlatformInfo.supportsUsbSerial) {
-      expect(find.widgetWithText(FloatingActionButton, 'USB'), findsOneWidget);
+      expect(find.byTooltip(l10n.connectionChoiceUsbLabel), findsOneWidget);
     } else {
-      expect(find.widgetWithText(FloatingActionButton, 'USB'), findsNothing);
+      expect(find.byTooltip(l10n.connectionChoiceUsbLabel), findsNothing);
     }
 
     // ScannerScreen.dispose() schedules disconnect work that debounces notify.
@@ -186,13 +188,13 @@ void main() {
 
     final context = tester.element(find.byType(ScannerScreen));
     final l10n = AppLocalizations.of(context);
-    expect(find.text(l10n.scanner_scan), findsOneWidget);
+    expect(find.text(l10n.scanner_scan), findsWidgets);
 
     if (PlatformInfo.supportsUsbSerial) {
-      expect(find.text(l10n.connectionChoiceUsbLabel), findsOneWidget);
+      expect(find.byTooltip(l10n.connectionChoiceUsbLabel), findsOneWidget);
     }
     if (!PlatformInfo.isWeb) {
-      expect(find.text(l10n.connectionChoiceTcpLabel), findsOneWidget);
+      expect(find.byTooltip(l10n.connectionChoiceTcpLabel), findsOneWidget);
     }
 
     await tester.pumpWidget(const SizedBox.shrink());

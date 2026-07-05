@@ -15,6 +15,18 @@ class UsbSerialService {
   static const Map<String, String> _knownUsbNames = <String, String>{
     '2886:1667': 'Seeed Wio Tracker L1',
   };
+
+  /// USB-to-UART bridge chips whose hardware auto-reset circuit requires DTR
+  /// to be held asserted after open (otherwise the MCU resets). Native-USB-CDC
+  /// boards (nRF52840/Adafruit 0x239A, Espressif native 0x303A, Seeed 0x2886)
+  /// tie DTR to the bootloader/reset line, so asserting it re-enumerates and
+  /// drops the device ("The device has been lost"); they must be left alone.
+  static const Set<int> _uartBridgeVendorIds = <int>{
+    0x10C4, // Silicon Labs CP210x
+    0x1A86, // QinHeng CH340 / CH9102
+    0x0403, // FTDI
+    0x067B, // Prolific PL2303
+  };
   static final Map<String, String> _deviceNamesByPortKey = <String, String>{};
   static final Map<String, String> _baseLabelsByPortKey = <String, String>{};
   static final Map<String, JSObject> _authorizedPortsByKey =
@@ -34,12 +46,14 @@ class UsbSerialService {
   String _requestPortLabel = 'Choose USB Device';
   String _fallbackDeviceName = 'Web Serial Device';
   AppDebugLogService? _debugLogService;
+  Object? _lastError;
 
   UsbSerialStatus get status => _status;
   String? get activePortKey => _connectedPortKey;
   String? get activePortDisplayLabel => _connectedPortName ?? _connectedPortKey;
   Stream<Uint8List> get frameStream => _frameController.stream;
   bool get isConnected => _status == UsbSerialStatus.connected;
+  Object? get lastError => _lastError;
 
   JSObject get _navigator => JSObject.fromInteropObject(web.window.navigator);
   bool get _isSupported => _navigator.has('serial');
@@ -74,6 +88,7 @@ class UsbSerialService {
     }
 
     _status = UsbSerialStatus.connecting;
+    _lastError = null;
     _frameDecoder.reset();
 
     try {
@@ -282,16 +297,30 @@ class UsbSerialService {
       ..['flowControl'] = 'none'.toJS;
     await port.callMethod<JSPromise<JSAny?>>('open'.toJS, options).toDart;
 
-    // Prevent ESP32 USB-CDC reset: hold DTR=true, RTS=false after open.
-    try {
-      final signals = JSObject()
-        ..['dataTerminalReady'] = true.toJS
-        ..['requestToSend'] = false.toJS;
-      await port
-          .callMethod<JSPromise<JSAny?>>('setSignals'.toJS, signals)
-          .toDart;
-    } catch (_) {
-      // setSignals may not be supported on all browsers/devices.
+    // Only UART-bridge chips (CP210x/CH340/FTDI/PL2303) need DTR held high to
+    // avoid the auto-reset circuit firing on open. Native-USB-CDC boards
+    // (e.g. nRF52840/Adafruit) tie DTR to the reset line — toggling it there
+    // re-enumerates the device and Web Serial reports "The device has been
+    // lost". Leave their signals untouched.
+    final vendorId = _portInfo(port)?.usbVendorId;
+    final isUartBridge =
+        vendorId != null && _uartBridgeVendorIds.contains(vendorId);
+    _debugLogService?.info(
+      'Open: vendorId=${vendorId == null ? 'unknown' : '0x${vendorId.toRadixString(16)}'} '
+      'uartBridge=$isUartBridge (DTR ${isUartBridge ? 'asserted' : 'left default'})',
+      tag: 'USB Serial',
+    );
+    if (isUartBridge) {
+      try {
+        final signals = JSObject()
+          ..['dataTerminalReady'] = true.toJS
+          ..['requestToSend'] = false.toJS;
+        await port
+            .callMethod<JSPromise<JSAny?>>('setSignals'.toJS, signals)
+            .toDart;
+      } catch (_) {
+        // setSignals may not be supported on all browsers/devices.
+      }
     }
   }
 
@@ -384,13 +413,21 @@ class UsbSerialService {
     } catch (error, stackTrace) {
       _debugLogService?.error('_pumpReads error: $error', tag: 'USB Serial');
       if (_status == UsbSerialStatus.connected) {
+        // The transport is dead — reflect that in status immediately so a
+        // concurrent connect handshake fails fast instead of waiting for a
+        // SELF_INFO that can never arrive.
+        _status = UsbSerialStatus.disconnected;
+        _lastError = error;
         _addFrameError(error, stackTrace);
       }
     } finally {
       _debugLogService?.info('_pumpReads: ended', tag: 'USB Serial');
       _releaseLock(reader);
       if (_status == UsbSerialStatus.connected && identical(reader, _reader)) {
-        _addFrameError(StateError('USB serial connection closed'));
+        _status = UsbSerialStatus.disconnected;
+        final closedError = StateError('USB serial connection closed');
+        _lastError = closedError;
+        _addFrameError(closedError);
       }
     }
   }

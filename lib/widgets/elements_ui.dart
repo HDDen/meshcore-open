@@ -29,31 +29,65 @@ class FeatureToggleRow extends StatefulWidget {
 class _FeatureToggleRow extends State<FeatureToggleRow> {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SwitchListTile(
-            title: Text(widget.title),
-            subtitle: Text(widget.subtitle),
-            value: widget.value,
-            onChanged: widget.onChanged,
-            contentPadding: EdgeInsets.zero,
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  widget.subtitle,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        if (widget.hasRefreshing)
-          IconButton(
-            icon: widget.isRefreshing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh, size: 20),
-            onPressed: widget.isRefreshing ? null : widget.onRefresh,
-            tooltip: widget.refreshTooltip,
-            visualDensity: VisualDensity.compact,
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(value: widget.value, onChanged: widget.onChanged),
+              if (widget.hasRefreshing) ...[
+                const SizedBox(width: 4),
+                widget.isRefreshing
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.8,
+                          color: scheme.primary,
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.refresh, size: 18),
+                        onPressed: widget.onRefresh,
+                        tooltip: widget.refreshTooltip,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                      ),
+              ],
+            ],
           ),
-      ],
+        ],
+      ),
     );
   }
 }

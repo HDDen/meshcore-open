@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
@@ -10,20 +10,31 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/chat_keyboard_navigation_history.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
 import '../models/channel.dart';
+import '../models/channel_group.dart';
 import '../models/community.dart';
+import '../storage/channel_group_store.dart';
 import '../storage/community_store.dart';
+import '../theme/mesh_theme.dart';
 import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
+import '../widgets/mco_image_message.dart';
+import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/mesh_ui.dart';
 import '../widgets/qr_code_display.dart';
+import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/popup_menu_row.dart';
+import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
+import '../helpers/channel_group_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'community_qr_scanner_screen.dart';
@@ -43,23 +54,95 @@ class ChannelsScreen extends StatefulWidget {
 class _ChannelsScreenState extends State<ChannelsScreen>
     with DisconnectNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  final ChannelGroupStore _channelGroupStore = ChannelGroupStore();
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
+  final Set<String> _expandedChannelGroups = <String>{};
   List<Community> _communities = [];
+  List<ChannelGroup> _channelGroups = [];
+  String _loadedChannelGroupsForPublicKey = '';
+  bool _isLoadingChannelGroups = false;
   Timer? _searchDebounce;
 
-  ChannelMessageStore get _channelMessageStore => ChannelMessageStore();
+  ChannelMessageStore get _channelMessageStore {
+    final connector = context.read<MeshCoreConnector>();
+    return ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..replaceChannels(connector.channels);
+  }
 
   @override
   void initState() {
     super.initState();
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _searchController.text = context
         .read<UiViewStateService>()
         .channelsSearchText;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MeshCoreConnector>().getChannels();
+      _loadChannelGroups();
       _loadCommunities();
     });
+  }
+
+  Future<void> _loadChannelGroups() async {
+    final connector = context.read<MeshCoreConnector>();
+    final publicKeyHex = connector.selfPublicKeyHex;
+    if (publicKeyHex.isEmpty ||
+        _isLoadingChannelGroups ||
+        _loadedChannelGroupsForPublicKey == publicKeyHex) {
+      return;
+    }
+
+    // Channel groups are stored per node, so wait until SELF_INFO gives us the
+    // node public key. Loading with an empty key would make grouped channels
+    // appear as a flat list on the initial Channels screen.
+    if (mounted) {
+      setState(() {
+        _isLoadingChannelGroups = true;
+      });
+    } else {
+      _isLoadingChannelGroups = true;
+    }
+
+    _channelGroupStore.setPublicKeyHex = publicKeyHex;
+    final groups = await _channelGroupStore.loadGroups();
+    final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final currentPublicKeyHex = connector.selfPublicKeyHex;
+    if (mounted && currentPublicKeyHex == publicKeyHex) {
+      setState(() {
+        _channelGroups = orderedChannelGroups(groups);
+        _loadedChannelGroupsForPublicKey = publicKeyHex;
+        _isLoadingChannelGroups = false;
+        _expandedChannelGroups
+          ..clear()
+          // Restore only groups that still exist after local edits/deletions.
+          ..addAll(
+            expandedGroups.where(
+              (name) => _channelGroups.any((group) => group.name == name),
+            ),
+          );
+      });
+    } else {
+      _isLoadingChannelGroups = false;
+    }
+  }
+
+  Future<void> _saveChannelGroups() async {
+    _channelGroupStore.setPublicKeyHex = context
+        .read<MeshCoreConnector>()
+        .selfPublicKeyHex;
+    await _channelGroupStore.saveGroups(_channelGroups);
+  }
+
+  Future<void> _saveExpandedChannelGroups() async {
+    _channelGroupStore.setPublicKeyHex = context
+        .read<MeshCoreConnector>()
+        .selfPublicKeyHex;
+    await _channelGroupStore.saveExpandedGroupNames(_expandedChannelGroups);
   }
 
   Future<void> _loadCommunities() async {
@@ -76,18 +159,80 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   @override
   void dispose() {
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _searchDebounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if (_searchFocusNode.hasFocus) {
+      return false;
+    }
+
+    final target = ChatKeyboardNavigationHistory.lastTarget;
+    if (target?.type != ChatKeyboardNavigationTargetType.channel) {
+      return false;
+    }
+    final rememberedChannel = target!.channel;
+    if (rememberedChannel == null) return false;
+
+    final connector = context.read<MeshCoreConnector>();
+    final channel = connector.channels.firstWhere(
+      (channel) => channel.index == rememberedChannel.index,
+      orElse: () => rememberedChannel,
+    );
+    final unread = connector.getUnreadCountForChannelIndex(channel.index);
+    connector.markChannelRead(channel.index);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ChannelChatScreen(channel: channel, initialUnreadCount: unread),
+      ),
+    );
+    return true;
+  }
+
+  String _relativeTime(DateTime t) {
+    final diff = DateTime.now().difference(t);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${diff.inDays}d';
   }
 
   @override
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final viewState = context.watch<UiViewStateService>();
+    final appSettings = context.watch<AppSettingsService>().settings;
+    final mutedChannelNames = appSettings.mutedChannels;
+
+    if (connector.selfPublicKeyHex.isNotEmpty &&
+        _loadedChannelGroupsForPublicKey != connector.selfPublicKeyHex &&
+        !_isLoadingChannelGroups) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_loadChannelGroups());
+        }
+      });
+    }
 
     final channelMessageStore = ChannelMessageStore();
     channelMessageStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    channelMessageStore.replaceChannels(connector.channels);
 
     // Auto-navigate back to scanner if disconnected
     if (!checkConnectionAndNavigate(connector)) {
@@ -103,37 +248,32 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           title: AppBarTitle(context.l10n.channels_title),
           centerTitle: true,
           automaticallyImplyLeading: false,
+          bottom: const SyncProgressAppBarBottom(),
           actions: [
             PopupMenuButton(
-              itemBuilder: (context) => [
+              // onTap handlers run after the menu route pops, so they must
+              // capture the screen's context — not the itemBuilder's menu
+              // context, which is deactivated by then.
+              itemBuilder: (menuContext) => [
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.logout, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.common_disconnect),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.logout,
+                    iconColor: Theme.of(menuContext).colorScheme.error,
+                    text: menuContext.l10n.common_disconnect,
                   ),
                   onTap: () => _disconnect(context),
                 ),
-                if (_communities.isNotEmpty)
-                  PopupMenuItem(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.groups),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.community_manageCommunities),
-                      ],
-                    ),
-                    onTap: () => _showManageCommunitiesDialog(context),
-                  ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.settings),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.settings_title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.groups,
+                    text: menuContext.l10n.community_manageCommunities,
+                  ),
+                  onTap: () => _showManageCommunitiesDialog(context),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
+                    icon: Icons.settings,
+                    text: menuContext.l10n.settings_title,
                   ),
                   onTap: () => Navigator.push(
                     context,
@@ -152,11 +292,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             await context.read<MeshCoreConnector>().getChannels(force: true);
           },
           child: () {
-            if (connector.isLoadingChannels) {
+            final channels = connector.channels;
+            final waitingForInitialChannels =
+                !connector.hasLoadedChannels && !connector.isLoadingChannels;
+            final waitingForFirstChannel =
+                connector.isLoadingChannels && channels.isEmpty;
+            final waitingForChannelGroups =
+                connector.isConnected &&
+                (connector.selfPublicKeyHex.isEmpty ||
+                    _loadedChannelGroupsForPublicKey !=
+                        connector.selfPublicKeyHex);
+
+            if (waitingForInitialChannels ||
+                waitingForFirstChannel ||
+                waitingForChannelGroups) {
               return const Center(child: CircularProgressIndicator());
             }
-
-            final channels = connector.channels;
 
             if (channels.isEmpty) {
               return ListView(
@@ -182,6 +333,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               connector,
               viewState,
             );
+            final sortUnreadFirst = appSettings.channelsUnreadSorting;
+            final channelsListDisabled =
+                connector.isLoadingChannels || connector.isSyncingChannels;
 
             return Column(
               children: [
@@ -189,6 +343,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: _searchController,
+                    focusNode: _searchFocusNode,
                     decoration: InputDecoration(
                       hintText: context.l10n.channels_searchChannels,
                       prefixIcon: const Icon(Icons.search),
@@ -210,9 +365,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           _buildFilterButton(viewState),
                         ],
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -233,89 +385,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ),
                 ),
                 Expanded(
-                  child: filteredChannels.isEmpty
-                      ? ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height - 300,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.search_off,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      context.l10n.channels_noChannelsFound,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : (viewState.channelsSortOption ==
-                                ChannelSortOption.manual &&
-                            viewState.channelsSearchText.isEmpty)
-                      ? ReorderableListView.builder(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            top: 8,
-                            bottom: 88,
-                          ),
-                          buildDefaultDragHandles: false,
-                          itemCount: filteredChannels.length,
-                          onReorder: (oldIndex, newIndex) {
-                            if (newIndex > oldIndex) newIndex -= 1;
-                            final reordered = List<Channel>.from(
-                              filteredChannels,
-                            );
-                            final item = reordered.removeAt(oldIndex);
-                            reordered.insert(newIndex, item);
-                            unawaited(
-                              connector.setChannelOrder(
-                                reordered.map((c) => c.index).toList(),
-                              ),
-                            );
-                          },
-                          itemBuilder: (context, index) {
-                            final channel = filteredChannels[index];
-                            return _buildChannelTile(
-                              context,
-                              connector,
-                              channelMessageStore,
-                              channel,
-                              showDragHandle: true,
-                              dragIndex: index,
-                            );
-                          },
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            top: 8,
-                            bottom: 88,
-                          ),
-                          itemCount: filteredChannels.length,
-                          itemBuilder: (context, index) {
-                            final channel = filteredChannels[index];
-                            return _buildChannelTile(
-                              context,
-                              connector,
-                              channelMessageStore,
-                              channel,
-                            );
-                          },
-                        ),
+                  child: AnimatedOpacity(
+                    opacity: channelsListDisabled ? 0.45 : 1.0,
+                    duration: const Duration(milliseconds: 180),
+                    child: AbsorbPointer(
+                      absorbing: channelsListDisabled,
+                      child: _buildChannelsList(
+                        context,
+                        connector,
+                        channelMessageStore,
+                        viewState,
+                        filteredChannels,
+                        mutedChannelNames,
+                        hideChannelIndexIndicator:
+                            appSettings.hideChannelIndexIndicator,
+                        sortUnreadFirst: sortUnreadFirst,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
@@ -345,142 +432,320 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     MeshCoreConnector connector,
     ChannelMessageStore channelMessageStore,
     Channel channel, {
+    required bool isMuted,
+    required bool hideChannelIndexIndicator,
     bool showDragHandle = false,
     int? dragIndex,
+    int listIndex = 0,
+    EdgeInsetsGeometry? margin,
   }) {
     final unreadCount = connector.getUnreadCountForChannel(channel);
+    final widgetColorValue = connector.getChannelWidgetColor(channel.index);
+    final widgetColor = widgetColorValue == null
+        ? null
+        : Color(widgetColorValue);
+    final widgetTextColorValue = connector.getChannelWidgetTextColor(
+      channel.index,
+    );
+    final widgetTextColor = widgetTextColorValue == null
+        ? null
+        : Color(widgetTextColorValue);
+    final compressionLabels = _channelCompressionLabels(connector, channel);
+    final scheme = Theme.of(context).colorScheme;
 
     // Determine icon and colors based on channel type
     IconData icon;
     Color iconColor;
-    Color bgColor;
     final ChannelType channelType = Channel.getChannelType(
       channel,
       _communityIndex,
     );
     final bool isCommunityChannel = Channel.isCommunityChannel(channelType);
+    final community = isCommunityChannel
+        ? _communityIndex.getCommunityForChannel(channel)
+        : null;
+    final region = connector.hasChannelRegion(channel.index)
+        ? context.l10n.channels_regionSetTo(
+            connector.getChannelRegion(channel.index),
+          )
+        : context.l10n.channels_regionNotSet;
+    String subtitle = region;
     switch (channelType) {
       case ChannelType.communityPublic:
         icon = Icons.groups;
-        iconColor = Colors.purple;
-        bgColor = Colors.purple.withValues(alpha: 0.2);
+        iconColor = MeshPalette.magenta;
+        if (community != null) {
+          subtitle =
+              '${context.l10n.community_publicChannel} • ${community.name}';
+        }
       case ChannelType.communityHashtag:
         icon = Icons.tag;
-        iconColor = Colors.purple;
-        bgColor = Colors.purple.withValues(alpha: 0.2);
+        iconColor = MeshPalette.magenta;
+        if (community != null) {
+          subtitle =
+              '${context.l10n.community_hashtagChannel} • ${community.name}';
+        }
       case ChannelType.public:
         icon = Icons.public;
-        iconColor = Colors.green;
-        bgColor = Colors.green.withValues(alpha: 0.2);
+        iconColor = MeshPalette.signal;
       case ChannelType.hashtag:
         icon = Icons.tag;
-        iconColor = Colors.blue;
-        bgColor = Colors.blue.withValues(alpha: 0.2);
+        iconColor = MeshPalette.blue;
       case ChannelType.private:
         icon = Icons.lock;
-        iconColor = Colors.blue;
-        bgColor = Colors.blue.withValues(alpha: 0.2);
+        iconColor = MeshPalette.blue;
     }
 
-    return Card(
-      key: ValueKey('channel_${channel.index}'),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onSecondaryTapUp: PlatformInfo.isDesktop
-            ? (_) => _showChannelActions(
-                context,
-                connector,
-                channelMessageStore,
-                channel,
-              )
-            : null,
-        child: ListTile(
-          dense: true,
-          minVerticalPadding: 14,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-          visualDensity: const VisualDensity(vertical: -2),
-          leading: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: CircleAvatar(
-                  backgroundColor: bgColor,
-                  child: Icon(icon, color: iconColor),
-                ),
+    // Last message preview
+    final messages = connector.getChannelMessages(channel);
+    final lastMessage = messages.isNotEmpty ? messages.last : null;
+    final lastPreview = lastMessage?.text ?? '';
+    final lastPreviewImage = lastMessage == null
+        ? null
+        : MCOImageMessage.tryDecode(lastMessage.text);
+    final lastTime = lastMessage?.timestamp;
+
+    final channelLabel = channel.name.isEmpty
+        ? context.l10n.channels_channelIndex(channel.index)
+        : channel.name;
+
+    return ListEntrance(
+      key: ValueKey('channel_entrance_${channel.index}'),
+      index: dragIndex ?? listIndex,
+      child: MeshCard(
+        key: ValueKey('channel_${channel.index}'),
+        margin:
+            margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        color: widgetColor,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          final unread = connector.getUnreadCountForChannelIndex(channel.index);
+          connector.markChannelRead(channel.index);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChannelChatScreen(
+                channel: channel,
+                initialUnreadCount: unread,
               ),
-              if (isCommunityChannel)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: Colors.purple,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(context).cardColor,
-                        width: 2,
+            ),
+          );
+        },
+        onLongPress: () => _showChannelActions(
+          this.context,
+          connector,
+          channelMessageStore,
+          channel,
+        ),
+        child: GestureDetector(
+          onSecondaryTapUp: PlatformInfo.isDesktop
+              ? (_) => _showChannelActions(
+                  this.context,
+                  connector,
+                  channelMessageStore,
+                  channel,
+                )
+              : null,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Leading avatar with optional community badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AvatarCircle(
+                    name: channelLabel,
+                    size: 42,
+                    color: iconColor,
+                    icon: icon,
+                  ),
+                  if (isCommunityChannel)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: MeshPalette.magenta,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerLow,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.people,
+                          size: 8,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.people,
-                      size: 8,
-                      color: Colors.white,
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Title + subtitle + optional channel index chip
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            channelLabel,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: widgetTextColor,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (!hideChannelIndexIndicator) ...[
+                          const SizedBox(width: 6),
+                          StatusChip(
+                            label: 'CH ${channel.index}',
+                            color: MeshPalette.blue,
+                            fontSize: 10,
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (lastPreviewImage != null) ...[
+                      const SizedBox(height: 2),
+                      MCOImageMessage(
+                        image: lastPreviewImage,
+                        maxSize: max(
+                          lastPreviewImage.width,
+                          lastPreviewImage.height,
+                        ).toDouble(),
+                      ),
+                    ] else if (lastPreview.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        lastPreview,
+                        style: MeshTheme.mono(
+                          fontSize: 11.5,
+                          color: widgetTextColor ?? scheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: widgetTextColor ?? scheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Right side: time + unread badge + muted + drag handle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (lastTime != null)
+                    Text(
+                      _relativeTime(lastTime),
+                      style: MeshTheme.mono(
+                        fontSize: 11,
+                        color: widgetTextColor ?? scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (unreadCount > 0) ...[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: isMuted || compressionLabels.isNotEmpty
+                                ? 4
+                                : 0,
+                          ),
+                          child: UnreadBadge(count: unreadCount),
+                        ),
+                      ],
+                      if (isMuted)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Icon(
+                            Icons.notifications_off,
+                            size: 14,
+                            color: widgetTextColor ?? scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      for (
+                        var index = 0;
+                        index < compressionLabels.length;
+                        index++
+                      ) ...[
+                        _buildChannelCompressionIndicator(
+                          context,
+                          compressionLabels[index],
+                          textColor: widgetTextColor,
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+              if (showDragHandle && dragIndex != null) ...[
+                const SizedBox(width: 4),
+                ReorderableDragStartListener(
+                  index: dragIndex,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(
+                      Icons.drag_handle,
+                      color:
+                          widgetTextColor ??
+                          Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-            ],
-          ),
-          title: Text(
-            channel.name.isEmpty
-                ? context.l10n.channels_channelIndex(channel.index)
-                : channel.name,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (unreadCount > 0) ...[
-                UnreadBadge(count: unreadCount),
-                const SizedBox(width: 4),
               ],
-              if (showDragHandle && dragIndex != null)
-                ReorderableDelayedDragStartListener(
-                  index: dragIndex,
-                  child: Icon(
-                    Icons.drag_handle,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
             ],
-          ),
-          onTap: () async {
-            final unread = connector.getUnreadCountForChannelIndex(
-              channel.index,
-            );
-            connector.markChannelRead(channel.index);
-            await Future.delayed(const Duration(milliseconds: 50));
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChannelChatScreen(
-                    channel: channel,
-                    initialUnreadCount: unread,
-                  ),
-                ),
-              );
-            }
-          },
-          onLongPress: () => _showChannelActions(
-            context,
-            connector,
-            channelMessageStore,
-            channel,
           ),
         ),
       ),
+    );
+  }
+
+  List<String> _channelCompressionLabels(
+    MeshCoreConnector connector,
+    Channel channel,
+  ) {
+    return [
+      if (connector.isChannelCyr2LatEnabled(channel.index)) 'C2L',
+      if (connector.isChannelMcmpEnabled(channel.index)) 'MC',
+      if (connector.isChannelSmazEnabled(channel.index)) 'SZ',
+    ];
+  }
+
+  Widget _buildChannelCompressionIndicator(
+    BuildContext context,
+    String label, {
+    Color? textColor,
+  }) {
+    final color = textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(label, style: MeshTheme.mono(fontSize: 11, color: color)),
     );
   }
 
@@ -502,7 +767,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           children: [
             ListTile(
               leading: const Icon(Icons.edit_outlined),
-              title: Text(context.l10n.channels_editChannel),
+              title: Text(sheetContext.l10n.channels_editChannel),
               onTap: () async {
                 Navigator.pop(sheetContext);
                 await Future.delayed(const Duration(milliseconds: 100));
@@ -519,8 +784,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               ),
               title: Text(
                 isMuted
-                    ? context.l10n.channels_unmuteChannel
-                    : context.l10n.channels_muteChannel,
+                    ? sheetContext.l10n.channels_unmuteChannel
+                    : sheetContext.l10n.channels_muteChannel,
               ),
               onTap: () async {
                 Navigator.pop(sheetContext);
@@ -532,21 +797,21 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(sheetContext).colorScheme.error,
+              ),
               title: Text(
-                context.l10n.channels_deleteChannel,
-                style: const TextStyle(color: Colors.red),
+                sheetContext.l10n.channels_deleteChannel,
+                style: TextStyle(
+                  color: Theme.of(sheetContext).colorScheme.error,
+                ),
               ),
               onTap: () async {
                 Navigator.pop(sheetContext);
                 await Future.delayed(const Duration(milliseconds: 100));
                 if (parentContext.mounted) {
-                  _confirmDeleteChannel(
-                    context,
-                    connector,
-                    channelMessageStore,
-                    channel,
-                  );
+                  _confirmDeleteChannel(parentContext, connector, channel);
                 }
               },
             ),
@@ -617,6 +882,705 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
+  Widget _buildChannelsList(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    UiViewStateService viewState,
+    List<Channel> filteredChannels,
+    Set<String> mutedChannelNames, {
+    required bool hideChannelIndexIndicator,
+    required bool sortUnreadFirst,
+  }) {
+    final groupedChannelNames = _groupedChannelNames();
+    final visibleGroups = _channelGroups.where((group) {
+      if (viewState.channelsSearchText.isEmpty) return true;
+      final query = viewState.channelsSearchText.toLowerCase();
+      return group.name.toLowerCase().contains(query) ||
+          channelsForGroup(group, filteredChannels).isNotEmpty;
+    }).toList();
+    final ungroupedChannels = _sortUnreadChannelsForDisplay(
+      filteredChannels
+          .where(
+            (channel) => !groupedChannelNames.contains(
+              channelNameForGroup(channel).toLowerCase(),
+            ),
+          )
+          .toList(),
+      connector,
+      enabled: sortUnreadFirst,
+    );
+    final hasVisibleContent =
+        visibleGroups.isNotEmpty || ungroupedChannels.isNotEmpty;
+
+    if (!hasVisibleContent) {
+      return ListView(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height - 300,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.l10n.channels_noChannelsFound,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final canReorder =
+        viewState.channelsSortOption == ChannelSortOption.manual &&
+        viewState.channelsSearchText.isEmpty;
+    if (canReorder) {
+      final baseEntries = buildManualChannelEntries(
+        filteredChannels,
+        _channelGroups,
+      );
+      final entries = sortUnreadFirst
+          ? _sortManualEntriesUnreadFirst(baseEntries, connector)
+          : baseEntries;
+      return ReorderableListView.builder(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
+        buildDefaultDragHandles: false,
+        itemCount: entries.length,
+        onReorderItem: (oldIndex, newIndex) {
+          final reordered = List<ChannelGroupListEntry>.from(entries);
+          final item = reordered.removeAt(oldIndex);
+          reordered.insert(newIndex, item);
+          final persistedEntries = sortUnreadFirst
+              ? _restoreUnreadManualEntryPositions(
+                  baseEntries,
+                  reordered,
+                  connector,
+                )
+              : reordered;
+          final reorderedGroups = channelGroupsFromManualEntries(
+            persistedEntries,
+          );
+          final orderedChannelIndexes =
+              manualChannelOrderFromEntriesWithChannels(
+                persistedEntries,
+                filteredChannels,
+              );
+          setState(() {
+            _channelGroups = reorderedGroups;
+          });
+          unawaited(_saveChannelGroups());
+          unawaited(connector.setChannelOrder(orderedChannelIndexes));
+        },
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          final group = entry.group;
+          if (group != null) {
+            return KeyedSubtree(
+              key: ValueKey('channel_group_${group.name}'),
+              child: _buildChannelGroupTile(
+                context,
+                connector,
+                channelMessageStore,
+                group,
+                filteredChannels,
+                mutedChannelNames: mutedChannelNames,
+                hideChannelIndexIndicator: hideChannelIndexIndicator,
+                sortUnreadFirst: sortUnreadFirst,
+                showDragHandle: true,
+                dragIndex: index,
+              ),
+            );
+          }
+          final channel = entry.channel!;
+          final showDragHandle = !_isUnreadSortedChannel(
+            connector,
+            channel,
+            sortUnreadFirst,
+          );
+          return _buildChannelTile(
+            context,
+            connector,
+            channelMessageStore,
+            channel,
+            isMuted: mutedChannelNames.contains(channel.name),
+            hideChannelIndexIndicator: hideChannelIndexIndicator,
+            showDragHandle: showDragHandle,
+            dragIndex: index,
+            margin: const EdgeInsets.symmetric(vertical: 4),
+          );
+        },
+      );
+    }
+
+    final children = <Widget>[
+      for (final group in visibleGroups)
+        _buildChannelGroupTile(
+          context,
+          connector,
+          channelMessageStore,
+          group,
+          filteredChannels,
+          mutedChannelNames: mutedChannelNames,
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          sortUnreadFirst: sortUnreadFirst,
+          forceExpanded: viewState.channelsSearchText.isNotEmpty,
+        ),
+    ];
+
+    children.addAll(
+      ungroupedChannels.map(
+        (channel) => _buildChannelTile(
+          context,
+          connector,
+          channelMessageStore,
+          channel,
+          isMuted: mutedChannelNames.contains(channel.name),
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+        ),
+      ),
+    );
+    return ListView(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
+      children: children,
+    );
+  }
+
+  Set<String> _groupedChannelNames() {
+    return channelGroupByChannelName(_channelGroups).keys.toSet();
+  }
+
+  Widget _buildChannelGroupTile(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    ChannelGroup group,
+    List<Channel> filteredChannels, {
+    Set<String> mutedChannelNames = const {},
+    required bool hideChannelIndexIndicator,
+    required bool sortUnreadFirst,
+    bool forceExpanded = false,
+    bool showDragHandle = false,
+    int? dragIndex,
+  }) {
+    final isExpanded =
+        forceExpanded || _expandedChannelGroups.contains(group.name);
+    final baseChannels = channelsForGroup(group, filteredChannels);
+    if (!group.allowOrderingInGroup) {
+      baseChannels.sort(_compareChannelsByName);
+    }
+    final channels = _sortUnreadChannelsForDisplay(
+      baseChannels,
+      connector,
+      enabled: sortUnreadFirst,
+    );
+    final groupWidgetColor = group.widgetColor == null
+        ? null
+        : Color(group.widgetColor!);
+    final groupWidgetTextColor = group.widgetTextColor == null
+        ? null
+        : Color(group.widgetTextColor!);
+    final unreadCount = channels.fold<int>(
+      0,
+      (sum, channel) =>
+          sum + connector.getUnreadCountForChannelIndex(channel.index),
+    );
+
+    return GestureDetector(
+      onSecondaryTapUp: PlatformInfo.isDesktop
+          ? (_) => _showChannelGroupActions(context, group)
+          : null,
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        color: groupWidgetColor,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              dense: true,
+              minVerticalPadding: 14,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+              visualDensity: const VisualDensity(vertical: -2),
+              title: Text(
+                group.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: groupWidgetTextColor,
+                ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (unreadCount > 0) ...[
+                    UnreadBadge(count: unreadCount),
+                    const SizedBox(width: 8),
+                  ],
+                  Icon(
+                    isExpanded ? Icons.remove : Icons.add,
+                    color: groupWidgetTextColor,
+                  ),
+                  if (showDragHandle && dragIndex != null) ...[
+                    const SizedBox(width: 8),
+                    ReorderableDragStartListener(
+                      index: dragIndex,
+                      child: Icon(
+                        Icons.drag_handle,
+                        color:
+                            groupWidgetTextColor ??
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              onTap: () {
+                setState(() {
+                  if (isExpanded) {
+                    _expandedChannelGroups.remove(group.name);
+                  } else {
+                    _expandedChannelGroups.add(group.name);
+                  }
+                });
+                unawaited(_saveExpandedChannelGroups());
+              },
+              onLongPress: () => _showChannelGroupActions(context, group),
+            ),
+            AnimatedCrossFade(
+              // Keep the collapsed child full-width so cross-fade sizing does
+              // not squeeze channel titles during collapse/expand animation.
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Padding(
+                padding: const EdgeInsets.fromLTRB(9, 0, 9, 5),
+                child: _buildChannelGroupContent(
+                  context,
+                  connector,
+                  channelMessageStore,
+                  group,
+                  channels,
+                  mutedChannelNames: mutedChannelNames,
+                  hideChannelIndexIndicator: hideChannelIndexIndicator,
+                  canReorder: showDragHandle && group.allowOrderingInGroup,
+                  sortUnreadFirst: sortUnreadFirst,
+                  emptyTextColor: groupWidgetTextColor,
+                ),
+              ),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 180),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChannelGroupContent(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    ChannelGroup group,
+    List<Channel> channels, {
+    Set<String> mutedChannelNames = const {},
+    required bool hideChannelIndexIndicator,
+    required bool canReorder,
+    required bool sortUnreadFirst,
+    Color? emptyTextColor,
+  }) {
+    if (channels.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            context.l10n.channels_changeGroupEmpty,
+            style: TextStyle(color: emptyTextColor),
+          ),
+        ),
+      );
+    }
+
+    if (!canReorder) {
+      return Column(
+        children: [
+          for (final channel in channels)
+            _buildChannelTile(
+              context,
+              connector,
+              channelMessageStore,
+              channel,
+              isMuted: mutedChannelNames.contains(channel.name),
+              hideChannelIndexIndicator: hideChannelIndexIndicator,
+              margin: const EdgeInsets.symmetric(vertical: 4),
+            ),
+        ],
+      );
+    }
+
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      buildDefaultDragHandles: false,
+      itemCount: channels.length,
+      onReorderItem: (oldIndex, newIndex) {
+        _reorderChannelsInGroup(
+          connector,
+          group,
+          channels,
+          oldIndex,
+          newIndex,
+          sortUnreadFirst: sortUnreadFirst,
+        );
+      },
+      itemBuilder: (context, index) {
+        final channel = channels[index];
+        final showDragHandle = !_isUnreadSortedChannel(
+          connector,
+          channel,
+          sortUnreadFirst,
+        );
+        return _buildChannelTile(
+          context,
+          connector,
+          channelMessageStore,
+          channel,
+          isMuted: mutedChannelNames.contains(channel.name),
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          showDragHandle: showDragHandle,
+          dragIndex: index,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+        );
+      },
+    );
+  }
+
+  void _reorderChannelsInGroup(
+    MeshCoreConnector connector,
+    ChannelGroup group,
+    List<Channel> displayChannels,
+    int oldIndex,
+    int newIndex, {
+    required bool sortUnreadFirst,
+  }) {
+    final reorderedChannels = List<Channel>.from(displayChannels);
+    if (oldIndex < 0 || oldIndex >= reorderedChannels.length) return;
+    final channel = reorderedChannels.removeAt(oldIndex);
+    final insertIndex = max(0, min(newIndex, reorderedChannels.length));
+    reorderedChannels.insert(insertIndex, channel);
+    final persistedChannels = sortUnreadFirst
+        ? _restoreUnreadChannelPositions(
+            channelsForGroup(group, connector.channels),
+            reorderedChannels,
+            connector,
+          )
+        : reorderedChannels;
+    final reorderedNames = [
+      for (final channel in persistedChannels) channelNameForGroup(channel),
+    ];
+    final updatedGroups = [
+      for (final item in _channelGroups)
+        if (item.name == group.name)
+          item.copyWith(channelNames: reorderedNames)
+        else
+          item,
+    ];
+
+    setState(() {
+      _channelGroups = updatedGroups;
+    });
+    unawaited(_saveChannelGroups());
+
+    // Keep the device-level manual channel order aligned with local group order.
+    final orderedChannelIndexes = manualChannelOrderForGroups(
+      connector.channels,
+      updatedGroups,
+    );
+    unawaited(connector.setChannelOrder(orderedChannelIndexes));
+  }
+
+  void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(context.l10n.contacts_editGroup),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _showEditChannelGroupDialog(context, group);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: Text(
+                context.l10n.contacts_deleteGroup,
+                style: const TextStyle(color: Colors.red),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _deleteChannelGroup(group);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditChannelGroupDialog(BuildContext context, ChannelGroup group) {
+    final connector = context.read<MeshCoreConnector>();
+    final groupedNames = _groupedChannelNames();
+    final nameController = TextEditingController(text: group.name);
+    final selectedNames = {
+      for (final name in group.channelNames) name.trim().toLowerCase(),
+    };
+    bool allowOrderingInGroup = group.allowOrderingInGroup;
+    int? selectedWidgetColor = group.widgetColor;
+    int? selectedWidgetTextColor = group.widgetTextColor;
+    final editableChannels =
+        connector.channels
+            .where(
+              (channel) =>
+                  selectedNames.contains(
+                    channelNameForGroup(channel).toLowerCase(),
+                  ) ||
+                  !groupedNames.contains(
+                    channelNameForGroup(channel).toLowerCase(),
+                  ),
+            )
+            .toList()
+          ..sort((a, b) {
+            final aSelected = selectedNames.contains(
+              channelNameForGroup(a).toLowerCase(),
+            );
+            final bSelected = selectedNames.contains(
+              channelNameForGroup(b).toLowerCase(),
+            );
+            if (aSelected != bSelected) return aSelected ? -1 : 1;
+            return _normalizeChannelName(a).compareTo(_normalizeChannelName(b));
+          });
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (builderContext, setDialogState) {
+          return AlertDialog(
+            title: Text(context.l10n.contacts_editGroup),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.65,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.contacts_groupName,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(context.l10n.channels_changeWidgetColor),
+                      trailing: ChannelWidgetColorValue(
+                        colorValue: selectedWidgetColor,
+                      ),
+                      onTap: () async {
+                        final selection = await showChannelWidgetColorPicker(
+                          dialogContext,
+                          selectedBackgroundColorValue: selectedWidgetColor,
+                          selectedTextColorValue: selectedWidgetTextColor,
+                        );
+                        if (selection == null) return;
+                        setDialogState(() {
+                          selectedWidgetColor = selection.backgroundColorValue;
+                          selectedWidgetTextColor = selection.textColorValue;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        context.l10n.channels_title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: editableChannels.isEmpty
+                          ? Center(
+                              child: Text(
+                                context.l10n.channels_changeGroupEmpty,
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: editableChannels.length,
+                              itemBuilder: (context, index) {
+                                final channel = editableChannels[index];
+                                final channelName = channelNameForGroup(
+                                  channel,
+                                );
+                                final channelNameKey = channelName
+                                    .toLowerCase();
+                                final isSelected = selectedNames.contains(
+                                  channelNameKey,
+                                );
+                                return CheckboxListTile(
+                                  value: isSelected,
+                                  title: Text(
+                                    _channelDisplayName(context, channel),
+                                  ),
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      if (value == true) {
+                                        selectedNames.add(channelNameKey);
+                                      } else {
+                                        selectedNames.remove(channelNameKey);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: allowOrderingInGroup,
+                      title: Text(context.l10n.channels_allowOrderingInGroup),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          allowOrderingInGroup = value ?? false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(context.l10n.common_cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) {
+                    showDismissibleSnackBar(
+                      context,
+                      content: Text(context.l10n.contacts_groupNameRequired),
+                    );
+                    return;
+                  }
+                  final exists = _channelGroups.any((item) {
+                    if (item.name == group.name) return false;
+                    return item.name.toLowerCase() == name.toLowerCase();
+                  });
+                  if (exists) {
+                    showDismissibleSnackBar(
+                      context,
+                      content: Text(
+                        context.l10n.contacts_groupAlreadyExists(name),
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() {
+                    _channelGroups = _channelGroups.map((item) {
+                      if (item.name != group.name) return item;
+                      return item.copyWith(
+                        name: name,
+                        channelNames: allowOrderingInGroup
+                            ? selectedChannelNamesForGroupEdit(
+                                group,
+                                editableChannels,
+                                selectedNames,
+                              )
+                            : selectedChannelNamesForGroupEditSorted(
+                                editableChannels,
+                                selectedNames,
+                                _compareChannelsByName,
+                              ),
+                        widgetColor: selectedWidgetColor,
+                        widgetTextColor: selectedWidgetTextColor,
+                        allowOrderingInGroup: allowOrderingInGroup,
+                      );
+                    }).toList();
+                    if (_expandedChannelGroups.remove(group.name)) {
+                      _expandedChannelGroups.add(name);
+                    }
+                  });
+                  await _saveChannelGroups();
+                  await _saveExpandedChannelGroups();
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                },
+                child: Text(context.l10n.common_save),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  String _channelDisplayName(BuildContext context, Channel channel) {
+    return channel.name.isEmpty
+        ? context.l10n.channels_channelIndex(channel.index)
+        : channel.name;
+  }
+
+  void _deleteChannelGroup(ChannelGroup group) {
+    setState(() {
+      _channelGroups = _channelGroups
+          .where((item) => item.name != group.name)
+          .toList();
+      _expandedChannelGroups.remove(group.name);
+    });
+    unawaited(_saveChannelGroups());
+    unawaited(_saveExpandedChannelGroups());
+  }
+
+  Future<void> _removeChannelNamesFromGroups(
+    Iterable<String> channelNames,
+  ) async {
+    final removed = {
+      for (final name in channelNames) name.trim().toLowerCase(),
+    };
+    if (removed.isEmpty) return;
+    if (!mounted) return;
+    var changed = false;
+    setState(() {
+      _channelGroups = _channelGroups.map((group) {
+        final members = group.channelNames
+            .where((name) => !removed.contains(name.toLowerCase()))
+            .toList();
+        if (members.length != group.channelNames.length) {
+          changed = true;
+        }
+        return group.copyWith(channelNames: members);
+      }).toList();
+    });
+    if (changed) {
+      await _saveChannelGroups();
+    }
+  }
+
   List<Channel> _filterAndSortChannels(
     List<Channel> channels,
     MeshCoreConnector connector,
@@ -629,12 +1593,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         viewState.channelsSearchText.toLowerCase(),
       );
     }).toList();
-
-    int compareByName(Channel a, Channel b) {
-      final nameA = _normalizeChannelName(a);
-      final nameB = _normalizeChannelName(b);
-      return nameA.toLowerCase().compareTo(nameB.toLowerCase());
-    }
 
     switch (viewState.channelsSortOption) {
       case ChannelSortOption.manual:
@@ -651,7 +1609,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               : bMessages.last.timestamp;
           final timeCompare = bLast.compareTo(aLast);
           if (timeCompare != 0) return timeCompare;
-          return compareByName(a, b);
+          return _compareChannelsByName(a, b);
         });
         break;
       case ChannelSortOption.unread:
@@ -660,15 +1618,117 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           final bUnread = connector.getUnreadCountForChannel(b);
           final unreadCompare = bUnread.compareTo(aUnread);
           if (unreadCompare != 0) return unreadCompare;
-          return compareByName(a, b);
+          return _compareChannelsByName(a, b);
         });
         break;
       case ChannelSortOption.name:
-        filtered.sort(compareByName);
+        filtered.sort(_compareChannelsByName);
         break;
     }
 
     return filtered;
+  }
+
+  List<ChannelGroupListEntry> _sortManualEntriesUnreadFirst(
+    List<ChannelGroupListEntry> entries,
+    MeshCoreConnector connector,
+  ) {
+    final unreadChannels = <ChannelGroupListEntry>[];
+    final rest = <ChannelGroupListEntry>[];
+    for (final entry in entries) {
+      final channel = entry.channel;
+      if (channel != null &&
+          connector.getUnreadCountForChannelIndex(channel.index) > 0) {
+        unreadChannels.add(entry);
+      } else {
+        rest.add(entry);
+      }
+    }
+    return [...unreadChannels, ...rest];
+  }
+
+  List<ChannelGroupListEntry> _restoreUnreadManualEntryPositions(
+    List<ChannelGroupListEntry> baseEntries,
+    List<ChannelGroupListEntry> displayEntries,
+    MeshCoreConnector connector,
+  ) {
+    final movableEntries = displayEntries
+        .where((entry) => !_isUnreadManualEntry(connector, entry))
+        .toList();
+    var movableIndex = 0;
+    return [
+      for (final baseEntry in baseEntries)
+        if (_isUnreadManualEntry(connector, baseEntry))
+          baseEntry
+        else if (movableIndex < movableEntries.length)
+          movableEntries[movableIndex++]
+        else
+          baseEntry,
+    ];
+  }
+
+  List<Channel> _restoreUnreadChannelPositions(
+    List<Channel> baseChannels,
+    List<Channel> displayChannels,
+    MeshCoreConnector connector,
+  ) {
+    final movableChannels = displayChannels
+        .where((channel) => !_isUnreadChannel(connector, channel))
+        .toList();
+    var movableIndex = 0;
+    return [
+      for (final baseChannel in baseChannels)
+        if (_isUnreadChannel(connector, baseChannel))
+          baseChannel
+        else if (movableIndex < movableChannels.length)
+          movableChannels[movableIndex++]
+        else
+          baseChannel,
+    ];
+  }
+
+  bool _isUnreadManualEntry(
+    MeshCoreConnector connector,
+    ChannelGroupListEntry entry,
+  ) {
+    final channel = entry.channel;
+    return channel != null && _isUnreadChannel(connector, channel);
+  }
+
+  List<Channel> _sortUnreadChannelsForDisplay(
+    List<Channel> channels,
+    MeshCoreConnector connector, {
+    required bool enabled,
+  }) {
+    if (!enabled || channels.length < 2) return channels;
+    final unread = <Channel>[];
+    final read = <Channel>[];
+    for (final channel in channels) {
+      if (connector.getUnreadCountForChannelIndex(channel.index) > 0) {
+        unread.add(channel);
+      } else {
+        read.add(channel);
+      }
+    }
+    return [...unread, ...read];
+  }
+
+  bool _isUnreadSortedChannel(
+    MeshCoreConnector connector,
+    Channel channel,
+    bool sortUnreadFirst,
+  ) {
+    return sortUnreadFirst && _isUnreadChannel(connector, channel);
+  }
+
+  bool _isUnreadChannel(MeshCoreConnector connector, Channel channel) {
+    return connector.getUnreadCountForChannelIndex(channel.index) > 0;
+  }
+
+  int _compareChannelsByName(Channel a, Channel b) {
+    final nameA = _normalizeChannelName(a).toLowerCase();
+    final nameB = _normalizeChannelName(b).toLowerCase();
+    return nameA.compareTo(nameB);
   }
 
   String _normalizeChannelName(Channel channel) {
@@ -699,47 +1759,27 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
     _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          Widget buildOptionTile({
+    showMeshSheet(
+      context,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          Widget buildOptionCard({
             required int optionIndex,
             required IconData icon,
             required String title,
-            required String subtitle,
+            String? subtitle,
             bool enabled = true,
           }) {
             final isSelected = selectedOption == optionIndex;
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: enabled
-                    ? (isSelected
-                          ? Theme.of(dialogContext).colorScheme.primaryContainer
-                          : null)
-                    : Colors.grey.withValues(alpha: 0.2),
-                child: Icon(
-                  icon,
-                  color: enabled
-                      ? (isSelected
-                            ? Theme.of(dialogContext).colorScheme.primary
-                            : null)
-                      : Colors.grey,
-                ),
-              ),
-              title: Text(
-                title,
-                style: TextStyle(color: enabled ? null : Colors.grey),
-              ),
-              subtitle: Text(
-                subtitle,
-                style: TextStyle(color: enabled ? null : Colors.grey),
-              ),
-              trailing: enabled ? const Icon(Icons.chevron_right) : null,
-              selected: isSelected,
+            final cardScheme = Theme.of(sheetContext).colorScheme;
+            return MeshCard(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              borderColor: isSelected && enabled ? MeshPalette.blueLine : null,
+              color: isSelected && enabled ? MeshPalette.blueBg : null,
               onTap: enabled
                   ? () {
-                      setDialogState(() {
+                      setSheetState(() {
                         selectedOption = optionIndex;
                         nameController.clear();
                         pskController.clear();
@@ -747,6 +1787,57 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       });
                     }
                   : null,
+              child: Row(
+                children: [
+                  AvatarCircle(
+                    name: title,
+                    size: 38,
+                    color: enabled
+                        ? (isSelected
+                              ? MeshPalette.blue
+                              : cardScheme.onSurfaceVariant)
+                        : cardScheme.outline,
+                    icon: icon,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(sheetContext).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: enabled ? null : cardScheme.outline,
+                              ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle ?? '',
+                          style: Theme.of(sheetContext).textTheme.bodySmall
+                              ?.copyWith(
+                                color: enabled
+                                    ? cardScheme.onSurfaceVariant
+                                    : cardScheme.outline,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (enabled)
+                    Icon(
+                      Icons.chevron_right,
+                      color: isSelected
+                          ? MeshPalette.blue
+                          : cardScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                ],
+              ),
             );
           }
 
@@ -754,6 +1845,84 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ChannelMessageStore channelMessageStore,
           ) {
             switch (selectedOption) {
+              case -1: // Create local channel group
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: sheetContext.l10n.contacts_groupName,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () async {
+                                final name = nameController.text.trim();
+                                if (name.isEmpty) {
+                                  showDismissibleSnackBar(
+                                    context,
+                                    content: Text(
+                                      sheetContext
+                                          .l10n
+                                          .contacts_groupNameRequired,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                final exists = _channelGroups.any(
+                                  (group) =>
+                                      group.name.toLowerCase() ==
+                                      name.toLowerCase(),
+                                );
+                                if (exists) {
+                                  showDismissibleSnackBar(
+                                    context,
+                                    content: Text(
+                                      sheetContext.l10n
+                                          .contacts_groupAlreadyExists(name),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                setState(() {
+                                  _channelGroups = orderedChannelGroups([
+                                    ChannelGroup(
+                                      name: name,
+                                      channelNames: const <String>[],
+                                      sortOrder: 0,
+                                    ),
+                                    for (final group in _channelGroups)
+                                      group.copyWith(
+                                        sortOrder: group.sortOrder + 1,
+                                      ),
+                                  ]);
+                                });
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
+                                }
+                                unawaited(_saveChannelGroups());
+                              },
+                              child: Text(sheetContext.l10n.common_create),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+
               case 0: // Create Private Channel
                 return Column(
                   children: [
@@ -765,7 +1934,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.channels_channelName,
+                          labelText: sheetContext.l10n.channels_channelName,
                           border: const OutlineInputBorder(),
                         ),
                         maxLength: 31,
@@ -783,7 +1952,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext
+                                      sheetContext
                                           .l10n
                                           .channels_enterChannelName,
                                     ),
@@ -795,14 +1964,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 for (int i = 0; i < 16; i++) {
                                   psk[i] = random.nextInt(256);
                                 }
-                                Navigator.pop(dialogContext);
+                                Navigator.pop(sheetContext);
                                 await connector.setChannel(
                                   nextIndex,
                                   name,
                                   psk,
-                                );
-                                await channelMessageStore.clearChannelMessages(
-                                  nextIndex,
                                 );
                                 if (context.mounted) {
                                   showDismissibleSnackBar(
@@ -813,12 +1979,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                 }
                               },
-                              child: Text(dialogContext.l10n.common_create),
+                              child: Text(sheetContext.l10n.common_create),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
                   ],
                 );
 
@@ -833,7 +2000,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.channels_channelName,
+                          labelText: sheetContext.l10n.channels_channelName,
                           border: const OutlineInputBorder(),
                         ),
                         maxLength: 31,
@@ -847,7 +2014,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: pskController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.channels_pskHex,
+                          labelText: sheetContext.l10n.channels_pskHex,
                           border: const OutlineInputBorder(),
                         ),
                       ),
@@ -865,7 +2032,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext
+                                      sheetContext
                                           .l10n
                                           .channels_enterChannelName,
                                     ),
@@ -879,14 +2046,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext
-                                          .l10n
-                                          .channels_pskMustBe32Hex,
+                                      sheetContext.l10n.channels_pskMustBe32Hex,
                                     ),
                                   );
                                   return;
                                 }
-                                Navigator.pop(dialogContext);
+                                Navigator.pop(sheetContext);
                                 connector.setChannel(nextIndex, name, psk);
                                 if (context.mounted) {
                                   showDismissibleSnackBar(
@@ -897,12 +2062,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                 }
                               },
-                              child: Text(dialogContext.l10n.common_add),
+                              child: Text(sheetContext.l10n.common_add),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
                   ],
                 );
 
@@ -920,8 +2086,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             final psk = Channel.parsePskHex(
                               Channel.publicChannelPsk,
                             );
-                            Navigator.pop(dialogContext);
-                            connector.setChannel(nextIndex, 'Public', psk);
+                            Navigator.pop(sheetContext);
+                            connector.setChannel(
+                              nextIndex,
+                              context.l10n.channels_public,
+                              psk,
+                            );
                             if (context.mounted) {
                               showDismissibleSnackBar(
                                 context,
@@ -931,7 +2101,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               );
                             }
                           },
-                          child: Text(dialogContext.l10n.common_add),
+                          child: Text(sheetContext.l10n.common_add),
                         ),
                       ),
                     ],
@@ -945,7 +2115,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     if (_communities.isNotEmpty) ...[
                       RadioGroup<bool>(
                         groupValue: isRegularHashtag,
-                        onChanged: (v) => setDialogState(() {
+                        onChanged: (v) => setSheetState(() {
                           if (v == null) return;
                           isRegularHashtag = v;
                           if (isRegularHashtag) {
@@ -960,20 +2130,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             RadioListTile<bool>(
                               value: true,
                               title: Text(
-                                dialogContext.l10n.community_regularHashtag,
+                                sheetContext.l10n.community_regularHashtag,
                               ),
                               subtitle: Text(
-                                dialogContext.l10n.community_regularHashtagDesc,
+                                sheetContext.l10n.community_regularHashtagDesc,
                               ),
                               dense: true,
                             ),
                             RadioListTile<bool>(
                               value: false,
                               title: Text(
-                                dialogContext.l10n.community_communityHashtag,
+                                sheetContext.l10n.community_communityHashtag,
                               ),
                               subtitle: Text(
-                                dialogContext
+                                sheetContext
                                     .l10n
                                     .community_communityHashtagDesc,
                               ),
@@ -1001,10 +2171,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               )
                               .toList(),
                           onChanged: (c) =>
-                              setDialogState(() => selectedCommunity = c),
+                              setSheetState(() => selectedCommunity = c),
                           decoration: InputDecoration(
                             labelText:
-                                dialogContext.l10n.community_selectCommunity,
+                                sheetContext.l10n.community_selectCommunity,
                             border: const OutlineInputBorder(),
                             prefixIcon: const Icon(Icons.groups),
                           ),
@@ -1019,8 +2189,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: hashtagController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.channels_enterHashtag,
-                          hintText: dialogContext.l10n.channels_hashtagHint,
+                          labelText: sheetContext.l10n.channels_enterHashtag,
+                          hintText: sheetContext.l10n.channels_hashtagHint,
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.tag),
                         ),
@@ -1032,10 +2202,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          dialogContext.l10n.community_hashtagPrivacyHint,
+                          sheetContext.l10n.community_hashtagPrivacyHint,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              sheetContext,
+                            ).colorScheme.onSurfaceVariant,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -1055,7 +2227,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext
+                                      sheetContext
                                           .l10n
                                           .channels_enterChannelName,
                                     ),
@@ -1078,9 +2250,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   // Community hashtag - HMAC derivation from community secret
                                   if (selectedCommunity == null) {
                                     showDismissibleSnackBar(
-                                      dialogContext,
+                                      sheetContext,
                                       content: Text(
-                                        dialogContext
+                                        sheetContext
                                             .l10n
                                             .community_selectCommunity,
                                       ),
@@ -1099,8 +2271,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   _loadCommunities();
                                 }
 
-                                if (dialogContext.mounted) {
-                                  Navigator.pop(dialogContext);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                 }
                                 connector.setChannel(
                                   nextIndex,
@@ -1118,7 +2290,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                 }
                               },
-                              child: Text(dialogContext.l10n.common_add),
+                              child: Text(sheetContext.l10n.common_add),
                             ),
                           ),
                         ],
@@ -1138,7 +2310,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () async {
-                            Navigator.pop(dialogContext);
+                            Navigator.pop(sheetContext);
                             if (context.mounted) {
                               final result = await Navigator.push<Community>(
                                 context,
@@ -1154,7 +2326,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             }
                           },
                           icon: const Icon(Icons.qr_code_scanner),
-                          label: Text(dialogContext.l10n.community_scanQr),
+                          label: Text(sheetContext.l10n.community_scanQr),
                         ),
                       ),
                     ],
@@ -1172,8 +2344,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          labelText: dialogContext.l10n.community_name,
-                          hintText: dialogContext.l10n.community_enterName,
+                          labelText: sheetContext.l10n.community_name,
+                          hintText: sheetContext.l10n.community_enterName,
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.groups),
                         ),
@@ -1183,15 +2355,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     CheckboxListTile(
                       value: addPublicChannel,
                       onChanged: (value) {
-                        setDialogState(() {
+                        setSheetState(() {
                           addPublicChannel = value ?? true;
                         });
                       },
-                      title: Text(
-                        dialogContext.l10n.community_addPublicChannel,
-                      ),
+                      title: Text(sheetContext.l10n.community_addPublicChannel),
                       subtitle: Text(
-                        dialogContext.l10n.community_addPublicChannelHint,
+                        sheetContext.l10n.community_addPublicChannelHint,
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: const EdgeInsets.symmetric(
@@ -1206,11 +2376,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             child: FilledButton(
                               onPressed: () async {
                                 final name = nameController.text.trim();
+                                final publicLabel =
+                                    context.l10n.channels_public;
                                 if (name.isEmpty) {
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
-                                      dialogContext.l10n.community_enterName,
+                                      sheetContext.l10n.community_enterName,
                                     ),
                                   );
                                   return;
@@ -1230,7 +2402,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   final psk = community
                                       .deriveCommunityPublicPsk();
                                   final channelName =
-                                      '${community.name} Public';
+                                      '${community.name} $publicLabel';
                                   connector.setChannel(
                                     nextIndex,
                                     channelName,
@@ -1238,8 +2410,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                 }
 
-                                if (dialogContext.mounted) {
-                                  Navigator.pop(dialogContext);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                 }
 
                                 // Refresh communities list
@@ -1268,12 +2440,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                 }
                               },
-                              child: Text(dialogContext.l10n.common_create),
+                              child: Text(sheetContext.l10n.common_create),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
                   ],
                 );
 
@@ -1282,84 +2455,85 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             }
           }
 
-          return AlertDialog(
-            title: Text(dialogContext.l10n.channels_addChannel),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    buildOptionTile(
-                      optionIndex: 0,
-                      icon: Icons.add,
-                      title: dialogContext.l10n.channels_createPrivateChannel,
-                      subtitle:
-                          dialogContext.l10n.channels_createPrivateChannelDesc,
-                    ),
-                    if (selectedOption == 0)
-                      buildExpandedContent(_channelMessageStore)!,
-                    const Divider(height: 1),
-                    buildOptionTile(
-                      optionIndex: 1,
-                      icon: Icons.lock,
-                      title: dialogContext.l10n.channels_joinPrivateChannel,
-                      subtitle:
-                          dialogContext.l10n.channels_joinPrivateChannelDesc,
-                    ),
-                    if (selectedOption == 1)
-                      buildExpandedContent(_channelMessageStore)!,
-                    if (!hasPublicChannel) ...[
-                      const Divider(height: 1),
-                      buildOptionTile(
-                        optionIndex: 2,
-                        icon: Icons.public,
-                        title: dialogContext.l10n.channels_joinPublicChannel,
-                        subtitle:
-                            dialogContext.l10n.channels_joinPublicChannelDesc,
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.7,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (_, scrollController) => Column(
+              children: [
+                BottomSheetHeader(title: sheetContext.l10n.channels_addChannel),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.only(bottom: 24),
+                    children: [
+                      buildOptionCard(
+                        optionIndex: -1,
+                        icon: Icons.create_new_folder_outlined,
+                        title: sheetContext.l10n.contacts_newGroup,
                       ),
-                      if (selectedOption == 2)
+                      if (selectedOption == -1)
+                        buildExpandedContent(_channelMessageStore)!,
+                      buildOptionCard(
+                        optionIndex: 0,
+                        icon: Icons.add,
+                        title: sheetContext.l10n.channels_createPrivateChannel,
+                        subtitle:
+                            sheetContext.l10n.channels_createPrivateChannelDesc,
+                      ),
+                      if (selectedOption == 0)
+                        buildExpandedContent(_channelMessageStore)!,
+                      buildOptionCard(
+                        optionIndex: 1,
+                        icon: Icons.lock,
+                        title: sheetContext.l10n.channels_joinPrivateChannel,
+                        subtitle:
+                            sheetContext.l10n.channels_joinPrivateChannelDesc,
+                      ),
+                      if (selectedOption == 1)
+                        buildExpandedContent(_channelMessageStore)!,
+                      if (!hasPublicChannel) ...[
+                        buildOptionCard(
+                          optionIndex: 2,
+                          icon: Icons.public,
+                          title: sheetContext.l10n.channels_joinPublicChannel,
+                          subtitle:
+                              sheetContext.l10n.channels_joinPublicChannelDesc,
+                        ),
+                        if (selectedOption == 2)
+                          buildExpandedContent(_channelMessageStore)!,
+                      ],
+                      buildOptionCard(
+                        optionIndex: 3,
+                        icon: Icons.tag,
+                        title: sheetContext.l10n.channels_joinHashtagChannel,
+                        subtitle:
+                            sheetContext.l10n.channels_joinHashtagChannelDesc,
+                      ),
+                      if (selectedOption == 3)
+                        buildExpandedContent(_channelMessageStore)!,
+                      buildOptionCard(
+                        optionIndex: 4,
+                        icon: Icons.qr_code_scanner,
+                        title: sheetContext.l10n.community_scanQr,
+                        subtitle: sheetContext.l10n.community_join,
+                      ),
+                      if (selectedOption == 4)
+                        buildExpandedContent(_channelMessageStore)!,
+                      buildOptionCard(
+                        optionIndex: 5,
+                        icon: Icons.groups,
+                        title: sheetContext.l10n.community_create,
+                        subtitle: sheetContext.l10n.community_createDesc,
+                      ),
+                      if (selectedOption == 5)
                         buildExpandedContent(_channelMessageStore)!,
                     ],
-                    const Divider(height: 1),
-                    buildOptionTile(
-                      optionIndex: 3,
-                      icon: Icons.tag,
-                      title: dialogContext.l10n.channels_joinHashtagChannel,
-                      subtitle:
-                          dialogContext.l10n.channels_joinHashtagChannelDesc,
-                    ),
-                    if (selectedOption == 3)
-                      buildExpandedContent(_channelMessageStore)!,
-                    const Divider(height: 1),
-                    buildOptionTile(
-                      optionIndex: 4,
-                      icon: Icons.qr_code_scanner,
-                      title: dialogContext.l10n.community_scanQr,
-                      subtitle: dialogContext.l10n.community_join,
-                    ),
-                    if (selectedOption == 4)
-                      buildExpandedContent(_channelMessageStore)!,
-                    const Divider(height: 1),
-                    buildOptionTile(
-                      optionIndex: 5,
-                      icon: Icons.groups,
-                      title: dialogContext.l10n.community_create,
-                      subtitle: dialogContext.l10n.community_createDesc,
-                    ),
-                    if (selectedOption == 5)
-                      buildExpandedContent(_channelMessageStore)!,
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(dialogContext.l10n.common_close),
-              ),
-            ],
           );
         },
       ),
@@ -1383,191 +2557,281 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
       channel.index,
     );
+    List<String> selectedQuickAnswerIds = connector.getChannelQuickAnswerIds(
+      channel.index,
+    );
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
+    int? selectedWidgetColor = connector.getChannelWidgetColor(channel.index);
+    int? selectedWidgetTextColor = connector.getChannelWidgetTextColor(
+      channel.index,
+    );
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setState) => AlertDialog(
-          title: Text(
-            dialogContext.l10n.channels_editChannelTitle(channel.index),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: dialogContext.l10n.channels_channelName,
-                    border: const OutlineInputBorder(),
-                  ),
-                  maxLength: 31,
+    showMeshSheet(
+      context,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) => Column(
+            children: [
+              BottomSheetHeader(
+                title: sheetContext.l10n.channels_editChannelTitle(
+                  channel.index,
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: pskController,
-                  decoration: InputDecoration(
-                    labelText: dialogContext.l10n.channels_pskHex,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.casino),
-                      tooltip: dialogContext.l10n.channels_generateRandomPsk,
-                      onPressed: () {
-                        final random = Random.secure();
-                        final bytes = Uint8List(16);
-                        for (int i = 0; i < 16; i++) {
-                          bytes[i] = random.nextInt(256);
-                        }
-                        pskController.text = Channel.formatPskHex(bytes);
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dialogContext.l10n.channels_mcmpCompression),
-                  subtitle: Text(
-                    dialogContext.l10n.channels_mcmpCompressionDescription,
-                  ),
-                  value: mcmpEnabled,
-                  onChanged: (value) => setState(() {
-                    mcmpEnabled = value;
-                    if (mcmpEnabled) {
-                      smazEnabled = false;
-                      cyr2latEnabled = false;
-                    }
-                  }),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dialogContext.l10n.channels_smazCompression),
-                  value: smazEnabled,
-                  onChanged: (value) => setState(() {
-                    smazEnabled = value;
-                    if (smazEnabled) {
-                      mcmpEnabled = false;
-                      cyr2latEnabled = false;
-                    }
-                  }),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dialogContext.l10n.channels_cyr2latCompression),
-                  subtitle: Text(
-                    dialogContext.l10n.channels_cyr2latCompressionDscr,
-                  ),
-                  value: cyr2latEnabled,
-                  onChanged: (value) => setState(() {
-                    cyr2latEnabled = value;
-                    if (cyr2latEnabled) {
-                      mcmpEnabled = false;
-                      smazEnabled = false;
-                    }
-                  }),
-                ),
-                if (cyr2latEnabled) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: selectedCyr2LatProfileId,
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameController,
                       decoration: InputDecoration(
-                        labelText: dialogContext
-                            .l10n
-                            .channels_cyr2latSettingsSubheading,
+                        labelText: sheetContext.l10n.channels_channelName,
                         border: const OutlineInputBorder(),
                       ),
-                      items: appSettingsService.settings.cyr2latProfiles.map((
-                        profile,
-                      ) {
-                        return DropdownMenuItem(
-                          value: profile.id,
-                          child: Text(profile.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) => setState(() {
-                        selectedCyr2LatProfileId = value;
+                      maxLength: 31,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: pskController,
+                      decoration: InputDecoration(
+                        labelText: sheetContext.l10n.channels_pskHex,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.casino),
+                          tooltip: sheetContext.l10n.channels_generateRandomPsk,
+                          onPressed: () {
+                            final random = Random.secure();
+                            final bytes = Uint8List(16);
+                            for (int i = 0; i < 16; i++) {
+                              bytes[i] = random.nextInt(256);
+                            }
+                            pskController.text = Channel.formatPskHex(bytes);
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(sheetContext.l10n.channels_mcmpCompression),
+                      subtitle: Text(
+                        sheetContext.l10n.channels_mcmpCompressionDescription,
+                      ),
+                      value: mcmpEnabled,
+                      onChanged: (value) => setSheetState(() {
+                        mcmpEnabled = value;
+                        if (mcmpEnabled) {
+                          smazEnabled = false;
+                          cyr2latEnabled = false;
+                        }
                       }),
                     ),
-                  ),
-                ],
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dialogContext.l10n.settings_useSendingDelay),
-                  value: sendingDelayEnabled,
-                  onChanged: (value) => setState(() {
-                    sendingDelayEnabled = value;
-                  }),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(dialogContext.l10n.common_cancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                final pskHex = pskController.text.trim();
-
-                Uint8List psk;
-                try {
-                  psk = Channel.parsePskHex(pskHex);
-                } on FormatException {
-                  showDismissibleSnackBar(
-                    dialogContext,
-                    content: Text(dialogContext.l10n.channels_pskMustBe32Hex),
-                  );
-                  return;
-                }
-
-                Navigator.pop(dialogContext);
-                try {
-                  await connector.setChannel(channel.index, name, psk);
-                  await connector.setChannelMcmpEnabled(
-                    channel.index,
-                    mcmpEnabled,
-                  );
-                  await connector.setChannelSmazEnabled(
-                    channel.index,
-                    smazEnabled,
-                  );
-                  await connector.setChannelCyr2LatEnabled(
-                    channel.index,
-                    cyr2latEnabled,
-                  );
-                  await connector.setChannelCyr2LatProfileId(
-                    channel.index,
-                    selectedCyr2LatProfileId,
-                  );
-                  await connector.setChannelSendingDelayEnabled(
-                    channel.index,
-                    sendingDelayEnabled,
-                  );
-                  if (!context.mounted) return;
-                  showDismissibleSnackBar(
-                    context,
-                    content: Text(context.l10n.channels_channelUpdated(name)),
-                  );
-                } catch (e, st) {
-                  debugPrint(st.toString());
-                  if (!context.mounted) return;
-                  showDismissibleSnackBar(
-                    context,
-                    content: Text(
-                      context.l10n.channels_channelUpdateFailed('$e'),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(sheetContext.l10n.channels_smazCompression),
+                      value: smazEnabled,
+                      onChanged: (value) => setSheetState(() {
+                        smazEnabled = value;
+                        if (smazEnabled) {
+                          mcmpEnabled = false;
+                          cyr2latEnabled = false;
+                        }
+                      }),
                     ),
-                  );
-                }
-              },
-              child: Text(dialogContext.l10n.common_save),
-            ),
-          ],
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        sheetContext.l10n.channels_cyr2latCompression,
+                      ),
+                      subtitle: Text(
+                        sheetContext.l10n.channels_cyr2latCompressionDscr,
+                      ),
+                      value: cyr2latEnabled,
+                      onChanged: (value) => setSheetState(() {
+                        cyr2latEnabled = value;
+                        if (cyr2latEnabled) {
+                          mcmpEnabled = false;
+                          smazEnabled = false;
+                        }
+                      }),
+                    ),
+                    if (cyr2latEnabled) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                        child: DropdownButtonFormField<String>(
+                          initialValue: selectedCyr2LatProfileId,
+                          decoration: InputDecoration(
+                            labelText: sheetContext
+                                .l10n
+                                .channels_cyr2latSettingsSubheading,
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: appSettingsService.settings.cyr2latProfiles
+                              .map((profile) {
+                                return DropdownMenuItem(
+                                  value: profile.id,
+                                  child: Text(profile.name),
+                                );
+                              })
+                              .toList(),
+                          onChanged: (value) => setSheetState(() {
+                            selectedCyr2LatProfileId = value;
+                          }),
+                        ),
+                      ),
+                    ],
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(sheetContext.l10n.settings_useSendingDelay),
+                      value: sendingDelayEnabled,
+                      onChanged: (value) => setSheetState(() {
+                        sendingDelayEnabled = value;
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.quickreply_outlined),
+                      title: Text(sheetContext.l10n.settings_quickAnswersTitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final selection = await showQuickAnswersSelectionDialog(
+                          sheetContext,
+                          settingsService: appSettingsService,
+                          selectedAnswerIds: selectedQuickAnswerIds,
+                        );
+                        if (selection == null) return;
+                        setSheetState(() {
+                          selectedQuickAnswerIds = selection;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(sheetContext.l10n.channels_changeWidgetColor),
+                      trailing: ChannelWidgetColorValue(
+                        colorValue: selectedWidgetColor,
+                      ),
+                      onTap: () async {
+                        final selection = await showChannelWidgetColorPicker(
+                          sheetContext,
+                          selectedBackgroundColorValue: selectedWidgetColor,
+                          selectedTextColorValue: selectedWidgetTextColor,
+                        );
+                        if (selection == null) return;
+                        setSheetState(() {
+                          selectedWidgetColor = selection.backgroundColorValue;
+                          selectedWidgetTextColor = selection.textColorValue;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: Text(sheetContext.l10n.common_cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final name = nameController.text.trim();
+                          final pskHex = pskController.text.trim();
+
+                          Uint8List psk;
+                          try {
+                            psk = Channel.parsePskHex(pskHex);
+                          } on FormatException {
+                            showDismissibleSnackBar(
+                              sheetContext,
+                              content: Text(
+                                sheetContext.l10n.channels_pskMustBe32Hex,
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(sheetContext);
+                          try {
+                            await connector.setChannel(
+                              channel.index,
+                              name,
+                              psk,
+                            );
+                            await connector.setChannelMcmpEnabled(
+                              channel.index,
+                              mcmpEnabled,
+                            );
+                            await connector.setChannelSmazEnabled(
+                              channel.index,
+                              smazEnabled,
+                            );
+                            await connector.setChannelCyr2LatEnabled(
+                              channel.index,
+                              cyr2latEnabled,
+                            );
+                            await connector.setChannelCyr2LatProfileId(
+                              channel.index,
+                              selectedCyr2LatProfileId,
+                            );
+                            await connector.setChannelSendingDelayEnabled(
+                              channel.index,
+                              sendingDelayEnabled,
+                            );
+                            await connector.setChannelQuickAnswerIds(
+                              channel.index,
+                              selectedQuickAnswerIds,
+                            );
+                            await connector.setChannelWidgetColor(
+                              channel.index,
+                              selectedWidgetColor,
+                            );
+                            await connector.setChannelWidgetTextColor(
+                              channel.index,
+                              selectedWidgetTextColor,
+                            );
+                            if (!context.mounted) return;
+                            showDismissibleSnackBar(
+                              context,
+                              content: Text(
+                                context.l10n.channels_channelUpdated(name),
+                              ),
+                            );
+                          } catch (e, st) {
+                            debugPrint(st.toString());
+                            if (!context.mounted) return;
+                            showDismissibleSnackBar(
+                              context,
+                              content: Text(
+                                context.l10n.channels_channelUpdateFailed('$e'),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(sheetContext.l10n.common_save),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1576,7 +2840,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _confirmDeleteChannel(
     BuildContext context,
     MeshCoreConnector connector,
-    ChannelMessageStore channelMessageStore,
     Channel channel,
   ) {
     showDialog(
@@ -1596,8 +2859,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               Navigator.pop(dialogContext);
               try {
                 await connector.deleteChannel(channel.index);
-
-                await channelMessageStore.clearChannelMessages(channel.index);
+                await _removeChannelNamesFromGroups([
+                  channelNameForGroup(channel),
+                ]);
 
                 if (!context.mounted) return;
 
@@ -1623,7 +2887,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             },
             child: Text(
               dialogContext.l10n.common_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],
@@ -1633,7 +2899,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   void _addPublicChannel(BuildContext context, MeshCoreConnector connector) {
     final psk = Channel.parsePskHex(Channel.publicChannelPsk);
-    connector.setChannel(0, 'Public', psk);
+    connector.setChannel(0, context.l10n.channels_public, psk);
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.channels_publicChannelAdded),
@@ -1649,9 +2915,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   void _showManageCommunitiesDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    showMeshSheet(
+      context,
       builder: (sheetContext) => DraggableScrollableSheet(
         initialChildSize: 0.5,
         minChildSize: 0.3,
@@ -1659,18 +2924,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         expand: false,
         builder: (_, scrollController) => Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const Icon(Icons.groups, size: 28),
-                  const SizedBox(width: 12),
-                  Text(
-                    context.l10n.community_manageCommunities,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ],
-              ),
+            BottomSheetHeader(
+              title: sheetContext.l10n.community_manageCommunities,
             ),
             const Divider(height: 1),
             Expanded(
@@ -1682,22 +2937,30 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           Icon(
                             Icons.groups_outlined,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: Theme.of(sheetContext)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.6),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            context.l10n.community_noCommunities,
+                            sheetContext.l10n.community_noCommunities,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                sheetContext,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            context.l10n.community_scanOrCreate,
+                            sheetContext.l10n.community_scanOrCreate,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[500],
+                              color: Theme.of(sheetContext)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.8),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1711,29 +2974,33 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         final community = _communities[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.purple.withValues(
-                              alpha: 0.2,
-                            ),
+                            backgroundColor: MeshPalette.magentaBg,
                             child: const Icon(
                               Icons.groups,
-                              color: Colors.purple,
+                              color: MeshPalette.magenta,
                             ),
                           ),
                           title: Text(community.name),
                           subtitle: Text(
-                            'ID: ${community.shortCommunityId}...',
+                            context.l10n.channels_communityShortId(
+                              community.shortCommunityId,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) {
                               Navigator.pop(sheetContext);
+                              // Use the screen's context: the sheet item's
+                              // context is deactivated once the sheet pops.
                               if (value == 'share') {
-                                _showCommunityQrDialog(context, community);
+                                _showCommunityQrDialog(this.context, community);
                               } else if (value == 'leave') {
-                                _confirmLeaveCommunity(context, community);
+                                _confirmLeaveCommunity(this.context, community);
                               }
                             },
                             itemBuilder: (context) => [
@@ -1751,14 +3018,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 value: 'leave',
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.exit_to_app,
-                                      color: Colors.red,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       context.l10n.community_delete,
-                                      style: const TextStyle(color: Colors.red),
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1845,6 +3118,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               for (final channel in communityChannels) {
                 await connector.deleteChannel(channel.index);
               }
+              await _removeChannelNamesFromGroups(
+                communityChannels.map(channelNameForGroup),
+              );
 
               // Remove community from store
               await _communityStore.removeCommunity(community.id);
@@ -1859,7 +3135,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             },
             child: Text(
               dialogContext.l10n.community_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],

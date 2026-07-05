@@ -3,6 +3,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
+import 'message_compression.dart';
 import 'translation_support.dart';
 
 enum MessageStatus { pending, sent, delivered, failed }
@@ -22,6 +23,11 @@ class Message {
   final MessageTranslationStatus translationStatus;
   final String? translationModelId;
   final bool wasMcmpCompressed;
+  final MessageCompressionType? compressionType;
+  final int? compressionSavingsPercent;
+  final int? compressionOriginalBytes;
+  final int? compressionPayloadBytes;
+  final String? sharedHistorySourceName;
 
   // NEW: Retry logic fields
   final String messageId;
@@ -29,6 +35,9 @@ class Message {
   final int? estimatedTimeoutMs;
   final int? expectedAckHash;
   final DateTime? sentAt;
+  // Internal TX anchor; UI keeps using timestamp as the visible compose time.
+  final DateTime? sentByRadioAt;
+  final List<int> sentByRadioWaitSeconds;
   final DateTime? deliveredAt;
   final int? tripTimeMs;
   final int? pathLength;
@@ -51,10 +60,17 @@ class Message {
     this.translationStatus = MessageTranslationStatus.none,
     this.translationModelId,
     this.wasMcmpCompressed = false,
+    this.compressionType,
+    this.compressionSavingsPercent,
+    this.compressionOriginalBytes,
+    this.compressionPayloadBytes,
+    this.sharedHistorySourceName,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
     this.expectedAckHash,
     this.sentAt,
+    this.sentByRadioAt,
+    List<int>? sentByRadioWaitSeconds,
     this.deliveredAt,
     this.tripTimeMs,
     this.pathLength,
@@ -65,6 +81,7 @@ class Message {
   }) : messageId =
            messageId ??
            '${timestamp.millisecondsSinceEpoch}_${pubKeyToHex(senderKey)}_${text.hashCode}',
+       sentByRadioWaitSeconds = sentByRadioWaitSeconds ?? const [],
        pathBytes = pathBytes ?? Uint8List(0),
        fourByteRoomContactKey = fourByteRoomContactKey ?? Uint8List(0),
        reactions = reactions ?? {},
@@ -78,6 +95,8 @@ class Message {
     int? estimatedTimeoutMs,
     int? expectedAckHash,
     DateTime? sentAt,
+    Object? sentByRadioAt = _unset,
+    List<int>? sentByRadioWaitSeconds,
     DateTime? deliveredAt,
     int? tripTimeMs,
     int? pathLength,
@@ -89,6 +108,11 @@ class Message {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     bool? wasMcmpCompressed,
+    Object? compressionType = _unset,
+    Object? compressionSavingsPercent = _unset,
+    Object? compressionOriginalBytes = _unset,
+    Object? compressionPayloadBytes = _unset,
+    Object? sharedHistorySourceName = _unset,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
@@ -115,10 +139,30 @@ class Message {
           ? this.translationModelId
           : translationModelId as String?,
       wasMcmpCompressed: wasMcmpCompressed ?? this.wasMcmpCompressed,
+      compressionType: compressionType == _unset
+          ? this.compressionType
+          : compressionType as MessageCompressionType?,
+      compressionSavingsPercent: compressionSavingsPercent == _unset
+          ? this.compressionSavingsPercent
+          : compressionSavingsPercent as int?,
+      compressionOriginalBytes: compressionOriginalBytes == _unset
+          ? this.compressionOriginalBytes
+          : compressionOriginalBytes as int?,
+      compressionPayloadBytes: compressionPayloadBytes == _unset
+          ? this.compressionPayloadBytes
+          : compressionPayloadBytes as int?,
+      sharedHistorySourceName: sharedHistorySourceName == _unset
+          ? this.sharedHistorySourceName
+          : sharedHistorySourceName as String?,
       retryCount: retryCount ?? this.retryCount,
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,
       sentAt: sentAt ?? this.sentAt,
+      sentByRadioAt: sentByRadioAt == _unset
+          ? this.sentByRadioAt
+          : sentByRadioAt as DateTime?,
+      sentByRadioWaitSeconds:
+          sentByRadioWaitSeconds ?? this.sentByRadioWaitSeconds,
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
       pathLength: pathLength ?? this.pathLength,
@@ -148,6 +192,10 @@ class Message {
       final rawText = reader.readCString();
       final text =
           MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+      final compression = MessageCompressionMetadata.fromEncodedText(
+        encodedText: rawText,
+        decodedText: text,
+      );
 
       return Message(
         senderKey: senderKey,
@@ -157,6 +205,10 @@ class Message {
         isCli: false,
         status: MessageStatus.delivered,
         wasMcmpCompressed: MeshCompressor.instance.hasPrefix(rawText),
+        compressionType: compression?.type,
+        compressionSavingsPercent: compression?.savingsPercent,
+        compressionOriginalBytes: compression?.originalBytes,
+        compressionPayloadBytes: compression?.payloadBytes,
         pathBytes: Uint8List(0),
       );
     } catch (e) {
@@ -171,6 +223,10 @@ class Message {
     String? translatedLanguageCode,
     String? translationModelId,
     bool wasMcmpCompressed = false,
+    MessageCompressionType? compressionType,
+    int? compressionSavingsPercent,
+    int? compressionOriginalBytes,
+    int? compressionPayloadBytes,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -181,6 +237,10 @@ class Message {
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType: compressionType,
+      compressionSavingsPercent: compressionSavingsPercent,
+      compressionOriginalBytes: compressionOriginalBytes,
+      compressionPayloadBytes: compressionPayloadBytes,
       timestamp: DateTime.now(),
       isOutgoing: true,
       isCli: false,

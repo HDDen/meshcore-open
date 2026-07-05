@@ -4,10 +4,18 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../services/ble_debug_log_service.dart';
 import '../connector/meshcore_protocol.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum _BleLogView { frames, rawLogRx }
+
+int _decodeRawPathByteLen(int pathLenRaw) {
+  if (pathLenRaw == 0xFF || pathLenRaw == 0) return 0;
+  final hashCount = pathLenRaw & 0x3F;
+  final hashWidth = ((pathLenRaw >> 6) & 0x03) + 1;
+  return hashCount * hashWidth;
+}
 
 class BleDebugLogScreen extends StatefulWidget {
   const BleDebugLogScreen({super.key});
@@ -32,6 +40,7 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
         return Scaffold(
           appBar: AppBar(
             title: AdaptiveAppBarTitle(context.l10n.debugLog_bleTitle),
+            centerTitle: true,
             actions: [
               IconButton(
                 tooltip: context.l10n.debugLog_copyLog,
@@ -101,23 +110,14 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
                           itemCount: showingFrames
                               ? entries.length
                               : rawEntries.length,
-                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          separatorBuilder: (_, _) =>
+                              const Divider(height: 1, color: MeshPalette.line),
                           itemBuilder: (context, index) {
                             if (showingFrames) {
                               final entry = entries[index];
                               final time =
                                   '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}';
-                              return ListTile(
-                                dense: true,
-                                title: Text(entry.description),
-                                subtitle: Text('${entry.hexPreview}\n$time'),
-                                isThreeLine: true,
-                                leading: Icon(
-                                  entry.outgoing
-                                      ? Icons.upload
-                                      : Icons.download,
-                                  size: 18,
-                                ),
+                              return GestureDetector(
                                 onLongPress: () async {
                                   await Clipboard.setData(
                                     ClipboardData(
@@ -131,6 +131,60 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
                                     ),
                                   );
                                 },
+                                child: Container(
+                                  color: MeshPalette.bg,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        entry.outgoing
+                                            ? Icons.upload
+                                            : Icons.download,
+                                        size: 18,
+                                        color: entry.outgoing
+                                            ? MeshPalette.blue
+                                            : MeshPalette.signal,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              entry.description,
+                                              style: MeshTheme.mono(
+                                                fontSize: 11.5,
+                                                color: MeshPalette.ink,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              entry.hexPreview,
+                                              style: MeshTheme.mono(
+                                                fontSize: 10,
+                                                color: MeshPalette.ink3,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              time,
+                                              style: MeshTheme.mono(
+                                                fontSize: 9.5,
+                                                color: MeshPalette.ink4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               );
                             }
 
@@ -138,18 +192,65 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
                             final info = _decodeRawPacket(entry.payload);
                             final time =
                                 '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}';
-                            return ListTile(
-                              dense: true,
-                              title: Text(info.title),
-                              subtitle: Text('${info.summary}\n$time'),
-                              isThreeLine: true,
-                              leading: const Icon(Icons.download, size: 18),
+                            return GestureDetector(
                               onTap: () => _showRawDialog(context, info),
+                              child: Container(
+                                color: MeshPalette.bg,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.download,
+                                      size: 18,
+                                      color: MeshPalette.signal,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            info.title,
+                                            style: MeshTheme.mono(
+                                              fontSize: 11.5,
+                                              color: MeshPalette.ink,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            info.summary,
+                                            style: MeshTheme.mono(
+                                              fontSize: 10,
+                                              color: MeshPalette.ink3,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            time,
+                                            style: MeshTheme.mono(
+                                              fontSize: 9.5,
+                                              color: MeshPalette.ink4,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             );
                           },
                         )
                       : Center(
-                          child: Text(context.l10n.debugLog_noBleActivity),
+                          child: Text(
+                            context.l10n.debugLog_noBleActivity,
+                            style: const TextStyle(color: MeshPalette.ink3),
+                          ),
                         ),
                 ),
               ],
@@ -208,16 +309,17 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
         rawHex: _bytesToHex(raw),
       );
     }
-    final pathLen = raw[index++];
-    if (raw.length < index + pathLen) {
+    final pathLenRaw = raw[index++];
+    final pathByteLen = _decodeRawPathByteLen(pathLenRaw);
+    if (raw.length < index + pathByteLen) {
       return _RawPacketInfo(
         title: 'RX RAW_LOG_RX_DATA • ${_payloadTypeLabel(payloadType)}',
         summary: 'Truncated path',
         rawHex: _bytesToHex(raw),
       );
     }
-    final pathBytes = raw.sublist(index, index + pathLen);
-    index += pathLen;
+    final pathBytes = raw.sublist(index, index + pathByteLen);
+    index += pathByteLen;
     if (raw.length <= index) {
       return _RawPacketInfo(
         title: 'RX RAW_LOG_RX_DATA • ${_payloadTypeLabel(payloadType)}',
@@ -230,7 +332,7 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
     final title =
         'RX ${_payloadTypeLabel(payloadType)} • ${_routeLabel(routeType)} • v$payloadVer';
     final summary = _decodePayloadSummary(payloadType, payload);
-    final pathSummary = pathLen > 0
+    final pathSummary = pathByteLen > 0
         ? 'Path=${_bytesToHex(pathBytes)}'
         : 'Path=none';
     final detail = '$summary • $pathSummary • len=${raw.length}';

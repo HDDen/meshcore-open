@@ -93,6 +93,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get common_disable => 'Desativar';
 
   @override
+  String get common_undo => 'Desfazer';
+
+  @override
+  String get messageStatus_sent => 'Enviado';
+
+  @override
+  String get messageStatus_delivered => 'Entregue';
+
+  @override
+  String get messageStatus_pending => 'Enviar';
+
+  @override
+  String get messageStatus_failed => 'Falhou ao enviar';
+
+  @override
+  String get messageStatus_repeated => 'Ouvi repetidamente';
+
+  @override
   String get common_reboot => 'Reiniciar';
 
   @override
@@ -110,6 +128,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String common_percentValue(int percent) {
     return '$percent%';
   }
+
+  @override
+  String get common_autoRefresh => 'Atualização automática';
+
+  @override
+  String get common_interval => 'Intervalo';
+
+  @override
+  String get common_default => 'Default';
+
+  @override
+  String get common_clear => 'Limpar';
+
+  @override
+  String get common_send => 'Send';
+
+  @override
+  String get common_apply => 'Apply';
 
   @override
   String get scanner_title => 'MeshCore: Versão aberta (Advanced mod)';
@@ -166,14 +202,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => 'Últimas conexões';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'Definir nome do favorito';
 
   @override
   String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+      'Quando marcado como favorito, não é removido do histórico de conexões';
 
   @override
   String get usbScreenTitle => 'Conecte via USB';
@@ -307,6 +343,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scanner_enableBluetooth => 'Ative o Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'A funcionalidade Bluetooth não está disponível no navegador. Conecte-se via USB em vez disso.';
+
+  @override
   String get device_quickSwitch => 'Mudar rapidamente';
 
   @override
@@ -350,6 +390,45 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settings_radioSettingsUpdated =>
       'Configurações de rádio atualizadas';
+
+  @override
+  String get settings_regionSettings => 'Regions';
+
+  @override
+  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+
+  @override
+  String get settings_regionManagement_screenTitle => 'Region Management';
+
+  @override
+  String get settings_regionNameHint => 'Enter region name';
+
+  @override
+  String get settings_regionAddRegion => 'Add region';
+
+  @override
+  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+
+  @override
+  String get settings_regionFetchRegionsFail => 'No regions were found';
+
+  @override
+  String get settings_regionFetchRegionsAlreadyExists =>
+      'This region has already been added';
+
+  @override
+  String get settings_regionName => 'Region Name';
+
+  @override
+  String get settings_regionDeleted => 'Region deleted';
+
+  @override
+  String get settings_deleteRegion => 'Delete Region';
+
+  @override
+  String settings_deleteRegionConfirm(String region) {
+    return 'Remove \"$region\" from region list?';
+  }
 
   @override
   String get settings_location => 'Localização';
@@ -535,6 +614,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Um cliente Flutter de código aberto para dispositivos de rede mesh LoRa Core da MeshCore.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Dados de elevação LOS: Open-Meteo (CC BY 4.0)';
 
@@ -606,11 +693,45 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle => 'Atraso de reenvio manual';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      'Também afeta o mecanismo interno para eliminar renderizações duplicadas de mensagens enviadas';
+
+  @override
+  String get settings_channelMaxbytesOutgoingTitle =>
+      'Limitar o payload de saída dos canais, bytes';
+
+  @override
+  String get settings_channelMaxbytesOutgoingSubtitle =>
+      'O limite considera o texto da mensagem mais o nome do remetente. Foi observado que, quando uma mensagem excede certo número de bytes, as confirmações de repetição de pacotes deixam de ser transmitidas. Isso é especialmente perceptível em conexões BLE. O limite aproximado em que as confirmações ainda funcionam é 139 bytes. Para USB, esse limite é de aproximadamente 155 bytes.';
+
+  @override
+  String get settings_quickAnswersTitle => 'Respostas rápidas';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Uma lista de frases disponíveis para selecionar como respostas rápidas. Elas são atribuídas a contatos/canais nas respectivas configurações.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Digite seu texto';
+
+  @override
+  String get settings_quickAnswersEditText => 'Editar resposta';
+
+  @override
+  String get settings_quickAnswersSelect => 'Ativar estas respostas';
+
+  @override
+  String get settings_quickAnswersExists => 'Já existe';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Você ainda não adicionou respostas rápidas para este chat!';
+
+  @override
+  String get settings_quickAnswersSendAtSelect => 'Send on selection';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
@@ -690,6 +811,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appSettings_languageUk => 'Ucraniano';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Ativar rastreamento de mensagens';
 
@@ -698,8 +831,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Mostrar metadados detalhados de roteamento e tempo para as mensagens';
 
   @override
+  String get appSettings_enableTimeSeconds =>
+      'Mostrar segundos nas informações da mensagem';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+      'Mostrar botão para ocultar o teclado';
 
   @override
   String get appSettings_notifications => 'Notificações';
@@ -815,11 +952,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get appSettings_maxMessageRetriesSubtitle =>
       'Número de tentativas de reenvio antes de classificar uma mensagem como falha.';
-
-  @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
 
   @override
   String get appSettings_battery => 'Bateria';
@@ -1023,6 +1155,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contacts_newGroup => 'Novo Grupo';
 
   @override
+  String get contacts_moreOptions => 'Mais opções';
+
+  @override
+  String get contacts_searchOpen => 'Pesquisar contatos';
+
+  @override
+  String get contacts_searchClose => 'Pesquisa avançada';
+
+  @override
   String get contacts_groupName => 'Nome do grupo';
 
   @override
@@ -1084,6 +1225,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get contact_clearChat => 'Limpar Chat';
+
+  @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
 
   @override
   String get contact_teleBase => 'Base de Telemetria';
@@ -1236,6 +1380,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get channels_changeWidgetColor => 'Cor do widget';
+
+  @override
+  String get channels_changeWidgetTextColor => 'Cor do texto do widget';
+
+  @override
+  String get channels_changeGroupEmpty => 'Ainda está vazio aqui';
+
+  @override
+  String get channels_allowOrderingInGroup =>
+      'Permitir ordenar canais dentro do grupo';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Adicionar perfil Cyr2Lat';
 
   @override
@@ -1266,25 +1423,25 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'Limite de colagem de texto MCMP';
 
   @override
   String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+      'Atraso de envio para cancelamento';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => 'Usar atraso de envio';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => 'cancelar envio';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Não filtrar mensagens próprias nos canais';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'Por padrão, mensagens próprias do seu nó são ignoradas. Isso causa problemas em alguns firmwares com TerminalCLI integrado';
 
   @override
   String get channels_publicChannelAdded => 'Canal público adicionado';
@@ -1345,6 +1502,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channels_hashtagHint => 'ex. #equipe';
 
   @override
+  String channels_regionSetTo(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_regionNotSet => 'Region: none';
+
+  @override
+  String get channels_regionSelect_Title => 'Select a region';
+
+  @override
+  String get channels_clearRegion => 'Clear region';
+
+  @override
   String get chat_noMessages => 'Ainda não existem mensagens.';
 
   @override
@@ -1393,7 +1564,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return 'Aguarde $seconds segundos antes de reenviar';
   }
 
   @override
@@ -1528,34 +1699,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get debugFrame_hexDump => 'Espaço Hexadecimal:';
 
   @override
-  String get chat_pathManagement => 'Gerenciamento de Caminhos';
-
-  @override
-  String get chat_ShowAllPaths => 'Mostrar todos os caminhos';
-
-  @override
-  String get chat_routingMode => 'Modo de roteamento';
-
-  @override
-  String get chat_autoUseSavedPath => 'Auto (usar caminho salvo)';
-
-  @override
-  String get chat_forceFloodMode => 'Modo de Inundação Forçado';
-
-  @override
-  String get chat_recentAckPaths => 'Rotas de ACK Recentes (toque para usar):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      'O histórico está cheio. Remova entradas para adicionar novas.';
-
-  @override
-  String get chat_hopSingular => 'pule';
-
-  @override
-  String get chat_hopPlural => 'salta';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1567,12 +1710,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => 'Sucessos';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => 'Remover caminho';
 
   @override
@@ -1580,51 +1717,146 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ainda não há histórico de caminhos.\nEnvie uma mensagem para descobrir caminhos.';
 
   @override
-  String get chat_pathActions => 'Ações do Caminho:';
-
-  @override
-  String get chat_setCustomPath => 'Definir Caminho Personalizado';
-
-  @override
-  String get chat_setCustomPathSubtitle =>
-      'Especifique manualmente o caminho de roteamento';
-
-  @override
-  String get chat_clearPath => 'Limpar Caminho';
-
-  @override
-  String get chat_clearPathSubtitle =>
-      'Forçar a descoberta na próxima transmissão';
-
-  @override
   String get chat_pathCleared =>
       'Caminho limpo. A próxima mensagem redescobrirá a rota.';
-
-  @override
-  String get chat_floodModeSubtitle =>
-      'Use a chave de roteamento na barra de ferramentas';
-
-  @override
-  String get chat_floodModeEnabled =>
-      'Modo de inundação ativado. Desative-o novamente através do ícone de roteamento na barra de ferramentas.';
 
   @override
   String get chat_fullPath => 'Caminho Completo';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      'Os detalhes do caminho ainda não estão disponíveis. Tente enviar uma mensagem para atualizar.';
+  String get routing_title => 'Rotas';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Caminho definido: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => 'Carro';
+
+  @override
+  String get routing_modeFlood => 'Inundação';
+
+  @override
+  String get routing_modeManual => 'Manual';
+
+  @override
+  String get routing_modeAutoHint =>
+      'Seleciona automaticamente o caminho mais conhecido, e, se nenhum caminho conhecido for encontrado, utiliza a estratégia de \"inundação\".';
+
+  @override
+  String get routing_modeFloodHint =>
+      'Transmissão através de todos os repetidores. É a opção mais confiável, mas utiliza mais tempo de transmissão.';
+
+  @override
+  String get routing_modeManualHint =>
+      'Sempre segue exatamente o caminho que você define.';
+
+  @override
+  String get routing_currentRoute => 'Rota atual';
+
+  @override
+  String get routing_directNoHops => 'Direto – sem saltos de repetidor';
+
+  @override
+  String get routing_noPathYet =>
+      'Ainda não há um caminho definido. A mensagem continua a ser enviada até que uma rota seja encontrada.';
+
+  @override
+  String get routing_floodBroadcast =>
+      'Transmissão através de todos os repetidores';
+
+  @override
+  String get routing_editPath => 'Editar caminho';
+
+  @override
+  String get routing_forgetPath => 'Esqueça o caminho';
+
+  @override
+  String get routing_knownPaths => 'Rotas conhecidas';
+
+  @override
+  String get routing_knownPathsHint =>
+      'Toque em um caminho para alternar para ele.';
+
+  @override
+  String get routing_inUse => 'Em uso';
+
+  @override
+  String get routing_qualityStrong => 'Primeiro salto notável';
+
+  @override
+  String get routing_qualityGood => 'Primeiro salto bem-sucedido';
+
+  @override
+  String get routing_qualityFair => 'Primeira etapa bem-sucedida';
+
+  @override
+  String get routing_qualityWorked => 'Foi entregue';
+
+  @override
+  String get routing_qualityFlood =>
+      'Informação obtida através de relatos generalizados.';
+
+  @override
+  String get routing_qualityUntested => 'Não testado';
+
+  @override
+  String routing_lastWorked(String when) {
+    return 'worked $when';
   }
+
+  @override
+  String get routing_neverWorked => 'nunca confirmado';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery =>
+      'Entrega em áreas afetadas por inundações';
+
+  @override
+  String get pathEditor_title => 'Criar Caminho';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count de 64 gramas de lúpulo';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      'Ainda não há lúpulos adicionados. Clique nos repetidores abaixo para adicioná-los na ordem desejada, ou salve sem adicionar lúpulos para enviar diretamente.';
+
+  @override
+  String get pathEditor_addHops => 'Adicione os lúpulos na seguinte ordem.';
+
+  @override
+  String get pathEditor_searchRepeaters => 'Encontrar repetidores';
+
+  @override
+  String get pathEditor_advancedHex => 'Avançado: caminho hexadecimal bruto';
+
+  @override
+  String get pathEditor_hexLabel => 'Prefixos hexadecimais';
+
+  @override
+  String get pathEditor_hexHelper =>
+      'Dois caracteres hexadecimais por salto, separados por vírgulas.';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return 'Inválido: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => 'Máximo de 64 saltos';
+
+  @override
+  String get pathEditor_usePath => 'Utilize este caminho.';
+
+  @override
+  String get pathEditor_removeHop => 'Remova o lúpulo';
+
+  @override
+  String get pathEditor_unknownHop => 'Repetidor desconhecido';
 
   @override
   String get chat_pathSavedLocally =>
@@ -1699,6 +1931,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get map_title => 'Mapa de Nós';
+
+  @override
+  String get map_searchHint => 'Pesquisar por nome ou ID do nó';
+
+  @override
+  String get map_activity => 'Atividade';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Recente';
+
+  @override
+  String get map_stale => 'Vencido';
+
+  @override
+  String get map_visible => 'Visível';
+
+  @override
+  String get map_hidden => 'Escondido';
+
+  @override
+  String get map_centerOnNode => 'Centralizar no nó';
+
+  @override
+  String get map_details => 'Detalhes';
+
+  @override
+  String get map_noGps => 'Sem GPS';
+
+  @override
+  String get map_noResults => 'Nenhum nó encontrado';
 
   @override
   String get map_lineOfSight => 'Linha de visão';
@@ -1887,6 +2152,354 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Rastreamento de caminho cancelado.';
+
+  @override
+  String get map_wardrive => 'Wardrive';
+
+  @override
+  String get map_wardriveStart => 'Start';
+
+  @override
+  String get map_wardriveStop => 'Stop';
+
+  @override
+  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+
+  @override
+  String get map_wardriveDiscoverySent => 'Wardrive discovery request sent.';
+
+  @override
+  String get map_wardriveUploadCancelled => 'Wardrive upload cancelled.';
+
+  @override
+  String map_wardriveDiscoveryFailed(String error) {
+    return 'Wardrive discovery failed: $error';
+  }
+
+  @override
+  String map_wardriveRequests(int requests, int responses) {
+    return 'Requests: $requests  Responses: $responses';
+  }
+
+  @override
+  String map_wardriveLastRequest(String time) {
+    return 'Last request: $time';
+  }
+
+  @override
+  String get map_wardrivePhoneGpsNotUpdated => 'Phone GPS: not updated yet';
+
+  @override
+  String map_wardrivePhoneGpsError(String error) {
+    return 'Phone GPS: $error';
+  }
+
+  @override
+  String map_wardrivePhoneGps(String latitude, String longitude) {
+    return 'Phone GPS: $latitude, $longitude';
+  }
+
+  @override
+  String get map_wardriveNoResponses => 'No discovery responses yet.';
+
+  @override
+  String get map_wardriveDataTooltip => 'Wardrive data';
+
+  @override
+  String get map_wardriveUploadData => 'Upload Data';
+
+  @override
+  String get map_wardriveManageUploadSites => 'Manage Upload Sites';
+
+  @override
+  String get map_wardriveAutoUpload => 'Autoupload';
+
+  @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
+  String get map_wardriveScreenWakelock => 'Screen wakelock';
+
+  @override
+  String get map_wardriveExport => 'Export';
+
+  @override
+  String get map_wardriveImport => 'Import';
+
+  @override
+  String get map_wardriveAutoDiscovery => 'Auto discovery';
+
+  @override
+  String get map_wardriveSecondsSuffix => 's';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+
+  @override
+  String map_wardriveSamplesSaved(int count) {
+    return 'Samples saved: $count';
+  }
+
+  @override
+  String map_wardriveAutoDiscoveryError(String error) {
+    return 'Auto discovery: $error';
+  }
+
+  @override
+  String map_wardriveSampleSaveError(String error) {
+    return 'Sample save: $error';
+  }
+
+  @override
+  String map_wardriveCoverageCells(int count) {
+    return 'Coverage cells: $count';
+  }
+
+  @override
+  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+
+  @override
+  String get map_wardriveCoverageResolutionPrompt =>
+      'Choose the size of coverage squares (size = block side length):';
+
+  @override
+  String get map_wardriveCoverageRegional => 'Regional';
+
+  @override
+  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+
+  @override
+  String get map_wardriveCoverageCity => 'City-level';
+
+  @override
+  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+
+  @override
+  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+
+  @override
+  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+
+  @override
+  String get map_wardriveCoverageStreet => 'Street-level';
+
+  @override
+  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+
+  @override
+  String get map_wardriveCoverageBuilding => 'Building-level';
+
+  @override
+  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+
+  @override
+  String get map_wardriveAutoUploadEnabled => 'Autoupload enabled.';
+
+  @override
+  String get map_wardriveAutoUploadDisabled => 'Autoupload disabled.';
+
+  @override
+  String get map_wardriveNoSamplesToUpload => 'No wardrive samples to upload.';
+
+  @override
+  String get map_wardriveUploadingSamples => 'Uploading samples...';
+
+  @override
+  String map_wardriveUploadingTo(String site) {
+    return 'Uploading to $site...';
+  }
+
+  @override
+  String map_wardriveUploadBatch(int current, int total) {
+    return 'Batch $current of $total';
+  }
+
+  @override
+  String map_wardriveUploadSamplesProgress(int sent, int total) {
+    return 'Sending $sent of $total';
+  }
+
+  @override
+  String map_wardriveUploadTarget(String site) {
+    return 'Target: $site';
+  }
+
+  @override
+  String get map_wardriveUploadWaitingConnection => 'Waiting for connection';
+
+  @override
+  String get map_wardriveUploadConnectionEstablished =>
+      'Connection established, uploading';
+
+  @override
+  String get map_wardriveUploadProcessingServer =>
+      'Data uploaded, processing by server';
+
+  @override
+  String map_wardriveUploadServerResponse(int statusCode) {
+    return 'Server processed data, response $statusCode';
+  }
+
+  @override
+  String get map_wardriveUploadTimeoutTreatedAsSuccess =>
+      'Upload timed out; marked as sent for this site';
+
+  @override
+  String map_wardriveUploadServerError(int statusCode) {
+    return 'Server error $statusCode';
+  }
+
+  @override
+  String map_wardriveUploadRequestError(String error) {
+    return 'Upload error: $error';
+  }
+
+  @override
+  String map_wardriveUploadFailed(String error) {
+    return 'Wardrive upload failed: $error';
+  }
+
+  @override
+  String get map_wardriveUploadComplete => 'Upload Complete';
+
+  @override
+  String get map_wardriveUploadResults => 'Upload Results';
+
+  @override
+  String map_wardriveSamplesUploaded(int count) {
+    return '$count samples uploaded';
+  }
+
+  @override
+  String get map_wardriveSelectUploadSites =>
+      'Select which sites to upload to:';
+
+  @override
+  String get map_wardriveNoUploadSitesConfigured =>
+      'No upload sites configured';
+
+  @override
+  String get map_wardriveAddSite => 'Add Site';
+
+  @override
+  String get map_wardriveUploadSitesUpdated => 'Upload sites updated.';
+
+  @override
+  String get map_wardriveAddUploadSite => 'Add Upload Site';
+
+  @override
+  String get map_wardriveEditUploadSite => 'Edit Upload Site';
+
+  @override
+  String get map_wardriveNameLabel => 'Name';
+
+  @override
+  String get map_wardriveUrlLabel => 'URL';
+
+  @override
+  String get map_wardriveUploadBatchSize => 'Upload batch size';
+
+  @override
+  String map_wardriveUploadBatchSizeInvalid(int min, int max) {
+    return 'Use a value from $min to $max';
+  }
+
+  @override
+  String get map_wardriveTreatTimeoutAsSuccess => 'Treat timeout as success';
+
+  @override
+  String get map_wardriveNameRequired => 'Name is required';
+
+  @override
+  String get map_wardriveNameExists => 'Name already exists';
+
+  @override
+  String get map_wardriveValidUrlRequired => 'Valid URL is required';
+
+  @override
+  String get map_wardriveDeleteSite => 'Delete Site';
+
+  @override
+  String map_wardriveDeleteSiteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToExport => 'No wardrive samples to export.';
+
+  @override
+  String get map_wardriveExportShareText => 'meshcore-open wardrive samples';
+
+  @override
+  String get map_wardriveSamplesExported =>
+      'Wardrive samples exported as JSON file.';
+
+  @override
+  String map_wardriveExportFailed(String error) {
+    return 'Wardrive export failed: $error';
+  }
+
+  @override
+  String get map_wardriveImportSamples => 'Import wardrive samples';
+
+  @override
+  String get map_wardriveImportHint => 'Paste exported wardrive JSON here';
+
+  @override
+  String get map_wardriveNoNewSamplesImported =>
+      'No new wardrive samples imported.';
+
+  @override
+  String map_wardriveSamplesImported(int count) {
+    return 'Imported $count wardrive samples.';
+  }
+
+  @override
+  String map_wardriveImportFailed(String error) {
+    return 'Wardrive import failed: $error';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToClear => 'No wardrive samples to clear.';
+
+  @override
+  String get map_wardriveClearSamplesTitle => 'Clear wardrive samples?';
+
+  @override
+  String map_wardriveClearSamplesConfirm(int count) {
+    return 'This will delete $count saved samples from this device.';
+  }
+
+  @override
+  String get map_wardriveSamplesCleared => 'Wardrive samples cleared.';
+
+  @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Please wait $seconds seconds before retrying discovery';
+  }
+
+  @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
+  String get map_wardriveDeleteBlock => 'Delete block';
+
+  @override
+  String get map_wardriveInBackground => 'Run in background';
+
+  @override
+  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+
+  @override
+  String get map_wardriveShowRepeaterCoverage =>
+      'Show wardrive\'s coverage blocks';
+
+  @override
+  String get map_wardriveHideRepeaterCoverage =>
+      'Hide wardrive\'s coverage blocks';
 
   @override
   String get mapCache_title => 'Cache de Mapa Offline';
@@ -2091,67 +2704,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get common_reload => 'Recarregar';
 
   @override
-  String get common_clear => 'Limpar';
-
-  @override
-  String path_currentPath(String path) {
-    return 'Caminho atual: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Usando $count $_temp0 caminho';
-  }
-
-  @override
-  String get path_enterCustomPath => 'Insira Caminho Personalizado';
-
-  @override
   String get path_currentPathLabel => 'Caminho atual';
-
-  @override
-  String get path_hexPrefixInstructions =>
-      'Insira os prefixos hexadecimais de 2 caracteres para cada salto, separados por vírgulas.';
-
-  @override
-  String get path_hexPrefixExample =>
-      'A1,F2,3C (cada nó usa o primeiro byte de sua chave pública)';
-
-  @override
-  String get path_labelHexPrefixes => 'Prefixo Hexadecimal';
-
-  @override
-  String get path_helperMaxHops =>
-      'Máximo de 64 saltos. Cada prefixo tem 2 caracteres hexadecimais (1 byte)';
-
-  @override
-  String get path_selectFromContacts => 'Ou selecione de contatos:';
 
   @override
   String get path_noRepeatersFound =>
       'Não foram encontrados repetidores ou servidores de sala.';
-
-  @override
-  String get path_customPathsRequire =>
-      'Caminhos personalizados exigem saltos intermediários que podem transmitir mensagens.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return 'Prefixos hexadecimais inválidos: $prefixes';
-  }
-
-  @override
-  String get path_tooLong =>
-      'Caminho muito longo. Máximo de 64 saltos permitidos.';
-
-  @override
-  String get path_setPath => 'Definir Caminho';
 
   @override
   String get repeater_management => 'Gerenciamento de Repetidor';
@@ -2216,15 +2773,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_routingMode => 'Modo de roteamento';
-
-  @override
-  String get repeater_autoUseSavedPath => 'Auto (usar caminho salvo)';
-
-  @override
-  String get repeater_forceFloodMode => 'Modo de Inundação Forçado';
-
-  @override
-  String get repeater_pathManagement => 'Gerenciamento de caminhos';
 
   @override
   String get repeater_refresh => 'Atualizar';
@@ -2571,7 +3119,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bytes utilizados para codificar o ID deste repetidor nas tags de caminho/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). As versões 1.13 e anteriores do firmware não suportam caminhos multi-byte — apenas funcionam uma vez após a ativação da rede (a partir da versão 1.14+).';
+      'Bytes usados para codificar o ID deste repetidor nas tags de caminho flood/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). O firmware anterior à v1.14 sempre usava caminhos de 1 byte; v1.14 e versões mais recentes podem ser configuradas para caminhos de 2 ou 3 bytes.';
 
   @override
   String get repeater_txDelay => 'Atraso na entrega em Flood, TX';
@@ -3325,6 +3873,139 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Entrada digital';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Saída digital';
+
+  @override
+  String get telemetry_analogInputLabel => 'Entrada analógica';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Saída analógica';
+
+  @override
+  String get telemetry_genericLabel => 'Sensor genérico';
+
+  @override
+  String get telemetry_luminosityLabel => 'Luminosidade';
+
+  @override
+  String get telemetry_presenceLabel => 'Presença';
+
+  @override
+  String get telemetry_humidityLabel => 'Humidade';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Acelerómetro';
+
+  @override
+  String get telemetry_pressureLabel => 'Pressão';
+
+  @override
+  String get telemetry_altitudeLabel => 'Altitude';
+
+  @override
+  String get telemetry_frequencyLabel => 'Frequência';
+
+  @override
+  String get telemetry_percentageLabel => 'Percentagem';
+
+  @override
+  String get telemetry_concentrationLabel => 'Concentração';
+
+  @override
+  String get telemetry_powerLabel => 'Potência';
+
+  @override
+  String get telemetry_distanceLabel => 'Distância';
+
+  @override
+  String get telemetry_energyLabel => 'Energia';
+
+  @override
+  String get telemetry_directionLabel => 'Direção';
+
+  @override
+  String get telemetry_timeLabel => 'Hora';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Girómetro';
+
+  @override
+  String get telemetry_colourLabel => 'Cor';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Interruptor';
+
+  @override
+  String get telemetry_polylineLabel => 'Polilinha';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
+  String get telemetry_autoFetchQuantity => 'Número de solicitações';
+
+  @override
+  String get telemetry_error => 'Não foi possível obter os dados';
+
+  @override
   String get neighbors_receivedData => 'Dados dos Vizinhos Recebidos';
 
   @override
@@ -3363,6 +4044,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHops => 'Saltos do Repetidor';
+
+  @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
 
   @override
   String get channelPath_noHopDetails =>
@@ -3454,6 +4139,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get channelPath_unknownRepeater => 'Repetidor Desconhecido';
+
+  @override
+  String get channelPath_outgoingSentByRadioAt =>
+      'Waiting for transmission via radio, sec';
 
   @override
   String get community_title => 'Comunidade';
@@ -3655,6 +4344,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get listFilter_removeFromFavorites => 'Remover da lista de favoritos';
+
+  @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
 
   @override
   String get listFilter_users => 'Usuários';
@@ -4215,6 +4910,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Controla o estado padrão do ícone de tradução do compositor.';
 
   @override
+  String get translation_autoIncomingTitle =>
+      'Traduzir mensagens automaticamente';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Traduz automaticamente mensagens para notificações e para chats ou canais.';
+
+  @override
+  String get translation_translateMessage => 'Traduzir mensagem';
+
+  @override
   String get translation_targetLanguage => 'Língua-alvo';
 
   @override
@@ -4327,11 +5033,52 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'Compressão MCMP';
 
   @override
   String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+      'Usando o modelo mesh-compressor';
+
+  @override
+  String get channels_copyPath => 'Copy message path';
+
+  @override
+  String get channels_copyPathExtended => 'Copy message path (extended)';
+
+  @override
+  String get channels_copiedPath => 'Message path copied';
+
+  @override
+  String get channels_copyPathFailed => 'Copying message path failed';
+
+  @override
+  String get settings_copyMsgPathTitle => 'Configure message path copying';
+
+  @override
+  String get settings_copyMsgPathDscr =>
+      'Edit the template for generating message path information from the channel';
+
+  @override
+  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+
+  @override
+  String get settings_copyMsgPathEditTemplateDscr =>
+      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+
+  @override
+  String get settings_copyMsgPathEditFinalDscr =>
+      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_channelsSendAsBinary =>
+      'Send extended data as binary (channels)';
+
+  @override
+  String get settings_dmSendAsBinary =>
+      'Send extended data as binary (direct messages)';
 
   @override
   String get contact_typeChat => 'Chat';
@@ -4347,4 +5094,468 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => 'Ampliar';
+
+  @override
+  String get map_zoomOut => 'Ampliar';
+
+  @override
+  String get map_centerMap => 'Mapa do centro';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'O Web Bluetooth requer um navegador Chromium.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'GPS confirmado';
+
+  @override
+  String get pathTrace_legendInferred => 'Posição inferida';
+
+  @override
+  String get pathMap_viewSingle => 'Único';
+
+  @override
+  String get pathMap_viewCombined => 'Combinado';
+
+  @override
+  String get pathMap_play => 'Reproduzir';
+
+  @override
+  String get pathMap_pause => 'Pausa';
+
+  @override
+  String get pathMap_replay => 'Repetir';
+
+  @override
+  String get pathMap_stepBack => 'Salto anterior';
+
+  @override
+  String get pathMap_stepForward => 'Próximo salto';
+
+  @override
+  String get pathMap_animationOn => 'Exibir animação do pacote';
+
+  @override
+  String get pathMap_animationOff => 'Ocultar a animação do pacote';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Salto $current de $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Caminhos observados: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primário';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alt $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saltos',
+      one: '1 salto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Segmento compartilhado';
+
+  @override
+  String get pathMap_legendEstimated => 'Segmento estimado';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Utilizado em $count caminhos';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saltos não têm localização — o caminho mostrado é parcial',
+      one: '1 salto não tem localização — o caminho mostrado é parcial',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Mostrar tudo';
+
+  @override
+  String get pathMap_hidePath => 'Esconder caminho';
+
+  @override
+  String get pathMap_showPath => 'Mostrar o caminho';
+
+  @override
+  String get pathMap_collapsePanel => 'Recolher painel';
+
+  @override
+  String get pathMap_expandPanel => 'Expandir painel';
+
+  @override
+  String get pathMap_noLocation => 'Sem localização';
+
+  @override
+  String get pathMap_followPacket => 'Fixar vista no pacote';
+
+  @override
+  String get pathMap_unfollowPacket => 'Liberar vista do pacote';
+
+  @override
+  String get chat_canvas => 'MCOimg canvas';
+
+  @override
+  String get chat_canvasCrop => 'Crop/expand';
+
+  @override
+  String get chat_canvasResize => 'Scale';
+
+  @override
+  String get chat_canvasUnlockSize => 'Unlock canvas size';
+
+  @override
+  String get chat_canvasFormatVer => 'Codec version';
+
+  @override
+  String get chat_canvasPalette => 'Palette';
+
+  @override
+  String get chat_canvasPaletteShow => 'Show palette';
+
+  @override
+  String get chat_canvasPaletteMode => 'Palette preset';
+
+  @override
+  String get chat_canvasPaletteDynamic => 'Dynamic';
+
+  @override
+  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+
+  @override
+  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+
+  @override
+  String get chat_canvasPaletteDynamicDscr =>
+      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+
+  @override
+  String get chat_canvasPaletteAlpha => 'Transparency color';
+
+  @override
+  String get chat_canvasChangeSize => 'Change canvas size';
+
+  @override
+  String get chat_canvasTrim => 'Trim empty';
+
+  @override
+  String get chat_canvasWidth => 'Width';
+
+  @override
+  String get chat_canvasHeight => 'Height';
+
+  @override
+  String get chat_canvasGridShow => 'Show grid';
+
+  @override
+  String get chat_canvasRulerShow => 'Show ruler';
+
+  @override
+  String get chat_canvasGridColor => 'Grid color';
+
+  @override
+  String get chat_canvasSave => 'Save to file';
+
+  @override
+  String get chat_canvasLoad => 'Load from file';
+
+  @override
+  String chat_canvasSendPayloadExceed(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+  }
+
+  @override
+  String chat_canvasCurrentPayload(int payload) {
+    return 'Current payload: $payload';
+  }
+
+  @override
+  String get chat_canvasActive => 'Show canvas';
+
+  @override
+  String get chat_canvasShowLockBtn => 'Show canvas block button';
+
+  @override
+  String get chat_canvasSendToEdit => 'Send to canvas';
+
+  @override
+  String get chat_canvasSendToGallery => 'Save to gallery';
+
+  @override
+  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+
+  @override
+  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+
+  @override
+  String get chat_canvasGalleryRemove => 'Remove';
+
+  @override
+  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+
+  @override
+  String chat_canvasFormatNotSupported(int received, int current) {
+    return 'MCOimg format version: $received, current codec supports up to $current';
+  }
+
+  @override
+  String get chat_canvasSaveBinary => 'Save fo binary file';
+
+  @override
+  String chat_canvasCannotSend(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+  }
+
+  @override
+  String get chat_canvasCompressionLevel => 'Compression level';
+
+  @override
+  String get chat_canvasCompressionLevelNormal => 'Normal';
+
+  @override
+  String get chat_canvasCompressionLevelHigh => 'High';
+
+  @override
+  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+
+  @override
+  String get chat_showHops => 'Show hops';
+
+  @override
+  String get settings_modSettings => 'Modification Settings';
+
+  @override
+  String get settings_modSettingsSubtitle =>
+      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+
+  @override
+  String get settings_modSettingsVisual => 'Visual';
+
+  @override
+  String get settings_modSettingsMessaging => 'Messaging';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Show quotes in incoming messages as mentions';
+
+  @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Simplified style of mentions in messages visual';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDscr =>
+      'Combining the history of messages received from different devices; the final history is stored only in the application';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+
+  @override
+  String get settings_modSettingsMessagingShowCompressionRatio =>
+      'Show compression ratio';
+
+  @override
+  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
+      'Also take into account senderName';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Hide map zoom panel';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
+
+  @override
+  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+
+  @override
+  String channels_messageRegion(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_messageRegionUnknown => 'unknown';
+
+  @override
+  String get channels_messageRegionEmpty => 'unset';
+
+  @override
+  String get settings_defaultRegionScope => 'Default region scope';
+
+  @override
+  String get settings_defaultRegionScopeChanged =>
+      'Default region scope changed';
+
+  @override
+  String get settings_defaultRegionScopeChangeFailed =>
+      'Change default region scope failed';
+
+  @override
+  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+
+  @override
+  String get settings_defaultRegionScopeWaitForSync =>
+      'Please wait until synchronization complete';
+
+  @override
+  String get common_reset => 'Reset';
+
+  @override
+  String get connection_autoconnect => 'Autoconnect';
+
+  @override
+  String settings_modSettingsNoRetraInfo(int time) {
+    return 'No retranslations heard for $time seconds.';
+  }
+
+  @override
+  String get settings_modSettingsNoRetraHeading =>
+      'Display messages as unsent if no retranslations heard within seconds:';
+
+  @override
+  String get settings_modSettingsNoRetraDscr =>
+      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+
+  @override
+  String get settings_selfTelemetryShow => 'Check sensors';
+
+  @override
+  String get settings_modSettingsVisualChannelsUnreadSorting =>
+      'Channels sorting by unread messages';
+
+  @override
+  String get settings_modSettingsMessagingBackgroundTCP =>
+      'Keep TCP-connection alive in background';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+
+  @override
+  String get chat_additionalActions => 'Chat actions menu';
+
+  @override
+  String get mcogallery_common => 'Common';
+
+  @override
+  String get mcogallery_addPack => 'Add package';
+
+  @override
+  String get mcogallery_removePack => 'Remove package';
+
+  @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
+  String get mcogallery_addGroup => 'Add group';
+
+  @override
+  String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get chat_sendSelfContact => 'Send self contact';
+
+  @override
+  String get chat_sendContact => 'Share contact';
+
+  @override
+  String get chat_addContact => 'Add contact';
+
+  @override
+  String get chat_sureToReplaceContact =>
+      'Contact is already exists, replace it?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
+
+  @override
+  String get chat_contactIsYou => 'It is you';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Contact type: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Node';
+
+  @override
+  String get chat_contactTypeRepeater => 'Repeater';
+
+  @override
+  String get chat_contactTypeRoom => 'Room-server';
+
+  @override
+  String get chat_contactTypeSensor => 'Sensor';
+
+  @override
+  String get chat_myLocation => 'Share my location';
+
+  @override
+  String get chat_locationFromMap => 'Share location from map';
 }

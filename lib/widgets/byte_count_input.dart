@@ -94,7 +94,7 @@ class ByteCountedTextField extends StatelessWidget {
         final counterColor = ratio > errorThreshold
             ? Theme.of(context).colorScheme.error
             : ratio > warningThreshold
-            ? Colors.orange
+            ? Theme.of(context).colorScheme.tertiary
             : Theme.of(context).colorScheme.onSurfaceVariant;
 
         return Column(
@@ -135,8 +135,9 @@ class ByteCountedTextField extends StatelessWidget {
                 onSubmitted: onSubmitted,
               ),
             ),
-            if (showCounter)
-              Padding(
+            Opacity(
+              opacity: showCounter ? 1 : 0,
+              child: Padding(
                 padding: const EdgeInsets.only(top: 4, right: 4),
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -146,6 +147,7 @@ class ByteCountedTextField extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
           ],
         );
       },

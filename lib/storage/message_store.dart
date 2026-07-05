@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import '../models/message.dart';
+import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
@@ -12,7 +13,7 @@ class MessageStore {
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
-      publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
+      publicKeyHex = value.length >= 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
@@ -66,6 +67,50 @@ class MessageStore {
     }
   }
 
+  Future<MessageStoreSummary?> loadMessageSummary(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot load messages.');
+      return null;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyFor$contactKeyHex';
+    final oldKey = '$_keyPrefix$contactKeyHex';
+    var jsonString = prefs.getString(key);
+    if (jsonString == null || jsonString.isEmpty) {
+      final legacyJsonString = prefs.getString(oldKey);
+      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
+        jsonString = legacyJsonString;
+      }
+    }
+    if (jsonString == null || jsonString.isEmpty) {
+      return null;
+    }
+
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      DateTime? latestMessageAt;
+      var messageCount = 0;
+      for (final entry in jsonList) {
+        if (entry is! Map<String, dynamic>) continue;
+        if (entry['isCli'] as bool? ?? false) continue;
+        final timestampMs = entry['timestamp'] as int?;
+        if (timestampMs == null) continue;
+        messageCount++;
+        final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+        if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
+          latestMessageAt = timestamp;
+        }
+      }
+      if (messageCount == 0 || latestMessageAt == null) return null;
+      return MessageStoreSummary(
+        messageCount: messageCount,
+        latestMessageAt: latestMessageAt,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> clearMessages(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot clear messages.');
@@ -91,10 +136,16 @@ class MessageStore {
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
+      'compressionType': msg.compressionType?.name,
+      'compressionSavingsPercent': msg.compressionSavingsPercent,
+      'compressionOriginalBytes': msg.compressionOriginalBytes,
+      'compressionPayloadBytes': msg.compressionPayloadBytes,
       'retryCount': msg.retryCount,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
       'sentAt': msg.sentAt?.millisecondsSinceEpoch,
+      'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
+      'sentByRadioWaitSeconds': msg.sentByRadioWaitSeconds,
       'deliveredAt': msg.deliveredAt?.millisecondsSinceEpoch,
       'tripTimeMs': msg.tripTimeMs,
       'pathLength': msg.pathLength,
@@ -118,6 +169,41 @@ class MessageStore {
     final decodedText = isCli
         ? rawText
         : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
+    final detectedCompression = isCli
+        ? null
+        : MessageCompressionMetadata.fromEncodedText(
+            encodedText: rawText,
+            decodedText: decodedText,
+          );
+
+    final rawPathLength = json['pathLength'] as int?;
+    final rawPathBytes = json['pathBytes'] != null
+        ? Uint8List.fromList(base64Decode(json['pathBytes'] as String))
+        : Uint8List(0);
+
+    int? decodedPathLength = rawPathLength;
+    Uint8List decodedPathBytes = rawPathBytes;
+
+    if (rawPathLength != null) {
+      if (rawPathLength == 0xFF || rawPathLength < 0) {
+        decodedPathLength = -1;
+        decodedPathBytes = Uint8List(0);
+      } else if (rawPathLength >= 64) {
+        final mode = (rawPathLength & 0xC0) >> 6;
+        final hopCount = rawPathLength & 0x3F;
+        final width = mode + 1;
+        final byteLen = hopCount * width;
+        decodedPathLength = hopCount;
+        if (byteLen <= rawPathBytes.length) {
+          decodedPathBytes = rawPathBytes.sublist(0, byteLen);
+        } else {
+          decodedPathBytes = Uint8List(0);
+        }
+      } else if (rawPathLength == 0) {
+        decodedPathBytes = Uint8List(0);
+      }
+    }
+
     return Message(
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
@@ -134,20 +220,37 @@ class MessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType:
+          MessageCompressionTypeLabel.fromJson(json['compressionType']) ??
+          detectedCompression?.type ??
+          (wasMcmpCompressed ? MessageCompressionType.mcmp : null),
+      compressionSavingsPercent:
+          json['compressionSavingsPercent'] as int? ??
+          detectedCompression?.savingsPercent,
+      compressionOriginalBytes:
+          json['compressionOriginalBytes'] as int? ??
+          detectedCompression?.originalBytes,
+      compressionPayloadBytes:
+          json['compressionPayloadBytes'] as int? ??
+          detectedCompression?.payloadBytes,
       retryCount: json['retryCount'] as int? ?? 0,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,
       sentAt: json['sentAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['sentAt'] as int)
           : null,
+      sentByRadioAt: json['sentByRadioAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
+          : null,
+      sentByRadioWaitSeconds: (json['sentByRadioWaitSeconds'] as List<dynamic>?)
+          ?.map((value) => value as int)
+          .toList(),
       deliveredAt: json['deliveredAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['deliveredAt'] as int)
           : null,
       tripTimeMs: json['tripTimeMs'] as int?,
-      pathLength: json['pathLength'] as int?,
-      pathBytes: json['pathBytes'] != null
-          ? Uint8List.fromList(base64Decode(json['pathBytes'] as String))
-          : Uint8List(0),
+      pathLength: decodedPathLength,
+      pathBytes: decodedPathBytes,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(key, value as int),
@@ -165,4 +268,14 @@ class MessageStore {
           : null,
     );
   }
+}
+
+class MessageStoreSummary {
+  const MessageStoreSummary({
+    required this.messageCount,
+    required this.latestMessageAt,
+  });
+
+  final int messageCount;
+  final DateTime latestMessageAt;
 }

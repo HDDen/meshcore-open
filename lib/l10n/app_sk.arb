@@ -33,6 +33,8 @@
   "common_remove": "Odstrániť",
   "common_enable": "Povolit",
   "common_disable": "Zakázať",
+  "common_autoRefresh": "Automatické obnovenie",
+  "common_interval": "Časový interval",
   "common_reboot": "Restartovať",
   "common_loading": "Načítavanie...",
   "common_notAvailable": "—",
@@ -158,6 +160,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Posledné pripojenia",
+  "tcpBookmarksSetName": "Nastaviť názov záložky",
+  "tcpBookmarksFavouritesSubtitle": "Keď je označené ako obľúbené, neodstráni sa z histórie pripojení",
+  "settings_channelResendTimeoutTitle": "Oneskorenie manuálneho opätovného odoslania",
+  "settings_channelResendTimeoutSubtitle": "Ovplyvňuje aj interný mechanizmus na odstránenie duplicitného zobrazenia odchádzajúcich správ",
+  "settings_channelMaxbytesOutgoingTitle": "Obmedziť odchádzajúci payload kanálov, bajty",
+  "settings_channelMaxbytesOutgoingSubtitle": "Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre USB je tento limit približne 155 bajtov.",
+  "settings_quickAnswersTitle": "Rýchle odpovede",
+  "settings_quickAnswersSubtitle": "Zoznam fráz dostupných na výber ako rýchle odpovede. Priraďujú sa ku kontaktom/kanálom v ich nastaveniach.",
+  "settings_quickAnswersAddText": "Zadajte text",
+  "settings_quickAnswersEditText": "Upraviť odpoveď",
+  "settings_quickAnswersSelect": "Povoliť tieto odpovede",
+  "settings_quickAnswersExists": "Už existuje",
+  "settings_quickAnswersNotAdded": "Pre tento chat ste ešte nepridali žiadne rýchle odpovede!",
+  "appSettings_enableTimeSeconds": "Zobrazovať sekundy v informáciách o správe",
+  "appSettings_showKeyboardHidingButton": "Zobraziť tlačidlo na skrytie klávesnice",
+  "settings_mcmpTextLimit": "Limit vkladania textu MCMP",
+  "settings_sendingDelayForCancellation": "Oneskorenie odoslania na zrušenie",
+  "settings_useSendingDelay": "Použiť oneskorenie odoslania",
+  "chat_cancelSend": "zrušiť odoslanie",
+  "settings_doNotFilterMessagesOnChannels": "Nefiltrovať vlastné správy v kanáloch",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Predvolene sa vlastné správy z vášho uzla ignorujú. To spôsobuje problémy v niektorých firmvéroch so vstavaným TerminalCLI",
+  "chat_retryingMessageWait": "Pred opätovným odoslaním počkajte {seconds} sekúnd",
+  "channels_mcmpCompression": "Kompresia MCMP",
+  "channels_mcmpCompressionDescription": "Používa sa model mesh-compressor",
   "appSettings_title": "Nastavenia aplikácie",
   "appSettings_appearance": "Vzhľad",
   "appSettings_theme": "Téma",
@@ -1105,7 +1132,7 @@
   "repeater_advancedSettings": "Pokročilé",
   "repeater_advancedSettingsSubtitle": "Ovládacie knopy pre skúsených operátorov",
   "repeater_pathHashMode": "Režim hashovania cesty",
-  "repeater_pathHashModeHelper": "Byty použité na zakódovanie ID tohto opakovača v tagoch pre trasu/detekciu slučky. 0 = 1 bytu (256 ID, až 64 skokov), 1 = 2 byty (65 000 ID, až 32 skokov), 2 = 3 byty (16 miliónov ID, až 21 skokov). Verzie 1.13 a staršie nepodporujú viacbytové trasy – fungujú len, keď je sieť aktivovaná.",
+  "repeater_pathHashModeHelper": "Bajty použité na zakódovanie ID tohto opakovača v tagoch flood trasy/detekcie slučky. 0=1 bajt (256 ID, až 64 skokov), 1=2 bajty (65 000 ID, až 32 skokov), 2=3 bajty (16 miliónov ID, až 21 skokov). Firmvér pred v1.14 vždy používal 1-bajtové trasy; v1.14 a novšie možno nakonfigurovať na 2- alebo 3-bajtové trasy.",
   "repeater_txDelay": "Zpoždanie v Flood, TX",
   "repeater_txDelayHelper": "Nastavenie pre opakované vysielanie pre dopravu počas povodní, ako násobok času, ktorý paket využije (0-2, výchoce hodnota 0,5). Vyššia hodnota znamená menej kolízii, ale pomalšie doručovanie.",
   "repeater_directTxDelay": "Priame oneskorenie TX",
@@ -1280,6 +1307,78 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Digitálny vstup",
+  "telemetry_digitalOutputLabel": "Digitálny výstup",
+  "telemetry_analogInputLabel": "Analógový vstup",
+  "telemetry_analogOutputLabel": "Analógový výstup",
+  "telemetry_genericLabel": "Všeobecný senzor",
+  "telemetry_luminosityLabel": "Osvetlenie",
+  "telemetry_presenceLabel": "Prítomnosť",
+  "telemetry_humidityLabel": "Vlhkosť",
+  "telemetry_accelerometerLabel": "Akcelerometer",
+  "telemetry_pressureLabel": "Tlak",
+  "telemetry_altitudeLabel": "Nadmorská výška",
+  "telemetry_frequencyLabel": "Frekvencia",
+  "telemetry_percentageLabel": "Percento",
+  "telemetry_concentrationLabel": "Koncentrácia",
+  "telemetry_powerLabel": "Výkon",
+  "telemetry_distanceLabel": "Vzdialenosť",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Smer",
+  "telemetry_timeLabel": "Čas",
+  "telemetry_gyrometerLabel": "Gyrometer",
+  "telemetry_colourLabel": "Farba",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Prepínač",
+  "telemetry_polylineLabel": "Lomená čiara",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_digitalInputLabel": "Digitálny vstup",
+  "telemetry_digitalOutputLabel": "Digitálny výstup",
+  "telemetry_analogInputLabel": "Analógový vstup",
+  "telemetry_analogOutputLabel": "Analógový výstup",
+  "telemetry_genericLabel": "Všeobecný senzor",
+  "telemetry_luminosityLabel": "Osvetlenie",
+  "telemetry_presenceLabel": "Prítomnosť",
+  "telemetry_humidityLabel": "Vlhkosť",
+  "telemetry_accelerometerLabel": "Akcelerometer",
+  "telemetry_pressureLabel": "Tlak",
+  "telemetry_altitudeLabel": "Nadmorská výška",
+  "telemetry_frequencyLabel": "Frekvencia",
+  "telemetry_percentageLabel": "Percento",
+  "telemetry_concentrationLabel": "Koncentrácia",
+  "telemetry_powerLabel": "Výkon",
+  "telemetry_distanceLabel": "Vzdialenosť",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Smer",
+  "telemetry_timeLabel": "Čas",
+  "telemetry_gyrometerLabel": "Gyrometer",
+  "telemetry_colourLabel": "Farba",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Prepínač",
+  "telemetry_polylineLabel": "Lomená čiara",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Počet požiadaviek",
+  "telemetry_error": "Nepodarilo sa získať údaje",
   "telemetry_noData": "Nejsú dostupné žiadne údaje z telemetrie.",
   "telemetry_channelTitle": "Kanál {channel}",
   "@telemetry_channelTitle": {
@@ -1469,6 +1568,10 @@
   "channels_scanQrCodeComingSoon": "Čoskoro",
   "channels_enterHashtag": "Zadajte hashtag",
   "channels_hashtagHint": "napr. #tím",
+  "channels_changeWidgetColor": "Farba widgetu",
+  "channels_changeWidgetTextColor": "Farba textu widgetu",
+  "channels_changeGroupEmpty": "Zatiaľ je tu prázdno",
+  "channels_allowOrderingInGroup": "Povoliť usporiadanie kanálov v skupine",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2100,6 +2203,9 @@
   "translation_composerTitle": "Preložte pred odeslaním",
   "translation_title": "Preklad",
   "translation_composerSubtitle": "Riadi výchoce stav ikony pre preklad, ktorú používa program.",
+  "translation_autoIncomingTitle": "Automaticky prekladať správy",
+  "translation_autoIncomingSubtitle": "Automaticky prekladá správy pre upozornenia aj pre čet alebo kanál.",
+  "translation_translateMessage": "Preložiť správu",
   "translation_targetLanguage": "Cieľový jazyk",
   "translation_useAppLanguage": "Použite jazyk aplikácie",
   "translation_downloadedModelLabel": "Stiahnutý model",
@@ -2311,5 +2417,455 @@
   "settings_companionDebugLogSubtitle": "Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB",
   "settings_companionDebugLog": "Logovanie pre ladenie (sprievodný log)",
   "chat_newMessages": "Nové správy",
-  "repeater_chanUtil": "Využitie kanálu"
+  "repeater_chanUtil": "Využitie kanálu",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Odoslané",
+  "messageStatus_delivered": "Doručené",
+  "messageStatus_pending": "Odoslanie",
+  "common_undo": "Zrušiť",
+  "messageStatus_failed": "Neúspešné odeslanie",
+  "messageStatus_repeated": "Slyšal som to opakovane",
+  "contacts_moreOptions": "Ďalšie možnosti",
+  "contacts_searchOpen": "Vyhľadajte kontakty",
+  "contacts_searchClose": "Zavrieť vyhľadávanie",
+  "routing_title": "Navigácia",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Povodňová vlna",
+  "routing_modeManual": "Ručná príručka",
+  "routing_modeAutoHint": "Automaticky vyberá najznámejší trasa, a ak žiadna nie je známa, použije náhodnú trasu.",
+  "routing_modeFloodHint": "Prenos prostredníctvom všetkých opakovačov. Najspoľahlivejší spôsob, ale vyžaduje viac času vysielania.",
+  "routing_modeManualHint": "Vždy dodáva presne podľa zadaného trasy.",
+  "routing_currentRoute": "Aktuálna trasa",
+  "routing_directNoHops": "Priamo – bez prechodných trás",
+  "routing_noPathYet": "Zatiaľ neexistuje žiadna cesta. Nasledujúce správy budú pokračovať, kým sa nenájde trasa.",
+  "routing_floodBroadcast": "Prenos prostredníctvom každého opakovača",
+  "routing_editPath": "Upraviť trasu",
+  "routing_forgetPath": "Zabudnite na trasu",
+  "routing_knownPaths": "Známe cesty",
+  "routing_knownPathsHint": "Kliknite na cestu, aby ste sa k nej presunuli.",
+  "routing_inUse": "V prevádzke",
+  "routing_qualityStrong": "Silný prvý krok",
+  "routing_qualityGood": "Úspešný prvý krok",
+  "routing_qualityFair": "Prvá, spravodlivá fáza",
+  "routing_qualityWorked": "Dosiahnutý úspech",
+  "routing_qualityFlood": "Zistil som to z informácií, ktoré som získal v dôsledku povodňovej situácie.",
+  "routing_qualityUntested": "Neotestované",
+  "routing_neverWorked": "nikedy nebolo potvrdené",
+  "routing_floodDelivery": "Doručenie v prípade povodní",
+  "pathEditor_title": "Vytvorenie cesty",
+  "pathEditor_hopCounter": "{count} z 64 chmelových zŕš",
+  "pathEditor_noHops": "Zatiaľ žiadne chmel. Kliknite na opakované, aby ste ich pridali postupne, alebo uložte bez chmelu, aby ste ho mohli poslať priamo.",
+  "pathEditor_addHops": "Pridávajte chmel podľa zadaného poriadku.",
+  "pathEditor_searchRepeaters": "Hľadať opakované",
+  "pathEditor_advancedHex": "Pokročilé: pôvodná hexová cesta",
+  "pathEditor_hexLabel": "Prefiksy pre hexadecimálne čísla",
+  "pathEditor_hexHelper": "Dve hexové čísla na každý krok, oddelené čiarkami",
+  "routing_lastWorked": "worked {when}",
+  "pathEditor_invalidTokens": "Neplatné: {tokens}",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_tooManyHops": "Maximálne 64 krokov",
+  "pathEditor_usePath": "Použite túto cestu",
+  "pathEditor_removeHop": "Odstráňte chmel",
+  "pathEditor_unknownHop": "Neznáme zariadenie na opakované vysielanie",
+  "map_zoomIn": "Zväčšiť",
+  "map_zoomOut": "Zmenť zamer zblízka",
+  "map_centerMap": "Mapa centra",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth vyžaduje prehliadač Chromium.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS potvrdilo",
+  "pathTrace_legendInferred": "Odvodená poloha",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "scanner_bluetoothWebUnsupported": "Funkcia Bluetooth nie je dostupná v prehliadači. Prepojte sa pomocou USB.",
+  "map_searchHint": "Vyhľadajte podľa názvu alebo ID uzla",
+  "map_activity": "Aktivita",
+  "map_recent": "Nedávne",
+  "map_stale": "Neaktuálne",
+  "map_hidden": "Skrytý",
+  "map_visible": "Viditeľný",
+  "map_centerOnNode": "Nacentrovať na uzol",
+  "map_details": "Podrobnosti",
+  "map_noGps": "Bez GPS",
+  "map_noResults": "Nenašli sa žiadne zodpovedajúce uzly.",
+  "pathMap_viewSingle": "Jednotlivý",
+  "pathMap_viewCombined": "Spojené",
+  "pathMap_play": "Prehrať",
+  "pathMap_pause": "Pozastaviť",
+  "pathMap_replay": "Prehrať znova",
+  "pathMap_stepBack": "Predchádzajúci skok",
+  "pathMap_stepForward": "Nasledujúci skok",
+  "pathMap_animationOn": "Zobraziť animáciu paketu",
+  "pathMap_animationOff": "Skryť animáciu paketu",
+  "pathMap_hopOf": "Skok {current} z {total}",
+  "pathMap_observedPaths": "Pozorované cesty: {count}",
+  "pathMap_primary": "Primárna",
+  "pathMap_alternate": "Alternatívny {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 skok} few{{count} skoky} other{{count} skokov}}",
+  "pathMap_legendShared": "Spoločný segment",
+  "pathMap_legendEstimated": "Odhadovaný segment",
+  "pathMap_sharedNodeCount": "Používané {count} cestami",
+  "pathMap_partialAnimation": "{count, plural, =1{1 skok nemá polohu — zobrazená trasa je neúplná} few{{count} skoky nemajú polohu — zobrazená trasa je neúplná} other{{count} skokov nemá polohu — zobrazená trasa je neúplná}}",
+  "pathMap_showAllPaths": "Zobraziť všetky",
+  "pathMap_hidePath": "Skryť cestu",
+  "pathMap_showPath": "Zobraziť trasu",
+  "pathMap_collapsePanel": "Zatvoriť panel",
+  "pathMap_expandPanel": "Rozbaliť panel",
+  "pathMap_noLocation": "Bez polohy",
+  "pathMap_followPacket": "Uzamknúť pohľad na paket",
+  "pathMap_unfollowPacket": "Odomknúť pohľad od paketu",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "settings_quickAnswersSendAtSelect": "Odoslať pri výbere",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Spustiť",
+  "map_wardriveStop": "Zastaviť",
+  "map_wardriveZeroHopDiscovery": "Zero-hop zisťovanie",
+  "map_wardriveDiscoverySent": "Požiadavka wardrive zisťovania bola odoslaná.",
+  "map_wardriveUploadCancelled": "Nahrávanie wardrive bolo zrušené.",
+  "map_wardriveDiscoveryFailed": "Wardrive zisťovanie zlyhalo: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Požiadavky: {requests}  Odpovede: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Posledná požiadavka: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS telefónu: zatiaľ neaktualizované",
+  "map_wardrivePhoneGpsError": "GPS telefónu: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS telefónu: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Zatiaľ žiadne odpovede zisťovania.",
+  "map_wardriveDataTooltip": "Wardrive údaje",
+  "map_wardriveUploadData": "Nahrať údaje",
+  "map_wardriveManageUploadSites": "Spravovať nahrávacie stránky",
+  "map_wardriveAutoUpload": "Automatické nahrávanie",
+  "map_wardriveScreenWakelock": "Wakelock obrazovky",
+  "map_wardriveExport": "Export",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Automatické zisťovanie",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Uložené vzorky: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Automatické zisťovanie: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Uloženie vzorky: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Bunky pokrytia: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Automatické nahrávanie zapnuté.",
+  "map_wardriveAutoUploadDisabled": "Automatické nahrávanie vypnuté.",
+  "map_wardriveNoSamplesToUpload": "Žiadne wardrive vzorky na nahranie.",
+  "map_wardriveUploadingSamples": "Nahrávanie vzoriek...",
+  "map_wardriveUploadingTo": "Nahrávanie na {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Dávka {current} z {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Odosielanie {sent} z {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cieľ: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Čakanie na pripojenie",
+  "map_wardriveUploadConnectionEstablished": "Pripojenie nadviazané, nahrávanie",
+  "map_wardriveUploadProcessingServer": "Údaje nahrané, server spracúva",
+  "map_wardriveUploadServerResponse": "Server spracoval údaje, odpoveď {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Nahrávanie prekročilo čas; pre túto stránku označené ako odoslané",
+  "map_wardriveUploadServerError": "Chyba servera {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Chyba nahrávania: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Nahrávanie wardrive zlyhalo: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Nahrávanie dokončené",
+  "map_wardriveUploadResults": "Výsledky nahrávania",
+  "map_wardriveSamplesUploaded": "Nahrané vzorky: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Vyberte stránky na nahranie:",
+  "map_wardriveNoUploadSitesConfigured": "Nie sú nakonfigurované žiadne nahrávacie stránky",
+  "map_wardriveAddSite": "Pridať stránku",
+  "map_wardriveUploadSitesUpdated": "Nahrávacie stránky aktualizované.",
+  "map_wardriveAddUploadSite": "Pridať nahrávaciu stránku",
+  "map_wardriveEditUploadSite": "Upraviť nahrávaciu stránku",
+  "map_wardriveNameLabel": "Názov",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Veľkosť dávky nahrávania",
+  "map_wardriveUploadBatchSizeInvalid": "Použite hodnotu od {min} do {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Považovať timeout za úspech",
+  "map_wardriveNameRequired": "Názov je povinný",
+  "map_wardriveNameExists": "Názov už existuje",
+  "map_wardriveValidUrlRequired": "Vyžaduje sa platná URL",
+  "map_wardriveDeleteSite": "Odstrániť stránku",
+  "map_wardriveDeleteSiteConfirm": "Odstrániť „{name}“?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Žiadne wardrive vzorky na export.",
+  "map_wardriveExportShareText": "wardrive vzorky meshcore-open",
+  "map_wardriveSamplesExported": "Wardrive vzorky exportované ako JSON súbor.",
+  "map_wardriveExportFailed": "Export wardrive zlyhal: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importovať wardrive vzorky",
+  "map_wardriveImportHint": "Sem vložte exportovaný wardrive JSON",
+  "map_wardriveNoNewSamplesImported": "Neboli importované žiadne nové wardrive vzorky.",
+  "map_wardriveSamplesImported": "Importované wardrive vzorky: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Import wardrive zlyhal: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Žiadne wardrive vzorky na vymazanie.",
+  "map_wardriveClearSamplesTitle": "Vymazať wardrive vzorky?",
+  "map_wardriveClearSamplesConfirm": "Týmto sa z tohto zariadenia odstráni {count} uložených vzoriek.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive vzorky vymazané.",
+  "channelPath_outgoingSentByRadioAt": "Čakanie na prenos rádiom, s"
 }

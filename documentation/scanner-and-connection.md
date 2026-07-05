@@ -28,9 +28,11 @@ The BLE Scanner is the app's home screen, displayed immediately on launch.
 
 **Device List**: When no devices are found, shows a large Bluetooth icon with a prompt. The prompt text is dynamic: "Searching for devices..." while actively scanning, or "Tap Scan to search" when idle. When devices are found, shows a scrollable list of `DeviceTile` widgets.
 
-**Bottom FAB Row**: Up to three floating action buttons:
-- **USB** button - Opens USB connection screen (Android, Windows, Linux, macOS, Chrome web only)
-- **TCP/IP** button - Opens TCP connection screen (all non-web platforms)
+**App Bar Actions**: Icon buttons in the top-right corner of the app bar:
+- **USB** icon button - Opens USB connection screen (Android, Windows, Linux, macOS, Chrome web only)
+- **TCP/IP** icon button - Opens TCP connection screen (all non-web platforms)
+
+**Bottom FAB**: A single floating action button:
 - **BLE Scan** button - Toggles BLE scanning on/off; shows a spinner when scanning. **Disabled** (greyed out, not tappable) when Bluetooth is off
 
 ### Device Tile
@@ -51,7 +53,7 @@ Note: The weak (-80 to -90 dBm) and poor (< -90 dBm) tiers share the same icon s
 
 ### How Scanning Works
 
-- Filters for devices with names starting with one of the known prefixes: `MeshCore-`, `Whisper-`, `WisCore-`, `Seeed`, `Lilygo`, `HT-`, `LowMesh_MC_`
+- Filters for devices advertising the Nordic UART Service UUID (so community forks with non-standard names are still found). Known name prefixes used by stock firmware builds for reference: `MeshCore-`, `Whisper-`, `WisCore-`, `Seeed`, `Lilygo`, `HT-`, `LowMesh_MC_`, `NRF52`
 - Uses low-latency scan mode on Android
 - Scans for 10 seconds then auto-stops
 - On iOS/macOS, waits for BLE adapter initialization before starting
@@ -65,7 +67,7 @@ Tap a device tile or its Connect button:
 3. Requests MTU 185 bytes for optimal throughput
 4. Discovers BLE services and locates the Nordic UART Service
 5. Subscribes to TX notifications for receiving data
-6. On success, automatically navigates to the Contacts screen
+6. On success, automatically navigates to the Channels screen
 7. On failure, shows a red error snackbar
 
 ---
@@ -74,7 +76,7 @@ Tap a device tile or its Connect button:
 
 ### How to Access
 
-From the Scanner screen, tap the **USB** FAB button.
+From the Scanner screen, tap the **USB** icon button in the app bar.
 
 ### What the User Sees
 
@@ -82,15 +84,15 @@ From the Scanner screen, tap the **USB** FAB button.
 - A list of detected USB serial ports, each showing:
   - Friendly display name
   - Raw port name (subtitle, only shown when it differs from the display name)
-  - "Connect" button
-- FABs at the bottom to switch to BLE or TCP (these use `pushReplacement`, so back navigation returns to Scanner, not between USB/TCP)
+  - Chevron trailing icon (the entire tile is tappable to connect)
+- Transport switcher buttons (outlined, not FABs) to switch to BLE or TCP (these use `pushReplacement`, so back navigation returns to Scanner, not between USB/TCP)
 
 ### Key Interactions
 
 - On desktop (Windows, Linux, macOS): ports are polled every 2 seconds for hot-plug detection (polling pauses while connecting/connected)
 - On mobile: tap the "Scan" FAB to manually refresh
-- Tap a port or its Connect button to connect
-- On successful connection, navigates to Contacts screen
+- Tap a port tile to connect
+- On successful connection, navigates to Channels screen
 - On connection failure, the port list automatically refreshes
 - Platform-specific error messages for common USB failures (permission denied, device missing, device detached, device busy, driver missing, port invalid, timeout, and more)
 
@@ -100,7 +102,7 @@ From the Scanner screen, tap the **USB** FAB button.
 
 ### How to Access
 
-From the Scanner screen, tap the **TCP/IP** FAB button.
+From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 
 ### What the User Sees
 
@@ -108,7 +110,7 @@ From the Scanner screen, tap the **TCP/IP** FAB button.
 - **Host address** text field
 - **Port number** text field
 - **Connect** button
-- FABs at the bottom to switch to USB or BLE
+- Transport switcher buttons (outlined, not FABs) to switch to USB or BLE
 
 ### Key Interactions
 
@@ -119,6 +121,6 @@ From the Scanner screen, tap the **TCP/IP** FAB button.
   - Validation errors are shown as red snackbars
 - The Connect button shows a spinner and "Connecting..." label while in progress
 - The status bar shows the specific host:port being connected to (e.g., "Connecting to 192.168.1.1:5000")
-- On success, navigates to Contacts screen and saves the host/port to settings
+- On success, navigates to Channels screen and saves the host/port to settings
 - On connection, the status bar shows the active TCP endpoint (e.g., "Connected to 192.168.1.1:5000")
 - Error messages for timeout, unsupported platform, and connection failures

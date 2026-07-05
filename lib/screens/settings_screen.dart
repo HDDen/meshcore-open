@@ -7,15 +7,23 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
+import '../models/contact.dart';
 import '../models/radio_settings.dart';
 import '../services/app_debug_log_service.dart';
+import '../theme/mesh_theme.dart';
 import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
+import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../widgets/sync_progress_overlay.dart';
+import 'region_management_screen.dart';
+import 'telemetry_screen.dart';
 
 /// Convert device coding-rate value (1-4 on some firmware, 5-8 on others)
 /// to the UI enum range (always 5-8).
@@ -52,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
     setState(() {
       _appVersion = packageInfo.version;
     });
@@ -67,27 +76,103 @@ class _SettingsScreenState extends State<SettingsScreen> {
           indicators: false,
           subtitle: false,
         ),
+        centerTitle: true,
+        bottom: const SyncProgressAppBarBottom(),
       ),
       body: SafeArea(
         top: false,
         child: Consumer<MeshCoreConnector>(
           builder: (context, connector, child) {
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
               children: [
-                _buildDeviceInfoCard(context, connector),
-                const SizedBox(height: 16),
-                _buildAppSettingsCard(context),
-                const SizedBox(height: 16),
-                _buildNodeSettingsCard(context, connector),
-                const SizedBox(height: 16),
-                _buildActionsCard(context, connector),
-                const SizedBox(height: 16),
-                _buildDebugCard(context),
-                const SizedBox(height: 16),
-                _buildExportCard(connector),
-                const SizedBox(height: 16),
-                _buildAboutCard(context),
+                // IDENTITY section
+                SectionHeader(l10n.settings_deviceInfo),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildIdentityCardContent(context, connector),
+                ),
+
+                // NODE section
+                SectionHeader(l10n.settings_nodeSettings),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildNodeCardContent(context, connector),
+                ),
+
+                // LOCATION section
+                SectionHeader(l10n.settings_location),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildLocationCardContent(context, connector),
+                ),
+
+                // APP SETTINGS
+                SectionHeader(l10n.settings_appSettings),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AppSettingsScreen(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.settings_outlined,
+                    title: l10n.settings_appSettings,
+                    subtitle: l10n.settings_appSettingsSubtitle,
+                  ),
+                ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ModSettingsScreen(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.tune_outlined,
+                    title: l10n.settings_modSettings,
+                    subtitle: l10n.settings_modSettingsSubtitle,
+                  ),
+                ),
+
+                // ACTIONS section
+                SectionHeader(l10n.settings_actions),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildActionsCardContent(context, connector),
+                ),
+
+                // EXPORT section
+                SectionHeader(l10n.settings_gpxExportRepeaters),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildExportCardContent(context, connector),
+                ),
+
+                // DEBUG section
+                SectionHeader(l10n.settings_debug),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: _buildDebugCardContent(context),
+                ),
+
+                // ABOUT
+                SectionHeader(l10n.settings_about),
+                MeshCard(
+                  onTap: () => _showAbout(context),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.info_outline,
+                    title: l10n.settings_about,
+                    subtitle: l10n.settings_aboutVersion(
+                      _appVersion.isEmpty ? l10n.common_loading : _appVersion,
+                    ),
+                    showChevron: false,
+                  ),
+                ),
               ],
             );
           },
@@ -96,91 +181,246 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDeviceInfoCard(
+  Widget _buildNavTileContent(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    bool showChevron = true,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (showChevron)
+          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant, size: 16),
+      ],
+    );
+  }
+
+  Widget _buildIdentityCardContent(
     BuildContext context,
     MeshCoreConnector connector,
   ) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Card(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row: device name + status chip + expand toggle
+        InkWell(
+          onTap: () {
+            setState(() {
+              _deviceInfoExpanded = !_deviceInfoExpanded;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        connector.deviceDisplayName,
+                        style: MeshTheme.mono(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      StatusChip(
+                        label: connector.isConnected
+                            ? l10n.common_connected
+                            : l10n.common_disconnected,
+                        color: connector.isConnected
+                            ? MeshPalette.blue
+                            : scheme.onSurfaceVariant,
+                        pulse: connector.isConnected,
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: _deviceInfoExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.expand_more,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Expandable detail rows
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.topCenter,
+          child: _deviceInfoExpanded
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(height: 1),
+                      const SizedBox(height: 10),
+                      _infoRow(
+                        context,
+                        label: l10n.settings_infoId,
+                        value: connector.deviceIdLabel,
+                      ),
+                      _buildBatteryInfoRow(context, connector),
+                      if (connector.selfName != null)
+                        _infoRow(
+                          context,
+                          label: l10n.settings_nodeName,
+                          value: connector.selfName!,
+                        ),
+                      if (connector.selfPublicKey != null)
+                        _infoRow(
+                          context,
+                          label: l10n.settings_infoPublicKey,
+                          value:
+                              '${pubKeyToHex(connector.selfPublicKey!).substring(0, 16)}...',
+                          mono: true,
+                        ),
+                      _infoRow(
+                        context,
+                        label: l10n.settings_infoContactsCount,
+                        value: '${connector.contacts.length}',
+                      ),
+                      _infoRow(
+                        context,
+                        label: l10n.settings_infoChannelCount,
+                        value: '${connector.channels.length}',
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.sensors_outlined,
+          title: l10n.settings_selfTelemetryShow,
+          subtitle: l10n.repeater_telemetrySubtitle,
+          onTap: connector.isConnected && connector.selfPublicKey != null
+              ? () => _showSelfTelemetry(context, connector)
+              : null,
+        ),
+      ],
+    );
+  }
+
+  void _showSelfTelemetry(BuildContext context, MeshCoreConnector connector) {
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey == null) return;
+
+    final contact = Contact(
+      publicKey: selfPublicKey,
+      name: connector.selfName ?? connector.deviceDisplayName,
+      type: advTypeChat,
+      pathLength: 0,
+      path: Uint8List(0),
+      latitude: connector.selfLatitude,
+      longitude: connector.selfLongitude,
+      lastSeen: DateTime.now(),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelemetryScreen(contact: contact, isSelf: true),
+      ),
+    );
+  }
+
+  Widget _infoRow(
+    BuildContext context, {
+    required String label,
+    required String value,
+    bool mono = false,
+    Widget? leading,
+    Color? valueColor,
+    VoidCallback? onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              setState(() {
-                _deviceInfoExpanded = !_deviceInfoExpanded;
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.settings_deviceInfo,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _deviceInfoExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.expand_more),
-                  ),
-                ],
+          Row(
+            children: [
+              if (leading != null) ...[leading, const SizedBox(width: 6)],
+              Text(
+                label,
+                style: textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
+            ],
           ),
-
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoRow(
-                    l10n.settings_infoName,
-                    connector.deviceDisplayName,
+          const SizedBox(height: 2),
+          mono
+              ? Text(
+                  value,
+                  style: MeshTheme.mono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: valueColor ?? scheme.onSurface,
                   ),
-                  _buildInfoRow(l10n.settings_infoId, connector.deviceIdLabel),
-                  _buildInfoRow(
-                    l10n.settings_infoStatus,
-                    connector.isConnected
-                        ? l10n.common_connected
-                        : l10n.common_disconnected,
+                )
+              : Text(
+                  value,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: valueColor,
                   ),
-                  _buildBatteryInfoRow(context, connector),
-                  if (connector.selfName != null)
-                    _buildInfoRow(l10n.settings_nodeName, connector.selfName!),
-                  if (connector.selfPublicKey != null)
-                    _buildInfoRow(
-                      l10n.settings_infoPublicKey,
-                      '${pubKeyToHex(connector.selfPublicKey!).substring(0, 16)}...',
-                    ),
-                  _buildInfoRow(
-                    l10n.settings_infoContactsCount,
-                    '${connector.contacts.length}',
-                  ),
-                  _buildInfoRow(
-                    l10n.settings_infoChannelCount,
-                    '${connector.channels.length}',
-                  ),
-                ],
-              ),
-            ),
-            crossFadeState: _deviceInfoExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 200),
-          ),
+                ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        borderRadius: BorderRadius.circular(MeshRadii.xs),
+        onTap: onTap,
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildBatteryInfoRow(
@@ -191,7 +431,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final percent = connector.batteryPercent;
     final millivolts = connector.batteryMillivolts;
 
-    // figure out display value
     final String displayValue;
     if (millivolts == null) {
       displayValue = l10n.common_notAvailable;
@@ -211,22 +450,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (percent == null) {
       icon = Icons.battery_unknown;
-      iconColor = Colors.grey;
+      iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
       valueColor = null;
     } else if (percent <= 15) {
       icon = Icons.battery_alert;
-      iconColor = Colors.orange;
-      valueColor = Colors.orange;
+      iconColor = Theme.of(context).colorScheme.tertiary;
+      valueColor = Theme.of(context).colorScheme.tertiary;
     } else {
       icon = Icons.battery_full;
       iconColor = null;
       valueColor = null;
     }
 
-    return _buildInfoRow(
-      l10n.settings_infoBattery,
-      displayValue,
-      leading: Icon(icon, size: 18, color: iconColor),
+    return _infoRow(
+      context,
+      label: l10n.settings_infoBattery,
+      value: displayValue,
+      leading: Icon(icon, size: 14, color: iconColor),
       valueColor: valueColor,
       onTap: millivolts != null
           ? () {
@@ -238,266 +478,303 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildAppSettingsCard(BuildContext context) {
-    final l10n = context.l10n;
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.settings_outlined),
-        title: Text(l10n.settings_appSettings),
-        subtitle: Text(l10n.settings_appSettingsSubtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AppSettingsScreen()),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildNodeSettingsCard(
+  Widget _buildNodeCardContent(
     BuildContext context,
     MeshCoreConnector connector,
   ) {
     final l10n = context.l10n;
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l10n.settings_nodeSettings,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: Text(l10n.settings_nodeName),
-            subtitle: Text(connector.selfName ?? l10n.settings_nodeNameNotSet),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _editNodeName(context, connector),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.radio),
-            title: Text(l10n.settings_radioSettings),
-            subtitle: Text(l10n.settings_radioSettingsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showRadioSettings(context, connector),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.sensors_outlined),
-            title: Text(l10n.radioStats_settingsTile),
-            subtitle: Text(l10n.radioStats_settingsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            enabled:
-                connector.isConnected && connector.supportsCompanionRadioStats,
-            onTap: () => pushCompanionRadioStatsScreen(context),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.location_on_outlined),
-            title: Text(l10n.settings_location),
-            subtitle: Text(l10n.settings_locationSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _editLocation(context, connector),
-          ),
-          if (connector.currentCustomVars?.containsKey('gps') ?? false) ...[
-            const Divider(height: 1),
-            SwitchListTile(
-              secondary: const Icon(Icons.gps_fixed),
-              title: Text(l10n.settings_locationGPSEnable),
-              subtitle: Text(l10n.settings_locationGPSEnableSubtitle),
-              value: connector.currentCustomVars?['gps'] == '1',
-              onChanged: (value) async {
-                await connector.setCustomVar(value ? 'gps:1' : 'gps:0');
-              },
-            ),
-          ],
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.group_add_outlined),
-            title: Text(l10n.settings_contactSettings),
-            subtitle: Text(l10n.settings_contactSettingsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _editAutoAddConfig(context, connector),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.visibility_off_outlined),
-            title: Text(l10n.settings_privacy),
-            subtitle: Text(l10n.settings_privacySubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _privacySettings(context, connector),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionsCard(BuildContext context, MeshCoreConnector connector) {
-    final l10n = context.l10n;
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l10n.settings_actions,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: Text(l10n.settings_deleteAllPaths),
-            subtitle: Text(
-              l10n.settings_deleteAllPathsSubtitle,
-              style: TextStyle(color: Colors.red[700]),
-            ),
-            onTap: () => connector.deleteAllPaths(),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.sync),
-            title: Text(l10n.settings_syncTime),
-            subtitle: Text(l10n.settings_syncTimeSubtitle),
-            onTap: () => _syncTime(context, connector),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.refresh),
-            title: Text(l10n.settings_refreshContacts),
-            subtitle: Text(l10n.settings_refreshContactsSubtitle),
-            onTap: () => connector.getContacts(),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.restart_alt, color: Colors.orange),
-            title: Text(l10n.settings_rebootDevice),
-            subtitle: Text(l10n.settings_rebootDeviceSubtitle),
-            onTap: () => _confirmReboot(context, connector),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutCard(BuildContext context) {
-    final l10n = context.l10n;
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.info_outline),
-        title: Text(l10n.settings_about),
-        subtitle: Text(
-          l10n.settings_aboutVersion(
-            _appVersion.isEmpty ? l10n.common_loading : _appVersion,
-          ),
+    return Column(
+      children: [
+        _tappableTile(
+          context,
+          icon: Icons.person_outline,
+          title: l10n.settings_nodeName,
+          subtitle: connector.selfName ?? l10n.settings_nodeNameNotSet,
+          onTap: () => _editNodeName(context, connector),
         ),
-        onTap: () => _showAbout(context),
-      ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.radio,
+          title: l10n.settings_radioSettings,
+          subtitle: l10n.settings_radioSettingsSubtitle,
+          onTap: () => _showRadioSettings(context, connector),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.landscape,
+          title: l10n.settings_regionSettings,
+          subtitle: l10n.settings_regionSettingsSubtitle,
+          onTap: () => pushRegionManagementScreen(context),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.sensors_outlined,
+          title: l10n.radioStats_settingsTile,
+          subtitle: l10n.radioStats_settingsSubtitle,
+          onTap: connector.isConnected && connector.supportsCompanionRadioStats
+              ? () => pushCompanionRadioStatsScreen(context)
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.route_outlined,
+          title: l10n.repeater_pathHashMode,
+          subtitle: _pathHashModeSubtitle(context, connector.pathHashByteWidth),
+          onTap: connector.isConnected
+              ? () => _editPathHashMode(context, connector)
+              : null,
+        ),
+      ],
     );
   }
 
-  Widget _buildDebugCard(BuildContext context) {
+  String _pathHashModeSubtitle(BuildContext context, int pathHashByteWidth) {
     final l10n = context.l10n;
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l10n.settings_debug,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.bluetooth_outlined),
-            title: Text(l10n.settings_companionDebugLog),
-            subtitle: Text(l10n.settings_companionDebugLogSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const BleDebugLogScreen(),
-                ),
-              );
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.code_outlined),
-            title: Text(l10n.settings_appDebugLog),
-            subtitle: Text(l10n.settings_appDebugLogSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AppDebugLogScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+    return switch (pathHashByteWidth.clamp(1, 4).toInt()) {
+      1 => l10n.repeater_pathHashModeOption0,
+      2 => l10n.repeater_pathHashModeOption1,
+      3 => l10n.repeater_pathHashModeOption2,
+      _ => l10n.repeater_pathHashModeOption3,
+    };
+  }
+
+  Widget _buildLocationCardContent(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    return Column(
+      children: [
+        _tappableTile(
+          context,
+          icon: Icons.location_on_outlined,
+          title: l10n.settings_location,
+          subtitle: l10n.settings_locationSubtitle,
+          onTap: () => _editLocation(context, connector),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.group_add_outlined,
+          title: l10n.settings_contactSettings,
+          subtitle: l10n.settings_contactSettingsSubtitle,
+          onTap: () => _editAutoAddConfig(context, connector),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.visibility_off_outlined,
+          title: l10n.settings_privacy,
+          subtitle: l10n.settings_privacySubtitle,
+          onTap: () => _privacySettings(context, connector),
+        ),
+      ],
     );
   }
 
-  Widget _buildInfoRow(
-    String label,
-    String value, {
-    Widget? leading,
-    Color? valueColor,
-    VoidCallback? onTap,
-  }) {
-    final theme = Theme.of(context);
+  Widget _buildActionsCardContent(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    return Column(
+      children: [
+        _tappableTile(
+          context,
+          icon: Icons.sync,
+          title: l10n.settings_syncTime,
+          subtitle: l10n.settings_syncTimeSubtitle,
+          onTap: () => _syncTime(context, connector),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.refresh,
+          title: l10n.settings_refreshContacts,
+          subtitle: l10n.settings_refreshContactsSubtitle,
+          onTap: () => connector.getContacts(),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.restart_alt,
+          title: l10n.settings_rebootDevice,
+          subtitle: l10n.settings_rebootDeviceSubtitle,
+          titleColor: MeshPalette.warn,
+          iconColor: MeshPalette.warn,
+          onTap: () => _confirmReboot(context, connector),
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.delete_outline,
+          title: l10n.settings_deleteAllPaths,
+          subtitle: l10n.settings_deleteAllPathsSubtitle,
+          titleColor: MeshPalette.alert,
+          iconColor: MeshPalette.alert,
+          onTap: () => _confirmDeleteAllPaths(context, connector),
+        ),
+      ],
+    );
+  }
 
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (leading != null) ...[leading, const SizedBox(width: 8)],
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+  Widget _buildExportCardContent(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    return Column(
+      children: [
+        _tappableTile(
+          context,
+          icon: Icons.download_outlined,
+          title: l10n.settings_gpxExportRepeaters,
+          subtitle: l10n.settings_gpxExportRepeatersSubtitle,
+          onTap: () async {
+            final exporter = GpxExport(connector);
+            exporter.addRepeaters();
+            _gpxExport(
+              exporter,
+              l10n.map_repeater,
+              l10n.settings_gpxExportRepeatersRoom,
+              'meshcore_repeaters_',
+              l10n.settings_gpxExportShareText,
+              l10n.settings_gpxExportShareSubject,
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.download_outlined,
+          title: l10n.settings_gpxExportContacts,
+          subtitle: l10n.settings_gpxExportContactsSubtitle,
+          onTap: () async {
+            final exporter = GpxExport(connector);
+            exporter.addContacts();
+            _gpxExport(
+              exporter,
+              l10n.map_repeater,
+              l10n.settings_gpxExportChat,
+              'meshcore_contacts_',
+              l10n.settings_gpxExportShareText,
+              l10n.settings_gpxExportShareSubject,
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.download_outlined,
+          title: l10n.settings_gpxExportAll,
+          subtitle: l10n.settings_gpxExportAllSubtitle,
+          onTap: () async {
+            final exporter = GpxExport(connector);
+            exporter.addAll();
+            _gpxExport(
+              exporter,
+              l10n.map_repeater,
+              l10n.settings_gpxExportAllContacts,
+              'meshcore_all_',
+              l10n.settings_gpxExportShareText,
+              l10n.settings_gpxExportShareSubject,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDebugCardContent(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      children: [
+        _tappableTile(
+          context,
+          icon: Icons.bluetooth_outlined,
+          title: l10n.settings_companionDebugLog,
+          subtitle: l10n.settings_companionDebugLogSubtitle,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BleDebugLogScreen(),
               ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: valueColor,
-              fontWeight: FontWeight.w500,
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.code_outlined,
+          title: l10n.settings_appDebugLog,
+          subtitle: l10n.settings_appDebugLogSubtitle,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AppDebugLogScreen(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _tappableTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? onTap,
+    Color? titleColor,
+    Color? iconColor,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final effectiveIconColor = iconColor ?? scheme.onSurfaceVariant;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: effectiveIconColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: titleColor != null
+                          ? titleColor.withValues(alpha: 0.7)
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(Icons.chevron_right, color: scheme.onSurfaceVariant, size: 16),
+          ],
+        ),
       ),
     );
-
-    if (onTap != null) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(6),
-        onTap: onTap,
-        child: row,
-      );
-    }
-
-    return row;
   }
 
   void _editNodeName(BuildContext context, MeshCoreConnector connector) {
@@ -520,18 +797,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.common_cancel),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await connector.setNodeName(controller.text);
-              await connector.refreshDeviceInfo();
-              if (!context.mounted) return;
-              showDismissibleSnackBar(
-                context,
-                content: Text(l10n.settings_nodeNameUpdated),
+          ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) {
+              final name = controller.text.trim();
+              return TextButton(
+                onPressed: name.isEmpty
+                    ? null
+                    : () async {
+                        Navigator.pop(context);
+                        await connector.setNodeName(name);
+                        await connector.refreshDeviceInfo();
+                        if (!context.mounted) return;
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(l10n.settings_nodeNameUpdated),
+                        );
+                      },
+                child: Text(l10n.common_save),
               );
             },
-            child: Text(l10n.common_save),
           ),
         ],
       ),
@@ -542,6 +827,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => _RadioSettingsDialog(connector: connector),
+    );
+  }
+
+  void _editPathHashMode(BuildContext context, MeshCoreConnector connector) {
+    final l10n = context.l10n;
+    var selectedMode = (connector.pathHashByteWidth - 1).clamp(0, 3).toInt();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.repeater_pathHashMode),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<int>(
+                initialValue: selectedMode,
+                decoration: InputDecoration(
+                  labelText: l10n.repeater_pathHashMode,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 0,
+                    child: Text(l10n.repeater_pathHashModeOption0),
+                  ),
+                  DropdownMenuItem(
+                    value: 1,
+                    child: Text(l10n.repeater_pathHashModeOption1),
+                  ),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text(l10n.repeater_pathHashModeOption2),
+                  ),
+                  DropdownMenuItem(
+                    value: 3,
+                    child: Text(l10n.repeater_pathHashModeOption3),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  setDialogState(() => selectedMode = value);
+                },
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.repeater_pathHashModeHelper,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await connector.setPathHashMode(selectedMode);
+                  await connector.refreshDeviceInfo();
+                  if (!context.mounted) return;
+                  showDismissibleSnackBar(
+                    context,
+                    content: Text(l10n.repeater_settingsSaved),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  showDismissibleSnackBar(
+                    context,
+                    content: Text(l10n.settings_error(e.toString())),
+                  );
+                }
+              },
+              child: Text(l10n.common_save),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -562,6 +928,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final currentInterval =
         int.tryParse(customVars["gps_interval"] ?? "") ?? 900;
     intervalController.text = currentInterval.toString();
+
+    String? intervalError;
 
     showDialog(
       context: context,
@@ -598,9 +966,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: intervalController,
+                  onChanged: (_) {
+                    if (intervalError != null) {
+                      setDialogState(() => intervalError = null);
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: l10n.settings_locationIntervalSec,
                     border: const OutlineInputBorder(),
+                    errorText: intervalError,
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
@@ -631,24 +1005,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
-
+                int? interval;
                 if (hasGPS) {
                   final intervalText = intervalController.text.trim();
-                  if (intervalText.isEmpty) {
-                    return;
+                  if (intervalText.isNotEmpty) {
+                    interval = int.tryParse(intervalText);
+                    if (interval == null ||
+                        interval < 60 ||
+                        interval >= 86400) {
+                      setDialogState(() {
+                        intervalError = l10n.settings_locationIntervalInvalid;
+                      });
+                      return;
+                    }
                   }
+                }
 
-                  final interval = int.tryParse(intervalText);
-                  if (interval == null || interval < 60 || interval >= 86400) {
-                    if (!context.mounted) return;
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(l10n.settings_locationIntervalInvalid),
-                    );
-                    return;
-                  }
+                Navigator.pop(context);
 
+                if (interval != null) {
                   await connector.setCustomVar("gps_interval:$interval");
                   await connector.refreshDeviceInfo();
                   if (!context.mounted) return;
@@ -714,6 +1089,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _confirmDeleteAllPaths(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settings_deleteAllPaths),
+        content: Text(l10n.settings_deleteAllPathsSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              connector.deleteAllPaths();
+            },
+            child: Text(
+              l10n.common_deleteAll,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmReboot(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
     showDialog(
@@ -733,7 +1138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
             child: Text(
               l10n.common_reboot,
-              style: const TextStyle(color: Colors.orange),
+              style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
             ),
           ),
         ],
@@ -753,8 +1158,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         const SizedBox(height: 16),
         Text(l10n.settings_aboutDescription),
+        const SizedBox(height: 12),
+        LinkHandler.buildLinkifyText(
+          context: context,
+          text: _formatAboutModLink(l10n.settings_aboutModLink),
+          style: DefaultTextStyle.of(context).style,
+        ),
+        const SizedBox(height: 8),
+        Text(l10n.settings_aboutModDescription),
       ],
     );
+  }
+
+  String _formatAboutModLink(String text) {
+    const url = 'https://t.me/mcoadvanced';
+    return text.contains('\n$url') ? text : text.replaceFirst(url, '\n$url');
   }
 
   Future<void> _gpxExport(
@@ -801,70 +1219,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildExportCard(MeshCoreConnector connector) {
-    final l10n = context.l10n;
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(l10n.settings_gpxExportRepeaters),
-            subtitle: Text(l10n.settings_gpxExportRepeatersSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final exporter = GpxExport(connector);
-              exporter.addRepeaters();
-              _gpxExport(
-                exporter,
-                l10n.map_repeater,
-                l10n.settings_gpxExportRepeatersRoom,
-                "meshcore_repeaters_",
-                l10n.settings_gpxExportShareText,
-                l10n.settings_gpxExportShareSubject,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(l10n.settings_gpxExportContacts),
-            subtitle: Text(l10n.settings_gpxExportContactsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final exporter = GpxExport(connector);
-              exporter.addContacts();
-              _gpxExport(
-                exporter,
-                l10n.map_repeater,
-                l10n.settings_gpxExportChat,
-                "meshcore_contacts_",
-                l10n.settings_gpxExportShareText,
-                l10n.settings_gpxExportShareSubject,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(l10n.settings_gpxExportAll),
-            subtitle: Text(l10n.settings_gpxExportAllSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final exporter = GpxExport(connector);
-              exporter.addAll();
-              _gpxExport(
-                exporter,
-                l10n.map_repeater,
-                l10n.settings_gpxExportAllContacts,
-                "meshcore_all_",
-                l10n.settings_gpxExportShareText,
-                l10n.settings_gpxExportShareSubject,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   void _editAutoAddConfig(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
     bool autoAddChat = false;
@@ -897,7 +1251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setDialogState(() => autoAddChat = value);
                   },
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 FeatureToggleRow(
                   title: l10n.contactsSettings_autoAddRepeatersTitle,
                   subtitle: l10n.contactsSettings_autoAddRepeatersSubtitle,
@@ -906,7 +1260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setDialogState(() => autoAddRepeater = value);
                   },
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 FeatureToggleRow(
                   title: l10n.contactsSettings_autoAddRoomServersTitle,
                   subtitle: l10n.contactsSettings_autoAddRoomServersSubtitle,
@@ -915,7 +1269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setDialogState(() => autoAddRoomServer = value);
                   },
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 FeatureToggleRow(
                   title: l10n.contactsSettings_autoAddSensorsTitle,
                   subtitle: l10n.contactsSettings_autoAddSensorsSubtitle,
@@ -924,7 +1278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setDialogState(() => autoAddSensor = value);
                   },
                 ),
-                Divider(height: 4),
+                const Divider(height: 4),
                 FeatureToggleRow(
                   title: l10n.contactsSettings_overwriteOldestTitle,
                   subtitle: l10n.contactsSettings_overwriteOldestSubtitle,
@@ -1124,6 +1478,8 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
   bool _clientRepeat = false;
   int? _selectedPresetIndex;
   _RadioSettingsSnapshot? _lastNonRepeatSnapshot;
+  String? _frequencyError;
+  String? _txPowerError;
 
   AppDebugLogService get _appLog =>
       Provider.of<AppDebugLogService>(context, listen: false);
@@ -1390,7 +1746,24 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
 
   void _handleManualSettingsChanged(String source) {
     _logRadioSettingsState('Manual settings edit: $source');
-    setState(_syncPresetSelection);
+    setState(() {
+      _validateFields();
+      _syncPresetSelection();
+    });
+  }
+
+  void _validateFields() {
+    final l10n = context.l10n;
+    final freqMHz = double.tryParse(_frequencyController.text);
+    _frequencyError = (freqMHz == null || freqMHz < 300 || freqMHz > 2500)
+        ? l10n.settings_frequencyInvalid
+        : null;
+
+    final maxTxPower = widget.connector.maxTxPower ?? 22;
+    final txPower = int.tryParse(_txPowerController.text);
+    _txPowerError = (txPower == null || txPower < 0 || txPower > maxTxPower)
+        ? '${l10n.settings_txPowerInvalid} (0-$maxTxPower dBm)'
+        : null;
   }
 
   void _handleClientRepeatChanged(bool enabled) {
@@ -1502,6 +1875,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
         content: Text(l10n.settings_error(e.toString())),
       );
     }
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -1577,6 +1951,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
                 labelText: l10n.settings_frequency,
                 border: const OutlineInputBorder(),
                 helperText: l10n.settings_frequencyHelper,
+                errorText: _frequencyError,
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1660,6 +2035,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
                 helperText: widget.connector.maxTxPower != null
                     ? '${l10n.settings_txPowerHelper} (max: ${widget.connector.maxTxPower} dBm)'
                     : l10n.settings_txPowerHelper,
+                errorText: _txPowerError,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -1681,7 +2057,12 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.common_cancel),
         ),
-        FilledButton(onPressed: _saveSettings, child: Text(l10n.common_save)),
+        FilledButton(
+          onPressed: (_frequencyError != null || _txPowerError != null)
+              ? null
+              : _saveSettings,
+          child: Text(l10n.common_save),
+        ),
       ],
     );
   }

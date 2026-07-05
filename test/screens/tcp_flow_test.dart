@@ -123,11 +123,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'TCP'));
+    final scannerContext = tester.element(find.byType(ScannerScreen));
+    final scannerL10n = AppLocalizations.of(scannerContext);
+    await tester.tap(find.byTooltip(scannerL10n.connectionChoiceTcpLabel));
     await tester.pumpAndSettle();
     expect(find.byType(TcpScreen), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Bluetooth'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Bluetooth'));
     await tester.pumpAndSettle();
 
     expect(find.byType(TcpScreen), findsNothing);

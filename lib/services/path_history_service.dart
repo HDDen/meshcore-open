@@ -134,10 +134,12 @@ class PathHistoryService extends ChangeNotifier {
       newWeight = (currentWeight + successIncrement).clamp(0.0, maxWeight);
     } else {
       newWeight = currentWeight - failureDecrement;
-      if (newWeight <= 0) {
+      if (newWeight <= 0 && failureCount >= 3) {
         removePathRecord(contactPubKeyHex, selection.pathBytes);
         return;
       }
+      // Keep the record with a small floor weight until we have enough evidence
+      newWeight = newWeight.clamp(0.1, maxWeight);
     }
 
     _addPathRecord(

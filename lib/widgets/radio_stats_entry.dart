@@ -7,6 +7,9 @@ import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/screens/companion_radio_stats_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../theme/mesh_theme.dart';
+import 'mesh_ui.dart';
+
 void pushCompanionRadioStatsScreen(BuildContext context) {
   Navigator.push(
     context,
@@ -59,11 +62,15 @@ class _RadioStatsIconButtonState extends State<RadioStatsIconButton> {
               active: connector.radioStatsAirActivityPulse,
             );
             if (widget.compact) {
-              return GestureDetector(
-                onTap: () => pushCompanionRadioStatsScreen(context),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: dot,
+              return Semantics(
+                label: context.l10n.radioStats_tooltip,
+                button: true,
+                child: GestureDetector(
+                  onTap: () => pushCompanionRadioStatsScreen(context),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: dot,
+                  ),
                 ),
               );
             }
@@ -136,12 +143,12 @@ class AirActivityDotState extends State<AirActivityDot> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final on = widget.active && _blink;
-    return Icon(
-      Icons.circle,
-      size: 12,
-      color: on ? scheme.primary : scheme.outline,
+    final scheme = Theme.of(context).colorScheme;
+    return PulseDot(
+      color: on ? MeshPalette.blue : scheme.outline,
+      size: 11,
+      animate: false,
     );
   }
 }

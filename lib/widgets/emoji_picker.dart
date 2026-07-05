@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
+import '../theme/mesh_theme.dart';
 
 class EmojiPicker extends StatelessWidget {
   final Function(String) onEmojiSelected;
@@ -257,7 +258,11 @@ class EmojiPicker extends StatelessWidget {
                         ),
                         child: Text(
                           emoji,
-                          style: const TextStyle(fontSize: 28),
+                          style: MeshTheme.emoji(),
+                          textHeightBehavior: const TextHeightBehavior(
+                            applyHeightToFirstAscent: false,
+                            applyHeightToLastDescent: false,
+                          ),
                         ),
                       ),
                     ),
@@ -298,7 +303,12 @@ class EmojiPicker extends StatelessWidget {
                                 child: Center(
                                   child: Text(
                                     emojis[index],
-                                    style: const TextStyle(fontSize: 28),
+                                    style: MeshTheme.emoji(),
+                                    textHeightBehavior:
+                                        const TextHeightBehavior(
+                                          applyHeightToFirstAscent: false,
+                                          applyHeightToLastDescent: false,
+                                        ),
                                   ),
                                 ),
                               ),

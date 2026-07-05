@@ -32,3 +32,15 @@
 
 ## Commit & Pull Request Guidelines
 - Keep commit subjects short and action-focused; PRs should describe behavior changes, link issues, include screenshots for UI changes, and call out BLE protocol changes explicitly.
+
+## Memory
+
+Agentmemory hooks are configured for this project/environment.
+
+Use MCP agentmemory manually only when explicitly useful, for example:
+- to recall project context before a complex task;
+- to save durable decisions, project conventions, user preferences, or unresolved follow-ups.
+
+Do not save secrets, tokens, passwords, API keys, credentials, private personal data, or temporary/debug-only details.
+
+If agentmemory is unavailable, continue the task normally and mention that memory could not be read or saved.

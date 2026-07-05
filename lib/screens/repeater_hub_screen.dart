@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../services/app_settings_service.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 import 'repeater_status_screen.dart';
 import 'repeater_cli_screen.dart';
 import 'repeater_settings_screen.dart';
@@ -26,175 +29,157 @@ class RepeaterHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final settingsService = context.watch<AppSettingsService>();
     final chemistry = settingsService.batteryChemistryForRepeater(
       repeater.publicKeyHex,
     );
+
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isAdmin)
-              Text(
-                repeater.type == advTypeRepeater
-                    ? l10n.repeater_management
-                    : l10n.room_management,
-              ),
-            if (!isAdmin)
-              Text(
-                repeater.type == advTypeRepeater
-                    ? l10n.repeater_guest
-                    : l10n.room_guest,
-              ),
-            Text(
-              repeater.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
+        title: Text(
+          repeater.type == advTypeRepeater
+              ? (isAdmin ? l10n.repeater_management : l10n.repeater_guest)
+              : (isAdmin ? l10n.room_management : l10n.room_guest),
         ),
-        centerTitle: false,
+        centerTitle: true,
       ),
       body: SafeArea(
         top: false,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
-            // Repeater info card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+            // ── Identity card ─────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+              child: MeshCard(
+                margin: EdgeInsets.zero,
+                padding: const EdgeInsets.all(20),
+                child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.orange,
-                      child: const Icon(
-                        Icons.cell_tower,
-                        size: 40,
-                        color: Colors.white,
-                      ),
+                    AvatarCircle(
+                      name: repeater.name,
+                      size: 52,
+                      color: MeshPalette.warn,
+                      icon: Icons.cell_tower,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      repeater.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      repeater.shortPubKeyHex,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      repeater.pathLabel(context.l10n),
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    if (repeater.hasLocation) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
                           Text(
-                            '${repeater.latitude?.toStringAsFixed(4)}, ${repeater.longitude?.toStringAsFixed(4)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                            repeater.name,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            repeater.shortPubKeyHex,
+                            style: MeshTheme.mono(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            repeater.pathLabel(l10n),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          if (repeater.hasLocation) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    '${repeater.latitude?.toStringAsFixed(4)}, '
+                                    '${repeater.longitude?.toStringAsFixed(4)}',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
-                    ],
+                    ),
+                    StatusChip(
+                      label: isAdmin ? 'ADMIN' : 'GUEST',
+                      color: isAdmin
+                          ? MeshPalette.blue
+                          : scheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            if (isAdmin)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.battery_full),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              l10n.appSettings_batteryChemistry,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: chemistry,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(),
-                          isDense: true,
-                        ),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          settingsService.setBatteryChemistryForRepeater(
-                            repeater.publicKeyHex,
-                            value,
-                          );
-                        },
-                        items: [
-                          DropdownMenuItem(
-                            value: 'nmc',
-                            child: Text(l10n.appSettings_batteryNmc),
-                          ),
-                          DropdownMenuItem(
-                            value: 'lifepo4',
-                            child: Text(l10n.appSettings_batteryLifepo4),
-                          ),
-                          DropdownMenuItem(
-                            value: 'lipo',
-                            child: Text(l10n.appSettings_batteryLipo),
-                          ),
-                        ],
-                      ),
-                    ],
+
+            // ── Battery chemistry (admin only) ─────────────────────────────
+            if (isAdmin) ...[
+              SectionHeader(l10n.appSettings_batteryChemistry),
+              MeshCard(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: DropdownButtonFormField<String>(
+                  initialValue: chemistry,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.battery_full, size: 18),
+                    labelText: l10n.appSettings_batteryChemistry,
                   ),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    settingsService.setBatteryChemistryForRepeater(
+                      repeater.publicKeyHex,
+                      value,
+                    );
+                  },
+                  items: [
+                    DropdownMenuItem(
+                      value: 'nmc',
+                      child: Text(l10n.appSettings_batteryNmc),
+                    ),
+                    DropdownMenuItem(
+                      value: 'lifepo4',
+                      child: Text(l10n.appSettings_batteryLifepo4),
+                    ),
+                    DropdownMenuItem(
+                      value: 'lipo',
+                      child: Text(l10n.appSettings_batteryLipo),
+                    ),
+                  ],
                 ),
               ),
-            const SizedBox(height: 24),
-            Text(
+            ],
+
+            // ── Tools ──────────────────────────────────────────────────────
+            SectionHeader(
               isAdmin
                   ? l10n.repeater_managementTools
                   : l10n.repeater_guestTools,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            // Status button
-            _buildManagementCard(
-              context,
+
+            _HubActionTile(
+              index: 0,
               icon: Icons.analytics,
               title: l10n.repeater_status,
               subtitle: l10n.repeater_statusSubtitle,
-              color: Colors.blue,
+              accentColor: MeshPalette.blue,
               onTap: () {
+                HapticFeedback.selectionClick();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -206,15 +191,15 @@ class RepeaterHubScreen extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            // Telemetry button
-            _buildManagementCard(
-              context,
+
+            _HubActionTile(
+              index: 1,
               icon: Icons.bar_chart_sharp,
               title: l10n.repeater_telemetry,
               subtitle: l10n.repeater_telemetrySubtitle,
-              color: Colors.teal,
+              accentColor: MeshPalette.magenta,
               onTap: () {
+                HapticFeedback.selectionClick();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -223,16 +208,34 @@ class RepeaterHubScreen extends StatelessWidget {
                 );
               },
             ),
-            if (isAdmin) const SizedBox(height: 12),
-            // CLI button
-            if (isAdmin)
-              _buildManagementCard(
-                context,
+
+            _HubActionTile(
+              index: 2,
+              icon: Icons.group,
+              title: l10n.repeater_neighbors,
+              subtitle: l10n.repeater_neighborsSubtitle,
+              accentColor: MeshPalette.signal,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        NeighborsScreen(repeater: repeater, password: password),
+                  ),
+                );
+              },
+            ),
+
+            if (isAdmin) ...[
+              _HubActionTile(
+                index: 3,
                 icon: Icons.terminal,
                 title: l10n.repeater_cli,
                 subtitle: l10n.repeater_cliSubtitle,
-                color: Colors.green,
+                accentColor: MeshPalette.warn,
                 onTap: () {
+                  HapticFeedback.selectionClick();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -244,34 +247,14 @@ class RepeaterHubScreen extends StatelessWidget {
                   );
                 },
               ),
-            const SizedBox(height: 12),
-            // Neighbors button
-            _buildManagementCard(
-              context,
-              icon: Icons.group,
-              title: l10n.repeater_neighbors,
-              subtitle: l10n.repeater_neighborsSubtitle,
-              color: Colors.orange,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        NeighborsScreen(repeater: repeater, password: password),
-                  ),
-                );
-              },
-            ),
-            if (isAdmin) const SizedBox(height: 12),
-            // Settings button
-            if (isAdmin)
-              _buildManagementCard(
-                context,
+              _HubActionTile(
+                index: 4,
                 icon: Icons.settings,
                 title: l10n.repeater_settings,
                 subtitle: l10n.repeater_settingsSubtitle,
-                color: Colors.deepOrange,
+                accentColor: MeshPalette.alert,
                 onTap: () {
+                  HapticFeedback.selectionClick();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -283,60 +266,76 @@ class RepeaterHubScreen extends StatelessWidget {
                   );
                 },
               ),
+            ],
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildManagementCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
+class _HubActionTile extends StatelessWidget {
+  final int index;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  const _HubActionTile({
+    required this.index,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListEntrance(
+      index: index,
+      child: MeshCard(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 32),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(MeshRadii.md),
+                border: Border.all(color: accentColor.withValues(alpha: 0.3)),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 22, color: accentColor),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: scheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right, color: scheme.onSurfaceVariant, size: 20),
+          ],
         ),
       ),
     );

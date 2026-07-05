@@ -93,6 +93,24 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_disable => 'Zakázať';
 
   @override
+  String get common_undo => 'Zrušiť';
+
+  @override
+  String get messageStatus_sent => 'Odoslané';
+
+  @override
+  String get messageStatus_delivered => 'Doručené';
+
+  @override
+  String get messageStatus_pending => 'Odoslanie';
+
+  @override
+  String get messageStatus_failed => 'Neúspešné odeslanie';
+
+  @override
+  String get messageStatus_repeated => 'Slyšal som to opakovane';
+
+  @override
   String get common_reboot => 'Restartovať';
 
   @override
@@ -110,6 +128,24 @@ class AppLocalizationsSk extends AppLocalizations {
   String common_percentValue(int percent) {
     return '$percent%';
   }
+
+  @override
+  String get common_autoRefresh => 'Automatické obnovenie';
+
+  @override
+  String get common_interval => 'Časový interval';
+
+  @override
+  String get common_default => 'Default';
+
+  @override
+  String get common_clear => 'Zmazať';
+
+  @override
+  String get common_send => 'Send';
+
+  @override
+  String get common_apply => 'Apply';
 
   @override
   String get scanner_title => 'MeshCore – Verzia pre verejnosť (Advanced mod)';
@@ -165,14 +201,14 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => 'Posledné pripojenia';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => 'Nastaviť názov záložky';
 
   @override
   String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+      'Keď je označené ako obľúbené, neodstráni sa z histórie pripojení';
 
   @override
   String get usbScreenTitle => 'Pripojte cez USB';
@@ -306,6 +342,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get scanner_enableBluetooth => 'Povolte Bluetooth';
 
   @override
+  String get scanner_bluetoothWebUnsupported =>
+      'Funkcia Bluetooth nie je dostupná v prehliadači. Prepojte sa pomocou USB.';
+
+  @override
   String get device_quickSwitch => 'Rýchle prepínač';
 
   @override
@@ -348,6 +388,45 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_radioSettingsUpdated => 'Nastavenia rádia aktualizované';
+
+  @override
+  String get settings_regionSettings => 'Regions';
+
+  @override
+  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+
+  @override
+  String get settings_regionManagement_screenTitle => 'Region Management';
+
+  @override
+  String get settings_regionNameHint => 'Enter region name';
+
+  @override
+  String get settings_regionAddRegion => 'Add region';
+
+  @override
+  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+
+  @override
+  String get settings_regionFetchRegionsFail => 'No regions were found';
+
+  @override
+  String get settings_regionFetchRegionsAlreadyExists =>
+      'This region has already been added';
+
+  @override
+  String get settings_regionName => 'Region Name';
+
+  @override
+  String get settings_regionDeleted => 'Region deleted';
+
+  @override
+  String get settings_deleteRegion => 'Delete Region';
+
+  @override
+  String settings_deleteRegionConfirm(String region) {
+    return 'Remove \"$region\" from region list?';
+  }
 
   @override
   String get settings_location => 'Lokalita';
@@ -529,6 +608,14 @@ class AppLocalizationsSk extends AppLocalizations {
       'Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'Údaje o nadmorskej výške LOS: Open-Meteo (CC BY 4.0)';
 
@@ -600,11 +687,46 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle =>
+      'Oneskorenie manuálneho opätovného odoslania';
 
   @override
   String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+      'Ovplyvňuje aj interný mechanizmus na odstránenie duplicitného zobrazenia odchádzajúcich správ';
+
+  @override
+  String get settings_channelMaxbytesOutgoingTitle =>
+      'Obmedziť odchádzajúci payload kanálov, bajty';
+
+  @override
+  String get settings_channelMaxbytesOutgoingSubtitle =>
+      'Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre USB je tento limit približne 155 bajtov.';
+
+  @override
+  String get settings_quickAnswersTitle => 'Rýchle odpovede';
+
+  @override
+  String get settings_quickAnswersSubtitle =>
+      'Zoznam fráz dostupných na výber ako rýchle odpovede. Priraďujú sa ku kontaktom/kanálom v ich nastaveniach.';
+
+  @override
+  String get settings_quickAnswersAddText => 'Zadajte text';
+
+  @override
+  String get settings_quickAnswersEditText => 'Upraviť odpoveď';
+
+  @override
+  String get settings_quickAnswersSelect => 'Povoliť tieto odpovede';
+
+  @override
+  String get settings_quickAnswersExists => 'Už existuje';
+
+  @override
+  String get settings_quickAnswersNotAdded =>
+      'Pre tento chat ste ešte nepridali žiadne rýchle odpovede!';
+
+  @override
+  String get settings_quickAnswersSendAtSelect => 'Odoslať pri výbere';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
@@ -684,6 +806,18 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrajinská';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing => 'Povoliť sledovanie správ';
 
   @override
@@ -691,8 +825,12 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zobraziť podrobné metadáta o smerovaní a časovaní správ';
 
   @override
+  String get appSettings_enableTimeSeconds =>
+      'Zobrazovať sekundy v informáciách o správe';
+
+  @override
   String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+      'Zobraziť tlačidlo na skrytie klávesnice';
 
   @override
   String get appSettings_notifications => 'Upozornenia';
@@ -804,11 +942,6 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get appSettings_maxMessageRetriesSubtitle =>
       'Počet pokusov o odošleť pred označením správy ako neúspešnej';
-
-  @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
 
   @override
   String get appSettings_battery => 'Batéria';
@@ -1012,6 +1145,15 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contacts_newGroup => 'Nová skupina';
 
   @override
+  String get contacts_moreOptions => 'Ďalšie možnosti';
+
+  @override
+  String get contacts_searchOpen => 'Vyhľadajte kontakty';
+
+  @override
+  String get contacts_searchClose => 'Zavrieť vyhľadávanie';
+
+  @override
   String get contacts_groupName => 'Názov skupiny';
 
   @override
@@ -1075,6 +1217,9 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contact_clearChat => 'Vymazať chat';
+
+  @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
 
   @override
   String get contact_teleBase => 'Báza telemetrie';
@@ -1226,6 +1371,19 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get channels_changeWidgetColor => 'Farba widgetu';
+
+  @override
+  String get channels_changeWidgetTextColor => 'Farba textu widgetu';
+
+  @override
+  String get channels_changeGroupEmpty => 'Zatiaľ je tu prázdno';
+
+  @override
+  String get channels_allowOrderingInGroup =>
+      'Povoliť usporiadanie kanálov v skupine';
+
+  @override
   String get settings_cyr2latProfileAdd => 'Pridať profil Cyr2Lat';
 
   @override
@@ -1257,25 +1415,25 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'Limit vkladania textu MCMP';
 
   @override
   String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+      'Oneskorenie odoslania na zrušenie';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => 'Použiť oneskorenie odoslania';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => 'zrušiť odoslanie';
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Nefiltrovať vlastné správy v kanáloch';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'Predvolene sa vlastné správy z vášho uzla ignorujú. To spôsobuje problémy v niektorých firmvéroch so vstavaným TerminalCLI';
 
   @override
   String get channels_publicChannelAdded => 'Veľký kanál pridaný';
@@ -1335,6 +1493,20 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_hashtagHint => 'napr. #tím';
 
   @override
+  String channels_regionSetTo(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_regionNotSet => 'Region: none';
+
+  @override
+  String get channels_regionSelect_Title => 'Select a region';
+
+  @override
+  String get channels_clearRegion => 'Clear region';
+
+  @override
   String get chat_noMessages => 'Zatiaľ žiadne správy.';
 
   @override
@@ -1383,7 +1555,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return 'Pred opätovným odoslaním počkajte $seconds sekúnd';
   }
 
   @override
@@ -1519,35 +1691,6 @@ class AppLocalizationsSk extends AppLocalizations {
   String get debugFrame_hexDump => 'Hexová analýza:';
 
   @override
-  String get chat_pathManagement => 'Správa ciest';
-
-  @override
-  String get chat_ShowAllPaths => 'Zobraziť všetky cesty';
-
-  @override
-  String get chat_routingMode => 'Režim trasy';
-
-  @override
-  String get chat_autoUseSavedPath => 'Použiť uloženú cestu';
-
-  @override
-  String get chat_forceFloodMode =>
-      'Zavrieť režim núdzového povodňového režimu';
-
-  @override
-  String get chat_recentAckPaths => 'Nedávne cesty ACK (klepni na použitie):';
-
-  @override
-  String get chat_pathHistoryFull =>
-      'História ciest je plná. Odstráňte záznamy, aby ste mohli pridať nové.';
-
-  @override
-  String get chat_hopSingular => 'Skok';
-
-  @override
-  String get chat_hopPlural => 'Skákať';
-
-  @override
   String chat_hopsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1559,12 +1702,6 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get chat_successes => 'Úspechy';
-
-  @override
-  String get chat_score => 'Score';
-
-  @override
   String get chat_removePath => 'Odstrániť cestu';
 
   @override
@@ -1572,50 +1709,146 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zatiaľ žiadna história trás.\nPošlite správu a objavte trasy.';
 
   @override
-  String get chat_pathActions => 'Cesty:';
-
-  @override
-  String get chat_setCustomPath => 'Nastaviť vlastnú cestu';
-
-  @override
-  String get chat_setCustomPathSubtitle => 'Ručne zadajte trasu.';
-
-  @override
-  String get chat_clearPath => 'Vyčistiš cestu';
-
-  @override
-  String get chat_clearPathSubtitle =>
-      'Znovu nájsť vynútene pri nasledujúcej pošlite';
-
-  @override
   String get chat_pathCleared =>
       'Cesta vyčistená. Nasledujúce prepočetné získa trasu znova.';
-
-  @override
-  String get chat_floodModeSubtitle =>
-      'Použite prepínanie trasy v navigačnom paneli.';
-
-  @override
-  String get chat_floodModeEnabled =>
-      'Odosporňovacia prevádzka je zapnutá. Vypnite ju znova cez ikonu routovania v navigačnom páse.';
 
   @override
   String get chat_fullPath => 'Celá cesta';
 
   @override
-  String get chat_pathDetailsNotAvailable =>
-      'Podrobnosti o ceste zatiaľ dostupné nie sú. Skúste poslať správu na obnovenie.';
+  String get routing_title => 'Navigácia';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    String _temp0 = intl.Intl.pluralLogic(
-      hopCount,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Cesta nastavená: $hopCount $_temp0 - $status';
+  String get routing_modeAuto => 'Auto';
+
+  @override
+  String get routing_modeFlood => 'Povodňová vlna';
+
+  @override
+  String get routing_modeManual => 'Ručná príručka';
+
+  @override
+  String get routing_modeAutoHint =>
+      'Automaticky vyberá najznámejší trasa, a ak žiadna nie je známa, použije náhodnú trasu.';
+
+  @override
+  String get routing_modeFloodHint =>
+      'Prenos prostredníctvom všetkých opakovačov. Najspoľahlivejší spôsob, ale vyžaduje viac času vysielania.';
+
+  @override
+  String get routing_modeManualHint =>
+      'Vždy dodáva presne podľa zadaného trasy.';
+
+  @override
+  String get routing_currentRoute => 'Aktuálna trasa';
+
+  @override
+  String get routing_directNoHops => 'Priamo – bez prechodných trás';
+
+  @override
+  String get routing_noPathYet =>
+      'Zatiaľ neexistuje žiadna cesta. Nasledujúce správy budú pokračovať, kým sa nenájde trasa.';
+
+  @override
+  String get routing_floodBroadcast =>
+      'Prenos prostredníctvom každého opakovača';
+
+  @override
+  String get routing_editPath => 'Upraviť trasu';
+
+  @override
+  String get routing_forgetPath => 'Zabudnite na trasu';
+
+  @override
+  String get routing_knownPaths => 'Známe cesty';
+
+  @override
+  String get routing_knownPathsHint =>
+      'Kliknite na cestu, aby ste sa k nej presunuli.';
+
+  @override
+  String get routing_inUse => 'V prevádzke';
+
+  @override
+  String get routing_qualityStrong => 'Silný prvý krok';
+
+  @override
+  String get routing_qualityGood => 'Úspešný prvý krok';
+
+  @override
+  String get routing_qualityFair => 'Prvá, spravodlivá fáza';
+
+  @override
+  String get routing_qualityWorked => 'Dosiahnutý úspech';
+
+  @override
+  String get routing_qualityFlood =>
+      'Zistil som to z informácií, ktoré som získal v dôsledku povodňovej situácie.';
+
+  @override
+  String get routing_qualityUntested => 'Neotestované';
+
+  @override
+  String routing_lastWorked(String when) {
+    return 'worked $when';
   }
+
+  @override
+  String get routing_neverWorked => 'nikedy nebolo potvrdené';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => 'Doručenie v prípade povodní';
+
+  @override
+  String get pathEditor_title => 'Vytvorenie cesty';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count z 64 chmelových zŕš';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      'Zatiaľ žiadne chmel. Kliknite na opakované, aby ste ich pridali postupne, alebo uložte bez chmelu, aby ste ho mohli poslať priamo.';
+
+  @override
+  String get pathEditor_addHops => 'Pridávajte chmel podľa zadaného poriadku.';
+
+  @override
+  String get pathEditor_searchRepeaters => 'Hľadať opakované';
+
+  @override
+  String get pathEditor_advancedHex => 'Pokročilé: pôvodná hexová cesta';
+
+  @override
+  String get pathEditor_hexLabel => 'Prefiksy pre hexadecimálne čísla';
+
+  @override
+  String get pathEditor_hexHelper =>
+      'Dve hexové čísla na každý krok, oddelené čiarkami';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return 'Neplatné: $tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => 'Maximálne 64 krokov';
+
+  @override
+  String get pathEditor_usePath => 'Použite túto cestu';
+
+  @override
+  String get pathEditor_removeHop => 'Odstráňte chmel';
+
+  @override
+  String get pathEditor_unknownHop =>
+      'Neznáme zariadenie na opakované vysielanie';
 
   @override
   String get chat_pathSavedLocally =>
@@ -1691,6 +1924,39 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_title => 'Mapa uzlov';
+
+  @override
+  String get map_searchHint => 'Vyhľadajte podľa názvu alebo ID uzla';
+
+  @override
+  String get map_activity => 'Aktivita';
+
+  @override
+  String get map_online => 'Online';
+
+  @override
+  String get map_recent => 'Nedávne';
+
+  @override
+  String get map_stale => 'Neaktuálne';
+
+  @override
+  String get map_visible => 'Viditeľný';
+
+  @override
+  String get map_hidden => 'Skrytý';
+
+  @override
+  String get map_centerOnNode => 'Nacentrovať na uzol';
+
+  @override
+  String get map_details => 'Podrobnosti';
+
+  @override
+  String get map_noGps => 'Bez GPS';
+
+  @override
+  String get map_noResults => 'Nenašli sa žiadne zodpovedajúce uzly.';
 
   @override
   String get map_lineOfSight => 'Úroveň výhľadu';
@@ -1878,6 +2144,360 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Zrušenie stopáže cesty bolo zrušené.';
+
+  @override
+  String get map_wardrive => 'Wardrive';
+
+  @override
+  String get map_wardriveStart => 'Spustiť';
+
+  @override
+  String get map_wardriveStop => 'Zastaviť';
+
+  @override
+  String get map_wardriveZeroHopDiscovery => 'Zero-hop zisťovanie';
+
+  @override
+  String get map_wardriveDiscoverySent =>
+      'Požiadavka wardrive zisťovania bola odoslaná.';
+
+  @override
+  String get map_wardriveUploadCancelled => 'Nahrávanie wardrive bolo zrušené.';
+
+  @override
+  String map_wardriveDiscoveryFailed(String error) {
+    return 'Wardrive zisťovanie zlyhalo: $error';
+  }
+
+  @override
+  String map_wardriveRequests(int requests, int responses) {
+    return 'Požiadavky: $requests  Odpovede: $responses';
+  }
+
+  @override
+  String map_wardriveLastRequest(String time) {
+    return 'Posledná požiadavka: $time';
+  }
+
+  @override
+  String get map_wardrivePhoneGpsNotUpdated =>
+      'GPS telefónu: zatiaľ neaktualizované';
+
+  @override
+  String map_wardrivePhoneGpsError(String error) {
+    return 'GPS telefónu: $error';
+  }
+
+  @override
+  String map_wardrivePhoneGps(String latitude, String longitude) {
+    return 'GPS telefónu: $latitude, $longitude';
+  }
+
+  @override
+  String get map_wardriveNoResponses => 'Zatiaľ žiadne odpovede zisťovania.';
+
+  @override
+  String get map_wardriveDataTooltip => 'Wardrive údaje';
+
+  @override
+  String get map_wardriveUploadData => 'Nahrať údaje';
+
+  @override
+  String get map_wardriveManageUploadSites => 'Spravovať nahrávacie stránky';
+
+  @override
+  String get map_wardriveAutoUpload => 'Automatické nahrávanie';
+
+  @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
+  String get map_wardriveScreenWakelock => 'Wakelock obrazovky';
+
+  @override
+  String get map_wardriveExport => 'Export';
+
+  @override
+  String get map_wardriveImport => 'Import';
+
+  @override
+  String get map_wardriveAutoDiscovery => 'Automatické zisťovanie';
+
+  @override
+  String get map_wardriveSecondsSuffix => 's';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+
+  @override
+  String map_wardriveSamplesSaved(int count) {
+    return 'Uložené vzorky: $count';
+  }
+
+  @override
+  String map_wardriveAutoDiscoveryError(String error) {
+    return 'Automatické zisťovanie: $error';
+  }
+
+  @override
+  String map_wardriveSampleSaveError(String error) {
+    return 'Uloženie vzorky: $error';
+  }
+
+  @override
+  String map_wardriveCoverageCells(int count) {
+    return 'Bunky pokrytia: $count';
+  }
+
+  @override
+  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+
+  @override
+  String get map_wardriveCoverageResolutionPrompt =>
+      'Choose the size of coverage squares (size = block side length):';
+
+  @override
+  String get map_wardriveCoverageRegional => 'Regional';
+
+  @override
+  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+
+  @override
+  String get map_wardriveCoverageCity => 'City-level';
+
+  @override
+  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+
+  @override
+  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+
+  @override
+  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+
+  @override
+  String get map_wardriveCoverageStreet => 'Street-level';
+
+  @override
+  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+
+  @override
+  String get map_wardriveCoverageBuilding => 'Building-level';
+
+  @override
+  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+
+  @override
+  String get map_wardriveAutoUploadEnabled => 'Automatické nahrávanie zapnuté.';
+
+  @override
+  String get map_wardriveAutoUploadDisabled =>
+      'Automatické nahrávanie vypnuté.';
+
+  @override
+  String get map_wardriveNoSamplesToUpload =>
+      'Žiadne wardrive vzorky na nahranie.';
+
+  @override
+  String get map_wardriveUploadingSamples => 'Nahrávanie vzoriek...';
+
+  @override
+  String map_wardriveUploadingTo(String site) {
+    return 'Nahrávanie na $site...';
+  }
+
+  @override
+  String map_wardriveUploadBatch(int current, int total) {
+    return 'Dávka $current z $total';
+  }
+
+  @override
+  String map_wardriveUploadSamplesProgress(int sent, int total) {
+    return 'Odosielanie $sent z $total';
+  }
+
+  @override
+  String map_wardriveUploadTarget(String site) {
+    return 'Cieľ: $site';
+  }
+
+  @override
+  String get map_wardriveUploadWaitingConnection => 'Čakanie na pripojenie';
+
+  @override
+  String get map_wardriveUploadConnectionEstablished =>
+      'Pripojenie nadviazané, nahrávanie';
+
+  @override
+  String get map_wardriveUploadProcessingServer =>
+      'Údaje nahrané, server spracúva';
+
+  @override
+  String map_wardriveUploadServerResponse(int statusCode) {
+    return 'Server spracoval údaje, odpoveď $statusCode';
+  }
+
+  @override
+  String get map_wardriveUploadTimeoutTreatedAsSuccess =>
+      'Nahrávanie prekročilo čas; pre túto stránku označené ako odoslané';
+
+  @override
+  String map_wardriveUploadServerError(int statusCode) {
+    return 'Chyba servera $statusCode';
+  }
+
+  @override
+  String map_wardriveUploadRequestError(String error) {
+    return 'Chyba nahrávania: $error';
+  }
+
+  @override
+  String map_wardriveUploadFailed(String error) {
+    return 'Nahrávanie wardrive zlyhalo: $error';
+  }
+
+  @override
+  String get map_wardriveUploadComplete => 'Nahrávanie dokončené';
+
+  @override
+  String get map_wardriveUploadResults => 'Výsledky nahrávania';
+
+  @override
+  String map_wardriveSamplesUploaded(int count) {
+    return 'Nahrané vzorky: $count';
+  }
+
+  @override
+  String get map_wardriveSelectUploadSites => 'Vyberte stránky na nahranie:';
+
+  @override
+  String get map_wardriveNoUploadSitesConfigured =>
+      'Nie sú nakonfigurované žiadne nahrávacie stránky';
+
+  @override
+  String get map_wardriveAddSite => 'Pridať stránku';
+
+  @override
+  String get map_wardriveUploadSitesUpdated =>
+      'Nahrávacie stránky aktualizované.';
+
+  @override
+  String get map_wardriveAddUploadSite => 'Pridať nahrávaciu stránku';
+
+  @override
+  String get map_wardriveEditUploadSite => 'Upraviť nahrávaciu stránku';
+
+  @override
+  String get map_wardriveNameLabel => 'Názov';
+
+  @override
+  String get map_wardriveUrlLabel => 'URL';
+
+  @override
+  String get map_wardriveUploadBatchSize => 'Veľkosť dávky nahrávania';
+
+  @override
+  String map_wardriveUploadBatchSizeInvalid(int min, int max) {
+    return 'Použite hodnotu od $min do $max';
+  }
+
+  @override
+  String get map_wardriveTreatTimeoutAsSuccess => 'Považovať timeout za úspech';
+
+  @override
+  String get map_wardriveNameRequired => 'Názov je povinný';
+
+  @override
+  String get map_wardriveNameExists => 'Názov už existuje';
+
+  @override
+  String get map_wardriveValidUrlRequired => 'Vyžaduje sa platná URL';
+
+  @override
+  String get map_wardriveDeleteSite => 'Odstrániť stránku';
+
+  @override
+  String map_wardriveDeleteSiteConfirm(String name) {
+    return 'Odstrániť „$name“?';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToExport =>
+      'Žiadne wardrive vzorky na export.';
+
+  @override
+  String get map_wardriveExportShareText => 'wardrive vzorky meshcore-open';
+
+  @override
+  String get map_wardriveSamplesExported =>
+      'Wardrive vzorky exportované ako JSON súbor.';
+
+  @override
+  String map_wardriveExportFailed(String error) {
+    return 'Export wardrive zlyhal: $error';
+  }
+
+  @override
+  String get map_wardriveImportSamples => 'Importovať wardrive vzorky';
+
+  @override
+  String get map_wardriveImportHint => 'Sem vložte exportovaný wardrive JSON';
+
+  @override
+  String get map_wardriveNoNewSamplesImported =>
+      'Neboli importované žiadne nové wardrive vzorky.';
+
+  @override
+  String map_wardriveSamplesImported(int count) {
+    return 'Importované wardrive vzorky: $count.';
+  }
+
+  @override
+  String map_wardriveImportFailed(String error) {
+    return 'Import wardrive zlyhal: $error';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToClear =>
+      'Žiadne wardrive vzorky na vymazanie.';
+
+  @override
+  String get map_wardriveClearSamplesTitle => 'Vymazať wardrive vzorky?';
+
+  @override
+  String map_wardriveClearSamplesConfirm(int count) {
+    return 'Týmto sa z tohto zariadenia odstráni $count uložených vzoriek.';
+  }
+
+  @override
+  String get map_wardriveSamplesCleared => 'Wardrive vzorky vymazané.';
+
+  @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Please wait $seconds seconds before retrying discovery';
+  }
+
+  @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
+  String get map_wardriveDeleteBlock => 'Delete block';
+
+  @override
+  String get map_wardriveInBackground => 'Run in background';
+
+  @override
+  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+
+  @override
+  String get map_wardriveShowRepeaterCoverage =>
+      'Show wardrive\'s coverage blocks';
+
+  @override
+  String get map_wardriveHideRepeaterCoverage =>
+      'Hide wardrive\'s coverage blocks';
 
   @override
   String get mapCache_title => 'Offline Mapa Pamäť';
@@ -2082,67 +2702,11 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_reload => 'Načítať';
 
   @override
-  String get common_clear => 'Zmazať';
-
-  @override
-  String path_currentPath(String path) {
-    return 'Aktívna cesta: $path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'hops',
-      one: 'hop',
-    );
-    return 'Používa $count $_temp0 cestu';
-  }
-
-  @override
-  String get path_enterCustomPath => 'Zadajte vlastný priebeh';
-
-  @override
   String get path_currentPathLabel => 'Aktuálny priebeh';
-
-  @override
-  String get path_hexPrefixInstructions =>
-      'Zadajte 2-miestne hexové predpony pre každú fázu, oddelené čiarkami.';
-
-  @override
-  String get path_hexPrefixExample =>
-      'A1,F2,3C (každý uzel používa prvý bajt svojho verejného kľúča)';
-
-  @override
-  String get path_labelHexPrefixes => 'Cesty (hexové predpony)';
-
-  @override
-  String get path_helperMaxHops =>
-      'Max 64 skokov. Každý prefix je 2 hexadecimálne znaky (1 bajt).';
-
-  @override
-  String get path_selectFromContacts => 'Vyberte sa z kontaktov:';
 
   @override
   String get path_noRepeatersFound =>
       'Nenašli sa žiadne opakovače ani serverové miestnosti.';
-
-  @override
-  String get path_customPathsRequire =>
-      'Vlastné cesty vyžadujú medziletoch, ktoré môžu prenášať správky.';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return 'Neplatné hexové predpony: $prefixes';
-  }
-
-  @override
-  String get path_tooLong =>
-      'Cesta je príliš dlhá. Umožnené je maximum 64 skokov.';
-
-  @override
-  String get path_setPath => 'Nastaviť cestu';
 
   @override
   String get repeater_management => 'Správa opakérov';
@@ -2207,16 +2771,6 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_routingMode => 'Režim trasy';
-
-  @override
-  String get repeater_autoUseSavedPath => 'Použiť uloženú cestu';
-
-  @override
-  String get repeater_forceFloodMode =>
-      'Zavrieť režim núdzového povodňového režimu';
-
-  @override
-  String get repeater_pathManagement => 'Správa trás';
 
   @override
   String get repeater_refresh => 'Obnoviť';
@@ -2558,7 +3112,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Byty použité na zakódovanie ID tohto opakovača v tagoch pre trasu/detekciu slučky. 0 = 1 bytu (256 ID, až 64 skokov), 1 = 2 byty (65 000 ID, až 32 skokov), 2 = 3 byty (16 miliónov ID, až 21 skokov). Verzie 1.13 a staršie nepodporujú viacbytové trasy – fungujú len, keď je sieť aktivovaná.';
+      'Bajty použité na zakódovanie ID tohto opakovača v tagoch flood trasy/detekcie slučky. 0=1 bajt (256 ID, až 64 skokov), 1=2 bajty (65 000 ID, až 32 skokov), 2=3 bajty (16 miliónov ID, až 21 skokov). Firmvér pred v1.14 vždy používal 1-bajtové trasy; v1.14 a novšie možno nakonfigurovať na 2- alebo 3-bajtové trasy.';
 
   @override
   String get repeater_txDelay => 'Zpoždanie v Flood, TX';
@@ -3311,6 +3865,139 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => 'Digitálny vstup';
+
+  @override
+  String get telemetry_digitalOutputLabel => 'Digitálny výstup';
+
+  @override
+  String get telemetry_analogInputLabel => 'Analógový vstup';
+
+  @override
+  String get telemetry_analogOutputLabel => 'Analógový výstup';
+
+  @override
+  String get telemetry_genericLabel => 'Všeobecný senzor';
+
+  @override
+  String get telemetry_luminosityLabel => 'Osvetlenie';
+
+  @override
+  String get telemetry_presenceLabel => 'Prítomnosť';
+
+  @override
+  String get telemetry_humidityLabel => 'Vlhkosť';
+
+  @override
+  String get telemetry_accelerometerLabel => 'Akcelerometer';
+
+  @override
+  String get telemetry_pressureLabel => 'Tlak';
+
+  @override
+  String get telemetry_altitudeLabel => 'Nadmorská výška';
+
+  @override
+  String get telemetry_frequencyLabel => 'Frekvencia';
+
+  @override
+  String get telemetry_percentageLabel => 'Percento';
+
+  @override
+  String get telemetry_concentrationLabel => 'Koncentrácia';
+
+  @override
+  String get telemetry_powerLabel => 'Výkon';
+
+  @override
+  String get telemetry_distanceLabel => 'Vzdialenosť';
+
+  @override
+  String get telemetry_energyLabel => 'Energia';
+
+  @override
+  String get telemetry_directionLabel => 'Smer';
+
+  @override
+  String get telemetry_timeLabel => 'Čas';
+
+  @override
+  String get telemetry_gyrometerLabel => 'Gyrometer';
+
+  @override
+  String get telemetry_colourLabel => 'Farba';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => 'Prepínač';
+
+  @override
+  String get telemetry_polylineLabel => 'Lomená čiara';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
+  String get telemetry_autoFetchQuantity => 'Počet požiadaviek';
+
+  @override
+  String get telemetry_error => 'Nepodarilo sa získať údaje';
+
+  @override
   String get neighbors_receivedData => 'Obdielo dáta suseda';
 
   @override
@@ -3349,6 +4036,10 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHops => 'Skoky opakovača';
+
+  @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
 
   @override
   String get channelPath_noHopDetails =>
@@ -3440,6 +4131,9 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get channelPath_unknownRepeater => 'Neznáme opakovače';
+
+  @override
+  String get channelPath_outgoingSentByRadioAt => 'Čakanie na prenos rádiom, s';
 
   @override
   String get community_title => 'Komunita';
@@ -3639,6 +4333,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get listFilter_removeFromFavorites => 'Odstrániť z označení';
+
+  @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
 
   @override
   String get listFilter_users => 'Používatelia';
@@ -4197,6 +4897,16 @@ class AppLocalizationsSk extends AppLocalizations {
       'Riadi výchoce stav ikony pre preklad, ktorú používa program.';
 
   @override
+  String get translation_autoIncomingTitle => 'Automaticky prekladať správy';
+
+  @override
+  String get translation_autoIncomingSubtitle =>
+      'Automaticky prekladá správy pre upozornenia aj pre čet alebo kanál.';
+
+  @override
+  String get translation_translateMessage => 'Preložiť správu';
+
+  @override
   String get translation_targetLanguage => 'Cieľový jazyk';
 
   @override
@@ -4311,11 +5021,52 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'Kompresia MCMP';
 
   @override
   String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+      'Používa sa model mesh-compressor';
+
+  @override
+  String get channels_copyPath => 'Copy message path';
+
+  @override
+  String get channels_copyPathExtended => 'Copy message path (extended)';
+
+  @override
+  String get channels_copiedPath => 'Message path copied';
+
+  @override
+  String get channels_copyPathFailed => 'Copying message path failed';
+
+  @override
+  String get settings_copyMsgPathTitle => 'Configure message path copying';
+
+  @override
+  String get settings_copyMsgPathDscr =>
+      'Edit the template for generating message path information from the channel';
+
+  @override
+  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+
+  @override
+  String get settings_copyMsgPathEditTemplateDscr =>
+      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+
+  @override
+  String get settings_copyMsgPathEditFinalDscr =>
+      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_channelsSendAsBinary =>
+      'Send extended data as binary (channels)';
+
+  @override
+  String get settings_dmSendAsBinary =>
+      'Send extended data as binary (direct messages)';
 
   @override
   String get contact_typeChat => 'Chat';
@@ -4331,4 +5082,470 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => 'Zväčšiť';
+
+  @override
+  String get map_zoomOut => 'Zmenť zamer zblízka';
+
+  @override
+  String get map_centerMap => 'Mapa centra';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth vyžaduje prehliadač Chromium.';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID: $id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => 'GPS potvrdilo';
+
+  @override
+  String get pathTrace_legendInferred => 'Odvodená poloha';
+
+  @override
+  String get pathMap_viewSingle => 'Jednotlivý';
+
+  @override
+  String get pathMap_viewCombined => 'Spojené';
+
+  @override
+  String get pathMap_play => 'Prehrať';
+
+  @override
+  String get pathMap_pause => 'Pozastaviť';
+
+  @override
+  String get pathMap_replay => 'Prehrať znova';
+
+  @override
+  String get pathMap_stepBack => 'Predchádzajúci skok';
+
+  @override
+  String get pathMap_stepForward => 'Nasledujúci skok';
+
+  @override
+  String get pathMap_animationOn => 'Zobraziť animáciu paketu';
+
+  @override
+  String get pathMap_animationOff => 'Skryť animáciu paketu';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return 'Skok $current z $total';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return 'Pozorované cesty: $count';
+  }
+
+  @override
+  String get pathMap_primary => 'Primárna';
+
+  @override
+  String pathMap_alternate(int index) {
+    return 'Alternatívny $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skokov',
+      few: '$count skoky',
+      one: '1 skok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => 'Spoločný segment';
+
+  @override
+  String get pathMap_legendEstimated => 'Odhadovaný segment';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return 'Používané $count cestami';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skokov nemá polohu — zobrazená trasa je neúplná',
+      few: '$count skoky nemajú polohu — zobrazená trasa je neúplná',
+      one: '1 skok nemá polohu — zobrazená trasa je neúplná',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => 'Zobraziť všetky';
+
+  @override
+  String get pathMap_hidePath => 'Skryť cestu';
+
+  @override
+  String get pathMap_showPath => 'Zobraziť trasu';
+
+  @override
+  String get pathMap_collapsePanel => 'Zatvoriť panel';
+
+  @override
+  String get pathMap_expandPanel => 'Rozbaliť panel';
+
+  @override
+  String get pathMap_noLocation => 'Bez polohy';
+
+  @override
+  String get pathMap_followPacket => 'Uzamknúť pohľad na paket';
+
+  @override
+  String get pathMap_unfollowPacket => 'Odomknúť pohľad od paketu';
+
+  @override
+  String get chat_canvas => 'MCOimg canvas';
+
+  @override
+  String get chat_canvasCrop => 'Crop/expand';
+
+  @override
+  String get chat_canvasResize => 'Scale';
+
+  @override
+  String get chat_canvasUnlockSize => 'Unlock canvas size';
+
+  @override
+  String get chat_canvasFormatVer => 'Codec version';
+
+  @override
+  String get chat_canvasPalette => 'Palette';
+
+  @override
+  String get chat_canvasPaletteShow => 'Show palette';
+
+  @override
+  String get chat_canvasPaletteMode => 'Palette preset';
+
+  @override
+  String get chat_canvasPaletteDynamic => 'Dynamic';
+
+  @override
+  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+
+  @override
+  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+
+  @override
+  String get chat_canvasPaletteDynamicDscr =>
+      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+
+  @override
+  String get chat_canvasPaletteAlpha => 'Transparency color';
+
+  @override
+  String get chat_canvasChangeSize => 'Change canvas size';
+
+  @override
+  String get chat_canvasTrim => 'Trim empty';
+
+  @override
+  String get chat_canvasWidth => 'Width';
+
+  @override
+  String get chat_canvasHeight => 'Height';
+
+  @override
+  String get chat_canvasGridShow => 'Show grid';
+
+  @override
+  String get chat_canvasRulerShow => 'Show ruler';
+
+  @override
+  String get chat_canvasGridColor => 'Grid color';
+
+  @override
+  String get chat_canvasSave => 'Save to file';
+
+  @override
+  String get chat_canvasLoad => 'Load from file';
+
+  @override
+  String chat_canvasSendPayloadExceed(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+  }
+
+  @override
+  String chat_canvasCurrentPayload(int payload) {
+    return 'Current payload: $payload';
+  }
+
+  @override
+  String get chat_canvasActive => 'Show canvas';
+
+  @override
+  String get chat_canvasShowLockBtn => 'Show canvas block button';
+
+  @override
+  String get chat_canvasSendToEdit => 'Send to canvas';
+
+  @override
+  String get chat_canvasSendToGallery => 'Save to gallery';
+
+  @override
+  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+
+  @override
+  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+
+  @override
+  String get chat_canvasGalleryRemove => 'Remove';
+
+  @override
+  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+
+  @override
+  String chat_canvasFormatNotSupported(int received, int current) {
+    return 'MCOimg format version: $received, current codec supports up to $current';
+  }
+
+  @override
+  String get chat_canvasSaveBinary => 'Save fo binary file';
+
+  @override
+  String chat_canvasCannotSend(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+  }
+
+  @override
+  String get chat_canvasCompressionLevel => 'Compression level';
+
+  @override
+  String get chat_canvasCompressionLevelNormal => 'Normal';
+
+  @override
+  String get chat_canvasCompressionLevelHigh => 'High';
+
+  @override
+  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+
+  @override
+  String get chat_showHops => 'Show hops';
+
+  @override
+  String get settings_modSettings => 'Modification Settings';
+
+  @override
+  String get settings_modSettingsSubtitle =>
+      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+
+  @override
+  String get settings_modSettingsVisual => 'Visual';
+
+  @override
+  String get settings_modSettingsMessaging => 'Messaging';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Show quotes in incoming messages as mentions';
+
+  @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Simplified style of mentions in messages visual';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDscr =>
+      'Combining the history of messages received from different devices; the final history is stored only in the application';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+
+  @override
+  String get settings_modSettingsMessagingShowCompressionRatio =>
+      'Show compression ratio';
+
+  @override
+  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
+      'Also take into account senderName';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Hide map zoom panel';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
+
+  @override
+  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+
+  @override
+  String channels_messageRegion(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_messageRegionUnknown => 'unknown';
+
+  @override
+  String get channels_messageRegionEmpty => 'unset';
+
+  @override
+  String get settings_defaultRegionScope => 'Default region scope';
+
+  @override
+  String get settings_defaultRegionScopeChanged =>
+      'Default region scope changed';
+
+  @override
+  String get settings_defaultRegionScopeChangeFailed =>
+      'Change default region scope failed';
+
+  @override
+  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+
+  @override
+  String get settings_defaultRegionScopeWaitForSync =>
+      'Please wait until synchronization complete';
+
+  @override
+  String get common_reset => 'Reset';
+
+  @override
+  String get connection_autoconnect => 'Autoconnect';
+
+  @override
+  String settings_modSettingsNoRetraInfo(int time) {
+    return 'No retranslations heard for $time seconds.';
+  }
+
+  @override
+  String get settings_modSettingsNoRetraHeading =>
+      'Display messages as unsent if no retranslations heard within seconds:';
+
+  @override
+  String get settings_modSettingsNoRetraDscr =>
+      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+
+  @override
+  String get settings_selfTelemetryShow => 'Check sensors';
+
+  @override
+  String get settings_modSettingsVisualChannelsUnreadSorting =>
+      'Channels sorting by unread messages';
+
+  @override
+  String get settings_modSettingsMessagingBackgroundTCP =>
+      'Keep TCP-connection alive in background';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+
+  @override
+  String get chat_additionalActions => 'Chat actions menu';
+
+  @override
+  String get mcogallery_common => 'Common';
+
+  @override
+  String get mcogallery_addPack => 'Add package';
+
+  @override
+  String get mcogallery_removePack => 'Remove package';
+
+  @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
+  String get mcogallery_addGroup => 'Add group';
+
+  @override
+  String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get chat_sendSelfContact => 'Send self contact';
+
+  @override
+  String get chat_sendContact => 'Share contact';
+
+  @override
+  String get chat_addContact => 'Add contact';
+
+  @override
+  String get chat_sureToReplaceContact =>
+      'Contact is already exists, replace it?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
+
+  @override
+  String get chat_contactIsYou => 'It is you';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Contact type: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Node';
+
+  @override
+  String get chat_contactTypeRepeater => 'Repeater';
+
+  @override
+  String get chat_contactTypeRoom => 'Room-server';
+
+  @override
+  String get chat_contactTypeSensor => 'Sensor';
+
+  @override
+  String get chat_myLocation => 'Share my location';
+
+  @override
+  String get chat_locationFromMap => 'Share location from map';
 }

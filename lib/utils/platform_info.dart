@@ -34,6 +34,9 @@ class PlatformInfo {
   /// Whether the app is running on a desktop platform (macOS, Windows, or Linux).
   static bool get isDesktop => isMacOS || isWindows || isLinux;
 
+  /// Number of logical processors available on native platforms.
+  static int get numberOfProcessors => kIsWeb ? 1 : Platform.numberOfProcessors;
+
   /// Whether the current platform supports a native USB serial backend.
   static bool get supportsNativeUsbSerial =>
       isAndroid || isWindows || isLinux || isMacOS;

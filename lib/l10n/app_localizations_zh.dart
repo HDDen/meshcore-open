@@ -93,6 +93,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_disable => '禁用';
 
   @override
+  String get common_undo => '撤销';
+
+  @override
+  String get messageStatus_sent => '发送';
+
+  @override
+  String get messageStatus_delivered => '已送达';
+
+  @override
+  String get messageStatus_pending => '发送';
+
+  @override
+  String get messageStatus_failed => '发送失败';
+
+  @override
+  String get messageStatus_repeated => '多次听到';
+
+  @override
   String get common_reboot => '重启';
 
   @override
@@ -110,6 +128,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String common_percentValue(int percent) {
     return '$percent%';
   }
+
+  @override
+  String get common_autoRefresh => '自动刷新';
+
+  @override
+  String get common_interval => '间隔';
+
+  @override
+  String get common_default => 'Default';
+
+  @override
+  String get common_clear => '清除';
+
+  @override
+  String get common_send => 'Send';
+
+  @override
+  String get common_apply => 'Apply';
 
   @override
   String get scanner_title => '连接设备';
@@ -164,14 +200,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tcpBookmarksLabel => 'Last connections';
+  String get tcpBookmarksLabel => '最近连接';
 
   @override
-  String get tcpBookmarksSetName => 'Set name to bookmark';
+  String get tcpBookmarksSetName => '设置书签名称';
 
   @override
-  String get tcpBookmarksFavouritesSubtitle =>
-      'When marked as a favourite, it is not removed from the connection history';
+  String get tcpBookmarksFavouritesSubtitle => '标记为收藏后，不会从连接历史中移除';
 
   @override
   String get usbScreenTitle => '通过USB连接';
@@ -292,6 +327,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanner_enableBluetooth => '启用蓝牙';
 
   @override
+  String get scanner_bluetoothWebUnsupported => '浏览器不支持蓝牙，请改用 USB 连接。';
+
+  @override
   String get device_quickSwitch => '快速切换';
 
   @override
@@ -332,6 +370,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_radioSettingsUpdated => '无线电设置已更新';
+
+  @override
+  String get settings_regionSettings => 'Regions';
+
+  @override
+  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+
+  @override
+  String get settings_regionManagement_screenTitle => 'Region Management';
+
+  @override
+  String get settings_regionNameHint => 'Enter region name';
+
+  @override
+  String get settings_regionAddRegion => 'Add region';
+
+  @override
+  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+
+  @override
+  String get settings_regionFetchRegionsFail => 'No regions were found';
+
+  @override
+  String get settings_regionFetchRegionsAlreadyExists =>
+      'This region has already been added';
+
+  @override
+  String get settings_regionName => 'Region Name';
+
+  @override
+  String get settings_regionDeleted => 'Region deleted';
+
+  @override
+  String get settings_deleteRegion => 'Delete Region';
+
+  @override
+  String settings_deleteRegionConfirm(String region) {
+    return 'Remove \"$region\" from region list?';
+  }
 
   @override
   String get settings_location => '位置';
@@ -500,6 +577,14 @@ class AppLocalizationsZh extends AppLocalizations {
       '一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。';
 
   @override
+  String get settings_aboutModDescription =>
+      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+
+  @override
+  String get settings_aboutModLink =>
+      'Mod group on Telegram: https://t.me/mcoadvanced';
+
+  @override
   String get settings_aboutOpenMeteoAttribution =>
       'LOS 高程数据:Open-Meteo (CC BY 4.0)';
 
@@ -570,11 +655,41 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_channelResendTimeoutTitle => 'Manual resending delay';
+  String get settings_channelResendTimeoutTitle => '手动重发延迟';
 
   @override
-  String get settings_channelResendTimeoutSubtitle =>
-      'It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages';
+  String get settings_channelResendTimeoutSubtitle => '也会影响用于消除外发消息重复显示的内部机制';
+
+  @override
+  String get settings_channelMaxbytesOutgoingTitle => '限制频道外发 payload，字节';
+
+  @override
+  String get settings_channelMaxbytesOutgoingSubtitle =>
+      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 USB，此限制约为 155 字节。';
+
+  @override
+  String get settings_quickAnswersTitle => '快捷回复';
+
+  @override
+  String get settings_quickAnswersSubtitle => '可作为快捷回复选择的短语列表。它们会在联系人/频道设置中分配。';
+
+  @override
+  String get settings_quickAnswersAddText => '请输入文本';
+
+  @override
+  String get settings_quickAnswersEditText => '编辑回复';
+
+  @override
+  String get settings_quickAnswersSelect => '启用这些回复';
+
+  @override
+  String get settings_quickAnswersExists => '已存在';
+
+  @override
+  String get settings_quickAnswersNotAdded => '你还没有为此聊天添加任何快捷回复！';
+
+  @override
+  String get settings_quickAnswersSendAtSelect => '选择时发送';
 
   @override
   String get settings_channelMaxbytesOutgoingTitle =>
@@ -654,14 +769,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_languageUk => '乌克兰语';
 
   @override
+  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+
+  @override
+  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+
+  @override
+  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+
+  @override
+  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+
+  @override
   String get appSettings_enableMessageTracing => '启用消息追踪';
 
   @override
   String get appSettings_enableMessageTracingSubtitle => '显示消息的详细路由和时间元数据';
 
   @override
-  String get appSettings_showKeyboardHidingButton =>
-      'Show keyboard hiding button';
+  String get appSettings_enableTimeSeconds => '在消息信息中显示秒';
+
+  @override
+  String get appSettings_showKeyboardHidingButton => '显示隐藏键盘按钮';
 
   @override
   String get appSettings_notifications => '通知';
@@ -757,11 +886,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSettings_maxMessageRetriesSubtitle => '在将消息标记为失败之前，允许尝试的次数';
-
-  @override
-  String path_routeWeight(String weight, String max) {
-    return '$weight/$max';
-  }
 
   @override
   String get appSettings_battery => '电池';
@@ -955,6 +1079,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_newGroup => '新建群聊';
 
   @override
+  String get contacts_moreOptions => '更多选择';
+
+  @override
+  String get contacts_searchOpen => '搜索联系人';
+
+  @override
+  String get contacts_searchClose => '高级搜索';
+
+  @override
   String get contacts_groupName => '群聊名称';
 
   @override
@@ -1015,6 +1148,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contact_clearChat => '清除聊天记录';
+
+  @override
+  String get contact_clearChatConfirm => 'Confirm chat clear';
 
   @override
   String get contact_teleBase => '遥测基站';
@@ -1161,6 +1297,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get channels_changeWidgetColor => '小组件颜色';
+
+  @override
+  String get channels_changeWidgetTextColor => '小组件文字颜色';
+
+  @override
+  String get channels_changeGroupEmpty => '这里暂时为空';
+
+  @override
+  String get channels_allowOrderingInGroup => '允许在组内排序频道';
+
+  @override
   String get settings_cyr2latProfileAdd => '新增 Cyr2Lat 設定檔';
 
   @override
@@ -1190,25 +1338,23 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_mcmpTextLimit => 'MCMP text paste limit';
+  String get settings_mcmpTextLimit => 'MCMP 文本粘贴限制';
 
   @override
-  String get settings_sendingDelayForCancellation =>
-      'Sending delay for cancellation';
+  String get settings_sendingDelayForCancellation => '用于取消的发送延迟';
 
   @override
-  String get settings_useSendingDelay => 'Use sending delay';
+  String get settings_useSendingDelay => '使用发送延迟';
 
   @override
-  String get chat_cancelSend => 'cancel sending';
+  String get chat_cancelSend => '取消发送';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+  String get settings_doNotFilterMessagesOnChannels => '不要过滤频道中的自己消息';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      '默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题';
 
   @override
   String get channels_publicChannelAdded => '已添加公共频道';
@@ -1265,6 +1411,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_hashtagHint => '例如：#团队';
 
   @override
+  String channels_regionSetTo(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_regionNotSet => 'Region: none';
+
+  @override
+  String get channels_regionSelect_Title => 'Select a region';
+
+  @override
+  String get channels_clearRegion => 'Clear region';
+
+  @override
   String get chat_noMessages => '暂无消息';
 
   @override
@@ -1313,7 +1473,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chat_retryingMessageWait(Object seconds) {
-    return 'Please wait $seconds seconds before resend';
+    return '请等待 $seconds 秒后再重新发送';
   }
 
   @override
@@ -1447,42 +1607,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get debugFrame_hexDump => '十六进制数据：';
 
   @override
-  String get chat_pathManagement => '路径管理';
-
-  @override
-  String get chat_ShowAllPaths => '显示所有路径';
-
-  @override
-  String get chat_routingMode => '路由模式';
-
-  @override
-  String get chat_autoUseSavedPath => '自动（使用保存的路径）';
-
-  @override
-  String get chat_forceFloodMode => '强制泛洪模式';
-
-  @override
-  String get chat_recentAckPaths => '最近使用的 ACK 路径（点击使用）：';
-
-  @override
-  String get chat_pathHistoryFull => '路径历史已满，请删除后再添加。';
-
-  @override
-  String get chat_hopSingular => '跳';
-
-  @override
-  String get chat_hopPlural => '跳';
-
-  @override
   String chat_hopsCount(int count) {
     return '$count 跳';
   }
-
-  @override
-  String get chat_successes => '成功';
-
-  @override
-  String get chat_score => 'Score';
 
   @override
   String get chat_removePath => '移除路径';
@@ -1491,39 +1618,136 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_noPathHistoryYet => '暂无路径历史。\n发送消息以探索路径。';
 
   @override
-  String get chat_pathActions => '路径操作：';
-
-  @override
-  String get chat_setCustomPath => '设置自定义路径';
-
-  @override
-  String get chat_setCustomPathSubtitle => '手动指定路由路径';
-
-  @override
-  String get chat_clearPath => '清除路径';
-
-  @override
-  String get chat_clearPathSubtitle => '清除当前路径，下次发送将重新尝试。';
-
-  @override
   String get chat_pathCleared => '路径已清除。下一条消息将重新路由。';
-
-  @override
-  String get chat_floodModeSubtitle => '在应用栏中切换路由模式。';
-
-  @override
-  String get chat_floodModeEnabled => '泛洪模式已启用。可通过应用栏的路由图标切换。';
 
   @override
   String get chat_fullPath => '完整路径';
 
   @override
-  String get chat_pathDetailsNotAvailable => '路径信息暂不可用，请尝试发送消息刷新。';
+  String get routing_title => '路由';
 
   @override
-  String chat_pathSetHops(int hopCount, String status) {
-    return '路径设置：$hopCount 跳 - $status';
+  String get routing_modeAuto => '汽车';
+
+  @override
+  String get routing_modeFlood => '洪水';
+
+  @override
+  String get routing_modeManual => '手册';
+
+  @override
+  String get routing_modeAutoHint => '自动选择已知最佳路径，当没有已知路径时，则进行“洪水”搜索。';
+
+  @override
+  String get routing_modeFloodHint => '通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。';
+
+  @override
+  String get routing_modeManualHint => '总是按照您设置的路径进行导航。';
+
+  @override
+  String get routing_currentRoute => '当前路线';
+
+  @override
+  String get routing_directNoHops => '直接连接— 无中继跳';
+
+  @override
+  String get routing_noPathYet => '目前还没有找到路径。直到找到路径，才会收到后续消息。';
+
+  @override
+  String get routing_floodBroadcast => '通过所有中继器进行广播';
+
+  @override
+  String get routing_editPath => '编辑路径';
+
+  @override
+  String get routing_forgetPath => '忘记原路';
+
+  @override
+  String get routing_knownPaths => '已知的路径';
+
+  @override
+  String get routing_knownPathsHint => '点击该路径以切换到它。';
+
+  @override
+  String get routing_inUse => '使用中';
+
+  @override
+  String get routing_qualityStrong => '强劲的初始阶段';
+
+  @override
+  String get routing_qualityGood => '不错的开端';
+
+  @override
+  String get routing_qualityFair => '第一次尝试，结果良好';
+
+  @override
+  String get routing_qualityWorked => '已完成';
+
+  @override
+  String get routing_qualityFlood => '通过新闻报道';
+
+  @override
+  String get routing_qualityUntested => '未经测试';
+
+  @override
+  String routing_lastWorked(String when) {
+    return '工作于 $when';
   }
+
+  @override
+  String get routing_neverWorked => '从未得到证实';
+
+  @override
+  String routing_deliveryCounts(int successes, int failures) {
+    return '$successes delivered, $failures failed';
+  }
+
+  @override
+  String get routing_floodDelivery => '洪水配送';
+
+  @override
+  String get pathEditor_title => '构建路径';
+
+  @override
+  String pathEditor_hopCounter(int count) {
+    return '$count of 64 hops';
+  }
+
+  @override
+  String get pathEditor_noHops =>
+      '目前还没有添加任何啤酒花。点击下面的“添加”按钮，按顺序添加，或者直接保存，不添加任何啤酒花。';
+
+  @override
+  String get pathEditor_addHops => '按照顺序添加啤酒花';
+
+  @override
+  String get pathEditor_searchRepeaters => '重复搜索';
+
+  @override
+  String get pathEditor_advancedHex => '高级：原始十六进制路径';
+
+  @override
+  String get pathEditor_hexLabel => '十六进制前缀';
+
+  @override
+  String get pathEditor_hexHelper => '每次跳跃，使用两个十六进制字符，用逗号分隔。';
+
+  @override
+  String pathEditor_invalidTokens(String tokens) {
+    return '无效：$tokens';
+  }
+
+  @override
+  String get pathEditor_tooManyHops => '最多 64 个跳跃';
+
+  @override
+  String get pathEditor_usePath => '请使用此路径';
+
+  @override
+  String get pathEditor_removeHop => '去除啤酒花';
+
+  @override
+  String get pathEditor_unknownHop => '未知的重复器';
 
   @override
   String get chat_pathSavedLocally => '已本地保存，连接设备后可同步。';
@@ -1596,6 +1820,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_title => '节点地图';
+
+  @override
+  String get map_searchHint => '搜索节点名称或ID';
+
+  @override
+  String get map_activity => '活动';
+
+  @override
+  String get map_online => '在线';
+
+  @override
+  String get map_recent => '最近';
+
+  @override
+  String get map_stale => '过时';
+
+  @override
+  String get map_visible => '可见';
+
+  @override
+  String get map_hidden => '已隐藏';
+
+  @override
+  String get map_centerOnNode => '以节点为中心';
+
+  @override
+  String get map_details => '详细信息';
+
+  @override
+  String get map_noGps => '无 GPS';
+
+  @override
+  String get map_noResults => '未找到匹配的节点';
 
   @override
   String get map_lineOfSight => '视线';
@@ -1779,6 +2036,347 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => '路径追踪已取消';
+
+  @override
+  String get map_wardrive => 'Wardrive';
+
+  @override
+  String get map_wardriveStart => '开始';
+
+  @override
+  String get map_wardriveStop => '停止';
+
+  @override
+  String get map_wardriveZeroHopDiscovery => '零跳发现';
+
+  @override
+  String get map_wardriveDiscoverySent => '已发送 Wardrive 发现请求。';
+
+  @override
+  String get map_wardriveUploadCancelled => 'Wardrive 上传已取消。';
+
+  @override
+  String map_wardriveDiscoveryFailed(String error) {
+    return 'Wardrive 发现失败：$error';
+  }
+
+  @override
+  String map_wardriveRequests(int requests, int responses) {
+    return '请求：$requests  响应：$responses';
+  }
+
+  @override
+  String map_wardriveLastRequest(String time) {
+    return '上次请求：$time';
+  }
+
+  @override
+  String get map_wardrivePhoneGpsNotUpdated => '手机 GPS：尚未更新';
+
+  @override
+  String map_wardrivePhoneGpsError(String error) {
+    return '手机 GPS：$error';
+  }
+
+  @override
+  String map_wardrivePhoneGps(String latitude, String longitude) {
+    return '手机 GPS：$latitude, $longitude';
+  }
+
+  @override
+  String get map_wardriveNoResponses => '还没有发现响应。';
+
+  @override
+  String get map_wardriveDataTooltip => 'Wardrive 数据';
+
+  @override
+  String get map_wardriveUploadData => '上传数据';
+
+  @override
+  String get map_wardriveManageUploadSites => '管理上传站点';
+
+  @override
+  String get map_wardriveAutoUpload => '自动上传';
+
+  @override
+  String get map_wardriveReUpload => 'Reupload';
+
+  @override
+  String get map_wardriveScreenWakelock => '屏幕保持唤醒';
+
+  @override
+  String get map_wardriveExport => '导出';
+
+  @override
+  String get map_wardriveImport => '导入';
+
+  @override
+  String get map_wardriveAutoDiscovery => '自动发现';
+
+  @override
+  String get map_wardriveSecondsSuffix => '秒';
+
+  @override
+  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+
+  @override
+  String map_wardriveSamplesSaved(int count) {
+    return '已保存样本：$count';
+  }
+
+  @override
+  String map_wardriveAutoDiscoveryError(String error) {
+    return '自动发现：$error';
+  }
+
+  @override
+  String map_wardriveSampleSaveError(String error) {
+    return '样本保存：$error';
+  }
+
+  @override
+  String map_wardriveCoverageCells(int count) {
+    return '覆盖网格：$count';
+  }
+
+  @override
+  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+
+  @override
+  String get map_wardriveCoverageResolutionPrompt =>
+      'Choose the size of coverage squares (size = block side length):';
+
+  @override
+  String get map_wardriveCoverageRegional => 'Regional';
+
+  @override
+  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+
+  @override
+  String get map_wardriveCoverageCity => 'City-level';
+
+  @override
+  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+
+  @override
+  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+
+  @override
+  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+
+  @override
+  String get map_wardriveCoverageStreet => 'Street-level';
+
+  @override
+  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+
+  @override
+  String get map_wardriveCoverageBuilding => 'Building-level';
+
+  @override
+  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+
+  @override
+  String get map_wardriveAutoUploadEnabled => '自动上传已启用。';
+
+  @override
+  String get map_wardriveAutoUploadDisabled => '自动上传已禁用。';
+
+  @override
+  String get map_wardriveNoSamplesToUpload => '没有可上传的 wardrive 样本。';
+
+  @override
+  String get map_wardriveUploadingSamples => '正在上传样本...';
+
+  @override
+  String map_wardriveUploadingTo(String site) {
+    return '正在上传到 $site...';
+  }
+
+  @override
+  String map_wardriveUploadBatch(int current, int total) {
+    return '批次 $current/$total';
+  }
+
+  @override
+  String map_wardriveUploadSamplesProgress(int sent, int total) {
+    return '正在发送 $sent/$total';
+  }
+
+  @override
+  String map_wardriveUploadTarget(String site) {
+    return '目标：$site';
+  }
+
+  @override
+  String get map_wardriveUploadWaitingConnection => '等待连接';
+
+  @override
+  String get map_wardriveUploadConnectionEstablished => '连接已建立，正在上传';
+
+  @override
+  String get map_wardriveUploadProcessingServer => '数据已上传，服务器处理中';
+
+  @override
+  String map_wardriveUploadServerResponse(int statusCode) {
+    return '服务器已处理数据，响应 $statusCode';
+  }
+
+  @override
+  String get map_wardriveUploadTimeoutTreatedAsSuccess => '上传超时；此站点已标记为已发送';
+
+  @override
+  String map_wardriveUploadServerError(int statusCode) {
+    return '服务器错误 $statusCode';
+  }
+
+  @override
+  String map_wardriveUploadRequestError(String error) {
+    return '上传错误：$error';
+  }
+
+  @override
+  String map_wardriveUploadFailed(String error) {
+    return 'Wardrive 上传失败：$error';
+  }
+
+  @override
+  String get map_wardriveUploadComplete => '上传完成';
+
+  @override
+  String get map_wardriveUploadResults => '上传结果';
+
+  @override
+  String map_wardriveSamplesUploaded(int count) {
+    return '已上传 $count 个样本';
+  }
+
+  @override
+  String get map_wardriveSelectUploadSites => '选择要上传到的站点：';
+
+  @override
+  String get map_wardriveNoUploadSitesConfigured => '未配置上传站点';
+
+  @override
+  String get map_wardriveAddSite => '添加站点';
+
+  @override
+  String get map_wardriveUploadSitesUpdated => '上传站点已更新。';
+
+  @override
+  String get map_wardriveAddUploadSite => '添加上传站点';
+
+  @override
+  String get map_wardriveEditUploadSite => '编辑上传站点';
+
+  @override
+  String get map_wardriveNameLabel => '名称';
+
+  @override
+  String get map_wardriveUrlLabel => 'URL';
+
+  @override
+  String get map_wardriveUploadBatchSize => '上传批次大小';
+
+  @override
+  String map_wardriveUploadBatchSizeInvalid(int min, int max) {
+    return '请输入 $min 到 $max 之间的值';
+  }
+
+  @override
+  String get map_wardriveTreatTimeoutAsSuccess => '将超时视为成功';
+
+  @override
+  String get map_wardriveNameRequired => '名称为必填项';
+
+  @override
+  String get map_wardriveNameExists => '名称已存在';
+
+  @override
+  String get map_wardriveValidUrlRequired => '需要有效的 URL';
+
+  @override
+  String get map_wardriveDeleteSite => '删除站点';
+
+  @override
+  String map_wardriveDeleteSiteConfirm(String name) {
+    return '删除“$name”？';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToExport => '没有可导出的 wardrive 样本。';
+
+  @override
+  String get map_wardriveExportShareText => 'meshcore-open wardrive 样本';
+
+  @override
+  String get map_wardriveSamplesExported => 'Wardrive 样本已导出为 JSON 文件。';
+
+  @override
+  String map_wardriveExportFailed(String error) {
+    return 'Wardrive 导出失败：$error';
+  }
+
+  @override
+  String get map_wardriveImportSamples => '导入 wardrive 样本';
+
+  @override
+  String get map_wardriveImportHint => '在此粘贴导出的 wardrive JSON';
+
+  @override
+  String get map_wardriveNoNewSamplesImported => '没有导入新的 wardrive 样本。';
+
+  @override
+  String map_wardriveSamplesImported(int count) {
+    return '已导入 $count 个 wardrive 样本。';
+  }
+
+  @override
+  String map_wardriveImportFailed(String error) {
+    return 'Wardrive 导入失败：$error';
+  }
+
+  @override
+  String get map_wardriveNoSamplesToClear => '没有可清除的 wardrive 样本。';
+
+  @override
+  String get map_wardriveClearSamplesTitle => '清除 wardrive 样本？';
+
+  @override
+  String map_wardriveClearSamplesConfirm(int count) {
+    return '这将从此设备删除 $count 个已保存样本。';
+  }
+
+  @override
+  String get map_wardriveSamplesCleared => 'Wardrive 样本已清除。';
+
+  @override
+  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+
+  @override
+  String map_wardriveDiscoveryWait(Object seconds) {
+    return 'Please wait $seconds seconds before retrying discovery';
+  }
+
+  @override
+  String get map_wardriveFollowMe => 'Follow my location';
+
+  @override
+  String get map_wardriveDeleteBlock => 'Delete block';
+
+  @override
+  String get map_wardriveInBackground => 'Run in background';
+
+  @override
+  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+
+  @override
+  String get map_wardriveShowRepeaterCoverage =>
+      'Show wardrive\'s coverage blocks';
+
+  @override
+  String get map_wardriveHideRepeaterCoverage =>
+      'Hide wardrive\'s coverage blocks';
 
   @override
   String get mapCache_title => '离线地图缓存';
@@ -1975,55 +2573,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_reload => '重新加载';
 
   @override
-  String get common_clear => '清除';
-
-  @override
-  String path_currentPath(String path) {
-    return '当前路径：$path';
-  }
-
-  @override
-  String path_usingHopsPath(int count) {
-    return '使用 $count 跳路径';
-  }
-
-  @override
-  String get path_enterCustomPath => '输入自定义路径';
-
-  @override
   String get path_currentPathLabel => '当前路径';
 
   @override
-  String get path_hexPrefixInstructions => '请输入每个中继节点的2字符十六进制前缀，用逗号分隔。';
-
-  @override
-  String get path_hexPrefixExample => '例如：A1, F2, 3C（每个节点使用其公钥的第一字节）';
-
-  @override
-  String get path_labelHexPrefixes => '路径（十六进制前缀）';
-
-  @override
-  String get path_helperMaxHops => '最多 64 跳。每个前缀由 2 个十六进制字符（1 字节）组成。';
-
-  @override
-  String get path_selectFromContacts => '或从联系人列表中选择：';
-
-  @override
   String get path_noRepeatersFound => '未找到任何转发节点或房间服务器。';
-
-  @override
-  String get path_customPathsRequire => '自定义路径需要中间节点转发消息。';
-
-  @override
-  String path_invalidHexPrefixes(String prefixes) {
-    return '无效的十六进制前缀：$prefixes';
-  }
-
-  @override
-  String get path_tooLong => '路径过长，最多允许 64 跳。';
-
-  @override
-  String get path_setPath => '设置路径';
 
   @override
   String get repeater_management => '转发节点管理';
@@ -2084,15 +2637,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_routingMode => '路由模式';
-
-  @override
-  String get repeater_autoUseSavedPath => '自动（使用保存的路径）';
-
-  @override
-  String get repeater_forceFloodMode => '强制泛洪模式';
-
-  @override
-  String get repeater_pathManagement => '路径管理';
 
   @override
   String get repeater_refresh => '刷新';
@@ -2417,7 +2961,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      '用于编码此复用器的 ID 的字节数，在“洪流路径/环检测”标签中使用。 0=1 字节（256 个 ID，最多 64 个跳跃），1=2 字节（65K 个 ID，最多 32 个跳跃），2=3 字节（16M 个 ID，最多 21 个跳跃）。 v1.13 及更早版本的固件会使用多字节路径——只有在您的网络升级到 v1.14 或更高版本后才会生效。';
+      '用于在洪泛路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
 
   @override
   String get repeater_txDelay => '洪水（德克萨斯州）延误';
@@ -3055,6 +3599,139 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get telemetry_digitalInputLabel => '数字输入';
+
+  @override
+  String get telemetry_digitalOutputLabel => '数字输出';
+
+  @override
+  String get telemetry_analogInputLabel => '模拟输入';
+
+  @override
+  String get telemetry_analogOutputLabel => '模拟输出';
+
+  @override
+  String get telemetry_genericLabel => '通用传感器';
+
+  @override
+  String get telemetry_luminosityLabel => '照度';
+
+  @override
+  String get telemetry_presenceLabel => '存在检测';
+
+  @override
+  String get telemetry_humidityLabel => '湿度';
+
+  @override
+  String get telemetry_accelerometerLabel => '加速度计';
+
+  @override
+  String get telemetry_pressureLabel => '气压';
+
+  @override
+  String get telemetry_altitudeLabel => '高度';
+
+  @override
+  String get telemetry_frequencyLabel => '频率';
+
+  @override
+  String get telemetry_percentageLabel => '百分比';
+
+  @override
+  String get telemetry_concentrationLabel => '浓度';
+
+  @override
+  String get telemetry_powerLabel => '功率';
+
+  @override
+  String get telemetry_distanceLabel => '距离';
+
+  @override
+  String get telemetry_energyLabel => '能量';
+
+  @override
+  String get telemetry_directionLabel => '方向';
+
+  @override
+  String get telemetry_timeLabel => '时间';
+
+  @override
+  String get telemetry_gyrometerLabel => '陀螺仪';
+
+  @override
+  String get telemetry_colourLabel => '颜色';
+
+  @override
+  String get telemetry_gpsLabel => 'GPS';
+
+  @override
+  String get telemetry_switchLabel => '开关';
+
+  @override
+  String get telemetry_polylineLabel => '折线';
+
+  @override
+  String telemetry_altitudeValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_frequencyValue(String hertz) {
+    return '$hertz Hz';
+  }
+
+  @override
+  String telemetry_pressureValue(String hpa) {
+    return '$hpa hPa';
+  }
+
+  @override
+  String telemetry_luminosityValue(String lux) {
+    return '$lux lx';
+  }
+
+  @override
+  String telemetry_powerValue(String watts) {
+    return '$watts W';
+  }
+
+  @override
+  String telemetry_distanceValue(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String telemetry_energyValue(String kilowattHours) {
+    return '$kilowattHours kWh';
+  }
+
+  @override
+  String telemetry_directionValue(String degrees) {
+    return '$degrees°';
+  }
+
+  @override
+  String telemetry_concentrationValue(String ppm) {
+    return '$ppm ppm';
+  }
+
+  @override
+  String telemetry_percentageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String telemetry_analogValue(String value) {
+    return '$value';
+  }
+
+  @override
+  String get telemetry_autoFetchQuantity => '请求次数';
+
+  @override
+  String get telemetry_error => '无法获取数据';
+
+  @override
   String get neighbors_receivedData => '已接收邻居信息';
 
   @override
@@ -3092,6 +3769,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHops => '转发节点跳数';
+
+  @override
+  String get channelPath_repeaterHopsHighTimeout =>
+      'Increased path trace timeout (10s*hops)';
 
   @override
   String get channelPath_noHopDetails => '此数据包未提供详细信息';
@@ -3180,6 +3861,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channelPath_unknownRepeater => '未知转发节点';
+
+  @override
+  String get channelPath_outgoingSentByRadioAt => '等待通过无线电发送，秒';
 
   @override
   String get community_title => '社区';
@@ -3371,6 +4055,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get listFilter_removeFromFavorites => '从收藏中移除';
+
+  @override
+  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+
+  @override
+  String get listFilter_returnToWardrive => 'Return to Wardrive';
 
   @override
   String get listFilter_users => '用户';
@@ -3874,6 +4564,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translation_composerSubtitle => '控制作曲家翻译图标的默认状态。';
 
   @override
+  String get translation_autoIncomingTitle => '自动翻译消息';
+
+  @override
+  String get translation_autoIncomingSubtitle => '自动为通知以及聊天或频道翻译消息。';
+
+  @override
+  String get translation_translateMessage => '翻译消息';
+
+  @override
   String get translation_targetLanguage => '目标语言';
 
   @override
@@ -3982,11 +4681,51 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_mcmpCompression => 'MCMP compression';
+  String get channels_mcmpCompression => 'MCMP 压缩';
 
   @override
-  String get channels_mcmpCompressionDescription =>
-      'Using mesh-compressor model';
+  String get channels_mcmpCompressionDescription => '使用 mesh-compressor 模型';
+
+  @override
+  String get channels_copyPath => 'Copy message path';
+
+  @override
+  String get channels_copyPathExtended => 'Copy message path (extended)';
+
+  @override
+  String get channels_copiedPath => 'Message path copied';
+
+  @override
+  String get channels_copyPathFailed => 'Copying message path failed';
+
+  @override
+  String get settings_copyMsgPathTitle => 'Configure message path copying';
+
+  @override
+  String get settings_copyMsgPathDscr =>
+      'Edit the template for generating message path information from the channel';
+
+  @override
+  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+
+  @override
+  String get settings_copyMsgPathEditTemplateDscr =>
+      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+
+  @override
+  String get settings_copyMsgPathEditFinalDscr =>
+      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+
+  @override
+  String get settings_channelsSendAsBinary =>
+      'Send extended data as binary (channels)';
+
+  @override
+  String get settings_dmSendAsBinary =>
+      'Send extended data as binary (direct messages)';
 
   @override
   String get contact_typeChat => 'Chat';
@@ -4002,4 +4741,468 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contact_typeUnknown => 'Unknown';
+
+  @override
+  String get map_zoomIn => '放大';
+
+  @override
+  String get map_zoomOut => '放大';
+
+  @override
+  String get map_centerMap => '中心地图';
+
+  @override
+  String get chrome_bluetoothRequiresChromium =>
+      'Web Bluetooth 需要 Chromium 浏览器';
+
+  @override
+  String channels_communityShortId(String id) {
+    return 'ID：$id...';
+  }
+
+  @override
+  String get pathTrace_legendGpsConfirmed => '通过GPS确认';
+
+  @override
+  String get pathTrace_legendInferred => '推测的位置';
+
+  @override
+  String get pathMap_viewSingle => '单条';
+
+  @override
+  String get pathMap_viewCombined => '综合';
+
+  @override
+  String get pathMap_play => '播放';
+
+  @override
+  String get pathMap_pause => '暂停';
+
+  @override
+  String get pathMap_replay => '重播';
+
+  @override
+  String get pathMap_stepBack => '上一跳';
+
+  @override
+  String get pathMap_stepForward => '下一跳';
+
+  @override
+  String get pathMap_animationOn => '显示数据包动画';
+
+  @override
+  String get pathMap_animationOff => '隐藏数据包动画';
+
+  @override
+  String pathMap_hopOf(int current, int total) {
+    return '第 $current 跳，共 $total 跳';
+  }
+
+  @override
+  String pathMap_observedPaths(int count) {
+    return '观测到的路径：$count';
+  }
+
+  @override
+  String get pathMap_primary => '主路径';
+
+  @override
+  String pathMap_alternate(int index) {
+    return '备用 $index';
+  }
+
+  @override
+  String pathMap_hopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 跳',
+      one: '1 跳',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMap_gpsCount(int confirmed, int total) {
+    return '$confirmed/$total GPS';
+  }
+
+  @override
+  String get pathMap_legendShared => '共享路段';
+
+  @override
+  String get pathMap_legendEstimated => '估算路段';
+
+  @override
+  String pathMap_sharedNodeCount(int count) {
+    return '已被 $count 条路径使用';
+  }
+
+  @override
+  String pathMap_partialAnimation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 跳无位置信息 — 显示的路径不完整',
+      one: '1 跳无位置信息 — 显示的路径不完整',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pathMap_showAllPaths => '显示全部';
+
+  @override
+  String get pathMap_hidePath => '隐藏路径';
+
+  @override
+  String get pathMap_showPath => '显示路径';
+
+  @override
+  String get pathMap_collapsePanel => '收起面板';
+
+  @override
+  String get pathMap_expandPanel => '展开面板';
+
+  @override
+  String get pathMap_noLocation => '无位置';
+
+  @override
+  String get pathMap_followPacket => '锁定视图跟随数据包';
+
+  @override
+  String get pathMap_unfollowPacket => '解锁视图跟随';
+
+  @override
+  String get chat_canvas => 'MCOimg canvas';
+
+  @override
+  String get chat_canvasCrop => 'Crop/expand';
+
+  @override
+  String get chat_canvasResize => 'Scale';
+
+  @override
+  String get chat_canvasUnlockSize => 'Unlock canvas size';
+
+  @override
+  String get chat_canvasFormatVer => 'Codec version';
+
+  @override
+  String get chat_canvasPalette => 'Palette';
+
+  @override
+  String get chat_canvasPaletteShow => 'Show palette';
+
+  @override
+  String get chat_canvasPaletteMode => 'Palette preset';
+
+  @override
+  String get chat_canvasPaletteDynamic => 'Dynamic';
+
+  @override
+  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+
+  @override
+  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+
+  @override
+  String get chat_canvasPaletteDynamicDscr =>
+      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+
+  @override
+  String get chat_canvasPaletteAlpha => 'Transparency color';
+
+  @override
+  String get chat_canvasChangeSize => 'Change canvas size';
+
+  @override
+  String get chat_canvasTrim => 'Trim empty';
+
+  @override
+  String get chat_canvasWidth => 'Width';
+
+  @override
+  String get chat_canvasHeight => 'Height';
+
+  @override
+  String get chat_canvasGridShow => 'Show grid';
+
+  @override
+  String get chat_canvasRulerShow => 'Show ruler';
+
+  @override
+  String get chat_canvasGridColor => 'Grid color';
+
+  @override
+  String get chat_canvasSave => 'Save to file';
+
+  @override
+  String get chat_canvasLoad => 'Load from file';
+
+  @override
+  String chat_canvasSendPayloadExceed(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+  }
+
+  @override
+  String chat_canvasCurrentPayload(int payload) {
+    return 'Current payload: $payload';
+  }
+
+  @override
+  String get chat_canvasActive => 'Show canvas';
+
+  @override
+  String get chat_canvasShowLockBtn => 'Show canvas block button';
+
+  @override
+  String get chat_canvasSendToEdit => 'Send to canvas';
+
+  @override
+  String get chat_canvasSendToGallery => 'Save to gallery';
+
+  @override
+  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+
+  @override
+  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+
+  @override
+  String get chat_canvasGalleryRemove => 'Remove';
+
+  @override
+  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+
+  @override
+  String chat_canvasFormatNotSupported(int received, int current) {
+    return 'MCOimg format version: $received, current codec supports up to $current';
+  }
+
+  @override
+  String get chat_canvasSaveBinary => 'Save fo binary file';
+
+  @override
+  String chat_canvasCannotSend(int count) {
+    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+  }
+
+  @override
+  String get chat_canvasCompressionLevel => 'Compression level';
+
+  @override
+  String get chat_canvasCompressionLevelNormal => 'Normal';
+
+  @override
+  String get chat_canvasCompressionLevelHigh => 'High';
+
+  @override
+  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+
+  @override
+  String get chat_showHops => 'Show hops';
+
+  @override
+  String get settings_modSettings => 'Modification Settings';
+
+  @override
+  String get settings_modSettingsSubtitle =>
+      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+
+  @override
+  String get settings_modSettingsVisual => 'Visual';
+
+  @override
+  String get settings_modSettingsMessaging => 'Messaging';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Show quotes in incoming messages as mentions';
+
+  @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Simplified style of mentions in messages visual';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDscr =>
+      'Combining the history of messages received from different devices; the final history is stored only in the application';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+
+  @override
+  String get settings_modSettingsMessagingShowCompressionRatio =>
+      'Show compression ratio';
+
+  @override
+  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
+      'Also take into account senderName';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Hide map zoom panel';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
+
+  @override
+  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+
+  @override
+  String channels_messageRegion(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String get channels_messageRegionUnknown => 'unknown';
+
+  @override
+  String get channels_messageRegionEmpty => 'unset';
+
+  @override
+  String get settings_defaultRegionScope => 'Default region scope';
+
+  @override
+  String get settings_defaultRegionScopeChanged =>
+      'Default region scope changed';
+
+  @override
+  String get settings_defaultRegionScopeChangeFailed =>
+      'Change default region scope failed';
+
+  @override
+  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+
+  @override
+  String get settings_defaultRegionScopeWaitForSync =>
+      'Please wait until synchronization complete';
+
+  @override
+  String get common_reset => 'Reset';
+
+  @override
+  String get connection_autoconnect => 'Autoconnect';
+
+  @override
+  String settings_modSettingsNoRetraInfo(int time) {
+    return 'No retranslations heard for $time seconds.';
+  }
+
+  @override
+  String get settings_modSettingsNoRetraHeading =>
+      'Display messages as unsent if no retranslations heard within seconds:';
+
+  @override
+  String get settings_modSettingsNoRetraDscr =>
+      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+
+  @override
+  String get settings_selfTelemetryShow => 'Check sensors';
+
+  @override
+  String get settings_modSettingsVisualChannelsUnreadSorting =>
+      'Channels sorting by unread messages';
+
+  @override
+  String get settings_modSettingsMessagingBackgroundTCP =>
+      'Keep TCP-connection alive in background';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+
+  @override
+  String get chat_additionalActions => 'Chat actions menu';
+
+  @override
+  String get mcogallery_common => 'Common';
+
+  @override
+  String get mcogallery_addPack => 'Add package';
+
+  @override
+  String get mcogallery_removePack => 'Remove package';
+
+  @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
+  String get mcogallery_addGroup => 'Add group';
+
+  @override
+  String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get chat_sendSelfContact => 'Send self contact';
+
+  @override
+  String get chat_sendContact => 'Share contact';
+
+  @override
+  String get chat_addContact => 'Add contact';
+
+  @override
+  String get chat_sureToReplaceContact =>
+      'Contact is already exists, replace it?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
+
+  @override
+  String get chat_contactIsYou => 'It is you';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Contact type: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Node';
+
+  @override
+  String get chat_contactTypeRepeater => 'Repeater';
+
+  @override
+  String get chat_contactTypeRoom => 'Room-server';
+
+  @override
+  String get chat_contactTypeSensor => 'Sensor';
+
+  @override
+  String get chat_myLocation => 'Share my location';
+
+  @override
+  String get chat_locationFromMap => 'Share location from map';
 }

@@ -33,6 +33,8 @@
   "common_remove": "Ta bort",
   "common_enable": "Aktivera",
   "common_disable": "Inaktivera",
+  "common_autoRefresh": "Automatisk uppdatering",
+  "common_interval": "Intervall",
   "common_reboot": "Start om",
   "common_loading": "Laddar...",
   "common_notAvailable": "—",
@@ -158,6 +160,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Senaste anslutningar",
+  "tcpBookmarksSetName": "Ange namn för bokmärke",
+  "tcpBookmarksFavouritesSubtitle": "När den är markerad som favorit tas den inte bort från anslutningshistoriken",
+  "settings_channelResendTimeoutTitle": "Fördröjning för manuell omsändning",
+  "settings_channelResendTimeoutSubtitle": "Påverkar också den interna mekanismen som tar bort dubbla visningar av utgående meddelanden",
+  "settings_channelMaxbytesOutgoingTitle": "Begränsa utgående payload för kanaler, byte",
+  "settings_channelMaxbytesOutgoingSubtitle": "Gränsen tar hänsyn till meddelandetexten plus avsändarens namn. Det har observerats att när ett meddelande överstiger ett visst antal byte slutar bekräftelser för paketupprepning att överföras. Detta märks särskilt med BLE-anslutningar. Den ungefärliga tröskeln där bekräftelser fortfarande fungerar är 139 byte. För USB är gränsen cirka 155 byte.",
+  "settings_quickAnswersTitle": "Snabbsvar",
+  "settings_quickAnswersSubtitle": "En lista med fraser som kan väljas som snabbsvar. De tilldelas kontakter/kanaler i deras inställningar.",
+  "settings_quickAnswersAddText": "Ange din text",
+  "settings_quickAnswersEditText": "Redigera svar",
+  "settings_quickAnswersSelect": "Aktivera dessa svar",
+  "settings_quickAnswersExists": "Finns redan",
+  "settings_quickAnswersNotAdded": "Du har inte lagt till några snabbsvar för den här chatten ännu!",
+  "appSettings_enableTimeSeconds": "Visa sekunder i meddelandeinformationen",
+  "appSettings_showKeyboardHidingButton": "Visa knapp för att dölja tangentbordet",
+  "settings_mcmpTextLimit": "Gräns för inklistrad MCMP-text",
+  "settings_sendingDelayForCancellation": "Sändningsfördröjning för avbrytning",
+  "settings_useSendingDelay": "Använd sändningsfördröjning",
+  "chat_cancelSend": "avbryt sändning",
+  "settings_doNotFilterMessagesOnChannels": "Filtrera inte egna meddelanden i kanaler",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Som standard ignoreras egna meddelanden från din nod. Detta orsakar problem på vissa firmware med inbyggd TerminalCLI",
+  "chat_retryingMessageWait": "Vänta {seconds} sekunder innan du skickar igen",
+  "channels_mcmpCompression": "MCMP-komprimering",
+  "channels_mcmpCompressionDescription": "Använder modellen mesh-compressor",
   "appSettings_title": "Appinställningar",
   "appSettings_appearance": "Utseende",
   "appSettings_theme": "Tema",
@@ -1105,7 +1132,7 @@
   "repeater_advancedSettings": "Avancerad",
   "repeater_advancedSettingsSubtitle": "Ställjusteringsknappar för erfarna användare",
   "repeater_pathHashMode": "Hash-läge för sökväg",
-  "repeater_pathHashModeHelper": "Byte används för att koda denna repeaters ID i taggar för att upptäcka loopar/flödesvägar. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Versioner 1.13 och äldre har stöd för multi-byte-vägar – endast en gång när nätverket är aktiverat (från och med version 1.14).",
+  "repeater_pathHashModeHelper": "Byte som används för att koda denna repeaters ID i taggar för flood-väg/loopdetektering. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Firmware före v1.14 använde alltid 1-byte-vägar; v1.14 och nyare kan konfigureras för 2- eller 3-byte-vägar.",
   "repeater_txDelay": "Försening i Flood TX",
   "repeater_txDelayHelper": "Återöverföringsintervall för trafik under perioder med hög belastning, som en multiplikator av paketets överföringstid (0-2, standard 0,5). Högre värde = färre kollisioner, men långsammare leverans.",
   "repeater_directTxDelay": "Direkt TX-fördröjning",
@@ -1280,6 +1307,43 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Digital ingång",
+  "telemetry_digitalOutputLabel": "Digital utgång",
+  "telemetry_analogInputLabel": "Analog ingång",
+  "telemetry_analogOutputLabel": "Analog utgång",
+  "telemetry_genericLabel": "Allmän sensor",
+  "telemetry_luminosityLabel": "Ljusstyrka",
+  "telemetry_presenceLabel": "Närvaro",
+  "telemetry_humidityLabel": "Luftfuktighet",
+  "telemetry_accelerometerLabel": "Accelerometer",
+  "telemetry_pressureLabel": "Tryck",
+  "telemetry_altitudeLabel": "Höjd",
+  "telemetry_frequencyLabel": "Frekvens",
+  "telemetry_percentageLabel": "Procent",
+  "telemetry_concentrationLabel": "Koncentration",
+  "telemetry_powerLabel": "Effekt",
+  "telemetry_distanceLabel": "Avstånd",
+  "telemetry_energyLabel": "Energi",
+  "telemetry_directionLabel": "Riktning",
+  "telemetry_timeLabel": "Tid",
+  "telemetry_gyrometerLabel": "Gyrometer",
+  "telemetry_colourLabel": "Färg",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Brytare",
+  "telemetry_polylineLabel": "Polylinje",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Antal förfrågningar",
+  "telemetry_error": "Det gick inte att hämta data",
   "telemetry_noData": "Inga telemetridata tillgängliga.",
   "telemetry_channelTitle": "Kanal {channel}",
   "@telemetry_channelTitle": {
@@ -1469,6 +1533,10 @@
   "channels_scanQrCodeComingSoon": "Kommer snart",
   "channels_enterHashtag": "Ange hashtag",
   "channels_hashtagHint": "t.ex. #team",
+  "channels_changeWidgetColor": "Widgetens färg",
+  "channels_changeWidgetTextColor": "Widgetens textfärg",
+  "channels_changeGroupEmpty": "Det är tomt här än så länge",
+  "channels_allowOrderingInGroup": "Tillåt sortering av kanaler i gruppen",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2100,6 +2168,9 @@
   "translation_title": "Översättning",
   "translation_composerTitle": "Översätt innan du skickar",
   "translation_composerSubtitle": "Styr standardtillståndet för kompositorns översättningsikon.",
+  "translation_autoIncomingTitle": "Översätt meddelanden automatiskt",
+  "translation_autoIncomingSubtitle": "Översätter meddelanden automatiskt för aviseringar och för chattar eller kanaler.",
+  "translation_translateMessage": "Översätt meddelande",
   "translation_targetLanguage": "Målmedvetet språk",
   "translation_useAppLanguage": "Använd appens språk",
   "translation_downloadedModelLabel": "Nedladdad modell",
@@ -2311,5 +2382,192 @@
   "settings_companionDebugLog": "Följande felsökningslogg",
   "chat_newMessages": "Nya meddelanden",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB-kommandon, svar och rådata",
-  "repeater_chanUtil": "Användning av kanal"
+  "repeater_chanUtil": "Användning av kanal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Sen",
+  "messageStatus_delivered": "Levererad",
+  "common_undo": "Ångra",
+  "messageStatus_pending": "Skicka",
+  "messageStatus_failed": "Misslyckades med att skicka",
+  "messageStatus_repeated": "Hördes upprepade gånger",
+  "contacts_moreOptions": "Fler alternativ",
+  "contacts_searchOpen": "Sök efter kontakter",
+  "contacts_searchClose": "Avancerad sökning",
+  "routing_title": "Ruttplanering",
+  "routing_modeAuto": "Bil",
+  "routing_modeFlood": "Översvämning",
+  "routing_modeManual": "Instruktioner",
+  "routing_modeAutoHint": "Väljer automatiskt den bästa kända vägen, och använder en \"flooding\"-strategi om ingen väg är känd.",
+  "routing_modeFloodHint": "Sändningar via alla repetrar. Det mest pålitliga alternativet, men kräver mer sändtid.",
+  "routing_modeManualHint": "Skickar alltid den exakta väg du har angivit.",
+  "routing_currentRoute": "Nuvarande rutt",
+  "routing_directNoHops": "Direkt – utan mellanliggande routrar",
+  "routing_noPathYet": "Ingen väg hittad ännu. Nästa meddelande skickas tills en rutt har upptäckts.",
+  "routing_floodBroadcast": "Sändas via alla repetrar",
+  "routing_editPath": "Redigera sökväg",
+  "routing_forgetPath": "Glöm vägen",
+  "routing_knownPaths": "Kända vägar",
+  "routing_knownPathsHint": "Välj en väg för att byta till den.",
+  "routing_inUse": "I användning",
+  "routing_qualityStrong": "En stark start",
+  "routing_qualityGood": "Bra första steg",
+  "routing_qualityFair": "Bra första hopp",
+  "routing_qualityWorked": "Har levererat",
+  "routing_qualityFlood": "Fått information via nyhetsflöde",
+  "routing_qualityUntested": "Ej testat",
+  "routing_lastWorked": "arbetade {when}",
+  "routing_neverWorked": "aldrig bekräftat",
+  "routing_floodDelivery": "Leverans vid översvämningsområde",
+  "pathEditor_title": "Skapa väg",
+  "pathEditor_hopCounter": "{count} av 64 humlor",
+  "pathEditor_noHops": "Inga humle än. Använd knapparna nedan för att lägga till dem i rätt ordning, eller spara utan humle för att skicka direkt.",
+  "pathEditor_addHops": "Tillsätt humlen i rätt ordning.",
+  "pathEditor_searchRepeaters": "Sök efter återupptagna samtal",
+  "pathEditor_advancedHex": "Avancerat: rå hex-sökväg",
+  "pathEditor_hexLabel": "Hex-prefikser",
+  "pathEditor_hexHelper": "Två hex-tecken per steg, separerade med kommatecken.",
+  "pathEditor_invalidTokens": "Ogiltigt: {tokens}",
+  "pathEditor_tooManyHops": "Maximalt 64 humlörter",
+  "pathEditor_usePath": "Använd denna väg",
+  "pathEditor_removeHop": "Ta bort humlen",
+  "pathEditor_unknownHop": "Okänd förstärkare",
+  "map_zoomIn": "Zooma in",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "Zooma ut",
+  "map_centerMap": "Kartöversikt",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth kräver en Chromium-baserad webbläsare.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS-verifierat",
+  "pathTrace_legendInferred": "Antagen position",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "scanner_bluetoothWebUnsupported": "Bluetooth är inte tillgängligt i webbläsaren. Anslut istället via USB.",
+  "map_activity": "Aktivitet",
+  "map_searchHint": "Sök efter nodens namn eller ID",
+  "map_recent": "Nyligen",
+  "map_stale": "Inaktuell",
+  "map_visible": "Synlig",
+  "map_hidden": "Dold",
+  "map_centerOnNode": "Centrera på nod",
+  "map_details": "Detaljer",
+  "map_noGps": "Ingen GPS",
+  "map_noResults": "Inga matchande noder",
+  "pathMap_viewSingle": "Enkel",
+  "pathMap_viewCombined": "Kombinerat",
+  "pathMap_play": "Spela",
+  "pathMap_pause": "Pausa",
+  "pathMap_replay": "Återspela",
+  "pathMap_stepBack": "Föregående hopp",
+  "pathMap_stepForward": "Nästa hopp",
+  "pathMap_animationOn": "Visa paketanimering",
+  "pathMap_animationOff": "Dölj paketanimering",
+  "pathMap_hopOf": "Hopp {current} av {total}",
+  "pathMap_observedPaths": "Observerade vägar: {count}",
+  "pathMap_primary": "Primär",
+  "pathMap_alternate": "Alternativ {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 hopp} other{{count} hopp}}",
+  "pathMap_legendShared": "Delat segment",
+  "pathMap_legendEstimated": "Uppskattat segment",
+  "pathMap_sharedNodeCount": "Används av {count} vägar",
+  "pathMap_partialAnimation": "{count, plural, =1{1 hopp saknar position — den visade vägen är ofullständig} other{{count} hopp saknar position — den visade vägen är ofullständig}}",
+  "pathMap_showAllPaths": "Visa allt",
+  "pathMap_hidePath": "Dölj väg",
+  "pathMap_showPath": "Visa väg",
+  "pathMap_collapsePanel": "Fäll ihop panel",
+  "pathMap_expandPanel": "Expandera panel",
+  "pathMap_noLocation": "Ingen position",
+  "pathMap_unfollowPacket": "Lås upp vy från paket",
+  "pathMap_followPacket": "Lås vy till paket",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

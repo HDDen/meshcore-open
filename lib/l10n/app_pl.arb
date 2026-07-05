@@ -33,6 +33,8 @@
   "common_remove": "Usuń",
   "common_enable": "Włącz",
   "common_disable": "Wyłącz",
+  "common_autoRefresh": "Automatyczne odświeżanie",
+  "common_interval": "Interwał",
   "common_reboot": "Uruchom ponownie",
   "common_loading": "Ładowanie...",
   "common_notAvailable": "—",
@@ -158,6 +160,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Ostatnie połączenia",
+  "tcpBookmarksSetName": "Ustaw nazwę zakładki",
+  "tcpBookmarksFavouritesSubtitle": "Po oznaczeniu jako ulubione nie jest usuwane z historii połączeń",
+  "settings_channelResendTimeoutTitle": "Opóźnienie ręcznego ponownego wysyłania",
+  "settings_channelResendTimeoutSubtitle": "Wpływa również na wewnętrzny mechanizm eliminowania podwójnego wyświetlania wiadomości wychodzących",
+  "settings_channelMaxbytesOutgoingTitle": "Ogranicz wychodzący payload kanałów, bajty",
+  "settings_channelMaxbytesOutgoingSubtitle": "Limit uwzględnia tekst wiadomości oraz nazwę nadawcy. Zaobserwowano, że gdy wiadomość przekroczy określoną liczbę bajtów, potwierdzenia retransmisji pakietów przestają być przesyłane. Jest to szczególnie widoczne przy połączeniach BLE. Przybliżony próg, przy którym potwierdzenia nadal działają, wynosi 139 bajtów. Dla USB limit wynosi około 155 bajtów.",
+  "settings_quickAnswersTitle": "Szybkie odpowiedzi",
+  "settings_quickAnswersSubtitle": "Lista fraz dostępnych do wyboru jako szybkie odpowiedzi. Są przypisywane do kontaktów/kanałów w ich ustawieniach.",
+  "settings_quickAnswersAddText": "Wpisz tekst",
+  "settings_quickAnswersEditText": "Edytuj odpowiedź",
+  "settings_quickAnswersSelect": "Włącz te odpowiedzi",
+  "settings_quickAnswersExists": "Już istnieje",
+  "settings_quickAnswersNotAdded": "Nie dodano jeszcze szybkich odpowiedzi dla tego czatu!",
+  "appSettings_enableTimeSeconds": "Pokazuj sekundy w informacji o wiadomości",
+  "appSettings_showKeyboardHidingButton": "Pokaż przycisk ukrywania klawiatury",
+  "settings_mcmpTextLimit": "Limit wklejania tekstu MCMP",
+  "settings_sendingDelayForCancellation": "Opóźnienie wysyłania do anulowania",
+  "settings_useSendingDelay": "Używaj opóźnienia wysyłania",
+  "chat_cancelSend": "anuluj wysyłanie",
+  "settings_doNotFilterMessagesOnChannels": "Nie filtruj własnych wiadomości w kanałach",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Domyślnie własne wiadomości z twojego węzła są ignorowane. Powoduje to problemy w niektórych firmware z wbudowanym TerminalCLI",
+  "chat_retryingMessageWait": "Poczekaj {seconds} sekund przed ponownym wysłaniem",
+  "channels_mcmpCompression": "Kompresja MCMP",
+  "channels_mcmpCompressionDescription": "Używanie modelu mesh-compressor",
   "appSettings_title": "Ustawienia aplikacji",
   "appSettings_appearance": "Wygląd",
   "appSettings_theme": "Motyw",
@@ -1115,7 +1142,7 @@
   "repeater_advancedSettings": "Zaawansowany",
   "repeater_advancedSettingsSubtitle": "Regulowane pokrętła dla doświadczonych operatorów",
   "repeater_pathHashMode": "Tryb haszujący ścieżkę",
-  "repeater_pathHashModeHelper": "Bity wykorzystywane do kodowania identyfikatora tego urządzenia w tagach ścieżek/detekcji pętli. 0=1 bity (256 identyfikatorów, do 64 skoków), 1=2 bity (65 000 identyfikatorów, do 32 skoków), 2=3 bity (1 600 000 identyfikatorów, do 21 skoków). Wersje 1.13 i wcześniejsze nie obsługują ścieżek wielobitowych – wykrywają tylko jedną, gdy sieć jest w wersji 1.14 lub nowszej.",
+  "repeater_pathHashModeHelper": "Bajty używane do kodowania identyfikatora tego repeatera w tagach ścieżki flood/wykrywania pętli. 0=1 bajt (256 identyfikatorów, do 64 skoków), 1=2 bajty (65 000 identyfikatorów, do 32 skoków), 2=3 bajty (16 milionów identyfikatorów, do 21 skoków). Firmware sprzed v1.14 zawsze używał ścieżek 1-bajtowych; v1.14 i nowsze można skonfigurować na ścieżki 2- lub 3-bajtowe.",
   "repeater_txDelay": "Opóźnienie w Flood, TX",
   "repeater_txDelayHelper": "Ustawienie odstępu dla ruchu związanego z powodzią, jako mnożnik czasu przesyłania pakietu (0-2, domyślnie 0,5). Wyższe wartości oznaczają mniejszą liczbę kolizji, ale wolniejszą prędkość przesyłania.",
   "repeater_directTxDelay": "Bezpośrednie opóźnienie sygnału TX",
@@ -1290,6 +1317,78 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Wejście cyfrowe",
+  "telemetry_digitalOutputLabel": "Wyjście cyfrowe",
+  "telemetry_analogInputLabel": "Wejście analogowe",
+  "telemetry_analogOutputLabel": "Wyjście analogowe",
+  "telemetry_genericLabel": "Czujnik ogólny",
+  "telemetry_luminosityLabel": "Jasność",
+  "telemetry_presenceLabel": "Obecność",
+  "telemetry_humidityLabel": "Wilgotność",
+  "telemetry_accelerometerLabel": "Akcelerometr",
+  "telemetry_pressureLabel": "Ciśnienie",
+  "telemetry_altitudeLabel": "Wysokość",
+  "telemetry_frequencyLabel": "Częstotliwość",
+  "telemetry_percentageLabel": "Procent",
+  "telemetry_concentrationLabel": "Stężenie",
+  "telemetry_powerLabel": "Moc",
+  "telemetry_distanceLabel": "Odległość",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Kierunek",
+  "telemetry_timeLabel": "Czas",
+  "telemetry_gyrometerLabel": "Żyrometr",
+  "telemetry_colourLabel": "Kolor",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Przełącznik",
+  "telemetry_polylineLabel": "Polilinia",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_digitalInputLabel": "Wejście cyfrowe",
+  "telemetry_digitalOutputLabel": "Wyjście cyfrowe",
+  "telemetry_analogInputLabel": "Wejście analogowe",
+  "telemetry_analogOutputLabel": "Wyjście analogowe",
+  "telemetry_genericLabel": "Czujnik ogólny",
+  "telemetry_luminosityLabel": "Jasność",
+  "telemetry_presenceLabel": "Obecność",
+  "telemetry_humidityLabel": "Wilgotność",
+  "telemetry_accelerometerLabel": "Akcelerometr",
+  "telemetry_pressureLabel": "Ciśnienie",
+  "telemetry_altitudeLabel": "Wysokość",
+  "telemetry_frequencyLabel": "Częstotliwość",
+  "telemetry_percentageLabel": "Procent",
+  "telemetry_concentrationLabel": "Stężenie",
+  "telemetry_powerLabel": "Moc",
+  "telemetry_distanceLabel": "Odległość",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Kierunek",
+  "telemetry_timeLabel": "Czas",
+  "telemetry_gyrometerLabel": "Żyrometr",
+  "telemetry_colourLabel": "Kolor",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Przełącznik",
+  "telemetry_polylineLabel": "Polilinia",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Liczba żądań",
+  "telemetry_error": "Nie udało się pobrać danych",
   "telemetry_noData": "Brak dostępnych danych telemetrycznych.",
   "telemetry_channelTitle": "Kanał {channel}",
   "@telemetry_channelTitle": {
@@ -1479,6 +1578,10 @@
   "channels_scanQrCodeComingSoon": "Wkrótce",
   "channels_enterHashtag": "Wprowadź hashtag",
   "channels_hashtagHint": "np. #zespół",
+  "channels_changeWidgetColor": "Kolor widżetu",
+  "channels_changeWidgetTextColor": "Kolor tekstu widżetu",
+  "channels_changeGroupEmpty": "Na razie jest tu pusto",
+  "channels_allowOrderingInGroup": "Zezwalaj na porządkowanie kanałów w grupie",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2137,6 +2240,9 @@
   "translation_enableTitle": "Włącz tłumaczenie",
   "translation_enableSubtitle": "Tłumaczenie otrzymywanych wiadomości oraz umożliwienie tłumaczenia przed wysłaniem.",
   "translation_composerSubtitle": "Kontroluje domyślny stan ikony tłumaczenia w edytorze.",
+  "translation_autoIncomingTitle": "Automatycznie tłumacz wiadomości",
+  "translation_autoIncomingSubtitle": "Automatycznie tłumaczy wiadomości do powiadomień oraz do czatów lub kanałów.",
+  "translation_translateMessage": "Przetłumacz wiadomość",
   "translation_targetLanguage": "Język docelowy",
   "translation_useAppLanguage": "Użyj języka aplikacji",
   "translation_downloadedModelLabel": "Pobudowany model",
@@ -2349,5 +2455,455 @@
   "settings_companionDebugLogSubtitle": "Polecenia, odpowiedzi i surowe dane związane z protokołami BLE/TCP/USB",
   "chat_markAsUnread": "Oznacz jako nieprzeczytane",
   "settings_companionDebugLog": "Log debugowania (dla pomocy w rozwiązywaniu problemów)",
-  "repeater_chanUtil": "Wykorzystanie kanału"
+  "repeater_chanUtil": "Wykorzystanie kanału",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "Wysłane",
+  "messageStatus_delivered": "Dostarczone",
+  "messageStatus_pending": "Wysyłanie",
+  "common_undo": "Wycofaj",
+  "messageStatus_failed": "Nie udało się wysłać",
+  "messageStatus_repeated": "Usłyszałem to wielokrotnie",
+  "contacts_moreOptions": "Więcej opcji",
+  "contacts_searchOpen": "Wyszukaj kontakty",
+  "contacts_searchClose": "Zaawansowane wyszukiwanie",
+  "routing_title": "Planowanie tras",
+  "routing_modeAuto": "Samochód",
+  "routing_modeFlood": "Powódź",
+  "routing_modeManual": "Instrukcja obsługi",
+  "routing_modeAutoHint": "Automatycznie wybiera najpopularniejszą ścieżkę, a w przypadku braku znanej, przechodzi do trybu \"przepływu\".",
+  "routing_modeFloodHint": "Transmisje za pośrednictwem każdego repeatera. Najbardziej niezawodna metoda, ale zużywa więcej czasu transmisji.",
+  "routing_modeManualHint": "Zawsze prowadzi dokładnie po trasie, którą określiłeś.",
+  "routing_currentRoute": "Obecna trasa",
+  "routing_directNoHops": "Bezpośrednio – bez pośrednictwa repeaterów",
+  "routing_noPathYet": "Na razie nie ma żadnej ścieżki. Komunikacja trwa do momentu, gdy zostanie odkryta trasa.",
+  "routing_floodBroadcast": "Transmisja za pośrednictwem każdego urządzenia powielającego",
+  "routing_editPath": "Edytuj ścieżkę",
+  "routing_forgetPath": "Zapomnij o ścieżce",
+  "routing_knownPaths": "Znane trasy",
+  "routing_knownPathsHint": "Wybierz ścieżkę, aby przełączyć się na nią.",
+  "routing_inUse": "W użyciu",
+  "routing_qualityStrong": "Silny pierwszy skok",
+  "routing_qualityGood": "Świetny początek",
+  "routing_qualityFair": "Świetny pierwszy krzak",
+  "routing_qualityWorked": "Zostało dostarczone",
+  "routing_qualityFlood": "Usłyszano dzięki doniesieniom",
+  "routing_qualityUntested": "Nieużywany",
+  "routing_lastWorked": "pracował {when}",
+  "routing_neverWorked": "nigdy nie zostało potwierdzone",
+  "routing_floodDelivery": "Dostawa w przypadku powodzi",
+  "pathEditor_title": "Stworzenie ścieżki",
+  "pathEditor_hopCounter": "{count} z 64 rodzajów chmielu",
+  "pathEditor_noHops": "Na razie nie dodano żadnych chmielu. Aby dodać je w odpowiedniej kolejności, kliknij w odpowiednie przyciski poniżej, lub zapisz przepis bez chmielu, aby wysłać go bezpośrednio.",
+  "pathEditor_addHops": "Dodawaj chmiel zgodnie z kolejnością.",
+  "pathEditor_searchRepeaters": "Funkcje powtarzania",
+  "pathEditor_advancedHex": "Zaawansowane: ścieżka w formacie szesnastkowym",
+  "pathEditor_hexLabel": "Prefiksy heksadecymalne",
+  "pathEditor_hexHelper": "Dwa znaki szesnastkowe na każdym kroku, oddzielone przecinkami",
+  "pathEditor_invalidTokens": "Nieprawidłowe: {tokens}",
+  "pathEditor_tooManyHops": "Maksymalnie 64 hopów",
+  "pathEditor_usePath": "Użyj tej ścieżki.",
+  "pathEditor_removeHop": "Usuń dziką psiankę",
+  "pathEditor_unknownHop": "Nieznany repeater",
+  "map_zoomIn": "Przybliż",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "map_zoomOut": "Przybliż z powrotem",
+  "map_centerMap": "Mapa centrum",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth wymaga przeglądarki Chromium.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS potwierdzone",
+  "pathTrace_legendInferred": "Wywnioskowana pozycja",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "map_searchHint": "Wyszukaj nazwę lub identyfikator węzła",
+  "scanner_bluetoothWebUnsupported": "Bluetooth nie jest dostępny w przeglądarce. Połącz się przez USB.",
+  "map_activity": "Aktywność",
+  "map_recent": "Ostatnie",
+  "map_stale": "Nieaktualne",
+  "map_visible": "Widoczny",
+  "map_hidden": "Ukryty",
+  "map_centerOnNode": "Wyśrodkuj na węźle",
+  "map_details": "Szczegóły",
+  "map_noGps": "Brak GPS",
+  "map_noResults": "Brak pasujących węzłów",
+  "pathMap_viewSingle": "Pojedyncza",
+  "pathMap_viewCombined": "Połączone",
+  "pathMap_play": "Odtwórz",
+  "pathMap_pause": "Wstrzymaj",
+  "pathMap_replay": "Odtwórz ponownie",
+  "pathMap_stepBack": "Poprzedni skok",
+  "pathMap_stepForward": "Następny skok",
+  "pathMap_animationOn": "Pokaż animację pakietu",
+  "pathMap_animationOff": "Ukryj animację pakietu",
+  "pathMap_hopOf": "Skok {current} z {total}",
+  "pathMap_observedPaths": "Obserwowane trasy: {count}",
+  "pathMap_primary": "Główna",
+  "pathMap_alternate": "Alt. {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 skok} few{{count} skoki} many{{count} skoków} other{{count} skoku}}",
+  "pathMap_legendShared": "Wspólny segment",
+  "pathMap_legendEstimated": "Szacunkowy segment",
+  "pathMap_sharedNodeCount": "Wykorzystywane przez {count} ścieżek",
+  "pathMap_partialAnimation": "{count, plural, =1{1 skok nie ma lokalizacji — pokazana ścieżka jest niekompletna} few{{count} skoki nie mają lokalizacji — pokazana ścieżka jest niekompletna} many{{count} skoków nie ma lokalizacji — pokazana ścieżka jest niekompletna} other{{count} skoku nie ma lokalizacji — pokazana ścieżka jest niekompletna}}",
+  "pathMap_showAllPaths": "Pokaż wszystkie",
+  "pathMap_hidePath": "Ukryj ścieżkę",
+  "pathMap_showPath": "Wyświetl trasę",
+  "pathMap_collapsePanel": "Zwiń panel",
+  "pathMap_expandPanel": "Rozwiń panel",
+  "pathMap_noLocation": "Brak lokalizacji",
+  "pathMap_followPacket": "Śledź pakiet",
+  "pathMap_unfollowPacket": "Przestań śledzić pakiet",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "settings_quickAnswersSendAtSelect": "Wyślij po wybraniu",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Start",
+  "map_wardriveStop": "Stop",
+  "map_wardriveZeroHopDiscovery": "Wykrywanie zero-hop",
+  "map_wardriveDiscoverySent": "Wysłano żądanie wykrywania wardrive.",
+  "map_wardriveUploadCancelled": "Przesyłanie wardrive anulowane.",
+  "map_wardriveDiscoveryFailed": "Wykrywanie wardrive nie powiodło się: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Żądania: {requests}  Odpowiedzi: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Ostatnie żądanie: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "GPS telefonu: jeszcze nie zaktualizowano",
+  "map_wardrivePhoneGpsError": "GPS telefonu: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "GPS telefonu: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "Brak odpowiedzi wykrywania.",
+  "map_wardriveDataTooltip": "Dane wardrive",
+  "map_wardriveUploadData": "Prześlij dane",
+  "map_wardriveManageUploadSites": "Zarządzaj witrynami przesyłania",
+  "map_wardriveAutoUpload": "Automatyczne przesyłanie",
+  "map_wardriveScreenWakelock": "Blokada wygaszania ekranu",
+  "map_wardriveExport": "Eksport",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Automatyczne wykrywanie",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesSaved": "Zapisane próbki: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Automatyczne wykrywanie: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Zapis próbki: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Komórki pokrycia: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "Automatyczne przesyłanie włączone.",
+  "map_wardriveAutoUploadDisabled": "Automatyczne przesyłanie wyłączone.",
+  "map_wardriveNoSamplesToUpload": "Brak próbek wardrive do przesłania.",
+  "map_wardriveUploadingSamples": "Przesyłanie próbek...",
+  "map_wardriveUploadingTo": "Przesyłanie do {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Partia {current} z {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Wysyłanie {sent} z {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Cel: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Oczekiwanie na połączenie",
+  "map_wardriveUploadConnectionEstablished": "Połączenie ustanowione, przesyłanie",
+  "map_wardriveUploadProcessingServer": "Dane przesłane, serwer przetwarza",
+  "map_wardriveUploadServerResponse": "Serwer przetworzył dane, odpowiedź {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Przesyłanie przekroczyło czas; oznaczono jako wysłane dla tej witryny",
+  "map_wardriveUploadServerError": "Błąd serwera {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Błąd przesyłania: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Przesyłanie wardrive nie powiodło się: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Przesyłanie zakończone",
+  "map_wardriveUploadResults": "Wyniki przesyłania",
+  "map_wardriveSamplesUploaded": "Przesłano próbek: {count}",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Wybierz witryny do przesyłania:",
+  "map_wardriveNoUploadSitesConfigured": "Nie skonfigurowano witryn przesyłania",
+  "map_wardriveAddSite": "Dodaj witrynę",
+  "map_wardriveUploadSitesUpdated": "Witryny przesyłania zaktualizowane.",
+  "map_wardriveAddUploadSite": "Dodaj witrynę przesyłania",
+  "map_wardriveEditUploadSite": "Edytuj witrynę przesyłania",
+  "map_wardriveNameLabel": "Nazwa",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Rozmiar partii przesyłania",
+  "map_wardriveUploadBatchSizeInvalid": "Użyj wartości od {min} do {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Traktuj timeout jako sukces",
+  "map_wardriveNameRequired": "Nazwa jest wymagana",
+  "map_wardriveNameExists": "Nazwa już istnieje",
+  "map_wardriveValidUrlRequired": "Wymagany jest prawidłowy URL",
+  "map_wardriveDeleteSite": "Usuń witrynę",
+  "map_wardriveDeleteSiteConfirm": "Usunąć „{name}”?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "Brak próbek wardrive do eksportu.",
+  "map_wardriveExportShareText": "próbki wardrive meshcore-open",
+  "map_wardriveSamplesExported": "Próbki wardrive wyeksportowane jako plik JSON.",
+  "map_wardriveExportFailed": "Eksport wardrive nie powiódł się: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Importuj próbki wardrive",
+  "map_wardriveImportHint": "Wklej tutaj wyeksportowany JSON wardrive",
+  "map_wardriveNoNewSamplesImported": "Nie zaimportowano nowych próbek wardrive.",
+  "map_wardriveSamplesImported": "Zaimportowano próbek wardrive: {count}.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Import wardrive nie powiódł się: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "Brak próbek wardrive do wyczyszczenia.",
+  "map_wardriveClearSamplesTitle": "Wyczyścić próbki wardrive?",
+  "map_wardriveClearSamplesConfirm": "Spowoduje to usunięcie {count} zapisanych próbek z tego urządzenia.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Próbki wardrive wyczyszczone.",
+  "channelPath_outgoingSentByRadioAt": "Oczekiwanie na transmisję radiową, s"
 }

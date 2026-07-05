@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../theme/mesh_theme.dart';
 
 class BatteryUi {
   final IconData icon;
@@ -10,19 +11,19 @@ class BatteryUi {
 
 BatteryUi batteryUiForPercent(int? percent) {
   if (percent == null) {
-    return const BatteryUi(Icons.battery_unknown, Colors.grey);
+    return const BatteryUi(Icons.battery_unknown, null);
   }
 
   final p = percent.clamp(0, 100);
 
   return switch (p) {
-    <= 5 => const BatteryUi(Icons.battery_alert, Colors.redAccent),
-    <= 15 => const BatteryUi(Icons.battery_0_bar, Colors.redAccent),
-    <= 30 => const BatteryUi(Icons.battery_1_bar, Colors.orange),
-    <= 45 => const BatteryUi(Icons.battery_2_bar, Colors.amber),
-    <= 60 => const BatteryUi(Icons.battery_3_bar, Colors.lightGreen),
-    <= 80 => const BatteryUi(Icons.battery_5_bar, Colors.green),
-    _ => const BatteryUi(Icons.battery_full, Colors.green),
+    <= 5 => const BatteryUi(Icons.battery_alert, MeshPalette.alert),
+    <= 15 => const BatteryUi(Icons.battery_0_bar, MeshPalette.alert),
+    <= 30 => const BatteryUi(Icons.battery_1_bar, MeshPalette.warn),
+    <= 45 => const BatteryUi(Icons.battery_2_bar, MeshPalette.warn),
+    <= 60 => const BatteryUi(Icons.battery_3_bar, null),
+    <= 80 => const BatteryUi(Icons.battery_5_bar, null),
+    _ => const BatteryUi(Icons.battery_full, MeshPalette.signal),
   };
 }
 
@@ -76,9 +77,9 @@ class _BatteryIndicatorState extends State<BatteryIndicator> {
                 Flexible(
                   child: Text(
                     displayText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                    style: MeshTheme.mono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: batteryUi.color,
                     ),
                     maxLines: 1,

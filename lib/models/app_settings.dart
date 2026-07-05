@@ -3,6 +3,8 @@ import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
 
+enum SharedMessageHistoryMode { disabled, channels, contacts, all }
+
 extension UnitSystemValue on UnitSystem {
   String get value {
     switch (this) {
@@ -12,6 +14,29 @@ extension UnitSystemValue on UnitSystem {
         return 'metric';
     }
   }
+}
+
+extension SharedMessageHistoryModeValue on SharedMessageHistoryMode {
+  String get value {
+    switch (this) {
+      case SharedMessageHistoryMode.channels:
+        return 'channels';
+      case SharedMessageHistoryMode.contacts:
+        return 'contacts';
+      case SharedMessageHistoryMode.all:
+        return 'all';
+      case SharedMessageHistoryMode.disabled:
+        return 'disabled';
+    }
+  }
+
+  bool get includesChannels =>
+      this == SharedMessageHistoryMode.channels ||
+      this == SharedMessageHistoryMode.all;
+
+  bool get includesContacts =>
+      this == SharedMessageHistoryMode.contacts ||
+      this == SharedMessageHistoryMode.all;
 }
 
 class Cyr2LatProfile {
@@ -104,6 +129,38 @@ class TcpConnectionBookmark {
   }
 }
 
+class QuickAnswer {
+  final String id;
+  final String text;
+  final bool sendAtSelect;
+
+  const QuickAnswer({
+    required this.id,
+    required this.text,
+    this.sendAtSelect = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'text': text, 'sendAtSelect': sendAtSelect};
+  }
+
+  factory QuickAnswer.fromJson(Map<String, dynamic> json) {
+    return QuickAnswer(
+      id: json['id']?.toString() ?? '',
+      text: json['text']?.toString() ?? '',
+      sendAtSelect: json['sendAtSelect'] == true,
+    );
+  }
+
+  QuickAnswer copyWith({String? id, String? text, bool? sendAtSelect}) {
+    return QuickAnswer(
+      id: id ?? this.id,
+      text: text ?? this.text,
+      sendAtSelect: sendAtSelect ?? this.sendAtSelect,
+    );
+  }
+}
+
 class AppSettings {
   static const Object _unset = Object();
   static const List<String> _standardCyr2LatProfileIds = [
@@ -116,6 +173,7 @@ class AppSettings {
   final bool mapShowRepeaters;
   final bool mapShowChatNodes;
   final bool mapShowOtherNodes;
+  final bool pathTraceHighTimeoutEnabled;
   final bool mapShowOverlaps;
   final double mapTimeFilterHours; // 0 = all time
   final bool mapKeyPrefixEnabled;
@@ -123,7 +181,26 @@ class AppSettings {
   final bool mapShowMarkers;
   final bool mapShowGuessedLocations;
   final bool enableMessageTracing;
+  final bool enableTimeSeconds;
   final bool showKeyboardHidingButton;
+  final bool canvasActive;
+  final bool canvasShowLockButton;
+  final bool showHops;
+  final bool hideChannelIndexIndicator;
+  final bool hideMapZoomControls;
+  final bool showMcoImageResolution;
+  final bool showMcoImageFormat;
+  final bool showMcoImageAlgorithm;
+  final bool showMcoImageBytes;
+  final bool showCompressionRatio;
+  final bool compressionRatioWithSenderName;
+  final bool showMessageRegion;
+  final bool channelsUnreadSorting;
+  final bool incomingQuoteAsMentions;
+  final bool simplifiedMentions;
+  final SharedMessageHistoryMode sharedMessageHistoryMode;
+  final int noRetransmissionWarningSeconds;
+  final bool backgroundTcpEnabled;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -151,6 +228,7 @@ class AppSettings {
   final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
   final bool translationEnabled;
+  final bool autoTranslateIncomingMessages;
   final String? translationTargetLanguageCode;
   final bool composerTranslationEnabled;
   final String? translationModelSourceUrl;
@@ -158,15 +236,26 @@ class AppSettings {
   final List<TranslationModelRecord> translationDownloadedModels;
   final int mcmpTextLimit;
   final int channelMaxbytesOutgoing;
+  final List<QuickAnswer> quickAnswers;
+  final String copyMsgPathTemplate;
+  final String copyMsgPathFinalTemplate;
+  final bool channelsSendAsBinary;
   final String doNotFilterMessagesOnChannels;
   final List<Cyr2LatProfile> cyr2latProfiles;
   final String selectedCyr2latProfileId;
   static const int defaultMcmpTextLimit = 600;
   static const int maxMcmpTextLimit = 10000;
   static const int maxChannelMaxbytesOutgoing = 1000;
+  static const String defaultCopyMsgPathTemplate =
+      r'%collisionMarker%%hopKey%: %hopName%%div%';
+  static const String defaultCopyMsgPathFinalTemplate =
+      r'@%senderName% - %hops% hops: %path%';
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
+  static const int defaultNoRetransmissionWarningSeconds = 7;
+  static const int minNoRetransmissionWarningSeconds = 5;
+  static const int maxNoRetransmissionWarningSeconds = 15;
   final int sendingDelayForCancellationSeconds;
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
@@ -239,6 +328,69 @@ class AppSettings {
     return (parsed ?? 0).clamp(0, maxChannelMaxbytesOutgoing).toInt();
   }
 
+  static List<QuickAnswer> normalizeQuickAnswers(dynamic value) {
+    if (value is! List) return const [];
+    final usedIds = <String>{};
+    final answers = <QuickAnswer>[];
+    for (var index = 0; index < value.length; index++) {
+      final answer = _quickAnswerFrom(value[index], index);
+      if (answer.text.trim().isEmpty) continue;
+      final id = answer.id.trim().isEmpty
+          ? _legacyQuickAnswerId(answer.text, index)
+          : answer.id;
+      if (!usedIds.add(id)) continue;
+      // Preserve meaningful trailing spaces for command templates.
+      answers.add(answer.copyWith(id: id));
+    }
+    return List.unmodifiable(answers);
+  }
+
+  static QuickAnswer _quickAnswerFrom(dynamic entry, int index) {
+    if (entry is QuickAnswer) return entry;
+    if (entry is Map) {
+      return QuickAnswer.fromJson(Map<String, dynamic>.from(entry));
+    }
+    final text = entry?.toString() ?? '';
+    // Local dev builds stored plain strings before quick answers received
+    // stable ids. Keep this tolerant without writing a migration.
+    return QuickAnswer(id: _legacyQuickAnswerId(text, index), text: text);
+  }
+
+  static List<String> normalizeQuickAnswerIds(dynamic value) {
+    if (value is! List) return const [];
+    final usedIds = <String>{};
+    final ids = <String>[];
+    for (final entry in value) {
+      final id = entry?.toString() ?? '';
+      if (id.trim().isEmpty || !usedIds.add(id)) continue;
+      ids.add(id);
+    }
+    return List.unmodifiable(ids);
+  }
+
+  static String normalizeCopyMsgPathTemplate(dynamic value) {
+    if (value is! String || value.isEmpty) {
+      return defaultCopyMsgPathTemplate;
+    }
+    return value;
+  }
+
+  static String normalizeCopyMsgPathFinalTemplate(dynamic value) {
+    if (value is! String || value.isEmpty) {
+      return defaultCopyMsgPathFinalTemplate;
+    }
+    return value;
+  }
+
+  static String _legacyQuickAnswerId(String text, int index) {
+    var hash = 0x811c9dc5;
+    for (final codeUnit in text.codeUnits) {
+      hash ^= codeUnit;
+      hash = (hash * 0x01000193) & 0xffffffff;
+    }
+    return 'qa_${index}_${hash.toRadixString(16).padLeft(8, '0')}';
+  }
+
   static int normalizeSendingDelayForCancellation(dynamic value) {
     int? parsed;
     if (value is int) {
@@ -267,6 +419,25 @@ class AppSettings {
         .toInt();
   }
 
+  static int normalizeNoRetransmissionWarningSeconds(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    if (parsed == null) return defaultNoRetransmissionWarningSeconds;
+    if (parsed <= 0) return 0;
+    return parsed
+        .clamp(
+          minNoRetransmissionWarningSeconds,
+          maxNoRetransmissionWarningSeconds,
+        )
+        .toInt();
+  }
+
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
       (p) => p.id == selectedCyr2latProfileId,
@@ -280,14 +451,34 @@ class AppSettings {
     this.mapShowRepeaters = true,
     this.mapShowChatNodes = true,
     this.mapShowOtherNodes = true,
+    this.pathTraceHighTimeoutEnabled = false,
     this.mapShowOverlaps = false,
     this.mapTimeFilterHours = 0, // Default to all time
     this.mapKeyPrefixEnabled = false,
     this.mapKeyPrefix = '',
     this.mapShowMarkers = true,
     this.mapShowGuessedLocations = true,
-    this.enableMessageTracing = false,
+    this.enableMessageTracing = true,
+    this.enableTimeSeconds = false,
     this.showKeyboardHidingButton = true,
+    this.canvasActive = true,
+    this.canvasShowLockButton = true,
+    this.showHops = true,
+    this.hideChannelIndexIndicator = false,
+    this.hideMapZoomControls = false,
+    this.showMcoImageResolution = false,
+    this.showMcoImageFormat = true,
+    this.showMcoImageAlgorithm = true,
+    this.showMcoImageBytes = true,
+    this.showCompressionRatio = false,
+    this.compressionRatioWithSenderName = false,
+    this.showMessageRegion = false,
+    this.channelsUnreadSorting = false,
+    this.incomingQuoteAsMentions = false,
+    this.simplifiedMentions = false,
+    this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
+    int? noRetransmissionWarningSeconds,
+    this.backgroundTcpEnabled = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -295,7 +486,7 @@ class AppSettings {
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
-    this.autoRouteRotationEnabled = false,
+    this.autoRouteRotationEnabled = true,
     this.maxRouteWeight = 5.0,
     this.initialRouteWeight = 3.0,
     this.routeWeightSuccessIncrement = 0.5,
@@ -315,6 +506,7 @@ class AppSettings {
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
     this.translationEnabled = false,
+    this.autoTranslateIncomingMessages = true,
     this.translationTargetLanguageCode,
     this.composerTranslationEnabled = false,
     this.translationModelSourceUrl,
@@ -322,6 +514,10 @@ class AppSettings {
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
+    List<QuickAnswer>? quickAnswers,
+    String? copyMsgPathTemplate,
+    String? copyMsgPathFinalTemplate,
+    this.channelsSendAsBinary = true,
     int? sendingDelayForCancellationSeconds,
     this.doNotFilterMessagesOnChannels = defaultDoNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -338,6 +534,14 @@ class AppSettings {
        channelMaxbytesOutgoing = normalizeChannelMaxbytesOutgoing(
          channelMaxbytesOutgoing,
        ),
+       quickAnswers = normalizeQuickAnswers(quickAnswers),
+       copyMsgPathTemplate = normalizeCopyMsgPathTemplate(copyMsgPathTemplate),
+       copyMsgPathFinalTemplate = normalizeCopyMsgPathFinalTemplate(
+         copyMsgPathFinalTemplate,
+       ),
+       noRetransmissionWarningSeconds = normalizeNoRetransmissionWarningSeconds(
+         noRetransmissionWarningSeconds,
+       ),
        sendingDelayForCancellationSeconds =
            normalizeSendingDelayForCancellation(
              sendingDelayForCancellationSeconds,
@@ -351,6 +555,7 @@ class AppSettings {
       'map_show_repeaters': mapShowRepeaters,
       'map_show_chat_nodes': mapShowChatNodes,
       'map_show_other_nodes': mapShowOtherNodes,
+      'path_trace_high_timeout_enabled': pathTraceHighTimeoutEnabled,
       'map_show_overlaps': mapShowOverlaps,
       'map_time_filter_hours': mapTimeFilterHours,
       'map_key_prefix_enabled': mapKeyPrefixEnabled,
@@ -358,7 +563,26 @@ class AppSettings {
       'map_show_markers': mapShowMarkers,
       'map_show_guessed_locations': mapShowGuessedLocations,
       'enable_message_tracing': enableMessageTracing,
+      'enable_time_seconds': enableTimeSeconds,
       'show_keyboard_hiding_button': showKeyboardHidingButton,
+      'canvas_active': canvasActive,
+      'canvas_show_lock_button': canvasShowLockButton,
+      'show_hops': showHops,
+      'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'hide_map_zoom_controls': hideMapZoomControls,
+      'show_mco_image_resolution': showMcoImageResolution,
+      'show_mco_image_format': showMcoImageFormat,
+      'show_mco_image_algorithm': showMcoImageAlgorithm,
+      'show_mco_image_bytes': showMcoImageBytes,
+      'show_compression_ratio': showCompressionRatio,
+      'compression_ratio_with_sender_name': compressionRatioWithSenderName,
+      'show_message_region': showMessageRegion,
+      'channels_unread_sorting': channelsUnreadSorting,
+      'incoming_quote_as_mentions': incomingQuoteAsMentions,
+      'simplified_mentions': simplifiedMentions,
+      'shared_message_history_mode': sharedMessageHistoryMode.value,
+      'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
+      'background_tcp_enabled': backgroundTcpEnabled,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -388,6 +612,7 @@ class AppSettings {
           .toList(),
       'jump_to_oldest_unread': jumpToOldestUnread,
       'translation_enabled': translationEnabled,
+      'auto_translate_incoming_messages': autoTranslateIncomingMessages,
       'translation_target_language_code': translationTargetLanguageCode,
       'composer_translation_enabled': composerTranslationEnabled,
       'translation_model_source_url': translationModelSourceUrl,
@@ -397,6 +622,10 @@ class AppSettings {
           .toList(),
       'mcmp_text_limit': mcmpTextLimit,
       'channel_maxbytes_outgoing': channelMaxbytesOutgoing,
+      'quick_answers': quickAnswers.map((answer) => answer.toJson()).toList(),
+      'copy_msg_path_template': copyMsgPathTemplate,
+      'copy_msg_path_final_template': copyMsgPathFinalTemplate,
+      'channels_send_as_binary': channelsSendAsBinary,
       'sending_delay_for_cancellation_seconds':
           sendingDelayForCancellationSeconds,
       'do_not_filter_messages_on_channels': doNotFilterMessagesOnChannels,
@@ -415,11 +644,27 @@ class AppSettings {
       return UnitSystem.metric;
     }
 
+    SharedMessageHistoryMode parseSharedMessageHistoryMode(dynamic value) {
+      if (value is String) {
+        switch (value.toLowerCase()) {
+          case 'channels':
+            return SharedMessageHistoryMode.channels;
+          case 'contacts':
+            return SharedMessageHistoryMode.contacts;
+          case 'all':
+            return SharedMessageHistoryMode.all;
+        }
+      }
+      return SharedMessageHistoryMode.disabled;
+    }
+
     return AppSettings(
       clearPathOnMaxRetry: json['clear_path_on_max_retry'] as bool? ?? false,
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
       mapShowChatNodes: json['map_show_chat_nodes'] as bool? ?? true,
       mapShowOtherNodes: json['map_show_other_nodes'] as bool? ?? true,
+      pathTraceHighTimeoutEnabled:
+          json['path_trace_high_timeout_enabled'] as bool? ?? false,
       mapShowOverlaps: json['map_show_overlaps'] as bool? ?? false,
       mapTimeFilterHours:
           (json['map_time_filter_hours'] as num?)?.toDouble() ?? 0,
@@ -428,9 +673,34 @@ class AppSettings {
       mapShowMarkers: json['map_show_markers'] as bool? ?? true,
       mapShowGuessedLocations:
           json['map_show_guessed_locations'] as bool? ?? true,
-      enableMessageTracing: json['enable_message_tracing'] as bool? ?? false,
+      enableMessageTracing: json['enable_message_tracing'] as bool? ?? true,
+      enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
       showKeyboardHidingButton:
           json['show_keyboard_hiding_button'] as bool? ?? true,
+      canvasActive: json['canvas_active'] as bool? ?? true,
+      canvasShowLockButton: json['canvas_show_lock_button'] as bool? ?? true,
+      showHops: json['show_hops'] as bool? ?? true,
+      hideChannelIndexIndicator:
+          json['hide_channel_index_indicator'] as bool? ?? false,
+      hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
+      showMcoImageResolution:
+          json['show_mco_image_resolution'] as bool? ?? false,
+      showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
+      showMcoImageAlgorithm: json['show_mco_image_algorithm'] as bool? ?? true,
+      showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
+      showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
+      compressionRatioWithSenderName:
+          json['compression_ratio_with_sender_name'] as bool? ?? false,
+      showMessageRegion: json['show_message_region'] as bool? ?? false,
+      channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? false,
+      incomingQuoteAsMentions:
+          json['incoming_quote_as_mentions'] as bool? ?? false,
+      simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
+      sharedMessageHistoryMode: parseSharedMessageHistoryMode(
+        json['shared_message_history_mode'],
+      ),
+      noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
+      backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -442,7 +712,7 @@ class AppSettings {
           json['notify_on_new_channel_message'] as bool? ?? true,
       notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
       autoRouteRotationEnabled:
-          json['auto_route_rotation_enabled'] as bool? ?? false,
+          json['auto_route_rotation_enabled'] as bool? ?? true,
       maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
       initialRouteWeight:
           (json['initial_route_weight'] as num?)?.toDouble() ?? 3.0,
@@ -489,6 +759,8 @@ class AppSettings {
           const [],
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
       translationEnabled: json['translation_enabled'] as bool? ?? false,
+      autoTranslateIncomingMessages:
+          json['auto_translate_incoming_messages'] as bool? ?? true,
       translationTargetLanguageCode:
           json['translation_target_language_code'] as String?,
       composerTranslationEnabled:
@@ -508,6 +780,10 @@ class AppSettings {
           const [],
       mcmpTextLimit: json['mcmp_text_limit'],
       channelMaxbytesOutgoing: json['channel_maxbytes_outgoing'],
+      quickAnswers: normalizeQuickAnswers(json['quick_answers']),
+      copyMsgPathTemplate: json['copy_msg_path_template'] as String?,
+      copyMsgPathFinalTemplate: json['copy_msg_path_final_template'] as String?,
+      channelsSendAsBinary: json['channels_send_as_binary'] as bool? ?? true,
       sendingDelayForCancellationSeconds:
           json['sending_delay_for_cancellation_seconds'],
       doNotFilterMessagesOnChannels:
@@ -547,6 +823,7 @@ class AppSettings {
     bool? mapShowRepeaters,
     bool? mapShowChatNodes,
     bool? mapShowOtherNodes,
+    bool? pathTraceHighTimeoutEnabled,
     bool? mapShowOverlaps,
     double? mapTimeFilterHours,
     bool? mapKeyPrefixEnabled,
@@ -554,7 +831,26 @@ class AppSettings {
     bool? mapShowMarkers,
     bool? mapShowGuessedLocations,
     bool? enableMessageTracing,
+    bool? enableTimeSeconds,
     bool? showKeyboardHidingButton,
+    bool? canvasActive,
+    bool? canvasShowLockButton,
+    bool? showHops,
+    bool? hideChannelIndexIndicator,
+    bool? hideMapZoomControls,
+    bool? showMcoImageResolution,
+    bool? showMcoImageFormat,
+    bool? showMcoImageAlgorithm,
+    bool? showMcoImageBytes,
+    bool? showCompressionRatio,
+    bool? compressionRatioWithSenderName,
+    bool? showMessageRegion,
+    bool? channelsUnreadSorting,
+    bool? incomingQuoteAsMentions,
+    bool? simplifiedMentions,
+    SharedMessageHistoryMode? sharedMessageHistoryMode,
+    int? noRetransmissionWarningSeconds,
+    bool? backgroundTcpEnabled,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -582,6 +878,7 @@ class AppSettings {
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
     bool? translationEnabled,
+    bool? autoTranslateIncomingMessages,
     Object? translationTargetLanguageCode = _unset,
     bool? composerTranslationEnabled,
     Object? translationModelSourceUrl = _unset,
@@ -589,6 +886,10 @@ class AppSettings {
     List<TranslationModelRecord>? translationDownloadedModels,
     int? mcmpTextLimit,
     int? channelMaxbytesOutgoing,
+    List<QuickAnswer>? quickAnswers,
+    String? copyMsgPathTemplate,
+    String? copyMsgPathFinalTemplate,
+    bool? channelsSendAsBinary,
     int? sendingDelayForCancellationSeconds,
     String? doNotFilterMessagesOnChannels,
     List<Cyr2LatProfile>? cyr2latProfiles,
@@ -599,6 +900,8 @@ class AppSettings {
       mapShowRepeaters: mapShowRepeaters ?? this.mapShowRepeaters,
       mapShowChatNodes: mapShowChatNodes ?? this.mapShowChatNodes,
       mapShowOtherNodes: mapShowOtherNodes ?? this.mapShowOtherNodes,
+      pathTraceHighTimeoutEnabled:
+          pathTraceHighTimeoutEnabled ?? this.pathTraceHighTimeoutEnabled,
       mapShowOverlaps: mapShowOverlaps ?? this.mapShowOverlaps,
       mapTimeFilterHours: mapTimeFilterHours ?? this.mapTimeFilterHours,
       mapKeyPrefixEnabled: mapKeyPrefixEnabled ?? this.mapKeyPrefixEnabled,
@@ -607,8 +910,35 @@ class AppSettings {
       mapShowGuessedLocations:
           mapShowGuessedLocations ?? this.mapShowGuessedLocations,
       enableMessageTracing: enableMessageTracing ?? this.enableMessageTracing,
+      enableTimeSeconds: enableTimeSeconds ?? this.enableTimeSeconds,
       showKeyboardHidingButton:
           showKeyboardHidingButton ?? this.showKeyboardHidingButton,
+      canvasActive: canvasActive ?? this.canvasActive,
+      canvasShowLockButton: canvasShowLockButton ?? this.canvasShowLockButton,
+      showHops: showHops ?? this.showHops,
+      hideChannelIndexIndicator:
+          hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,
+      showMcoImageResolution:
+          showMcoImageResolution ?? this.showMcoImageResolution,
+      showMcoImageFormat: showMcoImageFormat ?? this.showMcoImageFormat,
+      showMcoImageAlgorithm:
+          showMcoImageAlgorithm ?? this.showMcoImageAlgorithm,
+      showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
+      showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
+      compressionRatioWithSenderName:
+          compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
+      showMessageRegion: showMessageRegion ?? this.showMessageRegion,
+      channelsUnreadSorting:
+          channelsUnreadSorting ?? this.channelsUnreadSorting,
+      incomingQuoteAsMentions:
+          incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
+      simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
+      sharedMessageHistoryMode:
+          sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
+      noRetransmissionWarningSeconds:
+          noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
+      backgroundTcpEnabled: backgroundTcpEnabled ?? this.backgroundTcpEnabled,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
@@ -649,6 +979,8 @@ class AppSettings {
           tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
       translationEnabled: translationEnabled ?? this.translationEnabled,
+      autoTranslateIncomingMessages:
+          autoTranslateIncomingMessages ?? this.autoTranslateIncomingMessages,
       translationTargetLanguageCode: translationTargetLanguageCode == _unset
           ? this.translationTargetLanguageCode
           : translationTargetLanguageCode as String?,
@@ -665,6 +997,11 @@ class AppSettings {
       mcmpTextLimit: mcmpTextLimit ?? this.mcmpTextLimit,
       channelMaxbytesOutgoing:
           channelMaxbytesOutgoing ?? this.channelMaxbytesOutgoing,
+      quickAnswers: quickAnswers ?? this.quickAnswers,
+      copyMsgPathTemplate: copyMsgPathTemplate ?? this.copyMsgPathTemplate,
+      copyMsgPathFinalTemplate:
+          copyMsgPathFinalTemplate ?? this.copyMsgPathFinalTemplate,
+      channelsSendAsBinary: channelsSendAsBinary ?? this.channelsSendAsBinary,
       sendingDelayForCancellationSeconds:
           sendingDelayForCancellationSeconds ??
           this.sendingDelayForCancellationSeconds,

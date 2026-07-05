@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>mco_advanced</string>
+	<string>mcoadvanced</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -55,6 +55,8 @@
 	<string>This app uses Bluetooth to communicate with MeshCore devices.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to scan QR codes for joining communities.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses your location to tag wardrive discovery requests and update your MeshCore node position.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>http</string>

@@ -3,25 +3,28 @@ import 'dart:typed_data';
 import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../models/channel_message.dart';
+import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
+import 'channel_name_keyed_store.dart';
 import 'prefs_manager.dart';
 
-class ChannelMessageStore {
+class ChannelMessageStore with ChannelNameKeyedStore {
   static const String _keyPrefix = 'channel_messages_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
-      publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
+      publicKeyHex = value.length >= 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
   /// Save messages for a specific channel
   Future<void> saveChannelMessages(
     int channelIndex,
-    List<ChannelMessage> messages,
-  ) async {
+    List<ChannelMessage> messages, {
+    bool orderMessages = true,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot save channel messages.',
@@ -29,10 +32,18 @@ class ChannelMessageStore {
       return;
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) {
+      appLogger.warn(
+        'Channel name is not registered. Cannot save channel messages.',
+      );
+      return;
+    }
 
-    // Convert messages to JSON
-    final jsonList = messages.map((msg) => _messageToJson(msg)).toList();
+    final orderedMessages = orderMessages
+        ? _orderedMessages(messages)
+        : messages;
+    final jsonList = orderedMessages.map((msg) => _messageToJson(msg)).toList();
     final jsonString = jsonEncode(jsonList);
 
     await prefs.setString(key, jsonString);
@@ -47,42 +58,61 @@ class ChannelMessageStore {
       return [];
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return [];
+    final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
     String? jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(oldKey);
-      prefs.remove(oldKey);
+    if ((jsonString == null || jsonString.isEmpty) &&
+        allowsLegacyIndexMigration) {
+      // One-time migration from the old slot-based storage.
+      final legacyJsonString =
+          prefs.getString(scopedIndexKey) ?? prefs.getString(oldKey);
+      await prefs.remove(scopedIndexKey);
+      await prefs.remove(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating channel messages from legacy key $oldKey to scoped key $key',
-        );
+        appLogger.info('Migrating channel messages to name-keyed storage $key');
         await prefs.setString(key, legacyJsonString);
         jsonString = legacyJsonString;
       }
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
     }
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
+      return _orderedMessages(
+        jsonList
+            .map(
+              (json) =>
+                  _messageFromJson(json).copyWith(channelIndex: channelIndex),
+            )
+            .toList(),
+      );
     } catch (e) {
       // If parsing fails, return empty list
       return [];
     }
   }
 
+  List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {
+    if (messages.length < 2) return messages;
+    final ordered = List<ChannelMessage>.of(messages);
+    ordered.sort((a, b) {
+      final receivedCompare = a.receivedAt.compareTo(b.receivedAt);
+      if (receivedCompare != 0) return receivedCompare;
+      return a.messageId.compareTo(b.messageId);
+    });
+    return ordered;
+  }
+
   /// Clear messages for a specific channel
   Future<void> clearChannelMessages(int channelIndex) async {
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
-    await prefs.remove(key);
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key != null) await prefs.remove(key);
+    await prefs.remove('$keyFor$channelIndex');
   }
 
   /// Clear all channel messages
@@ -106,14 +136,26 @@ class ChannelMessageStore {
       'translationStatus': msg.translationStatus.value,
       'translationModelId': msg.translationModelId,
       'wasMcmpCompressed': msg.wasMcmpCompressed,
+      'compressionType': msg.compressionType?.name,
+      'compressionSavingsPercent': msg.compressionSavingsPercent,
+      'compressionOriginalBytes': msg.compressionOriginalBytes,
+      'compressionPayloadBytes': msg.compressionPayloadBytes,
+      'wasBinaryTransport': msg.wasBinaryTransport,
+      'binaryPacketBytes': msg.binaryPacketBytes,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'receivedAt': msg.receivedAt.millisecondsSinceEpoch,
+      'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'status': msg.status.index,
       'channelIndex': msg.channelIndex,
       'repeatCount': msg.repeatCount,
       'pathLength': msg.pathLength,
+      'pathHashWidth': msg.pathHashWidth,
       'pathBytes': base64Encode(msg.pathBytes),
       'pathVariants': msg.pathVariants.map(base64Encode).toList(),
+      'packetRegion': msg.packetRegion,
+      'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
+      'noRetransmissionWarningSeconds': msg.noRetransmissionWarningSeconds,
       'repeats': msg.repeats.map(_repeatToJson).toList(),
       'messageId': msg.messageId,
       'packetHash': msg.packetHash,
@@ -132,6 +174,42 @@ class ChannelMessageStore {
         MeshCompressor.instance.hasPrefix(rawText);
     final decodedText =
         MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+    final detectedCompression = MessageCompressionMetadata.fromEncodedText(
+      encodedText: rawText,
+      decodedText: decodedText,
+    );
+
+    final rawPathLength = json['pathLength'] as int?;
+    final rawPathBytes = json['pathBytes'] != null
+        ? Uint8List.fromList(base64Decode(json['pathBytes'] as String))
+        : Uint8List(0);
+    final rawPathHashWidth = json['pathHashWidth'] as int?;
+
+    int? decodedPathLength = rawPathLength;
+    Uint8List decodedPathBytes = rawPathBytes;
+    int? decodedPathHashWidth = rawPathHashWidth;
+
+    if (rawPathLength != null) {
+      if (rawPathLength == 0xFF || rawPathLength < 0) {
+        decodedPathLength = -1;
+        decodedPathBytes = Uint8List(0);
+      } else if (rawPathLength >= 64) {
+        final mode = (rawPathLength & 0xC0) >> 6;
+        final hopCount = rawPathLength & 0x3F;
+        final width = mode + 1;
+        final byteLen = hopCount * width;
+        decodedPathLength = hopCount;
+        decodedPathHashWidth = width;
+        if (byteLen <= rawPathBytes.length) {
+          decodedPathBytes = rawPathBytes.sublist(0, byteLen);
+        } else {
+          decodedPathBytes = Uint8List(0);
+        }
+      } else if (rawPathLength == 0) {
+        decodedPathBytes = Uint8List(0);
+      }
+    }
+
     return ChannelMessage(
       senderKey: json['senderKey'] != null
           ? Uint8List.fromList(base64Decode(json['senderKey']))
@@ -146,17 +224,42 @@ class ChannelMessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       wasMcmpCompressed: wasMcmpCompressed,
+      compressionType:
+          MessageCompressionTypeLabel.fromJson(json['compressionType']) ??
+          detectedCompression?.type ??
+          (wasMcmpCompressed ? MessageCompressionType.mcmp : null),
+      compressionSavingsPercent:
+          json['compressionSavingsPercent'] as int? ??
+          detectedCompression?.savingsPercent,
+      compressionOriginalBytes:
+          json['compressionOriginalBytes'] as int? ??
+          detectedCompression?.originalBytes,
+      compressionPayloadBytes:
+          json['compressionPayloadBytes'] as int? ??
+          detectedCompression?.payloadBytes,
+      wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
+      binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      receivedAt: DateTime.fromMillisecondsSinceEpoch(
+        (json['receivedAt'] as int?) ?? (json['timestamp'] as int),
+      ),
+      sentByRadioAt: json['sentByRadioAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(json['sentByRadioAt'] as int)
+          : null,
       isOutgoing: json['isOutgoing'] as bool,
       status: ChannelMessageStatus.values[json['status'] as int],
       repeatCount: (json['repeatCount'] as int?) ?? 0,
-      pathLength: json['pathLength'] as int?,
-      pathBytes: json['pathBytes'] != null
-          ? Uint8List.fromList(base64Decode(json['pathBytes'] as String))
-          : Uint8List(0),
+      pathLength: decodedPathLength,
+      pathHashWidth: decodedPathHashWidth,
+      pathBytes: decodedPathBytes,
       pathVariants: (json['pathVariants'] as List<dynamic>?)
           ?.map((entry) => Uint8List.fromList(base64Decode(entry as String)))
           .toList(),
+      packetRegion: json['packetRegion'] as String?,
+      packetRegionInfoAvailable:
+          json['packetRegionInfoAvailable'] as bool? ?? false,
+      noRetransmissionWarningSeconds:
+          json['noRetransmissionWarningSeconds'] as int?,
       repeats:
           (json['repeats'] as List<dynamic>?)
               ?.map((entry) => _repeatFromJson(entry as Map<String, dynamic>))

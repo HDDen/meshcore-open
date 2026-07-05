@@ -34,6 +34,8 @@
   "common_remove": "移除",
   "common_enable": "启用",
   "common_disable": "禁用",
+  "common_autoRefresh": "自动刷新",
+  "common_interval": "间隔",
   "common_reboot": "重启",
   "common_loading": "正在加载...",
   "common_notAvailable": "—",
@@ -168,6 +170,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "最近连接",
+  "tcpBookmarksSetName": "设置书签名称",
+  "tcpBookmarksFavouritesSubtitle": "标记为收藏后，不会从连接历史中移除",
+  "settings_channelResendTimeoutTitle": "手动重发延迟",
+  "settings_channelResendTimeoutSubtitle": "也会影响用于消除外发消息重复显示的内部机制",
+  "settings_channelMaxbytesOutgoingTitle": "限制频道外发 payload，字节",
+  "settings_channelMaxbytesOutgoingSubtitle": "此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 USB，此限制约为 155 字节。",
+  "settings_quickAnswersTitle": "快捷回复",
+  "settings_quickAnswersSubtitle": "可作为快捷回复选择的短语列表。它们会在联系人/频道设置中分配。",
+  "settings_quickAnswersAddText": "请输入文本",
+  "settings_quickAnswersEditText": "编辑回复",
+  "settings_quickAnswersSelect": "启用这些回复",
+  "settings_quickAnswersExists": "已存在",
+  "settings_quickAnswersNotAdded": "你还没有为此聊天添加任何快捷回复！",
+  "appSettings_enableTimeSeconds": "在消息信息中显示秒",
+  "appSettings_showKeyboardHidingButton": "显示隐藏键盘按钮",
+  "settings_mcmpTextLimit": "MCMP 文本粘贴限制",
+  "settings_sendingDelayForCancellation": "用于取消的发送延迟",
+  "settings_useSendingDelay": "使用发送延迟",
+  "chat_cancelSend": "取消发送",
+  "settings_doNotFilterMessagesOnChannels": "不要过滤频道中的自己消息",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题",
+  "chat_retryingMessageWait": "请等待 {seconds} 秒后再重新发送",
+  "channels_mcmpCompression": "MCMP 压缩",
+  "channels_mcmpCompressionDescription": "使用 mesh-compressor 模型",
   "appSettings_title": "应用设置",
   "appSettings_appearance": "外观",
   "appSettings_theme": "主题",
@@ -444,6 +471,10 @@
   "channels_scanQrCodeComingSoon": "即将推出",
   "channels_enterHashtag": "输入标签",
   "channels_hashtagHint": "例如：#团队",
+  "channels_changeWidgetColor": "小组件颜色",
+  "channels_changeWidgetTextColor": "小组件文字颜色",
+  "channels_changeGroupEmpty": "这里暂时为空",
+  "channels_allowOrderingInGroup": "允许在组内排序频道",
   "chat_noMessages": "暂无消息",
   "chat_sendMessageToStart": "发送消息开始对话",
   "chat_originalMessageNotFound": "找不到原始消息",
@@ -1135,7 +1166,7 @@
   "repeater_advancedSettings": "高级",
   "repeater_advancedSettingsSubtitle": "高级操作员使用的调节旋钮",
   "repeater_pathHashMode": "路径哈希模式",
-  "repeater_pathHashModeHelper": "用于编码此复用器的 ID 的字节数，在“洪流路径/环检测”标签中使用。 0=1 字节（256 个 ID，最多 64 个跳跃），1=2 字节（65K 个 ID，最多 32 个跳跃），2=3 字节（16M 个 ID，最多 21 个跳跃）。 v1.13 及更早版本的固件会使用多字节路径——只有在您的网络升级到 v1.14 或更高版本后才会生效。",
+  "repeater_pathHashModeHelper": "用于在洪泛路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。",
   "repeater_txDelay": "洪水（德克萨斯州）延误",
   "repeater_txDelayHelper": "对于洪水流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.5）的倍数。 较高的值意味着更少的冲突，但传输速度会变慢。",
   "repeater_directTxDelay": "直接的 TX 延迟",
@@ -1310,6 +1341,78 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "数字输入",
+  "telemetry_digitalOutputLabel": "数字输出",
+  "telemetry_analogInputLabel": "模拟输入",
+  "telemetry_analogOutputLabel": "模拟输出",
+  "telemetry_genericLabel": "通用传感器",
+  "telemetry_luminosityLabel": "照度",
+  "telemetry_presenceLabel": "存在检测",
+  "telemetry_humidityLabel": "湿度",
+  "telemetry_accelerometerLabel": "加速度计",
+  "telemetry_pressureLabel": "气压",
+  "telemetry_altitudeLabel": "高度",
+  "telemetry_frequencyLabel": "频率",
+  "telemetry_percentageLabel": "百分比",
+  "telemetry_concentrationLabel": "浓度",
+  "telemetry_powerLabel": "功率",
+  "telemetry_distanceLabel": "距离",
+  "telemetry_energyLabel": "能量",
+  "telemetry_directionLabel": "方向",
+  "telemetry_timeLabel": "时间",
+  "telemetry_gyrometerLabel": "陀螺仪",
+  "telemetry_colourLabel": "颜色",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "开关",
+  "telemetry_polylineLabel": "折线",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_digitalInputLabel": "数字输入",
+  "telemetry_digitalOutputLabel": "数字输出",
+  "telemetry_analogInputLabel": "模拟输入",
+  "telemetry_analogOutputLabel": "模拟输出",
+  "telemetry_genericLabel": "通用传感器",
+  "telemetry_luminosityLabel": "照度",
+  "telemetry_presenceLabel": "存在检测",
+  "telemetry_humidityLabel": "湿度",
+  "telemetry_accelerometerLabel": "加速度计",
+  "telemetry_pressureLabel": "气压",
+  "telemetry_altitudeLabel": "高度",
+  "telemetry_frequencyLabel": "频率",
+  "telemetry_percentageLabel": "百分比",
+  "telemetry_concentrationLabel": "浓度",
+  "telemetry_powerLabel": "功率",
+  "telemetry_distanceLabel": "距离",
+  "telemetry_energyLabel": "能量",
+  "telemetry_directionLabel": "方向",
+  "telemetry_timeLabel": "时间",
+  "telemetry_gyrometerLabel": "陀螺仪",
+  "telemetry_colourLabel": "颜色",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "开关",
+  "telemetry_polylineLabel": "折线",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "请求次数",
+  "telemetry_error": "无法获取数据",
   "telemetry_noData": "暂无遥测数据",
   "telemetry_channelTitle": "频道 {channel}",
   "@telemetry_channelTitle": {
@@ -2105,6 +2208,9 @@
   "translation_composerTitle": "在发送之前进行翻译",
   "translation_enableTitle": "启用翻译功能",
   "translation_composerSubtitle": "控制作曲家翻译图标的默认状态。",
+  "translation_autoIncomingTitle": "自动翻译消息",
+  "translation_autoIncomingSubtitle": "自动为通知以及聊天或频道翻译消息。",
+  "translation_translateMessage": "翻译消息",
   "translation_targetLanguage": "目标语言",
   "translation_useAppLanguage": "使用应用程序语言",
   "translation_downloadedModelLabel": "下载的模型",
@@ -2316,5 +2422,455 @@
   "settings_companionDebugLog": "调试日志",
   "chat_newMessages": "新的消息",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB 协议、响应和原始数据",
-  "repeater_chanUtil": "频道利用率"
+  "repeater_chanUtil": "频道利用率",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageStatus_sent": "发送",
+  "common_undo": "撤销",
+  "messageStatus_delivered": "已送达",
+  "messageStatus_pending": "发送",
+  "messageStatus_failed": "发送失败",
+  "messageStatus_repeated": "多次听到",
+  "contacts_moreOptions": "更多选择",
+  "contacts_searchOpen": "搜索联系人",
+  "contacts_searchClose": "高级搜索",
+  "routing_title": "路由",
+  "routing_modeAuto": "汽车",
+  "routing_modeFlood": "洪水",
+  "routing_modeManual": "手册",
+  "routing_modeAutoHint": "自动选择已知最佳路径，当没有已知路径时，则进行“洪水”搜索。",
+  "routing_modeFloodHint": "通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。",
+  "routing_modeManualHint": "总是按照您设置的路径进行导航。",
+  "routing_currentRoute": "当前路线",
+  "routing_directNoHops": "直接连接— 无中继跳",
+  "routing_noPathYet": "目前还没有找到路径。直到找到路径，才会收到后续消息。",
+  "routing_floodBroadcast": "通过所有中继器进行广播",
+  "routing_editPath": "编辑路径",
+  "routing_forgetPath": "忘记原路",
+  "routing_knownPaths": "已知的路径",
+  "routing_knownPathsHint": "点击该路径以切换到它。",
+  "routing_inUse": "使用中",
+  "routing_qualityStrong": "强劲的初始阶段",
+  "routing_qualityGood": "不错的开端",
+  "routing_qualityFair": "第一次尝试，结果良好",
+  "routing_qualityWorked": "已完成",
+  "routing_qualityFlood": "通过新闻报道",
+  "routing_qualityUntested": "未经测试",
+  "routing_lastWorked": "工作于 {when}",
+  "routing_neverWorked": "从未得到证实",
+  "routing_floodDelivery": "洪水配送",
+  "pathEditor_title": "构建路径",
+  "pathEditor_noHops": "目前还没有添加任何啤酒花。点击下面的“添加”按钮，按顺序添加，或者直接保存，不添加任何啤酒花。",
+  "pathEditor_addHops": "按照顺序添加啤酒花",
+  "pathEditor_searchRepeaters": "重复搜索",
+  "pathEditor_advancedHex": "高级：原始十六进制路径",
+  "pathEditor_hexLabel": "十六进制前缀",
+  "pathEditor_hexHelper": "每次跳跃，使用两个十六进制字符，用逗号分隔。",
+  "pathEditor_invalidTokens": "无效：{tokens}",
+  "pathEditor_tooManyHops": "最多 64 个跳跃",
+  "pathEditor_usePath": "请使用此路径",
+  "pathEditor_removeHop": "去除啤酒花",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_hopCounter": "{count} of 64 hops",
+  "pathEditor_unknownHop": "未知的重复器",
+  "map_zoomIn": "放大",
+  "map_zoomOut": "放大",
+  "map_centerMap": "中心地图",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth 需要 Chromium 浏览器",
+  "channels_communityShortId": "ID：{id}...",
+  "pathTrace_legendGpsConfirmed": "通过GPS确认",
+  "pathTrace_legendInferred": "推测的位置",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "在线",
+  "scanner_bluetoothWebUnsupported": "浏览器不支持蓝牙，请改用 USB 连接。",
+  "map_activity": "活动",
+  "map_searchHint": "搜索节点名称或ID",
+  "map_recent": "最近",
+  "map_visible": "可见",
+  "map_stale": "过时",
+  "map_hidden": "已隐藏",
+  "map_centerOnNode": "以节点为中心",
+  "map_details": "详细信息",
+  "map_noGps": "无 GPS",
+  "map_noResults": "未找到匹配的节点",
+  "pathMap_viewSingle": "单条",
+  "pathMap_viewCombined": "综合",
+  "pathMap_play": "播放",
+  "pathMap_pause": "暂停",
+  "pathMap_replay": "重播",
+  "pathMap_stepBack": "上一跳",
+  "pathMap_stepForward": "下一跳",
+  "pathMap_animationOn": "显示数据包动画",
+  "pathMap_animationOff": "隐藏数据包动画",
+  "pathMap_hopOf": "第 {current} 跳，共 {total} 跳",
+  "pathMap_observedPaths": "观测到的路径：{count}",
+  "pathMap_primary": "主路径",
+  "pathMap_alternate": "备用 {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 跳} other{{count} 跳}}",
+  "pathMap_legendShared": "共享路段",
+  "pathMap_legendEstimated": "估算路段",
+  "pathMap_sharedNodeCount": "已被 {count} 条路径使用",
+  "pathMap_showAllPaths": "显示全部",
+  "pathMap_hidePath": "隐藏路径",
+  "pathMap_showPath": "显示路径",
+  "pathMap_collapsePanel": "收起面板",
+  "pathMap_expandPanel": "展开面板",
+  "pathMap_noLocation": "无位置",
+  "pathMap_followPacket": "锁定视图跟随数据包",
+  "pathMap_unfollowPacket": "解锁视图跟随",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "pathMap_partialAnimation": "{count, plural, =1{1 跳无位置信息 — 显示的路径不完整} other{{count} 跳无位置信息 — 显示的路径不完整}}",
+  "settings_quickAnswersSendAtSelect": "选择时发送",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "开始",
+  "map_wardriveStop": "停止",
+  "map_wardriveZeroHopDiscovery": "零跳发现",
+  "map_wardriveDiscoverySent": "已发送 Wardrive 发现请求。",
+  "map_wardriveUploadCancelled": "Wardrive 上传已取消。",
+  "map_wardriveDiscoveryFailed": "Wardrive 发现失败：{error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "请求：{requests}  响应：{responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "上次请求：{time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "手机 GPS：尚未更新",
+  "map_wardrivePhoneGpsError": "手机 GPS：{error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "手机 GPS：{latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "还没有发现响应。",
+  "map_wardriveDataTooltip": "Wardrive 数据",
+  "map_wardriveUploadData": "上传数据",
+  "map_wardriveManageUploadSites": "管理上传站点",
+  "map_wardriveAutoUpload": "自动上传",
+  "map_wardriveScreenWakelock": "屏幕保持唤醒",
+  "map_wardriveExport": "导出",
+  "map_wardriveImport": "导入",
+  "map_wardriveAutoDiscovery": "自动发现",
+  "map_wardriveSecondsSuffix": "秒",
+  "map_wardriveSamplesSaved": "已保存样本：{count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "自动发现：{error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "样本保存：{error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "覆盖网格：{count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoUploadEnabled": "自动上传已启用。",
+  "map_wardriveAutoUploadDisabled": "自动上传已禁用。",
+  "map_wardriveNoSamplesToUpload": "没有可上传的 wardrive 样本。",
+  "map_wardriveUploadingSamples": "正在上传样本...",
+  "map_wardriveUploadingTo": "正在上传到 {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "批次 {current}/{total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "正在发送 {sent}/{total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "目标：{site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "等待连接",
+  "map_wardriveUploadConnectionEstablished": "连接已建立，正在上传",
+  "map_wardriveUploadProcessingServer": "数据已上传，服务器处理中",
+  "map_wardriveUploadServerResponse": "服务器已处理数据，响应 {statusCode}",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "上传超时；此站点已标记为已发送",
+  "map_wardriveUploadServerError": "服务器错误 {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "上传错误：{error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive 上传失败：{error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "上传完成",
+  "map_wardriveUploadResults": "上传结果",
+  "map_wardriveSamplesUploaded": "已上传 {count} 个样本",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "选择要上传到的站点：",
+  "map_wardriveNoUploadSitesConfigured": "未配置上传站点",
+  "map_wardriveAddSite": "添加站点",
+  "map_wardriveUploadSitesUpdated": "上传站点已更新。",
+  "map_wardriveAddUploadSite": "添加上传站点",
+  "map_wardriveEditUploadSite": "编辑上传站点",
+  "map_wardriveNameLabel": "名称",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "上传批次大小",
+  "map_wardriveUploadBatchSizeInvalid": "请输入 {min} 到 {max} 之间的值",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "将超时视为成功",
+  "map_wardriveNameRequired": "名称为必填项",
+  "map_wardriveNameExists": "名称已存在",
+  "map_wardriveValidUrlRequired": "需要有效的 URL",
+  "map_wardriveDeleteSite": "删除站点",
+  "map_wardriveDeleteSiteConfirm": "删除“{name}”？",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "没有可导出的 wardrive 样本。",
+  "map_wardriveExportShareText": "meshcore-open wardrive 样本",
+  "map_wardriveSamplesExported": "Wardrive 样本已导出为 JSON 文件。",
+  "map_wardriveExportFailed": "Wardrive 导出失败：{error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "导入 wardrive 样本",
+  "map_wardriveImportHint": "在此粘贴导出的 wardrive JSON",
+  "map_wardriveNoNewSamplesImported": "没有导入新的 wardrive 样本。",
+  "map_wardriveSamplesImported": "已导入 {count} 个 wardrive 样本。",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive 导入失败：{error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "没有可清除的 wardrive 样本。",
+  "map_wardriveClearSamplesTitle": "清除 wardrive 样本？",
+  "map_wardriveClearSamplesConfirm": "这将从此设备删除 {count} 个已保存样本。",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive 样本已清除。",
+  "channelPath_outgoingSentByRadioAt": "等待通过无线电发送，秒"
 }

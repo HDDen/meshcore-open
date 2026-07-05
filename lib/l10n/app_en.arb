@@ -28,6 +28,12 @@
   "common_remove": "Remove",
   "common_enable": "Enable",
   "common_disable": "Disable",
+  "common_undo": "Undo",
+  "messageStatus_sent": "Sent",
+  "messageStatus_delivered": "Delivered",
+  "messageStatus_pending": "Sending",
+  "messageStatus_failed": "Failed to send",
+  "messageStatus_repeated": "Heard repeated",
   "common_reboot": "Reboot",
   "common_loading": "Loading...",
   "common_notAvailable": "—",
@@ -47,6 +53,12 @@
       }
     }
   },
+  "common_autoRefresh": "Autorefresh",
+  "common_interval": "Interval",
+  "common_default": "Default",
+  "common_clear": "Clear",
+  "common_send": "Send",
+  "common_apply": "Apply",
   "scanner_title": "MeshCore Open (Advanced mod)",
   "connectionChoiceUsbLabel": "USB",
   "connectionChoiceBluetoothLabel": "Bluetooth",
@@ -138,6 +150,7 @@
   "scanner_chromeRequired": "Chrome Browser Required",
   "scanner_chromeRequiredMessage": "This web application requires Google Chrome or a Chromium-based browser for Bluetooth support.",
   "scanner_enableBluetooth": "Enable Bluetooth",
+  "scanner_bluetoothWebUnsupported": "Bluetooth isn't available in the browser. Connect over USB instead.",
   "device_quickSwitch": "Quick switch",
   "device_meshcore": "MeshCore",
   "settings_title": "Settings",
@@ -152,6 +165,25 @@
   "settings_radioSettings": "Radio Settings",
   "settings_radioSettingsSubtitle": "Frequency, power, spreading factor",
   "settings_radioSettingsUpdated": "Radio settings updated",
+  "settings_regionSettings": "Regions",
+  "settings_regionSettingsSubtitle": "Manage stored regions",
+  "settings_regionManagement_screenTitle": "Region Management",
+  "settings_regionNameHint": "Enter region name",
+  "settings_regionAddRegion": "Add region",
+  "settings_regionFetchRegions": "Fetch regions from repeaters",
+  "settings_regionFetchRegionsFail": "No regions were found",
+  "settings_regionFetchRegionsAlreadyExists": "This region has already been added",
+  "settings_regionName": "Region Name",
+  "settings_regionDeleted": "Region deleted",
+  "settings_deleteRegion": "Delete Region",
+  "settings_deleteRegionConfirm": "Remove \"{region}\" from region list?",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_location": "Location",
   "settings_locationSubtitle": "GPS coordinates",
   "settings_locationUpdated": "Location and GPS settings updated",
@@ -213,6 +245,8 @@
   },
   "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "An open-source Flutter client for MeshCore LoRa mesh networking devices.",
+  "settings_aboutModDescription": "The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application's repository or specific to the area of use, and therefore not submitted as pull requests.",
+  "settings_aboutModLink": "Mod group on Telegram: https://t.me/mcoadvanced",
   "settings_aboutOpenMeteoAttribution": "LOS elevation data: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Name",
   "settings_infoId": "ID",
@@ -246,6 +280,14 @@
   "settings_channelResendTimeoutSubtitle": "It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages",
   "settings_channelMaxbytesOutgoingTitle": "Limit the outgoing payload for channels, bytes",
   "settings_channelMaxbytesOutgoingSubtitle": "The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.",
+  "settings_quickAnswersTitle": "Quick replies",
+  "settings_quickAnswersSubtitle": "A list of phrases available to select as quick replies. These are assigned to contacts/channels in their settings.",
+  "settings_quickAnswersAddText": "Please, enter your text",
+  "settings_quickAnswersEditText": "Edit reply",
+  "settings_quickAnswersSelect": "Enable this replies",
+  "settings_quickAnswersExists": "Already exists",
+  "settings_quickAnswersNotAdded": "You haven't added any quick replies for this chat yet!",
+  "settings_quickAnswersSendAtSelect": "Send on selection",
   "appSettings_title": "App Settings",
   "appSettings_appearance": "Appearance",
   "appSettings_theme": "Theme",
@@ -269,8 +311,13 @@
   "appSettings_languageBg": "Български",
   "appSettings_languageRu": "Русский",
   "appSettings_languageUk": "Українська",
+  "repeater_pathHashModeOption0": "0 - 1 byte",
+  "repeater_pathHashModeOption1": "1 - 2 bytes",
+  "repeater_pathHashModeOption2": "2 - 3 bytes",
+  "repeater_pathHashModeOption3": "3 - 4 bytes",
   "appSettings_enableMessageTracing": "Enable Message Tracing",
   "appSettings_enableMessageTracingSubtitle": "Show detailed routing and timing metadata for messages",
+  "appSettings_enableTimeSeconds": "Show seconds in message info",
   "appSettings_showKeyboardHidingButton": "Show keyboard hiding button",
   "appSettings_notifications": "Notifications",
   "appSettings_enableNotifications": "Enable Notifications",
@@ -303,17 +350,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Weight removed from a path after failed delivery",
   "appSettings_maxMessageRetries": "Max Message Retries",
   "appSettings_maxMessageRetriesSubtitle": "Number of retry attempts before marking a message as failed",
-  "path_routeWeight": "{weight}/{max}",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_battery": "Battery",
   "appSettings_batteryChemistry": "Battery Chemistry",
   "appSettings_batteryChemistryPerDevice": "Set per device ({deviceName})",
@@ -459,6 +495,9 @@
     }
   },
   "contacts_newGroup": "New Group",
+  "contacts_moreOptions": "More options",
+  "contacts_searchOpen": "Search contacts",
+  "contacts_searchClose": "Close search",
   "contacts_groupName": "Group name",
   "contacts_groupNameRequired": "Group name is required",
   "contacts_groupNameReserved": "This group name is reserved",
@@ -505,6 +544,7 @@
   "contact_telemetry": "Telemetry",
   "contact_lastSeen": "Last seen",
   "contact_clearChat": "Clear Chat",
+  "contact_clearChatConfirm": "Confirm chat clear",
   "contact_teleBase": "Telemetry Base",
   "contact_teleBaseSubtitle": "Allow sharing battery level and basic telemetry",
   "contact_teleLoc": "Telemetry Location",
@@ -608,6 +648,10 @@
       }
     }
   },
+  "channels_changeWidgetColor": "Widget's color",
+  "channels_changeWidgetTextColor": "Widget's text color",
+  "channels_changeGroupEmpty": "It's empty here for now",
+  "channels_allowOrderingInGroup": "Allow channels ordering inside of group",
   "settings_cyr2latProfileAdd": "Add Cyr2Lat Profile",
   "settings_cyr2latProfileName": "Profile Name",
   "settings_cyr2latProfileNameEmpty": "Profile name cannot be empty",
@@ -648,6 +692,18 @@
   "channels_scanQrCodeComingSoon": "Coming soon",
   "channels_enterHashtag": "Enter hashtag",
   "channels_hashtagHint": "e.g. #team",
+  "channels_regionSetTo": "Region: {region}",
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "channels_regionNotSet": "Region: none",
+  "channels_regionSelect_Title": "Select a region",
+  "channels_clearRegion": "Clear region",
   "chat_noMessages": "No messages yet",
   "chat_sendMessage": "Send message",
   "chat_sendMessageTo": "Send a message to {contactName}",
@@ -790,15 +846,6 @@
     }
   },
   "debugFrame_hexDump": "Hex Dump:",
-  "chat_pathManagement": "Path Management",
-  "chat_ShowAllPaths": "Show all paths",
-  "chat_routingMode": "Routing mode",
-  "chat_autoUseSavedPath": "Auto (use saved path)",
-  "chat_forceFloodMode": "Force Flood Mode",
-  "chat_recentAckPaths": "Recent ACK Paths (tap to use):",
-  "chat_pathHistoryFull": "Path history is full. Remove entries to add new ones.",
-  "chat_hopSingular": "hop",
-  "chat_hopPlural": "hops",
   "chat_hopsCount": "{count} {count, plural, =1{hop} other{hops}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -807,31 +854,80 @@
       }
     }
   },
-  "chat_successes": "successes",
-  "chat_score": "Score",
   "chat_removePath": "Remove path",
   "chat_noPathHistoryYet": "No path history yet.\nSend a message to discover paths.",
-  "chat_pathActions": "Path Actions:",
-  "chat_setCustomPath": "Set Custom Path",
-  "chat_setCustomPathSubtitle": "Manually specify routing path",
-  "chat_clearPath": "Clear Path",
-  "chat_clearPathSubtitle": "Force rediscovery on next send",
   "chat_pathCleared": "Path cleared. Next message will rediscover route.",
-  "chat_floodModeSubtitle": "Use routing toggle in app bar",
-  "chat_floodModeEnabled": "Flood mode enabled. Toggle back via routing icon in app bar.",
   "chat_fullPath": "Full Path",
-  "chat_pathDetailsNotAvailable": "Path details not available yet. Try sending a message to refresh.",
-  "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
-  "@chat_pathSetHops": {
+  "routing_title": "Routing",
+  "routing_modeAuto": "Auto",
+  "routing_modeFlood": "Flood",
+  "routing_modeManual": "Manual",
+  "routing_modeAutoHint": "Picks the best known path automatically, flooding when none is known.",
+  "routing_modeFloodHint": "Broadcasts through every repeater. Most reliable, but uses more airtime.",
+  "routing_modeManualHint": "Always sends along the exact path you set.",
+  "routing_currentRoute": "Current route",
+  "routing_directNoHops": "Direct — no repeater hops",
+  "routing_noPathYet": "No path yet. The next message floods until a route is discovered.",
+  "routing_floodBroadcast": "Broadcast through every repeater",
+  "routing_editPath": "Edit path",
+  "routing_forgetPath": "Forget path",
+  "routing_knownPaths": "Known paths",
+  "routing_knownPathsHint": "Tap a path to switch to it.",
+  "routing_inUse": "In use",
+  "routing_qualityStrong": "Strong first hop",
+  "routing_qualityGood": "Good first hop",
+  "routing_qualityFair": "Fair first hop",
+  "routing_qualityWorked": "Has delivered",
+  "routing_qualityFlood": "Heard via flood",
+  "routing_qualityUntested": "Untested",
+  "routing_lastWorked": "worked {when}",
+  "@routing_lastWorked": {
     "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
+      "when": {
         "type": "String"
       }
     }
   },
+  "routing_neverWorked": "never confirmed",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "routing_floodDelivery": "Flood delivery",
+  "pathEditor_title": "Build Path",
+  "pathEditor_hopCounter": "{count} of 64 hops",
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathEditor_noHops": "No hops yet. Tap repeaters below to add them in order, or save with no hops to send direct.",
+  "pathEditor_addHops": "Add hops in order",
+  "pathEditor_searchRepeaters": "Search repeaters",
+  "pathEditor_advancedHex": "Advanced: raw hex path",
+  "pathEditor_hexLabel": "Hex prefixes",
+  "pathEditor_hexHelper": "Two hex characters per hop, separated by commas",
+  "pathEditor_invalidTokens": "Invalid: {tokens}",
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "pathEditor_tooManyHops": "Maximum 64 hops",
+  "pathEditor_usePath": "Use this path",
+  "pathEditor_removeHop": "Remove hop",
+  "pathEditor_unknownHop": "Unknown repeater",
   "chat_pathSavedLocally": "Saved locally. Connect to sync.",
   "chat_pathDeviceConfirmed": "Device confirmed.",
   "chat_pathDeviceNotConfirmed": "Device not confirmed yet.",
@@ -875,6 +971,17 @@
   },
   "chat_invalidLink": "Invalid link format",
   "map_title": "Node Map",
+  "map_searchHint": "Search node name or ID",
+  "map_activity": "Activity",
+  "map_online": "Online",
+  "map_recent": "Recent",
+  "map_stale": "Stale",
+  "map_visible": "Visible",
+  "map_hidden": "Hidden",
+  "map_centerOnNode": "Center on node",
+  "map_details": "Details",
+  "map_noGps": "No GPS",
+  "map_noResults": "No matching nodes",
   "map_lineOfSight": "Line of Sight",
   "map_losScreenTitle": "Line of Sight",
   "map_noNodesWithLocation": "No nodes with location data",
@@ -955,6 +1062,285 @@
   "map_runTraceWithReturnPath": "Return back on the same path.",
   "map_removeLast": "Remove Last",
   "map_pathTraceCancelled": "Path trace cancelled.",
+  "map_wardrive": "Wardrive",
+  "map_wardriveStart": "Start",
+  "map_wardriveStop": "Stop",
+  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveDiscoverySent": "Wardrive discovery request sent.",
+  "map_wardriveUploadCancelled": "Wardrive upload cancelled.",
+  "map_wardriveDiscoveryFailed": "Wardrive discovery failed: {error}",
+  "@map_wardriveDiscoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequests": "Requests: {requests}  Responses: {responses}",
+  "@map_wardriveRequests": {
+    "placeholders": {
+      "requests": {
+        "type": "int"
+      },
+      "responses": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveLastRequest": "Last request: {time}",
+  "@map_wardriveLastRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGpsNotUpdated": "Phone GPS: not updated yet",
+  "map_wardrivePhoneGpsError": "Phone GPS: {error}",
+  "@map_wardrivePhoneGpsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardrivePhoneGps": "Phone GPS: {latitude}, {longitude}",
+  "@map_wardrivePhoneGps": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoResponses": "No discovery responses yet.",
+  "map_wardriveDataTooltip": "Wardrive data",
+  "map_wardriveUploadData": "Upload Data",
+  "map_wardriveManageUploadSites": "Manage Upload Sites",
+  "map_wardriveAutoUpload": "Autoupload",
+  "map_wardriveReUpload": "Reupload",
+  "map_wardriveScreenWakelock": "Screen wakelock",
+  "map_wardriveExport": "Export",
+  "map_wardriveImport": "Import",
+  "map_wardriveAutoDiscovery": "Auto discovery",
+  "map_wardriveSecondsSuffix": "s",
+  "map_wardriveSamplesNoNew": "No new samples to upload",
+  "map_wardriveSamplesSaved": "Samples saved: {count}",
+  "@map_wardriveSamplesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveAutoDiscoveryError": "Auto discovery: {error}",
+  "@map_wardriveAutoDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveSampleSaveError": "Sample save: {error}",
+  "@map_wardriveSampleSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveCoverageCells": "Coverage cells: {count}",
+  "@map_wardriveCoverageCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveCoverageResolution": "Coverage Resolution",
+  "map_wardriveCoverageResolutionPrompt": "Choose the size of coverage squares (size = block side length):",
+  "map_wardriveCoverageRegional": "Regional",
+  "map_wardriveCoverageRegionalSubtitle": "~20km (precision 4)",
+  "map_wardriveCoverageCity": "City-level",
+  "map_wardriveCoverageCitySubtitle": "~5km (precision 5)",
+  "map_wardriveCoverageNeighborhood": "Neighborhood",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1.2km (precision 6)",
+  "map_wardriveCoverageStreet": "Street-level",
+  "map_wardriveCoverageStreetSubtitle": "~153m (precision 7)",
+  "map_wardriveCoverageBuilding": "Building-level",
+  "map_wardriveCoverageBuildingSubtitle": "~38m (precision 8)",
+  "map_wardriveAutoUploadEnabled": "Autoupload enabled.",
+  "map_wardriveAutoUploadDisabled": "Autoupload disabled.",
+  "map_wardriveNoSamplesToUpload": "No wardrive samples to upload.",
+  "map_wardriveUploadingSamples": "Uploading samples...",
+  "map_wardriveUploadingTo": "Uploading to {site}...",
+  "@map_wardriveUploadingTo": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadBatch": "Batch {current} of {total}",
+  "@map_wardriveUploadBatch": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadSamplesProgress": "Sending {sent} of {total}",
+  "@map_wardriveUploadSamplesProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadTarget": "Target: {site}",
+  "@map_wardriveUploadTarget": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadWaitingConnection": "Waiting for connection",
+  "map_wardriveUploadConnectionEstablished": "Connection established, uploading",
+  "map_wardriveUploadProcessingServer": "Data uploaded, processing by server",
+  "map_wardriveUploadServerResponse": "Server processed data, response {statusCode}",
+  "map_wardriveUploadTimeoutTreatedAsSuccess": "Upload timed out; marked as sent for this site",
+  "@map_wardriveUploadServerResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadServerError": "Server error {statusCode}",
+  "@map_wardriveUploadServerError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveUploadRequestError": "Upload error: {error}",
+  "@map_wardriveUploadRequestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadFailed": "Wardrive upload failed: {error}",
+  "@map_wardriveUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveUploadComplete": "Upload Complete",
+  "map_wardriveUploadResults": "Upload Results",
+  "map_wardriveSamplesUploaded": "{count} samples uploaded",
+  "@map_wardriveSamplesUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSelectUploadSites": "Select which sites to upload to:",
+  "map_wardriveNoUploadSitesConfigured": "No upload sites configured",
+  "map_wardriveAddSite": "Add Site",
+  "map_wardriveUploadSitesUpdated": "Upload sites updated.",
+  "map_wardriveAddUploadSite": "Add Upload Site",
+  "map_wardriveEditUploadSite": "Edit Upload Site",
+  "map_wardriveNameLabel": "Name",
+  "map_wardriveUrlLabel": "URL",
+  "map_wardriveUploadBatchSize": "Upload batch size",
+  "map_wardriveUploadBatchSizeInvalid": "Use a value from {min} to {max}",
+  "@map_wardriveUploadBatchSizeInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveTreatTimeoutAsSuccess": "Treat timeout as success",
+  "map_wardriveNameRequired": "Name is required",
+  "map_wardriveNameExists": "Name already exists",
+  "map_wardriveValidUrlRequired": "Valid URL is required",
+  "map_wardriveDeleteSite": "Delete Site",
+  "map_wardriveDeleteSiteConfirm": "Delete \"{name}\"?",
+  "@map_wardriveDeleteSiteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToExport": "No wardrive samples to export.",
+  "map_wardriveExportShareText": "meshcore-open wardrive samples",
+  "map_wardriveSamplesExported": "Wardrive samples exported as JSON file.",
+  "map_wardriveExportFailed": "Wardrive export failed: {error}",
+  "@map_wardriveExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveImportSamples": "Import wardrive samples",
+  "map_wardriveImportHint": "Paste exported wardrive JSON here",
+  "map_wardriveNoNewSamplesImported": "No new wardrive samples imported.",
+  "map_wardriveSamplesImported": "Imported {count} wardrive samples.",
+  "@map_wardriveSamplesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveImportFailed": "Wardrive import failed: {error}",
+  "@map_wardriveImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveNoSamplesToClear": "No wardrive samples to clear.",
+  "map_wardriveClearSamplesTitle": "Clear wardrive samples?",
+  "map_wardriveClearSamplesConfirm": "This will delete {count} saved samples from this device.",
+  "@map_wardriveClearSamplesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_wardriveSamplesCleared": "Wardrive samples cleared.",
+  "map_wardriveRepNoLocation": "Repeater location not provided",
+  "map_wardriveDiscoveryWait": "Please wait {seconds} seconds before retrying discovery",
+  "map_wardriveFollowMe": "Follow my location",
+  "map_wardriveDeleteBlock": "Delete block",
+  "map_wardriveInBackground": "Run in background",
+  "map_wardriveContinuousGPS": "Continuous GPS location",
+  "map_wardriveShowRepeaterCoverage": "Show wardrive's coverage blocks",
+  "map_wardriveHideRepeaterCoverage": "Hide wardrive's coverage blocks",
   "mapCache_title": "Offline Map Cache",
   "mapCache_selectAreaFirst": "Select an area to cache first",
   "mapCache_noTilesToDownload": "No tiles to download for this area",
@@ -1113,41 +1499,8 @@
   "login_failedMessage": "Login failed. Either the password is incorrect or the repeater is unreachable.",
   "common_reload": "Reload",
   "common_clear": "Clear",
-  "path_currentPath": "Current path: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Using {count} {count, plural, =1{hop} other{hops}} path",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Enter Custom Path",
   "path_currentPathLabel": "Current path",
-  "path_hexPrefixInstructions": "Enter 2-character hex prefixes for each hop, separated by commas.",
-  "path_hexPrefixExample": "Example: A1,F2,3C (each node uses first byte of its public key)",
-  "path_labelHexPrefixes": "Path (hex prefixes)",
-  "path_helperMaxHops": "Max 64 hops. Each prefix is 2 hex characters (1 byte)",
-  "path_selectFromContacts": "Or select from contacts:",
   "path_noRepeatersFound": "No repeaters or room servers found.",
-  "path_customPathsRequire": "Custom paths require intermediate hops that can relay messages.",
-  "path_invalidHexPrefixes": "Invalid hex prefixes: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "Path too long. Maximum 64 hops allowed.",
-  "path_setPath": "Set Path",
   "repeater_management": "Repeater Management",
   "room_management": "Room Server Management",
   "repeater_guest": "Repeater Information",
@@ -1174,9 +1527,6 @@
   },
   "repeater_statusTitle": "Repeater Status",
   "repeater_routingMode": "Routing mode",
-  "repeater_autoUseSavedPath": "Auto (use saved path)",
-  "repeater_forceFloodMode": "Force Flood Mode",
-  "repeater_pathManagement": "Path management",
   "repeater_refresh": "Refresh",
   "repeater_statusRequestTimeout": "Status request timed out.",
   "repeater_errorLoadingStatus": "Error loading status: {error}",
@@ -1376,7 +1726,7 @@
   "repeater_advancedSettings": "Advanced",
   "repeater_advancedSettingsSubtitle": "Tuning knobs for experienced operators",
   "repeater_pathHashMode": "Path hash mode",
-  "repeater_pathHashModeHelper": "Bytes used to encode this repeater's ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). v1.13 and older firmware drops multi-byte paths — only raise once your network is on v1.14+.",
+  "repeater_pathHashModeHelper": "Bytes used to encode this repeater's ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). Firmware before v1.14 always used 1-byte paths; v1.14 and newer can be configured for 2- or 3-byte paths.",
   "repeater_txDelay": "Flood TX delay",
   "repeater_txDelayHelper": "Retransmit spacing for flood traffic, as a multiplier of the packet's airtime (0-2, default 0.5). Higher = fewer collisions but slower delivery.",
   "repeater_directTxDelay": "Direct TX delay",
@@ -1676,6 +2026,120 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Digital Input",
+  "telemetry_digitalOutputLabel": "Digital Output",
+  "telemetry_analogInputLabel": "Analog Input",
+  "telemetry_analogOutputLabel": "Analog Output",
+  "telemetry_genericLabel": "Generic Sensor",
+  "telemetry_luminosityLabel": "Luminosity",
+  "telemetry_presenceLabel": "Presence",
+  "telemetry_humidityLabel": "Humidity",
+  "telemetry_accelerometerLabel": "Accelerometer",
+  "telemetry_pressureLabel": "Pressure",
+  "telemetry_altitudeLabel": "Altitude",
+  "telemetry_frequencyLabel": "Frequency",
+  "telemetry_percentageLabel": "Percentage",
+  "telemetry_concentrationLabel": "Concentration",
+  "telemetry_powerLabel": "Power",
+  "telemetry_distanceLabel": "Distance",
+  "telemetry_energyLabel": "Energy",
+  "telemetry_directionLabel": "Direction",
+  "telemetry_timeLabel": "Time",
+  "telemetry_gyrometerLabel": "Gyrometer",
+  "telemetry_colourLabel": "Colour",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Switch",
+  "telemetry_polylineLabel": "Polyline",
+  "telemetry_altitudeValue": "{meters} m",
+  "@telemetry_altitudeValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "@telemetry_frequencyValue": {
+    "placeholders": {
+      "hertz": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_pressureValue": "{hpa} hPa",
+  "@telemetry_pressureValue": {
+    "placeholders": {
+      "hpa": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_luminosityValue": "{lux} lx",
+  "@telemetry_luminosityValue": {
+    "placeholders": {
+      "lux": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_powerValue": "{watts} W",
+  "@telemetry_powerValue": {
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_distanceValue": "{meters} m",
+  "@telemetry_distanceValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "@telemetry_energyValue": {
+    "placeholders": {
+      "kilowattHours": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_directionValue": "{degrees}°",
+  "@telemetry_directionValue": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "@telemetry_concentrationValue": {
+    "placeholders": {
+      "ppm": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_percentageValue": "{percent}%",
+  "@telemetry_percentageValue": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_analogValue": "{value}",
+  "@telemetry_analogValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "telemetry_autoFetchQuantity": "Requests quantity",
+  "telemetry_error": "Unable to retrieve data",
   "neighbors_receivedData": "Received Neighbors Data",
   "neighbors_requestTimedOut": "Neighbors request timed out.",
   "neighbors_errorLoading": "Error loading neighbors: {error}",
@@ -1708,6 +2172,7 @@
   "channelPath_viewMap": "View map",
   "channelPath_otherObservedPaths": "Other Observed Paths",
   "channelPath_repeaterHops": "Repeater Hops",
+  "channelPath_repeaterHopsHighTimeout": "Increased path trace timeout (10s*hops)",
   "channelPath_noHopDetails": "Hop details are not provided for this packet.",
   "channelPath_messageDetails": "Message Details",
   "channelPath_senderLabel": "Sender",
@@ -1803,6 +2268,7 @@
   },
   "channelPath_noHopDetailsAvailable": "No hop details available for this packet.",
   "channelPath_unknownRepeater": "Unknown Repeater",
+  "channelPath_outgoingSentByRadioAt": "Waiting for transmission via radio, sec",
   "community_title": "Community",
   "community_create": "Create Community",
   "community_createDesc": "Create a new community and share via QR code.",
@@ -1949,6 +2415,8 @@
   "listFilter_favorites": "Favorites",
   "listFilter_addToFavorites": "Add to favorites",
   "listFilter_removeFromFavorites": "Remove from favorites",
+  "listFilter_removeFromWardrive": "Ignore in Wardrive",
+  "listFilter_returnToWardrive": "Return to Wardrive",
   "listFilter_users": "Users",
   "listFilter_repeaters": "Repeaters",
   "listFilter_roomServers": "Room servers",
@@ -2154,8 +2622,8 @@
   "contacts_contactImportFailed": "Failed to import contact.",
   "contacts_zeroHopAdvert": "Zero Hop Advert",
   "contacts_floodAdvert": "Flood Advert",
-  "contacts_copyAdvertToClipboard": "Copy Advert to Clipboard",
-  "contacts_addContactFromClipboard": "Add Contact from Clipboard",
+  "contacts_copyAdvertToClipboard": "Copy self-link «meshcore://»",
+  "contacts_addContactFromClipboard": "Add Contact by «meshcore://» link from clipboard",
   "contacts_ShareContact": "Copy contact to Clipboard",
   "contacts_ShareContactZeroHop": "Share contact by advert",
   "contacts_zeroHopContactAdvertSent": "Sent contact by advert.",
@@ -2303,6 +2771,9 @@
   "translation_enableSubtitle": "Translate incoming messages and allow pre-send translation.",
   "translation_composerTitle": "Translate before sending",
   "translation_composerSubtitle": "Controls the default state of the composer translation icon.",
+  "translation_autoIncomingTitle": "Auto-translate incoming messages",
+  "translation_autoIncomingSubtitle": "Translates Messages for notification and for chat or channel automatically.",
+  "translation_translateMessage": "Translate message",
   "translation_targetLanguage": "Target language",
   "translation_useAppLanguage": "Use app language",
   "translation_downloadedModelLabel": "Downloaded model",
@@ -2379,9 +2850,275 @@
   },
   "channels_mcmpCompression": "MCMP compression",
   "channels_mcmpCompressionDescription": "Using mesh-compressor model",
+  "channels_copyPath": "Copy message path",
+  "channels_copyPathExtended": "Copy message path (extended)",
+  "channels_copiedPath": "Message path copied",
+  "channels_copyPathFailed": "Copying message path failed",
+  "settings_copyMsgPathTitle": "Configure message path copying",
+  "settings_copyMsgPathDscr": "Edit the template for generating message path information from the channel",
+  "settings_copyMsgPathEditTemplateTitle": "Edit template",
+  "settings_copyMsgPathEditTemplateDscr": "Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break",
+  "settings_copyMsgPathEditFinalTitle": "Final message",
+  "settings_copyMsgPathEditFinalDscr": "Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break",
+  "settings_channelsSendAsBinary": "Send extended data as binary (channels)",
+  "settings_dmSendAsBinary": "Send extended data as binary (direct messages)",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",
   "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown"
+  "contact_typeUnknown": "Unknown",
+  "map_zoomIn": "Zoom in",
+  "map_zoomOut": "Zoom out",
+  "map_centerMap": "Center map",
+  "chrome_bluetoothRequiresChromium": "Web Bluetooth requires a Chromium browser",
+  "channels_communityShortId": "ID: {id}...",
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "pathTrace_legendGpsConfirmed": "GPS confirmed",
+  "pathTrace_legendInferred": "Inferred position",
+  "pathMap_viewSingle": "Single",
+  "pathMap_viewCombined": "Combined",
+  "pathMap_play": "Play",
+  "pathMap_pause": "Pause",
+  "pathMap_replay": "Replay",
+  "pathMap_stepBack": "Previous hop",
+  "pathMap_stepForward": "Next hop",
+  "pathMap_animationOn": "Show packet animation",
+  "pathMap_animationOff": "Hide packet animation",
+  "pathMap_hopOf": "Hop {current} of {total}",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_observedPaths": "Observed paths: {count}",
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_primary": "Primary",
+  "pathMap_alternate": "Alt {index}",
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_hopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_gpsCount": "{confirmed}/{total} GPS",
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_legendShared": "Shared segment",
+  "pathMap_legendEstimated": "Estimated segment",
+  "pathMap_sharedNodeCount": "Used by {count} paths",
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_partialAnimation": "{count, plural, =1{1 hop has no location — the shown path is partial} other{{count} hops have no location — the shown path is partial}}",
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_showAllPaths": "Show all",
+  "pathMap_hidePath": "Hide path",
+  "pathMap_showPath": "Show path",
+  "pathMap_collapsePanel": "Collapse panel",
+  "pathMap_expandPanel": "Expand panel",
+  "pathMap_noLocation": "No location",
+  "pathMap_followPacket": "Lock view to packet",
+  "pathMap_unfollowPacket": "Unlock view from packet",
+  "chat_canvas": "MCOimg canvas",
+  "chat_canvasCrop": "Crop/expand",
+  "chat_canvasResize": "Scale",
+  "chat_canvasUnlockSize": "Unlock canvas size",
+  "chat_canvasFormatVer": "Codec version",
+  "chat_canvasPalette": "Palette",
+  "chat_canvasPaletteShow": "Show palette",
+  "chat_canvasPaletteMode": "Palette preset",
+  "chat_canvasPaletteDynamic": "Dynamic",
+  "chat_canvasPaletteDynamicProfile": "Base set for dynamic palette",
+  "chat_canvasPaletteDynamicUsed": "Colours actually used",
+  "chat_canvasPaletteDynamicDscr": "Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.",
+  "chat_canvasPaletteAlpha": "Transparency color",
+  "chat_canvasChangeSize": "Change canvas size",
+  "chat_canvasTrim": "Trim empty",
+  "chat_canvasWidth": "Width",
+  "chat_canvasHeight": "Height",
+  "chat_canvasGridShow": "Show grid",
+  "chat_canvasRulerShow": "Show ruler",
+  "chat_canvasGridColor": "Grid color",
+  "chat_canvasSave": "Save to file",
+  "chat_canvasLoad": "Load from file",
+  "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.",
+  "@chat_canvasSendPayloadExceed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_canvasCurrentPayload": "Current payload: {payload}",
+  "@chat_canvasCurrentPayload": {
+    "placeholders": {
+      "payload": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_canvasActive": "Show canvas",
+  "chat_canvasShowLockBtn": "Show canvas block button",
+  "chat_canvasSendToEdit": "Send to canvas",
+  "chat_canvasSendToGallery": "Save to gallery",
+  "chat_canvasGalleryShowPNG": "Show source (PNG)",
+  "chat_canvasGalleryShowBIN": "Show as Bin",
+  "chat_canvasGalleryRemove": "Remove",
+  "chat_canvasGalleryRemoveConfirm": "Remove image from gallery?",
+  "chat_canvasFormatNotSupported": "MCOimg format version: {received}, current codec supports up to {current}",
+  "@chat_canvasFormatNotSupported": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_canvasSaveBinary": "Save fo binary file",
+  "chat_canvasCannotSend": "Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.",
+  "@chat_canvasCannotSend": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_canvasCompressionLevel": "Compression level",
+  "chat_canvasCompressionLevelNormal": "Normal",
+  "chat_canvasCompressionLevelHigh": "High",
+  "chat_canvasCompressionLevelExtreme": "Extreme",
+  "chat_showHops": "Show hops",
+  "settings_modSettings": "Modification Settings",
+  "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
+  "settings_modSettingsVisual": "Visual",
+  "settings_modSettingsMessaging": "Messaging",
+  "settings_modSettingsHideChInd": "Hide channel index",
+  "settings_modSettingsIncomingQuoteAsMentions": "Show quotes in incoming messages as mentions",
+  "settings_modSettingsSimplifiedMentions": "Simplified style of mentions in messages visual",
+  "settings_modSettingsSharedMsgHistory": "Shared messages history",
+  "settings_modSettingsSharedMsgHistoryDscr": "Combining the history of messages received from different devices; the final history is stored only in the application",
+  "settings_modSettingsSharedMsgHistoryDisabled": "Disabled",
+  "settings_modSettingsSharedMsgHistoryChannels": "Only channels",
+  "settings_modSettingsSharedMsgHistoryContacts": "Only contacts",
+  "settings_modSettingsSharedMsgHistoryAll": "All chats",
+  "settings_modSettingsMessagingShowCompressionRatio": "Show compression ratio",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "Also take into account senderName",
+  "settings_modSettingsVisualHideMapZoomControls": "Hide map zoom panel",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: show coding algorythm badge",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: show image weight (bytes)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution",
+  "settings_modSettingsVisualShowMsgRegion": "Show message region",
+  "channels_messageRegion": "Region: {region}",
+  "@channels_messageRegion": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_messageRegionUnknown": "unknown",
+  "channels_messageRegionEmpty": "unset",
+  "settings_defaultRegionScope": "Default region scope",
+  "settings_defaultRegionScopeChanged": "Default region scope changed",
+  "settings_defaultRegionScopeChangeFailed": "Change default region scope failed",
+  "settings_defaultRegionScopeEmpty": "Currently unset",
+  "settings_defaultRegionScopeWaitForSync": "Please wait until synchronization complete",
+  "common_reset": "Reset",
+  "connection_autoconnect": "Autoconnect",
+  "settings_modSettingsNoRetraInfo": "No retranslations heard for {time} seconds.",
+  "@settings_modSettingsNoRetraInfo": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_modSettingsNoRetraHeading": "Display messages as unsent if no retranslations heard within seconds:",
+  "settings_modSettingsNoRetraDscr": "Attention! Due to a mechanism in a node's firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!",
+  "settings_selfTelemetryShow": "Check sensors",
+  "settings_modSettingsVisualChannelsUnreadSorting": "Channels sorting by unread messages",
+  "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background",
+  "chat_MCOimgOpenGallery": "Open MCOimg gallery",
+  "chat_additionalActions": "Chat actions menu",
+  "mcogallery_common": "Common",
+  "mcogallery_addPack": "Add package",
+  "mcogallery_removePack": "Remove package",
+  "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
+  "@mcogallery_removePackConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcogallery_addGroup": "Add group",
+  "mcogallery_removeGroup": "Remove group",
+  "chat_sendSelfContact": "Send self contact",
+  "chat_sendContact": "Share contact",
+  "chat_addContact": "Add contact",
+  "chat_sureToReplaceContact": "Contact is already exists, replace it?",
+  "contacts_addContactByPubkey": "Add contact by pubkey",
+  "contacts_addContactByPubkey_contactType": "Contact type",
+  "chat_contactIsYou": "It is you",
+  "chat_contactType": "Contact type: {contacttype}",
+  "@chat_contactType": {
+    "placeholders": {
+      "contacttype": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_contactTypeNode": "Node",
+  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRoom": "Room-server",
+  "chat_contactTypeSensor": "Sensor",
+  "chat_myLocation": "Share my location",
+  "chat_locationFromMap": "Share location from map"
 }

@@ -10,9 +10,11 @@ import '../l10n/contact_localization.dart';
 import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../theme/mesh_theme.dart';
+import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'path_management_dialog.dart';
+import 'routing_sheet.dart';
 
 class RoomLoginDialog extends StatefulWidget {
   final Contact room;
@@ -181,7 +183,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.login_failed(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         );
       }
     }
@@ -226,26 +228,40 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.group, color: Colors.purple),
-          const SizedBox(width: 8),
+          AvatarCircle(
+            name: repeater.name,
+            size: 40,
+            color: MeshPalette.magenta,
+            icon: Icons.group,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.login_roomLogin),
+                Text(
+                  l10n.login_roomLogin,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 Text(
                   repeater.name,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.normal,
-                    color: Colors.grey[600],
+                    color: scheme.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -275,7 +291,6 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     decoration: InputDecoration(
                       labelText: l10n.login_password,
                       hintText: l10n.login_enterPassword,
-                      border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -319,9 +334,9 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     children: [
                       Text(
                         l10n.login_routing,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        style: MeshTheme.accentLabel(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 11,
                         ),
                       ),
                       const Spacer(),
@@ -349,9 +364,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                                 Icon(
                                   Icons.auto_mode,
                                   size: 20,
-                                  color: !isFloodMode
-                                      ? Theme.of(context).primaryColor
-                                      : null,
+                                  color: !isFloodMode ? scheme.primary : null,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -372,9 +385,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                                 Icon(
                                   Icons.waves,
                                   size: 20,
-                                  color: isFloodMode
-                                      ? Theme.of(context).primaryColor
-                                      : null,
+                                  color: isFloodMode ? scheme.primary : null,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -395,14 +406,17 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                   const SizedBox(height: 4),
                   Text(
                     repeater.pathLabel(context.l10n),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed: () =>
-                          PathManagementDialog.show(context, contact: repeater),
+                          ContactRoutingSheet.show(context, contact: repeater),
                       icon: const Icon(Icons.timeline, size: 18),
                       label: Text(l10n.login_managePaths),
                     ),
@@ -423,12 +437,12 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: scheme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 12),

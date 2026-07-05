@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:llamadart/llamadart.dart';
+import 'package:flutter_langdetect/flutter_langdetect.dart';
 
 import '../models/app_settings.dart';
 import '../models/translation_support.dart';
@@ -41,8 +42,12 @@ class TranslationService extends ChangeNotifier {
   TranslationService(
     this._appSettingsService, {
     TranslationFileStore? fileStore,
-  }) : _fileStore = fileStore ?? TranslationFileStore();
+  }) : _fileStore = fileStore ?? TranslationFileStore() {
+    // Initialize langdetect once at service construction.
+    _langDetectInit = initLangDetect();
+  }
 
+  bool _disposed = false;
   bool _isBusy = false;
   bool _isDownloading = false;
   bool _cancelDownloadRequested = false;
@@ -51,6 +56,7 @@ class TranslationService extends ChangeNotifier {
   LlamaEngine? _engine;
   String? _loadedModelPath;
   String? _failedModelPath;
+  Future<void>? _langDetectInit;
   int _downloadedBytes = 0;
   int? _downloadTotalBytes;
   String? _downloadFileName;
@@ -84,7 +90,22 @@ class TranslationService extends ChangeNotifier {
         'en';
   }
 
-  bool shouldTranslateIncoming({
+  bool shouldAutoTranslateIncoming({
+    required String text,
+    required bool isCli,
+    required bool isOutgoing,
+  }) {
+    if (!_settings.autoTranslateIncomingMessages) {
+      return false;
+    }
+    return canTranslateIncoming(
+      text: text,
+      isCli: isCli,
+      isOutgoing: isOutgoing,
+    );
+  }
+
+  bool canTranslateIncoming({
     required String text,
     required bool isCli,
     required bool isOutgoing,
@@ -195,7 +216,7 @@ class TranslationService extends ChangeNotifier {
         }
 
         _downloadTotalBytes = totalSize;
-        notifyListeners();
+        _notify();
 
         DownloadedModelFile downloaded;
         if (supportsRange &&
@@ -248,7 +269,7 @@ class TranslationService extends ChangeNotifier {
         throw StateError('Model download failed: HTTP ${response.statusCode}');
       }
       _downloadTotalBytes ??= response.contentLength;
-      notifyListeners();
+      _notify();
       final trackedStream = _trackDownloadProgress(response.stream);
       return await _fileStore.writeModelBytes(
         fileName: fileName,
@@ -293,7 +314,7 @@ class TranslationService extends ChangeNotifier {
         throw const TranslationDownloadCancelled();
       }
       _downloadFileName = 'Merging chunks...';
-      notifyListeners();
+      _notify();
       combineReached = true;
       return await _fileStore.combineChunks(
         fileName: fileName,
@@ -341,7 +362,7 @@ class TranslationService extends ChangeNotifier {
     }
     _cancelDownloadRequested = true;
     _lastError = 'Download stopped.';
-    notifyListeners();
+    _notify();
   }
 
   Future<void> removeModel(TranslationModelRecord model) async {
@@ -368,7 +389,9 @@ class TranslationService extends ChangeNotifier {
     if (targetLanguageCode == null || !_isPlainTextEligible(text)) {
       return null;
     }
-    final detectedLanguageCode = await detectLanguage(text);
+    final detectedLanguageCode = await detectLanguage(
+      _stripReplyInfoForDetection(text),
+    );
     if (detectedLanguageCode != null &&
         detectedLanguageCode == targetLanguageCode) {
       return const TranslationResult(
@@ -409,7 +432,9 @@ class TranslationService extends ChangeNotifier {
     if (targetLanguageCode == null || !_isPlainTextEligible(text)) {
       return null;
     }
-    final detectedLanguageCode = await detectLanguage(text);
+    final detectedLanguageCode = await detectLanguage(
+      _stripReplyInfoForDetection(text),
+    );
     if (detectedLanguageCode != null &&
         detectedLanguageCode == targetLanguageCode) {
       return const TranslationResult(
@@ -436,7 +461,26 @@ class TranslationService extends ChangeNotifier {
   }
 
   Future<String?> detectLanguage(String text) async {
-    return _heuristicLanguageCode(text);
+    try {
+      // Ensure the detector is initialized (constructor starts init).
+      await (_langDetectInit ??= initLangDetect());
+      final code = detect(text);
+      if (code.isEmpty) return null;
+      return code;
+    } catch (error) {
+      _lastError = error.toString();
+      appLogger.warn('Language detection failed: $error');
+      _notify();
+      return null;
+    }
+  }
+
+  String _stripReplyInfoForDetection(String text) {
+    final match = RegExp(
+      r'@\[([^\]]+)\]\s+(.+)$',
+      dotAll: true,
+    ).firstMatch(text);
+    return match?.group(2) ?? text;
   }
 
   Future<String?> _translateText({
@@ -495,7 +539,7 @@ class TranslationService extends ChangeNotifier {
     } catch (error) {
       _lastError = error.toString();
       appLogger.warn('Translation request failed: $error');
-      notifyListeners();
+      _notify();
       return null;
     }
   }
@@ -516,72 +560,6 @@ class TranslationService extends ChangeNotifier {
     return !(trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|') ||
         trimmed.startsWith('r:'));
-  }
-
-  String? _heuristicLanguageCode(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-
-    if (RegExp(r'[ぁ-んァ-ン]').hasMatch(text)) {
-      return 'ja';
-    }
-    if (RegExp(r'[가-힣]').hasMatch(text)) {
-      return 'ko';
-    }
-    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(text)) {
-      return 'zh';
-    }
-
-    final lower = trimmed.toLowerCase();
-    final patterns = <String, String>{
-      'uk': r'\b(привіт|дякую|будь|ласка|як|де|не|так|це|є|най|ще|може|для)\b',
-      'ru':
-          r'\b(что|это|как|не|да|нет|он|она|они|быть|есть|для|сегодня|если|уже|может)\b',
-      'bg': r'\b(ще|няма|благодаря|моля|това|какво|тук|ние|вие|не|със|за)\b',
-      'de':
-          r'\b(der|die|das|und|ist|nicht|ein|eine|ich|für|mit|auf|zu|auch|als|an|im|am|es|dem|den|sich|von)\b',
-      'en':
-          r'\b(the|and|is|you|for|with|from|not|that|this|have|be|are|was|were|but|can|will|your|what|when|how|they)\b',
-      'es':
-          r'\b(el|la|los|las|es|que|de|en|con|por|para|no|un|una|se|como|su|al|del|está)\b',
-      'fr':
-          r'\b(le|la|les|un|une|et|est|que|qui|pour|dans|pas|avec|sur|ne|vous|il|elle|des|ce|cette|je|tu|nous|vous)\b',
-      'it':
-          r'\b(il|la|lo|un|una|che|di|da|in|per|con|non|si|mi|ti|noi|voi|lui|lei)\b',
-      'pt':
-          r'\b(os|as|que|de|do|da|em|para|com|por|não|uma|um|se|você|também)\b',
-      'nl':
-          r'\b(de|het|een|en|is|niet|dat|wat|je|ik|op|aan|voor|met|als|nog|zijn)\b',
-      'sv':
-          r'\b(och|är|det|att|som|en|på|inte|har|var|men|du|jag|vi|ni|den|detta)\b',
-      'pl':
-          r'\b(na|się|nie|jest|to|że|do|od|dla|czy|tak|ale|ma|jak|on|ona|my)\b',
-      'sk': r'\b(je|na|so|že|do|od|za|si|to|ten|tá|tí|ako|má|nie|som|sa)\b',
-      'sl': r'\b(in|je|na|se|da|za|od|ne|to|ta|so|kako|bo|sem|si)\b',
-      'hu':
-          r'\b(az|és|nem|van|volt|hogy|mit|mire|ki|mi|ez|azért|is|de|ha|te|ő|mi|itt)\b',
-    };
-
-    final scores = <String, int>{};
-    for (final entry in patterns.entries) {
-      scores[entry.key] = RegExp(
-        entry.value,
-        caseSensitive: false,
-      ).allMatches(lower).length;
-    }
-
-    final sorted = scores.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    if (sorted.isEmpty || sorted.first.value == 0) {
-      return null;
-    }
-    if (sorted.length > 1 && sorted.first.value == sorted[1].value) {
-      return null;
-    }
-
-    return sorted.first.key;
   }
 
   String _languageLabel(String code) {
@@ -654,6 +632,10 @@ class TranslationService extends ChangeNotifier {
     final completer = Completer<T>();
     _setBusy(true);
     _queue = _queue.then((_) async {
+      if (_disposed) {
+        completer.completeError(StateError('TranslationService disposed.'));
+        return;
+      }
       try {
         completer.complete(await action());
       } catch (error, stackTrace) {
@@ -671,9 +653,16 @@ class TranslationService extends ChangeNotifier {
         throw const TranslationDownloadCancelled();
       }
       _downloadedBytes += chunk.length;
-      notifyListeners();
+      _notify();
       yield chunk;
     }
+  }
+
+  void _notify() {
+    if (_disposed) {
+      return;
+    }
+    notifyListeners();
   }
 
   void _setBusy(bool value) {
@@ -681,7 +670,7 @@ class TranslationService extends ChangeNotifier {
       return;
     }
     _isBusy = value;
-    notifyListeners();
+    _notify();
   }
 
   void _setDownloading(bool value) {
@@ -692,11 +681,12 @@ class TranslationService extends ChangeNotifier {
       _downloadTotalBytes = null;
       _downloadFileName = null;
     }
-    notifyListeners();
+    _notify();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     final engine = _engine;
     _engine = null;
     _loadedModelPath = null;

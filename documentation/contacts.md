@@ -6,18 +6,17 @@ The Contacts screen is the primary hub for managing mesh nodes your radio has a 
 
 ## How to Access
 
-- Automatically shown after connecting to a device
-- QuickSwitchBar tab 0 (leftmost) from Channels or Map screens
+- QuickSwitchBar tab 0 (leftmost) from Channels or Map screens (Channels is shown first after connecting)
 - Back navigation from Chat or Settings screens
 
 ## Contact Types
 
 | Type | Avatar Color | Icon | Description |
 |---|---|---|---|
-| Chat | Blue | Chat bubble | Another user's mesh radio |
-| Repeater | Orange | Cell tower | A mesh repeater/relay node |
-| Room | Purple | Group | A room server for group chat |
-| Sensor | Green | Sensors | A sensor device |
+| Chat | Blue | Initials / emoji | Another user's mesh radio |
+| Repeater | Amber | Cell tower | A mesh repeater/relay node |
+| Room | Magenta | Meeting room | A room server for group chat |
+| Sensor | Teal | Sensors | A sensor device |
 
 ## Contact List
 
@@ -73,31 +72,31 @@ Groups are stored per radio identity (scoped by public key).
 
 | Action | Availability | Description |
 |---|---|---|
-| Ping | Repeaters (always) | Opens PathTraceMapScreen targeting the repeater |
-| Path Trace | Rooms (always); Chat/Sensor if `pathLength > 0` | Opens PathTraceMapScreen. For rooms, label shows "Ping" when no path bytes are known, "Path Trace" when path bytes are available |
+| Ping | Repeaters only | Opens PathTraceMapScreen targeting the repeater |
+| Path Trace | Rooms (always); Chat/Sensor only if `pathLength > 0` | Opens PathTraceMapScreen. For rooms, label shows "Ping" when no path bytes are known, "Path Trace" when path bytes are available |
 | Manage Repeater | Repeaters only | Login dialog → RepeaterHubScreen |
 | Room Login | Rooms only | Login dialog → ChatScreen |
 | Room Management | Rooms only | Login dialog → RepeaterHubScreen (management mode) |
-| Open Chat | Chat/Sensor | Same as single tap |
 | Add/Remove Favorite | All types | Toggles the favorite flag |
-| Share Contact | All types | Copies `meshcore://<hex>` URI to clipboard |
+| Share Contact | All types | Requests advert from device → copies `meshcore://<hex>` URI to clipboard |
 | Share Contact Zero-Hop | All types | Broadcasts the contact's advertisement one hop |
 | Delete Contact | All types | Confirmation dialog → removes from device and clears messages |
 
 ## App Bar Menus
 
-The Contacts screen has **two separate popup menus** in the app bar:
+The Contacts screen has a single **three-dot overflow menu** (`⋮`) in the app bar:
 
-**Antenna icon menu** (contact sharing):
+- Discovered Contacts — opens the DiscoveryScreen
+- Add Contact from Clipboard — reads a `meshcore://<hex>` URI from clipboard and imports it
+- *(divider)*
 - Zero-Hop Advert — broadcasts your advertisement to immediately adjacent nodes
 - Flood Advert — broadcasts across the full mesh network
 - Copy Advert to Clipboard — copies your `meshcore://<hex>` URI for sharing externally
-- Add Contact from Clipboard — reads a `meshcore://<hex>` URI from clipboard and imports it
-
-**Three-dot overflow menu**:
+- *(divider)*
 - Disconnect — disconnects from the device
-- Discovered Contacts — opens the DiscoveryScreen
 - Settings — opens the Settings screen
+
+A **floating action button** (person-add icon) provides a shortcut sheet to "Add Contact from Clipboard" or "Discovered Contacts".
 
 ## Adding Contacts
 
@@ -105,10 +104,10 @@ The Contacts screen has **two separate popup menus** in the app bar:
 When the radio hears an advertisement, the contact appears automatically if auto-add is enabled for that type (configurable in Settings → Contact Settings).
 
 ### Import from Clipboard
-Antenna menu → "Add Contact from Clipboard". Reads a `meshcore://<hex>` URI from clipboard and imports it to the device.
+Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `meshcore://<hex>` URI from clipboard and imports it to the device.
 
 ### Import from Discovered Contacts
-Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Add, Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms, Favorites), and sort options (Last Seen, A-Z). An overflow "Delete All" option clears all discovered contacts.
+Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). An overflow "Delete All" option clears all discovered contacts.
 
 ## Contact Sharing Format
 

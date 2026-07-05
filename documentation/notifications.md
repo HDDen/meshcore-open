@@ -22,7 +22,7 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 
 ### 3. Advertisement Notifications
 - **Triggered when**: A new node is discovered on the mesh for the first time
-- **Title**: "New [type] discovered" (e.g., "New chat node discovered")
+- **Title**: "New [type] discovered" (e.g., "New Chat discovered")
 - **Body**: Contact's name
 - **Priority**: Default
 - **Android channel**: `adverts`
@@ -43,7 +43,7 @@ Red numeric badges appear throughout the UI:
 - **Contacts list**: Each contact row shows a red pill badge (e.g., "3") for unread messages
 - **Channels list**: Each channel row shows an unread badge
 - **Chat screen subtitle**: Shows unread count inline
-- Badges cap at "99+" for display
+- Badges cap at "9999+" for display
 
 ### How Unread Counts Work
 

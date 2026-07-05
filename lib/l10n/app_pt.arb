@@ -33,6 +33,8 @@
   "common_remove": "Remover",
   "common_enable": "Ativar",
   "common_disable": "Desativar",
+  "common_autoRefresh": "Atualização automática",
+  "common_interval": "Intervalo",
   "common_reboot": "Reiniciar",
   "common_loading": "Carregando...",
   "common_notAvailable": "—",
@@ -158,6 +160,31 @@
       }
     }
   },
+  "tcpBookmarksLabel": "Últimas conexões",
+  "tcpBookmarksSetName": "Definir nome do favorito",
+  "tcpBookmarksFavouritesSubtitle": "Quando marcado como favorito, não é removido do histórico de conexões",
+  "settings_channelResendTimeoutTitle": "Atraso de reenvio manual",
+  "settings_channelResendTimeoutSubtitle": "Também afeta o mecanismo interno para eliminar renderizações duplicadas de mensagens enviadas",
+  "settings_channelMaxbytesOutgoingTitle": "Limitar o payload de saída dos canais, bytes",
+  "settings_channelMaxbytesOutgoingSubtitle": "O limite considera o texto da mensagem mais o nome do remetente. Foi observado que, quando uma mensagem excede certo número de bytes, as confirmações de repetição de pacotes deixam de ser transmitidas. Isso é especialmente perceptível em conexões BLE. O limite aproximado em que as confirmações ainda funcionam é 139 bytes. Para USB, esse limite é de aproximadamente 155 bytes.",
+  "settings_quickAnswersTitle": "Respostas rápidas",
+  "settings_quickAnswersSubtitle": "Uma lista de frases disponíveis para selecionar como respostas rápidas. Elas são atribuídas a contatos/canais nas respectivas configurações.",
+  "settings_quickAnswersAddText": "Digite seu texto",
+  "settings_quickAnswersEditText": "Editar resposta",
+  "settings_quickAnswersSelect": "Ativar estas respostas",
+  "settings_quickAnswersExists": "Já existe",
+  "settings_quickAnswersNotAdded": "Você ainda não adicionou respostas rápidas para este chat!",
+  "appSettings_enableTimeSeconds": "Mostrar segundos nas informações da mensagem",
+  "appSettings_showKeyboardHidingButton": "Mostrar botão para ocultar o teclado",
+  "settings_mcmpTextLimit": "Limite de colagem de texto MCMP",
+  "settings_sendingDelayForCancellation": "Atraso de envio para cancelamento",
+  "settings_useSendingDelay": "Usar atraso de envio",
+  "chat_cancelSend": "cancelar envio",
+  "settings_doNotFilterMessagesOnChannels": "Não filtrar mensagens próprias nos canais",
+  "settings_doNotFilterMessagesOnChannelsSubtitle": "Por padrão, mensagens próprias do seu nó são ignoradas. Isso causa problemas em alguns firmwares com TerminalCLI integrado",
+  "chat_retryingMessageWait": "Aguarde {seconds} segundos antes de reenviar",
+  "channels_mcmpCompression": "Compressão MCMP",
+  "channels_mcmpCompressionDescription": "Usando o modelo mesh-compressor",
   "appSettings_title": "Configurações do App",
   "appSettings_appearance": "Aparência",
   "appSettings_theme": "Tema",
@@ -1105,7 +1132,7 @@
   "repeater_advancedSettings": "Avançado",
   "repeater_advancedSettingsSubtitle": "Controles de ajuste para operadores experientes",
   "repeater_pathHashMode": "Modo de hash de caminho",
-  "repeater_pathHashModeHelper": "Bytes utilizados para codificar o ID deste repetidor nas tags de caminho/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). As versões 1.13 e anteriores do firmware não suportam caminhos multi-byte — apenas funcionam uma vez após a ativação da rede (a partir da versão 1.14+).",
+  "repeater_pathHashModeHelper": "Bytes usados para codificar o ID deste repetidor nas tags de caminho flood/detecção de loop. 0=1 byte (256 IDs, até 64 saltos), 1=2 bytes (65.000 IDs, até 32 saltos), 2=3 bytes (16 milhões de IDs, até 21 saltos). O firmware anterior à v1.14 sempre usava caminhos de 1 byte; v1.14 e versões mais recentes podem ser configuradas para caminhos de 2 ou 3 bytes.",
   "repeater_txDelay": "Atraso na entrega em Flood, TX",
   "repeater_txDelayHelper": "Ajuste de espaçamento para tráfego de inundações, como um multiplicador do tempo de transmissão (0-2, padrão 0,5). Quanto maior, menos colisões, mas uma entrega mais lenta.",
   "repeater_directTxDelay": "Atraso direto no sinal TX",
@@ -1280,6 +1307,43 @@
       }
     }
   },
+  "telemetry_digitalInputLabel": "Entrada digital",
+  "telemetry_digitalOutputLabel": "Saída digital",
+  "telemetry_analogInputLabel": "Entrada analógica",
+  "telemetry_analogOutputLabel": "Saída analógica",
+  "telemetry_genericLabel": "Sensor genérico",
+  "telemetry_luminosityLabel": "Luminosidade",
+  "telemetry_presenceLabel": "Presença",
+  "telemetry_humidityLabel": "Humidade",
+  "telemetry_accelerometerLabel": "Acelerómetro",
+  "telemetry_pressureLabel": "Pressão",
+  "telemetry_altitudeLabel": "Altitude",
+  "telemetry_frequencyLabel": "Frequência",
+  "telemetry_percentageLabel": "Percentagem",
+  "telemetry_concentrationLabel": "Concentração",
+  "telemetry_powerLabel": "Potência",
+  "telemetry_distanceLabel": "Distância",
+  "telemetry_energyLabel": "Energia",
+  "telemetry_directionLabel": "Direção",
+  "telemetry_timeLabel": "Hora",
+  "telemetry_gyrometerLabel": "Girómetro",
+  "telemetry_colourLabel": "Cor",
+  "telemetry_gpsLabel": "GPS",
+  "telemetry_switchLabel": "Interruptor",
+  "telemetry_polylineLabel": "Polilinha",
+  "telemetry_altitudeValue": "{meters} m",
+  "telemetry_frequencyValue": "{hertz} Hz",
+  "telemetry_pressureValue": "{hpa} hPa",
+  "telemetry_luminosityValue": "{lux} lx",
+  "telemetry_powerValue": "{watts} W",
+  "telemetry_distanceValue": "{meters} m",
+  "telemetry_energyValue": "{kilowattHours} kWh",
+  "telemetry_directionValue": "{degrees}°",
+  "telemetry_concentrationValue": "{ppm} ppm",
+  "telemetry_percentageValue": "{percent}%",
+  "telemetry_analogValue": "{value}",
+  "telemetry_autoFetchQuantity": "Número de solicitações",
+  "telemetry_error": "Não foi possível obter os dados",
   "telemetry_noData": "Não estão disponíveis dados de telemetria.",
   "telemetry_channelTitle": "Canal {channel}",
   "@telemetry_channelTitle": {
@@ -1469,6 +1533,10 @@
   "channels_scanQrCodeComingSoon": "Em breve",
   "channels_enterHashtag": "Insira hashtag",
   "channels_hashtagHint": "ex. #equipe",
+  "channels_changeWidgetColor": "Cor do widget",
+  "channels_changeWidgetTextColor": "Cor do texto do widget",
+  "channels_changeGroupEmpty": "Ainda está vazio aqui",
+  "channels_allowOrderingInGroup": "Permitir ordenar canais dentro do grupo",
   "@neighbors_unknownContact": {
     "placeholders": {
       "pubkey": {
@@ -2100,6 +2168,9 @@
   "translation_enableTitle": "Ativar a tradução",
   "translation_title": "Tradução",
   "translation_composerSubtitle": "Controla o estado padrão do ícone de tradução do compositor.",
+  "translation_autoIncomingTitle": "Traduzir mensagens automaticamente",
+  "translation_autoIncomingSubtitle": "Traduz automaticamente mensagens para notificações e para chats ou canais.",
+  "translation_translateMessage": "Traduzir mensagem",
   "translation_targetLanguage": "Língua-alvo",
   "translation_useAppLanguage": "Utilize o idioma da aplicação",
   "translation_downloadedModelLabel": "Modelo baixado",
@@ -2311,5 +2382,192 @@
   "settings_companionDebugLogSubtitle": "Comandos, respostas e dados brutos para protocolos BLE/TCP/USB",
   "chat_markAsUnread": "Marcar como não lido",
   "chat_newMessages": "Novas mensagens",
-  "repeater_chanUtil": "Utilização do canal"
+  "repeater_chanUtil": "Utilização do canal",
+  "@routing_lastWorked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "@routing_deliveryCounts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_hopCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathEditor_invalidTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_communityShortId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "common_undo": "Desfazer",
+  "messageStatus_sent": "Enviado",
+  "messageStatus_pending": "Enviar",
+  "messageStatus_delivered": "Entregue",
+  "messageStatus_failed": "Falhou ao enviar",
+  "messageStatus_repeated": "Ouvi repetidamente",
+  "contacts_moreOptions": "Mais opções",
+  "contacts_searchOpen": "Pesquisar contatos",
+  "contacts_searchClose": "Pesquisa avançada",
+  "routing_title": "Rotas",
+  "routing_modeAuto": "Carro",
+  "routing_modeFlood": "Inundação",
+  "routing_modeManual": "Manual",
+  "routing_modeAutoHint": "Seleciona automaticamente o caminho mais conhecido, e, se nenhum caminho conhecido for encontrado, utiliza a estratégia de \"inundação\".",
+  "routing_modeFloodHint": "Transmissão através de todos os repetidores. É a opção mais confiável, mas utiliza mais tempo de transmissão.",
+  "routing_modeManualHint": "Sempre segue exatamente o caminho que você define.",
+  "routing_currentRoute": "Rota atual",
+  "routing_directNoHops": "Direto – sem saltos de repetidor",
+  "routing_noPathYet": "Ainda não há um caminho definido. A mensagem continua a ser enviada até que uma rota seja encontrada.",
+  "routing_floodBroadcast": "Transmissão através de todos os repetidores",
+  "routing_editPath": "Editar caminho",
+  "routing_forgetPath": "Esqueça o caminho",
+  "routing_knownPaths": "Rotas conhecidas",
+  "routing_knownPathsHint": "Toque em um caminho para alternar para ele.",
+  "routing_inUse": "Em uso",
+  "routing_qualityStrong": "Primeiro salto notável",
+  "routing_qualityGood": "Primeiro salto bem-sucedido",
+  "routing_qualityFair": "Primeira etapa bem-sucedida",
+  "routing_qualityWorked": "Foi entregue",
+  "routing_qualityFlood": "Informação obtida através de relatos generalizados.",
+  "routing_qualityUntested": "Não testado",
+  "routing_neverWorked": "nunca confirmado",
+  "routing_floodDelivery": "Entrega em áreas afetadas por inundações",
+  "pathEditor_title": "Criar Caminho",
+  "pathEditor_hopCounter": "{count} de 64 gramas de lúpulo",
+  "pathEditor_noHops": "Ainda não há lúpulos adicionados. Clique nos repetidores abaixo para adicioná-los na ordem desejada, ou salve sem adicionar lúpulos para enviar diretamente.",
+  "pathEditor_addHops": "Adicione os lúpulos na seguinte ordem.",
+  "pathEditor_searchRepeaters": "Encontrar repetidores",
+  "pathEditor_advancedHex": "Avançado: caminho hexadecimal bruto",
+  "pathEditor_hexLabel": "Prefixos hexadecimais",
+  "pathEditor_hexHelper": "Dois caracteres hexadecimais por salto, separados por vírgulas.",
+  "pathEditor_invalidTokens": "Inválido: {tokens}",
+  "routing_lastWorked": "worked {when}",
+  "pathEditor_tooManyHops": "Máximo de 64 saltos",
+  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "pathEditor_usePath": "Utilize este caminho.",
+  "pathEditor_removeHop": "Remova o lúpulo",
+  "pathEditor_unknownHop": "Repetidor desconhecido",
+  "map_zoomIn": "Ampliar",
+  "map_zoomOut": "Ampliar",
+  "map_centerMap": "Mapa do centro",
+  "chrome_bluetoothRequiresChromium": "O Web Bluetooth requer um navegador Chromium.",
+  "channels_communityShortId": "ID: {id}...",
+  "pathTrace_legendGpsConfirmed": "GPS confirmado",
+  "pathTrace_legendInferred": "Posição inferida",
+  "@pathMap_hopOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_observedPaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_alternate": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_hopCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_gpsCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_sharedNodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pathMap_partialAnimation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "map_online": "Online",
+  "map_activity": "Atividade",
+  "scanner_bluetoothWebUnsupported": "A funcionalidade Bluetooth não está disponível no navegador. Conecte-se via USB em vez disso.",
+  "map_searchHint": "Pesquisar por nome ou ID do nó",
+  "map_recent": "Recente",
+  "map_stale": "Vencido",
+  "map_visible": "Visível",
+  "map_hidden": "Escondido",
+  "map_centerOnNode": "Centralizar no nó",
+  "map_details": "Detalhes",
+  "map_noGps": "Sem GPS",
+  "map_noResults": "Nenhum nó encontrado",
+  "pathMap_viewSingle": "Único",
+  "pathMap_viewCombined": "Combinado",
+  "pathMap_play": "Reproduzir",
+  "pathMap_pause": "Pausa",
+  "pathMap_stepBack": "Salto anterior",
+  "pathMap_replay": "Repetir",
+  "pathMap_stepForward": "Próximo salto",
+  "pathMap_animationOn": "Exibir animação do pacote",
+  "pathMap_animationOff": "Ocultar a animação do pacote",
+  "pathMap_hopOf": "Salto {current} de {total}",
+  "pathMap_observedPaths": "Caminhos observados: {count}",
+  "pathMap_primary": "Primário",
+  "pathMap_alternate": "Alt {index}",
+  "pathMap_hopCount": "{count, plural, =1{1 salto} other{{count} saltos}}",
+  "pathMap_legendShared": "Segmento compartilhado",
+  "pathMap_legendEstimated": "Segmento estimado",
+  "pathMap_sharedNodeCount": "Utilizado em {count} caminhos",
+  "pathMap_partialAnimation": "{count, plural, =1{1 salto não tem localização — o caminho mostrado é parcial} other{{count} saltos não têm localização — o caminho mostrado é parcial}}",
+  "pathMap_showAllPaths": "Mostrar tudo",
+  "pathMap_hidePath": "Esconder caminho",
+  "pathMap_showPath": "Mostrar o caminho",
+  "pathMap_collapsePanel": "Recolher painel",
+  "pathMap_expandPanel": "Expandir painel",
+  "pathMap_noLocation": "Sem localização",
+  "pathMap_followPacket": "Fixar vista no pacote",
+  "pathMap_unfollowPacket": "Liberar vista do pacote",
+  "pathMap_gpsCount": "{confirmed}/{total} GPS"
 }

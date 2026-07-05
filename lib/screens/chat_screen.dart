@@ -6,48 +6,65 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:meshcore_open/screens/path_trace_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
+import '../helpers/mco_image_file_saver.dart';
+import '../helpers/mcoimg_codec.dart';
+import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/path_helper.dart';
+import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
-import '../models/path_history.dart';
+import '../models/message_compression.dart';
+import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
-import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
-import '../widgets/elements_ui.dart';
+import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/popup_menu_row.dart';
+import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
+import 'contacts_screen.dart';
 import 'map_screen.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
+import '../widgets/mco_image_message.dart';
 import '../widgets/message_translation_button.dart';
-import '../widgets/path_selection_dialog.dart';
+import '../widgets/quick_answers_selection_dialog.dart';
+import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../storage/mco_image_gallery_store.dart';
+import 'mco_image_gallery_screen.dart';
+import '../widgets/routing_sheet.dart';
+import '../widgets/shared_contact_message.dart';
+import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
-import '../utils/app_logger.dart';
 import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
+import '../theme/mesh_theme.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 
@@ -69,7 +86,11 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textController = TextEditingController();
   final _scrollController = ChatScrollController();
   final _textFieldFocusNode = FocusNode();
+  final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
+  bool _keyboardNavigationActive = true;
+  bool _ignoreNextTextFieldFocus = false;
+  String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
   Message? _pendingUnreadScrollTarget;
@@ -79,7 +100,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _textController.addListener(_onTextFieldTextChange);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -101,6 +126,11 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       connector.setActiveContact(keyHex);
       _connector = connector;
+      if (PlatformInfo.isDesktop) {
+        _ignoreNextTextFieldFocus = true;
+        _textFieldFocusNode.requestFocus();
+        _keyboardNavigationActive = true;
+      }
       if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -148,8 +178,27 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onTextFieldFocusChange() {
-    if (_textFieldFocusNode.hasFocus && mounted) {
+    if (!_textFieldFocusNode.hasFocus) {
+      _keyboardNavigationActive = true;
+      _ignoreNextTextFieldFocus = false;
+      return;
+    }
+    if (_ignoreNextTextFieldFocus) {
+      _ignoreNextTextFieldFocus = false;
+    } else {
+      _keyboardNavigationActive = false;
+    }
+    if (mounted) {
       _scrollController.handleKeyboardOpen();
+    }
+  }
+
+  void _onTextFieldTextChange() {
+    final text = _textController.text;
+    if (text == _lastTextFieldText) return;
+    _lastTextFieldText = text;
+    if (_textFieldFocusNode.hasFocus) {
+      _keyboardNavigationActive = false;
     }
   }
 
@@ -168,8 +217,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    if (PlatformInfo.isDesktop) {
+      HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
+    }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
+    _textController.removeListener(_onTextFieldTextChange);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
+    _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
     _scrollController.dispose();
@@ -178,254 +232,201 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Consumer2<PathHistoryService, MeshCoreConnector>(
-          builder: (context, pathService, connector, _) {
-            final contact = _resolveContact(connector);
-            final unreadCount = connector.getUnreadCountForContactKey(
-              widget.contact.publicKeyHex,
-            );
-            final unreadLabel = context.l10n.chat_unread(unreadCount);
-            final pathLabel = _currentPathLabel(contact);
+    return Focus(
+      focusNode: _screenFocusNode,
+      autofocus: PlatformInfo.isDesktop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Consumer<MeshCoreConnector>(
+            builder: (context, connector, _) {
+              final contact = _resolveContact(connector);
+              final unreadCount = connector.getUnreadCountForContactKey(
+                widget.contact.publicKeyHex,
+              );
+              final unreadLabel = context.l10n.chat_unread(unreadCount);
+              final pathLabel = _currentPathLabel(contact);
 
-            // Show path details if we have non-empty path data (from device or override)
-            final effectivePath = contact.pathOverrideBytes ?? contact.path;
-            final hasPathData = effectivePath.isNotEmpty;
+              // Show path details if we have non-empty path data (from device or override)
+              final effectivePath = contact.pathOverrideBytes ?? contact.path;
+              final hasPathData = effectivePath.isNotEmpty;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(contact.name),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: hasPathData
-                      ? () => _showFullPathDialog(context, effectivePath)
-                      : null,
-                  child: Text(
-                    '$pathLabel • $unreadLabel',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.normal,
-                      decoration: hasPathData ? TextDecoration.underline : null,
-                      decorationStyle: TextDecorationStyle.dotted,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(contact.name),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () =>
+                        ContactRoutingSheet.show(context, contact: contact),
+                    child: Text(
+                      '$pathLabel • $unreadLabel',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.normal,
+                        decoration: hasPathData
+                            ? TextDecoration.underline
+                            : null,
+                        decorationStyle: TextDecorationStyle.dotted,
+                      ),
                     ),
                   ),
+                ],
+              );
+            },
+          ),
+          centerTitle: false,
+          bottom: const SyncProgressAppBarBottom(),
+          actions: [
+            Consumer<MeshCoreConnector>(
+              builder: (context, connector, _) {
+                final contact = _resolveContact(connector);
+                final isFloodMode = contact.pathOverride == -1;
+                return IconButton(
+                  icon: Icon(isFloodMode ? Icons.waves : Icons.route),
+                  tooltip: context.l10n.repeater_routingMode,
+                  onPressed: () =>
+                      ContactRoutingSheet.show(context, contact: contact),
+                );
+              },
+            ),
+            const RadioStatsIconButton(),
+            Consumer<MeshCoreConnector>(
+              builder: (context, connector, _) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) async {
+                    if (value == 'info') {
+                      _showContactInfo(context);
+                    }
+                    if (value == 'settings') {
+                      _showContactSettings(context);
+                    }
+                    if (value == 'telemetry') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TelemetryScreen(contact: widget.contact),
+                        ),
+                      );
+                    }
+                    if (value == 'clearChat') {
+                      _confirmClearChat(context, connector);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'info',
+                      child: PopupMenuRow(
+                        icon: Icons.info_outline,
+                        text: context.l10n.contact_info,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'telemetry',
+                      child: PopupMenuRow(
+                        icon: Icons.bar_chart,
+                        text: context.l10n.contact_telemetry,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'settings',
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.contact_settings,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'clearChat',
+                      child: PopupMenuRow(
+                        icon: Icons.delete,
+                        iconColor: Colors.red,
+                        text: context.l10n.contact_clearChat,
+                        textStyle: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        body: Consumer<MeshCoreConnector>(
+          builder: (context, connector, child) {
+            final messages = [
+              ...connector.getMessages(widget.contact),
+              ...connector.getPendingContactMessages(
+                widget.contact.publicKeyHex,
+              ),
+            ];
+            return Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      messages.isEmpty
+                          ? _buildEmptyState()
+                          : _buildMessageList(messages, connector),
+                      JumpToBottomButton(scrollController: _scrollController),
+                    ],
+                  ),
                 ),
+                _buildInputBar(connector),
               ],
             );
           },
         ),
-        centerTitle: false,
-        actions: [
-          Consumer<MeshCoreConnector>(
-            builder: (context, connector, _) {
-              final contact = _resolveContact(connector);
-              final isFloodMode = contact.pathOverride == -1;
-
-              final isDirectMode = contact.pathOverride == 0;
-              final activeMode = isFloodMode
-                  ? 'flood'
-                  : isDirectMode
-                  ? 'direct'
-                  : 'auto';
-
-              return PopupMenuButton<String>(
-                icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-                tooltip: context.l10n.chat_routingMode,
-                onSelected: (mode) async {
-                  if (mode == 'flood') {
-                    await connector.setPathOverride(contact, pathLen: -1);
-                  } else if (mode == 'direct') {
-                    await connector.setPathOverride(
-                      contact,
-                      pathLen: 0,
-                      pathBytes: Uint8List(0),
-                    );
-                  } else {
-                    await connector.setPathOverride(contact, pathLen: null);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'auto',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.auto_mode,
-                          size: 20,
-                          color: activeMode == 'auto'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_autoUseSavedPath,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'auto'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'direct',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.near_me,
-                          size: 20,
-                          color: activeMode == 'direct'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_direct,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'direct'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'flood',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.waves,
-                          size: 20,
-                          color: activeMode == 'flood'
-                              ? Theme.of(context).primaryColor
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.chat_forceFloodMode,
-                          style: TextStyle(
-                            fontWeight: activeMode == 'flood'
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: context.l10n.chat_pathManagement,
-            onPressed: () => _showPathHistory(context),
-          ),
-          const RadioStatsIconButton(),
-          Consumer<MeshCoreConnector>(
-            builder: (context, connector, _) {
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'info') {
-                    _showContactInfo(context);
-                  }
-                  if (value == 'settings') {
-                    _showContactSettings(context);
-                  }
-                  if (value == 'telemetry') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TelemetryScreen(contact: widget.contact),
-                      ),
-                    );
-                  }
-                  if (value == 'clearChat') {
-                    connector.clearMessagesForContact(widget.contact);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'info',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_info),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'telemetry',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.bar_chart, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_telemetry),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.settings, size: 20),
-                        const SizedBox(width: 12),
-                        Text(context.l10n.contact_settings),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'clearChat',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete, size: 20, color: Colors.red),
-                        const SizedBox(width: 12),
-                        Text(
-                          context.l10n.contact_clearChat,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      body: Consumer<MeshCoreConnector>(
-        builder: (context, connector, child) {
-          final messages = [
-            ...connector.getMessages(widget.contact),
-            ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
-          ];
-          return Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    messages.isEmpty
-                        ? _buildEmptyState()
-                        : _buildMessageList(messages, connector),
-                    JumpToBottomButton(scrollController: _scrollController),
-                  ],
-                ),
-              ),
-              _buildInputBar(connector),
-            ],
-          );
-        },
       ),
     );
+  }
+
+  bool _handleDesktopKeyEvent(KeyEvent event) {
+    if (!PlatformInfo.isDesktop) {
+      return false;
+    }
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    final isNavigationKeyDown = event is KeyDownEvent;
+    final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;
+    if (!isNavigationKeyDown && !isScrollKeyEvent) {
+      return false;
+    }
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.escape:
+        unawaited(_handleEscapeNavigation());
+        return true;
+      case LogicalKeyboardKey.arrowLeft:
+        if (!isNavigationKeyDown || !_keyboardNavigationActive) return false;
+        unawaited(_handleEscapeNavigation());
+        return true;
+      case LogicalKeyboardKey.pageUp:
+        if (!isScrollKeyEvent) return false;
+        return _scrollMessagesByPage(1);
+      case LogicalKeyboardKey.pageDown:
+        if (!isScrollKeyEvent) return false;
+        return _scrollMessagesByPage(-1);
+      case LogicalKeyboardKey.arrowUp:
+        if (!isScrollKeyEvent || !_keyboardNavigationActive) return false;
+        return _scrollMessagesByLine(1);
+      case LogicalKeyboardKey.arrowDown:
+        if (!isScrollKeyEvent || !_keyboardNavigationActive) return false;
+        return _scrollMessagesByLine(-1);
+    }
+    return false;
+  }
+
+  bool _scrollMessagesByPage(int direction) {
+    if (!_scrollController.hasClients) return false;
+    return _scrollController.scrollBy(
+      _scrollController.position.viewportDimension * 0.85 * direction,
+    );
+  }
+
+  bool _scrollMessagesByLine(int direction) {
+    return _scrollController.scrollBy(72.0 * direction);
   }
 
   Widget _buildEmptyState() {
@@ -466,86 +467,115 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollController.scrollToBottomIfAtBottom();
     });
 
-    return ChatZoomWrapper(
-      child: ListView.builder(
-        reverse: true, // List grows from bottom up
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          // Loading indicator now appears at end (bottom) of reversed list
-          if (_isLoadingOlder && index == itemCount - 1) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-          final messageIndex = index;
-          Contact contact = _resolveContact(connector);
-          final message = reversedMessages[messageIndex];
-          String fourByteHex = '';
-          if (contact.type == advTypeRoom) {
-            // Room-server messages carry the original author's 4-byte prefix
-            // separately from message.text; use it only for resolving the name.
-            contact = _resolveContactFrom4Bytes(
-              connector,
-              message.fourByteRoomContactKey.isEmpty
-                  ? Uint8List.fromList([0, 0, 0, 0])
-                  : message.fourByteRoomContactKey,
-            );
-            fourByteHex = message.fourByteRoomContactKey
-                .map((b) => b.toRadixString(16).padLeft(2, '0'))
-                .join()
-                .toUpperCase();
-          }
-
-          return Builder(
-            builder: (context) {
-              final textScale = context.select<ChatTextScaleService, double>(
-                (service) => service.scale,
-              );
-              final resolvedContact = _resolveContact(connector);
-              final bubble = _MessageBubble(
-                message: message,
-                senderName: resolvedContact.type == advTypeRoom
-                    ? "${contact.name} [$fourByteHex]"
-                    : contact.name,
-                sourceId: widget.contact.publicKeyHex,
-                textScale: textScale,
-                onTap: () => _openMessagePath(message, contact),
-                onLongPress: () => _showMessageActions(message, contact),
-                onRetryReaction: (msg, emoji) =>
-                    _sendReaction(msg, contact, emoji),
-                pendingSendAt: connector.pendingContactSendAt(
-                  message.messageId,
-                ),
-                pendingSendDelaySeconds: connector
-                    .pendingContactSendDelaySeconds(message.messageId),
-                onCancelPendingSend: () =>
-                    _cancelPendingContactSend(connector, message.messageId),
-              );
-              final isUnreadAnchor =
-                  _unreadDividerMessageId != null &&
-                  message.messageId == _unreadDividerMessageId;
-              final child = isUnreadAnchor
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [const UnreadDivider(), bubble],
-                    )
-                  : bubble;
-              if (identical(message, _pendingUnreadScrollTarget)) {
-                return KeyedSubtree(key: _unreadScrollKey, child: child);
+    return JumpToBottomReservedPadding(
+      scrollController: _scrollController,
+      basePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      builder: (context, padding, bottomReservedExtent) {
+        final hasBottomSpacer = bottomReservedExtent > 0;
+        final spacerItemCount = hasBottomSpacer ? 1 : 0;
+        return ChatZoomWrapper(
+          child: ListView.builder(
+            reverse: true, // List grows from bottom up
+            controller: _scrollController,
+            padding: padding,
+            itemCount: itemCount + spacerItemCount,
+            itemBuilder: (context, index) {
+              if (hasBottomSpacer && index == 0) {
+                return SizedBox(height: bottomReservedExtent);
               }
-              return child;
+              final adjustedIndex = index - spacerItemCount;
+
+              // Loading indicator now appears at end (bottom) of reversed list
+              if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              final messageIndex = adjustedIndex;
+              Contact contact = _resolveContact(connector);
+              final message = reversedMessages[messageIndex];
+              String fourByteHex = '';
+              if (contact.type == advTypeRoom) {
+                // Room-server messages carry the original author's 4-byte prefix
+                // separately from message.text; use it only for resolving the name.
+                contact =
+                    _resolveContactFrom4Bytes(
+                      connector,
+                      message.fourByteRoomContactKey.isEmpty
+                          ? Uint8List.fromList([0, 0, 0, 0])
+                          : message.fourByteRoomContactKey,
+                    ) ??
+                    contact;
+                fourByteHex = message.fourByteRoomContactKey
+                    .map((b) => b.toRadixString(16).padLeft(2, '0'))
+                    .join()
+                    .toUpperCase();
+              }
+
+              return Builder(
+                builder: (context) {
+                  final textScale = context
+                      .select<ChatTextScaleService, double>(
+                        (service) => service.scale,
+                      );
+                  final resolvedContact = _resolveContact(connector);
+                  final bubble = _MessageBubble(
+                    message: message,
+                    senderName: resolvedContact.type == advTypeRoom
+                        ? "${contact.name} [$fourByteHex]"
+                        : contact.name,
+                    sourceId: widget.contact.publicKeyHex,
+                    textScale: textScale,
+                    onTap: () => _openMessagePath(message, contact),
+                    onLongPress: () => _showMessageActions(message, contact),
+                    onRetryReaction: (msg, emoji) =>
+                        _sendReaction(msg, contact, emoji),
+                    onAddSharedContact: _addSharedContact,
+                    pendingSendAt: connector.pendingContactSendAt(
+                      message.messageId,
+                    ),
+                    pendingSendDelaySeconds: connector
+                        .pendingContactSendDelaySeconds(message.messageId),
+                    onCancelPendingSend: () =>
+                        _cancelPendingContactSend(connector, message.messageId),
+                  );
+                  final isUnreadAnchor =
+                      _unreadDividerMessageId != null &&
+                      message.messageId == _unreadDividerMessageId;
+                  final child = isUnreadAnchor
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [const UnreadDivider(), bubble],
+                        )
+                      : bubble;
+                  if (identical(message, _pendingUnreadScrollTarget)) {
+                    return KeyedSubtree(key: _unreadScrollKey, child: child);
+                  }
+                  return child;
+                },
+              );
             },
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleEscapeNavigation() async {
+    ChatKeyboardNavigationHistory.rememberContact(widget.contact);
+    final navigator = Navigator.of(context);
+    final didPop = await navigator.maybePop();
+    if (!mounted || didPop) return;
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(hideBackButton: true),
       ),
     );
   }
@@ -584,10 +614,20 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.gif_box),
-              onPressed: () => _showGifPicker(context),
-              tooltip: context.l10n.chat_sendGif,
+            ChatComposerSideAction(
+              child: ChatAdditionalActionsButton(
+                canvasActive: settings.canvasActive,
+                onSendSelfContact: () => _insertSelfContact(connector),
+                onSendMyLocation: () =>
+                    unawaited(_insertMyLocation(connector)),
+                onSendContact: () => _pickAndInsertContact(),
+                onPickLocationFromMap: () =>
+                    unawaited(_pickAndInsertLocationFromMap()),
+                onSendGif: () => _showGifPicker(context),
+                onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
+                onOpenMcoImageGallery: () =>
+                    _showMcoImageGallery(connector, maxBytes),
+              ),
             ),
             if (settings.translationEnabled)
               MessageTranslationButton(
@@ -675,6 +715,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
+                      hintMaxLines: 1,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
@@ -692,12 +733,21 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filled(
-              icon: const Icon(Icons.send),
-              tooltip: context.l10n.chat_sendMessageTo(
-                _resolveContact(connector).name,
+            ChatComposerSideAction(
+              child: Semantics(
+                button: true,
+                label: context.l10n.chat_sendMessageTo(
+                  _resolveContact(connector).name,
+                ),
+                child: GestureDetector(
+                  onLongPress: () => _showQuickAnswersPicker(connector),
+                  onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                  child: IconButton.filled(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => _sendMessage(connector),
+                  ),
+                ),
               ),
-              onPressed: () => _sendMessage(connector),
             ),
           ],
         ),
@@ -717,6 +767,184 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _insertTextIntoComposer(String text) {
+    final value = _textController.value;
+    final selection = value.selection;
+    final range = selection.isValid
+        ? selection
+        : TextSelection.collapsed(offset: value.text.length);
+    final nextText = value.text.replaceRange(range.start, range.end, text);
+    final nextOffset = range.start + text.length;
+    _textController.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: nextOffset),
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
+  void _insertSelfContact(MeshCoreConnector connector) {
+    final publicKey = connector.selfPublicKey;
+    if (publicKey == null || publicKey.isEmpty) return;
+    _insertTextIntoComposer(
+      formatContactShareText(
+        publicKey: publicKey,
+        type: advTypeChat,
+        name: connector.selfName ?? connector.deviceDisplayName,
+      ),
+    );
+  }
+
+  Future<void> _insertMyLocation(MeshCoreConnector connector) async {
+    final location = await connector.refreshSelfLocation();
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  Future<void> _pickAndInsertLocationFromMap() async {
+    final location = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MapScreen(locationPickerMode: true),
+      ),
+    );
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  Future<void> _pickAndInsertContact() async {
+    final contact = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(selectionMode: true),
+      ),
+    );
+    if (contact == null || !mounted) return;
+    _insertTextIntoComposer(formatContactShareTextForContact(contact));
+  }
+
+  Future<void> _showCanvasEditor(
+    MeshCoreConnector connector,
+    int maxTextChars, {
+    MCOImage? initialImage,
+    Uint8List? initialImageBytes,
+    int? initialImageWidth,
+    int? initialImageHeight,
+    PaletteProfile? initialPaletteProfile,
+  }) async {
+    final result = await Navigator.push<CanvasEditorResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CanvasEditorScreen(
+          maxTextChars: maxTextChars,
+          initialImage: initialImage,
+          initialImageBytes: initialImageBytes,
+          initialImageWidth: initialImageWidth,
+          initialImageHeight: initialImageHeight,
+          initialPaletteProfile: initialPaletteProfile,
+        ),
+      ),
+    );
+    if (result == null || result.text.isEmpty) return;
+    if (!mounted) return;
+    final encodedText = result.text;
+    _textController.text = encodedText;
+    _textController.selection = TextSelection.collapsed(
+      offset: encodedText.length,
+    );
+    await _sendMessage(connector, skipTranslation: true);
+  }
+
+  Future<void> _showMcoImageGallery(
+    MeshCoreConnector connector,
+    int maxTextChars,
+  ) async {
+    final result = await showModalBottomSheet<MCOImageGalleryResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const MCOImageGalleryScreen(),
+    );
+    if (result == null || !mounted) return;
+    if (result.action == MCOImageGalleryAction.edit) {
+      await _openGalleryItemInCanvas(connector, maxTextChars, result.item);
+      return;
+    }
+    await _sendGalleryItem(connector, result.item);
+  }
+
+  Future<void> _openGalleryItemInCanvas(
+    MeshCoreConnector connector,
+    int maxTextChars,
+    MCOImageGalleryItem item,
+  ) async {
+    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    await _showCanvasEditor(
+      connector,
+      maxTextChars,
+      initialImage: image,
+      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageWidth: item.width,
+      initialImageHeight: item.height,
+      initialPaletteProfile: item.paletteProfile,
+    );
+  }
+
+  Future<void> _sendGalleryItem(
+    MeshCoreConnector connector,
+    MCOImageGalleryItem item,
+  ) async {
+    final text = item.textPayload;
+    final outboundText = connector.prepareContactOutboundText(
+      _resolveContact(connector),
+      text,
+    );
+    final payloadBytes = utf8.encode(outboundText).length;
+    final maxBytes = _maxContactInputBytes(connector);
+    if (payloadBytes > maxBytes) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(
+          context.l10n.chat_canvasCannotSend(payloadBytes - maxBytes),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+      );
+      return;
+    }
+    _textController.text = text;
+    _textController.selection = TextSelection.collapsed(offset: text.length);
+    await _sendMessage(connector, skipTranslation: true);
+  }
+
+  Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) async {
+    final selectedAnswerIds = await connector.loadContactQuickAnswerIds(
+      widget.contact.publicKeyHex,
+    );
+    if (!mounted) return;
+    final answer = await showQuickAnswersPickerDialog(
+      context,
+      answers: filterAvailableQuickAnswers(
+        selectedAnswerIds: selectedAnswerIds,
+        globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
+      ),
+    );
+    if (answer == null) return;
+    if (!mounted) return;
+    if (answer.sendAtSelect) {
+      await _sendMessage(connector, quickAnswerText: answer.text);
+      return;
+    }
+    insertQuickAnswerIntoComposer(
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      text: answer.text,
+    );
+  }
+
   Future<void> _showTranslationOptions() async {
     final settingsService = context.read<AppSettingsService>();
     final settings = settingsService.settings;
@@ -729,9 +957,14 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _sendMessage(MeshCoreConnector connector) async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage(
+    MeshCoreConnector connector, {
+    String? quickAnswerText,
+    bool skipTranslation = false,
+  }) async {
+    final rawText = quickAnswerText ?? _textController.text;
+    final text = quickAnswerText == null ? rawText.trim() : rawText;
+    if (text.trim().isEmpty) return;
 
     final now = DateTime.now();
     if (_lastTextSendAt != null &&
@@ -750,7 +983,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled) {
+    if (settings.translationEnabled && !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -773,6 +1006,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
+    final compressionSourceText = outgoingText;
     final maxBytes = _maxContactInputBytes(connector);
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
@@ -788,9 +1022,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // This is only for cyr2lat compression - to see the message being sent in the same format as the other person will receive
     try {
-      if (connector.isContactCyr2LatEnabled(
-        _resolveContact(connector).publicKeyHex,
-      )) {
+      if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
+          !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          connector.isContactCyr2LatEnabled(
+            _resolveContact(connector).publicKeyHex,
+          )) {
         outgoingText = Cyr2Lat.encode(outgoingText);
       }
     } catch (_) {
@@ -798,8 +1034,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // end transform
 
-    _textController.clear();
-    _textFieldFocusNode.requestFocus();
+    if (quickAnswerText == null) {
+      _textController.clear();
+      _textFieldFocusNode.requestFocus();
+    }
     final contact = _resolveContact(connector);
     final useSendingDelay =
         settings.sendingDelayForCancellationSeconds > 0 &&
@@ -810,6 +1048,7 @@ class _ChatScreenState extends State<ChatScreen> {
         contact,
         outgoingText,
         inputText: text,
+        uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -819,6 +1058,7 @@ class _ChatScreenState extends State<ChatScreen> {
       connector.sendMessage(
         contact,
         outgoingText,
+        uncompressedText: compressionSourceText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
@@ -845,391 +1085,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return limit;
   }
 
-  void _showPathHistory(BuildContext context) {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    bool showAllPaths = false;
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Consumer<PathHistoryService>(
-          builder: (context, pathService, _) {
-            final paths = pathService.getRecentPaths(
-              widget.contact.publicKeyHex,
-            );
-
-            final repeatersList = List.of(connector.directRepeaters)
-              ..sort((a, b) => b.ranking.compareTo(a.ranking));
-
-            if (repeatersList.isEmpty) {
-              showAllPaths = true;
-            }
-
-            final directRepeater = repeatersList.isEmpty
-                ? null
-                : repeatersList.first;
-            final secondDirectRepeater = repeatersList.length < 2
-                ? null
-                : repeatersList.elementAt(1);
-            final thirdDirectRepeater = repeatersList.length < 3
-                ? null
-                : repeatersList.elementAt(2);
-
-            List<MapEntry<int, MapEntry<Color, PathRecord>>>
-            pathsWithRepeaters = paths.map((path) {
-              final isDirectRepeater =
-                  directRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  directRepeater.pubkeyFirstByte == path.pathBytes.first;
-              final isSecondDirectRepeater =
-                  secondDirectRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  secondDirectRepeater.pubkeyFirstByte == path.pathBytes.first;
-              final isThirdDirectRepeater =
-                  thirdDirectRepeater != null &&
-                  path.pathBytes.isNotEmpty &&
-                  thirdDirectRepeater.pubkeyFirstByte == path.pathBytes.first;
-
-              int ranking = -1;
-              Color color = Colors.grey;
-              if (isDirectRepeater) {
-                color = Colors.green;
-                ranking = 3;
-              } else if (isSecondDirectRepeater) {
-                color = Colors.yellow;
-                ranking = 2;
-              } else if (isThirdDirectRepeater) {
-                color = Colors.red;
-                ranking = 1;
-              } else if (path.wasFloodDiscovery) {
-                color = Colors.blue;
-                ranking = 0;
-              }
-
-              return MapEntry(ranking, MapEntry(color, path));
-            }).toList();
-
-            pathsWithRepeaters.sort((a, b) => b.key.compareTo(a.key));
-
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.timeline),
-                  const SizedBox(width: 8),
-                  Text(context.l10n.chat_pathManagement),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (pathsWithRepeaters.isNotEmpty) ...[
-                      if (repeatersList.isNotEmpty)
-                        FeatureToggleRow(
-                          title: context.l10n.chat_ShowAllPaths,
-                          subtitle: "",
-                          value: showAllPaths,
-                          onChanged: (val) {
-                            setDialogState(() {
-                              showAllPaths = val;
-                            });
-                          },
-                        ),
-                      Text(
-                        context.l10n.chat_recentAckPaths,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (pathsWithRepeaters.length >= 100) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            context.l10n.chat_pathHistoryFull,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      ...pathsWithRepeaters.map((entry) {
-                        final path = entry.value.value;
-                        final color = entry.value.key;
-                        if (!showAllPaths && entry.key < 1) {
-                          return const SizedBox.shrink();
-                        } else {
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              dense: true,
-                              leading: CircleAvatar(
-                                radius: 16,
-                                backgroundColor: color,
-                                child: Text(
-                                  '${path.hopCount}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              title: Text(
-                                '${path.hopCount} ${path.hopCount == 1 ? context.l10n.chat_hopSingular : context.l10n.chat_hopPlural}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                '${(path.tripTimeMs / 1000).toStringAsFixed(2)}s • ${_formatRelativeTime(path.timestamp)} • ${path.successCount} ${context.l10n.chat_successes}',
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.close, size: 16),
-                                    tooltip: context.l10n.chat_removePath,
-                                    onPressed: () async {
-                                      await pathService.removePathRecord(
-                                        widget.contact.publicKeyHex,
-                                        path.pathBytes,
-                                      );
-                                    },
-                                  ),
-                                  path.wasFloodDiscovery
-                                      ? const Icon(
-                                          Icons.waves,
-                                          size: 16,
-                                          color: Colors.grey,
-                                        )
-                                      : const Icon(
-                                          Icons.route,
-                                          size: 16,
-                                          color: Colors.grey,
-                                        ),
-                                ],
-                              ),
-                              onLongPress: () =>
-                                  _showFullPathDialog(context, path.pathBytes),
-                              onTap: () async {
-                                if (path.pathBytes.isEmpty) {
-                                  showDismissibleSnackBar(
-                                    context,
-                                    content: Text(
-                                      context.l10n.chat_pathDetailsNotAvailable,
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  );
-                                  return;
-                                }
-
-                                final pathBytes = Uint8List.fromList(
-                                  path.pathBytes,
-                                );
-                                final pathLength = path.pathBytes.length;
-
-                                // Set the path override to persist user's choice
-                                await connector.setPathOverride(
-                                  _resolveContact(connector),
-                                  pathLen: pathLength,
-                                  pathBytes: pathBytes,
-                                );
-
-                                if (!context.mounted) return;
-                                Navigator.pop(context);
-                                await _notifyPathSet(
-                                  connector,
-                                  _resolveContact(connector),
-                                  pathBytes,
-                                  path.hopCount,
-                                );
-                              },
-                            ),
-                          );
-                        }
-                      }),
-                      const Divider(),
-                    ] else ...[
-                      Text(context.l10n.chat_noPathHistoryYet),
-                      const Divider(),
-                    ],
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.chat_pathActions,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.purple,
-                        child: Icon(Icons.edit_road, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_setCustomPath,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_setCustomPathSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showCustomPathDialog(context);
-                      },
-                    ),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.orange,
-                        child: Icon(Icons.clear_all, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_clearPath,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_clearPathSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () async {
-                        await connector.clearContactPath(
-                          _resolveContact(connector),
-                        );
-                        if (!context.mounted) return;
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(context.l10n.chat_pathCleared),
-                          duration: const Duration(seconds: 2),
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
-                    ListTile(
-                      dense: true,
-                      leading: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.blue,
-                        child: Icon(Icons.waves, size: 16),
-                      ),
-                      title: Text(
-                        context.l10n.chat_forceFloodMode,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        context.l10n.chat_floodModeSubtitle,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      onTap: () async {
-                        await connector.setPathOverride(
-                          _resolveContact(connector),
-                          pathLen: -1,
-                        );
-                        if (!context.mounted) return;
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(context.l10n.chat_floodModeEnabled),
-                          duration: const Duration(seconds: 2),
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(context.l10n.common_close),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  String _formatRelativeTime(DateTime? time) {
-    if (time == null) return '—';
-    final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return context.l10n.time_justNow;
-    if (diff.inMinutes < 60) {
-      return context.l10n.time_minutesAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) return context.l10n.time_hoursAgo(diff.inHours);
-    return context.l10n.time_daysAgo(diff.inDays);
-  }
-
-  void _showFullPathDialog(BuildContext context, List<int> pathBytes) {
-    if (pathBytes.isEmpty) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_pathDetailsNotAvailable),
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
-
-    final connector = context.read<MeshCoreConnector>();
-    final allContacts = connector.allContacts;
-
-    final formattedPath = PathHelper.formatPathHex(pathBytes);
-    final resolvedNames = PathHelper.resolvePathNames(pathBytes, allContacts);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.chat_fullPath),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SelectableText(formattedPath),
-            const SizedBox(height: 8),
-            SelectableText(
-              resolvedNames,
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PathTraceMapScreen(
-                  title: context.l10n.contacts_repeaterPathTrace,
-                  path: Uint8List.fromList(pathBytes),
-                  flipPathAround: true,
-                  targetContact: widget.contact,
-                  pathHashByteWidth: connector.pathHashByteWidth,
-                ),
-              ),
-            ),
-            child: Text(context.l10n.contacts_pathTrace),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
-          ),
-        ],
-      ),
-    );
-  }
-
   int _resolveContactIndex = -1;
 
   Contact _resolveContact(MeshCoreConnector connector) {
@@ -1248,51 +1103,50 @@ class _ChatScreenState extends State<ChatScreen> {
     return connector.contacts[_resolveContactIndex];
   }
 
-  Contact _resolveContactFrom4Bytes(
+  Contact? _resolveContactFrom4Bytes(
     MeshCoreConnector connector,
     Uint8List key4Bytes,
   ) {
-    return connector.contacts.firstWhere(
-      (c) => listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
-      orElse: () => widget.contact,
+    // Match against saved contacts first, then nodes only seen via discovery —
+    // a room poster you haven't saved may still be in the discovered list.
+    return connector.allContactsUnfiltered.cast<Contact?>().firstWhere(
+      (c) =>
+          c != null &&
+          listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
+      orElse: () => null,
     );
   }
 
   String _currentPathLabel(Contact contact) {
+    final connector = context.read<MeshCoreConnector>();
+
     // Check if user has set a path override
     if (contact.pathOverride != null) {
       if (contact.pathOverride! < 0) return context.l10n.chat_floodForced;
       if (contact.pathOverride == 0) return context.l10n.chat_directForced;
-      return context.l10n.chat_hopsForced(contact.pathOverride!);
+      final bytes = contact.pathOverrideBytes ?? Uint8List(0);
+      final hopCount = _displayHopCount(
+        bytes,
+        contact.pathOverride!,
+        connector.pathHashByteWidth,
+      );
+      return context.l10n.chat_hopsForced(hopCount);
     }
 
     // Use device's path
     if (contact.pathLength < 0) return context.l10n.chat_floodAuto;
     if (contact.pathLength == 0) return context.l10n.chat_direct;
-    return context.l10n.chat_hopsCount(contact.pathLength);
+    final hopCount = _displayHopCount(
+      contact.path,
+      contact.pathLength,
+      connector.pathHashByteWidth,
+    );
+    return context.l10n.chat_hopsCount(hopCount);
   }
 
-  Future<void> _notifyPathSet(
-    MeshCoreConnector connector,
-    Contact contact,
-    Uint8List pathBytes,
-    int hopCount,
-  ) async {
-    final verified = connector.isConnected
-        ? await connector.verifyContactPathOnDevice(contact, pathBytes)
-        : false;
-    if (!mounted) return;
-
-    final status = !connector.isConnected
-        ? context.l10n.chat_pathSavedLocally
-        : (verified
-              ? context.l10n.chat_pathDeviceConfirmed
-              : context.l10n.chat_pathDeviceNotConfirmed);
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.chat_pathSetHops(hopCount, status)),
-      duration: const Duration(seconds: 3),
-    );
+  int _displayHopCount(List<int> pathBytes, int storedHopCount, int hashWidth) {
+    if (pathBytes.isEmpty) return storedHopCount;
+    return PathHelper.splitPathBytes(pathBytes, hashWidth).length;
   }
 
   void _showContactInfo(BuildContext context) {
@@ -1313,7 +1167,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               _buildInfoRow(
                 context.l10n.chat_path,
-                contact.pathLabel(context.l10n),
+                contact.pathLabel(
+                  context.l10n,
+                  pathHashByteWidth: connector.pathHashByteWidth,
+                ),
               ),
               _buildInfoRow(
                 context.l10n.contact_lastSeen,
@@ -1350,6 +1207,7 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactSendingDelaySettingLoaded(
       widget.contact.publicKeyHex,
     );
+    connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
@@ -1357,6 +1215,9 @@ class _ChatScreenState extends State<ChatScreen> {
       contact.publicKeyHex,
     );
     bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
+      contact.publicKeyHex,
+    );
+    List<String> selectedQuickAnswerIds = connector.getContactQuickAnswerIds(
       contact.publicKeyHex,
     );
     String? selectedCyr2LatProfileId = connector.getContactCyr2LatProfileId(
@@ -1515,6 +1376,28 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
                 const Divider(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.quickreply_outlined),
+                  title: Text(context.l10n.settings_quickAnswersTitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    final selection = await showQuickAnswersSelectionDialog(
+                      context,
+                      settingsService: appSettingsService,
+                      selectedAnswerIds: selectedQuickAnswerIds,
+                    );
+                    if (selection == null) return;
+                    await connector.setContactQuickAnswerIds(
+                      contact.publicKeyHex,
+                      selection,
+                    );
+                    setDialogState(() {
+                      selectedQuickAnswerIds = selection;
+                    });
+                  },
+                ),
+                const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(context.l10n.contact_teleBase),
@@ -1615,72 +1498,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _showCustomPathDialog(BuildContext context) async {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-
-    final currentContact = _resolveContact(connector);
-    if (currentContact.pathLength > 0 &&
-        currentContact.path.isEmpty &&
-        connector.isConnected) {
-      connector.getContacts();
-    }
-
-    final pathForInput = currentContact.pathFormattedIdList(
-      connector.pathHashByteWidth,
-    );
-    final currentPathLabel = _currentPathLabel(currentContact);
-
-    // Filter out the current contact from available contacts
-    final availableContacts = connector.allContacts
-        .where((c) => c != widget.contact)
-        .toList();
-
-    final result = await PathSelectionDialog.show(
-      context,
-      availableContacts: availableContacts,
-      initialPath: pathForInput.isEmpty ? null : pathForInput,
-      title: context.l10n.chat_setCustomPath,
-      currentPathLabel: currentPathLabel,
-      onRefresh: connector.isConnected ? connector.getContacts : null,
-    );
-
-    appLogger.info(
-      'PathSelectionDialog returned: ${result?.length ?? 0} bytes, mounted: $mounted',
-      tag: 'ChatScreen',
-    );
-
-    if (result == null) {
-      return; // Cancelled — keep existing path
-    }
-
-    if (!mounted) {
-      appLogger.warn(
-        'Widget not mounted after dialog, cannot set path',
-        tag: 'ChatScreen',
-      );
-      return;
-    }
-
-    appLogger.info(
-      'Calling setPathOverride for ${widget.contact.name}',
-      tag: 'ChatScreen',
-    );
-    await connector.setPathOverride(
-      _resolveContact(connector),
-      pathLen: result.length,
-      pathBytes: result,
-    );
-    appLogger.info('setPathOverride completed', tag: 'ChatScreen');
-
-    if (!mounted) return;
-    await _notifyPathSet(
-      connector,
-      _resolveContact(connector),
-      result,
-      result.length,
-    );
-  }
-
   void _openMessagePath(Message message, Contact contact) {
     final connector = context.read<MeshCoreConnector>();
     final fourByteHex = message.fourByteRoomContactKey
@@ -1691,7 +1508,11 @@ class _ChatScreenState extends State<ChatScreen> {
     if (message.isOutgoing) {
       senderName = connector.selfName ?? context.l10n.chat_me;
     } else if (_resolveContact(connector).type == advTypeRoom) {
-      senderName = "${contact.name} [$fourByteHex]";
+      // An unresolved author leaves `contact` as the room server itself; show
+      // only the prefix rather than mislabeling the post with the room's name.
+      senderName = contact.type == advTypeRoom
+          ? "[$fourByteHex]"
+          : "${contact.name} [$fourByteHex]";
     } else {
       senderName = _resolveContact(connector).name;
     }
@@ -1700,7 +1521,13 @@ class _ChatScreenState extends State<ChatScreen> {
       senderName: senderName,
       text: message.text,
       wasMcmpCompressed: message.wasMcmpCompressed,
+      compressionType: message.compressionType,
+      compressionSavingsPercent: message.compressionSavingsPercent,
+      compressionOriginalBytes: message.compressionOriginalBytes,
+      compressionPayloadBytes: message.compressionPayloadBytes,
       timestamp: message.timestamp,
+      sentByRadioAt: message.sentByRadioAt,
+      sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
       status: ChannelMessageStatus.sent,
       repeatCount: 0,
@@ -1715,82 +1542,190 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _confirmClearChat(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.contact_clearChat),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(context.l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      connector.clearMessagesForContact(widget.contact);
+    }
+  }
+
   void _showMessageActions(Message message, Contact contact) {
+    final translationService = context.read<TranslationService>();
+    final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final settings = context.read<AppSettingsService>().settings;
+    final canTranslateMessage =
+        translationService.canTranslateIncoming(
+          text: message.text,
+          isCli: message.isCli,
+          isOutgoing: message.isOutgoing,
+        ) &&
+        (message.translatedText?.trim().isEmpty ?? true);
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Can't react to your own messages
-            if (!message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.add_reaction_outlined),
-                title: Text(context.l10n.chat_addReaction),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showEmojiPicker(message, contact);
-                },
-              ),
-            if (PlatformInfo.isDesktop)
-              ListTile(
-                leading: const Icon(Icons.route),
-                title: Text(context.l10n.chat_path),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openMessagePath(message, contact);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.copy),
-              title: Text(context.l10n.common_copy),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _copyMessageText(message.text);
-              },
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Can't react to your own messages
+                if (!message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.add_reaction_outlined),
+                    title: Text(context.l10n.chat_addReaction),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showEmojiPicker(message, contact);
+                    },
+                  ),
+                if (PlatformInfo.isDesktop)
+                  ListTile(
+                    leading: const Icon(Icons.route),
+                    title: Text(context.l10n.chat_path),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openMessagePath(message, contact);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: Text(context.l10n.common_copy),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _copyMessageText(message.text);
+                  },
+                ),
+                if (mcoImage != null)
+                  ListTile(
+                    leading: const Icon(Icons.photo_library_outlined),
+                    title: Text(context.l10n.chat_canvasSendToGallery),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageToGallery(message.text));
+                    },
+                  ),
+                if (mcoImage != null)
+                  ListTile(
+                    leading: const Icon(Icons.save_alt_outlined),
+                    title: Text(context.l10n.chat_canvasSave),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageMessage(mcoImage));
+                    },
+                  ),
+                if (mcoImage != null && ChannelBinaryDataHelper.isAvailable)
+                  ListTile(
+                    leading: const Icon(Icons.data_object_outlined),
+                    title: Text(context.l10n.chat_canvasSaveBinary),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_saveMcoImageBinaryMessage(message.text));
+                    },
+                  ),
+                if (mcoImage != null && settings.canvasActive)
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: Text(context.l10n.chat_canvasSendToEdit),
+                    onTap: () {
+                      final connector = context.read<MeshCoreConnector>();
+                      final maxBytes = _maxContactInputBytes(connector);
+                      Navigator.pop(sheetContext);
+                      unawaited(
+                        _showCanvasEditor(
+                          connector,
+                          maxBytes,
+                          initialImage: mcoImage,
+                        ),
+                      );
+                    },
+                  ),
+                if (canTranslateMessage)
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: Text(context.l10n.translation_translateMessage),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(
+                        context
+                            .read<MeshCoreConnector>()
+                            .translateContactMessage(
+                              widget.contact.publicKeyHex,
+                              message,
+                              manualTranslation: true,
+                            ),
+                      );
+                    },
+                  ),
+                if (!message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.mark_chat_unread_outlined),
+                    title: Text(context.l10n.chat_markAsUnread),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _markAsUnread(message);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: Text(context.l10n.common_delete),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await _deleteMessage(message);
+                  },
+                ),
+                if (message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.refresh),
+                    title: Text(context.l10n.common_retry),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _retryMessage(message);
+                    },
+                  ),
+                if (_resolveContact(context.read<MeshCoreConnector>()).type ==
+                    advTypeRoom)
+                  ListTile(
+                    leading: const Icon(Icons.chat),
+                    title: Text(context.l10n.contacts_openChat),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openChat(context, contact);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.close),
+                  title: Text(context.l10n.common_cancel),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
+              ],
             ),
-            if (!message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.mark_chat_unread_outlined),
-                title: Text(context.l10n.chat_markAsUnread),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _markAsUnread(message);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: Text(context.l10n.common_delete),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await _deleteMessage(message);
-              },
-            ),
-            if (message.isOutgoing)
-              ListTile(
-                leading: const Icon(Icons.refresh),
-                title: Text(context.l10n.common_retry),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _retryMessage(message);
-                },
-              ),
-            if (_resolveContact(context.read<MeshCoreConnector>()).type ==
-                advTypeRoom)
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: Text(context.l10n.contacts_openChat),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openChat(context, contact);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: Text(context.l10n.common_cancel),
-              onTap: () => Navigator.pop(sheetContext),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1804,6 +1739,50 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _saveMcoImageMessage(MCOImage image) async {
+    try {
+      await MCOImageFileSaver.savePng(image);
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _saveMcoImageToGallery(String text) async {
+    try {
+      await MCOImageGalleryStore().addFromText(text);
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_canvasSendToGallery),
+      );
+    } on MCOImageCodecException catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _saveMcoImageBinaryMessage(String text) async {
+    try {
+      await MCOImageFileSaver.saveBinaryPayloadFromText(text);
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   Future<void> _deleteMessage(Message message) async {
     await context.read<MeshCoreConnector>().deleteMessage(message);
     if (!mounted) return;
@@ -1811,6 +1790,63 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       content: Text(context.l10n.chat_messageDeleted),
     );
+  }
+
+  Future<void> _addSharedContact(SharedContactInfo contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey != null &&
+        selfPublicKey.isNotEmpty &&
+        contact.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_contactIsYou),
+      );
+      return;
+    }
+
+    final alreadyExists = connector.contacts.any(
+      (existing) => existing.publicKeyHex == contact.publicKeyHex,
+    );
+    if (alreadyExists) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          content: Text(context.l10n.chat_sureToReplaceContact),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (replace != true || !mounted) return;
+    }
+
+    try {
+      await connector.addOrUpdateSharedContact(
+        publicKey: contact.publicKey,
+        type: contact.type,
+        name: contact.name,
+      );
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImported),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
   }
 
   void _retryMessage(Message message) {
@@ -1863,6 +1899,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
+  final Future<void> Function(SharedContactInfo contact)? onAddSharedContact;
   final DateTime? pendingSendAt;
   final int? pendingSendDelaySeconds;
   final VoidCallback? onCancelPendingSend;
@@ -1877,6 +1914,7 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
+    this.onAddSharedContact,
     this.pendingSendAt,
     this.pendingSendDelaySeconds,
     this.onCancelPendingSend,
@@ -1886,21 +1924,73 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final showCompressionRatio = settingsService.settings.showCompressionRatio;
+    final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     final isOutgoing = message.isOutgoing;
-    final colorScheme = Theme.of(context).colorScheme;
+    final compressionType =
+        message.compressionType ??
+        (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
+    final compressionRatioPrefix =
+        showCompressionRatio && message.compressionSavingsPercent != null
+        ? '${message.compressionSavingsPercent}% '
+        : '';
+    final compressionLabel = compressionType == null
+        ? null
+        : '$compressionRatioPrefix${compressionType.label}';
+    final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final mcoImage = mcoImageMetadata.image;
+    final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
+      metadata: mcoImageMetadata,
+      sourceText: message.text,
+      isBinary: false,
+      showResolution: settingsService.settings.showMcoImageResolution,
+      showFormat: settingsService.settings.showMcoImageFormat,
+      showAlgorithm: settingsService.settings.showMcoImageAlgorithm,
+      showBytes: settingsService.settings.showMcoImageBytes,
+    );
+    final isMediaMessage =
+        gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final coordinate = parseCoordinateText(message.text);
+    final sharedContact = parseSharedContactText(message.text);
     final isFailed = message.status == MessageStatus.failed;
+
+    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
     final bubbleColor = isFailed
-        ? colorScheme.errorContainer
-        : (isOutgoing
-              ? colorScheme.primary
-              : colorScheme.surfaceContainerHighest);
+        ? scheme.errorContainer
+        : isOutgoing
+        ? MeshPalette.me
+        : scheme.surfaceContainerLow;
+    final bubbleBorder = isFailed
+        ? scheme.error
+        : isOutgoing
+        ? MeshPalette.meBorder
+        : scheme.outlineVariant;
     final textColor = isFailed
-        ? colorScheme.onErrorContainer
-        : (isOutgoing ? colorScheme.onPrimary : colorScheme.onSurface);
-    final metaColor = textColor.withValues(alpha: 0.7);
+        ? scheme.onErrorContainer
+        : (isOutgoing ? MeshPalette.meInk : scheme.onSurface);
+    final metaColor = textColor.withValues(alpha: 0.65);
+    final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     const bodyFontSize = 14.0;
+
+    // Asymmetric radius: outgoing — top-left large, others also large; outgoing bottom-right tight.
+    final borderRadius = isOutgoing
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.lg),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.xs),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(MeshRadii.xs),
+            topRight: Radius.circular(MeshRadii.lg),
+            bottomLeft: Radius.circular(MeshRadii.lg),
+            bottomRight: Radius.circular(MeshRadii.lg),
+          );
+
     // Do not strip room-server author bytes here: the parser stores them in
     // fourByteRoomContactKey, so message.text is safe to render as-is.
     final messageText = message.text;
@@ -1912,8 +2002,10 @@ class _MessageBubble extends StatelessWidget {
     final originalDisplayText = isOutgoing
         ? message.originalText
         : (translatedDisplayText != messageText ? messageText : null);
+    final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Column(
         crossAxisAlignment: isOutgoing
             ? CrossAxisAlignment.end
@@ -1929,33 +2021,34 @@ class _MessageBubble extends StatelessWidget {
               mainAxisAlignment: isOutgoing
                   ? MainAxisAlignment.end
                   : MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (!isOutgoing) ...[
-                  _buildAvatar(senderName, colorScheme),
-                  const SizedBox(width: 8),
+                  _buildAvatar(senderName, scheme),
+                  const SizedBox(width: 6),
                 ],
                 Flexible(
                   child: Container(
-                    padding: gifId != null
+                    padding: isMediaMessage
                         ? const EdgeInsets.all(4)
                         : const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
                           ),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.65,
+                      maxWidth: MediaQuery.of(context).size.width * 0.72,
                     ),
                     decoration: BoxDecoration(
                       color: bubbleColor,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: borderRadius,
+                      border: Border.all(color: bubbleBorder, width: 1),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (!isOutgoing) ...[
                           Padding(
-                            padding: gifId != null
+                            padding: isMediaMessage
                                 ? const EdgeInsets.only(
                                     left: 8,
                                     top: 4,
@@ -1964,14 +2057,14 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                             child: Text(
                               senderName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
+                              style: MeshTheme.mono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _colorForName(senderName),
                               ),
                             ),
                           ),
-                          if (gifId == null) const SizedBox(height: 4),
+                          if (!isMediaMessage) const SizedBox(height: 2),
                         ],
                         if (poi != null)
                           _buildPoiMessage(
@@ -1995,6 +2088,47 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   )
                                 : null,
+                          )
+                        else if (coordinate != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: _CoordinateMessageLink(
+                                  text: messageText.trim(),
+                                  coordinate: coordinate,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: textColor,
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
+                        else if (unsupportedMcoImageVersion != null)
+                          _buildUnsupportedMcoImageMessage(
+                            context,
+                            unsupportedMcoImageVersion,
+                            mcoImageMetadata.currentMaxSupportedVersion,
+                            textColor,
+                            textScale,
                           )
                         else if (gifId != null)
                           Stack(
@@ -2036,6 +2170,77 @@ class _MessageBubble extends StatelessWidget {
                                 ),
                             ],
                           )
+                        else if (mcoImage != null)
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: MCOImageMessage(image: mcoImage),
+                              ),
+                              if (!enableTracing && isOutgoing)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor,
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(10),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: MessageStatusIcon(
+                                      isAcked:
+                                          message.status ==
+                                              MessageStatus.delivered &&
+                                          message.pathBytes.isNotEmpty,
+                                      isFailed:
+                                          message.status ==
+                                          MessageStatus.failed,
+                                    ),
+                                  ),
+                              ),
+                            ],
+                          )
+                        else if (sharedContact != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: SharedContactMessage(
+                                  contact: sharedContact,
+                                  textStyle: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                  ),
+                                  metaColor: metaColor,
+                                  textScale: textScale,
+                                  onAddContact: () {
+                                    final handler = onAddSharedContact;
+                                    if (handler != null) {
+                                      unawaited(handler(sharedContact));
+                                    }
+                                  },
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
                         else
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2075,28 +2280,28 @@ class _MessageBubble extends StatelessWidget {
                           if (isOutgoing && message.retryCount > 0) ...[
                             const SizedBox(height: 4),
                             Padding(
-                              padding: gifId != null
+                              padding: isMediaMessage
                                   ? const EdgeInsets.symmetric(horizontal: 8)
                                   : EdgeInsets.zero,
                               child: Text(
                                 context.l10n.chat_retryCount(
-                                  message.retryCount,
+                                  message.retryCount + 1,
                                   context
                                       .read<AppSettingsService>()
                                       .settings
                                       .maxMessageRetries,
                                 ),
-                                style: TextStyle(
-                                  fontSize: 10,
+                                style: MeshTheme.mono(
+                                  fontSize: 9.5 * textScale,
                                   color: metaColor,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                           ],
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
+                          // Meta row: timestamp + status icon + optional tracing
                           Padding(
-                            padding: gifId != null
+                            padding: isMediaMessage
                                 ? const EdgeInsets.only(
                                     left: 8,
                                     right: 8,
@@ -2105,15 +2310,27 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                             child: Wrap(
                               spacing: 4,
+                              runSpacing: 2,
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  _formatTime(message.timestamp),
-                                  style: TextStyle(
-                                    fontSize: 10,
+                                  _formatTime(
+                                    message.timestamp,
+                                    enableSeconds: enableTimeSeconds,
+                                  ),
+                                  style: MeshTheme.mono(
+                                    fontSize: 10 * textScale,
                                     color: metaColor,
                                   ),
                                 ),
+                                if (outgoingRadioWaitLabel != null)
+                                  Text(
+                                    '($outgoingRadioWaitLabel)',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 4),
                                   _buildStatusIcon(metaColor),
@@ -2121,7 +2338,7 @@ class _MessageBubble extends StatelessWidget {
                                 if (message.tripTimeMs != null &&
                                     message.status ==
                                         MessageStatus.delivered) ...[
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 2),
                                   Icon(
                                     Icons.speed,
                                     size: 10,
@@ -2131,21 +2348,42 @@ class _MessageBubble extends StatelessWidget {
                                   ),
                                   Text(
                                     '${(message.tripTimeMs! / 1000).toStringAsFixed(1)}s',
-                                    style: TextStyle(
-                                      fontSize: 9,
+                                    style: MeshTheme.mono(
+                                      fontSize: 9 * textScale,
                                       color: isOutgoing
                                           ? metaColor
                                           : Colors.green[700],
                                     ),
                                   ),
                                 ],
-                                if (enableTracing &&
-                                    message.wasMcmpCompressed) ...[
+                                if (mcoImageBadgeLabel != null) ...[
                                   const SizedBox(width: 4),
                                   Text(
-                                    'mcmp',
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    mcoImageBadgeLabel,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (enableTracing &&
+                                    compressionLabel != null) ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    compressionLabel,
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                if (sharedHistorySourceName != null &&
+                                    sharedHistorySourceName.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'sync $sharedHistorySourceName',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
                                   ),
@@ -2173,11 +2411,28 @@ class _MessageBubble extends StatelessWidget {
           if (message.reactions.isNotEmpty) ...[
             const SizedBox(height: 4),
             Padding(
-              padding: EdgeInsets.only(left: isOutgoing ? 0 : 48),
-              child: _buildReactionsDisplay(context, message, colorScheme),
+              padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
+              child: _buildReactionsDisplay(context, message, scheme),
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildUnsupportedMcoImageMessage(
+    BuildContext context,
+    int received,
+    int current,
+    Color textColor,
+    double textScale,
+  ) {
+    return Text(
+      context.l10n.chat_canvasFormatNotSupported(received, current),
+      style: TextStyle(
+        color: textColor.withValues(alpha: 0.78),
+        fontSize: 12 * textScale,
+        fontStyle: FontStyle.italic,
       ),
     );
   }
@@ -2249,7 +2504,7 @@ class _MessageBubble extends StatelessWidget {
   Widget _buildReactionsDisplay(
     BuildContext context,
     Message message,
-    ColorScheme colorScheme,
+    ColorScheme scheme,
   ) {
     return Wrap(
       spacing: 6,
@@ -2272,28 +2527,33 @@ class _MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isFailed
-                    ? colorScheme.errorContainer
-                    : colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(12),
+                    ? scheme.errorContainer
+                    : scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(MeshRadii.pill),
                 border: Border.all(
-                  color: isFailed
-                      ? colorScheme.error
-                      : colorScheme.outline.withValues(alpha: 0.3),
+                  color: isFailed ? scheme.error : scheme.outlineVariant,
                   width: 1,
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(emoji, style: const TextStyle(fontSize: 16)),
+                  Text(
+                    emoji,
+                    style: MeshTheme.emoji(fontSize: 16),
+                    textHeightBehavior: const TextHeightBehavior(
+                      applyHeightToFirstAscent: false,
+                      applyHeightToLastDescent: false,
+                    ),
+                  ),
                   if (count > 1) ...[
                     const SizedBox(width: 4),
                     Text(
                       '$count',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSecondaryContainer,
+                      style: MeshTheme.mono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
                       ),
                     ),
                   ],
@@ -2304,13 +2564,13 @@ class _MessageBubble extends StatelessWidget {
                       height: 8,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: colorScheme.onSecondaryContainer,
+                        color: scheme.primary,
                       ),
                     ),
                   ],
                   if (isFailed) ...[
                     const SizedBox(width: 2),
-                    Icon(Icons.replay, size: 10, color: colorScheme.error),
+                    Icon(Icons.replay, size: 10, color: scheme.error),
                   ],
                 ],
               ),
@@ -2389,9 +2649,70 @@ class _MessageBubble extends StatelessWidget {
     return Icon(icon, size: 12, color: color);
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(DateTime time, {required bool enableSeconds}) {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+    if (!enableSeconds) return '$hour:$minute';
+    final second = time.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
+  }
+
+  String? _outgoingRadioWaitLabel(Message message) {
+    if (!message.isOutgoing) return null;
+    if (message.sentByRadioWaitSeconds.isNotEmpty) {
+      return message.sentByRadioWaitSeconds.join('/');
+    }
+    if (message.sentByRadioAt == null) return null;
+    final waitSeconds = message.sentByRadioAt!
+        .difference(message.timestamp)
+        .inSeconds;
+    return (waitSeconds < 0 ? 0 : waitSeconds).toString();
+  }
+}
+
+/// Deterministic name-to-hue mapping consistent with [AvatarCircle].
+Color _colorForName(String name) {
+  const hues = [
+    MeshPalette.blue,
+    MeshPalette.magenta,
+    MeshPalette.signal,
+    MeshPalette.warn,
+    Color(0xFF8FA8F0),
+    Color(0xFF6FD9CE),
+  ];
+  var h = 0;
+  for (final c in name.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return hues[h % hues.length];
+}
+
+class _CoordinateMessageLink extends StatelessWidget {
+  final String text;
+  final MarkerPayload coordinate;
+  final TextStyle style;
+
+  const _CoordinateMessageLink({
+    required this.text,
+    required this.coordinate,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MapScreen(
+              highlightPosition: coordinate.position,
+              highlightLabel: coordinate.label,
+            ),
+          ),
+        );
+      },
+      child: Text(text, style: style),
+    );
   }
 }

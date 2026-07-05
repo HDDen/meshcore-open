@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/widgets.dart';
 
 // Buffer Reader - sequential binary data reader with pointer tracking
@@ -206,11 +207,16 @@ const int cmdSendTelemetryReq = 39;
 const int cmdGetCustomVar = 40;
 const int cmdSetCustomVar = 41;
 const int cmdSendBinaryReq = 50;
+const int cmdSendControlData = 55;
 const int cmdGetStats = 56;
 const int cmdSendAnonReq = 57;
 const int cmdSetAutoAddConfig = 58;
 const int cmdGetAutoAddConfig = 59;
 const int cmdSetPathHashMode = 61;
+const int cmdSendChannelData = 62;
+const int cmdSetDefaultFloodScope = 63;
+const int cmdGetDefaultFloodScope = 64;
+const int cmdSetFloodScope = 54;
 
 // Text message types
 const int txtTypePlain = 0;
@@ -223,6 +229,42 @@ const int reqTypeKeepAlive = 0x02;
 const int reqTypeGetTelemetry = 0x03;
 const int reqTypeGetAccessList = 0x05;
 const int reqTypeGetNeighbors = 0x06;
+
+// Control data sub-types used by MeshCore discovery packets.
+const int controlSubtypeDiscoverReq = 0x08;
+const int controlSubtypeDiscoverResp = 0x09;
+
+Uint8List buildTelemetryBinaryPayload() {
+  // Room servers/repeaters read byte 1 as an inverse telemetry permission mask.
+  // Zero means "request every telemetry field allowed for this contact".
+  return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
+}
+
+Uint8List buildSendControlDataFrame(Uint8List payload) {
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendControlData);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+Uint8List buildDiscoveryRequestPayload(
+  int tag, {
+  bool prefixOnly = false,
+  int typeMask = 1 << advTypeRepeater,
+}) {
+  final writer = BufferWriter();
+  // The high bit must be set for CMD_SEND_CONTROL_DATA; DISCOVER_REQ uses
+  // subtype 0x8, with the low bit selecting short/full public keys in replies.
+  writer.writeByte(
+    (controlSubtypeDiscoverReq << 4) | (prefixOnly ? 0x01 : 0x00),
+  );
+  writer.writeByte(typeMask);
+  writer.writeUInt32LE(tag);
+  writer.writeUInt32LE(0); // since=0 asks nearby nodes for any recent advert.
+  return writer.toBytes();
+}
+
+const int anonReqTypeRegions = 0x01;
 
 // Repeater response codes
 const int respServerLoginOk = 0;
@@ -247,6 +289,8 @@ const int respCodeChannelMsgRecvV3 = 17;
 const int respCodeChannelInfo = 18;
 const int respCodeCustomVars = 21;
 const int respCodeAutoAddConfig = 25;
+const int respCodeChannelDataRecv = 27;
+const int respCodeDefaultFloodScope = 28;
 const int respCodeStats = 24;
 
 const int statsTypeCore = 0;
@@ -258,6 +302,7 @@ const int pushCodeAdvert = 0x80;
 const int pushCodePathUpdated = 0x81;
 const int pushCodeSendConfirmed = 0x82;
 const int pushCodeMsgWaiting = 0x83;
+const int pushCodeRawData = 0x84;
 const int pushCodeLoginSuccess = 0x85;
 const int pushCodeLoginFail = 0x86;
 const int pushCodeStatusResponse = 0x87;
@@ -266,6 +311,7 @@ const int pushCodeTraceData = 0x89;
 const int pushCodeNewAdvert = 0x8A;
 const int pushCodeTelemetryResponse = 0x8B;
 const int pushCodeBinaryResponse = 0x8C;
+const int pushCodeControlData = 0x8E;
 
 // Contact/advertisement types
 const int advTypeChat = 1;
@@ -320,6 +366,7 @@ const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
 const int maxFrameSize = 172;
+const int maxChannelDataLength = maxFrameSize - 9;
 const int appProtocolVersion = 4;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
@@ -451,8 +498,13 @@ String pubKeyToHex(Uint8List pubKey) {
 
 // Helper to convert hex string to public key
 Uint8List hexToPubKey(String hex) {
+  if (hex.length != pubKeySize * 2) {
+    throw FormatException(
+      'Public key hex must be ${pubKeySize * 2} chars, got ${hex.length}',
+    );
+  }
   final result = Uint8List(pubKeySize);
-  for (int i = 0; i < pubKeySize && i * 2 + 1 < hex.length; i++) {
+  for (int i = 0; i < pubKeySize; i++) {
     result[i] = int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16);
   }
   return result;
@@ -524,6 +576,78 @@ Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
   return writer.toBytes();
 }
 
+// Build CMD_SEND_CHANNEL_DATA frame.
+// Format: [cmd][channel_idx][path_len][path?][data_type u16][payload...]
+Uint8List buildSendChannelDataFrame(
+  int channelIndex,
+  int dataType,
+  Uint8List payload, {
+  Uint8List? pathBytes,
+}) {
+  if (payload.length > maxChannelDataLength) {
+    throw ArgumentError.value(
+      payload.length,
+      'payload.length',
+      'Channel data payload exceeds $maxChannelDataLength bytes',
+    );
+  }
+
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendChannelData);
+  writer.writeByte(channelIndex);
+  if (pathBytes == null || pathBytes.isEmpty) {
+    writer.writeByte(0xFF); // OUT_PATH_UNKNOWN: send as flood.
+  } else {
+    writer.writeByte(pathBytes.length);
+    writer.writeBytes(pathBytes);
+  }
+  writer.writeByte(dataType & 0xFF);
+  writer.writeByte((dataType >> 8) & 0xFF);
+  writer.writeBytes(payload);
+  return writer.toBytes();
+}
+
+class ChannelDataReceivedFrame {
+  final int channelIndex;
+  final int pathLength;
+  final int dataType;
+  final Uint8List payload;
+  final double snr;
+
+  const ChannelDataReceivedFrame({
+    required this.channelIndex,
+    required this.pathLength,
+    required this.dataType,
+    required this.payload,
+    required this.snr,
+  });
+}
+
+ChannelDataReceivedFrame? parseChannelDataReceivedFrame(Uint8List frame) {
+  if (frame.length < 9 || frame[0] != respCodeChannelDataRecv) return null;
+  final reader = BufferReader(frame);
+  try {
+    reader.skipBytes(1); // code
+    final snr = reader.readInt8() / 4.0;
+    reader.skipBytes(2); // reserved
+    final channelIndex = reader.readByte();
+    final pathLengthRaw = reader.readByte();
+    final dataType = reader.readByte() | (reader.readByte() << 8);
+    final dataLength = reader.readByte();
+    if (dataLength > frame.length - 9) return null;
+    final payload = reader.readBytes(dataLength);
+    return ChannelDataReceivedFrame(
+      channelIndex: channelIndex,
+      pathLength: pathLengthRaw == 0xFF ? -1 : pathLengthRaw,
+      dataType: dataType,
+      payload: payload,
+      snr: snr,
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 // Build CMD_REMOVE_CONTACT frame
 Uint8List buildRemoveContactFrame(Uint8List pubKey) {
   final writer = BufferWriter();
@@ -567,9 +691,9 @@ Uint8List buildGetStatsFrame(int statsType) {
   return Uint8List.fromList([cmdGetStats, statsType & 0xFF]);
 }
 
-/// Path hash width on air: [61][0][mode], mode 0..2 → (mode+1) bytes per hop hash.
+/// Path hash width on air: [61][0][mode], mode 0..3 → (mode+1) bytes per hop hash.
 Uint8List buildSetPathHashModeFrame(int mode) {
-  final m = mode.clamp(0, 2);
+  final m = mode.clamp(0, 3).toInt();
   return Uint8List.fromList([cmdSetPathHashMode, 0, m]);
 }
 
@@ -856,6 +980,45 @@ Uint8List buildSendBinaryReq(Uint8List repeaterPubKey, {Uint8List? payload}) {
   return writer.toBytes();
 }
 
+Uint8List _reversePathByHop(Uint8List path, int pathHashWidth) {
+  if (path.isEmpty) return Uint8List(0);
+  final width = pathHashWidth.clamp(1, 4).toInt();
+  if (path.length % width != 0) {
+    return Uint8List.fromList(path.reversed.toList());
+  }
+
+  final reversed = Uint8List(path.length);
+  final hops = path.length ~/ width;
+  for (var i = 0; i < hops; i++) {
+    final from = (hops - 1 - i) * width;
+    reversed.setRange(i * width, (i + 1) * width, path, from);
+  }
+  return reversed;
+}
+
+// Build CMD_SEND_ANON_REQ frame.
+// Payload format for regions: [anon_req_type][reply_path_len][reply_path...].
+Uint8List buildSendAnonReqFrame(
+  Uint8List repeaterPubKey, {
+  required int requestType,
+  Uint8List? replyPath,
+  int replyHopCount = 0,
+  int pathHashWidth = pathHashSize,
+}) {
+  // Current MeshCore firmware reserves path-hash mode 3 (4-byte hashes), so
+  // anon reply paths must stay in the supported 1..3 byte range.
+  final width = pathHashWidth.clamp(1, 3).toInt();
+  final path = replyPath ?? Uint8List(0);
+  final encodedPathLen = ((width - 1) << 6) | (replyHopCount & 0x3F);
+  final writer = BufferWriter();
+  writer.writeByte(cmdSendAnonReq);
+  writer.writeBytes(repeaterPubKey);
+  writer.writeByte(requestType);
+  writer.writeByte(encodedPathLen);
+  writer.writeBytes(_reversePathByHop(path, width));
+  return writer.toBytes();
+}
+
 //Build a trace request frame
 //[cmd][tag x4][auth x4][flag][payload]
 Uint8List buildTraceReq(int tag, int auth, int flag, {Uint8List? payload}) {
@@ -946,7 +1109,64 @@ Uint8List buildSendTelemetryReq(Uint8List? pubKey) {
     writer.writeBytes(Uint8List(3)); // reserved bytes
     writer.writeBytes(pubKey);
   } else {
-    writer.writeBytes(Uint8List(4)); // reserved bytes
+    writer.writeBytes(Uint8List(3)); // reserved bytes
   }
   return writer.toBytes();
+}
+
+//Build CMD_SET_FLOOD_SCOPE
+// Format: [cmd][scope]
+Uint8List buildSetFloodScopeFrame(String region) {
+  final normalized = region.trim();
+  if (normalized.isEmpty) {
+    // reset scope
+    return Uint8List.fromList([cmdSetFloodScope, 0]);
+  }
+
+  final name = normalized.startsWith('#') ? normalized : '#$normalized';
+  final hash = crypto.sha256.convert(utf8.encode(name)).bytes;
+  final scope = Uint8List.fromList(hash.sublist(0, 16));
+
+  return Uint8List.fromList([cmdSetFloodScope, 0, ...scope]);
+}
+
+Uint8List buildGetDefaultFloodScopeFrame() {
+  return Uint8List.fromList([cmdGetDefaultFloodScope]);
+}
+
+Uint8List buildSetDefaultFloodScopeFrame(String? region) {
+  final normalized = region?.trim() ?? '';
+  if (normalized.isEmpty) {
+    return Uint8List.fromList([cmdSetDefaultFloodScope]);
+  }
+
+  final displayName = normalized.startsWith('#')
+      ? normalized.substring(1)
+      : normalized;
+  if (utf8.encode(displayName).length > 30) {
+    throw ArgumentError.value(
+      displayName,
+      'region',
+      'Default flood scope name must fit into 30 UTF-8 bytes',
+    );
+  }
+  final scopedName = '#$displayName';
+  final hash = crypto.sha256.convert(utf8.encode(scopedName)).bytes;
+  final scope = Uint8List.fromList(hash.sublist(0, 16));
+  final writer = BufferWriter();
+  writer.writeByte(cmdSetDefaultFloodScope);
+  writer.writeCString(displayName, 31);
+  writer.writeBytes(scope);
+  return writer.toBytes();
+}
+
+String? parseDefaultFloodScopeFrame(Uint8List frame) {
+  if (frame.isEmpty || frame[0] != respCodeDefaultFloodScope) return null;
+  if (frame.length < 1 + 31 + 16) return '';
+
+  final reader = BufferReader(frame);
+  reader.skipBytes(1);
+  final name = reader.readCStringGreedy(31).trim();
+  if (name.isEmpty) return '';
+  return name.startsWith('#') ? name.substring(1) : name;
 }

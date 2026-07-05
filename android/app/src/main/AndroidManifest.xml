@@ -10,11 +10,14 @@
     <!-- Location permission (required for BLE scanning on Android 11 and below) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Optional wardrive background sampling can request all-time location. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <!-- Notification permission (required for Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Foreground service permission for background BLE -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <!-- Camera permission for QR code scanning -->
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -25,10 +28,20 @@
         android:label="MCO Advanced"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Keep the common companion service BLE-only; wardrive background is
+             gated in Dart so normal BLE users do not inherit location FGS. -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice"
+            android:stopWithTask="false" />
+        <!-- Separate wardrive location FGS, enabled only by the Android-only
+             "Run in background" option. This keeps normal BLE behavior close
+             to the alpha build while allowing honest background GPS sampling. -->
+        <service
+            android:name=".WardriveForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="location"
             android:stopWithTask="false" />
         <activity
             android:name=".MainActivity"
