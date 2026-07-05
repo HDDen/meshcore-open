@@ -21,6 +21,7 @@ class ChatComposerSideAction extends StatelessWidget {
 class ChatAdditionalActionsButton extends StatelessWidget {
   final bool canvasActive;
   final VoidCallback onSendSelfContact;
+  final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
@@ -30,6 +31,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
     super.key,
     required this.canvasActive,
     required this.onSendSelfContact,
+    required this.onSendMyLocation,
     required this.onSendContact,
     required this.onSendGif,
     required this.onOpenCanvas,
@@ -53,6 +55,10 @@ class ChatAdditionalActionsButton extends StatelessWidget {
         onSendSelfContact: () {
           Navigator.pop(sheetContext);
           onSendSelfContact();
+        },
+        onSendMyLocation: () {
+          Navigator.pop(sheetContext);
+          onSendMyLocation();
         },
         onSendContact: () {
           Navigator.pop(sheetContext);
@@ -78,6 +84,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
 class ChatAdditionalActionsMenu extends StatelessWidget {
   final bool canvasActive;
   final VoidCallback onSendSelfContact;
+  final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
@@ -87,6 +94,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
     super.key,
     required this.canvasActive,
     required this.onSendSelfContact,
+    required this.onSendMyLocation,
     required this.onSendContact,
     required this.onSendGif,
     required this.onOpenCanvas,
@@ -105,6 +113,11 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
               leading: const Icon(Icons.badge_outlined),
               title: Text(context.l10n.chat_sendSelfContact),
               onTap: onSendSelfContact,
+            ),
+            ListTile(
+              leading: const Icon(Icons.my_location),
+              title: Text(context.l10n.chat_myLocation),
+              onTap: onSendMyLocation,
             ),
             ListTile(
               leading: const Icon(Icons.contact_page_outlined),

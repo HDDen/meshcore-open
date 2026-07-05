@@ -218,6 +218,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Timer? _batteryPollTimer;
   Timer? _gpsLocationPollTimer;
   static const _gpsLocationPollInterval = Duration(minutes: 1);
+  final List<Completer<void>> _selfInfoRefreshWaiters = [];
   Timer? _radioStatsPollTimer;
   int _radioStatsPollRefCount = 0;
   final ValueNotifier<CompanionRadioStats?> radioStatsNotifier =
@@ -3863,6 +3864,32 @@ class MeshCoreConnector extends ChangeNotifier {
     _scheduleSelfInfoRetry();
   }
 
+  Future<({double latitude, double longitude})?> refreshSelfLocation({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    if (!isConnected) return _validSelfLocationOrNull();
+
+    final waiter = Completer<void>();
+    _selfInfoRefreshWaiters.add(waiter);
+    try {
+      await sendFrame(buildAppStartFrame());
+      await waiter.future.timeout(timeout, onTimeout: () {});
+    } catch (_) {
+      // Return the latest cached location below; menu actions should not throw.
+    } finally {
+      _selfInfoRefreshWaiters.remove(waiter);
+    }
+
+    return _validSelfLocationOrNull();
+  }
+
+  ({double latitude, double longitude})? _validSelfLocationOrNull() {
+    final latitude = _selfLatitude;
+    final longitude = _selfLongitude;
+    if (!hasValidLocation(latitude, longitude)) return null;
+    return (latitude: latitude!, longitude: longitude!);
+  }
+
   Future<void> _requestDeviceInfo() async {
     if (!isConnected || _awaitingSelfInfo) return;
     if (PlatformInfo.isWeb &&
@@ -6011,6 +6038,7 @@ class MeshCoreConnector extends ChangeNotifier {
         tag: 'Connector',
       );
     }
+    _completeSelfInfoRefreshWaiters();
     final selfName = _selfName?.trim();
     if (_activeTransport == MeshCoreTransportType.usb &&
         selfName != null &&
@@ -6064,6 +6092,16 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Start the serialized initial sync pipeline after SELF_INFO.
     _maybeStartInitialChannelSync();
+  }
+
+  void _completeSelfInfoRefreshWaiters() {
+    final waiters = List<Completer<void>>.from(_selfInfoRefreshWaiters);
+    _selfInfoRefreshWaiters.clear();
+    for (final waiter in waiters) {
+      if (!waiter.isCompleted) {
+        waiter.complete();
+      }
+    }
   }
 
   void _handleDeviceInfo(Uint8List frame) {

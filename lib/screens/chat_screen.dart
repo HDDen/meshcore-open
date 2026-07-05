@@ -629,6 +629,8 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
                 onSendSelfContact: () => _insertSelfContact(connector),
+                onSendMyLocation: () =>
+                    unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
                 onSendGif: () => _showGifPicker(context),
                 onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
@@ -798,6 +800,15 @@ class _ChatScreenState extends State<ChatScreen> {
         type: advTypeChat,
         name: connector.selfName ?? connector.deviceDisplayName,
       ),
+    );
+  }
+
+  Future<void> _insertMyLocation(MeshCoreConnector connector) async {
+    final location = await connector.refreshSelfLocation();
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
     );
   }
 

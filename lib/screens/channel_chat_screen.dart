@@ -1893,6 +1893,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Future<void> _insertMyLocation(MeshCoreConnector connector) async {
+    final location = await connector.refreshSelfLocation();
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
   Future<void> _pickAndInsertContact() async {
     final contact = await Navigator.push<Contact>(
       context,
@@ -2215,6 +2224,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   child: ChatAdditionalActionsButton(
                     canvasActive: settings.canvasActive,
                     onSendSelfContact: () => _insertSelfContact(connector),
+                    onSendMyLocation: () =>
+                        unawaited(_insertMyLocation(connector)),
                     onSendContact: () => _pickAndInsertContact(),
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
