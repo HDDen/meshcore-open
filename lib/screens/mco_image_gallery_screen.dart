@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:flutter/material.dart';
 
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/mco_image_gallery_item.dart';
+import '../models/mco_image_pack.dart';
 import '../storage/mco_image_gallery_store.dart';
 import '../widgets/mco_image_message.dart';
 
@@ -112,20 +114,21 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
                 unawaited(_saveItem(item));
               },
             ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+            if (!item.isPackItem)
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  context.l10n.chat_canvasGalleryRemove,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  unawaited(_confirmRemove(item));
+                },
               ),
-              title: Text(
-                context.l10n.chat_canvasGalleryRemove,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                unawaited(_confirmRemove(item));
-              },
-            ),
           ],
         ),
       ),
@@ -189,6 +192,116 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     await _saveItems();
   }
 
+  Future<void> _importPack() async {
+    try {
+      final file = await file_selector.openFile(
+        acceptedTypeGroups: const [
+          file_selector.XTypeGroup(
+            label: 'MCOimg pack',
+            extensions: ['mcoimg.pack', 'pack', 'zip'],
+            mimeTypes: ['application/zip', 'application/octet-stream'],
+            uniformTypeIdentifiers: ['public.zip-archive', 'public.data'],
+          ),
+        ],
+      );
+      if (file == null) return;
+
+      setState(() => _loading = true);
+      final pack = await _store.importPack(await file.readAsBytes());
+      await _loadItems();
+      if (!mounted) return;
+      showDismissibleSnackBar(context, content: Text(pack.groupTitle));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _showRemovePackSheet() async {
+    final packs = await _store.loadPacks();
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        var currentPacks = packs;
+        return StatefulBuilder(
+          builder: (context, setSheetState) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final pack in currentPacks)
+                  ListTile(
+                    title: Text(pack.groupTitle),
+                    trailing: IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      onPressed: () async {
+                        final removed = await _confirmRemovePack(pack);
+                        if (!removed || !context.mounted) return;
+                        final nextPacks = await _store.loadPacks();
+                        if (!context.mounted) return;
+                        setSheetState(() => currentPacks = nextPacks);
+                      },
+                    ),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.close),
+                  title: Text(context.l10n.common_cancel),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmRemovePack(MCOImagePackMetadata pack) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.mcogallery_removePackConfirm(pack.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(context.l10n.common_ok),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return false;
+
+    try {
+      await _store.removePack(pack);
+      await _loadItems();
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final groups = _buildGroups(context);
@@ -218,7 +331,14 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
                     child: Text(context.l10n.mcogallery_removePack),
                   ),
                 ],
-                onSelected: (_) {},
+                onSelected: (action) {
+                  switch (action) {
+                    case _GalleryMenuAction.addPack:
+                      unawaited(_importPack());
+                    case _GalleryMenuAction.removePack:
+                      unawaited(_showRemovePackSheet());
+                  }
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.close),
@@ -278,13 +398,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     groups.sort((a, b) {
       if (a.id == MCOImageGalleryItem.commonGroupId) return -1;
       if (b.id == MCOImageGalleryItem.commonGroupId) return 1;
-      final aDate = a.items.isEmpty
-          ? DateTime.fromMillisecondsSinceEpoch(0)
-          : a.items.first.createdAt;
-      final bDate = b.items.isEmpty
-          ? DateTime.fromMillisecondsSinceEpoch(0)
-          : b.items.first.createdAt;
-      return bDate.compareTo(aDate);
+      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
     });
     return groups;
   }
@@ -456,7 +570,10 @@ class _GalleryTile extends StatelessWidget {
                       ? Image.memory(item.pngBytes, fit: BoxFit.contain)
                       : FittedBox(
                           fit: BoxFit.contain,
-                          child: MCOImageMessage(image: image, maxSize: 96),
+                          child: MCOImageMessage(
+                            image: image,
+                            maxSize: item.previewMaxSize ?? 96,
+                          ),
                         ),
                 ),
               ),

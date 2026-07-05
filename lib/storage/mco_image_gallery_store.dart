@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:archive/archive.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../models/mco_image_gallery_item.dart';
+import '../models/mco_image_pack.dart';
 import '../widgets/mco_image_message.dart';
 import 'prefs_manager.dart';
 
@@ -13,10 +18,13 @@ class MCOImageGalleryStore {
   static const String _key = 'mco_image_gallery_items';
   static const String _collapsedGroupsKey =
       'mco_image_gallery_collapsed_groups';
+  static const String _packsDirectoryName = 'mcoimg_packs';
 
   Future<List<MCOImageGalleryItem>> loadItems() async {
     final jsonString = PrefsManager.instance.getString(_key);
-    if (jsonString == null || jsonString.isEmpty) return [];
+    if (jsonString == null || jsonString.isEmpty) {
+      return _loadPackItems();
+    }
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       final items = <MCOImageGalleryItem>[];
@@ -34,14 +42,18 @@ class MCOImageGalleryStore {
       if (migrated) {
         unawaited(saveItems(items));
       }
+      items.addAll(await _loadPackItems());
       return items;
     } catch (_) {
-      return [];
+      return _loadPackItems();
     }
   }
 
   Future<void> saveItems(List<MCOImageGalleryItem> items) async {
-    final jsonList = items.map(_toJson).toList();
+    final jsonList = items
+        .where((item) => !item.isPackItem)
+        .map(_toJson)
+        .toList();
     await PrefsManager.instance.setString(_key, jsonEncode(jsonList));
   }
 
@@ -70,6 +82,99 @@ class MCOImageGalleryStore {
       _collapsedGroupsKey,
       jsonEncode(jsonList),
     );
+  }
+
+  Future<MCOImagePackMetadata> importPack(Uint8List bytes) async {
+    final archive = ZipDecoder().decodeBytes(bytes);
+    ArchiveFile? infoFile;
+    for (final file in archive.files) {
+      if (file.isFile && _normalizedZipPath(file.name) == 'info.json') {
+        infoFile = file;
+        break;
+      }
+    }
+    if (infoFile == null) {
+      throw const FormatException('MCOimg pack info.json is missing');
+    }
+
+    final infoJson = jsonDecode(utf8.decode(_archiveFileBytes(infoFile)));
+    if (infoJson is! Map<String, dynamic>) {
+      throw const FormatException('MCOimg pack info.json is invalid');
+    }
+
+    final folderName = _packFolderName(infoJson);
+    final metadata = MCOImagePackMetadata.fromJson(
+      infoJson,
+      folderName: folderName,
+    );
+    final imagePairs = _packImagePairs(archive.files);
+    if (imagePairs.isEmpty) {
+      throw const FormatException('MCOimg pack does not contain images');
+    }
+
+    final packsDir = await _packsDirectory();
+    final packDir = Directory(_joinPath(packsDir.path, folderName));
+    if (await packDir.exists()) {
+      await packDir.delete(recursive: true);
+    }
+    await packDir.create(recursive: true);
+
+    await File(_joinPath(packDir.path, 'info.json')).writeAsBytes(
+      _archiveFileBytes(infoFile),
+      flush: true,
+    );
+
+    for (final pair in imagePairs) {
+      final imageDir = Directory(_joinPath(packDir.path, pair.directoryName));
+      await imageDir.create(recursive: true);
+      await File(_joinPath(imageDir.path, pair.pngFileName)).writeAsBytes(
+        _archiveFileBytes(pair.pngFile),
+        flush: true,
+      );
+      await File(_joinPath(imageDir.path, pair.binFileName)).writeAsBytes(
+        _archiveFileBytes(pair.binFile),
+        flush: true,
+      );
+    }
+
+    return metadata;
+  }
+
+  Future<List<MCOImagePackMetadata>> loadPacks() async {
+    final packsDir = await _packsDirectory(create: false);
+    if (!await packsDir.exists()) return [];
+
+    final packs = <MCOImagePackMetadata>[];
+    await for (final entity in packsDir.list()) {
+      if (entity is! Directory) continue;
+      final infoFile = File(_joinPath(entity.path, 'info.json'));
+      if (!await infoFile.exists()) continue;
+      try {
+        final infoJson = jsonDecode(await infoFile.readAsString());
+        if (infoJson is! Map<String, dynamic>) continue;
+        packs.add(
+          MCOImagePackMetadata.fromJson(
+            infoJson,
+            folderName: _fileNameFromPath(entity.path),
+          ),
+        );
+      } catch (_) {
+        continue;
+      }
+    }
+
+    packs.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    return packs;
+  }
+
+  Future<void> removePack(MCOImagePackMetadata pack) async {
+    final packsDir = await _packsDirectory(create: false);
+    final packDir = Directory(_joinPath(packsDir.path, pack.folderName));
+    if (await packDir.exists()) {
+      await packDir.delete(recursive: true);
+    }
   }
 
   Future<MCOImageGalleryItem> createFromText(String text) async {
@@ -202,6 +307,203 @@ class MCOImageGalleryStore {
     return true;
   }
 
+  Future<List<MCOImageGalleryItem>> _loadPackItems() async {
+    final packs = await loadPacks();
+    if (packs.isEmpty) return [];
+
+    final items = <MCOImageGalleryItem>[];
+    for (final pack in packs) {
+      final packDir = Directory(
+        _joinPath((await _packsDirectory(create: false)).path, pack.folderName),
+      );
+      final imagesDir = Directory(_joinPath(packDir.path, 'images'));
+      if (!await imagesDir.exists()) continue;
+
+      final imageDirs = <Directory>[];
+      await for (final entity in imagesDir.list()) {
+        if (entity is Directory) imageDirs.add(entity);
+      }
+      imageDirs.sort(
+        (a, b) => _fileNameFromPath(a.path).toLowerCase().compareTo(
+          _fileNameFromPath(b.path).toLowerCase(),
+        ),
+      );
+
+      for (final imageDir in imageDirs) {
+        final files = await imageDir.list().where((entity) {
+          if (entity is! File) return false;
+          final name = _fileNameFromPath(entity.path).toLowerCase();
+          return name.endsWith('.png') || name.endsWith('.mcoimg.bin');
+        }).toList();
+        File? pngFile;
+        File? binFile;
+        for (final entity in files) {
+          if (entity is! File) continue;
+          final name = _fileNameFromPath(entity.path).toLowerCase();
+          if (pngFile == null && name.endsWith('.png')) {
+            pngFile = entity;
+          } else if (binFile == null && name.endsWith('.mcoimg.bin')) {
+            binFile = entity;
+          }
+        }
+        if (pngFile == null || binFile == null) continue;
+
+        try {
+          final binaryPayload = await binFile.readAsBytes();
+          final pngBytes = await pngFile.readAsBytes();
+          final decoded = _decodeGalleryPayload(binaryPayload);
+          final stat = await binFile.stat();
+          items.add(
+            MCOImageGalleryItem(
+              id:
+                  'pack:${pack.folderName}:${_fileNameFromPath(imageDir.path)}',
+              createdAt: stat.modified,
+              groupId: pack.groupId,
+              groupName: pack.groupTitle,
+              packFolderName: pack.folderName,
+              previewMaxSize: pack.maxImageSize,
+              binaryPayload: binaryPayload,
+              pngBytes: pngBytes,
+              width: decoded.image.width,
+              height: decoded.image.height,
+              byteLength: binaryPayload.length,
+              usedColorCount: decoded.image.pixels.toSet().length,
+              codecVersion: decoded.codecVersion,
+              paletteProfile: decoded.image.paletteProfile,
+            ),
+          );
+        } catch (_) {
+          continue;
+        }
+      }
+    }
+    return items;
+  }
+
+  _DecodedGalleryPayload _decodeGalleryPayload(Uint8List binaryPayload) {
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      binaryPayload,
+    );
+    if (appPayload?.subtypeVersion ==
+        ChannelAppDataHelper.mcoImageV3SubtypeVersion) {
+      return _DecodedGalleryPayload(
+        image: MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload),
+        codecVersion: ChannelAppDataHelper.mcoImageV3Version,
+      );
+    }
+
+    final textPayload = MCOImageCodec.textFromBinaryPayload(binaryPayload);
+    final image = MCOImageCodec().decode(textPayload);
+    final payloadInfo = MCOImageCodec.inspectPayload(textPayload);
+    return _DecodedGalleryPayload(
+      image: image,
+      codecVersion: payloadInfo?.version ?? _codecVersionForImage(image),
+    );
+  }
+
+  Future<Directory> _packsDirectory({bool create = true}) async {
+    final baseDir = await getApplicationDocumentsDirectory();
+    final dir = Directory(_joinPath(baseDir.path, _packsDirectoryName));
+    if (create && !await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  String _packFolderName(Map<String, dynamic> infoJson) {
+    final id = (infoJson['id'] as String?)?.trim();
+    final version = (infoJson['ver'] as String?)?.trim();
+    if (id == null || id.isEmpty) {
+      throw const FormatException('MCOimg pack id is missing');
+    }
+    if (version == null || version.isEmpty) {
+      throw const FormatException('MCOimg pack version is missing');
+    }
+    final author = (infoJson['author'] as String?)?.trim();
+    return 'mcoimgpack_'
+        '${_sanitizePathSegment(author?.isNotEmpty == true ? author! : 'unknown')}_'
+        '${_sanitizePathSegment(id)}_'
+        '${_sanitizePathSegment(version)}';
+  }
+
+  List<_PackImagePair> _packImagePairs(List<ArchiveFile> files) {
+    final byDirectory = <String, _MutablePackImagePair>{};
+    for (final file in files) {
+      if (!file.isFile) continue;
+      final path = _normalizedZipPath(file.name);
+      final parts = path.split('/');
+      if (parts.length < 3 || parts.first != 'images') continue;
+      final directoryName = _sanitizePathSegment(parts[1]);
+      if (directoryName.isEmpty) continue;
+      final fileName = _sanitizePathSegment(parts.last);
+      final lowerFileName = fileName.toLowerCase();
+      final pair = byDirectory.putIfAbsent(
+        directoryName,
+        () => _MutablePackImagePair(directoryName),
+      );
+      if (lowerFileName.endsWith('.png') && pair.pngFile == null) {
+        pair.pngFile = file;
+        pair.pngFileName = fileName;
+      } else if (lowerFileName.endsWith('.mcoimg.bin') &&
+          pair.binFile == null) {
+        pair.binFile = file;
+        pair.binFileName = fileName;
+      }
+    }
+
+    final pairs = <_PackImagePair>[];
+    for (final pair in byDirectory.values) {
+      if (pair.pngFile == null || pair.binFile == null) continue;
+      pairs.add(
+        _PackImagePair(
+          directoryName: pair.directoryName,
+          pngFile: pair.pngFile!,
+          pngFileName: pair.pngFileName!,
+          binFile: pair.binFile!,
+          binFileName: pair.binFileName!,
+        ),
+      );
+    }
+    pairs.sort((a, b) => a.directoryName.compareTo(b.directoryName));
+    return pairs;
+  }
+
+  Uint8List _archiveFileBytes(ArchiveFile file) {
+    final content = file.content;
+    if (content is Uint8List) return content;
+    if (content is List<int>) return Uint8List.fromList(content);
+    throw const FormatException('Unsupported archive file content');
+  }
+
+  String _normalizedZipPath(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    return normalized
+        .split('/')
+        .where((part) => part.isNotEmpty && part != '.' && part != '..')
+        .join('/');
+  }
+
+  String _sanitizePathSegment(String value) {
+    final cleaned = value
+        .trim()
+        .replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    return cleaned.isEmpty ? 'item' : cleaned;
+  }
+
+  String _joinPath(String left, String right) {
+    final separator = Platform.pathSeparator;
+    if (left.endsWith(separator)) return '$left$right';
+    return '$left$separator$right';
+  }
+
+  String _fileNameFromPath(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final index = normalized.lastIndexOf('/');
+    return index >= 0 ? normalized.substring(index + 1) : normalized;
+  }
+
   int _codecVersionForImage(MCOImage image) {
     return switch (image.encodingVersion) {
       MCOImageEncodingVersion.v1Legacy => 1,
@@ -220,4 +522,40 @@ class MCOImageGalleryStore {
     }
     return ChannelAppDataHelper.mcoImageV3Version;
   }
+}
+
+class _DecodedGalleryPayload {
+  final MCOImage image;
+  final int codecVersion;
+
+  const _DecodedGalleryPayload({
+    required this.image,
+    required this.codecVersion,
+  });
+}
+
+class _MutablePackImagePair {
+  final String directoryName;
+  ArchiveFile? pngFile;
+  String? pngFileName;
+  ArchiveFile? binFile;
+  String? binFileName;
+
+  _MutablePackImagePair(this.directoryName);
+}
+
+class _PackImagePair {
+  final String directoryName;
+  final ArchiveFile pngFile;
+  final String pngFileName;
+  final ArchiveFile binFile;
+  final String binFileName;
+
+  const _PackImagePair({
+    required this.directoryName,
+    required this.pngFile,
+    required this.pngFileName,
+    required this.binFile,
+    required this.binFileName,
+  });
 }
