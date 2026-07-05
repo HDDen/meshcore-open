@@ -5256,7 +5256,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Déverrouiller la vue du paquet';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

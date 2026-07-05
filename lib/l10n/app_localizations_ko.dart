@@ -4979,7 +4979,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pathMap_unfollowPacket => '패킷 고정 해제';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

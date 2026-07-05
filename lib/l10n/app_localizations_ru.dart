@@ -5236,7 +5236,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Не следить за пакетом';
 
   @override
-  String get chat_canvas => 'Холст';
+  String get chat_canvas => 'Холст MCOimg';
 
   @override
   String get chat_canvasCrop => 'Обрезать/расширить';

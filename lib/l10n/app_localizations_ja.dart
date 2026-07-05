@@ -4975,7 +4975,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pathMap_unfollowPacket => 'パケットの追跡を解除';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

@@ -2204,7 +2204,7 @@
   "settings_copyMsgPathEditFinalDscr": "Доступные шаблоны:\n%senderName% - имя отправителя\n%path% - сформированный путь\n%hops% - количество хопов\n\\n - перенос строки",
   "settings_channelsSendAsBinary": "Отправлять расширенные форматы в бинарном виде (каналы)",
   "settings_dmSendAsBinary": "Отправлять расширенные форматы в бинарном виде (личные сообщения)",
-  "chat_canvas": "Холст",
+  "chat_canvas": "Холст MCOimg",
   "chat_canvasCrop": "Обрезать/расширить",
   "chat_canvasResize": "Сжать/растянуть",
   "chat_canvasUnlockSize": "Разблокировать размер холста",

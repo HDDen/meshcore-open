@@ -5244,7 +5244,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Відв\'язати вигляд від пакету';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

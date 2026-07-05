@@ -5144,7 +5144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Unlock view from packet';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

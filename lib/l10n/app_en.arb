@@ -2963,7 +2963,7 @@
   "pathMap_noLocation": "No location",
   "pathMap_followPacket": "Lock view to packet",
   "pathMap_unfollowPacket": "Unlock view from packet",
-  "chat_canvas": "Canvas",
+  "chat_canvas": "MCOimg canvas",
   "chat_canvasCrop": "Crop/expand",
   "chat_canvasResize": "Scale",
   "chat_canvasUnlockSize": "Unlock canvas size",

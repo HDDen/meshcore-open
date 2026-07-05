@@ -5175,7 +5175,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Lås upp vy från paket';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

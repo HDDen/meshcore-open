@@ -123,14 +123,14 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
               onTap: onSendSelfContact,
             ),
             ListTile(
-              leading: const Icon(Icons.my_location),
-              title: Text(context.l10n.chat_myLocation),
-              onTap: onSendMyLocation,
-            ),
-            ListTile(
               leading: const Icon(Icons.contact_page_outlined),
               title: Text(context.l10n.chat_sendContact),
               onTap: onSendContact,
+            ),
+            ListTile(
+              leading: const Icon(Icons.my_location),
+              title: Text(context.l10n.chat_myLocation),
+              onTap: onSendMyLocation,
             ),
             ListTile(
               leading: const Icon(Icons.add_location_alt_outlined),

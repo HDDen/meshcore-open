@@ -5237,7 +5237,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Fixierung aufheben';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

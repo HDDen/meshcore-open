@@ -5256,7 +5256,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Przestań śledzić pakiet';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

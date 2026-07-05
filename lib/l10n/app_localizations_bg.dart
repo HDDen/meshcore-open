@@ -5227,7 +5227,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Спри проследяването на пакета';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

@@ -4866,7 +4866,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathMap_unfollowPacket => '解锁视图跟随';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

@@ -5219,7 +5219,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Liberar vista do pacote';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

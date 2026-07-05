@@ -5225,7 +5225,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get pathMap_unfollowPacket => 'A nézet feloldása a csomagból';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

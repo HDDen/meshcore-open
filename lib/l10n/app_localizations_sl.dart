@@ -5210,7 +5210,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Odkleni pogled od paketa';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';

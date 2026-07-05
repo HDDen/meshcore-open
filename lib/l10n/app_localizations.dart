@@ -8947,7 +8947,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvas.
   ///
   /// In en, this message translates to:
-  /// **'Canvas'**
+  /// **'MCOimg canvas'**
   String get chat_canvas;
 
   /// No description provided for @chat_canvasCrop.
