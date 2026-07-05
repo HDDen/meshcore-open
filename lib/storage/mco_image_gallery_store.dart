@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -10,6 +11,8 @@ import 'prefs_manager.dart';
 
 class MCOImageGalleryStore {
   static const String _key = 'mco_image_gallery_items';
+  static const String _collapsedGroupsKey =
+      'mco_image_gallery_collapsed_groups';
 
   Future<List<MCOImageGalleryItem>> loadItems() async {
     final jsonString = PrefsManager.instance.getString(_key);
@@ -17,12 +20,20 @@ class MCOImageGalleryStore {
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       final items = <MCOImageGalleryItem>[];
+      var migrated = false;
       for (final entry in jsonList) {
         if (entry is! Map<String, dynamic>) continue;
+        final rawGroupId = entry['groupId'];
+        if (rawGroupId is! String || rawGroupId.trim().isEmpty) {
+          migrated = true;
+        }
         final item = _fromJson(entry);
         if (item != null) items.add(item);
       }
       items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (migrated) {
+        unawaited(saveItems(items));
+      }
       return items;
     } catch (_) {
       return [];
@@ -32,6 +43,33 @@ class MCOImageGalleryStore {
   Future<void> saveItems(List<MCOImageGalleryItem> items) async {
     final jsonList = items.map(_toJson).toList();
     await PrefsManager.instance.setString(_key, jsonEncode(jsonList));
+  }
+
+  Future<Set<String>> loadCollapsedGroupIds() async {
+    final jsonString = PrefsManager.instance.getString(_collapsedGroupsKey);
+    if (jsonString == null || jsonString.isEmpty) return {};
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      return jsonList
+          .whereType<String>()
+          .map((entry) => entry.trim())
+          .where((entry) => entry.isNotEmpty)
+          .toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> saveCollapsedGroupIds(Set<String> groupIds) async {
+    final jsonList = groupIds
+        .map((entry) => entry.trim())
+        .where((entry) => entry.isNotEmpty)
+        .toList()
+      ..sort();
+    await PrefsManager.instance.setString(
+      _collapsedGroupsKey,
+      jsonEncode(jsonList),
+    );
   }
 
   Future<MCOImageGalleryItem> createFromText(String text) async {
@@ -55,6 +93,7 @@ class MCOImageGalleryStore {
     return MCOImageGalleryItem(
       id: '${now.microsecondsSinceEpoch}',
       createdAt: now,
+      groupId: MCOImageGalleryItem.commonGroupId,
       binaryPayload: binaryPayload,
       pngBytes: pngBytes,
       width: image.width,
@@ -76,6 +115,8 @@ class MCOImageGalleryStore {
     );
     if (duplicateIndex >= 0) {
       items[duplicateIndex] = item.copyWith(
+        groupId: MCOImageGalleryItem.commonGroupId,
+        clearGroupName: true,
         showPngFallback: items[duplicateIndex].showPngFallback,
       );
     } else {
@@ -88,6 +129,9 @@ class MCOImageGalleryStore {
     return {
       'id': item.id,
       'createdAt': item.createdAt.millisecondsSinceEpoch,
+      'groupId': item.groupId,
+      if (item.groupName != null && item.groupName!.isNotEmpty)
+        'groupName': item.groupName,
       'binaryPayload': base64Encode(item.binaryPayload),
       'pngBytes': base64Encode(item.pngBytes),
       'width': item.width,
@@ -120,11 +164,21 @@ class MCOImageGalleryStore {
             MCOImageCodec.textFromBinaryPayload(binaryPayload),
           )?.version ??
           1;
+      final rawGroupId = json['groupId'];
+      final rawGroupName = json['groupName'];
+      final groupId = rawGroupId is String && rawGroupId.trim().isNotEmpty
+          ? rawGroupId.trim()
+          : MCOImageGalleryItem.commonGroupId;
+      final groupName = rawGroupName is String && rawGroupName.trim().isNotEmpty
+          ? rawGroupName.trim()
+          : null;
       return MCOImageGalleryItem(
         id: json['id'] as String? ?? '${json['createdAt'] ?? 0}',
         createdAt: DateTime.fromMillisecondsSinceEpoch(
           json['createdAt'] as int? ?? 0,
         ),
+        groupId: groupId,
+        groupName: groupName,
         binaryPayload: binaryPayload,
         pngBytes: pngBytes,
         width: json['width'] as int? ?? 0,

@@ -5,8 +5,12 @@ import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 
 class MCOImageGalleryItem {
+  static const String commonGroupId = 'common';
+
   final String id;
   final DateTime createdAt;
+  final String groupId;
+  final String? groupName;
   final Uint8List binaryPayload;
   final Uint8List pngBytes;
   final int width;
@@ -20,6 +24,8 @@ class MCOImageGalleryItem {
   const MCOImageGalleryItem({
     required this.id,
     required this.createdAt,
+    this.groupId = commonGroupId,
+    this.groupName,
     required this.binaryPayload,
     required this.pngBytes,
     required this.width,
@@ -31,10 +37,17 @@ class MCOImageGalleryItem {
     this.showPngFallback = false,
   });
 
-  MCOImageGalleryItem copyWith({bool? showPngFallback}) {
+  MCOImageGalleryItem copyWith({
+    String? groupId,
+    String? groupName,
+    bool clearGroupName = false,
+    bool? showPngFallback,
+  }) {
     return MCOImageGalleryItem(
       id: id,
       createdAt: createdAt,
+      groupId: groupId ?? this.groupId,
+      groupName: clearGroupName ? null : (groupName ?? this.groupName),
       binaryPayload: binaryPayload,
       pngBytes: pngBytes,
       width: width,

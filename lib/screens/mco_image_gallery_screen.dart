@@ -11,6 +11,8 @@ import '../widgets/mco_image_message.dart';
 
 enum MCOImageGalleryAction { send, edit }
 
+enum _GalleryMenuAction { addPack, removePack }
+
 class MCOImageGalleryResult {
   final MCOImageGalleryAction action;
   final MCOImageGalleryItem item;
@@ -28,6 +30,7 @@ class MCOImageGalleryScreen extends StatefulWidget {
 class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
   final MCOImageGalleryStore _store = MCOImageGalleryStore();
   List<MCOImageGalleryItem> _items = [];
+  final Set<String> _collapsedGroupIds = {};
   bool _loading = true;
 
   @override
@@ -37,10 +40,18 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
   }
 
   Future<void> _loadItems() async {
-    final items = await _store.loadItems();
+    final results = await Future.wait([
+      _store.loadItems(),
+      _store.loadCollapsedGroupIds(),
+    ]);
+    final items = results[0] as List<MCOImageGalleryItem>;
+    final collapsedGroupIds = results[1] as Set<String>;
     if (!mounted) return;
     setState(() {
       _items = items;
+      _collapsedGroupIds
+        ..clear()
+        ..addAll(collapsedGroupIds);
       _loading = false;
     });
   }
@@ -180,6 +191,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final groups = _buildGroups(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(16),
@@ -194,6 +206,20 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
+              PopupMenuButton<_GalleryMenuAction>(
+                icon: const Icon(Icons.more_vert),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _GalleryMenuAction.addPack,
+                    child: Text(context.l10n.mcogallery_addPack),
+                  ),
+                  PopupMenuItem(
+                    value: _GalleryMenuAction.removePack,
+                    child: Text(context.l10n.mcogallery_removePack),
+                  ),
+                ],
+                onSelected: (_) {},
+              ),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -204,27 +230,193 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _items.isEmpty
-                ? Center(child: Text(context.l10n.channels_changeGroupEmpty))
-                : GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 0.78,
-                        ),
-                    itemCount: _items.length,
-                    itemBuilder: (context, index) {
-                      return _GalleryTile(
-                        item: _items[index],
-                        onTap: () => _selectItem(_items[index]),
-                        onLongPress: () => _showItemActions(_items[index]),
-                      );
-                    },
-                  ),
+                : _buildGroupedGallery(groups),
           ),
         ],
+      ),
+    );
+  }
+
+  List<_GalleryGroup> _buildGroups(BuildContext context) {
+    final byId = <String, List<MCOImageGalleryItem>>{
+      MCOImageGalleryItem.commonGroupId: [],
+    };
+    final names = <String, String>{
+      MCOImageGalleryItem.commonGroupId: context.l10n.mcogallery_common,
+    };
+
+    for (final item in _items) {
+      final groupId = item.groupId.trim().isEmpty
+          ? MCOImageGalleryItem.commonGroupId
+          : item.groupId.trim();
+      byId.putIfAbsent(groupId, () => []).add(item);
+      if (groupId != MCOImageGalleryItem.commonGroupId) {
+        final groupName = item.groupName?.trim();
+        names[groupId] = groupName != null && groupName.isNotEmpty
+            ? groupName
+            : groupId;
+      }
+    }
+
+    final groups = [
+      _GalleryGroup(
+        id: MCOImageGalleryItem.commonGroupId,
+        title: names[MCOImageGalleryItem.commonGroupId]!,
+        items: byId[MCOImageGalleryItem.commonGroupId]!,
+      ),
+      ...byId.entries
+          .where((entry) => entry.key != MCOImageGalleryItem.commonGroupId)
+          .map(
+            (entry) => _GalleryGroup(
+              id: entry.key,
+              title: names[entry.key] ?? entry.key,
+              items: entry.value,
+            ),
+          ),
+    ];
+
+    groups.sort((a, b) {
+      if (a.id == MCOImageGalleryItem.commonGroupId) return -1;
+      if (b.id == MCOImageGalleryItem.commonGroupId) return 1;
+      final aDate = a.items.isEmpty
+          ? DateTime.fromMillisecondsSinceEpoch(0)
+          : a.items.first.createdAt;
+      final bDate = b.items.isEmpty
+          ? DateTime.fromMillisecondsSinceEpoch(0)
+          : b.items.first.createdAt;
+      return bDate.compareTo(aDate);
+    });
+    return groups;
+  }
+
+  Widget _buildGroupedGallery(List<_GalleryGroup> groups) {
+    if (_items.isEmpty) {
+      return CustomScrollView(
+        slivers: [
+          for (final group in groups)
+            SliverToBoxAdapter(
+              child: _GalleryGroupHeader(
+                title: group.title,
+                count: group.items.length,
+                collapsed: _collapsedGroupIds.contains(group.id),
+                onToggle: () => _toggleGroup(group.id),
+              ),
+            ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(context.l10n.channels_changeGroupEmpty)),
+          ),
+        ],
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        for (final group in groups) ...[
+          SliverToBoxAdapter(
+            child: _GalleryGroupHeader(
+              title: group.title,
+              count: group.items.length,
+              collapsed: _collapsedGroupIds.contains(group.id),
+              onToggle: () => _toggleGroup(group.id),
+            ),
+          ),
+          if (!_collapsedGroupIds.contains(group.id) && group.items.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.only(bottom: 12),
+              sliver: SliverGrid(
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.78,
+                    ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = group.items[index];
+                  return _GalleryTile(
+                    item: item,
+                    onTap: () => _selectItem(item),
+                    onLongPress: () => _showItemActions(item),
+                  );
+                }, childCount: group.items.length),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  void _toggleGroup(String groupId) {
+    setState(() {
+      if (!_collapsedGroupIds.add(groupId)) {
+        _collapsedGroupIds.remove(groupId);
+      }
+    });
+    unawaited(_store.saveCollapsedGroupIds(_collapsedGroupIds));
+  }
+}
+
+class _GalleryGroup {
+  final String id;
+  final String title;
+  final List<MCOImageGalleryItem> items;
+
+  const _GalleryGroup({
+    required this.id,
+    required this.title,
+    required this.items,
+  });
+}
+
+class _GalleryGroupHeader extends StatelessWidget {
+  final String title;
+  final int count;
+  final bool collapsed;
+  final VoidCallback onToggle;
+
+  const _GalleryGroupHeader({
+    required this.title,
+    required this.count,
+    required this.collapsed,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '$title ($count)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(collapsed ? Icons.add : Icons.remove),
+                  onPressed: onToggle,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
