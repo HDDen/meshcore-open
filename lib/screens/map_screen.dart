@@ -5881,6 +5881,22 @@ MarkerPayload? parseMarkerText(String text) {
   return MarkerPayload(position: LatLng(lat, lon), label: label, flags: flags);
 }
 
+/// Parse a plain coordinate message of the form `<lat>,<lon>`.
+MarkerPayload? parseCoordinateText(String text) {
+  final trimmed = text.trim();
+  final match = RegExp(
+    r'^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$',
+  ).firstMatch(trimmed);
+  if (match == null) return null;
+  final lat = double.tryParse(match.group(1) ?? '');
+  final lon = double.tryParse(match.group(2) ?? '');
+  if (lat == null || lon == null) return null;
+  if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+    return null;
+  }
+  return MarkerPayload(position: LatLng(lat, lon), label: trimmed, flags: '');
+}
+
 /// Build a normalized dedupe key for shared markers.
 /// Keeps the same algorithm previously present in both chat and map screens.
 String buildSharedMarkerKey({

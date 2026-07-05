@@ -908,9 +908,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final coordinate = parseCoordinateText(message.text);
     final sharedContact = parseSharedContactText(message.text);
     final isPlainTextMessage =
-        poi == null && !isMediaMessage && sharedContact == null;
+        poi == null &&
+        coordinate == null &&
+        !isMediaMessage &&
+        sharedContact == null;
     final hasReplyContext =
         message.replyToSenderName != null || message.replyToText != null;
     final replyMentionName = message.replyToSenderName?.trim();
@@ -1103,6 +1107,38 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   )
                                 : null,
+                          )
+                        else if (coordinate != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: _CoordinateMessageLink(
+                                  text: message.text.trim(),
+                                  coordinate: coordinate,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: textColor,
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            ChannelMessageStatus.sent &&
+                                        displayPath.isNotEmpty,
+                                    isFailed: showFailureVisual,
+                                  ),
+                                ),
+                              ],
+                            ],
                           )
                         else if (unsupportedMcoImageVersion != null)
                           _buildUnsupportedMcoImageMessage(
@@ -3267,6 +3303,36 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       region = _connector?.getChannelRegion(channel.index) ?? '';
     });
+  }
+}
+
+class _CoordinateMessageLink extends StatelessWidget {
+  final String text;
+  final MarkerPayload coordinate;
+  final TextStyle style;
+
+  const _CoordinateMessageLink({
+    required this.text,
+    required this.coordinate,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MapScreen(
+              highlightPosition: coordinate.position,
+              highlightLabel: coordinate.label,
+            ),
+          ),
+        );
+      },
+      child: Text(text, style: style),
+    );
   }
 }
 

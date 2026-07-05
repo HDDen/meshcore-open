@@ -1949,6 +1949,7 @@ class _MessageBubble extends StatelessWidget {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final coordinate = parseCoordinateText(message.text);
     final sharedContact = parseSharedContactText(message.text);
     final isFailed = message.status == MessageStatus.failed;
 
@@ -2082,6 +2083,39 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   )
                                 : null,
+                          )
+                        else if (coordinate != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: _CoordinateMessageLink(
+                                  text: messageText.trim(),
+                                  coordinate: coordinate,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: textColor,
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
+                            ],
                           )
                         else if (unsupportedMcoImageVersion != null)
                           _buildUnsupportedMcoImageMessage(
@@ -2646,4 +2680,34 @@ Color _colorForName(String name) {
     h = (h * 31 + c) & 0x7fffffff;
   }
   return hues[h % hues.length];
+}
+
+class _CoordinateMessageLink extends StatelessWidget {
+  final String text;
+  final MarkerPayload coordinate;
+  final TextStyle style;
+
+  const _CoordinateMessageLink({
+    required this.text,
+    required this.coordinate,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MapScreen(
+              highlightPosition: coordinate.position,
+              highlightLabel: coordinate.label,
+            ),
+          ),
+        );
+      },
+      child: Text(text, style: style),
+    );
+  }
 }
