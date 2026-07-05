@@ -2301,6 +2301,6 @@
   "chat_contactTypeRepeater": "Репитер",
   "chat_contactTypeRoom": "Рум-сервер",
   "chat_contactTypeSensor": "Сенсор",
-  "chat_myLocation": "Моё текущее местоположение",
+  "chat_myLocation": "Отправить моё местоположение",
   "chat_locationFromMap": "Отправить координаты с карты"
 }

@@ -3119,6 +3119,6 @@
   "chat_contactTypeRepeater": "Repeater",
   "chat_contactTypeRoom": "Room-server",
   "chat_contactTypeSensor": "Sensor",
-  "chat_myLocation": "My current position",
+  "chat_myLocation": "Share my location",
   "chat_locationFromMap": "Share location from map"
 }

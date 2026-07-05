@@ -5502,7 +5502,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_contactTypeSensor => 'Sensor';
 
   @override
-  String get chat_myLocation => 'My current position';
+  String get chat_myLocation => 'Share my location';
 
   @override
   String get chat_locationFromMap => 'Share location from map';

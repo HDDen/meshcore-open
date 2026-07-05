@@ -5565,7 +5565,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_contactTypeSensor => 'Сенсор';
 
   @override
-  String get chat_myLocation => 'Моё текущее местоположение';
+  String get chat_myLocation => 'Отправить моё местоположение';
 
   @override
   String get chat_locationFromMap => 'Отправить координаты с карты';

@@ -9529,7 +9529,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_myLocation.
   ///
   /// In en, this message translates to:
-  /// **'My current position'**
+  /// **'Share my location'**
   String get chat_myLocation;
 
   /// No description provided for @chat_locationFromMap.

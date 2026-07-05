@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -425,6 +426,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(
+                    icon: Icons.vpn_key,
+                    text: context.l10n.contacts_addContactByPubkey,
+                  ),
+                  onTap: () => _showAddContactByPubkeyDialog(context),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
                     icon: Icons.paste,
                     text: context.l10n.contacts_addContactFromClipboard,
                   ),
@@ -518,6 +526,210 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
+  Future<void> _showAddContactByPubkeyDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+    final pubkeyController = TextEditingController();
+    int selectedType = advTypeChat;
+    String? formError;
+    bool isSaving = false;
+
+    SharedContactInfo buildContactInfo() {
+      final publicKeyHex = pubkeyController.text.replaceAll(
+        RegExp(r'[^0-9a-fA-F]'),
+        '',
+      );
+      final publicKey = hexToPubKey(publicKeyHex);
+      final name = nameController.text.trim();
+      return SharedContactInfo(
+        publicKey: publicKey,
+        type: selectedType,
+        name: name.isEmpty ? publicKeyHex.substring(0, 8) : name,
+      );
+    }
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            Future<void> saveContact() async {
+              SharedContactInfo contact;
+              try {
+                contact = buildContactInfo();
+              } on FormatException {
+                setDialogState(() {
+                  formError = dialogContext.l10n.contacts_contactImportFailed;
+                });
+                return;
+              }
+
+              setDialogState(() {
+                isSaving = true;
+                formError = null;
+              });
+
+              final added = await _addSharedContact(contact);
+              if (!mounted) return;
+              if (added && dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                return;
+              }
+              if (dialogContext.mounted) {
+                setDialogState(() {
+                  isSaving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: Text(dialogContext.l10n.contacts_addContactByPubkey),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<int>(
+                      initialValue: selectedType,
+                      decoration: InputDecoration(
+                        labelText: dialogContext
+                            .l10n
+                            .contacts_addContactByPubkey_contactType,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: advTypeChat,
+                          child: Text(dialogContext.l10n.chat_contactTypeNode),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeRepeater,
+                          child: Text(
+                            dialogContext.l10n.chat_contactTypeRepeater,
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeRoom,
+                          child: Text(dialogContext.l10n.chat_contactTypeRoom),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeSensor,
+                          child: Text(
+                            dialogContext.l10n.chat_contactTypeSensor,
+                          ),
+                        ),
+                      ],
+                      onChanged: isSaving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setDialogState(() {
+                                selectedType = value;
+                              });
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: nameController,
+                      enabled: !isSaving,
+                      minLines: 1,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: dialogContext.l10n.settings_nodeName,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pubkeyController,
+                      enabled: !isSaving,
+                      minLines: 2,
+                      maxLines: 5,
+                      decoration: InputDecoration(
+                        hintText: dialogContext.l10n.chat_publicKey,
+                        errorText: formError,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.pop(dialogContext),
+                  child: Text(dialogContext.l10n.common_cancel),
+                ),
+                TextButton(
+                  onPressed: isSaving ? null : saveContact,
+                  child: Text(dialogContext.l10n.common_save),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      nameController.dispose();
+      pubkeyController.dispose();
+    }
+  }
+
+  Future<bool> _addSharedContact(SharedContactInfo contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey != null &&
+        selfPublicKey.isNotEmpty &&
+        contact.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_contactIsYou),
+      );
+      return false;
+    }
+
+    final alreadyExists = connector.contacts.any(
+      (existing) => existing.publicKeyHex == contact.publicKeyHex,
+    );
+    if (alreadyExists) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          content: Text(context.l10n.chat_sureToReplaceContact),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (replace != true || !mounted) return false;
+    }
+
+    try {
+      await connector.addOrUpdateSharedContact(
+        publicKey: contact.publicKey,
+        type: contact.type,
+        name: contact.name,
+      );
+      if (!mounted) return false;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImported),
+      );
+      return true;
+    } catch (_) {
+      if (!mounted) return false;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    }
+  }
+
   void _showAddContactSheet(BuildContext context) {
     showMeshSheet(
       context,
@@ -527,6 +739,14 @@ class _ContactsScreenState extends State<ContactsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               BottomSheetHeader(title: context.l10n.contacts_title),
+              ListTile(
+                leading: const Icon(Icons.vpn_key),
+                title: Text(context.l10n.contacts_addContactByPubkey),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _showAddContactByPubkeyDialog(context);
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.paste),
                 title: Text(context.l10n.contacts_addContactFromClipboard),
