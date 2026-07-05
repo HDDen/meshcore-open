@@ -141,12 +141,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "de": [
@@ -278,12 +285,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "es": [
@@ -428,12 +442,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "fr": [
@@ -578,12 +599,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "hu": [
@@ -728,12 +756,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "it": [
@@ -958,12 +993,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "ja": [
@@ -1108,12 +1150,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "ko": [
@@ -1258,12 +1307,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "nl": [
@@ -1488,12 +1544,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "pl": [
@@ -1638,12 +1701,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "pt": [
@@ -1868,12 +1938,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "sk": [
@@ -2018,12 +2095,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "sl": [
@@ -2168,12 +2252,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "sv": [
@@ -2398,12 +2489,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "uk": [
@@ -2548,12 +2646,19 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ],
 
   "zh": [
@@ -2698,11 +2803,18 @@
     "mcogallery_common",
     "mcogallery_addPack",
     "mcogallery_removePack",
+    "mcogallery_removePackConfirm",
     "mcogallery_addGroup",
     "mcogallery_removeGroup",
     "chat_sendSelfContact",
     "chat_sendContact",
     "chat_addContact",
-    "chat_contactTypeNode"
+    "chat_sureToReplaceContact",
+    "chat_contactIsYou",
+    "chat_contactType",
+    "chat_contactTypeNode",
+    "chat_contactTypeRepeater",
+    "chat_contactTypeRoom",
+    "chat_contactTypeSensor"
   ]
 }

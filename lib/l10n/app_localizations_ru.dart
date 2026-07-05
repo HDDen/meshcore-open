@@ -5516,6 +5516,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mcogallery_removePack => 'Удалить пакет';
 
   @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
   String get mcogallery_addGroup => 'Добавить группу';
 
   @override
@@ -5531,5 +5536,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_addContact => 'Добавить контакт';
 
   @override
-  String get chat_contactTypeNode => 'Сенсор';
+  String get chat_sureToReplaceContact => 'Контакт уже существует, заменить?';
+
+  @override
+  String get chat_contactIsYou => 'Это ваш собственный контакт';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Тип контакта: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Нода';
+
+  @override
+  String get chat_contactTypeRepeater => 'Репитер';
+
+  @override
+  String get chat_contactTypeRoom => 'Рум-сервер';
+
+  @override
+  String get chat_contactTypeSensor => 'Сенсор';
 }

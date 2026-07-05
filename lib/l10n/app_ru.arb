@@ -2286,13 +2286,17 @@
   "mcogallery_common": "Общее",
   "mcogallery_addPack": "Добавить пакет",
   "mcogallery_removePack": "Удалить пакет",
+  "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
   "mcogallery_addGroup": "Добавить группу",
   "mcogallery_removeGroup": "Удалить группу",
   "chat_sendSelfContact": "Отправить свой контакт",
   "chat_sendContact": "Поделиться контактом",
   "chat_addContact": "Добавить контакт",
+  "chat_sureToReplaceContact": "Контакт уже существует, заменить?",
+  "chat_contactIsYou": "Это ваш собственный контакт",
+  "chat_contactType": "Тип контакта: {contacttype}",
   "chat_contactTypeNode": "Нода",
-  "chat_contactTypeNode": "Репитер",
-  "chat_contactTypeNode": "Рум-сервер",
-  "chat_contactTypeNode": "Сенсор"
+  "chat_contactTypeRepeater": "Репитер",
+  "chat_contactTypeRoom": "Рум-сервер",
+  "chat_contactTypeSensor": "Сенсор"
 }

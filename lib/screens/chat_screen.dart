@@ -56,6 +56,7 @@ import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/routing_sheet.dart';
+import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../l10n/l10n.dart';
@@ -547,6 +548,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onLongPress: () => _showMessageActions(message, contact),
                     onRetryReaction: (msg, emoji) =>
                         _sendReaction(msg, contact, emoji),
+                    onAddSharedContact: _addSharedContact,
                     pendingSendAt: connector.pendingContactSendAt(
                       message.messageId,
                     ),
@@ -1774,6 +1776,63 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _addSharedContact(SharedContactInfo contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey != null &&
+        selfPublicKey.isNotEmpty &&
+        contact.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_contactIsYou),
+      );
+      return;
+    }
+
+    final alreadyExists = connector.contacts.any(
+      (existing) => existing.publicKeyHex == contact.publicKeyHex,
+    );
+    if (alreadyExists) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          content: Text(context.l10n.chat_sureToReplaceContact),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (replace != true || !mounted) return;
+    }
+
+    try {
+      await connector.addOrUpdateSharedContact(
+        publicKey: contact.publicKey,
+        type: contact.type,
+        name: contact.name,
+      );
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImported),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   void _retryMessage(Message message) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     // Retry using the contact's current path override setting
@@ -1824,6 +1883,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
+  final Future<void> Function(SharedContactInfo contact)? onAddSharedContact;
   final DateTime? pendingSendAt;
   final int? pendingSendDelaySeconds;
   final VoidCallback? onCancelPendingSend;
@@ -1838,6 +1898,7 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
+    this.onAddSharedContact,
     this.pendingSendAt,
     this.pendingSendDelaySeconds,
     this.onCancelPendingSend,
@@ -1877,6 +1938,7 @@ class _MessageBubble extends StatelessWidget {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final sharedContact = parseSharedContactText(message.text);
     final isFailed = message.status == MessageStatus.failed;
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
@@ -2088,7 +2150,45 @@ class _MessageBubble extends StatelessWidget {
                                           MessageStatus.failed,
                                     ),
                                   ),
+                              ),
+                            ],
+                          )
+                        else if (sharedContact != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: SharedContactMessage(
+                                  contact: sharedContact,
+                                  textStyle: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                  ),
+                                  metaColor: metaColor,
+                                  textScale: textScale,
+                                  onAddContact: () {
+                                    final handler = onAddSharedContact;
+                                    if (handler != null) {
+                                      unawaited(handler(sharedContact));
+                                    }
+                                  },
                                 ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
                             ],
                           )
                         else

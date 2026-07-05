@@ -5234,6 +5234,63 @@ class MeshCoreConnector extends ChangeNotifier {
     return true;
   }
 
+  Future<void> addOrUpdateSharedContact({
+    required Uint8List publicKey,
+    required int type,
+    required String name,
+  }) async {
+    if (!isConnected) {
+      throw Exception("Not connected to a MeshCore device");
+    }
+
+    final existingIndex = _contacts.indexWhere(
+      (contact) => listEquals(contact.publicKey, publicKey),
+    );
+    final existing = existingIndex >= 0 ? _contacts[existingIndex] : null;
+    final pathLength = existing == null
+        ? 0xFF
+        : (existing.pathLength < 0
+              ? 0xFF
+              : (_encodePathLenForCurrentMode(
+                      existing.pathLength,
+                      existing.path,
+                    ) ??
+                    0xFF));
+    final path = existing?.path ?? Uint8List(0);
+    final flags = existing?.flags ?? 0;
+
+    await sendFrame(
+      buildUpdateContactPathFrame(
+        publicKey,
+        path,
+        pathLength,
+        type: type,
+        flags: flags,
+        name: name,
+        lat: existing?.latitude,
+        lon: existing?.longitude,
+        lastModified: existing?.lastModified ?? existing?.lastSeen,
+      ),
+      waitForGenericAck: true,
+    );
+
+    _handleContactAdvert(
+      Contact(
+        publicKey: publicKey,
+        name: name,
+        type: type,
+        pathLength: existing?.pathLength ?? -1,
+        path: path,
+        latitude: existing?.latitude,
+        longitude: existing?.longitude,
+        lastSeen: DateTime.now(),
+        lastModified: existing?.lastModified,
+        flags: flags,
+      ),
+    );
+    notifyListeners();
+  }
+
   Future<void> clearContactPath(Contact contact) async {
     // Serialize path operations to prevent interleaved async calls.
     final prev = _pathOpLock;

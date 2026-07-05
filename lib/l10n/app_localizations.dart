@@ -9436,6 +9436,12 @@ abstract class AppLocalizations {
   /// **'Remove package'**
   String get mcogallery_removePack;
 
+  /// No description provided for @mcogallery_removePackConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Подтвердите удаление пакета «{name}»'**
+  String mcogallery_removePackConfirm(String name);
+
   /// No description provided for @mcogallery_addGroup.
   ///
   /// In en, this message translates to:
@@ -9466,11 +9472,47 @@ abstract class AppLocalizations {
   /// **'Add contact'**
   String get chat_addContact;
 
+  /// No description provided for @chat_sureToReplaceContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact is already exists, replace it?'**
+  String get chat_sureToReplaceContact;
+
+  /// No description provided for @chat_contactIsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'It is you'**
+  String get chat_contactIsYou;
+
+  /// No description provided for @chat_contactType.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact type: {contacttype}'**
+  String chat_contactType(String contacttype);
+
   /// No description provided for @chat_contactTypeNode.
   ///
   /// In en, this message translates to:
-  /// **'Sensor'**
+  /// **'Node'**
   String get chat_contactTypeNode;
+
+  /// No description provided for @chat_contactTypeRepeater.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater'**
+  String get chat_contactTypeRepeater;
+
+  /// No description provided for @chat_contactTypeRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room-server'**
+  String get chat_contactTypeRoom;
+
+  /// No description provided for @chat_contactTypeSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get chat_contactTypeSensor;
 }
 
 class _AppLocalizationsDelegate
