@@ -9513,6 +9513,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sensor'**
   String get chat_contactTypeSensor;
+
+  /// No description provided for @chat_myLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'My current position'**
+  String get chat_myLocation;
+
+  /// No description provided for @chat_locationFromMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Share location from map'**
+  String get chat_locationFromMap;
 }
 
 class _AppLocalizationsDelegate

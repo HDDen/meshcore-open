@@ -572,7 +572,7 @@ class _GalleryTile extends StatelessWidget {
                           fit: BoxFit.contain,
                           child: MCOImageMessage(
                             image: image,
-                            maxSize: item.previewMaxSize ?? 96,
+                            maxSize: (item.previewMaxSize ?? 96).toDouble(),
                           ),
                         ),
                 ),

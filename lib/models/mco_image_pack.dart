@@ -24,8 +24,8 @@ class MCOImagePackMetadata {
   String get groupTitle {
     final authorText = author?.trim();
     final details = authorText != null && authorText.isNotEmpty
-        ? '$authorText, $version'
-        : version;
+        ? '$authorText, ver. $version'
+        : 'ver. $version';
     return '$name ($details)';
   }
 

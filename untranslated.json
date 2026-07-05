@@ -153,7 +153,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "de": [
@@ -297,7 +299,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "es": [
@@ -454,7 +458,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "fr": [
@@ -611,7 +617,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "hu": [
@@ -768,7 +776,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "it": [
@@ -1005,7 +1015,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "ja": [
@@ -1162,7 +1174,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "ko": [
@@ -1319,7 +1333,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "nl": [
@@ -1556,7 +1572,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "pl": [
@@ -1713,7 +1731,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "pt": [
@@ -1950,7 +1970,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "sk": [
@@ -2107,7 +2129,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "sl": [
@@ -2264,7 +2288,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "sv": [
@@ -2501,7 +2527,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "uk": [
@@ -2658,7 +2686,9 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ],
 
   "zh": [
@@ -2815,6 +2845,8 @@
     "chat_contactTypeNode",
     "chat_contactTypeRepeater",
     "chat_contactTypeRoom",
-    "chat_contactTypeSensor"
+    "chat_contactTypeSensor",
+    "chat_myLocation",
+    "chat_locationFromMap"
   ]
 }

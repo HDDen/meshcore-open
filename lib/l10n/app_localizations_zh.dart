@@ -5185,4 +5185,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_contactTypeSensor => 'Sensor';
+
+  @override
+  String get chat_myLocation => 'My current position';
+
+  @override
+  String get chat_locationFromMap => 'Share location from map';
 }

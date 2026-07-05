@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../helpers/channel_app_data_helper.dart';
@@ -19,8 +19,11 @@ class MCOImageGalleryStore {
   static const String _collapsedGroupsKey =
       'mco_image_gallery_collapsed_groups';
   static const String _packsDirectoryName = 'mcoimg_packs';
+  static const String _bundledPacksDirectory = 'assets/mcopacks/';
+  static Future<void>? _bundledPacksInstallFuture;
 
   Future<List<MCOImageGalleryItem>> loadItems() async {
+    await ensureBundledPacksInstalled();
     final jsonString = PrefsManager.instance.getString(_key);
     if (jsonString == null || jsonString.isEmpty) {
       return _loadPackItems();
@@ -84,6 +87,40 @@ class MCOImageGalleryStore {
     );
   }
 
+  Future<void> ensureBundledPacksInstalled() async {
+    final existing = _bundledPacksInstallFuture;
+    if (existing != null) {
+      await existing;
+      return;
+    }
+
+    final future = _installBundledPacks();
+    _bundledPacksInstallFuture = future;
+    await future;
+  }
+
+  Future<void> _installBundledPacks() async {
+    final assetPaths = await _loadBundledPackAssetPaths();
+    if (assetPaths.isEmpty) return;
+
+    final packsDir = await _packsDirectory();
+    for (final assetPath in assetPaths) {
+      try {
+        final data = await rootBundle.load(assetPath);
+        final bytes = data.buffer.asUint8List(
+          data.offsetInBytes,
+          data.lengthInBytes,
+        );
+        final folderName = _packFolderNameFromBytes(bytes);
+        final packDir = Directory(_joinPath(packsDir.path, folderName));
+        if (await packDir.exists()) continue;
+        await importPack(bytes);
+      } catch (_) {
+        continue;
+      }
+    }
+  }
+
   Future<MCOImagePackMetadata> importPack(Uint8List bytes) async {
     final archive = ZipDecoder().decodeBytes(bytes);
     ArchiveFile? infoFile;
@@ -125,7 +162,9 @@ class MCOImageGalleryStore {
     );
 
     for (final pair in imagePairs) {
-      final imageDir = Directory(_joinPath(packDir.path, pair.directoryName));
+      final imageDir = Directory(
+        _joinPath(_joinPath(packDir.path, 'images'), pair.directoryName),
+      );
       await imageDir.create(recursive: true);
       await File(_joinPath(imageDir.path, pair.pngFileName)).writeAsBytes(
         _archiveFileBytes(pair.pngFile),
@@ -138,6 +177,39 @@ class MCOImageGalleryStore {
     }
 
     return metadata;
+  }
+
+  Future<List<String>> _loadBundledPackAssetPaths() async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final paths = manifest
+          .listAssets()
+          .where(
+            (path) =>
+                path.startsWith(_bundledPacksDirectory) &&
+                path.toLowerCase().endsWith('.mcoimg.pack'),
+          )
+          .toList();
+      paths.sort(_compareNaturalStrings);
+      return paths;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  String _packFolderNameFromBytes(Uint8List bytes) {
+    final archive = ZipDecoder().decodeBytes(bytes);
+    for (final file in archive.files) {
+      if (!file.isFile || _normalizedZipPath(file.name) != 'info.json') {
+        continue;
+      }
+      final infoJson = jsonDecode(utf8.decode(_archiveFileBytes(file)));
+      if (infoJson is! Map<String, dynamic>) {
+        throw const FormatException('MCOimg pack info.json is invalid');
+      }
+      return _packFolderName(infoJson);
+    }
+    throw const FormatException('MCOimg pack info.json is missing');
   }
 
   Future<List<MCOImagePackMetadata>> loadPacks() async {
@@ -324,8 +396,9 @@ class MCOImageGalleryStore {
         if (entity is Directory) imageDirs.add(entity);
       }
       imageDirs.sort(
-        (a, b) => _fileNameFromPath(a.path).toLowerCase().compareTo(
-          _fileNameFromPath(b.path).toLowerCase(),
+        (a, b) => _compareNaturalStrings(
+          _fileNameFromPath(a.path),
+          _fileNameFromPath(b.path),
         ),
       );
 
@@ -333,14 +406,15 @@ class MCOImageGalleryStore {
         final files = await imageDir.list().where((entity) {
           if (entity is! File) return false;
           final name = _fileNameFromPath(entity.path).toLowerCase();
-          return name.endsWith('.png') || name.endsWith('.mcoimg.bin');
+          return _isPackPreviewFileName(name) ||
+              name.endsWith('.mcoimg.bin');
         }).toList();
         File? pngFile;
         File? binFile;
         for (final entity in files) {
           if (entity is! File) continue;
           final name = _fileNameFromPath(entity.path).toLowerCase();
-          if (pngFile == null && name.endsWith('.png')) {
+          if (pngFile == null && _isPackPreviewFileName(name)) {
             pngFile = entity;
           } else if (binFile == null && name.endsWith('.mcoimg.bin')) {
             binFile = entity;
@@ -402,7 +476,7 @@ class MCOImageGalleryStore {
   }
 
   Future<Directory> _packsDirectory({bool create = true}) async {
-    final baseDir = await getApplicationDocumentsDirectory();
+    final baseDir = await getApplicationSupportDirectory();
     final dir = Directory(_joinPath(baseDir.path, _packsDirectoryName));
     if (create && !await dir.exists()) {
       await dir.create(recursive: true);
@@ -441,7 +515,7 @@ class MCOImageGalleryStore {
         directoryName,
         () => _MutablePackImagePair(directoryName),
       );
-      if (lowerFileName.endsWith('.png') && pair.pngFile == null) {
+      if (_isPackPreviewFileName(lowerFileName) && pair.pngFile == null) {
         pair.pngFile = file;
         pair.pngFileName = fileName;
       } else if (lowerFileName.endsWith('.mcoimg.bin') &&
@@ -464,15 +538,21 @@ class MCOImageGalleryStore {
         ),
       );
     }
-    pairs.sort((a, b) => a.directoryName.compareTo(b.directoryName));
+    pairs.sort(
+      (a, b) => _compareNaturalStrings(a.directoryName, b.directoryName),
+    );
     return pairs;
   }
 
   Uint8List _archiveFileBytes(ArchiveFile file) {
-    final content = file.content;
-    if (content is Uint8List) return content;
-    if (content is List<int>) return Uint8List.fromList(content);
-    throw const FormatException('Unsupported archive file content');
+    return file.content;
+  }
+
+  bool _isPackPreviewFileName(String fileName) {
+    return fileName.endsWith('.png') ||
+        fileName.endsWith('.jpg') ||
+        fileName.endsWith('.jpeg') ||
+        fileName.endsWith('.gif');
   }
 
   String _normalizedZipPath(String path) {
@@ -502,6 +582,68 @@ class MCOImageGalleryStore {
     final normalized = path.replaceAll('\\', '/');
     final index = normalized.lastIndexOf('/');
     return index >= 0 ? normalized.substring(index + 1) : normalized;
+  }
+
+  int _compareNaturalStrings(String left, String right) {
+    final a = left.toLowerCase();
+    final b = right.toLowerCase();
+    var ai = 0;
+    var bi = 0;
+
+    while (ai < a.length && bi < b.length) {
+      final ac = a.codeUnitAt(ai);
+      final bc = b.codeUnitAt(bi);
+      final aDigit = _isAsciiDigit(ac);
+      final bDigit = _isAsciiDigit(bc);
+
+      if (aDigit && bDigit) {
+        final aStart = ai;
+        final bStart = bi;
+        while (ai < a.length && _isAsciiDigit(a.codeUnitAt(ai))) {
+          ai++;
+        }
+        while (bi < b.length && _isAsciiDigit(b.codeUnitAt(bi))) {
+          bi++;
+        }
+
+        final numericCompare = _compareNumericRuns(
+          a.substring(aStart, ai),
+          b.substring(bStart, bi),
+        );
+        if (numericCompare != 0) return numericCompare;
+        continue;
+      }
+
+      if (ac != bc) return ac.compareTo(bc);
+      ai++;
+      bi++;
+    }
+
+    return (a.length - ai).compareTo(b.length - bi);
+  }
+
+  int _compareNumericRuns(String left, String right) {
+    final normalizedLeft = _trimLeadingZeroes(left);
+    final normalizedRight = _trimLeadingZeroes(right);
+    final lengthCompare = normalizedLeft.length.compareTo(
+      normalizedRight.length,
+    );
+    if (lengthCompare != 0) return lengthCompare;
+    final valueCompare = normalizedLeft.compareTo(normalizedRight);
+    if (valueCompare != 0) return valueCompare;
+    return left.length.compareTo(right.length);
+  }
+
+  String _trimLeadingZeroes(String value) {
+    var index = 0;
+    while (index < value.length - 1 && value.codeUnitAt(index) == 48) {
+      index++;
+    }
+    return value.substring(index);
+  }
+
+  bool _isAsciiDigit(int codeUnit) {
+    return codeUnit >= 48 && codeUnit <= 57;
   }
 
   int _codecVersionForImage(MCOImage image) {

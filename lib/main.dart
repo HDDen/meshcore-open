@@ -30,6 +30,7 @@ import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
+import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
@@ -106,6 +107,7 @@ void main() async {
   await translationService.refreshDownloadedModels();
   await uiViewStateService.initialize();
   await timeoutPredictionService.initialize();
+  unawaited(MCOImageGalleryStore().ensureBundledPacksInstalled());
 
   // Wire up connector with services
   connector.initialize(

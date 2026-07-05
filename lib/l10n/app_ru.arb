@@ -2298,5 +2298,7 @@
   "chat_contactTypeNode": "Нода",
   "chat_contactTypeRepeater": "Репитер",
   "chat_contactTypeRoom": "Рум-сервер",
-  "chat_contactTypeSensor": "Сенсор"
+  "chat_contactTypeSensor": "Сенсор",
+  "chat_myLocation": "Моё текущее местоположение",
+  "chat_locationFromMap": "Отправить координаты с карты"
 }
