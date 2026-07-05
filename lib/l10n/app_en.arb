@@ -2622,8 +2622,8 @@
   "contacts_contactImportFailed": "Failed to import contact.",
   "contacts_zeroHopAdvert": "Zero Hop Advert",
   "contacts_floodAdvert": "Flood Advert",
-  "contacts_copyAdvertToClipboard": "Copy Advert to Clipboard",
-  "contacts_addContactFromClipboard": "Add Contact from Clipboard",
+  "contacts_copyAdvertToClipboard": "Copy self-link «meshcore://»",
+  "contacts_addContactFromClipboard": "Add Contact by «meshcore://» link from clipboard",
   "contacts_ShareContact": "Copy contact to Clipboard",
   "contacts_ShareContactZeroHop": "Share contact by advert",
   "contacts_zeroHopContactAdvertSent": "Sent contact by advert.",
@@ -2963,7 +2963,7 @@
   "pathMap_noLocation": "No location",
   "pathMap_followPacket": "Lock view to packet",
   "pathMap_unfollowPacket": "Unlock view from packet",
-  "chat_canvas": "Canvas",
+  "chat_canvas": "MCOimg canvas",
   "chat_canvasCrop": "Crop/expand",
   "chat_canvasResize": "Scale",
   "chat_canvasUnlockSize": "Unlock canvas size",
@@ -3084,5 +3084,41 @@
   "settings_modSettingsNoRetraDscr": "Attention! Due to a mechanism in a node's firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!",
   "settings_selfTelemetryShow": "Check sensors",
   "settings_modSettingsVisualChannelsUnreadSorting": "Channels sorting by unread messages",
-  "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background"
+  "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background",
+  "chat_MCOimgOpenGallery": "Open MCOimg gallery",
+  "chat_additionalActions": "Chat actions menu",
+  "mcogallery_common": "Common",
+  "mcogallery_addPack": "Add package",
+  "mcogallery_removePack": "Remove package",
+  "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
+  "@mcogallery_removePackConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcogallery_addGroup": "Add group",
+  "mcogallery_removeGroup": "Remove group",
+  "chat_sendSelfContact": "Send self contact",
+  "chat_sendContact": "Share contact",
+  "chat_addContact": "Add contact",
+  "chat_sureToReplaceContact": "Contact is already exists, replace it?",
+  "contacts_addContactByPubkey": "Add contact by pubkey",
+  "contacts_addContactByPubkey_contactType": "Contact type",
+  "chat_contactIsYou": "It is you",
+  "chat_contactType": "Contact type: {contacttype}",
+  "@chat_contactType": {
+    "placeholders": {
+      "contacttype": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_contactTypeNode": "Node",
+  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRoom": "Room-server",
+  "chat_contactTypeSensor": "Sensor",
+  "chat_myLocation": "Share my location",
+  "chat_locationFromMap": "Share location from map"
 }

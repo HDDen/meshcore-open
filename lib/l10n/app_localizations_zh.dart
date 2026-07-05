@@ -4866,7 +4866,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathMap_unfollowPacket => '解锁视图跟随';
 
   @override
-  String get chat_canvas => 'Canvas';
+  String get chat_canvas => 'MCOimg canvas';
 
   @override
   String get chat_canvasCrop => 'Crop/expand';
@@ -5126,4 +5126,75 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
       'Keep TCP-connection alive in background';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+
+  @override
+  String get chat_additionalActions => 'Chat actions menu';
+
+  @override
+  String get mcogallery_common => 'Common';
+
+  @override
+  String get mcogallery_addPack => 'Add package';
+
+  @override
+  String get mcogallery_removePack => 'Remove package';
+
+  @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
+  String get mcogallery_addGroup => 'Add group';
+
+  @override
+  String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get chat_sendSelfContact => 'Send self contact';
+
+  @override
+  String get chat_sendContact => 'Share contact';
+
+  @override
+  String get chat_addContact => 'Add contact';
+
+  @override
+  String get chat_sureToReplaceContact =>
+      'Contact is already exists, replace it?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Contact type';
+
+  @override
+  String get chat_contactIsYou => 'It is you';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Contact type: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Node';
+
+  @override
+  String get chat_contactTypeRepeater => 'Repeater';
+
+  @override
+  String get chat_contactTypeRoom => 'Room-server';
+
+  @override
+  String get chat_contactTypeSensor => 'Sensor';
+
+  @override
+  String get chat_myLocation => 'Share my location';
+
+  @override
+  String get chat_locationFromMap => 'Share location from map';
 }

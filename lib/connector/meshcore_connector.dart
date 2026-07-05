@@ -220,6 +220,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Timer? _batteryPollTimer;
   Timer? _gpsLocationPollTimer;
   static const _gpsLocationPollInterval = Duration(minutes: 1);
+  final List<Completer<void>> _selfInfoRefreshWaiters = [];
   Timer? _radioStatsPollTimer;
   int _radioStatsPollRefCount = 0;
   final ValueNotifier<CompanionRadioStats?> radioStatsNotifier =
@@ -3879,6 +3880,32 @@ class MeshCoreConnector extends ChangeNotifier {
     _scheduleSelfInfoRetry();
   }
 
+  Future<({double latitude, double longitude})?> refreshSelfLocation({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    if (!isConnected) return _validSelfLocationOrNull();
+
+    final waiter = Completer<void>();
+    _selfInfoRefreshWaiters.add(waiter);
+    try {
+      await sendFrame(buildAppStartFrame());
+      await waiter.future.timeout(timeout, onTimeout: () {});
+    } catch (_) {
+      // Return the latest cached location below; menu actions should not throw.
+    } finally {
+      _selfInfoRefreshWaiters.remove(waiter);
+    }
+
+    return _validSelfLocationOrNull();
+  }
+
+  ({double latitude, double longitude})? _validSelfLocationOrNull() {
+    final latitude = _selfLatitude;
+    final longitude = _selfLongitude;
+    if (!hasValidLocation(latitude, longitude)) return null;
+    return (latitude: latitude!, longitude: longitude!);
+  }
+
   Future<void> _requestDeviceInfo() async {
     if (!isConnected || _awaitingSelfInfo) return;
     if (PlatformInfo.isWeb &&
@@ -5250,6 +5277,63 @@ class MeshCoreConnector extends ChangeNotifier {
     return true;
   }
 
+  Future<void> addOrUpdateSharedContact({
+    required Uint8List publicKey,
+    required int type,
+    required String name,
+  }) async {
+    if (!isConnected) {
+      throw Exception("Not connected to a MeshCore device");
+    }
+
+    final existingIndex = _contacts.indexWhere(
+      (contact) => listEquals(contact.publicKey, publicKey),
+    );
+    final existing = existingIndex >= 0 ? _contacts[existingIndex] : null;
+    final pathLength = existing == null
+        ? 0xFF
+        : (existing.pathLength < 0
+              ? 0xFF
+              : (_encodePathLenForCurrentMode(
+                      existing.pathLength,
+                      existing.path,
+                    ) ??
+                    0xFF));
+    final path = existing?.path ?? Uint8List(0);
+    final flags = existing?.flags ?? 0;
+
+    await sendFrame(
+      buildUpdateContactPathFrame(
+        publicKey,
+        path,
+        pathLength,
+        type: type,
+        flags: flags,
+        name: name,
+        lat: existing?.latitude,
+        lon: existing?.longitude,
+        lastModified: existing?.lastModified ?? existing?.lastSeen,
+      ),
+      waitForGenericAck: true,
+    );
+
+    _handleContactAdvert(
+      Contact(
+        publicKey: publicKey,
+        name: name,
+        type: type,
+        pathLength: existing?.pathLength ?? -1,
+        path: path,
+        latitude: existing?.latitude,
+        longitude: existing?.longitude,
+        lastSeen: DateTime.now(),
+        lastModified: existing?.lastModified,
+        flags: flags,
+      ),
+    );
+    notifyListeners();
+  }
+
   Future<void> clearContactPath(Contact contact) async {
     // Serialize path operations to prevent interleaved async calls.
     final prev = _pathOpLock;
@@ -6004,6 +6088,7 @@ class MeshCoreConnector extends ChangeNotifier {
         tag: 'Connector',
       );
     }
+    _completeSelfInfoRefreshWaiters();
     final selfName = _selfName?.trim();
     if (_activeTransport == MeshCoreTransportType.usb &&
         selfName != null &&
@@ -6057,6 +6142,16 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Start the serialized initial sync pipeline after SELF_INFO.
     _maybeStartInitialChannelSync();
+  }
+
+  void _completeSelfInfoRefreshWaiters() {
+    final waiters = List<Completer<void>>.from(_selfInfoRefreshWaiters);
+    _selfInfoRefreshWaiters.clear();
+    for (final waiter in waiters) {
+      if (!waiter.isCompleted) {
+        waiter.complete();
+      }
+    }
   }
 
   void _handleDeviceInfo(Uint8List frame) {

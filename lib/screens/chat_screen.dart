@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
@@ -14,6 +15,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
@@ -36,7 +38,9 @@ import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
+import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'contacts_screen.dart';
@@ -54,6 +58,7 @@ import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/routing_sheet.dart';
+import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../l10n/l10n.dart';
@@ -314,45 +319,32 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'info',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.info_outline, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_info),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.info_outline,
+                        text: context.l10n.contact_info,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'telemetry',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.bar_chart, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_telemetry),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.bar_chart,
+                        text: context.l10n.contact_telemetry,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'settings',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.settings, size: 20),
-                          const SizedBox(width: 12),
-                          Text(context.l10n.contact_settings),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.contact_settings,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'clearChat',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, size: 20, color: Colors.red),
-                          const SizedBox(width: 12),
-                          Text(
-                            context.l10n.contact_clearChat,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.delete,
+                        iconColor: Colors.red,
+                        text: context.l10n.contact_clearChat,
+                        textStyle: const TextStyle(color: Colors.red),
                       ),
                     ),
                   ],
@@ -545,6 +537,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onLongPress: () => _showMessageActions(message, contact),
                     onRetryReaction: (msg, emoji) =>
                         _sendReaction(msg, contact, emoji),
+                    onAddSharedContact: _addSharedContact,
                     pendingSendAt: connector.pendingContactSendAt(
                       message.messageId,
                     ),
@@ -621,24 +614,21 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.gif_box),
-              onPressed: () => _showGifPicker(context),
-              tooltip: context.l10n.chat_sendGif,
-            ),
-            if (settings.canvasActive)
-              _CanvasLaunchButton(
-                tooltip: context.l10n.chat_canvas,
-                onPressed: () => _showCanvasEditor(connector, maxBytes),
-                onLongPress: () => _showMcoImageGallery(connector, maxBytes),
+            ChatComposerSideAction(
+              child: ChatAdditionalActionsButton(
+                canvasActive: settings.canvasActive,
+                onSendSelfContact: () => _insertSelfContact(connector),
+                onSendMyLocation: () =>
+                    unawaited(_insertMyLocation(connector)),
+                onSendContact: () => _pickAndInsertContact(),
+                onPickLocationFromMap: () =>
+                    unawaited(_pickAndInsertLocationFromMap()),
+                onSendGif: () => _showGifPicker(context),
+                onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
+                onOpenMcoImageGallery: () =>
+                    _showMcoImageGallery(connector, maxBytes),
               ),
-            /*
-            IconButton(
-              icon: const Icon(Icons.photo_library_outlined),
-              onPressed: () => _showMcoImageGallery(connector, maxBytes),
-              tooltip: 'MCOimg',
             ),
-            */
             if (settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
@@ -743,17 +733,19 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Semantics(
-              button: true,
-              label: context.l10n.chat_sendMessageTo(
-                _resolveContact(connector).name,
-              ),
-              child: GestureDetector(
-                onLongPress: () => _showQuickAnswersPicker(connector),
-                onSecondaryTap: () => _showQuickAnswersPicker(connector),
-                child: IconButton.filled(
-                  icon: const Icon(Icons.send),
-                  onPressed: () => _sendMessage(connector),
+            ChatComposerSideAction(
+              child: Semantics(
+                button: true,
+                label: context.l10n.chat_sendMessageTo(
+                  _resolveContact(connector).name,
+                ),
+                child: GestureDetector(
+                  onLongPress: () => _showQuickAnswersPicker(connector),
+                  onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                  child: IconButton.filled(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => _sendMessage(connector),
+                  ),
                 ),
               ),
             ),
@@ -773,6 +765,67 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       ),
     );
+  }
+
+  void _insertTextIntoComposer(String text) {
+    final value = _textController.value;
+    final selection = value.selection;
+    final range = selection.isValid
+        ? selection
+        : TextSelection.collapsed(offset: value.text.length);
+    final nextText = value.text.replaceRange(range.start, range.end, text);
+    final nextOffset = range.start + text.length;
+    _textController.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: nextOffset),
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
+  void _insertSelfContact(MeshCoreConnector connector) {
+    final publicKey = connector.selfPublicKey;
+    if (publicKey == null || publicKey.isEmpty) return;
+    _insertTextIntoComposer(
+      formatContactShareText(
+        publicKey: publicKey,
+        type: advTypeChat,
+        name: connector.selfName ?? connector.deviceDisplayName,
+      ),
+    );
+  }
+
+  Future<void> _insertMyLocation(MeshCoreConnector connector) async {
+    final location = await connector.refreshSelfLocation();
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  Future<void> _pickAndInsertLocationFromMap() async {
+    final location = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MapScreen(locationPickerMode: true),
+      ),
+    );
+    if (!mounted || location == null) return;
+    _insertTextIntoComposer(
+      '${location.latitude.toStringAsFixed(6)},'
+      '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  Future<void> _pickAndInsertContact() async {
+    final contact = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(selectionMode: true),
+      ),
+    );
+    if (contact == null || !mounted) return;
+    _insertTextIntoComposer(formatContactShareTextForContact(contact));
   }
 
   Future<void> _showCanvasEditor(
@@ -1739,6 +1792,63 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _addSharedContact(SharedContactInfo contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey != null &&
+        selfPublicKey.isNotEmpty &&
+        contact.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_contactIsYou),
+      );
+      return;
+    }
+
+    final alreadyExists = connector.contacts.any(
+      (existing) => existing.publicKeyHex == contact.publicKeyHex,
+    );
+    if (alreadyExists) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          content: Text(context.l10n.chat_sureToReplaceContact),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (replace != true || !mounted) return;
+    }
+
+    try {
+      await connector.addOrUpdateSharedContact(
+        publicKey: contact.publicKey,
+        type: contact.type,
+        name: contact.name,
+      );
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImported),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   void _retryMessage(Message message) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     // Retry using the contact's current path override setting
@@ -1783,51 +1893,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class _CanvasLaunchButton extends StatelessWidget {
-  final String tooltip;
-  final VoidCallback onPressed;
-  final VoidCallback onLongPress;
-
-  const _CanvasLaunchButton({
-    required this.tooltip,
-    required this.onPressed,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final button = Semantics(
-      button: true,
-      label: tooltip,
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Center(
-          child: InkResponse(
-            radius: 24,
-            onTap: onPressed,
-            onLongPress: () {
-              HapticFeedback.selectionClick();
-              onLongPress();
-            },
-            child: const Icon(Icons.brush_outlined),
-          ),
-        ),
-      ),
-    );
-    if (!PlatformInfo.isDesktop) {
-      return button;
-    }
-    return Tooltip(message: tooltip, child: button);
-  }
-}
-
 class _MessageBubble extends StatelessWidget {
   final Message message;
   final String senderName;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(Message message, String emoji)? onRetryReaction;
+  final Future<void> Function(SharedContactInfo contact)? onAddSharedContact;
   final DateTime? pendingSendAt;
   final int? pendingSendDelaySeconds;
   final VoidCallback? onCancelPendingSend;
@@ -1842,6 +1914,7 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
+    this.onAddSharedContact,
     this.pendingSendAt,
     this.pendingSendDelaySeconds,
     this.onCancelPendingSend,
@@ -1881,6 +1954,8 @@ class _MessageBubble extends StatelessWidget {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    final coordinate = parseCoordinateText(message.text);
+    final sharedContact = parseSharedContactText(message.text);
     final isFailed = message.status == MessageStatus.failed;
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
@@ -2014,6 +2089,39 @@ class _MessageBubble extends StatelessWidget {
                                   )
                                 : null,
                           )
+                        else if (coordinate != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: _CoordinateMessageLink(
+                                  text: messageText.trim(),
+                                  coordinate: coordinate,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: textColor,
+                                  ),
+                                ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
                         else if (unsupportedMcoImageVersion != null)
                           _buildUnsupportedMcoImageMessage(
                             context,
@@ -2092,7 +2200,45 @@ class _MessageBubble extends StatelessWidget {
                                           MessageStatus.failed,
                                     ),
                                   ),
+                              ),
+                            ],
+                          )
+                        else if (sharedContact != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: SharedContactMessage(
+                                  contact: sharedContact,
+                                  textStyle: TextStyle(
+                                    color: textColor,
+                                    fontSize: bodyFontSize * textScale,
+                                  ),
+                                  metaColor: metaColor,
+                                  textScale: textScale,
+                                  onAddContact: () {
+                                    final handler = onAddSharedContact;
+                                    if (handler != null) {
+                                      unawaited(handler(sharedContact));
+                                    }
+                                  },
                                 ),
+                              ),
+                              if (!enableTracing && isOutgoing) ...[
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: MessageStatusIcon(
+                                    isAcked:
+                                        message.status ==
+                                            MessageStatus.delivered &&
+                                        message.pathBytes.isNotEmpty,
+                                    isFailed:
+                                        message.status == MessageStatus.failed,
+                                  ),
+                                ),
+                              ],
                             ],
                           )
                         else
@@ -2539,4 +2685,34 @@ Color _colorForName(String name) {
     h = (h * 31 + c) & 0x7fffffff;
   }
   return hues[h % hues.length];
+}
+
+class _CoordinateMessageLink extends StatelessWidget {
+  final String text;
+  final MarkerPayload coordinate;
+  final TextStyle style;
+
+  const _CoordinateMessageLink({
+    required this.text,
+    required this.coordinate,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MapScreen(
+              highlightPosition: coordinate.position,
+              highlightLabel: coordinate.label,
+            ),
+          ),
+        );
+      },
+      child: Text(text, style: style),
+    );
+  }
 }

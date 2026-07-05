@@ -5,8 +5,14 @@ import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 
 class MCOImageGalleryItem {
+  static const String commonGroupId = 'common';
+
   final String id;
   final DateTime createdAt;
+  final String groupId;
+  final String? groupName;
+  final String? packFolderName;
+  final int? previewMaxSize;
   final Uint8List binaryPayload;
   final Uint8List pngBytes;
   final int width;
@@ -20,6 +26,10 @@ class MCOImageGalleryItem {
   const MCOImageGalleryItem({
     required this.id,
     required this.createdAt,
+    this.groupId = commonGroupId,
+    this.groupName,
+    this.packFolderName,
+    this.previewMaxSize,
     required this.binaryPayload,
     required this.pngBytes,
     required this.width,
@@ -31,10 +41,21 @@ class MCOImageGalleryItem {
     this.showPngFallback = false,
   });
 
-  MCOImageGalleryItem copyWith({bool? showPngFallback}) {
+  MCOImageGalleryItem copyWith({
+    String? groupId,
+    String? groupName,
+    bool clearGroupName = false,
+    String? packFolderName,
+    int? previewMaxSize,
+    bool? showPngFallback,
+  }) {
     return MCOImageGalleryItem(
       id: id,
       createdAt: createdAt,
+      groupId: groupId ?? this.groupId,
+      groupName: clearGroupName ? null : (groupName ?? this.groupName),
+      packFolderName: packFolderName ?? this.packFolderName,
+      previewMaxSize: previewMaxSize ?? this.previewMaxSize,
       binaryPayload: binaryPayload,
       pngBytes: pngBytes,
       width: width,
@@ -46,6 +67,8 @@ class MCOImageGalleryItem {
       showPngFallback: showPngFallback ?? this.showPngFallback,
     );
   }
+
+  bool get isPackItem => packFolderName != null && packFolderName!.isNotEmpty;
 
   bool get isV3 {
     if (codecVersion == ChannelAppDataHelper.mcoImageV3Version) return true;

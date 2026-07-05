@@ -17,6 +17,7 @@ import '../services/map_tile_cache_service.dart';
 import '../utils/route_transitions.dart';
 import '../connector/meshcore_connector.dart';
 import '../widgets/app_bar.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../icons/los_icon.dart';
 import '../theme/mesh_theme.dart';
@@ -388,12 +389,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
               PopupMenuItem(
                 value: 'clear',
                 enabled: !_loading,
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_outline),
-                    const SizedBox(width: 10),
-                    Text(context.l10n.losClearAllPoints),
-                  ],
+                child: PopupMenuRow(
+                  icon: Icons.delete_outline,
+                  text: context.l10n.losClearAllPoints,
                 ),
               ),
             ],

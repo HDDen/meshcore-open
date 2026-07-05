@@ -8,6 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/debug_frame_viewer.dart';
+import '../widgets/popup_menu_row.dart';
 import '../services/repeater_command_service.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -317,12 +318,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'debug',
-                child: Row(
-                  children: [
-                    const Icon(Icons.bug_report),
-                    const SizedBox(width: 8),
-                    Text(l10n.repeater_debugNextCommand),
-                  ],
+                child: PopupMenuRow(
+                  icon: Icons.bug_report,
+                  text: l10n.repeater_debugNextCommand,
                 ),
               ),
             ],

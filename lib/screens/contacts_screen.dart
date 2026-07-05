@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -34,6 +35,7 @@ import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -50,8 +52,13 @@ enum ContactOperationType { import, export, zeroHopShare }
 
 class ContactsScreen extends StatefulWidget {
   final bool hideBackButton;
+  final bool selectionMode;
 
-  const ContactsScreen({super.key, this.hideBackButton = false});
+  const ContactsScreen({
+    super.key,
+    this.hideBackButton = false,
+    this.selectionMode = false,
+  });
 
   @override
   State<ContactsScreen> createState() => _ContactsScreenState();
@@ -118,6 +125,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop ||
+        widget.selectionMode ||
         event is! KeyDownEvent ||
         event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
@@ -405,12 +413,9 @@ class _ContactsScreenState extends State<ContactsScreen>
               tooltip: context.l10n.contacts_moreOptions,
               itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person_add_rounded),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.discoveredContacts_Title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.person_add_rounded,
+                    text: context.l10n.discoveredContacts_Title,
                   ),
                   onTap: () => Navigator.push(
                     context,
@@ -420,23 +425,24 @@ class _ContactsScreenState extends State<ContactsScreen>
                   ),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.paste),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_addContactFromClipboard),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.vpn_key,
+                    text: context.l10n.contacts_addContactByPubkey,
+                  ),
+                  onTap: () => _showAddContactByPubkeyDialog(context),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
+                    icon: Icons.paste,
+                    text: context.l10n.contacts_addContactFromClipboard,
                   ),
                   onTap: () => _contactImport(),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.connect_without_contact),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_zeroHopAdvert),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.connect_without_contact,
+                    text: context.l10n.contacts_zeroHopAdvert,
                   ),
                   onTap: () => {
                     connector.sendSelfAdvert(flood: false),
@@ -447,12 +453,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                   },
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.cell_tower),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_floodAdvert),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.cell_tower,
+                    text: context.l10n.contacts_floodAdvert,
                   ),
                   onTap: () => {
                     connector.sendSelfAdvert(flood: true),
@@ -463,36 +466,25 @@ class _ContactsScreenState extends State<ContactsScreen>
                   },
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.copy),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.contacts_copyAdvertToClipboard),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.copy,
+                    text: context.l10n.contacts_copyAdvertToClipboard,
                   ),
                   onTap: () => _contactExport(Uint8List.fromList([])),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.logout,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.common_disconnect),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.logout,
+                    iconColor: Theme.of(context).colorScheme.error,
+                    text: context.l10n.common_disconnect,
                   ),
                   onTap: () => _disconnect(context, connector),
                 ),
                 PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.settings),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.settings_title),
-                    ],
+                  child: PopupMenuRow(
+                    icon: Icons.settings,
+                    text: context.l10n.settings_title,
                   ),
                   onTap: () => Navigator.push(
                     context,
@@ -534,6 +526,210 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
+  Future<void> _showAddContactByPubkeyDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+    final pubkeyController = TextEditingController();
+    int selectedType = advTypeChat;
+    String? formError;
+    bool isSaving = false;
+
+    SharedContactInfo buildContactInfo() {
+      final publicKeyHex = pubkeyController.text.replaceAll(
+        RegExp(r'[^0-9a-fA-F]'),
+        '',
+      );
+      final publicKey = hexToPubKey(publicKeyHex);
+      final name = nameController.text.trim();
+      return SharedContactInfo(
+        publicKey: publicKey,
+        type: selectedType,
+        name: name.isEmpty ? publicKeyHex.substring(0, 8) : name,
+      );
+    }
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            Future<void> saveContact() async {
+              SharedContactInfo contact;
+              try {
+                contact = buildContactInfo();
+              } on FormatException {
+                setDialogState(() {
+                  formError = dialogContext.l10n.contacts_contactImportFailed;
+                });
+                return;
+              }
+
+              setDialogState(() {
+                isSaving = true;
+                formError = null;
+              });
+
+              final added = await _addSharedContact(contact);
+              if (!mounted) return;
+              if (added && dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                return;
+              }
+              if (dialogContext.mounted) {
+                setDialogState(() {
+                  isSaving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: Text(dialogContext.l10n.contacts_addContactByPubkey),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<int>(
+                      initialValue: selectedType,
+                      decoration: InputDecoration(
+                        labelText: dialogContext
+                            .l10n
+                            .contacts_addContactByPubkey_contactType,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: advTypeChat,
+                          child: Text(dialogContext.l10n.chat_contactTypeNode),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeRepeater,
+                          child: Text(
+                            dialogContext.l10n.chat_contactTypeRepeater,
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeRoom,
+                          child: Text(dialogContext.l10n.chat_contactTypeRoom),
+                        ),
+                        DropdownMenuItem(
+                          value: advTypeSensor,
+                          child: Text(
+                            dialogContext.l10n.chat_contactTypeSensor,
+                          ),
+                        ),
+                      ],
+                      onChanged: isSaving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setDialogState(() {
+                                selectedType = value;
+                              });
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: nameController,
+                      enabled: !isSaving,
+                      minLines: 1,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: dialogContext.l10n.settings_nodeName,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pubkeyController,
+                      enabled: !isSaving,
+                      minLines: 2,
+                      maxLines: 5,
+                      decoration: InputDecoration(
+                        hintText: dialogContext.l10n.chat_publicKey,
+                        errorText: formError,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.pop(dialogContext),
+                  child: Text(dialogContext.l10n.common_cancel),
+                ),
+                TextButton(
+                  onPressed: isSaving ? null : saveContact,
+                  child: Text(dialogContext.l10n.common_save),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      nameController.dispose();
+      pubkeyController.dispose();
+    }
+  }
+
+  Future<bool> _addSharedContact(SharedContactInfo contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKey = connector.selfPublicKey;
+    if (selfPublicKey != null &&
+        selfPublicKey.isNotEmpty &&
+        contact.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_contactIsYou),
+      );
+      return false;
+    }
+
+    final alreadyExists = connector.contacts.any(
+      (existing) => existing.publicKeyHex == contact.publicKeyHex,
+    );
+    if (alreadyExists) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          content: Text(context.l10n.chat_sureToReplaceContact),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (replace != true || !mounted) return false;
+    }
+
+    try {
+      await connector.addOrUpdateSharedContact(
+        publicKey: contact.publicKey,
+        type: contact.type,
+        name: contact.name,
+      );
+      if (!mounted) return false;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImported),
+      );
+      return true;
+    } catch (_) {
+      if (!mounted) return false;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    }
+  }
+
   void _showAddContactSheet(BuildContext context) {
     showMeshSheet(
       context,
@@ -543,6 +739,14 @@ class _ContactsScreenState extends State<ContactsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               BottomSheetHeader(title: context.l10n.contacts_title),
+              ListTile(
+                leading: const Icon(Icons.vpn_key),
+                title: Text(context.l10n.contacts_addContactByPubkey),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _showAddContactByPubkeyDialog(context);
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.paste),
                 title: Text(context.l10n.contacts_addContactFromClipboard),
@@ -984,7 +1188,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                         lastSeen: _resolveLastSeen(contact),
                         unreadCount: unreadCount,
                         isFavorite: contact.isFavorite,
-                        onTap: () => _openChat(context, contact),
+                        onTap: () => widget.selectionMode
+                            ? Navigator.pop(context, contact)
+                            : _openChat(context, contact),
                         onLongPress: () =>
                             _showContactOptions(context, connector, contact),
                       );

@@ -7945,13 +7945,13 @@ abstract class AppLocalizations {
   /// No description provided for @contacts_copyAdvertToClipboard.
   ///
   /// In en, this message translates to:
-  /// **'Copy Advert to Clipboard'**
+  /// **'Copy self-link «meshcore://»'**
   String get contacts_copyAdvertToClipboard;
 
   /// No description provided for @contacts_addContactFromClipboard.
   ///
   /// In en, this message translates to:
-  /// **'Add Contact from Clipboard'**
+  /// **'Add Contact by «meshcore://» link from clipboard'**
   String get contacts_addContactFromClipboard;
 
   /// No description provided for @contacts_ShareContact.
@@ -8947,7 +8947,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvas.
   ///
   /// In en, this message translates to:
-  /// **'Canvas'**
+  /// **'MCOimg canvas'**
   String get chat_canvas;
 
   /// No description provided for @chat_canvasCrop.
@@ -9405,6 +9405,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep TCP-connection alive in background'**
   String get settings_modSettingsMessagingBackgroundTCP;
+
+  /// No description provided for @chat_MCOimgOpenGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Open MCOimg gallery'**
+  String get chat_MCOimgOpenGallery;
+
+  /// No description provided for @chat_additionalActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat actions menu'**
+  String get chat_additionalActions;
+
+  /// No description provided for @mcogallery_common.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get mcogallery_common;
+
+  /// No description provided for @mcogallery_addPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add package'**
+  String get mcogallery_addPack;
+
+  /// No description provided for @mcogallery_removePack.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove package'**
+  String get mcogallery_removePack;
+
+  /// No description provided for @mcogallery_removePackConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Подтвердите удаление пакета «{name}»'**
+  String mcogallery_removePackConfirm(String name);
+
+  /// No description provided for @mcogallery_addGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add group'**
+  String get mcogallery_addGroup;
+
+  /// No description provided for @mcogallery_removeGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove group'**
+  String get mcogallery_removeGroup;
+
+  /// No description provided for @chat_sendSelfContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Send self contact'**
+  String get chat_sendSelfContact;
+
+  /// No description provided for @chat_sendContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Share contact'**
+  String get chat_sendContact;
+
+  /// No description provided for @chat_addContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get chat_addContact;
+
+  /// No description provided for @chat_sureToReplaceContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact is already exists, replace it?'**
+  String get chat_sureToReplaceContact;
+
+  /// No description provided for @contacts_addContactByPubkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact by pubkey'**
+  String get contacts_addContactByPubkey;
+
+  /// No description provided for @contacts_addContactByPubkey_contactType.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact type'**
+  String get contacts_addContactByPubkey_contactType;
+
+  /// No description provided for @chat_contactIsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'It is you'**
+  String get chat_contactIsYou;
+
+  /// No description provided for @chat_contactType.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact type: {contacttype}'**
+  String chat_contactType(String contacttype);
+
+  /// No description provided for @chat_contactTypeNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Node'**
+  String get chat_contactTypeNode;
+
+  /// No description provided for @chat_contactTypeRepeater.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater'**
+  String get chat_contactTypeRepeater;
+
+  /// No description provided for @chat_contactTypeRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room-server'**
+  String get chat_contactTypeRoom;
+
+  /// No description provided for @chat_contactTypeSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get chat_contactTypeSensor;
+
+  /// No description provided for @chat_myLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my location'**
+  String get chat_myLocation;
+
+  /// No description provided for @chat_locationFromMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Share location from map'**
+  String get chat_locationFromMap;
 }
 
 class _AppLocalizationsDelegate

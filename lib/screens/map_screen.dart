@@ -34,6 +34,7 @@ import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/themed_map_tile_layer.dart';
 import '../widgets/wardrive_status_panel.dart';
@@ -56,6 +57,7 @@ class MapScreen extends StatefulWidget {
   final String? highlightMarkerKey;
   final double highlightZoom;
   final bool hideBackButton;
+  final bool locationPickerMode;
 
   const MapScreen({
     super.key,
@@ -64,6 +66,7 @@ class MapScreen extends StatefulWidget {
     this.highlightMarkerKey,
     this.highlightZoom = 15.0,
     this.hideBackButton = false,
+    this.locationPickerMode = false,
   });
 
   @override
@@ -826,12 +829,9 @@ class _MapScreenState extends State<MapScreen>
                         connector.selfLatitude != null &&
                         connector.selfLongitude != null)
                       PopupMenuItem(
-                        child: Row(
-                          children: [
-                            const Icon(Icons.radar),
-                            const SizedBox(width: 8),
-                            Text(context.l10n.contacts_pathTrace),
-                          ],
+                        child: PopupMenuRow(
+                          icon: Icons.radar,
+                          text: context.l10n.contacts_pathTrace,
                         ),
                         onTap: () => _startPath(
                           LatLng(
@@ -842,12 +842,9 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     if (!_isBuildingPathTrace)
                       PopupMenuItem(
-                        child: Row(
-                          children: [
-                            const LosIcon(),
-                            const SizedBox(width: 8),
-                            Text(context.l10n.map_lineOfSight),
-                          ],
+                        child: PopupMenuRow(
+                          leading: const LosIcon(),
+                          text: context.l10n.map_lineOfSight,
                         ),
                         onTap: () {
                           final candidates = <LineOfSightEndpoint>[];
@@ -887,25 +884,17 @@ class _MapScreenState extends State<MapScreen>
                         },
                       ),
                     PopupMenuItem(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.logout,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.common_disconnect),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.logout,
+                        iconColor: Theme.of(context).colorScheme.error,
+                        text: context.l10n.common_disconnect,
                       ),
                       onTap: () => _disconnect(context, connector),
                     ),
                     PopupMenuItem(
-                      child: Row(
-                        children: [
-                          const Icon(Icons.settings),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.settings_title),
-                        ],
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.settings_title,
                       ),
                       onTap: () => Navigator.push(
                         context,
@@ -943,6 +932,10 @@ class _MapScreenState extends State<MapScreen>
                           : const KeyboardOptions.disabled(),
                     ),
                     onTap: (_, latLng) {
+                      if (widget.locationPickerMode) {
+                        Navigator.pop(context, latLng);
+                        return;
+                      }
                       if (_isSelectingPoi) {
                         setState(() {
                           _isSelectingPoi = false;
@@ -960,6 +953,7 @@ class _MapScreenState extends State<MapScreen>
                       _selectWardriveCoverageAt(wardrive, latLng);
                     },
                     onSecondaryTap: (tapPosition, latLng) {
+                      if (widget.locationPickerMode) return;
                       unawaited(
                         _showWardriveCoverageBlockMenu(
                           wardrive: wardrive,
@@ -969,6 +963,10 @@ class _MapScreenState extends State<MapScreen>
                       );
                     },
                     onLongPress: (tapPosition, latLng) {
+                      if (widget.locationPickerMode) {
+                        Navigator.pop(context, latLng);
+                        return;
+                      }
                       if (_isSelectingPoi) {
                         setState(() {
                           _isSelectingPoi = false;
@@ -5879,6 +5877,22 @@ MarkerPayload? parseMarkerText(String text) {
   final label = (match.group(3) ?? '').trim();
   final flags = (match.group(4) ?? '').trim();
   return MarkerPayload(position: LatLng(lat, lon), label: label, flags: flags);
+}
+
+/// Parse a plain coordinate message of the form `<lat>,<lon>`.
+MarkerPayload? parseCoordinateText(String text) {
+  final trimmed = text.trim();
+  final match = RegExp(
+    r'^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$',
+  ).firstMatch(trimmed);
+  if (match == null) return null;
+  final lat = double.tryParse(match.group(1) ?? '');
+  final lon = double.tryParse(match.group(2) ?? '');
+  if (lat == null || lon == null) return null;
+  if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+    return null;
+  }
+  return MarkerPayload(position: LatLng(lat, lon), label: trimmed, flags: '');
 }
 
 /// Build a normalized dedupe key for shared markers.

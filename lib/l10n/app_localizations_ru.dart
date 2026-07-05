@@ -312,7 +312,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scanner_tapToScan =>
-      'Нажмите «Поиск», чтобы найти устройства MeshCore';
+      'Нажмите «Сканирование», чтобы найти устройства MeshCore';
 
   @override
   String scanner_connectionFailed(String error) {
@@ -4596,11 +4596,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_copyAdvertToClipboard =>
-      'Копировать анонс в буфер обмена';
+      'Копировать self-ссылку «meshcore://»';
 
   @override
   String get contacts_addContactFromClipboard =>
-      'Добавить контакт из буфера обмена';
+      'Добавить контакт из ссылки «meshcore://» из буфера обмена';
 
   @override
   String get contacts_ShareContact => 'Копировать контакт в буфер обмена';
@@ -5236,7 +5236,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Не следить за пакетом';
 
   @override
-  String get chat_canvas => 'Холст';
+  String get chat_canvas => 'Холст MCOimg';
 
   @override
   String get chat_canvasCrop => 'Обрезать/расширить';
@@ -5499,4 +5499,74 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
       'Удерживать TCP-соединение в фоне';
+
+  @override
+  String get chat_MCOimgOpenGallery => 'Открыть галерею MCOimg';
+
+  @override
+  String get chat_additionalActions => 'Меню действий';
+
+  @override
+  String get mcogallery_common => 'Общее';
+
+  @override
+  String get mcogallery_addPack => 'Добавить пакет';
+
+  @override
+  String get mcogallery_removePack => 'Удалить пакет';
+
+  @override
+  String mcogallery_removePackConfirm(String name) {
+    return 'Подтвердите удаление пакета «$name»';
+  }
+
+  @override
+  String get mcogallery_addGroup => 'Добавить группу';
+
+  @override
+  String get mcogallery_removeGroup => 'Удалить группу';
+
+  @override
+  String get chat_sendSelfContact => 'Отправить свой контакт';
+
+  @override
+  String get chat_sendContact => 'Поделиться контактом';
+
+  @override
+  String get chat_addContact => 'Добавить контакт';
+
+  @override
+  String get chat_sureToReplaceContact => 'Контакт уже существует, заменить?';
+
+  @override
+  String get contacts_addContactByPubkey => 'Добавить контакт по ключу';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => 'Тип контакта';
+
+  @override
+  String get chat_contactIsYou => 'Это ваш собственный контакт';
+
+  @override
+  String chat_contactType(String contacttype) {
+    return 'Тип контакта: $contacttype';
+  }
+
+  @override
+  String get chat_contactTypeNode => 'Нода';
+
+  @override
+  String get chat_contactTypeRepeater => 'Репитер';
+
+  @override
+  String get chat_contactTypeRoom => 'Рум-сервер';
+
+  @override
+  String get chat_contactTypeSensor => 'Сенсор';
+
+  @override
+  String get chat_myLocation => 'Отправить моё местоположение';
+
+  @override
+  String get chat_locationFromMap => 'Отправить координаты с карты';
 }
