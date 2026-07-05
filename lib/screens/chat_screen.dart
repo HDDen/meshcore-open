@@ -14,6 +14,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
@@ -625,6 +626,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ChatComposerSideAction(
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
+                onSendSelfContact: () => _insertSelfContact(connector),
+                onSendContact: () => _pickAndInsertContact(),
                 onSendGif: () => _showGifPicker(context),
                 onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
                 onOpenMcoImageGallery: () =>
@@ -767,6 +770,44 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       ),
     );
+  }
+
+  void _insertTextIntoComposer(String text) {
+    final value = _textController.value;
+    final selection = value.selection;
+    final range = selection.isValid
+        ? selection
+        : TextSelection.collapsed(offset: value.text.length);
+    final nextText = value.text.replaceRange(range.start, range.end, text);
+    final nextOffset = range.start + text.length;
+    _textController.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: nextOffset),
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
+  void _insertSelfContact(MeshCoreConnector connector) {
+    final publicKey = connector.selfPublicKey;
+    if (publicKey == null || publicKey.isEmpty) return;
+    _insertTextIntoComposer(
+      formatContactShareText(
+        publicKey: publicKey,
+        type: advTypeChat,
+        name: connector.selfName ?? connector.deviceDisplayName,
+      ),
+    );
+  }
+
+  Future<void> _pickAndInsertContact() async {
+    final contact = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(selectionMode: true),
+      ),
+    );
+    if (contact == null || !mounted) return;
+    _insertTextIntoComposer(formatContactShareTextForContact(contact));
   }
 
   Future<void> _showCanvasEditor(

@@ -5491,4 +5491,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chat_sendContact => 'Share contact';
+
+  @override
+  String get chat_addContact => 'Add contact';
+
+  @override
+  String get chat_contactTypeNode => 'Sensor';
 }

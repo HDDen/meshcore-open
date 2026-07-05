@@ -3093,5 +3093,10 @@
   "mcogallery_addGroup": "Add group",
   "mcogallery_removeGroup": "Remove group",
   "chat_sendSelfContact": "Send self contact",
-  "chat_sendContact": "Share contact"
+  "chat_sendContact": "Share contact",
+  "chat_addContact": "Add contact",
+  "chat_contactTypeNode": "Node",
+  "chat_contactTypeNode": "Repeater",
+  "chat_contactTypeNode": "Room-server",
+  "chat_contactTypeNode": "Sensor"
 }

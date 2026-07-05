@@ -18,6 +18,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
@@ -63,6 +64,7 @@ import '../widgets/mesh_ui.dart';
 import 'channel_message_path_screen.dart';
 import 'canvas_editor_screen.dart';
 import 'channels_screen.dart';
+import 'contacts_screen.dart';
 import 'map_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 
@@ -1827,6 +1829,44 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  void _insertTextIntoComposer(String text) {
+    final value = _textController.value;
+    final selection = value.selection;
+    final range = selection.isValid
+        ? selection
+        : TextSelection.collapsed(offset: value.text.length);
+    final nextText = value.text.replaceRange(range.start, range.end, text);
+    final nextOffset = range.start + text.length;
+    _textController.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: nextOffset),
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
+  void _insertSelfContact(MeshCoreConnector connector) {
+    final publicKey = connector.selfPublicKey;
+    if (publicKey == null || publicKey.isEmpty) return;
+    _insertTextIntoComposer(
+      formatContactShareText(
+        publicKey: publicKey,
+        type: advTypeChat,
+        name: connector.selfName ?? connector.deviceDisplayName,
+      ),
+    );
+  }
+
+  Future<void> _pickAndInsertContact() async {
+    final contact = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ContactsScreen(selectionMode: true),
+      ),
+    );
+    if (contact == null || !mounted) return;
+    _insertTextIntoComposer(formatContactShareTextForContact(contact));
+  }
+
   Future<void> _showCanvasEditor(
     int maxTextChars, {
     MCOImage? initialImage,
@@ -2137,6 +2177,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ChatComposerSideAction(
                   child: ChatAdditionalActionsButton(
                     canvasActive: settings.canvasActive,
+                    onSendSelfContact: () => _insertSelfContact(connector),
+                    onSendContact: () => _pickAndInsertContact(),
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
                     onOpenMcoImageGallery: () =>

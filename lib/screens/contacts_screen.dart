@@ -50,8 +50,13 @@ enum ContactOperationType { import, export, zeroHopShare }
 
 class ContactsScreen extends StatefulWidget {
   final bool hideBackButton;
+  final bool selectionMode;
 
-  const ContactsScreen({super.key, this.hideBackButton = false});
+  const ContactsScreen({
+    super.key,
+    this.hideBackButton = false,
+    this.selectionMode = false,
+  });
 
   @override
   State<ContactsScreen> createState() => _ContactsScreenState();
@@ -118,6 +123,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop ||
+        widget.selectionMode ||
         event is! KeyDownEvent ||
         event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
@@ -984,7 +990,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                         lastSeen: _resolveLastSeen(contact),
                         unreadCount: unreadCount,
                         isFavorite: contact.isFavorite,
-                        onTap: () => _openChat(context, contact),
+                        onTap: () => widget.selectionMode
+                            ? Navigator.pop(context, contact)
+                            : _openChat(context, contact),
                         onLongPress: () =>
                             _showContactOptions(context, connector, contact),
                       );

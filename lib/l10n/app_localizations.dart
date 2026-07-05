@@ -9459,6 +9459,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share contact'**
   String get chat_sendContact;
+
+  /// No description provided for @chat_addContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get chat_addContact;
+
+  /// No description provided for @chat_contactTypeNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get chat_contactTypeNode;
 }
 
 class _AppLocalizationsDelegate

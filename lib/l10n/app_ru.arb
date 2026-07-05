@@ -2289,5 +2289,10 @@
   "mcogallery_addGroup": "Добавить группу",
   "mcogallery_removeGroup": "Удалить группу",
   "chat_sendSelfContact": "Отправить свой контакт",
-  "chat_sendContact": "Поделиться контактом"
+  "chat_sendContact": "Поделиться контактом",
+  "chat_addContact": "Добавить контакт",
+  "chat_contactTypeNode": "Нода",
+  "chat_contactTypeNode": "Репитер",
+  "chat_contactTypeNode": "Рум-сервер",
+  "chat_contactTypeNode": "Сенсор"
 }

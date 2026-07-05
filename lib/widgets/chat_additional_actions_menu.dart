@@ -20,6 +20,8 @@ class ChatComposerSideAction extends StatelessWidget {
 
 class ChatAdditionalActionsButton extends StatelessWidget {
   final bool canvasActive;
+  final VoidCallback onSendSelfContact;
+  final VoidCallback onSendContact;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
@@ -27,6 +29,8 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   const ChatAdditionalActionsButton({
     super.key,
     required this.canvasActive,
+    required this.onSendSelfContact,
+    required this.onSendContact,
     required this.onSendGif,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
@@ -46,6 +50,14 @@ class ChatAdditionalActionsButton extends StatelessWidget {
       context: context,
       builder: (sheetContext) => ChatAdditionalActionsMenu(
         canvasActive: canvasActive,
+        onSendSelfContact: () {
+          Navigator.pop(sheetContext);
+          onSendSelfContact();
+        },
+        onSendContact: () {
+          Navigator.pop(sheetContext);
+          onSendContact();
+        },
         onSendGif: () {
           Navigator.pop(sheetContext);
           onSendGif();
@@ -65,6 +77,8 @@ class ChatAdditionalActionsButton extends StatelessWidget {
 
 class ChatAdditionalActionsMenu extends StatelessWidget {
   final bool canvasActive;
+  final VoidCallback onSendSelfContact;
+  final VoidCallback onSendContact;
   final VoidCallback onSendGif;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
@@ -72,6 +86,8 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
   const ChatAdditionalActionsMenu({
     super.key,
     required this.canvasActive,
+    required this.onSendSelfContact,
+    required this.onSendContact,
     required this.onSendGif,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
@@ -85,6 +101,16 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: Text(context.l10n.chat_sendSelfContact),
+              onTap: onSendSelfContact,
+            ),
+            ListTile(
+              leading: const Icon(Icons.contact_page_outlined),
+              title: Text(context.l10n.chat_sendContact),
+              onTap: onSendContact,
+            ),
             ListTile(
               leading: const Icon(Icons.gif_box_outlined),
               title: Text(context.l10n.chat_sendGif),

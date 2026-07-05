@@ -5526,4 +5526,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_sendContact => 'Поделиться контактом';
+
+  @override
+  String get chat_addContact => 'Добавить контакт';
+
+  @override
+  String get chat_contactTypeNode => 'Сенсор';
 }
