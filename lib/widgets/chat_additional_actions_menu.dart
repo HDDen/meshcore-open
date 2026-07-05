@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 
+class ChatComposerSideAction extends StatelessWidget {
+  static const double counterReserveHeight = 18;
+
+  final Widget child;
+
+  const ChatComposerSideAction({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: counterReserveHeight),
+      child: child,
+    );
+  }
+}
+
 class ChatAdditionalActionsButton extends StatelessWidget {
   final bool canvasActive;
   final VoidCallback onSendGif;

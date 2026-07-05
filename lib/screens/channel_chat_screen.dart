@@ -2134,11 +2134,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ChatAdditionalActionsButton(
-                  canvasActive: settings.canvasActive,
-                  onSendGif: () => _showGifPicker(context),
-                  onOpenCanvas: () => _showCanvasEditor(maxBytes),
-                  onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
+                ChatComposerSideAction(
+                  child: ChatAdditionalActionsButton(
+                    canvasActive: settings.canvasActive,
+                    onSendGif: () => _showGifPicker(context),
+                    onOpenCanvas: () => _showCanvasEditor(maxBytes),
+                    onOpenMcoImageGallery: () =>
+                        _showMcoImageGallery(maxBytes),
+                  ),
                 ),
                 if (settings.translationEnabled)
                   MessageTranslationButton(
@@ -2229,35 +2232,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _textController,
-                  builder: (context, value, _) {
-                    final hasText = value.text.trim().isNotEmpty;
-                    return GestureDetector(
-                      onLongPress: _showQuickAnswersPicker,
-                      onSecondaryTap: _showQuickAnswersPicker,
-                      child: IconButton.filled(
-                        icon: const Icon(Icons.send, size: 20),
-                        tooltip: context.l10n.chat_sendMessage,
-                        style: IconButton.styleFrom(
-                          backgroundColor: hasText
-                              ? scheme.primary
-                              : scheme.surfaceContainerHighest,
-                          foregroundColor: hasText
-                              ? scheme.onPrimary
-                              : scheme.onSurfaceVariant,
-                          minimumSize: const Size(40, 40),
-                          shape: const CircleBorder(),
+                ChatComposerSideAction(
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, _) {
+                      final hasText = value.text.trim().isNotEmpty;
+                      return GestureDetector(
+                        onLongPress: _showQuickAnswersPicker,
+                        onSecondaryTap: _showQuickAnswersPicker,
+                        child: IconButton.filled(
+                          icon: const Icon(Icons.send, size: 20),
+                          tooltip: context.l10n.chat_sendMessage,
+                          style: IconButton.styleFrom(
+                            backgroundColor: hasText
+                                ? scheme.primary
+                                : scheme.surfaceContainerHighest,
+                            foregroundColor: hasText
+                                ? scheme.onPrimary
+                                : scheme.onSurfaceVariant,
+                            minimumSize: const Size(40, 40),
+                            shape: const CircleBorder(),
+                          ),
+                          onPressed: hasText
+                              ? () {
+                                  HapticFeedback.lightImpact();
+                                  _sendMessage();
+                                }
+                              : null,
                         ),
-                        onPressed: hasText
-                            ? () {
-                                HapticFeedback.lightImpact();
-                                _sendMessage();
-                              }
-                            : null,
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),

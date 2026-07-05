@@ -5525,4 +5525,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get chat_sendSelfContact => 'Send self contact';
+
+  @override
+  String get chat_sendContact => 'Share contact';
 }

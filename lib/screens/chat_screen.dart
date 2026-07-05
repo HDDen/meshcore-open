@@ -622,12 +622,14 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            ChatAdditionalActionsButton(
-              canvasActive: settings.canvasActive,
-              onSendGif: () => _showGifPicker(context),
-              onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
-              onOpenMcoImageGallery: () =>
-                  _showMcoImageGallery(connector, maxBytes),
+            ChatComposerSideAction(
+              child: ChatAdditionalActionsButton(
+                canvasActive: settings.canvasActive,
+                onSendGif: () => _showGifPicker(context),
+                onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
+                onOpenMcoImageGallery: () =>
+                    _showMcoImageGallery(connector, maxBytes),
+              ),
             ),
             if (settings.translationEnabled)
               MessageTranslationButton(
@@ -733,17 +735,19 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Semantics(
-              button: true,
-              label: context.l10n.chat_sendMessageTo(
-                _resolveContact(connector).name,
-              ),
-              child: GestureDetector(
-                onLongPress: () => _showQuickAnswersPicker(connector),
-                onSecondaryTap: () => _showQuickAnswersPicker(connector),
-                child: IconButton.filled(
-                  icon: const Icon(Icons.send),
-                  onPressed: () => _sendMessage(connector),
+            ChatComposerSideAction(
+              child: Semantics(
+                button: true,
+                label: context.l10n.chat_sendMessageTo(
+                  _resolveContact(connector).name,
+                ),
+                child: GestureDetector(
+                  onLongPress: () => _showQuickAnswersPicker(connector),
+                  onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                  child: IconButton.filled(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => _sendMessage(connector),
+                  ),
                 ),
               ),
             ),

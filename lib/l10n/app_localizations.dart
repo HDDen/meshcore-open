@@ -9447,6 +9447,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove group'**
   String get mcogallery_removeGroup;
+
+  /// No description provided for @chat_sendSelfContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Send self contact'**
+  String get chat_sendSelfContact;
+
+  /// No description provided for @chat_sendContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Share contact'**
+  String get chat_sendContact;
 }
 
 class _AppLocalizationsDelegate

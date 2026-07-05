@@ -142,7 +142,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "de": [
@@ -275,7 +277,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "es": [
@@ -421,7 +425,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "fr": [
@@ -567,7 +573,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "hu": [
@@ -713,7 +721,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "it": [
@@ -939,7 +949,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "ja": [
@@ -1085,7 +1097,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "ko": [
@@ -1231,7 +1245,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "nl": [
@@ -1457,7 +1473,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "pl": [
@@ -1603,7 +1621,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "pt": [
@@ -1829,7 +1849,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "sk": [
@@ -1975,7 +1997,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "sl": [
@@ -2121,7 +2145,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "sv": [
@@ -2347,7 +2373,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "uk": [
@@ -2493,7 +2521,9 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ],
 
   "zh": [
@@ -2639,6 +2669,8 @@
     "mcogallery_addPack",
     "mcogallery_removePack",
     "mcogallery_addGroup",
-    "mcogallery_removeGroup"
+    "mcogallery_removeGroup",
+    "chat_sendSelfContact",
+    "chat_sendContact"
   ]
 }

@@ -2287,5 +2287,7 @@
   "mcogallery_addPack": "Добавить пакет",
   "mcogallery_removePack": "Удалить пакет",
   "mcogallery_addGroup": "Добавить группу",
-  "mcogallery_removeGroup": "Удалить группу"
+  "mcogallery_removeGroup": "Удалить группу",
+  "chat_sendSelfContact": "Отправить свой контакт",
+  "chat_sendContact": "Поделиться контактом"
 }

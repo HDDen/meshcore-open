@@ -5520,4 +5520,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mcogallery_removeGroup => 'Удалить группу';
+
+  @override
+  String get chat_sendSelfContact => 'Отправить свой контакт';
+
+  @override
+  String get chat_sendContact => 'Поделиться контактом';
 }
