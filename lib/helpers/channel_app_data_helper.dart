@@ -108,7 +108,7 @@ class ChannelAppDataHelper {
   ///
   /// Examples:
   ///   0x13 = MCOimg v3
-  ///   0x22 = MCMP v2
+  ///   0x20 = MCMP v3
   ///
   /// MCOimg v3 bodies are binary. They can be carried either in this official
   /// binary envelope or in the im3: Base91 text transport.
@@ -118,10 +118,12 @@ class ChannelAppDataHelper {
   static const int mcmpSubtype = 0x02;
 
   static const int mcoImageV3Version = 0x03;
-  static const int mcmpV2Version = 0x02;
+  static const int mcmpV3FormatVersion = 0x03;
+  static const int mcmpV3WireVersion = 0x00;
   static const int mcoImageV3SubtypeVersion =
       (mcoImageSubtype << 4) | mcoImageV3Version;
-  static const int mcmpV2SubtypeVersion = (mcmpSubtype << 4) | mcmpV2Version;
+  static const int mcmpV3SubtypeVersion =
+      (mcmpSubtype << 4) | mcmpV3WireVersion;
 
   static int packSubtypeVersion({
     required int subtypeId,

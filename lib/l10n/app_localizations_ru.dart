@@ -5380,6 +5380,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsMessaging => 'Обмен сообщениями';
 
   @override
+  String get settings_modSettingsMCMP => 'MCMP';
+
+  @override
+  String get settings_mcmp_signed => 'Без проверки подписи';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
 
   @override

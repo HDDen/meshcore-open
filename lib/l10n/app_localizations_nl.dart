@@ -5346,6 +5346,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_modSettingsMessaging => 'Messaging';
 
   @override
+  String get settings_modSettingsMCMP => 'MCMP';
+
+  @override
+  String get settings_mcmp_signed => 'No signature';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
 
   @override

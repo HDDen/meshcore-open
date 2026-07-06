@@ -44,6 +44,7 @@ import '../services/translation_service.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
@@ -586,11 +587,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
               onSelected: (value) async {
+                if (value == 'editChannel') {
+                  final connector = context.read<MeshCoreConnector>();
+                  showChannelEditSheet(context, connector, widget.channel);
+                }
                 if (value == 'clearChat') {
                   _confirmClearChat();
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'editChannel',
+                  child: PopupMenuRow(
+                    icon: Icons.edit_outlined,
+                    text: context.l10n.channels_editChannel,
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'clearChat',
                   child: PopupMenuRow(

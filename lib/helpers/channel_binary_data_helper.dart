@@ -5,6 +5,7 @@ import '../connector/meshcore_protocol.dart';
 import 'channel_app_data_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
+import 'mcmp_app_codec.dart';
 import 'mesh_compressor.dart';
 
 enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
@@ -56,6 +57,7 @@ class ChannelAppDataInbound {
   final Uint8List body;
   final int payloadLength;
   final MCOImage? mcoImage;
+  final DecodedMcmpAppMessage? mcmpMessage;
   final String? text;
   final bool wasMcmpCompressed;
 
@@ -67,6 +69,7 @@ class ChannelAppDataInbound {
     required this.body,
     required this.payloadLength,
     this.mcoImage,
+    this.mcmpMessage,
     this.text,
     this.wasMcmpCompressed = false,
   });
@@ -91,7 +94,8 @@ class ChannelBinaryDataHelper {
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
   static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
-  static const int mcmpV2Version = ChannelAppDataHelper.mcmpV2Version;
+  static const int mcmpV3WireVersion =
+      ChannelAppDataHelper.mcmpV3WireVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -168,20 +172,27 @@ class ChannelBinaryDataHelper {
     );
   }
 
-  static ChannelBinaryDataOutbound? tryEncodeMcmpV2AppOutbound({
+  static ChannelBinaryDataOutbound? tryEncodeMcmpV3AppOutbound({
     required String text,
     required String senderName,
+    required int timestamp,
+    Uint8List? signature,
+    String? replyAuthorName,
+    int? replyTimestamp,
   }) {
     if (!canSend) return null;
     try {
-      final compressed = MeshCompressor.instance.compressToBytes(text);
-      final body = Uint8List(compressed.length + 1)
-        ..[0] = MCOImageV3Codec.nextPacketNonce()
-        ..setRange(1, compressed.length + 1, compressed);
+      final encoded = McmpAppCodec.encodeBody(
+        text: text,
+        timestamp: timestamp,
+        signature: signature,
+        replyAuthorName: replyAuthorName,
+        replyTimestamp: replyTimestamp,
+      );
       return _encodeAppEnvelope(
         subtypeId: mcmpSubtype,
-        version: mcmpV2Version,
-        body: body,
+        version: mcmpV3WireVersion,
+        body: encoded.body,
         senderName: senderName,
         kind: ChannelBinaryDataKind.mcmp,
       );
@@ -285,7 +296,7 @@ class ChannelBinaryDataHelper {
   static int uncompressedAppBinaryPayloadLength(String text, String senderName) {
     return channelDataHeaderLength +
         appBinaryEnvelopeLength(
-          bodyLength: 1 + utf8.encode(text).length,
+          bodyLength: 1 + 4 + utf8.encode(text).length,
           senderName: senderName,
         );
   }
@@ -367,13 +378,10 @@ class ChannelBinaryDataHelper {
           mcoImage: image,
         );
       case ChannelAppDataSubtype.mcmp:
-        if (envelope.version != mcmpV2Version) return null;
-        if (envelope.body.isEmpty) return null;
-        final String text;
+        if (envelope.version != mcmpV3WireVersion) return null;
+        final DecodedMcmpAppMessage decoded;
         try {
-          text = MeshCompressor.instance.decompressBytes(
-            Uint8List.sublistView(envelope.body, 1),
-          );
+          decoded = McmpAppCodec.decodeBody(envelope.body);
         } catch (_) {
           return null;
         }
@@ -384,7 +392,8 @@ class ChannelBinaryDataHelper {
           subtype: ChannelAppDataSubtype.mcmp,
           body: envelope.body,
           payloadLength: payload.length,
-          text: text,
+          mcmpMessage: decoded,
+          text: decoded.text,
           wasMcmpCompressed: true,
         );
       case null:

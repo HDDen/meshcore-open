@@ -9208,6 +9208,24 @@ abstract class AppLocalizations {
   /// **'Messaging'**
   String get settings_modSettingsMessaging;
 
+  /// No description provided for @settings_modSettingsMCMP.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP'**
+  String get settings_modSettingsMCMP;
+
+  /// No description provided for @settings_mcmp_signed.
+  ///
+  /// In en, this message translates to:
+  /// **'No signature'**
+  String get settings_mcmp_signed;
+
+  /// No description provided for @settings_modSettingsMCOimg.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg'**
+  String get settings_modSettingsMCOimg;
+
   /// No description provided for @settings_modSettingsHideChInd.
   ///
   /// In en, this message translates to:
