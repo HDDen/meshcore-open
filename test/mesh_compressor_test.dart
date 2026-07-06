@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
 import 'package:meshcore_open/helpers/channel_binary_data_helper.dart';
+import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/helpers/mesh_compressor.dart';
 
 void main() {
@@ -29,15 +30,14 @@ void main() {
     }
   });
 
-  test('decodes MCMP v2 official app-data subtype envelope', () {
-    const text = 'Привет MCMP через app data subtype 0x22';
-    final compressed = MeshCompressor.instance.compressToBytes(text);
-    final body = Uint8List.fromList(<int>[0x7a, ...compressed]);
+  test('decodes MCMP v3 official app-data subtype envelope', () {
+    const text = 'Привет MCMP через app data subtype 0x20';
+    final encoded = McmpAppCodec.encodeBody(text: text, timestamp: 123456);
     final payload = ChannelAppDataHelper.encodeEnvelope(
       senderName: 'QRS',
       subtypeId: ChannelAppDataHelper.mcmpSubtype,
-      version: ChannelAppDataHelper.mcmpV2Version,
-      body: body,
+      version: ChannelAppDataHelper.mcmpV3WireVersion,
+      body: encoded.body,
     );
 
     final decoded = ChannelBinaryDataHelper.tryDecodeAppData(
@@ -47,7 +47,7 @@ void main() {
 
     expect(decoded, isNotNull);
     expect(decoded!.subtype, ChannelAppDataSubtype.mcmp);
-    expect(decoded.subtypeVersion, ChannelAppDataHelper.mcmpV2SubtypeVersion);
+    expect(decoded.subtypeVersion, ChannelAppDataHelper.mcmpV3SubtypeVersion);
     expect(decoded.senderName, 'QRS');
     expect(decoded.text, text);
     expect(decoded.wasMcmpCompressed, isTrue);
@@ -60,7 +60,7 @@ void main() {
       senderName: 'QRS',
       subtypeId: ChannelAppDataHelper.mcmpSubtype,
       version: 1,
-      body: MeshCompressor.instance.compressToBytes(text),
+      body: McmpAppCodec.encodeBody(text: text, timestamp: 123456).body,
     );
 
     final decoded = ChannelBinaryDataHelper.tryDecodeAppData(
@@ -71,11 +71,11 @@ void main() {
     expect(decoded, isNull);
   });
 
-  test('rejects MCMP v2 app-data without packet nonce', () {
+  test('rejects malformed MCMP v3 app-data body', () {
     final payload = ChannelAppDataHelper.encodeEnvelope(
       senderName: 'QRS',
       subtypeId: ChannelAppDataHelper.mcmpSubtype,
-      version: ChannelAppDataHelper.mcmpV2Version,
+      version: ChannelAppDataHelper.mcmpV3WireVersion,
       body: Uint8List(0),
     );
 
@@ -87,17 +87,18 @@ void main() {
     expect(decoded, isNull);
   });
 
-  test('encodes MCMP v2 official app-data outbound payload', () {
-    const text = 'Future MCMP v2 app data outbound envelope';
+  test('encodes MCMP v3 official app-data outbound payload', () {
+    const text = 'Future MCMP v3 app data outbound envelope';
     final previousSendEnabled = ChannelBinaryDataHelper.sendEnabled;
     ChannelBinaryDataHelper.sendEnabled = true;
     addTearDown(() {
       ChannelBinaryDataHelper.sendEnabled = previousSendEnabled;
     });
 
-    final outbound = ChannelBinaryDataHelper.tryEncodeMcmpV2AppOutbound(
+    final outbound = ChannelBinaryDataHelper.tryEncodeMcmpV3AppOutbound(
       text: text,
       senderName: 'QRS',
+      timestamp: 123456,
     );
 
     expect(outbound, isNotNull);
@@ -106,15 +107,47 @@ void main() {
 
     final envelope = ChannelAppDataHelper.tryDecodeEnvelope(outbound.payload);
     expect(envelope, isNotNull);
-    expect(envelope!.subtypeVersion, ChannelAppDataHelper.mcmpV2SubtypeVersion);
+    expect(envelope!.subtypeVersion, ChannelAppDataHelper.mcmpV3SubtypeVersion);
     expect(envelope.senderName, 'QRS');
-    expect(envelope.body.length, greaterThan(1));
-    expect(
-      MeshCompressor.instance.decompressBytes(
-        Uint8List.sublistView(envelope.body, 1),
-      ),
-      text,
+    final decodedBody = McmpAppCodec.decodeBody(envelope.body);
+    expect(decodedBody.timestamp, 123456);
+    expect(decodedBody.text, text);
+  });
+
+  test('roundtrips MCMP v3 reply and signature fields', () {
+    const text = 'Ответ на подписанное сообщение';
+    final signature = Uint8List.fromList(List<int>.generate(64, (i) => i));
+
+    final encoded = McmpAppCodec.encodeBody(
+      text: text,
+      timestamp: 123456,
+      signature: signature,
+      replyAuthorName: 'Lenina_h',
+      replyTimestamp: 123450,
     );
+    final decoded = McmpAppCodec.decodeBody(encoded.body);
+
+    expect(decoded.text, text);
+    expect(decoded.timestamp, 123456);
+    expect(decoded.isSigned, isTrue);
+    expect(decoded.signature, orderedEquals(signature));
+    expect(decoded.isReply, isTrue);
+    expect(decoded.replyAuthorName, 'Lenina_h');
+    expect(decoded.replyTimestamp, 123450);
+  });
+
+  test('roundtrips MCMP v3 Base91 text payload', () {
+    const text = 'MCMP v3 text fallback';
+    final encoded = McmpAppCodec.encodeBody(text: text, timestamp: 123456);
+    final transport = McmpAppCodec.textFromBody(encoded.body);
+
+    expect(McmpAppCodec.isTextPayload(transport), isTrue);
+    final decoded = McmpAppCodec.decodeBody(
+      McmpAppCodec.bodyFromText(transport),
+    );
+
+    expect(decoded.text, text);
+    expect(decoded.timestamp, 123456);
   });
 
   test('encodes with mcmp prefix when beneficial and decodes back', () {

@@ -105,7 +105,7 @@ void main() {
       final packets = decoder.ingest(
         Uint8List.fromList(<int>[
           usbSerialRxFrameStart,
-          0xAD,
+          0xB1,
           0x00,
           0x99,
           usbSerialRxFrameStart,

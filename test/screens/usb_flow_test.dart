@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/screens/usb_screen.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 
 class _FakeMeshCoreConnector extends MeshCoreConnector {
@@ -90,6 +92,12 @@ Widget _buildTestApp({
 }
 
 void main() {
+  setUp(() async {
+    PrefsManager.reset();
+    SharedPreferences.setMockInitialValues({});
+    await PrefsManager.initialize();
+  });
+
   testWidgets('UsbScreen passes localized chooser label to connector', (
     tester,
   ) async {

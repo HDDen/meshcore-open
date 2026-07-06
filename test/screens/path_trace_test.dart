@@ -6,9 +6,12 @@ import 'dart:typed_data';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
+import 'package:meshcore_open/services/path_history_service.dart';
+import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 
@@ -52,6 +55,29 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   }
 }
 
+class _FakePathStorageService extends StorageService {
+  final Map<String, ContactPathHistory> _pathHistory =
+      <String, ContactPathHistory>{};
+
+  @override
+  Future<void> savePathHistory(
+    String contactPubKeyHex,
+    ContactPathHistory history,
+  ) async {
+    _pathHistory[contactPubKeyHex] = history;
+  }
+
+  @override
+  Future<ContactPathHistory?> loadPathHistory(String contactPubKeyHex) async {
+    return _pathHistory[contactPubKeyHex];
+  }
+
+  @override
+  Future<void> clearPathHistory(String contactPubKeyHex) async {
+    _pathHistory.remove(contactPubKeyHex);
+  }
+}
+
 Widget _buildTestApp({
   required MeshCoreConnector connector,
   required Widget child,
@@ -63,6 +89,9 @@ Widget _buildTestApp({
         create: (_) => AppSettingsService(),
       ),
       Provider<MapTileCacheService>(create: (_) => MapTileCacheService()),
+      ChangeNotifierProvider<PathHistoryService>(
+        create: (_) => PathHistoryService(_FakePathStorageService()),
+      ),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -118,8 +147,9 @@ void main() {
     // Offset 4..7: tag
     // Offset 8..11: auth (0)
     // Offset 12..13: pathBytes [0x12, 0x34]
-    // Offset 14..15: SNR bytes [12, 16] -> to be mapped to signed 8 bit Snr/4
-    final pushTraceFrame = Uint8List(16);
+    // Offset 14..16: SNR bytes [12, 16, 20] -> signed 8 bit Snr/4.
+    // Firmware emits one SNR per hop plus one final SNR to this node.
+    final pushTraceFrame = Uint8List(17);
     pushTraceFrame[0] = pushCodeTraceData;
     pushTraceFrame[1] = 0; // reserved
     pushTraceFrame[2] = 2; // pathLength
@@ -127,7 +157,7 @@ void main() {
     pushTraceFrame.setRange(4, 8, tag);
     // auth bytes (8..11) = 0
     pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
-    pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
+    pushTraceFrame.setRange(14, 17, [12, 16, 20]); // SNR bytes
 
     connector.emitFrame(pushTraceFrame);
     // pump multiple times to handle async tasks
@@ -355,14 +385,14 @@ void main() {
     // Structure:
     // Offset 2: pathLength (2) -> raw byte length count, mode is 0!
     // Offset 12..13: pathBytes [0x12, 0x34]
-    final pushTraceFrame = Uint8List(16);
+    final pushTraceFrame = Uint8List(17);
     pushTraceFrame[0] = pushCodeTraceData;
     pushTraceFrame[1] = 0; // reserved
     pushTraceFrame[2] = 2; // pathLength as raw byte length (2 bytes)
     pushTraceFrame[3] = 0; // flag
     pushTraceFrame.setRange(4, 8, tag);
     pushTraceFrame.setRange(12, 14, [0x12, 0x34]); // pathBytes
-    pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
+    pushTraceFrame.setRange(14, 17, [12, 16, 20]); // SNR bytes
 
     connector.emitFrame(pushTraceFrame);
     await tester.pumpAndSettle();
