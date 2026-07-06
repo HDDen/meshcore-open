@@ -365,7 +365,7 @@ const int signatureSize = 64;
 const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
-const int maxFrameSize = 172;
+const int maxFrameSize = 176;
 const int maxChannelDataLength = maxFrameSize - 9;
 const int appProtocolVersion = 4;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
