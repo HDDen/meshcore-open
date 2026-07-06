@@ -56,6 +56,8 @@ class ChannelAppDataInbound {
   final Uint8List body;
   final int payloadLength;
   final MCOImage? mcoImage;
+  final String? text;
+  final bool wasMcmpCompressed;
 
   const ChannelAppDataInbound({
     required this.senderName,
@@ -65,6 +67,8 @@ class ChannelAppDataInbound {
     required this.body,
     required this.payloadLength,
     this.mcoImage,
+    this.text,
+    this.wasMcmpCompressed = false,
   });
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
@@ -85,7 +89,9 @@ class ChannelBinaryDataHelper {
   static const int mcmpDataType = 0xFFF1;
   static const int appDataType = ChannelAppDataHelper.appDataType;
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
+  static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
+  static const int mcmpV2Version = ChannelAppDataHelper.mcmpV2Version;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -160,6 +166,28 @@ class ChannelBinaryDataHelper {
       kind: ChannelBinaryDataKind.mcoImageV3,
       canonicalText: MCOImageV3Codec.textFromBody(body),
     );
+  }
+
+  static ChannelBinaryDataOutbound? tryEncodeMcmpV2AppOutbound({
+    required String text,
+    required String senderName,
+  }) {
+    if (!canSend) return null;
+    try {
+      final compressed = MeshCompressor.instance.compressToBytes(text);
+      final body = Uint8List(compressed.length + 1)
+        ..[0] = MCOImageV3Codec.nextPacketNonce()
+        ..setRange(1, compressed.length + 1, compressed);
+      return _encodeAppEnvelope(
+        subtypeId: mcmpSubtype,
+        version: mcmpV2Version,
+        body: body,
+        senderName: senderName,
+        kind: ChannelBinaryDataKind.mcmp,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static int? mcoImagePayloadLength(String text, String senderName) {
@@ -254,6 +282,14 @@ class ChannelBinaryDataHelper {
         uncompressedPayloadLength(text, senderName);
   }
 
+  static int uncompressedAppBinaryPayloadLength(String text, String senderName) {
+    return channelDataHeaderLength +
+        appBinaryEnvelopeLength(
+          bodyLength: 1 + utf8.encode(text).length,
+          senderName: senderName,
+        );
+  }
+
   static ChannelBinaryDataInbound? tryDecodeInbound({
     required int dataType,
     required Uint8List payload,
@@ -331,6 +367,26 @@ class ChannelBinaryDataHelper {
           mcoImage: image,
         );
       case ChannelAppDataSubtype.mcmp:
+        if (envelope.version != mcmpV2Version) return null;
+        if (envelope.body.isEmpty) return null;
+        final String text;
+        try {
+          text = MeshCompressor.instance.decompressBytes(
+            Uint8List.sublistView(envelope.body, 1),
+          );
+        } catch (_) {
+          return null;
+        }
+        return ChannelAppDataInbound(
+          senderName: envelope.senderName,
+          subtypeId: envelope.subtypeId,
+          version: envelope.version,
+          subtype: ChannelAppDataSubtype.mcmp,
+          body: envelope.body,
+          payloadLength: payload.length,
+          text: text,
+          wasMcmpCompressed: true,
+        );
       case null:
         return null;
     }

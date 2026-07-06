@@ -7353,6 +7353,26 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  MessageCompressionMetadata? _incomingAppDataCompression(
+    ChannelAppDataInbound decoded,
+  ) {
+    if (!decoded.wasMcmpCompressed || decoded.text == null) return null;
+    return MessageCompressionMetadata.fromByteLengths(
+      type: MessageCompressionType.mcmp,
+      originalBytes: ChannelBinaryDataHelper.uncompressedAppBinaryPayloadLength(
+        decoded.text!,
+        decoded.senderName,
+      ),
+      compressedBytes: ChannelBinaryDataHelper.finalBinaryPayloadLength(
+        decoded.payloadLength,
+      ),
+    );
+  }
+
+  String _appDataMessageText(ChannelAppDataInbound decoded) {
+    return decoded.text ?? MCOImageV3Codec.textFromBody(decoded.body);
+  }
+
   String _channelDisplayName(int channelIndex) {
     for (final channel in _channels) {
       if (channel.index != channelIndex) continue;
@@ -7483,9 +7503,10 @@ class MeshCoreConnector extends ChangeNotifier {
       if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
       return;
     }
+    final appData = appDecoded;
 
     final channelName = _channelDisplayName(dataFrame.channelIndex);
-    final senderName = decoded?.senderName ?? appDecoded!.senderName;
+    final senderName = decoded?.senderName ?? appData!.senderName;
     // In received channel-data frames, raw 0xFF means direct route.
     // The parser maps it to -1; pathLength == 0 is a valid zero-hop flood.
     final isSelfDirect =
@@ -7502,15 +7523,18 @@ class MeshCoreConnector extends ChangeNotifier {
       dataFrame.dataType,
       dataFrame.payload,
     );
-    final compression = decoded == null
-        ? null
-        : _incomingBinaryCompression(decoded);
-    final messageText =
-        decoded?.text ?? MCOImageV3Codec.textFromBody(appDecoded!.body);
+    final compression = decoded != null
+        ? _incomingBinaryCompression(decoded)
+        : _incomingAppDataCompression(appData!);
+    final messageText = decoded != null
+        ? decoded.text
+        : _appDataMessageText(appData!);
     final message = ChannelMessage(
       senderName: senderName,
       text: messageText,
-      wasMcmpCompressed: decoded?.wasMcmpCompressed ?? false,
+      wasMcmpCompressed: decoded != null
+          ? decoded.wasMcmpCompressed
+          : appData!.wasMcmpCompressed,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
@@ -7734,20 +7758,24 @@ class MeshCoreConnector extends ChangeNotifier {
           )
         : null;
     if (decoded == null && appDecoded == null) return null;
+    final appData = appDecoded;
 
     final pktHash = _computePacketHash(packet.payloadType, packet.payload);
-    final compression = decoded == null
-        ? null
-        : _incomingBinaryCompression(decoded);
-    final senderName = decoded?.senderName ?? appDecoded!.senderName;
-    final messageText =
-        decoded?.text ?? MCOImageV3Codec.textFromBody(appDecoded!.body);
+    final compression = decoded != null
+        ? _incomingBinaryCompression(decoded)
+        : _incomingAppDataCompression(appData!);
+    final senderName = decoded?.senderName ?? appData!.senderName;
+    final messageText = decoded != null
+        ? decoded.text
+        : _appDataMessageText(appData!);
     final timestamp = decoded?.timestamp ?? DateTime.now();
     return ChannelMessage(
       senderKey: null,
       senderName: senderName,
       text: messageText,
-      wasMcmpCompressed: decoded?.wasMcmpCompressed ?? false,
+      wasMcmpCompressed: decoded != null
+          ? decoded.wasMcmpCompressed
+          : appData!.wasMcmpCompressed,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,

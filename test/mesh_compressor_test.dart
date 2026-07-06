@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
+import 'package:meshcore_open/helpers/channel_binary_data_helper.dart';
 import 'package:meshcore_open/helpers/mesh_compressor.dart';
 
 void main() {
@@ -24,6 +27,94 @@ void main() {
       final decoded = MeshCompressor.instance.decompressBytes(compressed);
       expect(decoded, sample);
     }
+  });
+
+  test('decodes MCMP v2 official app-data subtype envelope', () {
+    const text = 'Привет MCMP через app data subtype 0x22';
+    final compressed = MeshCompressor.instance.compressToBytes(text);
+    final body = Uint8List.fromList(<int>[0x7a, ...compressed]);
+    final payload = ChannelAppDataHelper.encodeEnvelope(
+      senderName: 'QRS',
+      subtypeId: ChannelAppDataHelper.mcmpSubtype,
+      version: ChannelAppDataHelper.mcmpV2Version,
+      body: body,
+    );
+
+    final decoded = ChannelBinaryDataHelper.tryDecodeAppData(
+      dataType: ChannelBinaryDataHelper.appDataType,
+      payload: payload,
+    );
+
+    expect(decoded, isNotNull);
+    expect(decoded!.subtype, ChannelAppDataSubtype.mcmp);
+    expect(decoded.subtypeVersion, ChannelAppDataHelper.mcmpV2SubtypeVersion);
+    expect(decoded.senderName, 'QRS');
+    expect(decoded.text, text);
+    expect(decoded.wasMcmpCompressed, isTrue);
+    expect(decoded.payloadLength, payload.length);
+  });
+
+  test('rejects unsupported MCMP app-data versions', () {
+    const text = 'Unsupported MCMP subtype version should be ignored';
+    final payload = ChannelAppDataHelper.encodeEnvelope(
+      senderName: 'QRS',
+      subtypeId: ChannelAppDataHelper.mcmpSubtype,
+      version: 1,
+      body: MeshCompressor.instance.compressToBytes(text),
+    );
+
+    final decoded = ChannelBinaryDataHelper.tryDecodeAppData(
+      dataType: ChannelBinaryDataHelper.appDataType,
+      payload: payload,
+    );
+
+    expect(decoded, isNull);
+  });
+
+  test('rejects MCMP v2 app-data without packet nonce', () {
+    final payload = ChannelAppDataHelper.encodeEnvelope(
+      senderName: 'QRS',
+      subtypeId: ChannelAppDataHelper.mcmpSubtype,
+      version: ChannelAppDataHelper.mcmpV2Version,
+      body: Uint8List(0),
+    );
+
+    final decoded = ChannelBinaryDataHelper.tryDecodeAppData(
+      dataType: ChannelBinaryDataHelper.appDataType,
+      payload: payload,
+    );
+
+    expect(decoded, isNull);
+  });
+
+  test('encodes MCMP v2 official app-data outbound payload', () {
+    const text = 'Future MCMP v2 app data outbound envelope';
+    final previousSendEnabled = ChannelBinaryDataHelper.sendEnabled;
+    ChannelBinaryDataHelper.sendEnabled = true;
+    addTearDown(() {
+      ChannelBinaryDataHelper.sendEnabled = previousSendEnabled;
+    });
+
+    final outbound = ChannelBinaryDataHelper.tryEncodeMcmpV2AppOutbound(
+      text: text,
+      senderName: 'QRS',
+    );
+
+    expect(outbound, isNotNull);
+    expect(outbound!.dataType, ChannelBinaryDataHelper.appDataType);
+    expect(outbound.kind, ChannelBinaryDataKind.mcmp);
+
+    final envelope = ChannelAppDataHelper.tryDecodeEnvelope(outbound.payload);
+    expect(envelope, isNotNull);
+    expect(envelope!.subtypeVersion, ChannelAppDataHelper.mcmpV2SubtypeVersion);
+    expect(envelope.senderName, 'QRS');
+    expect(envelope.body.length, greaterThan(1));
+    expect(
+      MeshCompressor.instance.decompressBytes(
+        Uint8List.sublistView(envelope.body, 1),
+      ),
+      text,
+    );
   });
 
   test('encodes with mcmp prefix when beneficial and decodes back', () {
