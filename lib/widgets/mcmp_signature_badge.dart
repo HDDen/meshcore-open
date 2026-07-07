@@ -104,11 +104,22 @@ class McmpSignatureBadge extends StatelessWidget {
     final iconSize = 12.0 * textScale;
 
     if (isOutgoing) {
-      // Outgoing MCMP v3 messages show a textual badge instead of a shield
-      // icon: "signed" / "no signature".
-      return Text(
-        isSigned ? l10n.settings_mcmp_signed : l10n.settings_mcmp_noSign,
-        style: MeshTheme.mono(fontSize: 10 * textScale, color: color),
+      // Textual badge, kept commented in case it comes back:
+      // return Text(
+      //   isSigned ? l10n.settings_mcmp_signed : l10n.settings_mcmp_noSign,
+      //   style: MeshTheme.mono(fontSize: 10 * textScale, color: color),
+      // );
+      // Outgoing messages use the same lock icons as incoming ones: closed
+      // green when sent signed, crossed-out grey when sent unsigned.
+      return Tooltip(
+        message: isSigned
+            ? l10n.settings_mcmp_signed
+            : l10n.settings_mcmp_noSign,
+        child: Icon(
+          isSigned ? Icons.lock_outlined : Icons.no_encryption_outlined,
+          size: iconSize,
+          color: isSigned ? MeshPalette.signal : color,
+        ),
       );
     }
 

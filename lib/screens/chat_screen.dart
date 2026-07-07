@@ -2223,6 +2223,35 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2342,6 +2371,35 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2377,14 +2435,45 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
-                        // Signature/signing badge: room-server chats only,
-                        // always on its own line above the message time,
-                        // independent of the message-tracing setting. Direct
-                        // messages never show the badge.
+                        // Incoming signature badge: room-server chats only,
+                        // on its own line above the message time, independent
+                        // of the message-tracing setting. Direct messages
+                        // never show the badge; outgoing messages show their
+                        // lock in the meta row after the compression label.
                         if (isRoomChat &&
+                            !isOutgoing &&
                             McmpSignatureBadge.isVisible(
                               status: message.mcmpSignatureStatus,
                               isOutgoing: isOutgoing,
@@ -2512,6 +2601,30 @@ class _MessageBubble extends StatelessWidget {
                                       fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
+                                  ),
+                                ],
+                                // Outgoing signing lock (room chats), right
+                                // after the compression-type label.
+                                if (isRoomChat &&
+                                    isOutgoing &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  McmpSignatureBadge(
+                                    status: message.mcmpSignatureStatus,
+                                    isOutgoing: true,
+                                    isSigned: message.mcmpIsSigned,
+                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    verifiedSenderKeyHex:
+                                        message.verifiedSenderKeyHex,
+                                    nameCollision: message.mcmpNameCollision,
+                                    showFingerprint: false,
+                                    textScale: textScale,
+                                    color: metaColor,
+                                    errorColor: scheme.error,
                                   ),
                                 ],
                                 if (sharedHistorySourceName != null &&

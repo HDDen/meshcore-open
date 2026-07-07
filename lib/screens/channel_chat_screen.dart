@@ -1193,6 +1193,33 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -1303,6 +1330,33 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -1346,38 +1400,54 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3:
+                                          message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision:
+                                          message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
-                        // Outgoing signing badge: always on its own line
-                        // above the message time, independent of the
-                        // message-tracing setting. Incoming messages show
-                        // their badge next to the sender name instead.
-                        if (isOutgoing &&
-                            McmpSignatureBadge.isVisible(
-                              status: message.mcmpSignatureStatus,
-                              isOutgoing: true,
-                              wasMcmpV3: message.mcmpTimestamp != null,
-                            )) ...[
-                          const SizedBox(height: 3),
-                          Padding(
-                            padding: isMediaMessage
-                                ? const EdgeInsets.symmetric(horizontal: 8)
-                                : EdgeInsets.zero,
-                            child: McmpSignatureBadge(
-                              status: message.mcmpSignatureStatus,
-                              isOutgoing: true,
-                              isSigned: message.mcmpIsSigned,
-                              wasMcmpV3: message.mcmpTimestamp != null,
-                              verifiedSenderKeyHex:
-                                  message.verifiedSenderKeyHex,
-                              nameCollision: message.mcmpNameCollision,
-                              textScale: textScale,
-                              color: metaColor,
-                              errorColor: scheme.error,
-                            ),
-                          ),
-                        ],
+                        // Standalone textual signing badge for outgoing
+                        // messages, kept commented in case it comes back —
+                        // the lock icon now lives in the meta row after the
+                        // compression label.
+                        // if (isOutgoing &&
+                        //     McmpSignatureBadge.isVisible(
+                        //       status: message.mcmpSignatureStatus,
+                        //       isOutgoing: true,
+                        //       wasMcmpV3: message.mcmpTimestamp != null,
+                        //     )) ...[
+                        //   const SizedBox(height: 3),
+                        //   Padding(
+                        //     padding: isMediaMessage
+                        //         ? const EdgeInsets.symmetric(horizontal: 8)
+                        //         : EdgeInsets.zero,
+                        //     child: McmpSignatureBadge(...),
+                        //   ),
+                        // ],
                         if (enableTracing) ...[
                           if (showHops && displayPath.isNotEmpty) ...[
                             const SizedBox(height: 4),
@@ -1514,6 +1584,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
+                                  ),
+                                ],
+                                // Outgoing signing lock, right after the
+                                // compression-type label.
+                                if (isOutgoing &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 6),
+                                  McmpSignatureBadge(
+                                    status: message.mcmpSignatureStatus,
+                                    isOutgoing: true,
+                                    isSigned: message.mcmpIsSigned,
+                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    verifiedSenderKeyHex:
+                                        message.verifiedSenderKeyHex,
+                                    nameCollision: message.mcmpNameCollision,
+                                    textScale: textScale,
+                                    color: metaColor,
+                                    errorColor: scheme.error,
                                   ),
                                 ],
                                 if (sharedHistorySourceName != null &&
