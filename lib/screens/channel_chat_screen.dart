@@ -926,9 +926,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
-    final compressionLabel = compressionType == null
+    // MCMP labels carry the format version: "mcmp3" / "mcmp2".
+    final compressionTypeLabel = compressionType == null
         ? null
-        : '$compressionRatioPrefix${compressionType.label}'
+        : compressionType == MessageCompressionType.mcmp
+        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        : compressionType.label;
+    final compressionLabel = compressionTypeLabel == null
+        ? null
+        : '$compressionRatioPrefix$compressionTypeLabel'
               '${message.wasBinaryTransport ? ' bin' : ''}';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
