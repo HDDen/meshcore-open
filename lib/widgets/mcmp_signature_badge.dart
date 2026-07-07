@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../helpers/mcmp_app_codec.dart';
 import '../l10n/l10n.dart';
@@ -114,16 +115,20 @@ class McmpSignatureBadge extends StatelessWidget {
 
     switch (status) {
       case McmpSignatureStatus.valid:
-        icon = Icons.verified_user_outlined;
+        // Closed green lock: signature verified.
+        icon = Icons.lock_outlined;
         tooltip = l10n.settings_mcmp_signed;
+        iconColor = MeshPalette.signal;
         break;
       case McmpSignatureStatus.invalid:
-        icon = Icons.gpp_bad_outlined;
+        // Open red lock with the shackle turned aside: signature invalid.
+        icon = Symbols.lock_open_right;
         tooltip = l10n.chat_mcmpSignatureInvalid;
         iconColor = errorColor;
         break;
       case McmpSignatureStatus.unverifiable:
-        icon = Icons.gpp_maybe_outlined;
+        // Crossed-out grey lock: signature cannot be checked.
+        icon = Icons.no_encryption_outlined;
         tooltip = l10n.chat_mcmpSignatureUnverifiable;
         break;
       case McmpSignatureStatus.transportAuthenticated:
