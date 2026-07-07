@@ -12,6 +12,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/path_hop_resolver.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
@@ -149,6 +150,49 @@ class ChannelMessagePathScreen extends StatelessWidget {
     );
   }
 
+  /// Localized signature verification result for the message-details section;
+  /// null when the message carries no verification result (plain payloads).
+  /// Outgoing messages show only "sent signed / unsigned"; incoming ones show
+  /// the verification result with a name-collision note appended when the
+  /// sender name belonged to several contacts at verification time.
+  String? _signatureStatusLabel(AppLocalizations l10n) {
+    if (message.isOutgoing) {
+      // Own messages: only whether they were sent with a signature.
+      if (message.mcmpTimestamp == null) return null;
+      return message.mcmpIsSigned
+          ? l10n.settings_mcmp_signed
+          : l10n.settings_mcmp_noSign;
+    }
+
+    final String? label;
+    switch (message.mcmpSignatureStatus) {
+      case McmpSignatureStatus.valid:
+        label = l10n.chat_mcmpSignatureValid;
+        break;
+      case McmpSignatureStatus.invalid:
+        label = l10n.chat_mcmpSignatureInvalid;
+        break;
+      case McmpSignatureStatus.unverifiable:
+        label = l10n.chat_mcmpSignatureUnverifiable;
+        break;
+      case McmpSignatureStatus.transportAuthenticated:
+        label = l10n.chat_mcmpSignatureTransport;
+        break;
+      case McmpSignatureStatus.unsigned:
+        // MCMP v3 message sent without a signature.
+        label = l10n.settings_mcmp_noSign;
+        break;
+      case McmpSignatureStatus.none:
+        label = null;
+        break;
+    }
+    if (label == null) return null;
+    if (message.mcmpNameCollision) {
+      return '$label (${l10n.settings_mcmp_senderNameCollision})';
+    }
+    return label;
+  }
+
   Widget _buildSummaryCard(
     BuildContext context, {
     String? observedLabel,
@@ -193,6 +237,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
             _formatTime(message.timestamp, l10n),
             scheme: scheme,
           ),
+          if (_signatureStatusLabel(l10n) != null)
+            _buildDetailRow(
+              context,
+              l10n.chat_mcmpSignatureCheckStatus,
+              _signatureStatusLabel(l10n)!,
+              scheme: scheme,
+            ),
           if (outgoingRadioWaitLabel != null)
             _buildDetailRow(
               context,

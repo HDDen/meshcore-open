@@ -9244,6 +9244,12 @@ abstract class AppLocalizations {
   /// **'Sender isn\'t unique!'**
   String get settings_mcmp_senderNameCollision;
 
+  /// No description provided for @chat_mcmpSignatureValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature is valid'**
+  String get chat_mcmpSignatureValid;
+
   /// No description provided for @chat_mcmpSignatureInvalid.
   ///
   /// In en, this message translates to:
@@ -9267,6 +9273,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manually recheck signature'**
   String get chat_mcmpManualRecheckSign;
+
+  /// No description provided for @chat_mcmpSignatureCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature checking'**
+  String get chat_mcmpSignatureCheckStatus;
 
   /// No description provided for @settings_modSettingsMCOimg.
   ///

@@ -5370,6 +5370,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
 
   @override
+  String get chat_mcmpSignatureValid => 'Signature is valid';
+
+  @override
   String get chat_mcmpSignatureInvalid => 'Invalid signature!';
 
   @override
@@ -5382,6 +5385,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => 'Signature checking';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';

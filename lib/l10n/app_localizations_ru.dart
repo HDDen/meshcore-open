@@ -5399,6 +5399,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Имя отправителя не уникально!';
 
   @override
+  String get chat_mcmpSignatureValid => 'Подпись действительна';
+
+  @override
   String get chat_mcmpSignatureInvalid => 'Недействительная подпись!';
 
   @override
@@ -5411,6 +5414,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_mcmpManualRecheckSign => 'Перепроверить подпись';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => 'Проверка подписи';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';
