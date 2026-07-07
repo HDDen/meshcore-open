@@ -5401,7 +5401,33 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_mcmp_signed => 'No signature';
+  String get settings_mcmp_version => 'Version';
+
+  @override
+  String get settings_mcmp_useSign => 'Message signing';
+
+  @override
+  String get settings_mcmp_signed => 'Using signature verification';
+
+  @override
+  String get settings_mcmp_noSign => 'No signature';
+
+  @override
+  String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
+
+  @override
+  String get chat_mcmpSignatureInvalid => 'Invalid signature!';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable =>
+      'Signature can\'t be verified — sender is not in contacts';
+
+  @override
+  String get chat_mcmpSignatureTransport =>
+      'Authenticated by encrypted transport';
+
+  @override
+  String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';

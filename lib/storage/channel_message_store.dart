@@ -5,6 +5,7 @@ import 'package:meshcore_open/utils/app_logger.dart';
 import '../models/channel_message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'channel_name_keyed_store.dart';
@@ -140,6 +141,17 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'compressionSavingsPercent': msg.compressionSavingsPercent,
       'compressionOriginalBytes': msg.compressionOriginalBytes,
       'compressionPayloadBytes': msg.compressionPayloadBytes,
+      'mcmpSignatureStatus': msg.mcmpSignatureStatus.name,
+      'mcmpTimestamp': msg.mcmpTimestamp,
+      'mcmpSenderName': msg.mcmpSenderName,
+      'mcmpIsSigned': msg.mcmpIsSigned,
+      'mcmpSignature': msg.mcmpSignature != null
+          ? base64Encode(msg.mcmpSignature!)
+          : null,
+      'mcmpReplyAuthorName': msg.mcmpReplyAuthorName,
+      'mcmpReplyTimestamp': msg.mcmpReplyTimestamp,
+      'verifiedSenderKeyHex': msg.verifiedSenderKeyHex,
+      'mcmpNameCollision': msg.mcmpNameCollision,
       'wasBinaryTransport': msg.wasBinaryTransport,
       'binaryPacketBytes': msg.binaryPacketBytes,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
@@ -237,6 +249,19 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       compressionPayloadBytes:
           json['compressionPayloadBytes'] as int? ??
           detectedCompression?.payloadBytes,
+      mcmpSignatureStatus: _parseMcmpSignatureStatus(
+        json['mcmpSignatureStatus'],
+      ),
+      mcmpTimestamp: json['mcmpTimestamp'] as int?,
+      mcmpSenderName: json['mcmpSenderName'] as String?,
+      mcmpIsSigned: json['mcmpIsSigned'] as bool? ?? false,
+      mcmpSignature: json['mcmpSignature'] != null
+          ? Uint8List.fromList(base64Decode(json['mcmpSignature'] as String))
+          : null,
+      mcmpReplyAuthorName: json['mcmpReplyAuthorName'] as String?,
+      mcmpReplyTimestamp: json['mcmpReplyTimestamp'] as int?,
+      verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
+      mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
@@ -277,6 +302,14 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           ) ??
           {},
     );
+  }
+
+  McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
+    if (value is! String) return McmpSignatureStatus.none;
+    for (final status in McmpSignatureStatus.values) {
+      if (status.name == value) return status;
+    }
+    return McmpSignatureStatus.none;
   }
 
   Map<String, dynamic> _repeatToJson(Repeat repeat) {

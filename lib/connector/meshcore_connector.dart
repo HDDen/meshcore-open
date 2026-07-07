@@ -23,7 +23,10 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
+import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcmp_app_codec.dart';
+import '../helpers/mcmp_signature_verifier.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -372,6 +375,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final UnreadStore _unreadStore = UnreadStore();
   List<Channel> _cachedChannels = [];
   final Map<int, bool> _channelMcmpEnabled = {};
+  final Map<int, int> _channelMcmpVersion = {};
+  final Map<int, bool> _channelMcmpUseSign = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
@@ -384,6 +389,8 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _lastSentWasCliCommand =
       false; // Track if last sent message was a CLI command
   final Map<String, bool> _contactMcmpEnabled = {};
+  final Map<String, int> _contactMcmpVersion = {};
+  final Map<String, bool> _contactMcmpUseSign = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
@@ -1107,6 +1114,14 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelMcmpEnabled[channelIndex] ?? false;
   }
 
+  int channelMcmpVersion(int channelIndex) {
+    return _channelMcmpVersion[channelIndex] ?? 2;
+  }
+
+  bool channelMcmpUseSign(int channelIndex) {
+    return _channelMcmpUseSign[channelIndex] ?? true;
+  }
+
   bool isChannelSmazEnabled(int channelIndex) {
     return _channelSmazEnabled[channelIndex] ?? false;
   }
@@ -1115,12 +1130,22 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactMcmpEnabled[contactKeyHex] ?? false;
   }
 
+  int contactMcmpVersion(String contactKeyHex) {
+    return _contactMcmpVersion[contactKeyHex] ?? 2;
+  }
+
+  bool contactMcmpUseSign(String contactKeyHex) {
+    return _contactMcmpUseSign[contactKeyHex] ?? true;
+  }
+
   bool isContactSmazEnabled(String contactKeyHex) {
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
 
   void ensureContactMcmpSettingLoaded(String contactKeyHex) {
     _ensureContactMcmpSettingLoaded(contactKeyHex);
+    _ensureContactMcmpVersionLoaded(contactKeyHex);
+    _ensureContactMcmpUseSignLoaded(contactKeyHex);
   }
 
   bool hasChannelRegion(int channelIndex) {
@@ -1436,6 +1461,21 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelMcmpVersion(int channelIndex, int version) async {
+    final normalized = version == 3 ? 3 : 2;
+    if (_channelMcmpVersion[channelIndex] == normalized) return;
+    _channelMcmpVersion[channelIndex] = normalized;
+    await _channelSettingsStore.saveMcmpVersion(channelIndex, normalized);
+    notifyListeners();
+  }
+
+  Future<void> setChannelMcmpUseSign(int channelIndex, bool useSign) async {
+    if (_channelMcmpUseSign[channelIndex] == useSign) return;
+    _channelMcmpUseSign[channelIndex] = useSign;
+    await _channelSettingsStore.saveMcmpUseSign(channelIndex, useSign);
+    notifyListeners();
+  }
+
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
     _channelSmazEnabled[channelIndex] = enabled;
     if (enabled) {
@@ -1457,6 +1497,24 @@ class MeshCoreConnector extends ChangeNotifier {
       await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setContactMcmpVersion(String contactKeyHex, int version) async {
+    final normalized = version == 3 ? 3 : 2;
+    if (_contactMcmpVersion[contactKeyHex] == normalized) return;
+    _contactMcmpVersion[contactKeyHex] = normalized;
+    await _contactSettingsStore.saveMcmpVersion(contactKeyHex, normalized);
+    notifyListeners();
+  }
+
+  Future<void> setContactMcmpUseSign(
+    String contactKeyHex,
+    bool useSign,
+  ) async {
+    if (_contactMcmpUseSign[contactKeyHex] == useSign) return;
+    _contactMcmpUseSign[contactKeyHex] = useSign;
+    await _contactSettingsStore.saveMcmpUseSign(contactKeyHex, useSign);
     notifyListeners();
   }
 
@@ -1758,7 +1816,14 @@ class MeshCoreConnector extends ChangeNotifier {
               deviceTimeoutMs: deviceTimeoutMs,
             ),
         getSelfPublicKey: () => _selfPublicKey,
-        prepareContactOutboundText: prepareContactOutboundText,
+        // The retry service computes wire-facing values (ACK hashes); it must
+        // never see the size-estimation signature placeholder.
+        prepareContactOutboundText: (contact, text) =>
+            prepareContactOutboundText(
+              contact,
+              text,
+              estimateSignatureOverhead: false,
+            ),
         appSettingsService: appSettingsService,
         debugLogService: _appDebugLogService,
         recordPathResult: _recordPathResult,
@@ -1894,6 +1959,8 @@ class MeshCoreConnector extends ChangeNotifier {
     settingsStore.replaceChannels(knownChannels);
     regionStore.replaceChannels(knownChannels);
     _channelMcmpEnabled.clear();
+    _channelMcmpVersion.clear();
+    _channelMcmpUseSign.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     _channelCyr2LatProfileId.clear();
@@ -1926,6 +1993,12 @@ class MeshCoreConnector extends ChangeNotifier {
     final mcmpEnabled = await channelSettingsStore.loadMcmpEnabled(
       channelIndex,
     );
+    final mcmpVersion = await channelSettingsStore.loadMcmpVersion(
+      channelIndex,
+    );
+    final mcmpUseSign = await channelSettingsStore.loadMcmpUseSign(
+      channelIndex,
+    );
     final smazEnabled = await channelSettingsStore.loadSmazEnabled(
       channelIndex,
     );
@@ -1949,6 +2022,8 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     _channelMcmpEnabled[channelIndex] = mcmpEnabled;
+    _channelMcmpVersion[channelIndex] = mcmpVersion == 3 ? 3 : 2;
+    _channelMcmpUseSign[channelIndex] = mcmpUseSign;
     _channelSmazEnabled[channelIndex] = smazEnabled;
     _channelCyr2LatEnabled[channelIndex] = cyr2LatEnabled;
     _channelSendingDelayEnabled[channelIndex] = sendingDelayEnabled;
@@ -2060,7 +2135,11 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isConnected || text.isEmpty) return null;
     try {
       await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
-      final outboundText = prepareContactOutboundText(contact, text);
+      final outboundText = prepareContactOutboundText(
+        contact,
+        text,
+        estimateSignatureOverhead: false,
+      );
       final sentByRadioAt = DateTime.now();
       await sendFrame(
         buildSendTextMsgFrame(
@@ -4052,20 +4131,36 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isConnected || text.isEmpty) return;
     await _loadMessagesForContact(contact.publicKeyHex);
 
-    final outboundText = prepareContactOutboundText(contact, text);
+    final outboundText = await prepareContactOutboundTextAsync(contact, text);
+    if (!isConnected) return;
     final compression = _contactCompressionMetadata(
       contact,
       uncompressedText ?? text,
       outboundText,
     );
     final outboundBytes = utf8.encode(outboundText);
-    if (outboundBytes.length > maxTextPayloadBytes) {
+    // Room servers store posts in a 151-byte buffer (MAX_POST_TEXT_LEN =
+    // 160-9) and silently truncate anything longer, which would destroy the
+    // MCMP container and its signature.
+    final maxOutboundBytes = contact.type == advTypeRoom
+        ? maxRoomServerTextBytes
+        : maxTextPayloadBytes;
+    if (outboundBytes.length > maxOutboundBytes) {
       debugPrint(
         'sendMessage: dropping overlong message '
-        '(${outboundBytes.length} > $maxTextPayloadBytes bytes)',
+        '(${outboundBytes.length} > $maxOutboundBytes bytes)',
       );
       return;
     }
+
+    // Meta exactly as transmitted in the MCMP body (if any): reply anchors
+    // and manual signature re-checks rely on the verbatim values.
+    final mcmpMeta = McmpAppCodec.tryDecodeTextPayloadMessage(outboundText);
+    final mcmpStatus = mcmpMeta == null
+        ? McmpSignatureStatus.none
+        : (mcmpMeta.isSigned
+              ? McmpSignatureStatus.valid
+              : McmpSignatureStatus.unsigned);
 
     // Check if this is a reaction - apply locally with pending status and route through retry service
     final reactionInfo = ReactionHelper.parseReaction(text);
@@ -4098,10 +4193,16 @@ class MeshCoreConnector extends ChangeNotifier {
       await _retryService!.sendMessageWithRetry(
         contact: contact,
         text: text,
+        preparedOutboundText: outboundText,
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
+        mcmpSignatureStatus: mcmpStatus,
+        mcmpTimestamp: mcmpMeta?.timestamp,
+        mcmpSenderName: mcmpMeta?.senderName,
+        mcmpIsSigned: mcmpMeta?.isSigned ?? false,
+        mcmpSignature: mcmpMeta?.signature,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
@@ -4112,11 +4213,16 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = Message.outgoing(
         contact.publicKey,
         text,
-        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(outboundText),
+        wasMcmpCompressed: _isMcmpEncodedText(outboundText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
+        mcmpSignatureStatus: mcmpStatus,
+        mcmpTimestamp: mcmpMeta?.timestamp,
+        mcmpSenderName: mcmpMeta?.senderName,
+        mcmpIsSigned: mcmpMeta?.isSigned ?? false,
+        mcmpSignature: mcmpMeta?.signature,
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
         originalText: originalText,
@@ -4390,7 +4496,11 @@ class MeshCoreConnector extends ChangeNotifier {
     final selfKey = _selfPublicKey;
     if (selfKey == null) return;
     // Use transformed text to match device's ACK hash computation
-    final outboundText = prepareContactOutboundText(contact, text);
+    final outboundText = prepareContactOutboundText(
+      contact,
+      text,
+      estimateSignatureOverhead: false,
+    );
     final ackHash = MessageRetryService.computeExpectedAckHash(
       timestampSeconds,
       attempt,
@@ -4466,6 +4576,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToMessageId,
     String? replyToSenderName,
     String? replyToText,
+    int? replyToTimestamp,
     ChannelBinaryDataOutbound? preparedMcoImageV3Outbound,
   }) async {
     if (!isConnected || text.isEmpty) return;
@@ -4524,6 +4635,34 @@ class MeshCoreConnector extends ChangeNotifier {
         : await _outgoingChannelRegionForMessage(channel.index);
     if (!isConnected) return;
 
+    // MCMP v3: the reply pair travels only when both parts are known, and the
+    // signature covers the exact same flags/reply data as the encoded body.
+    final hasReplyPair = replyToSenderName != null && replyToTimestamp != null;
+    final mcmpReplyAuthorName = hasReplyPair ? replyToSenderName : null;
+    final mcmpReplyTimestamp = hasReplyPair ? replyToTimestamp : null;
+    final mcmpV3Applies =
+        !hasExplicitMcoImageV3 &&
+        isChannelMcmpEnabled(channel.index) &&
+        channelMcmpVersion(channel.index) == 3 &&
+        _isMcmpSignableText(text);
+    final mcmpTimestamp = mcmpV3Applies
+        ? DateTime.now().millisecondsSinceEpoch ~/ 1000
+        : null;
+    Uint8List? mcmpSignature;
+    if (mcmpV3Applies && channelMcmpUseSign(channel.index)) {
+      mcmpSignature = await _signMcmpCanonical(
+        context: McmpSigningContext.channel,
+        binding: McmpAppCodec.channelSigningBinding(channel.psk),
+        senderName: _selfName ?? 'Me',
+        timestamp: mcmpTimestamp!,
+        hasSenderNameInBody: false,
+        text: text,
+        replyAuthorName: mcmpReplyAuthorName,
+        replyTimestamp: mcmpReplyTimestamp,
+      );
+      if (!isConnected) return;
+    }
+
     final binaryOutbound =
         preparedMcoImageV3Outbound ??
         (hasExplicitMcoImageV3
@@ -4535,15 +4674,36 @@ class MeshCoreConnector extends ChangeNotifier {
                 text: text,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
+                mcmpVersion: channelMcmpVersion(channel.index),
+                mcmpUseSign: channelMcmpUseSign(channel.index),
+                timestamp:
+                    mcmpTimestamp ??
+                    DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                signature: mcmpSignature,
+                replyAuthorName: replyToSenderName,
+                replyTimestamp: replyToTimestamp,
               ));
     if (hasExplicitMcoImageV3 && binaryOutbound == null) return;
 
     final isMcoImageV3Binary =
         binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3;
     final messageText = binaryOutbound?.canonicalText ?? text;
-    final outboundText = isMcoImageV3Binary
-        ? messageText
-        : prepareChannelOutboundText(channel.index, text);
+    final String outboundText;
+    if (isMcoImageV3Binary) {
+      outboundText = messageText;
+    } else if (mcmpV3Applies && binaryOutbound == null) {
+      // Text transport carries the signed body in the mcmp3: Base91 wrapper;
+      // the sender name stays in the outer "Name: text" layer (no bit2).
+      outboundText = McmpAppCodec.encodeTextTransportIfSmaller(
+        text: text,
+        timestamp: mcmpTimestamp!,
+        signature: mcmpSignature,
+        replyAuthorName: mcmpReplyAuthorName,
+        replyTimestamp: mcmpReplyTimestamp,
+      );
+    } else {
+      outboundText = prepareChannelOutboundText(channel.index, text);
+    }
     final binaryFrame = binaryOutbound == null
         ? null
         : buildSendChannelDataFrame(
@@ -4578,13 +4738,24 @@ class MeshCoreConnector extends ChangeNotifier {
       _selfName ?? 'Me',
       channel.index,
       wasMcmpCompressed:
-          (!isMcoImageV3Binary &&
-              MeshCompressor.instance.hasPrefix(outboundText)) ||
+          (!isMcoImageV3Binary && _isMcmpEncodedText(outboundText)) ||
           isBinaryMcmpTransport,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
+      mcmpSignatureStatus: mcmpV3Applies
+          ? (mcmpSignature != null
+                ? McmpSignatureStatus.valid
+                : McmpSignatureStatus.unsigned)
+          : (isBinaryMcmpTransport
+                ? binaryOutbound!.mcmpSignatureStatus
+                : McmpAppCodec.signatureStatusFromTextPayload(outboundText)),
+      mcmpTimestamp: mcmpTimestamp,
+      mcmpIsSigned: mcmpSignature != null,
+      mcmpSignature: mcmpSignature,
+      mcmpReplyAuthorName: mcmpV3Applies ? mcmpReplyAuthorName : null,
+      mcmpReplyTimestamp: mcmpV3Applies ? mcmpReplyTimestamp : null,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -4600,12 +4771,24 @@ class MeshCoreConnector extends ChangeNotifier {
         ? baseMessage
         : baseMessage.copyWith(packetHash: packetHash);
     _addChannelMessage(channel.index, message);
+    if (!isBinaryTransport &&
+        utf8.encode(outboundText).length > maxChannelMessageBytes(_selfName)) {
+      // Belt-and-suspenders: the composer counter should prevent this, but a
+      // signed container may exceed the frame/payload budget for long texts.
+      appLogger.warn(
+        'Channel message too long after MCMP encoding '
+        '(${utf8.encode(outboundText).length} bytes), not sending',
+      );
+      _markPendingChannelMessageFailedById(message.messageId);
+      return;
+    }
     if (shouldDeferForSync) {
       _deferChannelMessageSend(
         channel,
         message.messageId,
         messageText,
         binaryOutbound: binaryOutbound,
+        preparedOutboundText: isMcoImageV3Binary ? null : outboundText,
         uncompressedText: uncompressedText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -4613,6 +4796,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyToMessageId: replyToMessageId,
         replyToSenderName: replyToSenderName,
         replyToText: replyToText,
+        replyToTimestamp: replyToTimestamp,
       );
       notifyListeners();
       return;
@@ -4648,6 +4832,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String messageId,
     String text, {
     ChannelBinaryDataOutbound? binaryOutbound,
+    String? preparedOutboundText,
     String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
@@ -4655,6 +4840,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToMessageId,
     String? replyToSenderName,
     String? replyToText,
+    int? replyToTimestamp,
   }) {
     _deferredChannelMessageSends.add(
       _DeferredChannelMessageSend(
@@ -4662,6 +4848,7 @@ class MeshCoreConnector extends ChangeNotifier {
         messageId: messageId,
         text: text,
         binaryOutbound: binaryOutbound,
+        preparedOutboundText: preparedOutboundText,
         uncompressedText: uncompressedText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -4669,6 +4856,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyToMessageId: replyToMessageId,
         replyToSenderName: replyToSenderName,
         replyToText: replyToText,
+        replyToTimestamp: replyToTimestamp,
       ),
     );
   }
@@ -4723,7 +4911,12 @@ class MeshCoreConnector extends ChangeNotifier {
         binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3;
     final outboundText = isMcoImageV3Binary
         ? pending.text
-        : prepareChannelOutboundText(pending.channel.index, pending.text);
+        : pending.preparedOutboundText ??
+              prepareChannelOutboundText(
+                pending.channel.index,
+                pending.text,
+                estimateSignatureOverhead: false,
+              );
     final binaryFrame = binaryOutbound == null
         ? null
         : buildSendChannelDataFrame(
@@ -4845,6 +5038,147 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  static const Duration _signAttemptTimeout = Duration(seconds: 1);
+  static const int _signAttempts = 5;
+  Future<void> _signSessionTail = Future.value();
+
+  /// Signs [data] with the connected node's identity key via
+  /// CMD_SIGN_START/DATA/FINISH. Returns the 64-byte Ed25519 signature, or
+  /// null when signing is unavailable (old firmware, timeouts, disconnect) —
+  /// callers should then proceed unsigned.
+  ///
+  /// Sessions are serialized: the firmware keeps a single global sign buffer
+  /// and a new CMD_SIGN_START silently resets the previous session. Each
+  /// attempt gets [_signAttemptTimeout] counted from the moment its first
+  /// frame is handed to the transport; time spent waiting in the queue does
+  /// not count.
+  Future<Uint8List?> signWithNode(Uint8List data) async {
+    if (data.isEmpty || data.length > maxSignDataTotalBytes) {
+      appLogger.warn(
+        'MCMP sign request of ${data.length} bytes is out of range',
+      );
+      return null;
+    }
+    final previous = _signSessionTail;
+    final sessionDone = Completer<void>();
+    _signSessionTail = sessionDone.future;
+    await previous;
+    try {
+      for (var attempt = 1; attempt <= _signAttempts; attempt++) {
+        if (!isConnected) return null;
+        try {
+          return await _runSignAttempt(data);
+        } catch (e) {
+          appLogger.warn(
+            'MCMP sign attempt $attempt/$_signAttempts failed: $e',
+          );
+        }
+      }
+      return null;
+    } finally {
+      sessionDone.complete();
+    }
+  }
+
+  Future<Uint8List> _runSignAttempt(Uint8List data) async {
+    final buffered = <Uint8List>[];
+    final waiters = <Completer<Uint8List>>[];
+    late final StreamSubscription<Uint8List> subscription;
+    // Note: respCodeOk/respCodeErr are shared with unrelated commands, so a
+    // concurrent command's ACK can theoretically be misattributed to a chunk.
+    // This mirrors _sendFrameAndWaitForCommandAck's behavior; retries recover.
+    subscription = receivedFrames.listen((frame) {
+      if (frame.isEmpty) return;
+      final code = frame[0];
+      if (code != respCodeSignStart &&
+          code != respCodeSignature &&
+          code != respCodeOk &&
+          code != respCodeErr) {
+        return;
+      }
+      if (waiters.isNotEmpty) {
+        waiters.removeAt(0).complete(Uint8List.fromList(frame));
+      } else {
+        buffered.add(Uint8List.fromList(frame));
+      }
+    });
+
+    // The attempt deadline starts when the first frame goes to the transport.
+    final deadline = DateTime.now().add(_signAttemptTimeout);
+
+    Future<Uint8List> nextFrame() async {
+      if (buffered.isNotEmpty) return buffered.removeAt(0);
+      final remaining = deadline.difference(DateTime.now());
+      if (remaining.isNegative || remaining == Duration.zero) {
+        throw TimeoutException('Sign attempt timed out');
+      }
+      final waiter = Completer<Uint8List>();
+      waiters.add(waiter);
+      return waiter.future.timeout(remaining);
+    }
+
+    void expectOk(Uint8List frame, String stage) {
+      if (frame[0] == respCodeErr) {
+        final errCode = frame.length > 1 ? frame[1] : -1;
+        throw Exception('Sign $stage rejected with error code $errCode');
+      }
+      if (frame[0] != respCodeOk) {
+        throw Exception('Unexpected frame 0x'
+            '${frame[0].toRadixString(16)} during sign $stage');
+      }
+    }
+
+    try {
+      await sendFrame(buildSignStartFrame());
+      final startResp = await nextFrame();
+      if (startResp[0] == respCodeErr) {
+        final errCode = startResp.length > 1 ? startResp[1] : -1;
+        throw Exception('Sign start rejected with error code $errCode');
+      }
+      if (startResp[0] != respCodeSignStart) {
+        throw Exception(
+          'Unexpected frame 0x${startResp[0].toRadixString(16)} '
+          'instead of sign-start response',
+        );
+      }
+      if (startResp.length >= 6) {
+        final reader = BufferReader(startResp);
+        reader.skipBytes(2); // code + reserved
+        final maxLen = reader.readUInt32LE();
+        if (data.length > maxLen) {
+          throw Exception(
+            'Sign data of ${data.length} bytes exceeds node limit $maxLen',
+          );
+        }
+      }
+
+      for (var offset = 0; offset < data.length;
+          offset += maxSignDataChunkBytes) {
+        final end = (offset + maxSignDataChunkBytes) > data.length
+            ? data.length
+            : offset + maxSignDataChunkBytes;
+        await sendFrame(
+          buildSignDataFrame(Uint8List.sublistView(data, offset, end)),
+        );
+        expectOk(await nextFrame(), 'data');
+      }
+
+      await sendFrame(buildSignFinishFrame());
+      final finishResp = await nextFrame();
+      if (finishResp[0] == respCodeErr) {
+        final errCode = finishResp.length > 1 ? finishResp[1] : -1;
+        throw Exception('Sign finish rejected with error code $errCode');
+      }
+      if (finishResp[0] != respCodeSignature ||
+          finishResp.length < 1 + signatureSize) {
+        throw Exception('Malformed signature response');
+      }
+      return Uint8List.fromList(finishResp.sublist(1, 1 + signatureSize));
+    } finally {
+      await subscription.cancel();
+    }
+  }
+
   List<Message> getPendingContactMessages(String contactKeyHex) {
     return _pendingContactSends.values
         .where((pending) => pending.contact.publicKeyHex == contactKeyHex)
@@ -4887,6 +5221,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
     final resolved = resolvePathSelection(contact);
+    // Preview only: the real send re-prepares (and re-signs) at commit time.
     final outboundText = prepareContactOutboundText(contact, text);
     final compression = _contactCompressionMetadata(
       contact,
@@ -4896,11 +5231,14 @@ class MeshCoreConnector extends ChangeNotifier {
     final message = Message.outgoing(
       contact.publicKey,
       text,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(outboundText),
+      wasMcmpCompressed: _isMcmpEncodedText(outboundText),
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
+      // Pending previews never show a signature badge; the real send at
+      // commit time re-prepares, signs and stamps the actual meta.
+      mcmpSignatureStatus: McmpSignatureStatus.none,
       pathLength: resolved.useFlood ? -1 : resolved.hopCount,
       pathBytes: Uint8List.fromList(resolved.pathBytes),
       originalText: originalText,
@@ -4939,6 +5277,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToMessageId,
     String? replyToSenderName,
     String? replyToText,
+    int? replyToTimestamp,
   }) {
     if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
     final outboundText = prepareChannelOutboundText(channel.index, text);
@@ -4946,6 +5285,11 @@ class MeshCoreConnector extends ChangeNotifier {
       text: text,
       senderName: _selfName ?? 'Me',
       mcmpEnabled: isChannelMcmpEnabled(channel.index),
+      mcmpVersion: channelMcmpVersion(channel.index),
+      mcmpUseSign: channelMcmpUseSign(channel.index),
+      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      replyAuthorName: replyToSenderName,
+      replyTimestamp: replyToTimestamp,
     );
     final binaryFrame = binaryOutbound == null
         ? null
@@ -4980,12 +5324,14 @@ class MeshCoreConnector extends ChangeNotifier {
       messageText,
       _selfName ?? 'Me',
       channel.index,
-      wasMcmpCompressed:
-          MeshCompressor.instance.hasPrefix(outboundText) || usesBinaryMcmp,
+      wasMcmpCompressed: _isMcmpEncodedText(outboundText) || usesBinaryMcmp,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
+      // Pending previews never show a signature badge; the real send at
+      // commit time re-encodes, signs and stamps the actual meta.
+      mcmpSignatureStatus: McmpSignatureStatus.none,
       wasBinaryTransport: usesBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
       packetRegion: packetRegion,
@@ -5016,6 +5362,7 @@ class MeshCoreConnector extends ChangeNotifier {
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
+      replyToTimestamp: replyToTimestamp,
       delaySeconds: delaySeconds,
       sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
     );
@@ -5071,6 +5418,7 @@ class MeshCoreConnector extends ChangeNotifier {
       replyToMessageId: pending.replyToMessageId,
       replyToSenderName: pending.replyToSenderName,
       replyToText: pending.replyToText,
+      replyToTimestamp: pending.replyToTimestamp,
       preparedMcoImageV3Outbound: pending.mcoImageV3Outbound,
     );
   }
@@ -5923,6 +6271,11 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeChannelInfo:
         unawaited(_handleChannelInfo(frame));
+        break;
+      case respCodeSignStart:
+      case respCodeSignature:
+        // MCMP signing sessions (signWithNode) listen to receivedFrames
+        // directly; keep these from falling through as unknown traffic.
         break;
       case respCodeAutoAddConfig:
         _handleAutoAddConfig(frame);
@@ -6801,10 +7154,16 @@ class MeshCoreConnector extends ChangeNotifier {
           pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
         );
       }
+      if (contact != null && !message.isOutgoing && !message.isCli) {
+        message = await _applyContactMcmpVerification(message, contact);
+      }
       if (contact != null) {
         _updateContactLastMessageAt(contact.publicKeyHex, receivedAt);
       }
       await _loadMessagesForContact(message.senderKeyHex);
+      if (contact != null && !message.isOutgoing && !message.isCli) {
+        message = _resolveContactReplyReference(message, contact);
+      }
       if (!message.isOutgoing) {
         final existing = _conversations[message.senderKeyHex];
         final incomingTimestamp = message.timestamp.millisecondsSinceEpoch;
@@ -6936,9 +7295,10 @@ class MeshCoreConnector extends ChangeNotifier {
         appLogger.warn('Received message with empty text, ignoring');
         return null;
       }
-      final decodedText = isCli
-          ? msgText
-          : (MessageTextCodec.tryDecodeKnownCompression(msgText) ?? msgText);
+      final decodedDetails = isCli
+          ? null
+          : MessageTextCodec.tryDecodeKnownCompressionDetails(msgText);
+      final decodedText = isCli ? msgText : (decodedDetails?.text ?? msgText);
       final compression = isCli
           ? null
           : MessageCompressionMetadata.fromEncodedText(
@@ -6957,6 +7317,7 @@ class MeshCoreConnector extends ChangeNotifier {
         return null;
       }
 
+      final mcmpMessage = decodedDetails?.mcmpMessage;
       return Message(
         senderKey: contact.publicKey,
         text: decodedText,
@@ -6964,11 +7325,19 @@ class MeshCoreConnector extends ChangeNotifier {
         isOutgoing: false,
         isCli: isCli,
         status: MessageStatus.delivered,
-        wasMcmpCompressed: !isCli && MeshCompressor.instance.hasPrefix(msgText),
+        wasMcmpCompressed: !isCli && _isMcmpEncodedText(msgText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
+        mcmpSignatureStatus:
+            mcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
+        mcmpTimestamp: mcmpMessage?.timestamp,
+        mcmpSenderName: mcmpMessage?.senderName,
+        mcmpIsSigned: mcmpMessage?.isSigned ?? false,
+        mcmpSignature: mcmpMessage?.signature,
+        mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
+        mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
         pathLength: pathLength == 0xFF ? -1 : (pathLength & 0x3F),
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: roomAuthorPrefix,
@@ -7007,6 +7376,25 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSettingsStore.loadMcmpEnabled(contactKeyHex).then((enabled) {
       if (_contactMcmpEnabled[contactKeyHex] == enabled) return;
       _contactMcmpEnabled[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
+  void _ensureContactMcmpVersionLoaded(String contactKeyHex) {
+    if (_contactMcmpVersion.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadMcmpVersion(contactKeyHex).then((version) {
+      final normalized = version == 3 ? 3 : 2;
+      if (_contactMcmpVersion[contactKeyHex] == normalized) return;
+      _contactMcmpVersion[contactKeyHex] = normalized;
+      notifyListeners();
+    });
+  }
+
+  void _ensureContactMcmpUseSignLoaded(String contactKeyHex) {
+    if (_contactMcmpUseSign.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadMcmpUseSign(contactKeyHex).then((useSign) {
+      if (_contactMcmpUseSign[contactKeyHex] == useSign) return;
+      _contactMcmpUseSign[contactKeyHex] = useSign;
       notifyListeners();
     });
   }
@@ -7181,17 +7569,154 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// True when [text] is a plain user message eligible for MCMP v3 encoding
+  /// and signing (not an image payload, structured payload, or an already
+  /// encoded container).
+  bool _isMcmpSignableText(String text) {
+    if (text.isEmpty) return false;
+    final trimmedLeft = text.trimLeft();
+    final trimmed = text.trim();
+    return !MCOImageV3Codec.isTextPayload(trimmedLeft) &&
+        !trimmedLeft.startsWith(MCOImageCodec.prefix) &&
+        !trimmed.startsWith('g:') &&
+        !trimmed.startsWith('m:') &&
+        !trimmed.startsWith('V1|') &&
+        !MeshCompressor.instance.hasPrefix(trimmed) &&
+        !McmpAppCodec.isTextPayload(trimmed);
+  }
+
+  /// Requests a node signature over the MCMP v3 canonical bytes.
+  /// Returns null when signing fails; callers should then send unsigned.
+  Future<Uint8List?> _signMcmpCanonical({
+    required McmpSigningContext context,
+    required Uint8List binding,
+    required String senderName,
+    required int timestamp,
+    required bool hasSenderNameInBody,
+    required String text,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) async {
+    try {
+      final canonical = McmpAppCodec.canonicalSigningBytes(
+        context: context,
+        binding: binding,
+        senderName: senderName,
+        timestamp: timestamp,
+        flags: McmpAppCodec.packFlags(
+          hasReply: replyAuthorName != null,
+          isSigned: true,
+          hasSenderName: hasSenderNameInBody,
+        ),
+        text: text,
+        replyAuthorName: replyAuthorName,
+        replyTimestamp: replyTimestamp,
+      );
+      return await signWithNode(canonical);
+    } catch (e) {
+      appLogger.warn('MCMP canonical signing failed: $e');
+      return null;
+    }
+  }
+
+  /// Async variant of [prepareContactOutboundText] used by the real send
+  /// paths. For room servers with MCMP v3 it embeds the sender name in the
+  /// body (the room transport carries only a pubkey prefix) and, when
+  /// enabled, signs the message with the node identity key.
+  Future<String> prepareContactOutboundTextAsync(
+    Contact contact,
+    String text, {
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) async {
+    final hasReplyPair = replyAuthorName != null && replyTimestamp != null;
+    final effectiveReplyName = hasReplyPair ? replyAuthorName : null;
+    final effectiveReplyTimestamp = hasReplyPair ? replyTimestamp : null;
+
+    if (isContactMcmpEnabled(contact.publicKeyHex) &&
+        contactMcmpVersion(contact.publicKeyHex) == 3 &&
+        _isMcmpSignableText(text)) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (contact.type == advTypeRoom) {
+        final senderName = _selfName ?? 'Me';
+        Uint8List? signature;
+        if (contactMcmpUseSign(contact.publicKeyHex)) {
+          signature = await _signMcmpCanonical(
+            context: McmpSigningContext.room,
+            binding: McmpAppCodec.roomSigningBinding(contact.publicKey),
+            senderName: senderName,
+            timestamp: timestamp,
+            hasSenderNameInBody: true,
+            text: text,
+            replyAuthorName: effectiveReplyName,
+            replyTimestamp: effectiveReplyTimestamp,
+          );
+        }
+        return McmpAppCodec.encodeTextTransportIfSmaller(
+          text: text,
+          timestamp: timestamp,
+          senderName: senderName,
+          signature: signature,
+          replyAuthorName: effectiveReplyName,
+          replyTimestamp: effectiveReplyTimestamp,
+        );
+      }
+      // Direct contacts: the ECDH transport authenticates the sender, so the
+      // body is never signed and carries no name; reply anchors still travel.
+      return McmpAppCodec.encodeTextTransportIfSmaller(
+        text: text,
+        timestamp: timestamp,
+        replyAuthorName: effectiveReplyName,
+        replyTimestamp: effectiveReplyTimestamp,
+      );
+    }
+    return prepareContactOutboundText(contact, text);
+  }
+
   /// Prepares contact outbound text by applying SMAZ encoding if enabled.
   /// This should be used to transform text before computing ACK hashes.
-  String prepareContactOutboundText(Contact contact, String text) {
+  ///
+  /// For MCMP v3 this is a synchronous *estimation*: real sends go through
+  /// [prepareContactOutboundTextAsync], which signs via the node. When
+  /// [estimateSignatureOverhead] is true (composer counters, length guards)
+  /// a zero-filled placeholder signature of the exact wire size is included
+  /// so byte counts reflect the signed container. Never send the placeholder
+  /// variant to the wire.
+  String prepareContactOutboundText(
+    Contact contact,
+    String text, {
+    bool estimateSignatureOverhead = true,
+  }) {
     final trimmed = text.trim();
     final isStructuredPayload =
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
-        trimmed.startsWith('V1|');
+        trimmed.startsWith('V1|') ||
+        MeshCompressor.instance.hasPrefix(trimmed) ||
+        McmpAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
       if (isContactMcmpEnabled(contact.publicKeyHex)) {
-        return MeshCompressor.instance.encodeIfSmaller(text);
+        if (contactMcmpVersion(contact.publicKeyHex) != 3) {
+          return MeshCompressor.instance.encodeIfSmaller(text);
+        }
+        final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        if (contact.type == advTypeRoom) {
+          final placeholderSignature =
+              estimateSignatureOverhead &&
+                  contactMcmpUseSign(contact.publicKeyHex)
+              ? Uint8List(signatureSize)
+              : null;
+          return McmpAppCodec.encodeTextTransportIfSmaller(
+            text: text,
+            timestamp: timestamp,
+            senderName: _selfName ?? 'Me',
+            signature: placeholderSignature,
+          );
+        }
+        return McmpAppCodec.encodeDirectContactTextIfSmaller(
+          text: text,
+          timestamp: timestamp,
+        );
       }
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
@@ -7216,12 +7741,34 @@ class MeshCoreConnector extends ChangeNotifier {
     return text;
   }
 
-  String prepareChannelOutboundText(int channelIndex, String text) {
+  /// Synchronous channel outbound estimation; see
+  /// [prepareContactOutboundText] for the [estimateSignatureOverhead]
+  /// placeholder semantics. Real MCMP v3 sends encode (and sign) inline in
+  /// [sendChannelMessage].
+  String prepareChannelOutboundText(
+    int channelIndex,
+    String text, {
+    bool estimateSignatureOverhead = true,
+  }) {
     final trimmed = text.trim();
     final isStructuredPayload =
-        trimmed.startsWith('g:') || trimmed.startsWith('m:');
+        trimmed.startsWith('g:') ||
+        trimmed.startsWith('m:') ||
+        MeshCompressor.instance.hasPrefix(trimmed) ||
+        McmpAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
       if (isChannelMcmpEnabled(channelIndex)) {
+        if (channelMcmpVersion(channelIndex) == 3) {
+          final placeholderSignature =
+              estimateSignatureOverhead && channelMcmpUseSign(channelIndex)
+              ? Uint8List(signatureSize)
+              : null;
+          return McmpAppCodec.encodeTextTransportIfSmaller(
+            text: text,
+            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            signature: placeholderSignature,
+          );
+        }
         return MeshCompressor.instance.encodeIfSmaller(text);
       }
       if (isChannelSmazEnabled(channelIndex)) {
@@ -7260,7 +7807,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     MessageCompressionType? type;
     if (isContactMcmpEnabled(contact.publicKeyHex) &&
-        MeshCompressor.instance.hasPrefix(outboundText)) {
+        _isMcmpEncodedText(outboundText)) {
       type = MessageCompressionType.mcmp;
     } else if (isContactSmazEnabled(contact.publicKeyHex) &&
         Smaz.hasPrefix(outboundText)) {
@@ -7275,6 +7822,257 @@ class MeshCoreConnector extends ChangeNotifier {
       originalText: originalText,
       compressedText: outboundText,
     );
+  }
+
+  bool _isMcmpEncodedText(String text) {
+    return MeshCompressor.instance.hasPrefix(text) ||
+        McmpAppCodec.isTextPayload(text);
+  }
+
+  _McmpReplyReference? _resolveMcmpReplyReference(
+    int channelIndex,
+    DecodedMcmpAppMessage? mcmpMessage,
+  ) {
+    if (mcmpMessage == null || !mcmpMessage.isReply) return null;
+    return _resolveChannelReplyAnchor(
+      channelIndex,
+      mcmpMessage.replyAuthorName,
+      mcmpMessage.replyTimestamp,
+    );
+  }
+
+  /// Resolves a reply anchor ("author name + timestamp" as transmitted in the
+  /// MCMP body) against the channel history. Matches either the outer group
+  /// timestamp or the transmitted MCMP body timestamp.
+  _McmpReplyReference? _resolveChannelReplyAnchor(
+    int channelIndex,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  ) {
+    final replySender = replyAuthorName?.trim();
+    if (replySender == null || replySender.isEmpty || replyTimestamp == null) {
+      return null;
+    }
+
+    final messages = _channelMessages[channelIndex] ?? const <ChannelMessage>[];
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final message = messages[i];
+      if (message.senderName.trim() != replySender) continue;
+      final messageTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
+      if (messageTimestamp != replyTimestamp &&
+          message.mcmpTimestamp != replyTimestamp) {
+        continue;
+      }
+      return _McmpReplyReference(
+        messageId: message.messageId,
+        senderName: message.senderName,
+        text: message.text,
+      );
+    }
+
+    return _McmpReplyReference(senderName: replySender);
+  }
+
+  Uint8List? _channelPskForIndex(int channelIndex) {
+    final channels = _channels.isNotEmpty ? _channels : _cachedChannels;
+    for (final channel in channels) {
+      if (channel.index == channelIndex && !channel.isEmpty) {
+        return channel.psk;
+      }
+    }
+    return null;
+  }
+
+  /// Verifies the MCMP v3 signature of an inbound channel message using the
+  /// verbatim meta stored on the model, and stamps the verification result.
+  Future<ChannelMessage> _verifyInboundChannelMessage(
+    ChannelMessage message,
+  ) async {
+    if (!message.mcmpIsSigned ||
+        message.mcmpSignature == null ||
+        message.mcmpTimestamp == null ||
+        message.channelIndex == null) {
+      return message;
+    }
+    final psk = _channelPskForIndex(message.channelIndex!);
+    if (psk == null) {
+      return message.copyWith(
+        mcmpSignatureStatus: McmpSignatureStatus.unverifiable,
+      );
+    }
+    final decoded = DecodedMcmpAppMessage(
+      text: message.text,
+      timestamp: message.mcmpTimestamp!,
+      senderName: message.mcmpSenderName,
+      signature: message.mcmpSignature,
+      replyAuthorName: message.mcmpReplyAuthorName,
+      replyTimestamp: message.mcmpReplyTimestamp,
+    );
+    final result = await McmpSignatureVerifier.verifyChannelMessage(
+      message: decoded,
+      // Prefer the name embedded in the signed body (foreign clients may set
+      // it even for channels); otherwise the outer envelope/text name.
+      senderName: message.mcmpSenderName ?? message.senderName,
+      channelPsk: psk,
+      contacts: List<Contact>.from(_contacts),
+    );
+    return message.copyWith(
+      mcmpSignatureStatus: result.status,
+      verifiedSenderKeyHex: result.verifiedSenderKeyHex,
+      mcmpNameCollision: result.nameCollision,
+    );
+  }
+
+  /// Stamps the MCMP verification result on an inbound contact message.
+  ///
+  /// Direct messages are authenticated by the ECDH transport itself; room
+  /// posts are relayed by the room server and require the embedded Ed25519
+  /// signature (author located by the 4-byte pubkey prefix, signed name must
+  /// match the local contact name).
+  Future<Message> _applyContactMcmpVerification(
+    Message message,
+    Contact contact,
+  ) async {
+    if (message.mcmpTimestamp == null) return message;
+    final isRoomPost =
+        contact.type == advTypeRoom &&
+        message.fourByteRoomContactKey.isNotEmpty;
+    if (!isRoomPost) {
+      return message.copyWith(
+        mcmpSignatureStatus: McmpSignatureStatus.transportAuthenticated,
+      );
+    }
+    if (!message.mcmpIsSigned || message.mcmpSignature == null) {
+      return message.copyWith(
+        mcmpSignatureStatus: McmpSignatureStatus.unsigned,
+      );
+    }
+    final decoded = DecodedMcmpAppMessage(
+      text: message.text,
+      timestamp: message.mcmpTimestamp!,
+      senderName: message.mcmpSenderName,
+      signature: message.mcmpSignature,
+      replyAuthorName: message.mcmpReplyAuthorName,
+      replyTimestamp: message.mcmpReplyTimestamp,
+    );
+    final result = await McmpSignatureVerifier.verifyRoomMessage(
+      message: decoded,
+      authorPrefix: message.fourByteRoomContactKey,
+      roomPublicKey: contact.publicKey,
+      contacts: List<Contact>.from(_contacts),
+    );
+    return message.copyWith(
+      mcmpSignatureStatus: result.status,
+      verifiedSenderKeyHex: result.verifiedSenderKeyHex,
+      mcmpNameCollision: result.nameCollision,
+    );
+  }
+
+  /// Manually re-checks the signature of a stored channel message against the
+  /// current contact list (e.g. after adding the author as a contact).
+  /// Updates the stored verification result, including the name-collision
+  /// flag, and returns the new status (null when the message is not a signed
+  /// MCMP v3 payload).
+  Future<McmpSignatureStatus?> recheckChannelMessageSignature(
+    int channelIndex,
+    String messageId,
+  ) async {
+    final messages = _channelMessages[channelIndex];
+    if (messages == null) return null;
+    final index = messages.indexWhere((m) => m.messageId == messageId);
+    if (index < 0) return null;
+    final message = messages[index];
+    if (message.isOutgoing ||
+        !message.mcmpIsSigned ||
+        message.mcmpSignature == null) {
+      return null;
+    }
+
+    final reverified = await _verifyInboundChannelMessage(message);
+    final currentIndex = messages.indexWhere((m) => m.messageId == messageId);
+    if (currentIndex < 0) return reverified.mcmpSignatureStatus;
+    messages[currentIndex] = reverified;
+    unawaited(_channelMessageStore.saveChannelMessages(channelIndex, messages));
+    notifyListeners();
+    return reverified.mcmpSignatureStatus;
+  }
+
+  /// Manually re-checks the signature of a stored room-server message.
+  /// Returns the new status (null when the message is not a signed MCMP v3
+  /// payload or the contact is unknown).
+  Future<McmpSignatureStatus?> recheckContactMessageSignature(
+    String contactKeyHex,
+    String messageId,
+  ) async {
+    final messages = _conversations[contactKeyHex];
+    if (messages == null) return null;
+    final index = messages.indexWhere((m) => m.messageId == messageId);
+    if (index < 0) return null;
+    final message = messages[index];
+    if (message.isOutgoing ||
+        !message.mcmpIsSigned ||
+        message.mcmpSignature == null) {
+      return null;
+    }
+    final contact = _contacts.cast<Contact?>().firstWhere(
+      (c) => c?.publicKeyHex == contactKeyHex,
+      orElse: () => null,
+    );
+    if (contact == null) return null;
+
+    final reverified = await _applyContactMcmpVerification(message, contact);
+    final currentIndex = messages.indexWhere((m) => m.messageId == messageId);
+    if (currentIndex < 0) return reverified.mcmpSignatureStatus;
+    messages[currentIndex] = reverified;
+    await _messageStore.saveMessages(contactKeyHex, messages);
+    notifyListeners();
+    return reverified.mcmpSignatureStatus;
+  }
+
+  /// Resolves the MCMP reply anchor of an inbound DM/room message against the
+  /// stored conversation, matching the transmitted "author name + timestamp"
+  /// pair.
+  Message _resolveContactReplyReference(Message message, Contact contact) {
+    final replySender = message.mcmpReplyAuthorName?.trim();
+    final replyTimestamp = message.mcmpReplyTimestamp;
+    if (replySender == null || replySender.isEmpty || replyTimestamp == null) {
+      return message;
+    }
+
+    String? authorNameFor(Message candidate) {
+      if (candidate.mcmpSenderName != null) return candidate.mcmpSenderName;
+      if (candidate.isOutgoing) return _selfName;
+      if (candidate.fourByteRoomContactKey.isNotEmpty) {
+        final author = _contacts.cast<Contact?>().firstWhere(
+          (c) =>
+              c != null &&
+              _matchesPrefix(c.publicKey, candidate.fourByteRoomContactKey),
+          orElse: () => null,
+        );
+        return author?.name;
+      }
+      return contact.name;
+    }
+
+    final messages =
+        _conversations[contact.publicKeyHex] ?? const <Message>[];
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final candidate = messages[i];
+      final candidateName = authorNameFor(candidate)?.trim();
+      if (candidateName == null || candidateName != replySender) continue;
+      final outerTimestamp =
+          candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
+      if (candidate.mcmpTimestamp != replyTimestamp &&
+          outerTimestamp != replyTimestamp) {
+        continue;
+      }
+      return message.copyWith(
+        replyToMessageId: candidate.messageId,
+        replyToSenderName: candidateName,
+        replyToText: candidate.text,
+      );
+    }
+    return message.copyWith(replyToSenderName: replySender);
   }
 
   MessageCompressionMetadata? _channelCompressionMetadata(
@@ -7300,8 +8098,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     MessageCompressionType? type;
-    if (isChannelMcmpEnabled(channelIndex) &&
-        MeshCompressor.instance.hasPrefix(outboundText)) {
+    if (isChannelMcmpEnabled(channelIndex) && _isMcmpEncodedText(outboundText)) {
       type = MessageCompressionType.mcmp;
     } else if (isChannelSmazEnabled(channelIndex) &&
         Smaz.hasPrefix(outboundText)) {
@@ -7452,7 +8249,20 @@ class MeshCoreConnector extends ChangeNotifier {
         parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
         '${parsed.senderName}: ${parsed.text}',
       );
-      final message = parsed.copyWith(packetHash: contentHash);
+      var message = parsed.copyWith(packetHash: contentHash);
+      final textReplyReference = _resolveChannelReplyAnchor(
+        parsed.channelIndex!,
+        message.mcmpReplyAuthorName,
+        message.mcmpReplyTimestamp,
+      );
+      if (textReplyReference != null) {
+        message = message.copyWith(
+          replyToMessageId: textReplyReference.messageId,
+          replyToSenderName: textReplyReference.senderName,
+          replyToText: textReplyReference.text,
+        );
+      }
+      message = await _verifyInboundChannelMessage(message);
       _updateContactLastMessageAtByName(
         message.senderName,
         message.receivedAt,
@@ -7529,7 +8339,12 @@ class MeshCoreConnector extends ChangeNotifier {
     final messageText = decoded != null
         ? decoded.text
         : _appDataMessageText(appData!);
-    final message = ChannelMessage(
+    final replyReference = _resolveMcmpReplyReference(
+      dataFrame.channelIndex,
+      appData?.mcmpMessage,
+    );
+    final mcmpMessage = appData?.mcmpMessage;
+    var message = ChannelMessage(
       senderName: senderName,
       text: messageText,
       wasMcmpCompressed: decoded != null
@@ -7539,6 +8354,15 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
+      mcmpSignatureStatus: decoded != null
+          ? decoded.mcmpSignatureStatus
+          : appData!.mcmpSignatureStatus,
+      mcmpTimestamp: mcmpMessage?.timestamp,
+      mcmpSenderName: mcmpMessage?.senderName,
+      mcmpIsSigned: mcmpMessage?.isSigned ?? false,
+      mcmpSignature: mcmpMessage?.signature,
+      mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
+      mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
       timestamp: decoded?.timestamp ?? receivedAt,
@@ -7548,7 +8372,11 @@ class MeshCoreConnector extends ChangeNotifier {
       pathLength: dataFrame.pathLength,
       channelIndex: dataFrame.channelIndex,
       packetHash: contentHash,
+      replyToMessageId: replyReference?.messageId,
+      replyToSenderName: replyReference?.senderName,
+      replyToText: replyReference?.text,
     );
+    message = await _verifyInboundChannelMessage(message);
 
     _updateContactLastMessageAtByName(
       message.senderName,
@@ -7605,14 +8433,15 @@ class MeshCoreConnector extends ChangeNotifier {
           final decryptedBytes = _decryptPayload(channel.psk, encrypted);
           if (decryptedBytes == null) return;
           if (packet.payloadType == _payloadTypeGroupData) {
-            final message = _parseLogRxChannelData(
+            final parsedMessage = _parseLogRxChannelData(
               packet,
               channel.index,
               decryptedBytes,
               packetRegion: _resolvePacketRegion(packet),
               packetRegionInfoAvailable: true,
             );
-            if (message == null) return;
+            if (parsedMessage == null) return;
+            final message = await _verifyInboundChannelMessage(parsedMessage);
 
             _updateContactLastMessageAtByName(
               message.senderName,
@@ -7653,13 +8482,18 @@ class MeshCoreConnector extends ChangeNotifier {
 
           final text = decrypted.readCString();
           final parsed = _splitSenderText(text);
-          final decodedText =
-              MessageTextCodec.tryDecodeKnownCompression(parsed.text) ??
-              parsed.text;
+          final decoded = MessageTextCodec.tryDecodeKnownCompressionDetails(
+            parsed.text,
+          );
+          final decodedText = decoded?.text ?? parsed.text;
           final compression = _incomingChannelTextCompression(
             parsed.text,
             decodedText,
             parsed.senderName,
+          );
+          final replyReference = _resolveMcmpReplyReference(
+            channel.index,
+            decoded?.mcmpMessage,
           );
           final label = channel.name.isEmpty
               ? 'Channel ${channel.index}'
@@ -7677,15 +8511,24 @@ class MeshCoreConnector extends ChangeNotifier {
             packet.payload,
           );
 
-          final message = ChannelMessage(
+          final logRxMcmpMessage = decoded?.mcmpMessage;
+          final unverifiedMessage = ChannelMessage(
             senderKey: null,
             senderName: parsed.senderName,
             text: decodedText,
-            wasMcmpCompressed: MeshCompressor.instance.hasPrefix(parsed.text),
+            wasMcmpCompressed: _isMcmpEncodedText(parsed.text),
             compressionType: compression?.type,
             compressionSavingsPercent: compression?.savingsPercent,
             compressionOriginalBytes: compression?.originalBytes,
             compressionPayloadBytes: compression?.payloadBytes,
+            mcmpSignatureStatus:
+                logRxMcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
+            mcmpTimestamp: logRxMcmpMessage?.timestamp,
+            mcmpSenderName: logRxMcmpMessage?.senderName,
+            mcmpIsSigned: logRxMcmpMessage?.isSigned ?? false,
+            mcmpSignature: logRxMcmpMessage?.signature,
+            mcmpReplyAuthorName: logRxMcmpMessage?.replyAuthorName,
+            mcmpReplyTimestamp: logRxMcmpMessage?.replyTimestamp,
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
             isOutgoing: false,
             status: ChannelMessageStatus.sent,
@@ -7696,6 +8539,12 @@ class MeshCoreConnector extends ChangeNotifier {
             packetRegion: _resolvePacketRegion(packet),
             packetRegionInfoAvailable: true,
             packetHash: pktHash,
+            replyToMessageId: replyReference?.messageId,
+            replyToSenderName: replyReference?.senderName,
+            replyToText: replyReference?.text,
+          );
+          final message = await _verifyInboundChannelMessage(
+            unverifiedMessage,
           );
 
           _updateContactLastMessageAtByName(
@@ -7769,6 +8618,11 @@ class MeshCoreConnector extends ChangeNotifier {
         ? decoded.text
         : _appDataMessageText(appData!);
     final timestamp = decoded?.timestamp ?? DateTime.now();
+    final replyReference = _resolveMcmpReplyReference(
+      channelIndex,
+      appData?.mcmpMessage,
+    );
+    final mcmpMessage = appData?.mcmpMessage;
     return ChannelMessage(
       senderKey: null,
       senderName: senderName,
@@ -7780,6 +8634,15 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
+      mcmpSignatureStatus: decoded != null
+          ? decoded.mcmpSignatureStatus
+          : appData!.mcmpSignatureStatus,
+      mcmpTimestamp: mcmpMessage?.timestamp,
+      mcmpSenderName: mcmpMessage?.senderName,
+      mcmpIsSigned: mcmpMessage?.isSigned ?? false,
+      mcmpSignature: mcmpMessage?.signature,
+      mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
+      mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
       wasBinaryTransport: true,
       binaryPacketBytes: dataPayload.length,
       timestamp: timestamp,
@@ -7792,6 +8655,9 @@ class MeshCoreConnector extends ChangeNotifier {
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
       packetHash: pktHash,
+      replyToMessageId: replyReference?.messageId,
+      replyToSenderName: replyReference?.senderName,
+      replyToText: replyReference?.text,
     );
   }
 
@@ -8070,6 +8936,8 @@ class MeshCoreConnector extends ChangeNotifier {
       _registerChannelStorageBinding(channel);
       _channelMessages.remove(channel.index);
       _channelMcmpEnabled.remove(channel.index);
+      _channelMcmpVersion.remove(channel.index);
+      _channelMcmpUseSign.remove(channel.index);
       _channelSmazEnabled.remove(channel.index);
       _channelCyr2LatEnabled.remove(channel.index);
       _channelCyr2LatProfileId.remove(channel.index);
@@ -9729,6 +10597,14 @@ class _ParsedText {
   _ParsedText({required this.senderName, required this.text});
 }
 
+class _McmpReplyReference {
+  final String? messageId;
+  final String senderName;
+  final String? text;
+
+  _McmpReplyReference({this.messageId, required this.senderName, this.text});
+}
+
 class _RepeaterAckContext {
   final String contactKeyHex;
   final PathSelection selection;
@@ -9784,6 +10660,7 @@ class _PendingChannelSend {
   final String? replyToMessageId;
   final String? replyToSenderName;
   final String? replyToText;
+  final int? replyToTimestamp;
   final int delaySeconds;
   final DateTime sendAt;
   Timer? timer;
@@ -9801,6 +10678,7 @@ class _PendingChannelSend {
     required this.replyToMessageId,
     required this.replyToSenderName,
     required this.replyToText,
+    required this.replyToTimestamp,
     required this.delaySeconds,
     required this.sendAt,
   });
@@ -9811,6 +10689,10 @@ class _DeferredChannelMessageSend {
   final String messageId;
   final String text;
   final ChannelBinaryDataOutbound? binaryOutbound;
+
+  /// Exact text-transport payload prepared (and possibly signed) at compose
+  /// time. Reused verbatim on flush so deferral never re-encodes or re-signs.
+  final String? preparedOutboundText;
   final String? uncompressedText;
   final String? originalText;
   final String? translatedLanguageCode;
@@ -9818,12 +10700,14 @@ class _DeferredChannelMessageSend {
   final String? replyToMessageId;
   final String? replyToSenderName;
   final String? replyToText;
+  final int? replyToTimestamp;
 
   _DeferredChannelMessageSend({
     required this.channel,
     required this.messageId,
     required this.text,
     required this.binaryOutbound,
+    this.preparedOutboundText,
     required this.uncompressedText,
     required this.originalText,
     required this.translatedLanguageCode,
@@ -9831,6 +10715,7 @@ class _DeferredChannelMessageSend {
     required this.replyToMessageId,
     required this.replyToSenderName,
     required this.replyToText,
+    required this.replyToTimestamp,
   });
 }
 

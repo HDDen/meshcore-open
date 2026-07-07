@@ -6,6 +6,8 @@ import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
 import 'package:meshcore_open/helpers/channel_binary_data_helper.dart';
 import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/helpers/mesh_compressor.dart';
+import 'package:meshcore_open/helpers/message_text_codec.dart';
+import 'package:meshcore_open/models/message_compression.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -148,6 +150,42 @@ void main() {
 
     expect(decoded.text, text);
     expect(decoded.timestamp, 123456);
+  });
+
+  test('encodes MCMP v3 direct contact text without sender envelope', () {
+    const text =
+        'Long enough private message for direct MCMP v3 text transport.';
+    final encoded = McmpAppCodec.encodeDirectContactTextIfSmaller(
+      text: text,
+      timestamp: 123456,
+    );
+
+    expect(encoded, startsWith(McmpAppCodec.textPrefix));
+    expect(MessageTextCodec.tryDecodeKnownCompression(encoded), text);
+
+    final body = McmpAppCodec.bodyFromText(encoded);
+    final decoded = McmpAppCodec.decodeBody(body);
+    expect(decoded.text, text);
+    expect(decoded.timestamp, 123456);
+    expect(decoded.isReply, isFalse);
+    expect(decoded.isSigned, isFalse);
+  });
+
+  test('recognizes MCMP v3 text payload as MCMP compression', () {
+    const text =
+        'Long enough text for MCMP v3 compression metadata calculation.';
+    final encoded = McmpAppCodec.encodeDirectContactTextIfSmaller(
+      text: text,
+      timestamp: 123456,
+    );
+
+    final metadata = MessageCompressionMetadata.fromEncodedText(
+      encodedText: encoded,
+      decodedText: text,
+    );
+
+    expect(metadata, isNotNull);
+    expect(metadata!.type, MessageCompressionType.mcmp);
   });
 
   test('encodes with mcmp prefix when beneficial and decodes back', () {

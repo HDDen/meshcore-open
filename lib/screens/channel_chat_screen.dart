@@ -52,6 +52,7 @@ import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/popup_menu_row.dart';
@@ -874,6 +875,36 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  /// Signature status badge shown next to the sender name of incoming
+  /// messages: status icon, verified-key fingerprint and the name-collision
+  /// warning. Outgoing messages show their signed/unsigned badge in the meta
+  /// row instead.
+  Widget _buildMcmpSignatureIcon(ChannelMessage message) {
+    if (message.isOutgoing ||
+        !McmpSignatureBadge.isVisible(
+          status: message.mcmpSignatureStatus,
+          isOutgoing: false,
+          wasMcmpV3: message.mcmpTimestamp != null,
+        )) {
+      return const SizedBox.shrink();
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: McmpSignatureBadge(
+        status: message.mcmpSignatureStatus,
+        isOutgoing: false,
+        isSigned: message.mcmpIsSigned,
+        wasMcmpV3: message.mcmpTimestamp != null,
+        verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+        nameCollision: message.mcmpNameCollision,
+        textScale: 1.0,
+        color: scheme.onSurface.withValues(alpha: 0.65),
+        errorColor: scheme.error,
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChannelMessage message, double textScale) {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
@@ -1069,13 +1100,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     bottom: 4,
                                   )
                                 : EdgeInsets.zero,
-                            child: Text(
-                              message.senderName,
-                              style: MeshTheme.mono(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: _colorForName(message.senderName),
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    message.senderName,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: MeshTheme.mono(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _colorForName(message.senderName),
+                                    ),
+                                  ),
+                                ),
+                                _buildMcmpSignatureIcon(message),
+                              ],
                             ),
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
@@ -1303,6 +1343,35 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ],
                           ),
+                        // Outgoing signing badge: always on its own line
+                        // above the message time, independent of the
+                        // message-tracing setting. Incoming messages show
+                        // their badge next to the sender name instead.
+                        if (isOutgoing &&
+                            McmpSignatureBadge.isVisible(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: true,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                            )) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: McmpSignatureBadge(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: true,
+                              isSigned: message.mcmpIsSigned,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                              verifiedSenderKeyHex:
+                                  message.verifiedSenderKeyHex,
+                              nameCollision: message.mcmpNameCollision,
+                              textScale: textScale,
+                              color: metaColor,
+                              errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
                         if (enableTracing) ...[
                           if (showHops && displayPath.isNotEmpty) ...[
                             const SizedBox(height: 4),
@@ -2578,6 +2647,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyToMessageId: replyTarget?.messageId,
         replyToSenderName: replyTarget?.senderName,
         replyToText: replyTarget?.text,
+        // Prefer the timestamp transmitted in the quoted MCMP body: for
+        // binary transports the outer timestamp is receiver-local and would
+        // not resolve on other devices.
+        replyToTimestamp: replyTarget == null
+            ? null
+            : replyTarget.mcmpTimestamp ??
+                  replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     } else {
       connector.sendChannelMessage(
@@ -2591,6 +2667,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyToMessageId: replyTarget?.messageId,
         replyToSenderName: replyTarget?.senderName,
         replyToText: replyTarget?.text,
+        // Prefer the timestamp transmitted in the quoted MCMP body: for
+        // binary transports the outer timestamp is receiver-local and would
+        // not resolve on other devices.
+        replyToTimestamp: replyTarget == null
+            ? null
+            : replyTarget.mcmpTimestamp ??
+                  replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     }
   }
@@ -2634,6 +2717,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     if (imagePayloadBytes != null) return imagePayloadBytes;
     if (!connector.isChannelMcmpEnabled(widget.channel.index)) return null;
+    if (connector.channelMcmpVersion(widget.channel.index) == 3) {
+      return ChannelBinaryDataHelper.mcmpV3AppPayloadLength(
+        text,
+        senderName,
+        includeSignature: connector.channelMcmpUseSign(widget.channel.index),
+      );
+    }
     return ChannelBinaryDataHelper.mcmpPayloadLength(text, senderName);
   }
 
@@ -2822,6 +2912,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onTap: () {
                       Navigator.pop(sheetContext);
                       _markAsUnread(message);
+                    },
+                  ),
+                if (!message.isOutgoing &&
+                    message.mcmpIsSigned &&
+                    message.mcmpSignature != null)
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(context.l10n.chat_mcmpManualRecheckSign),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_recheckMessageSignature(message));
                     },
                   ),
                 ListTile(
@@ -3071,6 +3172,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
+  Future<void> _recheckMessageSignature(ChannelMessage message) async {
+    final connector = context.read<MeshCoreConnector>();
+    final status = await connector.recheckChannelMessageSignature(
+      widget.channel.index,
+      message.messageId,
+    );
+    if (!mounted || status == null) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(McmpSignatureBadge.statusLabel(context, status)),
+    );
+  }
+
   void _resendMessage(ChannelMessage message) {
     final remainingSeconds = _remainingResendWaitSeconds(message);
     if (remainingSeconds != null) {
@@ -3095,6 +3209,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       replyToMessageId: message.replyToMessageId,
       replyToSenderName: message.replyToSenderName,
       replyToText: message.replyToText,
+      // Keep the reply anchor on manual resend (metadata is rebuilt and the
+      // message re-signed, but the quoted target stays the same).
+      replyToTimestamp: message.mcmpReplyTimestamp,
     );
     showDismissibleSnackBar(
       context,

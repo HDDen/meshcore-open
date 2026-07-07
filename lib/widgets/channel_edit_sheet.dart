@@ -25,6 +25,8 @@ void showChannelEditSheet(
   final nameController = TextEditingController(text: channel.name);
   final pskController = TextEditingController(text: channel.pskHex);
   bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
+  int selectedMcmpVersion = connector.channelMcmpVersion(channel.index);
+  bool mcmpUseSign = connector.channelMcmpUseSign(channel.index);
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
@@ -106,6 +108,56 @@ void showChannelEditSheet(
                       }
                     }),
                   ),
+                  if (mcmpEnabled) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedMcmpVersion,
+                        decoration: InputDecoration(
+                          labelText: sheetContext.l10n.settings_mcmp_version,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text('v2 (legacy)'),
+                          ),
+                          DropdownMenuItem(value: 3, child: Text('v3')),
+                        ],
+                        onChanged: (value) => setSheetState(() {
+                          selectedMcmpVersion = value == 3 ? 3 : 2;
+                        }),
+                      ),
+                    ),
+                    if (selectedMcmpVersion == 3)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                        child: DropdownButtonFormField<bool>(
+                          initialValue: mcmpUseSign,
+                          decoration: InputDecoration(
+                            labelText: sheetContext.l10n.settings_mcmp_useSign,
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: true,
+                              child: Text(
+                                sheetContext.l10n.settings_mcmp_signed,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text(
+                                sheetContext.l10n.settings_mcmp_noSign,
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) => setSheetState(() {
+                            mcmpUseSign = value ?? true;
+                          }),
+                        ),
+                      ),
+                  ],
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(sheetContext.l10n.channels_smazCompression),
@@ -246,6 +298,14 @@ void showChannelEditSheet(
                           await connector.setChannelMcmpEnabled(
                             channel.index,
                             mcmpEnabled,
+                          );
+                          await connector.setChannelMcmpVersion(
+                            channel.index,
+                            selectedMcmpVersion,
+                          );
+                          await connector.setChannelMcmpUseSign(
+                            channel.index,
+                            mcmpUseSign,
                           );
                           await connector.setChannelSmazEnabled(
                             channel.index,

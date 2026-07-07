@@ -14,6 +14,7 @@ class ChannelBinaryDataOutbound {
   final int dataType;
   final Uint8List payload;
   final ChannelBinaryDataKind kind;
+  final McmpSignatureStatus mcmpSignatureStatus;
 
   /// Canonical text representation of the exact binary payload, when the
   /// binary format also has a text fallback (currently MCOimg v3).
@@ -27,6 +28,7 @@ class ChannelBinaryDataOutbound {
     required this.dataType,
     required this.payload,
     required this.kind,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
     this.canonicalText,
   });
 }
@@ -36,6 +38,7 @@ class ChannelBinaryDataInbound {
   final String text;
   final DateTime timestamp;
   final bool wasMcmpCompressed;
+  final McmpSignatureStatus mcmpSignatureStatus;
   final int payloadLength;
   final ChannelBinaryDataKind kind;
 
@@ -44,6 +47,7 @@ class ChannelBinaryDataInbound {
     required this.text,
     required this.timestamp,
     required this.wasMcmpCompressed,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
     required this.payloadLength,
     required this.kind,
   });
@@ -60,6 +64,7 @@ class ChannelAppDataInbound {
   final DecodedMcmpAppMessage? mcmpMessage;
   final String? text;
   final bool wasMcmpCompressed;
+  final McmpSignatureStatus mcmpSignatureStatus;
 
   const ChannelAppDataInbound({
     required this.senderName,
@@ -72,6 +77,7 @@ class ChannelAppDataInbound {
     this.mcmpMessage,
     this.text,
     this.wasMcmpCompressed = false,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
   });
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
@@ -107,6 +113,12 @@ class ChannelBinaryDataHelper {
     required String text,
     required String senderName,
     required bool mcmpEnabled,
+    int mcmpVersion = 2,
+    bool mcmpUseSign = true,
+    int? timestamp,
+    Uint8List? signature,
+    String? replyAuthorName,
+    int? replyTimestamp,
   }) {
     if (!canSend) return null;
 
@@ -142,6 +154,18 @@ class ChannelBinaryDataHelper {
       if (isStructuredPayload) return null;
 
       if (mcmpEnabled) {
+        if (mcmpVersion == 3) {
+          final hasReply = replyAuthorName != null && replyTimestamp != null;
+          return tryEncodeMcmpV3AppOutbound(
+            text: text,
+            senderName: senderName,
+            timestamp:
+                timestamp ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            signature: mcmpUseSign ? signature : null,
+            replyAuthorName: hasReply ? replyAuthorName : null,
+            replyTimestamp: hasReply ? replyTimestamp : null,
+          );
+        }
         final compressed = MeshCompressor.instance.compressToBytes(text);
         return _encodeEnvelope(
           dataType: mcmpDataType,
@@ -189,12 +213,17 @@ class ChannelBinaryDataHelper {
         replyAuthorName: replyAuthorName,
         replyTimestamp: replyTimestamp,
       );
+      // Outgoing messages: we produced the signature ourselves, so a present
+      // signature is by definition valid.
       return _encodeAppEnvelope(
         subtypeId: mcmpSubtype,
         version: mcmpV3WireVersion,
         body: encoded.body,
         senderName: senderName,
         kind: ChannelBinaryDataKind.mcmp,
+        mcmpSignatureStatus: encoded.isSigned
+            ? McmpSignatureStatus.valid
+            : McmpSignatureStatus.unsigned,
       );
     } catch (_) {
       return null;
@@ -231,6 +260,42 @@ class ChannelBinaryDataHelper {
       bodyLength: image.body.length,
       senderName: senderName,
     );
+  }
+
+  /// Estimated binary payload length for an MCMP v3 app envelope. When
+  /// [includeSignature] is true a placeholder of the exact wire size is
+  /// counted, so composer counters reflect the signed container.
+  static int? mcmpV3AppPayloadLength(
+    String text,
+    String senderName, {
+    bool includeSignature = false,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) {
+    if (!canSend) return null;
+    try {
+      final trimmed = text.trim();
+      if (trimmed.startsWith('g:') ||
+          trimmed.startsWith('m:') ||
+          trimmed.startsWith('V1|') ||
+          trimmed.startsWith(MCOImageCodec.prefix)) {
+        return null;
+      }
+      final hasReply = replyAuthorName != null && replyTimestamp != null;
+      final encoded = McmpAppCodec.encodeBody(
+        text: text,
+        timestamp: 0,
+        signature: includeSignature ? Uint8List(signatureSize) : null,
+        replyAuthorName: hasReply ? replyAuthorName : null,
+        replyTimestamp: hasReply ? replyTimestamp : null,
+      );
+      return ChannelAppDataHelper.envelopeLength(
+        bodyLength: encoded.body.length,
+        senderName: senderName,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static int? mcmpPayloadLength(String text, String senderName) {
@@ -324,6 +389,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: false,
+          mcmpSignatureStatus: McmpSignatureStatus.none,
           payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcoImage,
         );
@@ -336,6 +402,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: true,
+          mcmpSignatureStatus: McmpSignatureStatus.none,
           payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcmp,
         );
@@ -395,6 +462,7 @@ class ChannelBinaryDataHelper {
           mcmpMessage: decoded,
           text: decoded.text,
           wasMcmpCompressed: true,
+          mcmpSignatureStatus: decoded.signatureStatus,
         );
       case null:
         return null;
@@ -438,6 +506,7 @@ class ChannelBinaryDataHelper {
     required Uint8List body,
     required String senderName,
     required ChannelBinaryDataKind kind,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
     String? canonicalText,
   }) {
     final Uint8List payload;
@@ -456,6 +525,7 @@ class ChannelBinaryDataHelper {
       dataType: appDataType,
       payload: payload,
       kind: kind,
+      mcmpSignatureStatus: mcmpSignatureStatus,
       canonicalText: canonicalText,
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/smaz.dart';
 
@@ -39,7 +40,9 @@ class MessageCompressionMetadata {
     required String decodedText,
     int sharedPayloadBytes = 0,
   }) {
-    final type = MeshCompressor.instance.hasPrefix(encodedText)
+    final type =
+        MeshCompressor.instance.hasPrefix(encodedText) ||
+            McmpAppCodec.isTextPayload(encodedText)
         ? MessageCompressionType.mcmp
         : Smaz.hasPrefix(encodedText)
         ? MessageCompressionType.smaz

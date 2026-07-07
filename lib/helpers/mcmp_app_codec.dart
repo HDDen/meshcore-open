@@ -1,14 +1,39 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
+
 import '../connector/meshcore_protocol.dart';
 import 'mesh_compressor.dart';
+
+/// Serialized by name in message stores; only append new values and never
+/// rename existing ones (unknown names fall back to [none] on older builds).
+enum McmpSignatureStatus {
+  none,
+  unsigned,
+  valid,
+  invalid,
+  unverifiable,
+  transportAuthenticated,
+}
+
+/// Signing context. DM payloads are never signed: the ECDH transport already
+/// authenticates the sender.
+enum McmpSigningContext {
+  channel(0x01),
+  room(0x02);
+
+  final int id;
+
+  const McmpSigningContext(this.id);
+}
 
 class EncodedMcmpAppMessage {
   final Uint8List body;
   final int timestamp;
   final bool isSigned;
   final bool isReply;
+  final String? senderName;
   final String? replyAuthorName;
   final int? replyTimestamp;
 
@@ -17,6 +42,7 @@ class EncodedMcmpAppMessage {
     required this.timestamp,
     required this.isSigned,
     required this.isReply,
+    this.senderName,
     this.replyAuthorName,
     this.replyTimestamp,
   });
@@ -25,14 +51,21 @@ class EncodedMcmpAppMessage {
 class DecodedMcmpAppMessage {
   final String text;
   final int timestamp;
+
+  /// Sender name embedded in the body. Present only for transports that do
+  /// not carry the author name outside of the MCMP payload (room servers).
+  final String? senderName;
   final Uint8List? signature;
+  final McmpSignatureStatus signatureStatus;
   final String? replyAuthorName;
   final int? replyTimestamp;
 
   const DecodedMcmpAppMessage({
     required this.text,
     required this.timestamp,
+    this.senderName,
     this.signature,
+    this.signatureStatus = McmpSignatureStatus.unsigned,
     this.replyAuthorName,
     this.replyTimestamp,
   });
@@ -50,14 +83,52 @@ class McmpAppCodec {
   static const int subtypeVersion = (subtypeId << 4) | wireVersion;
   static const String textPrefix = 'mcmp3:';
   static const String signingDomain = 'MCOAPP:MCMP:SIGNED:v3';
+  static const String bindingDomain = 'MCOAPP:MCMP:BIND:v3';
+  static const int signingBindingSize = 32;
 
   static const int _flagReply = 1 << 0;
   static const int _flagSigned = 1 << 1;
-  static const int _knownFlags = _flagReply | _flagSigned;
+  static const int _flagSenderName = 1 << 2;
+  static const int _knownFlags = _flagReply | _flagSigned | _flagSenderName;
+
+  /// Packs the wire flags byte. The exact same byte is covered by the
+  /// signature via [canonicalSigningBytes], so encode and verify paths must
+  /// derive it through this single helper.
+  static int packFlags({
+    required bool hasReply,
+    required bool isSigned,
+    required bool hasSenderName,
+  }) {
+    var flags = 0;
+    if (hasReply) flags |= _flagReply;
+    if (isSigned) flags |= _flagSigned;
+    if (hasSenderName) flags |= _flagSenderName;
+    return flags;
+  }
+
+  /// Signing binding for channel messages: full HMAC-SHA256 of the binding
+  /// domain keyed with the 16-byte channel PSK.
+  static Uint8List channelSigningBinding(Uint8List psk) {
+    final hmac = crypto.Hmac(crypto.sha256, psk);
+    return Uint8List.fromList(hmac.convert(utf8.encode(bindingDomain)).bytes);
+  }
+
+  /// Signing binding for room-server messages: the room's 32-byte public key.
+  static Uint8List roomSigningBinding(Uint8List roomPublicKey) {
+    if (roomPublicKey.length != signingBindingSize) {
+      throw ArgumentError.value(
+        roomPublicKey.length,
+        'roomPublicKey.length',
+        'Room binding requires a $signingBindingSize-byte public key',
+      );
+    }
+    return Uint8List.fromList(roomPublicKey);
+  }
 
   static EncodedMcmpAppMessage encodeBody({
     required String text,
     required int timestamp,
+    String? senderName,
     Uint8List? signature,
     String? replyAuthorName,
     int? replyTimestamp,
@@ -82,18 +153,21 @@ class McmpAppCodec {
       );
     }
 
-    var flags = 0;
-    if (replyAuthorName != null) {
-      flags |= _flagReply;
-    }
-    if (signature != null) {
-      flags |= _flagSigned;
-    }
+    final flags = packFlags(
+      hasReply: replyAuthorName != null,
+      isSigned: signature != null,
+      hasSenderName: senderName != null,
+    );
 
     final compressed = MeshCompressor.instance.compressToBytes(text);
     final writer = _ByteWriter()
       ..writeByte(flags)
       ..writeUint32LE(timestamp);
+    if (senderName != null) {
+      final senderNameBytes = utf8.encode(senderName);
+      writer.writeVarUint(senderNameBytes.length);
+      writer.writeBytes(senderNameBytes);
+    }
     if (signature != null) {
       writer.writeBytes(signature);
     }
@@ -110,6 +184,7 @@ class McmpAppCodec {
       timestamp: timestamp,
       isSigned: signature != null,
       isReply: replyAuthorName != null,
+      senderName: senderName,
       replyAuthorName: replyAuthorName,
       replyTimestamp: replyTimestamp,
     );
@@ -122,6 +197,12 @@ class McmpAppCodec {
       throw const FormatException('Unsupported MCMP app flags');
     }
     final timestamp = reader.readUint32LE();
+
+    String? senderName;
+    if ((flags & _flagSenderName) != 0) {
+      final senderNameLength = reader.readVarUint();
+      senderName = utf8.decode(reader.readBytes(senderNameLength));
+    }
 
     Uint8List? signature;
     if ((flags & _flagSigned) != 0) {
@@ -141,35 +222,61 @@ class McmpAppCodec {
     return DecodedMcmpAppMessage(
       text: text,
       timestamp: timestamp,
+      senderName: senderName,
       signature: signature,
+      signatureStatus: signature == null
+          ? McmpSignatureStatus.unsigned
+          : McmpSignatureStatus.invalid,
       replyAuthorName: replyAuthorName,
       replyTimestamp: replyTimestamp,
     );
   }
 
+  /// Canonical bytes covered by the Ed25519 signature.
+  ///
+  /// Nothing here travels on the wire as-is: both signer and verifier rebuild
+  /// these bytes from their own context. [binding] pins the destination
+  /// (channel PSK derivation or room public key), so a signature made for one
+  /// destination can never verify in another. [flags] must be the exact wire
+  /// flags byte of the body (see [packFlags]). [senderName] always
+  /// participates regardless of whether the body embeds it; the verifier takes
+  /// it from the body (room) or from the transport layer (channel envelope /
+  /// outer text). [text] is the original uncompressed message text.
   static Uint8List canonicalSigningBytes({
-    required Uint8List channelBinding,
+    required McmpSigningContext context,
+    required Uint8List binding,
     required String senderName,
     required int timestamp,
+    required int flags,
     required String text,
     String? replyAuthorName,
     int? replyTimestamp,
   }) {
+    if (binding.length != signingBindingSize) {
+      throw ArgumentError.value(
+        binding.length,
+        'binding.length',
+        'Signing binding must be $signingBindingSize bytes',
+      );
+    }
     if ((replyAuthorName == null) != (replyTimestamp == null)) {
       throw ArgumentError(
         'replyAuthorName and replyTimestamp must be provided together',
       );
     }
-    var flags = 0;
-    if (replyAuthorName != null) {
-      flags |= _flagReply;
+    if (((flags & _flagReply) != 0) != (replyAuthorName != null)) {
+      throw ArgumentError('flags reply bit conflicts with reply arguments');
+    }
+    if ((flags & ~_knownFlags) != 0) {
+      throw ArgumentError.value(flags, 'flags', 'Unknown flag bits');
     }
 
     final senderNameBytes = utf8.encode(senderName);
     final textBytes = utf8.encode(text);
     final writer = _ByteWriter()
       ..writeBytes(utf8.encode(signingDomain))
-      ..writeBytes(channelBinding)
+      ..writeByte(context.id)
+      ..writeBytes(binding)
       ..writeVarUint(senderNameBytes.length)
       ..writeBytes(senderNameBytes)
       ..writeUint32LE(timestamp)
@@ -188,6 +295,52 @@ class McmpAppCodec {
     return '$textPrefix${_McmpBase91.encode(body)}';
   }
 
+  /// Encodes [text] into the `mcmp3:` text transport.
+  ///
+  /// Unsigned payloads keep the size gate: the container is used only when it
+  /// is smaller than the plain text. Signed payloads ([signature] != null) are
+  /// always containerized — dropping the container would silently drop the
+  /// signature.
+  static String encodeTextTransportIfSmaller({
+    required String text,
+    required int timestamp,
+    String? senderName,
+    Uint8List? signature,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) {
+    if (text.isEmpty ||
+        isTextPayload(text) ||
+        MeshCompressor.instance.hasPrefix(text)) {
+      return text;
+    }
+    try {
+      final encoded = encodeBody(
+        text: text,
+        timestamp: timestamp,
+        senderName: senderName,
+        signature: signature,
+        replyAuthorName: replyAuthorName,
+        replyTimestamp: replyTimestamp,
+      );
+      final candidate = textFromBody(encoded.body);
+      if (signature != null ||
+          utf8.encode(candidate).length < utf8.encode(text).length) {
+        return candidate;
+      }
+    } catch (_) {
+      // Fall through to original text.
+    }
+    return text;
+  }
+
+  static String encodeDirectContactTextIfSmaller({
+    required String text,
+    required int timestamp,
+  }) {
+    return encodeTextTransportIfSmaller(text: text, timestamp: timestamp);
+  }
+
   static bool isTextPayload(String text) {
     final trimmedLeft = text.trimLeft();
     return trimmedLeft.startsWith(textPrefix) &&
@@ -200,6 +353,24 @@ class McmpAppCodec {
       throw const FormatException('Missing MCMP app text prefix');
     }
     return _McmpBase91.decode(trimmedLeft.substring(textPrefix.length));
+  }
+
+  static String? tryDecodeTextPayload(String text) {
+    return tryDecodeTextPayloadMessage(text)?.text;
+  }
+
+  static DecodedMcmpAppMessage? tryDecodeTextPayloadMessage(String text) {
+    if (!isTextPayload(text)) return null;
+    try {
+      return decodeBody(bodyFromText(text));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static McmpSignatureStatus signatureStatusFromTextPayload(String text) {
+    return tryDecodeTextPayloadMessage(text)?.signatureStatus ??
+        McmpSignatureStatus.none;
   }
 }
 

@@ -1625,6 +1625,12 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
+    int selectedMcmpVersion = isRoom
+        ? connector.contactMcmpVersion(contact.publicKeyHex)
+        : 2;
+    bool mcmpUseSign = isRoom
+        ? connector.contactMcmpUseSign(contact.publicKeyHex)
+        : true;
     bool smazEnabled =
         isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled =
@@ -1768,6 +1774,66 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
+                  if (mcmpEnabled) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedMcmpVersion,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.settings_mcmp_version,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text('v2 (legacy)'),
+                          ),
+                          DropdownMenuItem(value: 3, child: Text('v3')),
+                        ],
+                        onChanged: (value) {
+                          final normalized = value == 3 ? 3 : 2;
+                          connector.setContactMcmpVersion(
+                            contact.publicKeyHex,
+                            normalized,
+                          );
+                          setSheetState(() {
+                            selectedMcmpVersion = normalized;
+                          });
+                        },
+                      ),
+                    ),
+                    if (selectedMcmpVersion == 3)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: DropdownButtonFormField<bool>(
+                          initialValue: mcmpUseSign,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.settings_mcmp_useSign,
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: true,
+                              child: Text(context.l10n.settings_mcmp_signed),
+                            ),
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text(context.l10n.settings_mcmp_noSign),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            final normalized = value ?? true;
+                            connector.setContactMcmpUseSign(
+                              contact.publicKeyHex,
+                              normalized,
+                            );
+                            setSheetState(() {
+                              mcmpUseSign = normalized;
+                            });
+                          },
+                        ),
+                      ),
+                  ],
                   SwitchListTile(
                     title: Text(context.l10n.channels_smazCompression),
                     subtitle: Text(context.l10n.chat_compressOutgoingMessages),

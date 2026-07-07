@@ -5383,7 +5383,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_mcmp_signed => 'Без проверки подписи';
+  String get settings_mcmp_version => 'Версия';
+
+  @override
+  String get settings_mcmp_useSign => 'Проверка подписи';
+
+  @override
+  String get settings_mcmp_signed => 'С проверкой подписи';
+
+  @override
+  String get settings_mcmp_noSign => 'Без проверки подписи';
+
+  @override
+  String get settings_mcmp_senderNameCollision =>
+      'Имя отправителя не уникально!';
+
+  @override
+  String get chat_mcmpSignatureInvalid => 'Недействительная подпись!';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable =>
+      'Подпись нельзя проверить — отправителя нет в контактах';
+
+  @override
+  String get chat_mcmpSignatureTransport =>
+      'Подтверждено шифрованием транспорта';
+
+  @override
+  String get chat_mcmpManualRecheckSign => 'Перепроверить подпись';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';

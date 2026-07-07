@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
@@ -27,6 +28,29 @@ class Message {
   final int? compressionSavingsPercent;
   final int? compressionOriginalBytes;
   final int? compressionPayloadBytes;
+  final McmpSignatureStatus mcmpSignatureStatus;
+
+  // MCMP v3 metadata exactly as transmitted in the packet body. Kept verbatim
+  // so reply anchors resolve precisely and signatures can be re-checked later.
+  final int? mcmpTimestamp;
+  final String? mcmpSenderName;
+  final bool mcmpIsSigned;
+  final Uint8List? mcmpSignature;
+  final String? mcmpReplyAuthorName;
+  final int? mcmpReplyTimestamp;
+
+  /// Hex of the contact key that successfully verified the signature.
+  final String? verifiedSenderKeyHex;
+
+  /// True when the sender name belonged to more than one contact at the time
+  /// the signature was checked.
+  final bool mcmpNameCollision;
+
+  // Resolved reply reference (from the MCMP reply anchor), mirroring the
+  // ChannelMessage reply fields.
+  final String? replyToMessageId;
+  final String? replyToSenderName;
+  final String? replyToText;
   final String? sharedHistorySourceName;
 
   // NEW: Retry logic fields
@@ -64,6 +88,18 @@ class Message {
     this.compressionSavingsPercent,
     this.compressionOriginalBytes,
     this.compressionPayloadBytes,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
+    this.mcmpTimestamp,
+    this.mcmpSenderName,
+    this.mcmpIsSigned = false,
+    this.mcmpSignature,
+    this.mcmpReplyAuthorName,
+    this.mcmpReplyTimestamp,
+    this.verifiedSenderKeyHex,
+    this.mcmpNameCollision = false,
+    this.replyToMessageId,
+    this.replyToSenderName,
+    this.replyToText,
     this.sharedHistorySourceName,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
@@ -112,6 +148,18 @@ class Message {
     Object? compressionSavingsPercent = _unset,
     Object? compressionOriginalBytes = _unset,
     Object? compressionPayloadBytes = _unset,
+    McmpSignatureStatus? mcmpSignatureStatus,
+    Object? mcmpTimestamp = _unset,
+    Object? mcmpSenderName = _unset,
+    bool? mcmpIsSigned,
+    Object? mcmpSignature = _unset,
+    Object? mcmpReplyAuthorName = _unset,
+    Object? mcmpReplyTimestamp = _unset,
+    Object? verifiedSenderKeyHex = _unset,
+    bool? mcmpNameCollision,
+    Object? replyToMessageId = _unset,
+    Object? replyToSenderName = _unset,
+    Object? replyToText = _unset,
     Object? sharedHistorySourceName = _unset,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
@@ -151,6 +199,36 @@ class Message {
       compressionPayloadBytes: compressionPayloadBytes == _unset
           ? this.compressionPayloadBytes
           : compressionPayloadBytes as int?,
+      mcmpSignatureStatus: mcmpSignatureStatus ?? this.mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp == _unset
+          ? this.mcmpTimestamp
+          : mcmpTimestamp as int?,
+      mcmpSenderName: mcmpSenderName == _unset
+          ? this.mcmpSenderName
+          : mcmpSenderName as String?,
+      mcmpIsSigned: mcmpIsSigned ?? this.mcmpIsSigned,
+      mcmpSignature: mcmpSignature == _unset
+          ? this.mcmpSignature
+          : mcmpSignature as Uint8List?,
+      mcmpReplyAuthorName: mcmpReplyAuthorName == _unset
+          ? this.mcmpReplyAuthorName
+          : mcmpReplyAuthorName as String?,
+      mcmpReplyTimestamp: mcmpReplyTimestamp == _unset
+          ? this.mcmpReplyTimestamp
+          : mcmpReplyTimestamp as int?,
+      verifiedSenderKeyHex: verifiedSenderKeyHex == _unset
+          ? this.verifiedSenderKeyHex
+          : verifiedSenderKeyHex as String?,
+      mcmpNameCollision: mcmpNameCollision ?? this.mcmpNameCollision,
+      replyToMessageId: replyToMessageId == _unset
+          ? this.replyToMessageId
+          : replyToMessageId as String?,
+      replyToSenderName: replyToSenderName == _unset
+          ? this.replyToSenderName
+          : replyToSenderName as String?,
+      replyToText: replyToText == _unset
+          ? this.replyToText
+          : replyToText as String?,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
@@ -190,8 +268,10 @@ class Message {
         return null;
       }
       final rawText = reader.readCString();
-      final text =
-          MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+      final decodedDetails = MessageTextCodec.tryDecodeKnownCompressionDetails(
+        rawText,
+      );
+      final text = decodedDetails?.text ?? rawText;
       final compression = MessageCompressionMetadata.fromEncodedText(
         encodedText: rawText,
         decodedText: text,
@@ -204,11 +284,16 @@ class Message {
         isOutgoing: false,
         isCli: false,
         status: MessageStatus.delivered,
-        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(rawText),
+        wasMcmpCompressed:
+            MeshCompressor.instance.hasPrefix(rawText) ||
+            McmpAppCodec.isTextPayload(rawText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
+        mcmpSignatureStatus:
+            decodedDetails?.mcmpMessage?.signatureStatus ??
+            McmpSignatureStatus.none,
         pathBytes: Uint8List(0),
       );
     } catch (e) {
@@ -227,6 +312,11 @@ class Message {
     int? compressionSavingsPercent,
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
+    int? mcmpTimestamp,
+    String? mcmpSenderName,
+    bool mcmpIsSigned = false,
+    Uint8List? mcmpSignature,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -241,6 +331,11 @@ class Message {
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
+      mcmpSignatureStatus: mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp,
+      mcmpSenderName: mcmpSenderName,
+      mcmpIsSigned: mcmpIsSigned,
+      mcmpSignature: mcmpSignature,
       timestamp: DateTime.now(),
       isOutgoing: true,
       isCli: false,

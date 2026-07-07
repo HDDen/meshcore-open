@@ -9214,11 +9214,59 @@ abstract class AppLocalizations {
   /// **'MCMP'**
   String get settings_modSettingsMCMP;
 
+  /// No description provided for @settings_mcmp_version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settings_mcmp_version;
+
+  /// No description provided for @settings_mcmp_useSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Message signing'**
+  String get settings_mcmp_useSign;
+
   /// No description provided for @settings_mcmp_signed.
   ///
   /// In en, this message translates to:
-  /// **'No signature'**
+  /// **'Using signature verification'**
   String get settings_mcmp_signed;
+
+  /// No description provided for @settings_mcmp_noSign.
+  ///
+  /// In en, this message translates to:
+  /// **'No signature'**
+  String get settings_mcmp_noSign;
+
+  /// No description provided for @settings_mcmp_senderNameCollision.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender isn\'t unique!'**
+  String get settings_mcmp_senderNameCollision;
+
+  /// No description provided for @chat_mcmpSignatureInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid signature!'**
+  String get chat_mcmpSignatureInvalid;
+
+  /// No description provided for @chat_mcmpSignatureUnverifiable.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature can\'t be verified — sender is not in contacts'**
+  String get chat_mcmpSignatureUnverifiable;
+
+  /// No description provided for @chat_mcmpSignatureTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticated by encrypted transport'**
+  String get chat_mcmpSignatureTransport;
+
+  /// No description provided for @chat_mcmpManualRecheckSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Manually recheck signature'**
+  String get chat_mcmpManualRecheckSign;
 
   /// No description provided for @settings_modSettingsMCOimg.
   ///
