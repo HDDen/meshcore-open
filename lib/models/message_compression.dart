@@ -48,6 +48,21 @@ class MessageCompressionMetadata {
         ? MessageCompressionType.smaz
         : null;
     if (type == null || encodedText == decodedText) return null;
+
+    // MCMP v3 containers carry metadata (timestamp, signature, reply anchor)
+    // on top of the compressed text; the ratio is computed over the text
+    // segment only so overhead does not mask the actual compression.
+    final mcmpV3TextBytes = McmpAppCodec.compressedTextBytesFromTextPayload(
+      encodedText,
+    );
+    if (mcmpV3TextBytes != null) {
+      return MessageCompressionMetadata.fromByteLengths(
+        type: type,
+        originalBytes: utf8.encode(decodedText).length,
+        compressedBytes: mcmpV3TextBytes,
+      );
+    }
+
     return MessageCompressionMetadata.fromText(
       type: type,
       originalText: decodedText,

@@ -2300,6 +2300,8 @@
   "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
   "mcogallery_addGroup": "Добавить группу",
   "mcogallery_removeGroup": "Удалить группу",
+  "mcogallery_showLora": "Отобразить LoRa-вариант",
+  "mcogallery_showPacked": "Отобразить улучшенный вариант",
   "chat_sendSelfContact": "Отправить свой контакт",
   "chat_sendContact": "Поделиться контактом",
   "chat_addContact": "Добавить контакт",

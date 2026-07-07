@@ -295,6 +295,42 @@ class McmpAppCodec {
     return '$textPrefix${_McmpBase91.encode(body)}';
   }
 
+  /// Byte length of the compressed text segment inside a v3 body, excluding
+  /// all container metadata (flags, timestamp, sender name, signature and
+  /// reply anchor). Used by compression statistics so the ratio reflects the
+  /// text itself rather than the container overhead.
+  static int compressedTextBytesFromBody(Uint8List body) {
+    final reader = _ByteReader(body);
+    final flags = reader.readByte();
+    if ((flags & ~_knownFlags) != 0) {
+      throw const FormatException('Unsupported MCMP app flags');
+    }
+    reader.readUint32LE(); // timestamp
+    if ((flags & _flagSenderName) != 0) {
+      reader.readBytes(reader.readVarUint());
+    }
+    if ((flags & _flagSigned) != 0) {
+      reader.readBytes(signatureSize);
+    }
+    if ((flags & _flagReply) != 0) {
+      reader.readBytes(reader.readVarUint());
+      reader.readUint32LE();
+    }
+    return reader.readRemainingBytes().length;
+  }
+
+  /// Same as [compressedTextBytesFromBody] for the `mcmp3:` text transport;
+  /// null when [text] is not a parsable v3 payload.
+  static int? compressedTextBytesFromTextPayload(String text) {
+    final trimmedLeft = text.trimLeft();
+    if (!isTextPayload(trimmedLeft)) return null;
+    try {
+      return compressedTextBytesFromBody(bodyFromText(trimmedLeft));
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Encodes [text] into the `mcmp3:` text transport.
   ///
   /// Unsigned payloads keep the size gate: the container is used only when it

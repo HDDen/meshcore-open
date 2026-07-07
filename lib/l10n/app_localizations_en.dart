@@ -5467,6 +5467,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mcogallery_removeGroup => 'Remove group';
 
   @override
+  String get mcogallery_showLora => 'Show LoRa-variant';
+
+  @override
+  String get mcogallery_showPacked => 'Show improved variant';
+
+  @override
   String get chat_sendSelfContact => 'Send self contact';
 
   @override

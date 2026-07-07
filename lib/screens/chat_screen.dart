@@ -533,6 +533,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ? "${contact.name} [$fourByteHex]"
                         : contact.name,
                     sourceId: widget.contact.publicKeyHex,
+                    isRoomChat: resolvedContact.type == advTypeRoom,
                     textScale: textScale,
                     onTap: () => _openMessagePath(message, contact),
                     onLongPress: () => _showMessageActions(message, contact),
@@ -1998,11 +1999,16 @@ class _MessageBubble extends StatelessWidget {
   final double textScale;
   final String sourceId;
 
+  /// Signature badges are shown only in room-server chats; direct messages
+  /// are authenticated by the ECDH transport and show no badge at all.
+  final bool isRoomChat;
+
   const _MessageBubble({
     required this.message,
     required this.senderName,
     required this.sourceId,
     required this.textScale,
+    this.isRoomChat = false,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -2368,14 +2374,16 @@ class _MessageBubble extends StatelessWidget {
                               ],
                             ],
                           ),
-                        // Signature/signing badge: always on its own line
-                        // above the message time, independent of the
-                        // message-tracing setting.
-                        if (McmpSignatureBadge.isVisible(
-                          status: message.mcmpSignatureStatus,
-                          isOutgoing: isOutgoing,
-                          wasMcmpV3: message.mcmpTimestamp != null,
-                        )) ...[
+                        // Signature/signing badge: room-server chats only,
+                        // always on its own line above the message time,
+                        // independent of the message-tracing setting. Direct
+                        // messages never show the badge.
+                        if (isRoomChat &&
+                            McmpSignatureBadge.isVisible(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: isOutgoing,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                            )) ...[
                           const SizedBox(height: 3),
                           Padding(
                             padding: isMediaMessage

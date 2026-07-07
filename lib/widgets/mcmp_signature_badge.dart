@@ -82,8 +82,11 @@ class McmpSignatureBadge extends StatelessWidget {
       case McmpSignatureStatus.unverifiable:
       case McmpSignatureStatus.transportAuthenticated:
         return true;
-      case McmpSignatureStatus.none:
+      // Incoming MCMP v3 messages sent without a signature still show the
+      // crossed-out grey lock.
       case McmpSignatureStatus.unsigned:
+        return wasMcmpV3;
+      case McmpSignatureStatus.none:
         return false;
     }
   }
@@ -112,6 +115,8 @@ class McmpSignatureBadge extends StatelessWidget {
     final IconData icon;
     final String tooltip;
     Color iconColor = color;
+    // Unverifiable renders a grey lock with a small "?" overlay.
+    var questionOverlay = false;
 
     switch (status) {
       case McmpSignatureStatus.valid:
@@ -127,16 +132,22 @@ class McmpSignatureBadge extends StatelessWidget {
         iconColor = errorColor;
         break;
       case McmpSignatureStatus.unverifiable:
-        // Crossed-out grey lock: signature cannot be checked.
-        icon = Icons.no_encryption_outlined;
+        // Grey lock with a question mark: signed, but there is no matching
+        // contact key to check against.
+        icon = Icons.lock_outlined;
         tooltip = l10n.chat_mcmpSignatureUnverifiable;
+        questionOverlay = true;
         break;
       case McmpSignatureStatus.transportAuthenticated:
         icon = Icons.enhanced_encryption_outlined;
         tooltip = l10n.chat_mcmpSignatureTransport;
         break;
-      case McmpSignatureStatus.none:
       case McmpSignatureStatus.unsigned:
+        // Crossed-out grey lock: the message was sent without a signature.
+        icon = Icons.no_encryption_outlined;
+        tooltip = l10n.settings_mcmp_noSign;
+        break;
+      case McmpSignatureStatus.none:
         return const SizedBox.shrink();
     }
 
@@ -147,14 +158,34 @@ class McmpSignatureBadge extends StatelessWidget {
         ? formatFingerprint(verifiedSenderKeyHex!)
         : null;
 
+    Widget iconWidget = Icon(icon, size: iconSize, color: iconColor);
+    if (questionOverlay) {
+      iconWidget = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          iconWidget,
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Text(
+              '?',
+              style: TextStyle(
+                fontSize: iconSize * 0.7,
+                fontWeight: FontWeight.w800,
+                height: 1,
+                color: iconColor,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Tooltip(
-          message: tooltip,
-          child: Icon(icon, size: iconSize, color: iconColor),
-        ),
+        Tooltip(message: tooltip, child: iconWidget),
         if (fingerprint != null) ...[
           SizedBox(width: 3 * textScale),
           Text(

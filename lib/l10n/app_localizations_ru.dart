@@ -5563,6 +5563,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mcogallery_removeGroup => 'Удалить группу';
 
   @override
+  String get mcogallery_showLora => 'Отобразить LoRa-вариант';
+
+  @override
+  String get mcogallery_showPacked => 'Отобразить улучшенный вариант';
+
+  @override
   String get chat_sendSelfContact => 'Отправить свой контакт';
 
   @override

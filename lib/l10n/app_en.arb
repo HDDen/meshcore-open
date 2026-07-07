@@ -3111,6 +3111,8 @@
   },
   "mcogallery_addGroup": "Add group",
   "mcogallery_removeGroup": "Remove group",
+  "mcogallery_showLora": "Show LoRa-variant",
+  "mcogallery_showPacked": "Show improved variant",
   "chat_sendSelfContact": "Send self contact",
   "chat_sendContact": "Share contact",
   "chat_addContact": "Add contact",

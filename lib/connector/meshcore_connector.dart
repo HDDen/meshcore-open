@@ -7666,11 +7666,13 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
       // Direct contacts: the ECDH transport authenticates the sender, so the
-      // body is never signed and carries no name; reply anchors still travel.
+      // body is never signed and carries no name. Reply anchors travel with
+      // an empty author name — both identities are known, resolution relies
+      // on the timestamp alone.
       return McmpAppCodec.encodeTextTransportIfSmaller(
         text: text,
         timestamp: timestamp,
-        replyAuthorName: effectiveReplyName,
+        replyAuthorName: hasReplyPair ? '' : null,
         replyTimestamp: effectiveReplyTimestamp,
       );
     }
@@ -7815,6 +7817,18 @@ class MeshCoreConnector extends ChangeNotifier {
     if (isContactMcmpEnabled(contact.publicKeyHex) &&
         _isMcmpEncodedText(outboundText)) {
       type = MessageCompressionType.mcmp;
+      // MCMP v3: ratio over the compressed text segment only, without
+      // container metadata.
+      final mcmpV3TextBytes = McmpAppCodec.compressedTextBytesFromTextPayload(
+        outboundText,
+      );
+      if (mcmpV3TextBytes != null) {
+        return MessageCompressionMetadata.fromByteLengths(
+          type: type,
+          originalBytes: utf8.encode(originalText).length,
+          compressedBytes: mcmpV3TextBytes,
+        );
+      }
     } else if (isContactSmazEnabled(contact.publicKeyHex) &&
         Smaz.hasPrefix(outboundText)) {
       type = MessageCompressionType.smaz;
@@ -7847,9 +7861,17 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  /// Tolerance for reply-anchor timestamp matching. The author's local card
+  /// keeps the compose time while the wire carries the firmware TX timestamp
+  /// (RTC at transmit, after radio-quiet waits), so exact equality can miss
+  /// by several seconds for non-MCMP-v3 anchors.
+  static const int _replyAnchorToleranceSeconds = 120;
+
   /// Resolves a reply anchor ("author name + timestamp" as transmitted in the
-  /// MCMP body) against the channel history. Matches either the outer group
-  /// timestamp or the transmitted MCMP body timestamp.
+  /// MCMP body) against the channel history. Prefers an exact match on the
+  /// outer group timestamp or the transmitted MCMP body timestamp, then falls
+  /// back to the closest message from the author within
+  /// [_replyAnchorToleranceSeconds].
   _McmpReplyReference? _resolveChannelReplyAnchor(
     int channelIndex,
     String? replyAuthorName,
@@ -7861,21 +7883,40 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final messages = _channelMessages[channelIndex] ?? const <ChannelMessage>[];
+    ChannelMessage? closest;
+    int? closestDelta;
     for (var i = messages.length - 1; i >= 0; i--) {
       final message = messages[i];
       if (message.senderName.trim() != replySender) continue;
-      final messageTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
-      if (messageTimestamp != replyTimestamp &&
-          message.mcmpTimestamp != replyTimestamp) {
-        continue;
+      final outerTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
+      if (outerTimestamp == replyTimestamp ||
+          message.mcmpTimestamp == replyTimestamp) {
+        return _McmpReplyReference(
+          messageId: message.messageId,
+          senderName: message.senderName,
+          text: message.text,
+        );
       }
-      return _McmpReplyReference(
-        messageId: message.messageId,
-        senderName: message.senderName,
-        text: message.text,
-      );
+      var delta = (outerTimestamp - replyTimestamp).abs();
+      final mcmpTimestamp = message.mcmpTimestamp;
+      if (mcmpTimestamp != null) {
+        final mcmpDelta = (mcmpTimestamp - replyTimestamp).abs();
+        if (mcmpDelta < delta) delta = mcmpDelta;
+      }
+      if (delta <= _replyAnchorToleranceSeconds &&
+          (closestDelta == null || delta < closestDelta)) {
+        closest = message;
+        closestDelta = delta;
+      }
     }
 
+    if (closest != null) {
+      return _McmpReplyReference(
+        messageId: closest.messageId,
+        senderName: closest.senderName,
+        text: closest.text,
+      );
+    }
     return _McmpReplyReference(senderName: replySender);
   }
 
@@ -8036,12 +8077,15 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   /// Resolves the MCMP reply anchor of an inbound DM/room message against the
-  /// stored conversation, matching the transmitted "author name + timestamp"
-  /// pair.
+  /// stored conversation. Room posts match the transmitted "author name +
+  /// timestamp" pair; direct messages carry an empty author name (both
+  /// identities are known) and resolve by timestamp alone.
   Message _resolveContactReplyReference(Message message, Contact contact) {
+    final isRoom = contact.type == advTypeRoom;
     final replySender = message.mcmpReplyAuthorName?.trim();
     final replyTimestamp = message.mcmpReplyTimestamp;
-    if (replySender == null || replySender.isEmpty || replyTimestamp == null) {
+    if (replyTimestamp == null) return message;
+    if (isRoom && (replySender == null || replySender.isEmpty)) {
       return message;
     }
 
@@ -8062,23 +8106,51 @@ class MeshCoreConnector extends ChangeNotifier {
 
     final messages =
         _conversations[contact.publicKeyHex] ?? const <Message>[];
+    Message? closest;
+    String? closestName;
+    int? closestDelta;
     for (var i = messages.length - 1; i >= 0; i--) {
       final candidate = messages[i];
       final candidateName = authorNameFor(candidate)?.trim();
-      if (candidateName == null || candidateName != replySender) continue;
-      final outerTimestamp =
-          candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
-      if (candidate.mcmpTimestamp != replyTimestamp &&
-          outerTimestamp != replyTimestamp) {
+      // Rooms match the transmitted author name; direct messages resolve by
+      // timestamp alone (the anchor carries an empty name).
+      if (isRoom && (candidateName == null || candidateName != replySender)) {
         continue;
       }
+      final outerTimestamp =
+          candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
+      if (candidate.mcmpTimestamp == replyTimestamp ||
+          outerTimestamp == replyTimestamp) {
+        return message.copyWith(
+          replyToMessageId: candidate.messageId,
+          replyToSenderName: candidateName,
+          replyToText: candidate.text,
+        );
+      }
+      var delta = (outerTimestamp - replyTimestamp).abs();
+      final mcmpTimestamp = candidate.mcmpTimestamp;
+      if (mcmpTimestamp != null) {
+        final mcmpDelta = (mcmpTimestamp - replyTimestamp).abs();
+        if (mcmpDelta < delta) delta = mcmpDelta;
+      }
+      if (delta <= _replyAnchorToleranceSeconds &&
+          (closestDelta == null || delta < closestDelta)) {
+        closest = candidate;
+        closestName = candidateName;
+        closestDelta = delta;
+      }
+    }
+    if (closest != null) {
       return message.copyWith(
-        replyToMessageId: candidate.messageId,
-        replyToSenderName: candidateName,
-        replyToText: candidate.text,
+        replyToMessageId: closest.messageId,
+        replyToSenderName: closestName,
+        replyToText: closest.text,
       );
     }
-    return message.copyWith(replyToSenderName: replySender);
+    if (isRoom) {
+      return message.copyWith(replyToSenderName: replySender);
+    }
+    return message;
   }
 
   MessageCompressionMetadata? _channelCompressionMetadata(
@@ -8090,6 +8162,21 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     final trimmed = originalText.trim();
     if (trimmed.startsWith('g:') || trimmed.startsWith('m:')) return null;
+    // MCMP v3: the ratio is computed over the compressed text segment only,
+    // excluding container metadata (timestamp, signature, reply anchor). The
+    // segment is identical for the binary and Base91 transports.
+    if (isChannelMcmpEnabled(channelIndex)) {
+      final mcmpV3TextBytes = McmpAppCodec.compressedTextBytesFromTextPayload(
+        outboundText,
+      );
+      if (mcmpV3TextBytes != null) {
+        return MessageCompressionMetadata.fromByteLengths(
+          type: MessageCompressionType.mcmp,
+          originalBytes: utf8.encode(originalText).length,
+          compressedBytes: mcmpV3TextBytes,
+        );
+      }
+    }
     if (binaryPayloadBytes != null) {
       return MessageCompressionMetadata.fromByteLengths(
         type: MessageCompressionType.mcmp,
@@ -8160,16 +8247,19 @@ class MeshCoreConnector extends ChangeNotifier {
     ChannelAppDataInbound decoded,
   ) {
     if (!decoded.wasMcmpCompressed || decoded.text == null) return null;
-    return MessageCompressionMetadata.fromByteLengths(
-      type: MessageCompressionType.mcmp,
-      originalBytes: ChannelBinaryDataHelper.uncompressedAppBinaryPayloadLength(
-        decoded.text!,
-        decoded.senderName,
-      ),
-      compressedBytes: ChannelBinaryDataHelper.finalBinaryPayloadLength(
-        decoded.payloadLength,
-      ),
-    );
+    // MCMP v3 binary envelope: ratio over the compressed text segment only,
+    // without envelope and container metadata.
+    try {
+      return MessageCompressionMetadata.fromByteLengths(
+        type: MessageCompressionType.mcmp,
+        originalBytes: utf8.encode(decoded.text!).length,
+        compressedBytes: McmpAppCodec.compressedTextBytesFromBody(
+          decoded.body,
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   String _appDataMessageText(ChannelAppDataInbound decoded) {
@@ -9465,8 +9555,12 @@ class MeshCoreConnector extends ChangeNotifier {
       var replyToSenderName = message.replyToSenderName;
       var replyToText = message.replyToText;
 
-      if (replyToSenderName == null || replyToText == null) {
-        // Fallback for incoming/legacy messages where only the @mention exists.
+      if ((replyToSenderName == null || replyToText == null) &&
+          message.mcmpReplyTimestamp == null) {
+        // Fallback for incoming/legacy messages where only the @mention
+        // exists. Messages with an MCMP reply anchor must never fall back to
+        // "most recent from this sender": if the anchor did not resolve, a
+        // name-only reply banner is more honest than a wrong quote.
         final originalMessage = _findMessageBySender(
           messages,
           replyInfo.mentionedNode,
@@ -9493,6 +9587,15 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionSavingsPercent: message.compressionSavingsPercent,
         compressionOriginalBytes: message.compressionOriginalBytes,
         compressionPayloadBytes: message.compressionPayloadBytes,
+        mcmpSignatureStatus: message.mcmpSignatureStatus,
+        mcmpTimestamp: message.mcmpTimestamp,
+        mcmpSenderName: message.mcmpSenderName,
+        mcmpIsSigned: message.mcmpIsSigned,
+        mcmpSignature: message.mcmpSignature,
+        mcmpReplyAuthorName: message.mcmpReplyAuthorName,
+        mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+        verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+        mcmpNameCollision: message.mcmpNameCollision,
         wasBinaryTransport: message.wasBinaryTransport,
         binaryPacketBytes: message.binaryPacketBytes,
         timestamp: message.timestamp,

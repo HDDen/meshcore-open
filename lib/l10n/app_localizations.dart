@@ -9520,6 +9520,18 @@ abstract class AppLocalizations {
   /// **'Remove group'**
   String get mcogallery_removeGroup;
 
+  /// No description provided for @mcogallery_showLora.
+  ///
+  /// In en, this message translates to:
+  /// **'Show LoRa-variant'**
+  String get mcogallery_showLora;
+
+  /// No description provided for @mcogallery_showPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Show improved variant'**
+  String get mcogallery_showPacked;
+
   /// No description provided for @chat_sendSelfContact.
   ///
   /// In en, this message translates to:
