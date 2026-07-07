@@ -1025,6 +1025,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
           !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          // Shared contact payloads must stay untouched.
+          parseSharedContactText(outgoingText) == null &&
           connector.isContactCyr2LatEnabled(
             _resolveContact(connector).publicKeyHex,
           )) {

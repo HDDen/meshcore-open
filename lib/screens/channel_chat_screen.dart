@@ -2619,7 +2619,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // but we getting messages doubles in chat screen (source text and transformed).
     // To prevent, we'll perform transform of source before pass to main sender logic.
     // We can pass whole text, senderName will be kept intact
-    if (connector.isChannelCyr2LatEnabled(widget.channel.index)) {
+    if (connector.isChannelCyr2LatEnabled(widget.channel.index) &&
+        // Shared contact payloads must stay untouched.
+        parseSharedContactText(messageText) == null) {
       messageText = Cyr2Lat.encode(messageText);
     }
     // end transform

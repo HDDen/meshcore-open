@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import 'channel_app_data_helper.dart';
+import 'contact_share_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
 import 'mcmp_app_codec.dart';
@@ -150,7 +151,10 @@ class ChannelBinaryDataHelper {
       final isStructuredPayload =
           trimmed.startsWith('g:') ||
           trimmed.startsWith('m:') ||
-          trimmed.startsWith('V1|');
+          trimmed.startsWith('V1|') ||
+          // Shared contact payloads (<pubkey:type:name>) must travel as
+          // plain text so receivers can parse them.
+          parseSharedContactText(trimmed) != null;
       if (isStructuredPayload) return null;
 
       if (mcmpEnabled) {
@@ -278,7 +282,8 @@ class ChannelBinaryDataHelper {
       if (trimmed.startsWith('g:') ||
           trimmed.startsWith('m:') ||
           trimmed.startsWith('V1|') ||
-          trimmed.startsWith(MCOImageCodec.prefix)) {
+          trimmed.startsWith(MCOImageCodec.prefix) ||
+          parseSharedContactText(trimmed) != null) {
         return null;
       }
       final hasReply = replyAuthorName != null && replyTimestamp != null;
@@ -305,7 +310,8 @@ class ChannelBinaryDataHelper {
       if (trimmed.startsWith('g:') ||
           trimmed.startsWith('m:') ||
           trimmed.startsWith('V1|') ||
-          trimmed.startsWith(MCOImageCodec.prefix)) {
+          trimmed.startsWith(MCOImageCodec.prefix) ||
+          parseSharedContactText(trimmed) != null) {
         return null;
       }
       final compressed = MeshCompressor.instance.compressToBytes(text);

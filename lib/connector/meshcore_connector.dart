@@ -20,6 +20,7 @@ import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
@@ -7581,6 +7582,9 @@ class MeshCoreConnector extends ChangeNotifier {
         !trimmed.startsWith('g:') &&
         !trimmed.startsWith('m:') &&
         !trimmed.startsWith('V1|') &&
+        // Shared contact payloads (<pubkey:type:name>) must travel as plain
+        // text so receivers can parse them.
+        parseSharedContactText(trimmed) == null &&
         !MeshCompressor.instance.hasPrefix(trimmed) &&
         !McmpAppCodec.isTextPayload(trimmed);
   }
@@ -7692,6 +7696,7 @@ class MeshCoreConnector extends ChangeNotifier {
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|') ||
+        parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
         McmpAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
@@ -7754,6 +7759,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final isStructuredPayload =
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
+        parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
         McmpAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
