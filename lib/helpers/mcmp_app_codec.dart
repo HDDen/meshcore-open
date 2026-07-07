@@ -333,11 +333,12 @@ class McmpAppCodec {
 
   /// Encodes [text] into the `mcmp3:` text transport.
   ///
-  /// Unsigned payloads keep the size gate: the container is used only when it
-  /// is smaller than the plain text. Signed payloads ([signature] != null) are
-  /// always containerized — dropping the container would silently drop the
-  /// signature.
-  static String encodeTextTransportIfSmaller({
+  /// When the v3 format is selected the container is always used, signed or
+  /// not: it carries the timestamp (reply anchor) and, when present, the
+  /// sender name and signature — there is no "only if smaller" gate. The
+  /// original text is returned only for empty/already-encoded inputs or when
+  /// encoding fails.
+  static String encodeTextTransport({
     required String text,
     required int timestamp,
     String? senderName,
@@ -359,22 +360,18 @@ class McmpAppCodec {
         replyAuthorName: replyAuthorName,
         replyTimestamp: replyTimestamp,
       );
-      final candidate = textFromBody(encoded.body);
-      if (signature != null ||
-          utf8.encode(candidate).length < utf8.encode(text).length) {
-        return candidate;
-      }
+      return textFromBody(encoded.body);
     } catch (_) {
       // Fall through to original text.
     }
     return text;
   }
 
-  static String encodeDirectContactTextIfSmaller({
+  static String encodeDirectContactText({
     required String text,
     required int timestamp,
   }) {
-    return encodeTextTransportIfSmaller(text: text, timestamp: timestamp);
+    return encodeTextTransport(text: text, timestamp: timestamp);
   }
 
   static bool isTextPayload(String text) {

@@ -155,7 +155,7 @@ void main() {
   test('encodes MCMP v3 direct contact text without sender envelope', () {
     const text =
         'Long enough private message for direct MCMP v3 text transport.';
-    final encoded = McmpAppCodec.encodeDirectContactTextIfSmaller(
+    final encoded = McmpAppCodec.encodeDirectContactText(
       text: text,
       timestamp: 123456,
     );
@@ -174,7 +174,7 @@ void main() {
   test('recognizes MCMP v3 text payload as MCMP compression', () {
     const text =
         'Long enough text for MCMP v3 compression metadata calculation.';
-    final encoded = McmpAppCodec.encodeDirectContactTextIfSmaller(
+    final encoded = McmpAppCodec.encodeDirectContactText(
       text: text,
       timestamp: 123456,
     );

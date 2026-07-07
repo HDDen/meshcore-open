@@ -4695,7 +4695,7 @@ class MeshCoreConnector extends ChangeNotifier {
     } else if (mcmpV3Applies && binaryOutbound == null) {
       // Text transport carries the signed body in the mcmp3: Base91 wrapper;
       // the sender name stays in the outer "Name: text" layer (no bit2).
-      outboundText = McmpAppCodec.encodeTextTransportIfSmaller(
+      outboundText = McmpAppCodec.encodeTextTransport(
         text: text,
         timestamp: mcmpTimestamp!,
         signature: mcmpSignature,
@@ -7656,7 +7656,7 @@ class MeshCoreConnector extends ChangeNotifier {
             replyTimestamp: effectiveReplyTimestamp,
           );
         }
-        return McmpAppCodec.encodeTextTransportIfSmaller(
+        return McmpAppCodec.encodeTextTransport(
           text: text,
           timestamp: timestamp,
           senderName: senderName,
@@ -7669,7 +7669,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // body is never signed and carries no name. Reply anchors travel with
       // an empty author name — both identities are known, resolution relies
       // on the timestamp alone.
-      return McmpAppCodec.encodeTextTransportIfSmaller(
+      return McmpAppCodec.encodeTextTransport(
         text: text,
         timestamp: timestamp,
         replyAuthorName: hasReplyPair ? '' : null,
@@ -7713,14 +7713,14 @@ class MeshCoreConnector extends ChangeNotifier {
                   contactMcmpUseSign(contact.publicKeyHex)
               ? Uint8List(signatureSize)
               : null;
-          return McmpAppCodec.encodeTextTransportIfSmaller(
+          return McmpAppCodec.encodeTextTransport(
             text: text,
             timestamp: timestamp,
             senderName: _selfName ?? 'Me',
             signature: placeholderSignature,
           );
         }
-        return McmpAppCodec.encodeDirectContactTextIfSmaller(
+        return McmpAppCodec.encodeDirectContactText(
           text: text,
           timestamp: timestamp,
         );
@@ -7771,7 +7771,7 @@ class MeshCoreConnector extends ChangeNotifier {
               estimateSignatureOverhead && channelMcmpUseSign(channelIndex)
               ? Uint8List(signatureSize)
               : null;
-          return McmpAppCodec.encodeTextTransportIfSmaller(
+          return McmpAppCodec.encodeTextTransport(
             text: text,
             timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
             signature: placeholderSignature,
