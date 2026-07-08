@@ -192,6 +192,7 @@ class AppSettings {
   final bool showMcoImageFormat;
   final bool showMcoImageAlgorithm;
   final bool showMcoImageBytes;
+  final bool showMcoImagePackReplacements;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool showMessageRegion;
@@ -470,6 +471,7 @@ class AppSettings {
     this.showMcoImageFormat = true,
     this.showMcoImageAlgorithm = true,
     this.showMcoImageBytes = true,
+    this.showMcoImagePackReplacements = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.showMessageRegion = false,
@@ -574,6 +576,7 @@ class AppSettings {
       'show_mco_image_format': showMcoImageFormat,
       'show_mco_image_algorithm': showMcoImageAlgorithm,
       'show_mco_image_bytes': showMcoImageBytes,
+      'show_mco_image_pack_replacements': showMcoImagePackReplacements,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'show_message_region': showMessageRegion,
@@ -688,6 +691,8 @@ class AppSettings {
       showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
       showMcoImageAlgorithm: json['show_mco_image_algorithm'] as bool? ?? true,
       showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
+      showMcoImagePackReplacements:
+          json['show_mco_image_pack_replacements'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
@@ -842,6 +847,7 @@ class AppSettings {
     bool? showMcoImageFormat,
     bool? showMcoImageAlgorithm,
     bool? showMcoImageBytes,
+    bool? showMcoImagePackReplacements,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? showMessageRegion,
@@ -925,6 +931,8 @@ class AppSettings {
       showMcoImageAlgorithm:
           showMcoImageAlgorithm ?? this.showMcoImageAlgorithm,
       showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
+      showMcoImagePackReplacements:
+          showMcoImagePackReplacements ?? this.showMcoImagePackReplacements,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,

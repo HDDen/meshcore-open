@@ -100,9 +100,18 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
 
-  /// Message ids for which the user forced the received LoRa image instead of
-  /// the pack original.
-  final Set<String> _mcoShowLoraIds = {};
+  /// Message ids whose MCOimg variant the user flipped away from the default
+  /// (the default is "show pack original" when the mod setting is enabled,
+  /// otherwise "show received LoRa version").
+  final Set<String> _mcoVariantOverridden = {};
+
+  /// Effective "render the received LoRa version" flag for a message,
+  /// combining the mod setting default with the per-message override.
+  bool _mcoForceLora(String messageId, bool showReplacements) {
+    final defaultLora = !showReplacements;
+    final overridden = _mcoVariantOverridden.contains(messageId);
+    return defaultLora != overridden;
+  }
 
   @override
   void initState() {
@@ -540,7 +549,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         : contact.name,
                     sourceId: widget.contact.publicKeyHex,
                     isRoomChat: resolvedContact.type == advTypeRoom,
-                    showLoraImage: _mcoShowLoraIds.contains(message.messageId),
+                    mcoVariantOverridden: _mcoVariantOverridden.contains(
+                      message.messageId,
+                    ),
                     textScale: textScale,
                     onTap: () => _openMessagePath(message, contact),
                     onLongPress: () =>
@@ -1715,7 +1726,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   ListTile(
                     leading: const Icon(Icons.swap_horiz),
                     title: Text(
-                      _mcoShowLoraIds.contains(message.messageId)
+                      _mcoForceLora(
+                            message.messageId,
+                            settings.showMcoImagePackReplacements,
+                          )
                           ? context.l10n.mcogallery_showPacked
                           : context.l10n.mcogallery_showLora,
                     ),
@@ -1883,8 +1897,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _toggleMcoImageVariant(String messageId) {
     setState(() {
-      if (!_mcoShowLoraIds.add(messageId)) {
-        _mcoShowLoraIds.remove(messageId);
+      if (!_mcoVariantOverridden.add(messageId)) {
+        _mcoVariantOverridden.remove(messageId);
       }
     });
   }
@@ -2047,8 +2061,9 @@ class _MessageBubble extends StatelessWidget {
   /// are authenticated by the ECDH transport and show no badge at all.
   final bool isRoomChat;
 
-  /// Forces the received LoRa image instead of the pack original.
-  final bool showLoraImage;
+  /// Per-message override flipping the MCOimg variant away from the default
+  /// chosen by the mod setting.
+  final bool mcoVariantOverridden;
 
   const _MessageBubble({
     required this.message,
@@ -2056,7 +2071,7 @@ class _MessageBubble extends StatelessWidget {
     required this.sourceId,
     required this.textScale,
     this.isRoomChat = false,
-    this.showLoraImage = false,
+    this.mcoVariantOverridden = false,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -2072,6 +2087,11 @@ class _MessageBubble extends StatelessWidget {
     final enableTracing = settingsService.settings.enableMessageTracing;
     final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
+    // Default is "show pack original" when replacements are enabled; the
+    // per-message override flips it.
+    final mcoForceLora =
+        !settingsService.settings.showMcoImagePackReplacements !=
+        mcoVariantOverridden;
     final isOutgoing = message.isOutgoing;
     final compressionType =
         message.compressionType ??
@@ -2364,7 +2384,7 @@ class _MessageBubble extends StatelessWidget {
                                   child: MCOImageOriginalOrFallback(
                                     text: message.text,
                                     image: mcoImage,
-                                    forceLora: showLoraImage,
+                                    forceLora: mcoForceLora,
                                   ),
                                 ),
                               ),

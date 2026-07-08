@@ -102,9 +102,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
 
-  /// Message ids for which the user forced the received LoRa image instead of
-  /// the pack original.
-  final Set<String> _mcoShowLoraIds = {};
+  /// Message ids whose MCOimg variant the user flipped away from the default
+  /// (the default is "show pack original" when the mod setting is enabled,
+  /// otherwise "show received LoRa version").
+  final Set<String> _mcoVariantOverridden = {};
+
+  /// Effective "render the received LoRa version" flag for a message,
+  /// combining the mod setting default with the per-message override.
+  bool _mcoForceLora(String messageId, bool showReplacements) {
+    final defaultLora = !showReplacements;
+    final overridden = _mcoVariantOverridden.contains(messageId);
+    return defaultLora != overridden;
+  }
   bool _isLoadingOlder = false;
   bool _communitiesLoaded = false;
   Region region = '';
@@ -1287,8 +1296,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   child: MCOImageOriginalOrFallback(
                                     text: message.text,
                                     image: mcoImage,
-                                    forceLora: _mcoShowLoraIds.contains(
+                                    forceLora: _mcoForceLora(
                                       message.messageId,
+                                      settingsService
+                                          .settings
+                                          .showMcoImagePackReplacements,
                                     ),
                                   ),
                                 ),
@@ -3069,7 +3081,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ListTile(
                     leading: const Icon(Icons.swap_horiz),
                     title: Text(
-                      _mcoShowLoraIds.contains(message.messageId)
+                      _mcoForceLora(
+                            message.messageId,
+                            settings.showMcoImagePackReplacements,
+                          )
                           ? context.l10n.mcogallery_showPacked
                           : context.l10n.mcogallery_showLora,
                     ),
@@ -3191,8 +3206,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   void _toggleMcoImageVariant(String messageId) {
     setState(() {
-      if (!_mcoShowLoraIds.add(messageId)) {
-        _mcoShowLoraIds.remove(messageId);
+      if (!_mcoVariantOverridden.add(messageId)) {
+        _mcoVariantOverridden.remove(messageId);
       }
     });
   }
