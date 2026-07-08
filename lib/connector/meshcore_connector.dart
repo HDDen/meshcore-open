@@ -4153,8 +4153,39 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isConnected || text.isEmpty) return;
     await _loadMessagesForContact(contact.publicKeyHex);
 
+    // Room-server messages sign via the node (a few seconds). Show a pending
+    // placeholder while signing so the message does not visually disappear;
+    // it is removed just before the retry service adds the finalized message.
+    final willSignRoomMcmp =
+        contact.type == advTypeRoom &&
+        isContactMcmpEnabled(contact.publicKeyHex) &&
+        contactMcmpVersion(contact.publicKeyHex) == 3 &&
+        contactMcmpUseSign(contact.publicKeyHex) &&
+        _isMcmpSignableText(text) &&
+        ReactionHelper.parseReaction(text) == null;
+    Message? signingPlaceholder;
+    if (willSignRoomMcmp) {
+      signingPlaceholder = Message.outgoing(
+        contact.publicKey,
+        text,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+      );
+      _addMessage(contact.publicKeyHex, signingPlaceholder);
+      notifyListeners();
+    }
+
     final outboundText = await prepareContactOutboundTextAsync(contact, text);
-    if (!isConnected) return;
+    if (signingPlaceholder != null) {
+      _conversations[contact.publicKeyHex]?.removeWhere(
+        (m) => m.messageId == signingPlaceholder!.messageId,
+      );
+    }
+    if (!isConnected) {
+      if (signingPlaceholder != null) notifyListeners();
+      return;
+    }
     final compression = _contactCompressionMetadata(
       contact,
       uncompressedText ?? text,
@@ -4672,6 +4703,26 @@ class MeshCoreConnector extends ChangeNotifier {
         : null;
     Uint8List? mcmpSignature;
     if (mcmpV3Applies && channelMcmpUseSign(channel.index)) {
+      // Signing round-trips to the node (up to a few seconds). Show the
+      // message right away in the pending state so it does not visually
+      // disappear while we wait; it is finalized (badges/state) below once
+      // the signature result is known, and only then actually transmitted.
+      final pending = ChannelMessage.outgoing(
+        text,
+        _selfName ?? 'Me',
+        channel.index,
+        originalText: originalText,
+        translatedLanguageCode: translatedLanguageCode,
+        translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
+        packetRegion: _displayPacketRegion(outgoingRegion),
+        packetRegionInfoAvailable: true,
+      );
+      _addChannelMessage(channel.index, pending);
+      notifyListeners();
+
       mcmpSignature = await _signMcmpCanonical(
         context: McmpSigningContext.channel,
         binding: McmpAppCodec.channelSigningBinding(channel.psk),
@@ -4682,7 +4733,16 @@ class MeshCoreConnector extends ChangeNotifier {
         replyAuthorName: mcmpReplyAuthorName,
         replyTimestamp: mcmpReplyTimestamp,
       );
-      if (!isConnected) return;
+
+      // Drop the placeholder; the finalized message is (re-)added below in the
+      // same synchronous pass, so the bubble never leaves the list.
+      _channelMessages[channel.index]?.removeWhere(
+        (m) => m.messageId == pending.messageId,
+      );
+      if (!isConnected) {
+        notifyListeners();
+        return;
+      }
       if (mcmpSignature == null) _notifyMcmpSigningFailed();
     }
 
