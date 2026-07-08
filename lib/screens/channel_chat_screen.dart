@@ -52,6 +52,7 @@ import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
@@ -1273,7 +1274,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: MCOImageMessage(image: mcoImage),
+                                child: MCOImageOriginalOrFallback(
+                                  text: message.text,
+                                  image: mcoImage,
+                                ),
                               ),
                               if (!enableTracing && isOutgoing)
                                 Positioned(
