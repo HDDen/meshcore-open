@@ -5389,6 +5389,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_mcmpSignatureCheckStatus => 'Signature checking';
 
   @override
+  String get chat_mcmpSigningFailed => 'Failed to sign the message';
+
+  @override
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override

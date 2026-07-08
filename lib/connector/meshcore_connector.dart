@@ -234,6 +234,14 @@ class MeshCoreConnector extends ChangeNotifier {
   final StreamController<Uint8List> _receivedFramesController =
       StreamController<Uint8List>.broadcast();
 
+  /// Emits when a signed MCMP v3 channel/room message could not be signed by
+  /// the node (message signing was requested but the signature came back
+  /// null). The UI surfaces this as an error and the message is still sent
+  /// unsigned. Direct messages never emit here: they are authenticated by the
+  /// transport and are not signed.
+  final StreamController<void> _mcmpSigningFailedController =
+      StreamController<void>.broadcast();
+
   Uint8List? _selfPublicKey;
   String? _selfName;
   int? _currentTxPower;
@@ -517,6 +525,10 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get isLoadingChannels => _isLoadingChannels;
   bool get hasLoadedChannels => _hasLoadedChannels;
   Stream<Uint8List> get receivedFrames => _receivedFramesController.stream;
+
+  /// Broadcast of MCMP v3 channel/room signing failures; see
+  /// [_mcmpSigningFailedController].
+  Stream<void> get mcmpSigningFailures => _mcmpSigningFailedController.stream;
   Uint8List? get selfPublicKey => _selfPublicKey;
   String get selfPublicKeyHex => pubKeyToHex(_selfPublicKey ?? Uint8List(0));
   String? get selfName => _selfName;
@@ -4671,6 +4683,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyTimestamp: mcmpReplyTimestamp,
       );
       if (!isConnected) return;
+      if (mcmpSignature == null) _notifyMcmpSigningFailed();
     }
 
     final binaryOutbound =
@@ -7613,6 +7626,12 @@ class MeshCoreConnector extends ChangeNotifier {
         !McmpAppCodec.isTextPayload(trimmed);
   }
 
+  void _notifyMcmpSigningFailed() {
+    if (!_mcmpSigningFailedController.isClosed) {
+      _mcmpSigningFailedController.add(null);
+    }
+  }
+
   /// Requests a node signature over the MCMP v3 canonical bytes.
   /// Returns null when signing fails; callers should then send unsigned.
   Future<Uint8List?> _signMcmpCanonical({
@@ -7679,6 +7698,7 @@ class MeshCoreConnector extends ChangeNotifier {
             replyAuthorName: effectiveReplyName,
             replyTimestamp: effectiveReplyTimestamp,
           );
+          if (signature == null) _notifyMcmpSigningFailed();
         }
         return McmpAppCodec.encodeTextTransport(
           text: text,
@@ -10097,6 +10117,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _cancelAllChannelNoRetransmissionTimers();
     radioStatsNotifier.dispose();
     _receivedFramesController.close();
+    _mcmpSigningFailedController.close();
     _usbManager.dispose();
     _tcpConnector.dispose();
 

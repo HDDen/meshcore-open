@@ -9280,6 +9280,12 @@ abstract class AppLocalizations {
   /// **'Signature checking'**
   String get chat_mcmpSignatureCheckStatus;
 
+  /// No description provided for @chat_mcmpSigningFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to sign the message'**
+  String get chat_mcmpSigningFailed;
+
   /// No description provided for @settings_modSettingsMCOimg.
   ///
   /// In en, this message translates to:

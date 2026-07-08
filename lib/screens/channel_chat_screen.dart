@@ -122,6 +122,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String? _replyReturnMessageId;
 
   MeshCoreConnector? _connector;
+  StreamSubscription<void>? _mcmpSigningFailedSubscription;
   DateTime? _lastChannelSendAt;
   String? _lastChannelSentText;
   bool _channelSkipNextBottomSnap = false;
@@ -162,6 +163,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       });
       connector.setActiveChannel(idx);
       _connector = connector;
+      _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
+        (_) => _showMcmpSigningFailed(),
+      );
       if (PlatformInfo.isDesktop) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
@@ -260,6 +264,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveChannel(null);
+    _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -271,6 +276,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showMcmpSigningFailed() {
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_mcmpSigningFailed),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
   }
 
   void _setReplyingTo(ChannelMessage message) {

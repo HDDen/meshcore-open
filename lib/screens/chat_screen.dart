@@ -96,6 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
+  StreamSubscription<void>? _mcmpSigningFailedSubscription;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
@@ -142,6 +143,9 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       connector.setActiveContact(keyHex);
       _connector = connector;
+      _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
+        (_) => _showMcmpSigningFailed(),
+      );
       if (PlatformInfo.isDesktop) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
@@ -233,6 +237,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -244,6 +249,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showMcmpSigningFailed() {
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_mcmpSigningFailed),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
   }
 
   @override

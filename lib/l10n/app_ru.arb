@@ -2260,6 +2260,7 @@
   "chat_mcmpSignatureTransport": "Подтверждено шифрованием транспорта",
   "chat_mcmpManualRecheckSign": "Перепроверить подпись",
   "chat_mcmpSignatureCheckStatus": "Проверка подписи",
+  "chat_mcmpSigningFailed": "Не удалось подписать сообщение",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsMCOimg_showReplacements": "Отображать оригиналы картинок вместо LoRa-версий",
   "settings_modSettingsHideChInd": "Скрыть индекс канала",

@@ -3050,6 +3050,7 @@
   "chat_mcmpSignatureTransport": "Authenticated by encrypted transport",
   "chat_mcmpManualRecheckSign": "Manually recheck signature",
   "chat_mcmpSignatureCheckStatus": "Signature checking",
+  "chat_mcmpSigningFailed": "Failed to sign the message",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsMCOimg_showReplacements": "Display original images instead of LoRa versions",
   "settings_modSettingsHideChInd": "Hide channel index",

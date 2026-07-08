@@ -5419,6 +5419,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_mcmpSignatureCheckStatus => 'Проверка подписи';
 
   @override
+  String get chat_mcmpSigningFailed => 'Не удалось подписать сообщение';
+
+  @override
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
