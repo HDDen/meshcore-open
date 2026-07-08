@@ -9286,6 +9286,12 @@ abstract class AppLocalizations {
   /// **'MCOimg'**
   String get settings_modSettingsMCOimg;
 
+  /// No description provided for @settings_modSettingsMCOimg_showReplacements.
+  ///
+  /// In en, this message translates to:
+  /// **'Display original images instead of LoRa versions'**
+  String get settings_modSettingsMCOimg_showReplacements;
+
   /// No description provided for @settings_modSettingsHideChInd.
   ///
   /// In en, this message translates to:

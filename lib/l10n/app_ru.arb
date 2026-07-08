@@ -2261,6 +2261,7 @@
   "chat_mcmpManualRecheckSign": "Перепроверить подпись",
   "chat_mcmpSignatureCheckStatus": "Проверка подписи",
   "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsMCOimg_showReplacements": "Отображать оригиналы картинок вместо LoRa-версий",
   "settings_modSettingsHideChInd": "Скрыть индекс канала",
   "settings_modSettingsIncomingQuoteAsMentions": "Отображать цитаты во входящих сообщениях как упоминания",
   "settings_modSettingsSimplifiedMentions": "Упрощённый стиль упоминаний в сообщениях",

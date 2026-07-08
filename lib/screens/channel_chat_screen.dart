@@ -40,6 +40,7 @@ import '../models/contact.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
@@ -100,6 +101,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
+
+  /// Message ids for which the user forced the received LoRa image instead of
+  /// the pack original.
+  final Set<String> _mcoShowLoraIds = {};
   bool _isLoadingOlder = false;
   bool _communitiesLoaded = false;
   Region region = '';
@@ -1069,9 +1074,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onTap: PlatformInfo.isDesktop
                       ? null
                       : () => _showMessagePathInfo(message),
-                  onLongPress: () => _showMessageActions(message),
+                  onLongPress: () => unawaited(_showMessageActions(message)),
                   onSecondaryTapUp: PlatformInfo.isDesktop
-                      ? (_) => _showMessageActions(message)
+                      ? (_) => unawaited(_showMessageActions(message))
                       : null,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 1000),
@@ -1272,11 +1277,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         else if (mcoImage != null)
                           Stack(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: MCOImageOriginalOrFallback(
-                                  text: message.text,
-                                  image: mcoImage,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: MCOImageOriginalOrFallback(
+                                    text: message.text,
+                                    image: mcoImage,
+                                    forceLora: _mcoShowLoraIds.contains(
+                                      message.messageId,
+                                    ),
+                                  ),
                                 ),
                               ),
                               if (!enableTracing && isOutgoing)
@@ -2924,9 +2938,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  void _showMessageActions(ChannelMessage message) {
+  Future<void> _showMessageActions(ChannelMessage message) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final hasMcoOriginal = mcoImage == null
+        ? false
+        : await McoImagePackOriginals.instance.hasOriginalForText(
+            message.text,
+          );
+    if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
@@ -3045,6 +3065,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     unawaited(_copyMessagePath(message, extended: true));
                   },
                 ),
+                if (hasMcoOriginal)
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                      _mcoShowLoraIds.contains(message.messageId)
+                          ? context.l10n.mcogallery_showPacked
+                          : context.l10n.mcogallery_showLora,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMcoImageVariant(message.messageId);
+                    },
+                  ),
                 if (mcoImage != null)
                   ListTile(
                     leading: const Icon(Icons.photo_library_outlined),
@@ -3154,6 +3187,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  void _toggleMcoImageVariant(String messageId) {
+    setState(() {
+      if (!_mcoShowLoraIds.add(messageId)) {
+        _mcoShowLoraIds.remove(messageId);
+      }
+    });
   }
 
   Future<void> _saveMcoImageToGallery(String text) async {

@@ -35,6 +35,12 @@ class McoImagePackOriginals {
   /// Resolves the pack original for a chat MCOimg text payload, or null when
   /// the image is unknown or the original file is gone (caller falls back to
   /// rendering the received LoRa version).
+  /// True when an installed pack provides an original for [text] and its file
+  /// is present on disk.
+  Future<bool> hasOriginalForText(String text) async {
+    return (await resolveOriginalForText(text)) != null;
+  }
+
   Future<File?> resolveOriginalForText(String text) async {
     await _ensureLoaded();
     final index = _index;

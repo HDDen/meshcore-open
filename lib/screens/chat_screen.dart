@@ -36,6 +36,7 @@ import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
@@ -98,6 +99,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+
+  /// Message ids for which the user forced the received LoRa image instead of
+  /// the pack original.
+  final Set<String> _mcoShowLoraIds = {};
 
   @override
   void initState() {
@@ -535,9 +540,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         : contact.name,
                     sourceId: widget.contact.publicKeyHex,
                     isRoomChat: resolvedContact.type == advTypeRoom,
+                    showLoraImage: _mcoShowLoraIds.contains(message.messageId),
                     textScale: textScale,
                     onTap: () => _openMessagePath(message, contact),
-                    onLongPress: () => _showMessageActions(message, contact),
+                    onLongPress: () =>
+                        unawaited(_showMessageActions(message, contact)),
                     onRetryReaction: (msg, emoji) =>
                         _sendReaction(msg, contact, emoji),
                     onAddSharedContact: _addSharedContact,
@@ -1647,9 +1654,15 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _showMessageActions(Message message, Contact contact) {
+  Future<void> _showMessageActions(Message message, Contact contact) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final hasMcoOriginal = mcoImage == null
+        ? false
+        : await McoImagePackOriginals.instance.hasOriginalForText(
+            message.text,
+          );
+    if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
@@ -1698,6 +1711,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     _copyMessageText(message.text);
                   },
                 ),
+                if (hasMcoOriginal)
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                      _mcoShowLoraIds.contains(message.messageId)
+                          ? context.l10n.mcogallery_showPacked
+                          : context.l10n.mcogallery_showLora,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMcoImageVariant(message.messageId);
+                    },
+                  ),
                 if (mcoImage != null)
                   ListTile(
                     leading: const Icon(Icons.photo_library_outlined),
@@ -1853,6 +1879,14 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  void _toggleMcoImageVariant(String messageId) {
+    setState(() {
+      if (!_mcoShowLoraIds.add(messageId)) {
+        _mcoShowLoraIds.remove(messageId);
+      }
+    });
   }
 
   Future<void> _saveMcoImageToGallery(String text) async {
@@ -2013,12 +2047,16 @@ class _MessageBubble extends StatelessWidget {
   /// are authenticated by the ECDH transport and show no badge at all.
   final bool isRoomChat;
 
+  /// Forces the received LoRa image instead of the pack original.
+  final bool showLoraImage;
+
   const _MessageBubble({
     required this.message,
     required this.senderName,
     required this.sourceId,
     required this.textScale,
     this.isRoomChat = false,
+    this.showLoraImage = false,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -2316,11 +2354,18 @@ class _MessageBubble extends StatelessWidget {
                         else if (mcoImage != null)
                           Stack(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: MCOImageOriginalOrFallback(
-                                  text: message.text,
-                                  image: mcoImage,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: MCOImageOriginalOrFallback(
+                                    text: message.text,
+                                    image: mcoImage,
+                                    forceLora: showLoraImage,
+                                  ),
                                 ),
                               ),
                               if (!enableTracing && isOutgoing)

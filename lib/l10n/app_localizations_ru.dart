@@ -5422,6 +5422,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Отображать оригиналы картинок вместо LoRa-версий';
+
+  @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
 
   @override

@@ -5427,6 +5427,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Display original images instead of LoRa versions';
+
+  @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
 
   @override
