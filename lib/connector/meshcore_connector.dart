@@ -314,6 +314,14 @@ class MeshCoreConnector extends ChangeNotifier {
   Timer? _contactSyncTimeout;
   static const Duration _contactSyncIdleTimeout = Duration(seconds: 10);
   bool _isSyncingQueuedMessages = false;
+
+  /// True only while draining the backlog the node accumulated before this
+  /// connection (the initial post-connect queued sync). During this window
+  /// queued channel messages are ordered by their original send time, since
+  /// the node replays the whole backlog "now" and the local receivedAt is
+  /// meaningless for them. Incremental live deliveries afterwards keep real
+  /// receivedAt ordering (robust to per-message radio flight time).
+  bool _isInitialBacklogDrain = false;
   bool _deferQueuedContactMessagesUntilContacts = false;
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
@@ -3556,6 +3564,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _isLoadingChannels = false;
     _hasLoadedChannels = false;
     _isSyncingQueuedMessages = false;
+    _isInitialBacklogDrain = false;
     _deferQueuedContactMessagesUntilContacts = false;
     _isProcessingDeferredQueuedContactMessages = false;
     _queuedMessageSyncInFlight = false;
@@ -5747,6 +5756,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _requestNextQueuedMessage() async {
     if (!isConnected) {
       _isSyncingQueuedMessages = false;
+      _isInitialBacklogDrain = false;
       _queuedMessageSyncInFlight = false;
       _queueSyncRetries = 0;
       return;
@@ -5772,6 +5782,7 @@ class MeshCoreConnector extends ChangeNotifier {
       debugPrint('[QueueSync] Error sending sync request: $e');
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
+      _isInitialBacklogDrain = false;
       _queueSyncTimeout?.cancel();
       _queueSyncRetries = 0;
       notifyListeners();
@@ -5794,6 +5805,7 @@ class MeshCoreConnector extends ChangeNotifier {
       debugPrint('[QueueSync] Max retries reached, stopping sync');
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
+      _isInitialBacklogDrain = false;
       _queueSyncRetries = 0;
       notifyListeners();
       _continueAfterQueuedMessageSync();
@@ -6092,6 +6104,9 @@ class MeshCoreConnector extends ChangeNotifier {
   void _startPostChannelInitialQueuedMessageSync() {
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
       _deferQueuedContactMessagesUntilContacts = _pendingInitialContactsSync;
+      // This drain replays the backlog accumulated before we connected;
+      // order queued channel messages by their send time until it finishes.
+      _isInitialBacklogDrain = _pendingInitialQueuedMessageSync;
       _pendingInitialQueuedMessageSync = false;
       _pendingQueueSync = false;
       unawaited(syncQueuedMessages(force: true));
@@ -6539,10 +6554,19 @@ class MeshCoreConnector extends ChangeNotifier {
     debugPrint('[QueueSync] No more messages, sync complete');
     _queueSyncTimeout?.cancel();
     _isSyncingQueuedMessages = false;
+    _isInitialBacklogDrain = false;
     _queuedMessageSyncInFlight = false;
     _queueSyncRetries = 0; // Reset retry counter on successful completion
     notifyListeners();
     _continueAfterQueuedMessageSync();
+  }
+
+  /// receivedAt to assign to a queued channel message. During the initial
+  /// backlog drain the node replays everything "now", so we order queued
+  /// messages by their original send time instead; live deliveries (and all
+  /// incremental syncs after the drain) keep the real arrival time.
+  DateTime _channelMessageReceivedAt(DateTime sendTimestamp, DateTime now) {
+    return _isInitialBacklogDrain ? sendTimestamp : now;
   }
 
   bool _shouldDeferQueuedContactMessage(Uint8List frame) {
@@ -8345,7 +8369,16 @@ class MeshCoreConnector extends ChangeNotifier {
         parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
         '${parsed.senderName}: ${parsed.text}',
       );
-      var message = parsed.copyWith(packetHash: contentHash);
+      var message = parsed.copyWith(
+        packetHash: contentHash,
+        // During the initial backlog drain, order text messages by their send
+        // time (the packet timestamp); live/incremental deliveries keep the
+        // real arrival time.
+        receivedAt: _channelMessageReceivedAt(
+          parsed.timestamp,
+          parsed.receivedAt,
+        ),
+      );
       final textReplyReference = _resolveChannelReplyAnchor(
         parsed.channelIndex!,
         message.mcmpReplyAuthorName,
@@ -8440,6 +8473,17 @@ class MeshCoreConnector extends ChangeNotifier {
       appData?.mcmpMessage,
     );
     final mcmpMessage = appData?.mcmpMessage;
+    // During the initial backlog drain, order by send time. MCMP v3 carries a
+    // send timestamp in its body; MCOimg / legacy binary datagrams carry none,
+    // so those fall back to arrival (delivery) order.
+    final mcmpSendSeconds = mcmpMessage?.timestamp;
+    final binarySendTime = mcmpSendSeconds != null
+        ? DateTime.fromMillisecondsSinceEpoch(mcmpSendSeconds * 1000)
+        : receivedAt;
+    final storedReceivedAt = _channelMessageReceivedAt(
+      binarySendTime,
+      receivedAt,
+    );
     var message = ChannelMessage(
       senderName: senderName,
       text: messageText,
@@ -8462,7 +8506,7 @@ class MeshCoreConnector extends ChangeNotifier {
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
       timestamp: decoded?.timestamp ?? receivedAt,
-      receivedAt: receivedAt,
+      receivedAt: storedReceivedAt,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
