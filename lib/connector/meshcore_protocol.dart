@@ -400,7 +400,16 @@ const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
 const int maxFrameSize = 176;
-const int maxChannelDataLength = maxFrameSize - 9;
+
+/// Maximum channel-data payload accepted end-to-end.
+///
+/// The serial link would allow MAX_FRAME_SIZE - 9 = 167 bytes
+/// (MAX_CHANNEL_DATA_LENGTH in the companion firmware), but the radio path is
+/// stricter: sendGroupData wraps the payload as [data_type u16][len u8][data]
+/// and rejects data longer than MAX_GROUP_DATA_LENGTH =
+/// MAX_PACKET_PAYLOAD(184) - CIPHER_BLOCK_SIZE(16) - 3 = 165 bytes — the node
+/// answers with an error frame and nothing is transmitted.
+const int maxChannelDataLength = 165;
 const int appProtocolVersion = 4;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
