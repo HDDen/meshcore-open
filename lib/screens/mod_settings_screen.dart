@@ -126,6 +126,50 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setChannelsUnreadSorting,
                   ),
                 ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.format_size, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context.l10n.settings_modSettingsDPIchange,
+                            ),
+                          ),
+                          Text(
+                            '${(settings.uiScale * 100).round()}%',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: const Icon(Icons.image_outlined, size: 20),
+                        title: Text(
+                          context.l10n.settings_modSettingsDPIchangeToIcons,
+                        ),
+                        value: settings.uiScaleApplyToIcons,
+                        onChanged: settingsService.setUiScaleApplyToIcons,
+                      ),
+                      Slider(
+                        value: settings.uiScale.clamp(0.5, 2.0).toDouble(),
+                        min: 0.5,
+                        max: 2.0,
+                        divisions: 30,
+                        label: '${(settings.uiScale * 100).round()}%',
+                        onChanged: (value) {
+                          settingsService.setUiScale(
+                            (value * 20).round() / 20,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
                 MeshCard(
                   padding: EdgeInsets.zero,

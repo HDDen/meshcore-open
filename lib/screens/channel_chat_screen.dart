@@ -1796,12 +1796,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required bool simplifiedMention,
     required double textScale,
   }) {
+    // flutter_linkify ignores the ambient MediaQuery scaler, so the message
+    // body must apply the global UI scale explicitly (as an additional
+    // multiplier for backward compatibility with the untouched system scale).
+    final uiScale = context.read<AppSettingsService>().settings.uiScale;
+    final bodyTextScaler = TextScaler.linear(uiScale);
     if (replyMentionName == null || replyMentionName.isEmpty) {
       return TranslatedMessageContent(
         displayText: displayText,
         originalText: originalText,
         style: textStyle,
         originalStyle: originalStyle,
+        textScaler: bodyTextScaler,
       );
     }
 

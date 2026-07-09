@@ -9502,6 +9502,18 @@ abstract class AppLocalizations {
   /// **'Keep TCP-connection alive in background'**
   String get settings_modSettingsMessagingBackgroundTCP;
 
+  /// No description provided for @settings_modSettingsDPIchange.
+  ///
+  /// In en, this message translates to:
+  /// **'DPI change'**
+  String get settings_modSettingsDPIchange;
+
+  /// No description provided for @settings_modSettingsDPIchangeToIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to icons'**
+  String get settings_modSettingsDPIchangeToIcons;
+
   /// No description provided for @chat_MCOimgOpenGallery.
   ///
   /// In en, this message translates to:

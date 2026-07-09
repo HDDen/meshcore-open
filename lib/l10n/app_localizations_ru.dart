@@ -5553,6 +5553,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удерживать TCP-соединение в фоне';
 
   @override
+  String get settings_modSettingsDPIchange => 'Регулировка DPI';
+
+  @override
+  String get settings_modSettingsDPIchangeToIcons => 'Применять к иконкам';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Открыть галерею MCOimg';
 
   @override

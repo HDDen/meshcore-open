@@ -193,6 +193,14 @@ class AppSettings {
   final bool showMcoImageAlgorithm;
   final bool showMcoImageBytes;
   final bool showMcoImagePackReplacements;
+
+  /// Global UI scale multiplier applied on top of the system text scale
+  /// (affects fonts, and icons when [uiScaleApplyToIcons] is enabled).
+  final double uiScale;
+
+  /// When true, the [uiScale] multiplier also scales icons (via
+  /// IconThemeData.applyTextScaling), not only text.
+  final bool uiScaleApplyToIcons;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool showMessageRegion;
@@ -472,6 +480,8 @@ class AppSettings {
     this.showMcoImageAlgorithm = true,
     this.showMcoImageBytes = true,
     this.showMcoImagePackReplacements = true,
+    this.uiScale = 1.0,
+    this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.showMessageRegion = false,
@@ -577,6 +587,8 @@ class AppSettings {
       'show_mco_image_algorithm': showMcoImageAlgorithm,
       'show_mco_image_bytes': showMcoImageBytes,
       'show_mco_image_pack_replacements': showMcoImagePackReplacements,
+      'ui_scale': uiScale,
+      'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'show_message_region': showMessageRegion,
@@ -693,6 +705,8 @@ class AppSettings {
       showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
       showMcoImagePackReplacements:
           json['show_mco_image_pack_replacements'] as bool? ?? true,
+      uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
+      uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
@@ -848,6 +862,8 @@ class AppSettings {
     bool? showMcoImageAlgorithm,
     bool? showMcoImageBytes,
     bool? showMcoImagePackReplacements,
+    double? uiScale,
+    bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? showMessageRegion,
@@ -933,6 +949,8 @@ class AppSettings {
       showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
       showMcoImagePackReplacements:
           showMcoImagePackReplacements ?? this.showMcoImagePackReplacements,
+      uiScale: uiScale ?? this.uiScale,
+      uiScaleApplyToIcons: uiScaleApplyToIcons ?? this.uiScaleApplyToIcons,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,

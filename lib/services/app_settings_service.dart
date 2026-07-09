@@ -178,6 +178,14 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setUiScale(double value) async {
+    await updateSettings(_settings.copyWith(uiScale: value));
+  }
+
+  Future<void> setUiScaleApplyToIcons(bool value) async {
+    await updateSettings(_settings.copyWith(uiScaleApplyToIcons: value));
+  }
+
   Future<void> setShowCompressionRatio(bool value) async {
     await updateSettings(_settings.copyWith(showCompressionRatio: value));
   }

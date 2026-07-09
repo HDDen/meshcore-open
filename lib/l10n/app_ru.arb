@@ -2297,6 +2297,8 @@
   "settings_selfTelemetryShow": "Просмотр датчиков",
   "settings_modSettingsVisualChannelsUnreadSorting": "Сортировка каналов по непрочитанным сообщениям",
   "settings_modSettingsMessagingBackgroundTCP": "Удерживать TCP-соединение в фоне",
+  "settings_modSettingsDPIchange": "Регулировка DPI",
+  "settings_modSettingsDPIchangeToIcons": "Применять к иконкам",
   "chat_MCOimgOpenGallery": "Открыть галерею MCOimg",
   "chat_additionalActions": "Меню действий",
   "mcogallery_common": "Общее",

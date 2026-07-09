@@ -5179,6 +5179,12 @@ class AppLocalizationsZh extends AppLocalizations {
       'Keep TCP-connection alive in background';
 
   @override
+  String get settings_modSettingsDPIchange => 'DPI change';
+
+  @override
+  String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
 
   @override

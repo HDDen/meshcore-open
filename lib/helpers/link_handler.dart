@@ -15,16 +15,25 @@ class LinkHandler {
   }
 
   /// Returns a [SelectableLinkify] on desktop or a [Linkify] on mobile.
+  ///
+  /// [textScaler] lets callers scale linkified text explicitly. flutter_linkify
+  /// does not inherit MediaQuery's textScaler, so message bodies must pass one
+  /// to participate in the global UI scale (see the DPI setting).
   static Widget buildLinkifyText({
     required BuildContext context,
     required String text,
     required TextStyle style,
     TextStyle? linkStyle,
+    TextScaler? textScaler,
   }) {
     final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
     const linkifiers = [UrlLinkifier(), EmailLinkifier()];
     void onOpen(LinkableElement link) => handleLinkTap(context, link.url);
+    // flutter_linkify 6.0.0 exposes textScaleFactor (double), not textScaler.
+    final effectiveTextScaleFactor = (textScaler ?? TextScaler.noScaling).scale(
+      1.0,
+    );
 
     if (PlatformInfo.isDesktop) {
       return SelectableLinkify(
@@ -34,6 +43,7 @@ class LinkHandler {
         options: options,
         linkifiers: linkifiers,
         onOpen: onOpen,
+        textScaleFactor: effectiveTextScaleFactor,
       );
     }
     return Linkify(
@@ -43,6 +53,7 @@ class LinkHandler {
       options: options,
       linkifiers: linkifiers,
       onOpen: onOpen,
+      textScaleFactor: effectiveTextScaleFactor,
     );
   }
 

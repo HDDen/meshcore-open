@@ -2099,6 +2099,10 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    // flutter_linkify ignores the ambient MediaQuery scaler, so the message
+    // body must apply the global UI scale explicitly (as an additional
+    // multiplier for backward compatibility with the untouched system scale).
+    final bodyTextScaler = TextScaler.linear(settingsService.settings.uiScale);
     final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
     // Default is "show pack original" when replacements are enabled; the
@@ -2512,6 +2516,7 @@ class _MessageBubble extends StatelessWidget {
                                     color: textColor.withValues(alpha: 0.78),
                                     fontSize: bodyFontSize * textScale,
                                   ),
+                                  textScaler: bodyTextScaler,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
