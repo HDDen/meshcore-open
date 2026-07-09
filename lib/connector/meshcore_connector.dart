@@ -8017,17 +8017,20 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
-  /// Tolerance for reply-anchor timestamp matching. The author's local card
-  /// keeps the compose time while the wire carries the firmware TX timestamp
-  /// (RTC at transmit, after radio-quiet waits), so exact equality can miss
-  /// by several seconds for non-MCMP-v3 anchors.
-  static const int _replyAnchorToleranceSeconds = 120;
+  /// Tolerance for reply-anchor timestamp matching. Kept at 0 so only an exact
+  /// timestamp match resolves a quoted message; the delta mechanism is retained
+  /// for compatibility/tests but never accepts an approximate candidate.
+  static const int _replyAnchorToleranceSeconds = 0;
 
   /// Resolves a reply anchor ("author name + timestamp" as transmitted in the
-  /// MCMP body) against the channel history. Prefers an exact match on the
-  /// outer group timestamp or the transmitted MCMP body timestamp, then falls
-  /// back to the closest message from the author within
-  /// [_replyAnchorToleranceSeconds].
+  /// MCMP v3 body of the *replying* message) against the channel history. The
+  /// quoted message may be any message that carries a canonical timestamp —
+  /// plain group_text (incl. contact-share) via its outer packet timestamp, or
+  /// MCMP v3 via its body timestamp. MCOimg / legacy binary datagrams carry no
+  /// timestamp on the wire (receiver-local only), so they are skipped. A
+  /// candidate matches when its author is [replyAuthorName] and its canonical
+  /// timestamp equals [replyTimestamp] exactly. When nothing matches exactly,
+  /// returns an author-name-only reference (rendered as an @mention).
   _McmpReplyReference? _resolveChannelReplyAnchor(
     int channelIndex,
     String? replyAuthorName,
@@ -8044,6 +8047,11 @@ class MeshCoreConnector extends ChangeNotifier {
     for (var i = messages.length - 1; i >= 0; i--) {
       final message = messages[i];
       if (message.senderName.trim() != replySender) continue;
+      // Binary datagrams without an MCMP body timestamp (MCOimg / legacy) have
+      // only a receiver-local timestamp and cannot be matched reliably.
+      if (message.wasBinaryTransport && message.mcmpTimestamp == null) {
+        continue;
+      }
       final outerTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
       if (outerTimestamp == replyTimestamp ||
           message.mcmpTimestamp == replyTimestamp) {
