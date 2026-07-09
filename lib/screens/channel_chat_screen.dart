@@ -1555,9 +1555,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
+                                  // Show the real receive time (matches the
+                                  // list ordering), not the sender's packet
+                                  // timestamp.
                                   _formatTime(
                                     context,
-                                    message.timestamp,
+                                    message.receivedAt,
                                     enableSeconds: enableTimeSeconds,
                                   ),
                                   style: MeshTheme.mono(

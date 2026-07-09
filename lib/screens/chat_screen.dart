@@ -1635,6 +1635,10 @@ class _ChatScreenState extends State<ChatScreen> {
       verifiedSenderKeyHex: message.verifiedSenderKeyHex,
       mcmpNameCollision: message.mcmpNameCollision,
       timestamp: message.timestamp,
+      // Room-server posts / outgoing have no receive time → epoch 0 renders
+      // as a dash on the path screen; contacts carry the real receivedAt.
+      receivedAt:
+          message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,

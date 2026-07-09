@@ -127,6 +127,7 @@ class MessageStore {
       'senderKey': base64Encode(msg.senderKey),
       'text': msg.text,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'receivedAt': msg.receivedAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'isCli': msg.isCli,
       'status': msg.status.index,
@@ -223,6 +224,9 @@ class MessageStore {
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      receivedAt: json['receivedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['receivedAt'] as int)
+          : null,
       isOutgoing: json['isOutgoing'] as bool,
       isCli: isCli,
       status: MessageStatus.values[json['status'] as int],

@@ -7298,6 +7298,11 @@ class MeshCoreConnector extends ChangeNotifier {
           pathLength: contact.pathLength < 0 ? -1 : contact.pathLength,
           pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
         );
+        // Record the air receive time for incoming DMs from regular contacts.
+        // Room-server posts intentionally keep receivedAt null (shown as "—").
+        if (!message.isOutgoing && contact.type != advTypeRoom) {
+          message = message.copyWith(receivedAt: receivedAt);
+        }
       }
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = await _applyContactMcmpVerification(message, contact);

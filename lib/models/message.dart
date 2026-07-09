@@ -15,6 +15,9 @@ class Message {
   final Uint8List senderKey;
   final String text;
   final DateTime timestamp;
+  // Wall-clock time this message was received from the air. Only set for
+  // incoming messages from regular contacts (null for room servers / outgoing).
+  final DateTime? receivedAt;
   final bool isOutgoing;
   final bool isCli;
   final MessageStatus status;
@@ -74,6 +77,7 @@ class Message {
     required this.senderKey,
     required this.text,
     required this.timestamp,
+    this.receivedAt,
     required this.isOutgoing,
     this.isCli = false,
     this.status = MessageStatus.pending,
@@ -127,6 +131,7 @@ class Message {
 
   Message copyWith({
     MessageStatus? status,
+    DateTime? receivedAt,
     int? retryCount,
     int? estimatedTimeoutMs,
     int? expectedAckHash,
@@ -169,6 +174,7 @@ class Message {
       senderKey: senderKey,
       text: text,
       timestamp: timestamp,
+      receivedAt: receivedAt ?? this.receivedAt,
       isOutgoing: isOutgoing,
       isCli: isCli ?? this.isCli,
       status: status ?? this.status,
