@@ -5171,6 +5171,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Hide channel index';
 
   @override
+  String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
+
+  @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
       'Show quotes in incoming messages as mentions';
 

@@ -19,6 +19,7 @@ import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
+import 'companion_radio_stats_screen.dart';
 import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -730,6 +731,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => const AppDebugLogScreen(),
+              ),
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.insights_outlined,
+          title: l10n.radioStats_settingsTile,
+          subtitle: l10n.radioStats_settingsSubtitle,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CompanionRadioStatsScreen(),
               ),
             );
           },

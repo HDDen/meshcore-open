@@ -5089,7 +5089,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отправлять расширенные форматы в бинарном виде (личные сообщения)';
 
   @override
-  String get contact_typeChat => 'Чат';
+  String get contact_typeChat => 'Пользователь';
 
   @override
   String get contact_typeRepeater => 'Репитер';
@@ -5433,6 +5433,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
+
+  @override
+  String get settings_modSettingsHideRadioStats =>
+      'Скрыть статистику радиовещания в шапке';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>

@@ -9310,6 +9310,12 @@ abstract class AppLocalizations {
   /// **'Hide channel index'**
   String get settings_modSettingsHideChInd;
 
+  /// No description provided for @settings_modSettingsHideRadioStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide header radio stats'**
+  String get settings_modSettingsHideRadioStats;
+
   /// No description provided for @settings_modSettingsIncomingQuoteAsMentions.
   ///
   /// In en, this message translates to:
