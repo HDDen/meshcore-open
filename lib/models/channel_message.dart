@@ -153,6 +153,7 @@ class ChannelMessage {
 
   ChannelMessage copyWith({
     ChannelMessageStatus? status,
+    DateTime? timestamp,
     List<Repeat>? repeats,
     int? repeatCount,
     int? pathLength,
@@ -252,7 +253,7 @@ class ChannelMessage {
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
-      timestamp: timestamp,
+      timestamp: timestamp ?? this.timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
       sentByRadioAt: sentByRadioAt == _unset
           ? this.sentByRadioAt

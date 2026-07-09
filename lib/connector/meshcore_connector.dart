@@ -4918,8 +4918,22 @@ class MeshCoreConnector extends ChangeNotifier {
         );
         return;
       }
+      // Stamp the outgoing packet with the actual send time and align the
+      // stored message.timestamp to the exact value that went on the air, so
+      // replies to our own message resolve by exact-timestamp matching.
+      final sentTimestampSeconds =
+          sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      _updateChannelMessagePacketTimestamp(
+        channel.index,
+        message.messageId,
+        sentTimestampSeconds,
+      );
       await _sendFrameAndWaitForCommandAck(
-        buildSendChannelTextMsgFrame(channel.index, outboundText),
+        buildSendChannelTextMsgFrame(
+          channel.index,
+          outboundText,
+          timestampSeconds: sentTimestampSeconds,
+        ),
         channelSendQueueId: message.messageId,
         expectsGenericAck: true,
       );
@@ -5042,8 +5056,19 @@ class MeshCoreConnector extends ChangeNotifier {
         );
         return;
       }
+      final sentTimestampSeconds =
+          sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      _updateChannelMessagePacketTimestamp(
+        pending.channel.index,
+        pending.messageId,
+        sentTimestampSeconds,
+      );
       await _sendFrameAndWaitForCommandAck(
-        buildSendChannelTextMsgFrame(pending.channel.index, outboundText),
+        buildSendChannelTextMsgFrame(
+          pending.channel.index,
+          outboundText,
+          timestampSeconds: sentTimestampSeconds,
+        ),
         channelSendQueueId: pending.messageId,
         expectsGenericAck: true,
       );
@@ -5551,6 +5576,32 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
+  }
+
+  /// Aligns an outgoing message's packet timestamp to the value that was
+  /// actually written into the transmitted frame, so replies to our own
+  /// message resolve by exact-timestamp matching. The visible bubble time uses
+  /// receivedAt and is unaffected.
+  void _updateChannelMessagePacketTimestamp(
+    int channelIndex,
+    String messageId,
+    int timestampSeconds,
+  ) {
+    final channelMessages = _channelMessages[channelIndex];
+    if (channelMessages == null) return;
+    final index = channelMessages.indexWhere(
+      (message) => message.messageId == messageId,
+    );
+    if (index < 0) return;
+    final message = channelMessages[index];
+    if (!message.isOutgoing) return;
+    channelMessages[index] = message.copyWith(
+      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampSeconds * 1000),
+    );
+    unawaited(
+      _channelMessageStore.saveChannelMessages(channelIndex, channelMessages),
+    );
+    notifyListeners();
   }
 
   void _scheduleChannelNoRetransmissionWarning(String messageId) {

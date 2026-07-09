@@ -8,10 +8,12 @@ import '../theme/mesh_theme.dart';
 /// Compact signature-status badge for message bubbles.
 ///
 /// Outgoing MCMP v3 messages show "sent signed / unsigned". Incoming messages
-/// show the verification result; for a valid signature the fingerprint of the
-/// key that actually verified is displayed («404654...AF4322») so trust is
-/// anchored to the key, not the display name. A warning badge is added when
-/// the sender name belonged to several contacts at verification time.
+/// show the verification result; for any signed message (valid or invalid) the
+/// fingerprint of the associated key is displayed («404654...AF4322») so trust
+/// is anchored to the key, not the display name. The exception is
+/// "unverifiable", where no contact bears the name and there is no key to show.
+/// A warning badge is added when the sender name belonged to several contacts
+/// at verification time.
 class McmpSignatureBadge extends StatelessWidget {
   final McmpSignatureStatus status;
   final bool isOutgoing;
@@ -131,10 +133,12 @@ class McmpSignatureBadge extends StatelessWidget {
 
     switch (status) {
       case McmpSignatureStatus.valid:
-        // Closed green lock: signature verified.
+        // Closed lock: signature verified. Green normally, amber when the
+        // sender name is shared by several contacts (verified key, ambiguous
+        // name).
         icon = Icons.lock_outlined;
         tooltip = l10n.settings_mcmp_signed;
-        iconColor = MeshPalette.signal;
+        iconColor = nameCollision ? MeshPalette.warn : MeshPalette.signal;
         break;
       case McmpSignatureStatus.invalid:
         // Open red lock with the shackle turned aside: signature invalid.
@@ -162,9 +166,13 @@ class McmpSignatureBadge extends StatelessWidget {
         return const SizedBox.shrink();
     }
 
+    // Any signed message shows the public key fingerprint, anchoring trust to
+    // the key rather than the display name. The exception is "unverifiable"
+    // (no contact with that name), where there is no key to show.
     final fingerprint =
         showFingerprint &&
-            status == McmpSignatureStatus.valid &&
+            (status == McmpSignatureStatus.valid ||
+                status == McmpSignatureStatus.invalid) &&
             verifiedSenderKeyHex != null
         ? formatFingerprint(verifiedSenderKeyHex!)
         : null;

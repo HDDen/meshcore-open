@@ -9,8 +9,10 @@ import 'mcmp_app_codec.dart';
 class McmpVerificationResult {
   final McmpSignatureStatus status;
 
-  /// Hex of the contact key that successfully verified the signature
-  /// (only set for [McmpSignatureStatus.valid]).
+  /// Hex of the contact key associated with the signature check: the key that
+  /// verified for [McmpSignatureStatus.valid], or the single contact key the
+  /// signature was checked against for [McmpSignatureStatus.invalid]. Left null
+  /// when there is no unambiguous key (unverifiable, or a name collision).
   final String? verifiedSenderKeyHex;
 
   /// True when the sender name belonged to more than one contact at the time
@@ -116,6 +118,10 @@ class McmpSignatureVerifier {
     }
     return McmpVerificationResult(
       status: McmpSignatureStatus.invalid,
+      // Expose the checked key so the badge can anchor trust to it, but only
+      // when a single contact bore the name (a collision has no single key).
+      verifiedSenderKeyHex:
+          candidates.length == 1 ? candidates.first.publicKeyHex : null,
       nameCollision: collision,
     );
   }
@@ -182,9 +188,11 @@ class McmpSignatureVerifier {
       )) {
         if (!_namesMatch(candidate.name, signedName)) {
           // The key is genuine but the signed name does not match the local
-          // contact name: rename or deliberate impersonation.
+          // contact name: rename or deliberate impersonation. The key is known,
+          // so expose it.
           return McmpVerificationResult(
             status: McmpSignatureStatus.invalid,
+            verifiedSenderKeyHex: candidate.publicKeyHex,
             nameCollision: collision,
           );
         }
@@ -197,6 +205,8 @@ class McmpSignatureVerifier {
     }
     return McmpVerificationResult(
       status: McmpSignatureStatus.invalid,
+      verifiedSenderKeyHex:
+          candidates.length == 1 ? candidates.first.publicKeyHex : null,
       nameCollision: collision,
     );
   }
