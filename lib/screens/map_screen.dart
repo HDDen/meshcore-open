@@ -103,6 +103,11 @@ class _MapScreenState extends State<MapScreen>
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
+  // Start point of the trace (self position), kept so the auxiliary map state
+  // can be rebuilt after a manual edit of the hop list.
+  LatLng? _pathTraceStart;
+  final TextEditingController _pathEditController = TextEditingController();
+  final FocusNode _pathEditFocus = FocusNode();
   bool _mapControlsCollapsed = true;
   bool _statsExpanded = false;
   bool _showNodeLabels = true;
@@ -138,6 +143,9 @@ class _MapScreenState extends State<MapScreen>
   void initState() {
     super.initState();
     _loadRemovedMarkers();
+    _pathEditFocus.addListener(() {
+      if (!_pathEditFocus.hasFocus) _commitPathEdit();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<MeshCoreConnector>().getChannels();
@@ -184,6 +192,8 @@ class _MapScreenState extends State<MapScreen>
     appRouteObserver.unsubscribe(this);
     _searchController.dispose();
     _searchFocus.dispose();
+    _pathEditController.dispose();
+    _pathEditFocus.dispose();
     _disableWardriveScreenWakelock();
     if (_wardriveServiceListener != null) {
       _wardriveService?.removeListener(_wardriveServiceListener!);
@@ -5435,6 +5445,9 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _addToPath(BuildContext context, Contact contact, {LatLng? position}) {
+    // Commit any pending manual edit first so a tapped hop is appended to the
+    // typed path rather than overwritten when the field later loses focus.
+    if (_pathEditFocus.hasFocus) _pathEditFocus.unfocus();
     final connector = context.read<MeshCoreConnector>();
     final hopWidth = min(
       connector.pathHashByteWidth.clamp(1, pubKeySize),
@@ -5459,23 +5472,126 @@ class _MapScreenState extends State<MapScreen>
         ),
       ); // Add contact to path trace contacts
       _points.add(position ?? LatLng(contact.latitude!, contact.longitude!));
+      _syncPathEditText();
     });
   }
 
   void _startPath(LatLng position) {
     setState(() {
       _isBuildingPathTrace = true;
+      _pathTraceStart = position;
       _pathTrace.clear();
       _pathTraceHopWidths.clear();
       _pathTraceContacts.clear();
       _points.clear();
       _polylines.clear();
       _points.add(position);
+      _syncPathEditText();
     });
+  }
+
+  /// Mirrors the current [_pathTrace] into the editable hop field, unless the
+  /// user is actively editing it.
+  void _syncPathEditText() {
+    if (_pathEditFocus.hasFocus) return;
+    final width = context.read<MeshCoreConnector>().pathHashByteWidth;
+    final hopText = PathHelper.splitPathBytes(
+      _pathTrace,
+      width,
+    ).map(PathHelper.formatHopHex).join(',');
+    if (_pathEditController.text != hopText) {
+      _pathEditController.text = hopText;
+    }
+  }
+
+  /// Commits a manual edit of the hop list (on focus loss). Uppercases, strips
+  /// characters outside the "a-zA-Z0-9," alphabet (and spaces), collapses and
+  /// trims commas, then keeps only hops whose length matches the node's path
+  /// hash mode (width * 2 hex chars) and are valid hex.
+  void _commitPathEdit() {
+    if (!mounted || !_isBuildingPathTrace) return;
+    final width = context.read<MeshCoreConnector>().pathHashByteWidth
+        .clamp(1, pubKeySize)
+        .toInt();
+    final expectedLen = width * 2;
+
+    var text = _pathEditController.text.toUpperCase();
+    text = text.replaceAll(RegExp(r'[^A-Za-z0-9,]'), '');
+    text = text.replaceAll(' ', '');
+    text = text.replaceAll(RegExp(r',{2,}'), ',');
+    text = text.replaceAll(RegExp(r'^,+|,+$'), '');
+
+    final rawHops = text.isEmpty ? const <String>[] : text.split(',');
+    final canonicalHops = <String>[];
+    final bytes = <int>[];
+    final widths = <int>[];
+    for (final hop in rawHops) {
+      if (hop.length != expectedLen) continue;
+      final hopBytes = _hexStringToBytes(hop);
+      if (hopBytes == null) continue;
+      bytes.addAll(hopBytes);
+      widths.add(width);
+      canonicalHops.add(hop);
+    }
+
+    setState(() {
+      _pathTrace
+        ..clear()
+        ..addAll(bytes);
+      _pathTraceHopWidths
+        ..clear()
+        ..addAll(widths);
+      _rebuildPathTraceAuxiliary();
+      _pathEditController.text = canonicalHops.join(',');
+    });
+  }
+
+  List<int>? _hexStringToBytes(String hex) {
+    if (hex.length % 2 != 0) return null;
+    final out = <int>[];
+    for (var i = 0; i < hex.length; i += 2) {
+      final b = int.tryParse(hex.substring(i, i + 2), radix: 16);
+      if (b == null) return null;
+      out.add(b);
+    }
+    return out;
+  }
+
+  /// Rebuilds [_pathTraceContacts] and [_points] from the current [_pathTrace]
+  /// by resolving each hop to a known repeater/room contact (by pubkey prefix).
+  /// Manually-entered hops without a matching located contact simply contribute
+  /// no map point.
+  void _rebuildPathTraceAuxiliary() {
+    final connector = context.read<MeshCoreConnector>();
+    final width = connector.pathHashByteWidth;
+    _pathTraceContacts.clear();
+    _points.clear();
+    _polylines.clear();
+    if (_pathTraceStart != null) _points.add(_pathTraceStart!);
+    for (final hop in PathHelper.splitPathBytes(_pathTrace, width)) {
+      final contact = _contactForHopPrefix(connector, hop);
+      if (contact == null) continue;
+      _pathTraceContacts.add(contact);
+      if (contact.hasLocation) {
+        _points.add(LatLng(contact.latitude!, contact.longitude!));
+      }
+    }
+  }
+
+  Contact? _contactForHopPrefix(MeshCoreConnector connector, List<int> prefix) {
+    for (final c in connector.contacts) {
+      if (c.type != advTypeRepeater && c.type != advTypeRoom) continue;
+      if (c.publicKey.length < prefix.length) continue;
+      if (listEquals(c.publicKey.sublist(0, prefix.length), prefix)) {
+        return c;
+      }
+    }
+    return null;
   }
 
   void _removePath() {
     setState(() {
+      if (_pathTrace.isEmpty && _pathTraceHopWidths.isEmpty) return;
       final recordedHopWidth = _pathTraceHopWidths.isNotEmpty
           ? _pathTraceHopWidths.removeLast()
           : context.read<MeshCoreConnector>().pathHashByteWidth.clamp(
@@ -5483,14 +5599,19 @@ class _MapScreenState extends State<MapScreen>
               pubKeySize,
             );
       final hopByteCount = min(recordedHopWidth, _pathTrace.length).toInt();
-      _pathTraceContacts.removeLast();
-      // A path trace hop can be wider than one byte; remove the full hash prefix.
-      _pathTrace.removeRange(
-        _pathTrace.length - hopByteCount,
-        _pathTrace.length,
-      );
-      _points.removeLast(); // Remove last point from points list
+      // A path trace hop can be wider than one byte; remove the full hash
+      // prefix. Auxiliary lists may be shorter after a manual edit (hops with
+      // no resolved/located contact), so guard every pop.
+      if (_pathTrace.isNotEmpty) {
+        _pathTrace.removeRange(
+          _pathTrace.length - hopByteCount,
+          _pathTrace.length,
+        );
+      }
+      if (_pathTraceContacts.isNotEmpty) _pathTraceContacts.removeLast();
+      if (_points.isNotEmpty) _points.removeLast();
       _polylines.clear(); // Clear polylines
+      _syncPathEditText();
     });
   }
 
@@ -5546,9 +5667,6 @@ class _MapScreenState extends State<MapScreen>
                   l10n.contacts_pathTrace,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (_pathTrace.isEmpty) const SizedBox(height: 8),
-                if (_pathTrace.isEmpty)
-                  Text(l10n.map_tapToAdd, style: const TextStyle(fontSize: 12)),
                 const SizedBox(height: 6),
                 if (_pathTrace.isNotEmpty)
                   Text(
@@ -5558,11 +5676,40 @@ class _MapScreenState extends State<MapScreen>
                       color: MapPalette.textSecondaryOn(brightness),
                     ),
                   ),
-                SelectableText(
-                  PathHelper.splitPathBytes(
-                    _pathTrace,
-                    context.read<MeshCoreConnector>().pathHashByteWidth,
-                  ).map(PathHelper.formatHopHex).join(','),
+                TextField(
+                  controller: _pathEditController,
+                  focusNode: _pathEditFocus,
+                  textAlign: TextAlign.center,
+                  textCapitalization: TextCapitalization.characters,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  minLines: 1,
+                  maxLines: 3,
+                  cursorColor: MapPalette.selected,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction(
+                      (oldValue, newValue) => newValue.copyWith(
+                        text: newValue.text.toUpperCase(),
+                      ),
+                    ),
+                  ],
+                  // Tapping anywhere outside the field (e.g. the map) blurs it
+                  // and commits the edit.
+                  onTapOutside: (_) => _pathEditFocus.unfocus(),
+                  onSubmitted: (_) => _pathEditFocus.unfocus(),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                    hintText: l10n.map_tapToAdd,
+                    hintStyle: MeshTheme.mono(
+                      fontSize: 13,
+                      color: MapPalette.textMutedOn(brightness),
+                    ),
+                  ),
                   style: MeshTheme.mono(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
