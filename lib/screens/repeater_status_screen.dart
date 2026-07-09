@@ -618,24 +618,34 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
   }
 
   Widget _buildStatGrid(List<_StatItem> items) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 2.2,
-      children: items
-          .map(
-            (item) => StatTile(
-              icon: item.icon,
-              label: item.label,
-              value: item.value,
-              color: item.color,
-            ),
-          )
-          .toList(),
+    const spacing = 8.0;
+    Widget tile(_StatItem item) => StatTile(
+      icon: item.icon,
+      label: item.label,
+      value: item.value,
+      color: item.color,
     );
+
+    final rows = <Widget>[];
+    for (int i = 0; i < items.length; i += 2) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: spacing));
+      final hasRight = i + 1 < items.length;
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: tile(items[i])),
+              const SizedBox(width: spacing),
+              Expanded(
+                child: hasRight ? tile(items[i + 1]) : const SizedBox(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 }
 

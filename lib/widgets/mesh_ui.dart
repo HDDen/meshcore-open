@@ -180,6 +180,7 @@ class StatTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 14, color: accent),
               const SizedBox(width: 6),
@@ -190,7 +191,6 @@ class StatTile extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                     fontSize: 9,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -200,8 +200,7 @@ class StatTile extends StatelessWidget {
             TextSpan(
               text: value,
               style: MeshTheme.mono(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
                 color: scheme.onSurface,
               ),
               children: [
@@ -215,8 +214,6 @@ class StatTile extends StatelessWidget {
                   ),
               ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
