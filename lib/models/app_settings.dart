@@ -188,6 +188,7 @@ class AppSettings {
   final bool showHops;
   final bool hideChannelIndexIndicator;
   final bool hideRadioStatsButton;
+  final bool snrIndicatorAllRepActivity;
   final bool hideMapZoomControls;
   final bool showMcoImageResolution;
   final bool showMcoImageFormat;
@@ -476,6 +477,7 @@ class AppSettings {
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
     this.hideRadioStatsButton = false,
+    this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
     this.showMcoImageResolution = false,
     this.showMcoImageFormat = true,
@@ -584,6 +586,7 @@ class AppSettings {
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'hide_radio_stats_button': hideRadioStatsButton,
+      'snr_indicator_all_rep_activity': snrIndicatorAllRepActivity,
       'hide_map_zoom_controls': hideMapZoomControls,
       'show_mco_image_resolution': showMcoImageResolution,
       'show_mco_image_format': showMcoImageFormat,
@@ -701,6 +704,8 @@ class AppSettings {
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
+      snrIndicatorAllRepActivity:
+          json['snr_indicator_all_rep_activity'] as bool? ?? true,
       hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
       showMcoImageResolution:
           json['show_mco_image_resolution'] as bool? ?? false,
@@ -861,6 +866,7 @@ class AppSettings {
     bool? showHops,
     bool? hideChannelIndexIndicator,
     bool? hideRadioStatsButton,
+    bool? snrIndicatorAllRepActivity,
     bool? hideMapZoomControls,
     bool? showMcoImageResolution,
     bool? showMcoImageFormat,
@@ -946,6 +952,8 @@ class AppSettings {
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
       hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,
+      snrIndicatorAllRepActivity:
+          snrIndicatorAllRepActivity ?? this.snrIndicatorAllRepActivity,
       hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,
       showMcoImageResolution:
           showMcoImageResolution ?? this.showMcoImageResolution,

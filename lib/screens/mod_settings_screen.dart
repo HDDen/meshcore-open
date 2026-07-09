@@ -62,6 +62,21 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
+                    secondary: const Icon(Icons.cell_tower, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsSNRindicatorAllRepActivity,
+                    ),
+                    value: settings.snrIndicatorAllRepActivity,
+                    onChanged: settingsService.setSnrIndicatorAllRepActivity,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     secondary: const Icon(Icons.zoom_out_map, size: 20),
                     title: Text(
                       context

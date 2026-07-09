@@ -2266,6 +2266,7 @@
   "settings_modSettingsMCOimg_showReplacements": "Отображать оригиналы картинок вместо LoRa-версий",
   "settings_modSettingsHideChInd": "Скрыть индекс канала",
   "settings_modSettingsHideRadioStats": "Скрыть статистику радиовещания в шапке",
+  "settings_modSettingsSNRindicatorAllRepActivity": "Индикатор SNR: срабатывать на все ответы репитеров, не только advert",
   "settings_modSettingsIncomingQuoteAsMentions": "Отображать цитаты во входящих сообщениях как упоминания",
   "settings_modSettingsSimplifiedMentions": "Упрощённый стиль упоминаний в сообщениях",
   "settings_modSettingsSharedMsgHistory": "Общая история сообщений",

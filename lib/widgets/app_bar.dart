@@ -31,6 +31,9 @@ class AppBarTitle extends StatelessWidget {
     final hideRadioStats = context.select<AppSettingsService, bool>(
       (s) => s.settings.hideRadioStatsButton,
     );
+    final snrAllRepActivity = context.select<AppSettingsService, bool>(
+      (s) => s.settings.snrIndicatorAllRepActivity,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -71,7 +74,10 @@ class AppBarTitle extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (showBattery) BatteryIndicator(connector: connector),
-                  if (showSnr) SNRIndicator(connector: connector),
+                  if (showSnr)
+                    snrAllRepActivity
+                        ? SNRActivityIndicator(connector: connector)
+                        : SNRIndicator(connector: connector),
                   if (connector.supportsCompanionRadioStats && !hideRadioStats)
                     const RadioStatsIconButton(compact: true),
                 ],

@@ -5403,6 +5403,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
 
   @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'SNR indicator: trigger on all repeater responses, not just adverts';
+
+  @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
       'Show quotes in incoming messages as mentions';
 

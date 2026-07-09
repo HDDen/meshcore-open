@@ -263,6 +263,10 @@ class MeshCoreConnector extends ChangeNotifier {
   double? _selfLatitude;
   double? _selfLongitude;
   final List<DirectRepeater> _directRepeaters = List.empty(growable: true);
+  // Signal activity of repeaters seen as the last hop of any received packet
+  // (not just adverts). Used by the "all repeater activity" SNR indicator.
+  final List<DirectRepeater> _activeRepeaters = List.empty(growable: true);
+  static const int _maxActiveRepeaters = 10;
   bool _isLoadingContacts = false;
   bool _hasLoadedContacts = false;
   Map<String, int>? _contactSyncIndexes;
@@ -537,6 +541,7 @@ class MeshCoreConnector extends ChangeNotifier {
   double? get selfLatitude => _selfLatitude;
   double? get selfLongitude => _selfLongitude;
   List<DirectRepeater> get directRepeaters => _directRepeaters;
+  List<DirectRepeater> get activeRepeaters => _activeRepeaters;
   int? get currentTxPower => _currentTxPower;
   int? get maxTxPower => _maxTxPower;
 
@@ -3933,6 +3938,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_pathHashByteWidth != nextWidth) {
       _pathHashByteWidth = nextWidth;
       _directRepeaters.clear();
+      _activeRepeaters.clear();
       notifyListeners();
     }
   }
@@ -6607,6 +6613,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     if (_pathHashByteWidth != previousPathHashByteWidth) {
       _directRepeaters.clear();
+      _activeRepeaters.clear();
     }
 
     // Firmware reports MAX_CONTACTS / 2 for v3+ device info.
@@ -10248,6 +10255,8 @@ class MeshCoreConnector extends ChangeNotifier {
       final pathBytes = packet.readBytes(pathByteLen);
       final payload = packet.readBytes(packet.remaining);
 
+      _recordRepeaterActivity(pathBytes, pathHashWidth, snr);
+
       final rawPacket = frame.sublist(3);
       switch (payloadType) {
         case payloadTypeADVERT:
@@ -10499,6 +10508,79 @@ class MeshCoreConnector extends ChangeNotifier {
         tag: 'Connector',
       );
     }
+  }
+
+  // Records the last-hop repeater of ANY received packet (message, ack,
+  // advert, …) with its SNR, ranked by signal quality and capped at
+  // [_maxActiveRepeaters]. Feeds the "all repeater activity" SNR indicator.
+  void _recordRepeaterActivity(
+    Uint8List pathBytes,
+    int pathHashWidth,
+    double snr,
+  ) {
+    final width = pathHashWidth.clamp(1, 4).toInt();
+    // A non-empty path means a repeater relayed the packet to us; its hash is
+    // the last hop. Directly-heard (0-hop) packets have no relaying repeater.
+    if (pathBytes.length < width) return;
+    final lastHop = pathBytes.sublist(pathBytes.length - width);
+    final contactKeyHex = _resolveActivityRepeaterContactKeyHex(lastHop);
+
+    _activeRepeaters.removeWhere((r) => r.isStale());
+
+    DirectRepeater? existing;
+    for (final r in _activeRepeaters) {
+      if (contactKeyHex != null && r.contactKeyHex != null) {
+        if (r.contactKeyHex == contactKeyHex) {
+          existing = r;
+          break;
+        }
+      } else if (r.pathHashWidth == width && r.matchesPrefix(lastHop)) {
+        existing = r;
+        break;
+      }
+    }
+
+    if (existing != null) {
+      // Refreshes lastUpdated to now, so it floats back to the top of the
+      // recency-ordered list.
+      existing.update(
+        snr,
+        pubkeyPrefix: lastHop,
+        pathHashWidth: width,
+        contactKeyHex: contactKeyHex,
+      );
+    } else {
+      // On overflow drop the oldest entry to make room for the newest.
+      if (_activeRepeaters.length >= _maxActiveRepeaters) {
+        _activeRepeaters.sort(
+          (a, b) => a.lastUpdated.compareTo(b.lastUpdated),
+        );
+        _activeRepeaters.removeAt(0);
+      }
+      _activeRepeaters.add(
+        DirectRepeater(
+          pubkeyPrefix: lastHop,
+          pathHashWidth: width,
+          contactKeyHex: contactKeyHex,
+          snr: snr,
+        ),
+      );
+    }
+    notifyListeners();
+  }
+
+  String? _resolveActivityRepeaterContactKeyHex(List<int> pubkeyPrefix) {
+    final prefixMatches = allContacts
+        .where(
+          (c) =>
+              (c.type == advTypeRepeater || c.type == advTypeRoom) &&
+              _contactKeyMatchesPrefix(c.publicKeyHex, pubkeyPrefix),
+        )
+        .toList();
+    if (prefixMatches.length == 1) {
+      return prefixMatches.first.publicKeyHex;
+    }
+    return null;
   }
 
   void _updateDirectRepeater(

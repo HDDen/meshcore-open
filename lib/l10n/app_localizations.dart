@@ -9316,6 +9316,12 @@ abstract class AppLocalizations {
   /// **'Hide header radio stats'**
   String get settings_modSettingsHideRadioStats;
 
+  /// No description provided for @settings_modSettingsSNRindicatorAllRepActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR indicator: trigger on all repeater responses, not just adverts'**
+  String get settings_modSettingsSNRindicatorAllRepActivity;
+
   /// No description provided for @settings_modSettingsIncomingQuoteAsMentions.
   ///
   /// In en, this message translates to:

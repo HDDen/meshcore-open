@@ -5439,6 +5439,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Скрыть статистику радиовещания в шапке';
 
   @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'Индикатор SNR: срабатывать на все ответы репитеров, не только advert';
+
+  @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
       'Отображать цитаты во входящих сообщениях как упоминания';
 

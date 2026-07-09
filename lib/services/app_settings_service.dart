@@ -156,6 +156,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideRadioStatsButton: value));
   }
 
+  Future<void> setSnrIndicatorAllRepActivity(bool value) async {
+    await updateSettings(
+      _settings.copyWith(snrIndicatorAllRepActivity: value),
+    );
+  }
+
   Future<void> setHideMapZoomControls(bool value) async {
     await updateSettings(_settings.copyWith(hideMapZoomControls: value));
   }

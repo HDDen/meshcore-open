@@ -3056,6 +3056,7 @@
   "settings_modSettingsMCOimg_showReplacements": "Display original images instead of LoRa versions",
   "settings_modSettingsHideChInd": "Hide channel index",
   "settings_modSettingsHideRadioStats": "Hide header radio stats",
+  "settings_modSettingsSNRindicatorAllRepActivity": "SNR indicator: trigger on all repeater responses, not just adverts",
   "settings_modSettingsIncomingQuoteAsMentions": "Show quotes in incoming messages as mentions",
   "settings_modSettingsSimplifiedMentions": "Simplified style of mentions in messages visual",
   "settings_modSettingsSharedMsgHistory": "Shared messages history",
