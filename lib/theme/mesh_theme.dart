@@ -88,6 +88,31 @@ class MapPalette {
   static const border = Color(0x5264758B);
   static const markerOutline = Colors.white;
   static const markerShadow = Color(0xB3000000);
+
+  // Light-theme counterparts for the floating map chrome (panels, search bar,
+  // chips, FABs). Marker colors above stay constant across themes.
+  static const _panelTextPrimaryLight = Color(0xFF0F172A);
+  static const _panelTextSecondaryLight = Color(0xFF475569);
+  static const _panelTextMutedLight = Color(0xFF64748B);
+  static const _panelBorderLight = Color(0x33475569);
+
+  static bool _isDark(Brightness b) => b == Brightness.dark;
+
+  /// Floating panel / control background for the current theme.
+  static Color panelOn(Brightness b) => _isDark(b) ? panelDark : panelLight;
+
+  /// Border for floating panels / controls for the current theme.
+  static Color borderOn(Brightness b) =>
+      _isDark(b) ? border : _panelBorderLight;
+
+  static Color textPrimaryOn(Brightness b) =>
+      _isDark(b) ? textPrimary : _panelTextPrimaryLight;
+
+  static Color textSecondaryOn(Brightness b) =>
+      _isDark(b) ? textSecondary : _panelTextSecondaryLight;
+
+  static Color textMutedOn(Brightness b) =>
+      _isDark(b) ? textMuted : _panelTextMutedLight;
 }
 
 /// High-contrast colors for line-of-sight maps and elevation profiles.

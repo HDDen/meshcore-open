@@ -771,8 +771,6 @@ class _MapScreenState extends State<MapScreen>
           canPop: allowBack,
           child: Scaffold(
             appBar: AppBar(
-              backgroundColor: MapPalette.panelDark,
-              foregroundColor: MapPalette.textPrimary,
               title: AppBarTitle(context.l10n.map_title),
               centerTitle: true,
               automaticallyImplyLeading: false,
@@ -3567,10 +3565,10 @@ class _MapScreenState extends State<MapScreen>
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: MapPalette.textSecondary,
+                color: MapPalette.textSecondaryOn(Theme.of(context).brightness),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -3616,6 +3614,11 @@ class _MapScreenState extends State<MapScreen>
   }) {
     final settings = settingsService.settings;
     final hasQuery = _searchQuery.trim().isNotEmpty;
+    final brightness = Theme.of(context).brightness;
+    final panelColor = MapPalette.panelOn(brightness);
+    final panelBorder = MapPalette.borderOn(brightness);
+    final panelTextPrimary = MapPalette.textPrimaryOn(brightness);
+    final panelTextSecondary = MapPalette.textSecondaryOn(brightness);
     return Positioned(
       top: 8,
       left: 12,
@@ -3628,9 +3631,9 @@ class _MapScreenState extends State<MapScreen>
             children: [
               Expanded(
                 child: Material(
-                  color: MapPalette.panelDark,
+                  color: panelColor,
                   shape: StadiumBorder(
-                    side: const BorderSide(color: MapPalette.border),
+                    side: BorderSide(color: panelBorder),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: TextField(
@@ -3638,17 +3641,15 @@ class _MapScreenState extends State<MapScreen>
                     focusNode: _searchFocus,
                     decoration: InputDecoration(
                       hintText: context.l10n.map_searchHint,
-                      hintStyle: const TextStyle(
-                        color: MapPalette.textSecondary,
-                      ),
-                      prefixIcon: const Icon(
+                      hintStyle: TextStyle(color: panelTextSecondary),
+                      prefixIcon: Icon(
                         Icons.search,
                         size: 20,
-                        color: MapPalette.textPrimary,
+                        color: panelTextPrimary,
                       ),
                       suffixIcon: hasQuery
                           ? IconButton(
-                              color: MapPalette.textPrimary,
+                              color: panelTextPrimary,
                               icon: const Icon(Icons.close, size: 18),
                               onPressed: () {
                                 setState(() {
@@ -3668,9 +3669,9 @@ class _MapScreenState extends State<MapScreen>
                         vertical: 12,
                       ),
                     ),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: MapPalette.textPrimary,
+                      color: panelTextPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                     cursorColor: MapPalette.selected,
@@ -3682,9 +3683,9 @@ class _MapScreenState extends State<MapScreen>
               ),
               const SizedBox(width: 8),
               Material(
-                color: MapPalette.panelDark,
+                color: panelColor,
                 shape: StadiumBorder(
-                  side: const BorderSide(color: MapPalette.border),
+                  side: BorderSide(color: panelBorder),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -3708,17 +3709,17 @@ class _MapScreenState extends State<MapScreen>
                           style: MeshTheme.mono(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: MapPalette.textPrimary,
+                            color: panelTextPrimary,
                           ),
                         ),
                         const SizedBox(width: 2),
                         AnimatedRotation(
                           turns: _statsExpanded ? 0.5 : 0,
                           duration: const Duration(milliseconds: 200),
-                          child: const Icon(
+                          child: Icon(
                             Icons.expand_more,
                             size: 16,
-                            color: MapPalette.textPrimary,
+                            color: panelTextPrimary,
                           ),
                         ),
                       ],
@@ -3811,18 +3812,20 @@ class _MapScreenState extends State<MapScreen>
     Color? color,
   }) {
     final accent = color ?? MapPalette.selected;
+    final brightness = Theme.of(context).brightness;
+    final panelColor = MapPalette.panelOn(brightness);
+    final panelBorder = MapPalette.borderOn(brightness);
+    final panelTextPrimary = MapPalette.textPrimaryOn(brightness);
+    final panelTextSecondary = MapPalette.textSecondaryOn(brightness);
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: Material(
         color: selected
-            ? Color.alphaBlend(
-                accent.withValues(alpha: 0.34),
-                MapPalette.panelDark,
-              )
-            : MapPalette.panelDark,
+            ? Color.alphaBlend(accent.withValues(alpha: 0.34), panelColor)
+            : panelColor,
         shape: StadiumBorder(
           side: BorderSide(
-            color: selected ? accent : MapPalette.border,
+            color: selected ? accent : panelBorder,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -3838,11 +3841,7 @@ class _MapScreenState extends State<MapScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (selected) ...[
-                  const Icon(
-                    Icons.check,
-                    size: 13,
-                    color: MapPalette.textPrimary,
-                  ),
+                  Icon(Icons.check, size: 13, color: panelTextPrimary),
                   const SizedBox(width: 4),
                 ],
                 Text(
@@ -3850,9 +3849,7 @@ class _MapScreenState extends State<MapScreen>
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: selected
-                        ? MapPalette.textPrimary
-                        : MapPalette.textSecondary,
+                    color: selected ? panelTextPrimary : panelTextSecondary,
                   ),
                 ),
               ],
@@ -3878,13 +3875,19 @@ class _MapScreenState extends State<MapScreen>
             return b.lastSeen.compareTo(a.lastSeen);
           });
     final results = matches.take(8).toList();
+    final brightness = Theme.of(context).brightness;
+    final panelColor = MapPalette.panelOn(brightness);
+    final panelBorder = MapPalette.borderOn(brightness);
+    final panelTextPrimary = MapPalette.textPrimaryOn(brightness);
+    final panelTextSecondary = MapPalette.textSecondaryOn(brightness);
+    final panelTextMuted = MapPalette.textMutedOn(brightness);
     return Container(
       margin: const EdgeInsets.only(top: 6),
       constraints: const BoxConstraints(maxHeight: 300),
       decoration: BoxDecoration(
-        color: MapPalette.panelDark,
+        color: panelColor,
         borderRadius: BorderRadius.circular(MeshRadii.md),
-        border: Border.all(color: MapPalette.border),
+        border: Border.all(color: panelBorder),
         boxShadow: const [
           BoxShadow(
             color: MapPalette.markerShadow,
@@ -3898,10 +3901,7 @@ class _MapScreenState extends State<MapScreen>
               padding: const EdgeInsets.all(16),
               child: Text(
                 context.l10n.map_noResults,
-                style: const TextStyle(
-                  color: MapPalette.textSecondary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: panelTextSecondary, fontSize: 13),
               ),
             )
           : ListView.separated(
@@ -3909,7 +3909,7 @@ class _MapScreenState extends State<MapScreen>
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: results.length,
               separatorBuilder: (_, _) =>
-                  const Divider(height: 1, color: MapPalette.border),
+                  Divider(height: 1, color: panelBorder),
               itemBuilder: (context, index) {
                 final c = results[index];
                 final color = _getNodeColor(c.type);
@@ -3930,10 +3930,10 @@ class _MapScreenState extends State<MapScreen>
                             children: [
                               Text(
                                 c.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
-                                  color: MapPalette.textPrimary,
+                                  color: panelTextPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3941,7 +3941,7 @@ class _MapScreenState extends State<MapScreen>
                                 c.publicKeyHex.substring(0, 12),
                                 style: MeshTheme.mono(
                                   fontSize: 10.5,
-                                  color: MapPalette.textSecondary,
+                                  color: panelTextSecondary,
                                 ),
                               ),
                             ],
@@ -3951,13 +3951,13 @@ class _MapScreenState extends State<MapScreen>
                           Icon(
                             Icons.chevron_right,
                             size: 18,
-                            color: MapPalette.textSecondary,
+                            color: panelTextSecondary,
                           )
                         else
                           Text(
                             context.l10n.map_noGps.toUpperCase(),
                             style: MeshTheme.accentLabel(
-                              color: MapPalette.textMuted,
+                              color: panelTextMuted,
                               fontSize: 8.5,
                             ),
                           ),
@@ -4012,14 +4012,15 @@ class _MapScreenState extends State<MapScreen>
     required int pinCount,
     required int guessedCount,
   }) {
+    final brightness = Theme.of(context).brightness;
     return Container(
       margin: const EdgeInsets.only(top: 6),
       width: 230,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: MapPalette.panelDark,
+        color: MapPalette.panelOn(brightness),
         borderRadius: BorderRadius.circular(MeshRadii.md),
-        border: Border.all(color: MapPalette.border),
+        border: Border.all(color: MapPalette.borderOn(brightness)),
         boxShadow: const [
           BoxShadow(
             color: MapPalette.markerShadow,
@@ -4041,7 +4042,7 @@ class _MapScreenState extends State<MapScreen>
           ),
           _statRow(context.l10n.map_hidden, hiddenCount, MapPalette.offline),
           _statRow(context.l10n.map_markers, pinCount, MapPalette.shared),
-          const Divider(height: 16, color: MapPalette.border),
+          Divider(height: 16, color: MapPalette.borderOn(brightness)),
           _buildLegendItem(
             Icons.person,
             context.l10n.map_chat,
@@ -4079,6 +4080,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Widget _statRow(String label, int value, Color color) {
+    final brightness = Theme.of(context).brightness;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -4092,7 +4094,10 @@ class _MapScreenState extends State<MapScreen>
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 12.5, color: MapPalette.textSecondary),
+              style: TextStyle(
+                fontSize: 12.5,
+                color: MapPalette.textSecondaryOn(brightness),
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -4101,7 +4106,7 @@ class _MapScreenState extends State<MapScreen>
             style: MeshTheme.mono(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: MapPalette.textPrimary,
+              color: MapPalette.textPrimaryOn(brightness),
             ),
           ),
         ],
@@ -4116,6 +4121,9 @@ class _MapScreenState extends State<MapScreen>
   ) {
     final color = _markerColor(contact);
     final age = _ageOf(contact);
+    final brightness = Theme.of(context).brightness;
+    final panelTextPrimary = MapPalette.textPrimaryOn(brightness);
+    final panelTextSecondary = MapPalette.textSecondaryOn(brightness);
     final pos = contact.hasLocation
         ? LatLng(contact.latitude!, contact.longitude!)
         : _selectedGuessPos;
@@ -4134,8 +4142,8 @@ class _MapScreenState extends State<MapScreen>
         child: MeshCard(
           margin: EdgeInsets.zero,
           padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-          color: MapPalette.panelDark,
-          borderColor: MapPalette.border,
+          color: MapPalette.panelOn(brightness),
+          borderColor: MapPalette.borderOn(brightness),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4158,10 +4166,10 @@ class _MapScreenState extends State<MapScreen>
                             Flexible(
                               child: Text(
                                 contact.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
-                                  color: MapPalette.textPrimary,
+                                  color: panelTextPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -4189,9 +4197,9 @@ class _MapScreenState extends State<MapScreen>
                             Flexible(
                               child: Text(
                                 contact.typeLabel(context.l10n),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11.5,
-                                  color: MapPalette.textSecondary,
+                                  color: panelTextSecondary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -4203,13 +4211,13 @@ class _MapScreenState extends State<MapScreen>
                   ),
                   if (pos != null)
                     IconButton(
-                      color: MapPalette.textPrimary,
+                      color: panelTextPrimary,
                       icon: const Icon(Icons.center_focus_strong, size: 20),
                       tooltip: context.l10n.map_centerOnNode,
                       onPressed: () => _mapController.move(pos, max(_zoom, 15)),
                     ),
                   IconButton(
-                    color: MapPalette.textPrimary,
+                    color: panelTextPrimary,
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: _clearSelection,
                   ),
@@ -4268,6 +4276,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Widget _miniMeta(String label, String value) {
+    final brightness = Theme.of(context).brightness;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -4275,14 +4284,17 @@ class _MapScreenState extends State<MapScreen>
         Text(
           label.toUpperCase(),
           style: MeshTheme.accentLabel(
-            color: MapPalette.textMuted,
+            color: MapPalette.textMutedOn(brightness),
             fontSize: 8,
           ),
         ),
         const SizedBox(height: 1),
         Text(
           value,
-          style: MeshTheme.mono(fontSize: 11.5, color: MapPalette.textPrimary),
+          style: MeshTheme.mono(
+            fontSize: 11.5,
+            color: MapPalette.textPrimaryOn(brightness),
+          ),
         ),
       ],
     );
@@ -5502,6 +5514,7 @@ class _MapScreenState extends State<MapScreen>
 
   Widget _buildPathTraceOverlay() {
     final l10n = context.l10n;
+    final brightness = Theme.of(context).brightness;
     final isImperial =
         context.read<AppSettingsService>().settings.unitSystem ==
         UnitSystem.imperial;
@@ -5511,9 +5524,9 @@ class _MapScreenState extends State<MapScreen>
       right: 16,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: MapPalette.panelDark,
+          color: MapPalette.panelOn(brightness),
           borderRadius: BorderRadius.circular(MeshRadii.md),
-          border: Border.all(color: MapPalette.border),
+          border: Border.all(color: MapPalette.borderOn(brightness)),
           boxShadow: const [
             BoxShadow(
               color: MapPalette.markerShadow,
@@ -5542,7 +5555,7 @@ class _MapScreenState extends State<MapScreen>
                     '${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}',
                     style: MeshTheme.mono(
                       fontSize: 12,
-                      color: MapPalette.textSecondary,
+                      color: MapPalette.textSecondaryOn(brightness),
                     ),
                   ),
                 SelectableText(
