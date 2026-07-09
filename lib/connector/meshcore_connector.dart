@@ -5121,7 +5121,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  static const Duration _signAttemptTimeout = Duration(seconds: 1);
+  static const Duration _signAttemptTimeout = Duration(seconds: 3);
   static const int _signAttempts = 5;
   Future<void> _signSessionTail = Future.value();
 
@@ -5164,65 +5164,66 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<Uint8List> _runSignAttempt(Uint8List data) async {
+    // Signing shares the broadcast frame stream with all other command
+    // traffic (battery/stats polling, flood-scope, channel-data sends, the
+    // channel sync loop) and RESP_CODE_OK is emitted by many of those. So we
+    // never correlate on the ambiguous OK: we wait only for the sign-unique
+    // codes (RESP_CODE_SIGN_START / RESP_CODE_SIGNATURE) or RESP_CODE_ERR, and
+    // skip everything else. Data chunks are streamed back-to-back and the
+    // FINISH result is the authoritative gate.
     final buffered = <Uint8List>[];
-    final waiters = <Completer<Uint8List>>[];
+    Completer<Uint8List>? waiter;
+    Set<int>? waitCodes;
     late final StreamSubscription<Uint8List> subscription;
-    // Note: respCodeOk/respCodeErr are shared with unrelated commands, so a
-    // concurrent command's ACK can theoretically be misattributed to a chunk.
-    // This mirrors _sendFrameAndWaitForCommandAck's behavior; retries recover.
+
+    bool matches(int code, Set<int> codes) => codes.contains(code);
+
     subscription = receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
       final code = frame[0];
-      if (code != respCodeSignStart &&
-          code != respCodeSignature &&
-          code != respCodeOk &&
-          code != respCodeErr) {
-        return;
-      }
-      if (waiters.isNotEmpty) {
-        waiters.removeAt(0).complete(Uint8List.fromList(frame));
+      final pending = waiter;
+      final codes = waitCodes;
+      if (pending != null && codes != null && matches(code, codes)) {
+        waiter = null;
+        waitCodes = null;
+        pending.complete(Uint8List.fromList(frame));
       } else {
         buffered.add(Uint8List.fromList(frame));
       }
     });
 
-    // The attempt deadline starts when the first frame goes to the transport.
     final deadline = DateTime.now().add(_signAttemptTimeout);
 
-    Future<Uint8List> nextFrame() async {
-      if (buffered.isNotEmpty) return buffered.removeAt(0);
+    // Waits for the next frame whose code is in [codes], discarding any other
+    // (foreign) frames. Throws on timeout.
+    Future<Uint8List> waitForCodes(Set<int> codes) async {
+      while (buffered.isNotEmpty) {
+        final frame = buffered.removeAt(0);
+        if (matches(frame[0], codes)) return frame;
+      }
       final remaining = deadline.difference(DateTime.now());
-      if (remaining.isNegative || remaining == Duration.zero) {
+      if (remaining <= Duration.zero) {
         throw TimeoutException('Sign attempt timed out');
       }
-      final waiter = Completer<Uint8List>();
-      waiters.add(waiter);
-      return waiter.future.timeout(remaining);
-    }
-
-    void expectOk(Uint8List frame, String stage) {
-      if (frame[0] == respCodeErr) {
-        final errCode = frame.length > 1 ? frame[1] : -1;
-        throw Exception('Sign $stage rejected with error code $errCode');
-      }
-      if (frame[0] != respCodeOk) {
-        throw Exception('Unexpected frame 0x'
-            '${frame[0].toRadixString(16)} during sign $stage');
+      final pending = Completer<Uint8List>();
+      waiter = pending;
+      waitCodes = codes;
+      try {
+        return await pending.future.timeout(remaining);
+      } finally {
+        if (identical(waiter, pending)) {
+          waiter = null;
+          waitCodes = null;
+        }
       }
     }
 
     try {
       await sendFrame(buildSignStartFrame());
-      final startResp = await nextFrame();
+      final startResp = await waitForCodes({respCodeSignStart, respCodeErr});
       if (startResp[0] == respCodeErr) {
         final errCode = startResp.length > 1 ? startResp[1] : -1;
         throw Exception('Sign start rejected with error code $errCode');
-      }
-      if (startResp[0] != respCodeSignStart) {
-        throw Exception(
-          'Unexpected frame 0x${startResp[0].toRadixString(16)} '
-          'instead of sign-start response',
-        );
       }
       if (startResp.length >= 6) {
         final reader = BufferReader(startResp);
@@ -5235,6 +5236,9 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
 
+      // Stream the data chunks. Per-chunk OK acks are not correlated (the code
+      // is ambiguous); the transport preserves order and the node accumulates
+      // the chunks before FINISH.
       for (var offset = 0; offset < data.length;
           offset += maxSignDataChunkBytes) {
         final end = (offset + maxSignDataChunkBytes) > data.length
@@ -5243,17 +5247,15 @@ class MeshCoreConnector extends ChangeNotifier {
         await sendFrame(
           buildSignDataFrame(Uint8List.sublistView(data, offset, end)),
         );
-        expectOk(await nextFrame(), 'data');
       }
 
       await sendFrame(buildSignFinishFrame());
-      final finishResp = await nextFrame();
+      final finishResp = await waitForCodes({respCodeSignature, respCodeErr});
       if (finishResp[0] == respCodeErr) {
         final errCode = finishResp.length > 1 ? finishResp[1] : -1;
         throw Exception('Sign finish rejected with error code $errCode');
       }
-      if (finishResp[0] != respCodeSignature ||
-          finishResp.length < 1 + signatureSize) {
+      if (finishResp.length < 1 + signatureSize) {
         throw Exception('Malformed signature response');
       }
       return Uint8List.fromList(finishResp.sublist(1, 1 + signatureSize));
