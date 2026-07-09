@@ -63,6 +63,23 @@ class MeshPalette {
   static const lightInk2 = Color(0xFF3C4853);
   static const lightInk3 = Color(0xFF69767F);
   static const lightBlue = Color(0xFF2F6EA8);
+
+  // Theme-aware accessors for chrome (panels, controls) that is currently
+  // hardcoded to the dark palette. Semantic colors (signal/warn/alert/blue…)
+  // are intentionally left constant.
+  static bool _dark(Brightness b) => b == Brightness.dark;
+
+  static Color bgOn(Brightness b) => _dark(b) ? bg : lightBg;
+  static Color bg1On(Brightness b) => _dark(b) ? bg1 : lightBg1;
+  static Color bg2On(Brightness b) => _dark(b) ? bg2 : lightBg2;
+  static Color bg3On(Brightness b) => _dark(b) ? bg3 : lightBg2;
+  static Color lineOn(Brightness b) => _dark(b) ? line : lightLine;
+  static Color line2On(Brightness b) => _dark(b) ? line2 : lightLine;
+  static Color line3On(Brightness b) => _dark(b) ? line3 : lightLine;
+  static Color inkOn(Brightness b) => _dark(b) ? ink : lightInk;
+  static Color ink2On(Brightness b) => _dark(b) ? ink2 : lightInk2;
+  static Color ink3On(Brightness b) => _dark(b) ? ink3 : lightInk3;
+  static Color ink4On(Brightness b) => _dark(b) ? ink4 : lightInk3;
 }
 
 /// High-contrast semantic colors for UI rendered over variable map tiles.
