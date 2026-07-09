@@ -195,6 +195,9 @@ class AppSettings {
   final bool showMcoImageAlgorithm;
   final bool showMcoImageBytes;
   final bool showMcoImagePackReplacements;
+  final double mcoImageReplacementsScale;
+  final bool mcoImageScaleNearestNeighbor;
+  final int mcoImageReplacementsSharpness;
 
   /// Global UI scale multiplier applied on top of the system text scale
   /// (affects fonts, and icons when [uiScaleApplyToIcons] is enabled).
@@ -484,6 +487,9 @@ class AppSettings {
     this.showMcoImageAlgorithm = true,
     this.showMcoImageBytes = true,
     this.showMcoImagePackReplacements = true,
+    this.mcoImageReplacementsScale = 1.0,
+    this.mcoImageScaleNearestNeighbor = true,
+    this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
     this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
@@ -593,6 +599,9 @@ class AppSettings {
       'show_mco_image_algorithm': showMcoImageAlgorithm,
       'show_mco_image_bytes': showMcoImageBytes,
       'show_mco_image_pack_replacements': showMcoImagePackReplacements,
+      'mco_image_replacements_scale': mcoImageReplacementsScale,
+      'mco_image_scale_nearest_neighbor': mcoImageScaleNearestNeighbor,
+      'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
       'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
@@ -714,6 +723,12 @@ class AppSettings {
       showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
       showMcoImagePackReplacements:
           json['show_mco_image_pack_replacements'] as bool? ?? true,
+      mcoImageReplacementsScale:
+          (json['mco_image_replacements_scale'] as num?)?.toDouble() ?? 1.0,
+      mcoImageScaleNearestNeighbor:
+          json['mco_image_scale_nearest_neighbor'] as bool? ?? true,
+      mcoImageReplacementsSharpness:
+          (json['mco_image_replacements_sharpness'] as num?)?.toInt() ?? 0,
       uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
       uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
@@ -873,6 +888,9 @@ class AppSettings {
     bool? showMcoImageAlgorithm,
     bool? showMcoImageBytes,
     bool? showMcoImagePackReplacements,
+    double? mcoImageReplacementsScale,
+    bool? mcoImageScaleNearestNeighbor,
+    int? mcoImageReplacementsSharpness,
     double? uiScale,
     bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
@@ -963,6 +981,12 @@ class AppSettings {
       showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
       showMcoImagePackReplacements:
           showMcoImagePackReplacements ?? this.showMcoImagePackReplacements,
+      mcoImageReplacementsScale:
+          mcoImageReplacementsScale ?? this.mcoImageReplacementsScale,
+      mcoImageScaleNearestNeighbor:
+          mcoImageScaleNearestNeighbor ?? this.mcoImageScaleNearestNeighbor,
+      mcoImageReplacementsSharpness:
+          mcoImageReplacementsSharpness ?? this.mcoImageReplacementsSharpness,
       uiScale: uiScale ?? this.uiScale,
       uiScaleApplyToIcons: uiScaleApplyToIcons ?? this.uiScaleApplyToIcons,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,

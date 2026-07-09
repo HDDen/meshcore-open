@@ -188,6 +188,24 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMcoImageReplacementsScale(double value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageReplacementsScale: value),
+    );
+  }
+
+  Future<void> setMcoImageScaleNearestNeighbor(bool value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageScaleNearestNeighbor: value),
+    );
+  }
+
+  Future<void> setMcoImageReplacementsSharpness(int value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageReplacementsSharpness: value),
+    );
+  }
+
   Future<void> setUiScale(double value) async {
     await updateSettings(_settings.copyWith(uiScale: value));
   }

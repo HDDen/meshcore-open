@@ -234,7 +234,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
           _buildDetailRow(
             context,
             l10n.channelPath_timeLabel,
-            _formatTime(message.timestamp, l10n),
+            _receivedAtLabel(l10n),
             scheme: scheme,
           ),
           if (_signatureStatusLabel(l10n) != null)
@@ -244,6 +244,14 @@ class ChannelMessagePathScreen extends StatelessWidget {
               _signatureStatusLabel(l10n)!,
               scheme: scheme,
             ),
+          _buildDetailRow(
+            context,
+            l10n.chat_timestampPacket,
+            // Timestamp the sender node embedded in the packet (both MCMP v3
+            // and plain group_text carry it) — not our receive time.
+            _packetTimestampLabel(l10n),
+            scheme: scheme,
+          ),
           if (outgoingRadioWaitLabel != null)
             _buildDetailRow(
               context,
@@ -483,6 +491,26 @@ class ChannelMessagePathScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Timestamp the sender node stamped into the packet (frame timestamp,
+  // present for both MCMP v3 and plain group_text). Distinct from receivedAt.
+  String _packetTimestampLabel(AppLocalizations l10n) {
+    final ts = message.timestamp;
+    final rawSeconds = ts.millisecondsSinceEpoch ~/ 1000;
+    if (rawSeconds == 0) return '—';
+    // Raw packet timestamp (seconds, as stamped by the sender) plus a
+    // human-readable rendering in parentheses.
+    return '$rawSeconds (${_formatTime(ts, l10n)})';
+  }
+
+  // Actual message receive time (receivedAt, stored in milliseconds): raw
+  // value plus a human-readable rendering in parentheses.
+  String _receivedAtLabel(AppLocalizations l10n) {
+    final ts = message.receivedAt;
+    final rawMillis = ts.millisecondsSinceEpoch;
+    if (rawMillis == 0) return '—';
+    return '$rawMillis (${_formatTime(ts, l10n)})';
   }
 
   String _formatTime(DateTime time, AppLocalizations l10n) {

@@ -4057,7 +4057,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_senderLabel => 'Отправитель';
 
   @override
-  String get channelPath_timeLabel => 'Время';
+  String get channelPath_timeLabel => 'Время получения';
 
   @override
   String get channelPath_repeatsLabel => 'Повторы';
@@ -5425,11 +5425,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_mcmpSigningFailed => 'Не удалось подписать сообщение';
 
   @override
+  String get chat_timestampPacket => 'Timestamp пакета';
+
+  @override
   String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: отображать бейдж версии формата';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: отображать бейдж алгоритма кодирования';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: отображать информационный вес картинки (байт)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: отображать разрешение';
 
   @override
   String get settings_modSettingsMCOimg_showReplacements =>
       'Отображать оригиналы картинок вместо LoRa-версий';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Масштабировать оригиналы в чатах';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Масштабировать как Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Повысить резкость оригиналов в чатах';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Внимание! Отключает анимирование GIF!';
 
   @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
@@ -5480,22 +5515,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
       'Скрыть на карте панель зума';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: отображать бейдж версии формата';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: отображать бейдж алгоритма кодирования';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: отображать информационный вес картинки (байт)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: отображать разрешение';
 
   @override
   String get settings_modSettingsVisualShowMsgRegion =>

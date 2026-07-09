@@ -7067,7 +7067,7 @@ abstract class AppLocalizations {
   /// No description provided for @channelPath_timeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Time'**
+  /// **'Time (received at)'**
   String get channelPath_timeLabel;
 
   /// No description provided for @channelPath_repeatsLabel.
@@ -9292,17 +9292,71 @@ abstract class AppLocalizations {
   /// **'Failed to sign the message'**
   String get chat_mcmpSigningFailed;
 
+  /// No description provided for @chat_timestampPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet timestamp'**
+  String get chat_timestampPacket;
+
   /// No description provided for @settings_modSettingsMCOimg.
   ///
   /// In en, this message translates to:
   /// **'MCOimg'**
   String get settings_modSettingsMCOimg;
 
+  /// No description provided for @settings_modSettingsVisualShowMCOimgFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show format version badge'**
+  String get settings_modSettingsVisualShowMCOimgFormat;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show coding algorythm badge'**
+  String get settings_modSettingsVisualShowMCOimgAlgo;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show image weight (bytes)'**
+  String get settings_modSettingsVisualShowMCOimgBytes;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show resolution'**
+  String get settings_modSettingsVisualShowMCOimgResolution;
+
   /// No description provided for @settings_modSettingsMCOimg_showReplacements.
   ///
   /// In en, this message translates to:
   /// **'Display original images instead of LoRa versions'**
   String get settings_modSettingsMCOimg_showReplacements;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale original images in chats'**
+  String get settings_modSettingsMCOimg_replacementsScale;
+
+  /// No description provided for @settings_modSettingsMCOimg_scaleNearestNeighbor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale as Nearest Neighbor'**
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsSharp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp original images in chats'**
+  String get settings_modSettingsMCOimg_replacementsSharp;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsSharpDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention! Disables GIF animation!'**
+  String get settings_modSettingsMCOimg_replacementsSharpDscr;
 
   /// No description provided for @settings_modSettingsHideChInd.
   ///
@@ -9387,30 +9441,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide map zoom panel'**
   String get settings_modSettingsVisualHideMapZoomControls;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show format version badge'**
-  String get settings_modSettingsVisualShowMCOimgFormat;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show coding algorythm badge'**
-  String get settings_modSettingsVisualShowMCOimgAlgo;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show image weight (bytes)'**
-  String get settings_modSettingsVisualShowMCOimgBytes;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgResolution.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show resolution'**
-  String get settings_modSettingsVisualShowMCOimgResolution;
 
   /// No description provided for @settings_modSettingsVisualShowMsgRegion.
   ///

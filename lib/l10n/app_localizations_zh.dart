@@ -5052,11 +5052,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_mcmpSigningFailed => 'Failed to sign the message';
 
   @override
+  String get chat_timestampPacket => 'Packet timestamp';
+
+  @override
   String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
 
   @override
   String get settings_modSettingsMCOimg_showReplacements =>
       'Display original images instead of LoRa versions';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Scale original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Scale as Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Sharp original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Attention! Disables GIF animation!';
 
   @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
@@ -5106,22 +5141,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
       'Hide map zoom panel';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
 
   @override
   String get settings_modSettingsVisualShowMsgRegion => 'Show message region';

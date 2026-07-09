@@ -448,6 +448,112 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setShowMcoImagePackReplacements,
                   ),
                 ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.zoom_in, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsMCOimg_replacementsScale,
+                            ),
+                          ),
+                          Text(
+                            '${settings.mcoImageReplacementsScale.toStringAsFixed(1)}x',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: settings.mcoImageReplacementsScale
+                            .clamp(1.0, 5.0)
+                            .toDouble(),
+                        min: 1.0,
+                        max: 5.0,
+                        divisions: 40,
+                        label:
+                            '${settings.mcoImageReplacementsScale.toStringAsFixed(1)}x',
+                        onChanged: (value) {
+                          settingsService.setMcoImageReplacementsScale(
+                            (value * 10).round() / 10,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.grid_on, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsMCOimg_scaleNearestNeighbor,
+                    ),
+                    value: settings.mcoImageScaleNearestNeighbor,
+                    onChanged: settingsService.setMcoImageScaleNearestNeighbor,
+                  ),
+                ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.deblur, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsMCOimg_replacementsSharp,
+                            ),
+                          ),
+                          Text(
+                            '${settings.mcoImageReplacementsSharpness}',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32),
+                        child: Text(
+                          context
+                              .l10n
+                              .settings_modSettingsMCOimg_replacementsSharpDscr,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      Slider(
+                        value: settings.mcoImageReplacementsSharpness
+                            .clamp(0, 10)
+                            .toDouble(),
+                        min: 0,
+                        max: 10,
+                        divisions: 10,
+                        label: '${settings.mcoImageReplacementsSharpness}',
+                        onChanged: (value) {
+                          settingsService.setMcoImageReplacementsSharpness(
+                            value.round(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ],
             );
           },
