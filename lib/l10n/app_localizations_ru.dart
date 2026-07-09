@@ -647,6 +647,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_infoChannelCount => 'Количество каналов';
 
   @override
+  String get settings_infoFirmware => 'Версия прошивки';
+
+  @override
   String get settings_presets => 'Пресеты';
 
   @override

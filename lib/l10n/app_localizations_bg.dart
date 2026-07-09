@@ -649,6 +649,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_infoChannelCount => 'Брой канали';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Предварителни настройки';
 
   @override

@@ -641,6 +641,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_infoChannelCount => 'Počet kanálov';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Prednastavenia';
 
   @override

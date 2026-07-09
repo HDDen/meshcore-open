@@ -641,6 +641,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_infoChannelCount => 'Aantal Kanalen';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Voorgeprogrammeerde instellingen';
 
   @override

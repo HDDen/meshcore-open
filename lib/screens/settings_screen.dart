@@ -321,6 +321,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: l10n.settings_infoChannelCount,
                         value: '${connector.channels.length}',
                       ),
+                      if (connector.firmwareVersion != null &&
+                          connector.firmwareVersion!.isNotEmpty)
+                        _infoRow(
+                          context,
+                          label: l10n.settings_infoFirmware,
+                          value:
+                              connector.firmwareBuildDate != null &&
+                                  connector.firmwareBuildDate!.isNotEmpty
+                              ? '${connector.firmwareVersion!} '
+                                    '(${connector.firmwareBuildDate!})'
+                              : connector.firmwareVersion!,
+                        ),
                     ],
                   ),
                 )

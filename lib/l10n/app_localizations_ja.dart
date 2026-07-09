@@ -617,6 +617,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_infoChannelCount => 'チャンネル数';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'プリセット';
 
   @override

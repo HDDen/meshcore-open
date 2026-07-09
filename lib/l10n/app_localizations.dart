@@ -1282,6 +1282,12 @@ abstract class AppLocalizations {
   /// **'Channel Count'**
   String get settings_infoChannelCount;
 
+  /// No description provided for @settings_infoFirmware.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version'**
+  String get settings_infoFirmware;
+
   /// No description provided for @settings_presets.
   ///
   /// In en, this message translates to:

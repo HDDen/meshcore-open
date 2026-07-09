@@ -126,6 +126,7 @@
   "settings_infoPublicKey": "Публичный ключ",
   "settings_infoContactsCount": "Количество контактов",
   "settings_infoChannelCount": "Количество каналов",
+  "settings_infoFirmware": "Версия прошивки",
   "settings_presets": "Пресеты",
   "settings_frequency": "Частота (МГц)",
   "settings_frequencyHelper": "300.0 – 2500.0",

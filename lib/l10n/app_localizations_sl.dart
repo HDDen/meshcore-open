@@ -639,6 +639,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_infoChannelCount => 'Število kanalov';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Prednastavitve';
 
   @override

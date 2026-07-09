@@ -644,6 +644,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_infoChannelCount => 'Кількість каналів';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Попередні налаштування';
 
   @override

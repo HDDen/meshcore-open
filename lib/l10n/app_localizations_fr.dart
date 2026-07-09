@@ -649,6 +649,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_infoChannelCount => 'Nombre de canaux';
 
   @override
+  String get settings_infoFirmware => 'Firmware version';
+
+  @override
   String get settings_presets => 'Préréglages';
 
   @override

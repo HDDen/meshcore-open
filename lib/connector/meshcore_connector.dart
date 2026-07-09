@@ -253,6 +253,8 @@ class MeshCoreConnector extends ChangeNotifier {
   bool? _clientRepeat;
   MeshCoreRadioStateSnapshot? _rememberedNonRepeatRadioState;
   int? _firmwareVerCode;
+  String? _firmwareVersion;
+  String? _firmwareBuildDate;
   int _pathHashByteWidth = 1;
   CompanionRadioStats? _latestRadioStats;
   Stopwatch? _airtimeBumpStopwatch;
@@ -583,6 +585,15 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   int? get firmwareVerCode => _firmwareVerCode;
+
+  /// Human-readable firmware version string reported in RESP_CODE_DEVICE_INFO
+  /// (FIRMWARE_VERSION), e.g. "v1.7.4"; null until the device info arrives.
+  String? get firmwareVersion => _firmwareVersion;
+
+  /// Firmware build date reported in RESP_CODE_DEVICE_INFO
+  /// (FIRMWARE_BUILD_DATE); null until the device info arrives.
+  String? get firmwareBuildDate => _firmwareBuildDate;
+
   Map<String, String>? get currentCustomVars => _currentCustomVars;
   int? get batteryMillivolts => _batteryMillivolts;
   int? get storageUsedKb => _storageUsedKb;
@@ -3732,6 +3743,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _clientRepeat = null;
     _rememberedNonRepeatRadioState = null;
     _firmwareVerCode = null;
+    _firmwareVersion = null;
+    _firmwareBuildDate = null;
     _batteryMillivolts = null;
     _repeaterBatterySnapshots.clear();
     _batteryRequested = false;
@@ -6548,12 +6561,37 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  /// Reads a null-padded UTF-8 string from [frame] at [offset] up to
+  /// [maxLength] bytes (stops at the first NUL), or null when out of range.
+  String? _readNullPaddedString(Uint8List frame, int offset, int maxLength) {
+    if (frame.length <= offset) return null;
+    final end = (offset + maxLength) > frame.length
+        ? frame.length
+        : offset + maxLength;
+    var terminator = offset;
+    while (terminator < end && frame[terminator] != 0) {
+      terminator++;
+    }
+    if (terminator == offset) return null;
+    try {
+      return utf8.decode(frame.sublist(offset, terminator));
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _handleDeviceInfo(Uint8List frame) {
     if (frame.length < 4) return;
     if (_shouldGateInitialChannelSync) {
       _hasReceivedDeviceInfo = true;
     }
     _firmwareVerCode = frame[1];
+
+    // RESP_CODE_DEVICE_INFO layout: [0]=code [1]=ver_code [2]=maxContacts/2
+    // [3]=maxChannels [4..7]=ble_pin [8..19]=build date (12B, null-padded)
+    // [20..59]=manufacturer (40B) [60..79]=firmware version (20B).
+    _firmwareBuildDate = _readNullPaddedString(frame, 8, 12);
+    _firmwareVersion = _readNullPaddedString(frame, 60, 20);
 
     // Parse client_repeat from firmware v9+ (byte 80)
     if (frame.length >= 81) {

@@ -255,6 +255,7 @@
   "settings_infoPublicKey": "Public Key",
   "settings_infoContactsCount": "Contacts Count",
   "settings_infoChannelCount": "Channel Count",
+  "settings_infoFirmware": "Firmware version",
   "settings_presets": "Presets",
   "settings_frequency": "Frequency (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
