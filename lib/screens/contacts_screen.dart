@@ -2215,7 +2215,7 @@ class _ContactTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name row + route chip
+                  // Name row + favorite + unread badge
                   Row(
                     children: [
                       Expanded(
@@ -2236,8 +2236,46 @@ class _ContactTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Icon(Icons.star, size: 13, color: MeshPalette.warn),
                       ],
+                      if (unreadCount > 0) ...[
+                        const SizedBox(width: 6),
+                        UnreadBadge(count: unreadCount),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  // Path / subtitle row: path label + route chip, then
+                  // location marker and last-seen time (right-aligned).
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                contact.pathLabel(
+                                  context.l10n,
+                                  pathHashByteWidth: pathHashByteWidth,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            if (hasPath) ...[
+                              const SizedBox(width: 6),
+                              RouteChip(
+                                isDirect: isDirect,
+                                hops: isDirect ? displayHopCount : null,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                       if (contact.hasLocation) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Icon(
                           Icons.location_on,
                           size: 13,
@@ -2246,67 +2284,19 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  // Path / subtitle row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          contact.pathLabel(
-                            context.l10n,
-                            pathHashByteWidth: pathHashByteWidth,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatLastSeen(context, lastSeen),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          color: unreadCount > 0
+                              ? MeshPalette.blue
+                              : scheme.onSurfaceVariant,
                         ),
                       ),
-                      if (hasPath) ...[
-                        const SizedBox(width: 6),
-                        RouteChip(
-                          isDirect: isDirect,
-                          hops: isDirect ? displayHopCount : null,
-                        ),
-                      ],
                     ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Trailing: time + unread badge
-            // Clamp text scale to prevent overflow in trailing section.
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (unreadCount > 0) ...[
-                    UnreadBadge(count: unreadCount),
-                    const SizedBox(height: 4),
-                  ],
-                  Text(
-                    _formatLastSeen(context, lastSeen),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.right,
-                    style: MeshTheme.mono(
-                      fontSize: 11,
-                      color: unreadCount > 0
-                          ? MeshPalette.blue
-                          : scheme.onSurfaceVariant,
-                    ),
                   ),
                 ],
               ),
