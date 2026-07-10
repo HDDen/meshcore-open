@@ -317,10 +317,7 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.directRowDelta.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.directRowDelta.index);
       expect(decoded.pixels, image.pixels);
     });
 
@@ -335,10 +332,7 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.lzPixels.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.lzPixels.index);
       expect(decoded.pixels, image.pixels);
     });
 
@@ -356,10 +350,7 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.directRowDelta.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.directRowDelta.index);
       expect(decoded.pixels, image.pixels);
     });
 

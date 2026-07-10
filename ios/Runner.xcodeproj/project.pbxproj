@@ -183,6 +183,8 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				B788CEDB957A87EE8AC593BB /* [CP] Copy Pods Resources */,
+				F0D7F2413C6E4B7A9B1C2D3E /* Fix Native Asset Minimum OS */,
 			);
 			buildRules = (
 			);

@@ -637,9 +637,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
             children: [
               Expanded(child: tile(items[i])),
               const SizedBox(width: spacing),
-              Expanded(
-                child: hasRight ? tile(items[i + 1]) : const SizedBox(),
-              ),
+              Expanded(child: hasRight ? tile(items[i + 1]) : const SizedBox()),
             ],
           ),
         ),

@@ -21,14 +21,17 @@ PaletteProfile _paletteProfile(String name) {
 
 Future<void> main(List<String> arguments) async {
   final scriptDirectory = File.fromUri(Platform.script).parent;
-  final positional = arguments.where((argument) => !argument.startsWith('--')).toList();
+  final positional = arguments
+      .where((argument) => !argument.startsWith('--'))
+      .toList();
   final fixtureFile = File(
     positional.isNotEmpty
         ? positional.first
         : '${scriptDirectory.path}/v2-js-fixtures.json',
   );
   final decodeOnly = arguments.contains('--decode-only');
-  final document = jsonDecode(await fixtureFile.readAsString()) as Map<String, dynamic>;
+  final document =
+      jsonDecode(await fixtureFile.readAsString()) as Map<String, dynamic>;
   final fixtures = document['fixtures'] as List<dynamic>;
   final codec = MCOImageCodec();
   final summaries = <Map<String, dynamic>>[];
@@ -36,7 +39,9 @@ Future<void> main(List<String> arguments) async {
   for (final raw in fixtures) {
     final fixture = Map<String, dynamic>.from(raw as Map);
     final name = fixture['name'] as String;
-    final payload = Uint8List.fromList(base64Decode(fixture['payloadBase64'] as String));
+    final payload = Uint8List.fromList(
+      base64Decode(fixture['payloadBase64'] as String),
+    );
     final decoded = codec.decode(MCOImageCodec.textFromBinaryPayload(payload));
     final profile = _paletteProfile(fixture['paletteProfile'] as String);
     final pixels = List<int>.from(fixture['pixels'] as List);
@@ -66,7 +71,9 @@ Future<void> main(List<String> arguments) async {
         ),
         encodingVersion: MCOImageEncodingVersion.v2,
         outputTarget: MCOImageOutputTarget.binary,
-        compressionLevel: _compressionLevel(fixture['compressionLevel'] as String),
+        compressionLevel: _compressionLevel(
+          fixture['compressionLevel'] as String,
+        ),
         maxRegions: fixture['maxRegions'] as int,
       );
       exact = _sameInts(encoded.payload, payload);
@@ -84,12 +91,14 @@ Future<void> main(List<String> arguments) async {
     });
   }
 
-  stdout.writeln(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-    'fixtureFile': fixtureFile.path,
-    'generator': document['generator'] ?? 'unknown',
-    'decodeOnly': decodeOnly,
-    'fixtures': summaries,
-  }));
+  stdout.writeln(
+    const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      'fixtureFile': fixtureFile.path,
+      'generator': document['generator'] ?? 'unknown',
+      'decodeOnly': decodeOnly,
+      'fixtures': summaries,
+    }),
+  );
 }
 
 bool _sameInts(List<int> left, List<int> right) {

@@ -148,7 +148,11 @@ class _MCOImageOriginalOrFallbackState
         for (int c = 0; c < 3; c++) {
           final value =
               center * src[i + c] -
-              k * (src[up + c] + src[down + c] + src[left + c] + src[right + c]);
+              k *
+                  (src[up + c] +
+                      src[down + c] +
+                      src[left + c] +
+                      src[right + c]);
           out[i + c] = value < 0
               ? 0
               : value > 255

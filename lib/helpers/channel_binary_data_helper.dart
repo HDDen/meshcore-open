@@ -101,8 +101,7 @@ class ChannelBinaryDataHelper {
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
   static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
-  static const int mcmpV3WireVersion =
-      ChannelAppDataHelper.mcmpV3WireVersion;
+  static const int mcmpV3WireVersion = ChannelAppDataHelper.mcmpV3WireVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -364,7 +363,10 @@ class ChannelBinaryDataHelper {
         uncompressedPayloadLength(text, senderName);
   }
 
-  static int uncompressedAppBinaryPayloadLength(String text, String senderName) {
+  static int uncompressedAppBinaryPayloadLength(
+    String text,
+    String senderName,
+  ) {
     return channelDataHeaderLength +
         appBinaryEnvelopeLength(
           bodyLength: 1 + 4 + utf8.encode(text).length,

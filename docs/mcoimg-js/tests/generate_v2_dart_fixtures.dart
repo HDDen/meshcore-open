@@ -26,7 +26,8 @@ Future<void> main(List<String> arguments) async {
         ? arguments.first
         : '${scriptDirectory.path}/v2-dart-fixtures.json',
   );
-  final source = jsonDecode(await sourceFile.readAsString()) as Map<String, dynamic>;
+  final source =
+      jsonDecode(await sourceFile.readAsString()) as Map<String, dynamic>;
   final cases = source['cases'] as List<dynamic>;
   final codec = MCOImageCodec();
   final fixtures = <Map<String, dynamic>>[];
@@ -50,10 +51,14 @@ Future<void> main(List<String> arguments) async {
       image,
       encodingVersion: MCOImageEncodingVersion.v2,
       outputTarget: MCOImageOutputTarget.binary,
-      compressionLevel: _compressionLevel(fixture['compressionLevel'] as String),
+      compressionLevel: _compressionLevel(
+        fixture['compressionLevel'] as String,
+      ),
       maxRegions: fixture['maxRegions'] as int,
     );
-    final decoded = codec.decode(MCOImageCodec.textFromBinaryPayload(result.payload));
+    final decoded = codec.decode(
+      MCOImageCodec.textFromBinaryPayload(result.payload),
+    );
     if (decoded.width != width ||
         decoded.height != height ||
         decoded.paletteProfile != profile ||
@@ -77,11 +82,7 @@ Future<void> main(List<String> arguments) async {
   }
 
   await outputFile.writeAsString(
-    '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-      'schema': 1,
-      'generator': 'lib/helpers/mcoimg_codec.dart',
-      'fixtures': fixtures,
-    })}\n',
+    '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{'schema': 1, 'generator': 'lib/helpers/mcoimg_codec.dart', 'fixtures': fixtures})}\n',
   );
   stdout.writeln(outputFile.path);
 }

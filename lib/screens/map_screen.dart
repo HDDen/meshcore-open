@@ -3641,9 +3641,7 @@ class _MapScreenState extends State<MapScreen>
               Expanded(
                 child: Material(
                   color: panelColor,
-                  shape: StadiumBorder(
-                    side: BorderSide(color: panelBorder),
-                  ),
+                  shape: StadiumBorder(side: BorderSide(color: panelBorder)),
                   clipBehavior: Clip.antiAlias,
                   child: TextField(
                     controller: _searchController,
@@ -3693,9 +3691,7 @@ class _MapScreenState extends State<MapScreen>
               const SizedBox(width: 8),
               Material(
                 color: panelColor,
-                shape: StadiumBorder(
-                  side: BorderSide(color: panelBorder),
-                ),
+                shape: StadiumBorder(side: BorderSide(color: panelBorder)),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: () => setState(() => _statsExpanded = !_statsExpanded),
@@ -5509,7 +5505,9 @@ class _MapScreenState extends State<MapScreen>
   /// hash mode (width * 2 hex chars) and are valid hex.
   void _commitPathEdit() {
     if (!mounted || !_isBuildingPathTrace) return;
-    final width = context.read<MeshCoreConnector>().pathHashByteWidth
+    final width = context
+        .read<MeshCoreConnector>()
+        .pathHashByteWidth
         .clamp(1, pubKeySize)
         .toInt();
     final expectedLen = width * 2;
@@ -5687,9 +5685,8 @@ class _MapScreenState extends State<MapScreen>
                   cursorColor: MapPalette.selected,
                   inputFormatters: [
                     TextInputFormatter.withFunction(
-                      (oldValue, newValue) => newValue.copyWith(
-                        text: newValue.text.toUpperCase(),
-                      ),
+                      (oldValue, newValue) =>
+                          newValue.copyWith(text: newValue.text.toUpperCase()),
                     ),
                   ],
                   // Tapping anywhere outside the field (e.g. the map) blurs it

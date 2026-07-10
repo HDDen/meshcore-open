@@ -202,10 +202,7 @@ class StatTile extends StatelessWidget {
           Text.rich(
             TextSpan(
               text: value,
-              style: MeshTheme.mono(
-                fontSize: 14,
-                color: scheme.onSurface,
-              ),
+              style: MeshTheme.mono(fontSize: 14, color: scheme.onSurface),
               children: [
                 if (unit != null)
                   TextSpan(

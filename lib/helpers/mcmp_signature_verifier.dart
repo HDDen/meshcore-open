@@ -75,9 +75,7 @@ class McmpSignatureVerifier {
   }) async {
     final signature = message.signature;
     if (signature == null) {
-      return const McmpVerificationResult(
-        status: McmpSignatureStatus.unsigned,
-      );
+      return const McmpVerificationResult(status: McmpSignatureStatus.unsigned);
     }
 
     final candidates = _contactsNamed(contacts, senderName);
@@ -120,8 +118,9 @@ class McmpSignatureVerifier {
       status: McmpSignatureStatus.invalid,
       // Expose the checked key so the badge can anchor trust to it, but only
       // when a single contact bore the name (a collision has no single key).
-      verifiedSenderKeyHex:
-          candidates.length == 1 ? candidates.first.publicKeyHex : null,
+      verifiedSenderKeyHex: candidates.length == 1
+          ? candidates.first.publicKeyHex
+          : null,
       nameCollision: collision,
     );
   }
@@ -140,18 +139,14 @@ class McmpSignatureVerifier {
   }) async {
     final signature = message.signature;
     if (signature == null) {
-      return const McmpVerificationResult(
-        status: McmpSignatureStatus.unsigned,
-      );
+      return const McmpVerificationResult(status: McmpSignatureStatus.unsigned);
     }
 
     final signedName = message.senderName;
     if (signedName == null) {
       // A signed room body without an embedded name cannot be reconstructed
       // for verification.
-      return const McmpVerificationResult(
-        status: McmpSignatureStatus.invalid,
-      );
+      return const McmpVerificationResult(status: McmpSignatureStatus.invalid);
     }
 
     final collision = _contactsNamed(contacts, signedName).length > 1;
@@ -205,8 +200,9 @@ class McmpSignatureVerifier {
     }
     return McmpVerificationResult(
       status: McmpSignatureStatus.invalid,
-      verifiedSenderKeyHex:
-          candidates.length == 1 ? candidates.first.publicKeyHex : null,
+      verifiedSenderKeyHex: candidates.length == 1
+          ? candidates.first.publicKeyHex
+          : null,
       nameCollision: collision,
     );
   }

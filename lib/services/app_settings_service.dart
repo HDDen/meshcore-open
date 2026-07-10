@@ -165,9 +165,7 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   Future<void> setSnrIndicatorAllRepActivity(bool value) async {
-    await updateSettings(
-      _settings.copyWith(snrIndicatorAllRepActivity: value),
-    );
+    await updateSettings(_settings.copyWith(snrIndicatorAllRepActivity: value));
   }
 
   Future<void> setHideMapZoomControls(bool value) async {
@@ -197,9 +195,7 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   Future<void> setMcoImageReplacementsScale(double value) async {
-    await updateSettings(
-      _settings.copyWith(mcoImageReplacementsScale: value),
-    );
+    await updateSettings(_settings.copyWith(mcoImageReplacementsScale: value));
   }
 
   Future<void> setMcoImageScaleNearestNeighbor(bool value) async {

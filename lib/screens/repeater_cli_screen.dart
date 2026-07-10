@@ -335,7 +335,12 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           // Quick commands bar
           Container(
             color: MeshPalette.bg1,
-            padding: EdgeInsets.fromLTRB(8, 6, 8, PlatformInfo.isDesktop ? 0 : 6),
+            padding: EdgeInsets.fromLTRB(
+              8,
+              6,
+              8,
+              PlatformInfo.isDesktop ? 0 : 6,
+            ),
             child: Scrollbar(
               controller: _quickCommandsScrollController,
               thumbVisibility: PlatformInfo.isDesktop,
@@ -347,24 +352,24 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                     : EdgeInsets.zero,
                 child: Row(
                   children: _quickCommands.map((cmd) {
-                  final label = _quickCommandLabel(cmd['labelKey']!);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ActionChip(
-                      label: Text(
-                        label,
-                        style: MeshTheme.mono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: MeshPalette.blue,
+                    final label = _quickCommandLabel(cmd['labelKey']!);
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ActionChip(
+                        label: Text(
+                          label,
+                          style: MeshTheme.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: MeshPalette.blue,
+                          ),
                         ),
+                        backgroundColor: MeshPalette.blueBg,
+                        side: const BorderSide(color: MeshPalette.blueLine),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _useQuickCommand(cmd['command']!),
                       ),
-                      backgroundColor: MeshPalette.blueBg,
-                      side: const BorderSide(color: MeshPalette.blueLine),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => _useQuickCommand(cmd['command']!),
-                    ),
-                  );
+                    );
                   }).toList(),
                 ),
               ),

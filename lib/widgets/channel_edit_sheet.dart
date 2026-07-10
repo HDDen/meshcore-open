@@ -54,9 +54,7 @@ void showChannelEditSheet(
         builder: (_, scrollController) => Column(
           children: [
             BottomSheetHeader(
-              title: sheetContext.l10n.channels_editChannelTitle(
-                channel.index,
-              ),
+              title: sheetContext.l10n.channels_editChannelTitle(channel.index),
             ),
             Expanded(
               child: ListView(
@@ -172,9 +170,7 @@ void showChannelEditSheet(
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      sheetContext.l10n.channels_cyr2latCompression,
-                    ),
+                    title: Text(sheetContext.l10n.channels_cyr2latCompression),
                     subtitle: Text(
                       sheetContext.l10n.channels_cyr2latCompressionDscr,
                     ),
@@ -198,14 +194,14 @@ void showChannelEditSheet(
                               .channels_cyr2latSettingsSubheading,
                           border: const OutlineInputBorder(),
                         ),
-                        items: appSettingsService.settings.cyr2latProfiles
-                            .map((profile) {
-                              return DropdownMenuItem(
-                                value: profile.id,
-                                child: Text(profile.name),
-                              );
-                            })
-                            .toList(),
+                        items: appSettingsService.settings.cyr2latProfiles.map((
+                          profile,
+                        ) {
+                          return DropdownMenuItem(
+                            value: profile.id,
+                            child: Text(profile.name),
+                          );
+                        }).toList(),
                         onChanged: (value) => setSheetState(() {
                           selectedCyr2LatProfileId = value;
                         }),
@@ -274,94 +270,98 @@ void showChannelEditSheet(
                         child: Text(sheetContext.l10n.common_cancel),
                       ),
                     ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        final name = nameController.text.trim();
-                        final pskHex = pskController.text.trim();
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final name = nameController.text.trim();
+                          final pskHex = pskController.text.trim();
 
-                        Uint8List psk;
-                        try {
-                          psk = Channel.parsePskHex(pskHex);
-                        } on FormatException {
-                          showDismissibleSnackBar(
-                            sheetContext,
-                            content: Text(
-                              sheetContext.l10n.channels_pskMustBe32Hex,
-                            ),
-                          );
-                          return;
-                        }
+                          Uint8List psk;
+                          try {
+                            psk = Channel.parsePskHex(pskHex);
+                          } on FormatException {
+                            showDismissibleSnackBar(
+                              sheetContext,
+                              content: Text(
+                                sheetContext.l10n.channels_pskMustBe32Hex,
+                              ),
+                            );
+                            return;
+                          }
 
-                        Navigator.pop(sheetContext);
-                        try {
-                          await connector.setChannel(channel.index, name, psk);
-                          await connector.setChannelMcmpEnabled(
-                            channel.index,
-                            mcmpEnabled,
-                          );
-                          await connector.setChannelMcmpVersion(
-                            channel.index,
-                            selectedMcmpVersion,
-                          );
-                          await connector.setChannelMcmpUseSign(
-                            channel.index,
-                            mcmpUseSign,
-                          );
-                          await connector.setChannelSmazEnabled(
-                            channel.index,
-                            smazEnabled,
-                          );
-                          await connector.setChannelCyr2LatEnabled(
-                            channel.index,
-                            cyr2latEnabled,
-                          );
-                          await connector.setChannelCyr2LatProfileId(
-                            channel.index,
-                            selectedCyr2LatProfileId,
-                          );
-                          await connector.setChannelSendingDelayEnabled(
-                            channel.index,
-                            sendingDelayEnabled,
-                          );
-                          await connector.setChannelQuickAnswerIds(
-                            channel.index,
-                            selectedQuickAnswerIds,
-                          );
-                          await connector.setChannelWidgetColor(
-                            channel.index,
-                            selectedWidgetColor,
-                          );
-                          await connector.setChannelWidgetTextColor(
-                            channel.index,
-                            selectedWidgetTextColor,
-                          );
-                          if (!context.mounted) return;
-                          showDismissibleSnackBar(
-                            context,
-                            content: Text(
-                              context.l10n.channels_channelUpdated(name),
-                            ),
-                          );
-                        } catch (e, st) {
-                          debugPrint(st.toString());
-                          if (!context.mounted) return;
-                          showDismissibleSnackBar(
-                            context,
-                            content: Text(
-                              context.l10n.channels_channelUpdateFailed('$e'),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(sheetContext.l10n.common_save),
+                          Navigator.pop(sheetContext);
+                          try {
+                            await connector.setChannel(
+                              channel.index,
+                              name,
+                              psk,
+                            );
+                            await connector.setChannelMcmpEnabled(
+                              channel.index,
+                              mcmpEnabled,
+                            );
+                            await connector.setChannelMcmpVersion(
+                              channel.index,
+                              selectedMcmpVersion,
+                            );
+                            await connector.setChannelMcmpUseSign(
+                              channel.index,
+                              mcmpUseSign,
+                            );
+                            await connector.setChannelSmazEnabled(
+                              channel.index,
+                              smazEnabled,
+                            );
+                            await connector.setChannelCyr2LatEnabled(
+                              channel.index,
+                              cyr2latEnabled,
+                            );
+                            await connector.setChannelCyr2LatProfileId(
+                              channel.index,
+                              selectedCyr2LatProfileId,
+                            );
+                            await connector.setChannelSendingDelayEnabled(
+                              channel.index,
+                              sendingDelayEnabled,
+                            );
+                            await connector.setChannelQuickAnswerIds(
+                              channel.index,
+                              selectedQuickAnswerIds,
+                            );
+                            await connector.setChannelWidgetColor(
+                              channel.index,
+                              selectedWidgetColor,
+                            );
+                            await connector.setChannelWidgetTextColor(
+                              channel.index,
+                              selectedWidgetTextColor,
+                            );
+                            if (!context.mounted) return;
+                            showDismissibleSnackBar(
+                              context,
+                              content: Text(
+                                context.l10n.channels_channelUpdated(name),
+                              ),
+                            );
+                          } catch (e, st) {
+                            debugPrint(st.toString());
+                            if (!context.mounted) return;
+                            showDismissibleSnackBar(
+                              context,
+                              content: Text(
+                                context.l10n.channels_channelUpdateFailed('$e'),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(sheetContext.l10n.common_save),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
           ],
         ),
       ),

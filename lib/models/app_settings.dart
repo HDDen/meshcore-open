@@ -168,8 +168,7 @@ class AppSettings {
     'cyrillic_extended',
     'cyrillic_transliteration',
   ];
-  static const String stadiaDemo =
-      '51bd0381-4685-4666-bae8-48940f6d77c0';
+  static const String stadiaDemo = '51bd0381-4685-4666-bae8-48940f6d77c0';
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -467,8 +466,7 @@ class AppSettings {
     return apiKey;
   }
 
-  bool get usesstadiaDemo =>
-      effectiveMapTileApiKey == stadiaDemo;
+  bool get usesstadiaDemo => effectiveMapTileApiKey == stadiaDemo;
 
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(

@@ -1554,10 +1554,7 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setContactMcmpUseSign(
-    String contactKeyHex,
-    bool useSign,
-  ) async {
+  Future<void> setContactMcmpUseSign(String contactKeyHex, bool useSign) async {
     if (_contactMcmpUseSign[contactKeyHex] == useSign) return;
     _contactMcmpUseSign[contactKeyHex] = useSign;
     await _contactSettingsStore.saveMcmpUseSign(contactKeyHex, useSign);
@@ -4942,8 +4939,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // Stamp the outgoing packet with the actual send time and align the
       // stored message.timestamp to the exact value that went on the air, so
       // replies to our own message resolve by exact-timestamp matching.
-      final sentTimestampSeconds =
-          sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
       _updateChannelMessagePacketTimestamp(
         channel.index,
         message.messageId,
@@ -5078,8 +5074,7 @@ class MeshCoreConnector extends ChangeNotifier {
         );
         return;
       }
-      final sentTimestampSeconds =
-          sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
       _updateChannelMessagePacketTimestamp(
         pending.channel.index,
         pending.messageId,
@@ -5130,15 +5125,10 @@ class MeshCoreConnector extends ChangeNotifier {
     await prev;
 
     try {
-      // Only touch the global flood scope for region-scoped channels. Plain
-      // channels send exactly as before, which also stays compatible with
-      // firmware that predates CMD_SET_FLOOD_SCOPE. The lock is still held so an
-      // unscoped send can't interleave with (and inherit the scope of) a
-      // concurrent scoped send.
-      if (region.isEmpty) {
-        await action();
-        return;
-      }
+      // An empty channel region deliberately clears any previous app override,
+      // handing scope selection back to the node's default-region setting.
+      // This must happen for unscoped channels too: otherwise a stale scope
+      // left by another client can leak into the outgoing packet.
       await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
       try {
         await action();
@@ -5320,8 +5310,11 @@ class MeshCoreConnector extends ChangeNotifier {
       // Stream the data chunks. Per-chunk OK acks are not correlated (the code
       // is ambiguous); the transport preserves order and the node accumulates
       // the chunks before FINISH.
-      for (var offset = 0; offset < data.length;
-          offset += maxSignDataChunkBytes) {
+      for (
+        var offset = 0;
+        offset < data.length;
+        offset += maxSignDataChunkBytes
+      ) {
         final end = (offset + maxSignDataChunkBytes) > data.length
             ? data.length
             : offset + maxSignDataChunkBytes;
@@ -8396,8 +8389,7 @@ class MeshCoreConnector extends ChangeNotifier {
       return contact.name;
     }
 
-    final messages =
-        _conversations[contact.publicKeyHex] ?? const <Message>[];
+    final messages = _conversations[contact.publicKeyHex] ?? const <Message>[];
     Message? closest;
     String? closestName;
     int? closestDelta;
@@ -8409,8 +8401,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isRoom && (candidateName == null || candidateName != replySender)) {
         continue;
       }
-      final outerTimestamp =
-          candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
+      final outerTimestamp = candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
       if (candidate.mcmpTimestamp == replyTimestamp ||
           outerTimestamp == replyTimestamp) {
         return message.copyWith(
@@ -8483,7 +8474,8 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     MessageCompressionType? type;
-    if (isChannelMcmpEnabled(channelIndex) && _isMcmpEncodedText(outboundText)) {
+    if (isChannelMcmpEnabled(channelIndex) &&
+        _isMcmpEncodedText(outboundText)) {
       type = MessageCompressionType.mcmp;
     } else if (isChannelSmazEnabled(channelIndex) &&
         Smaz.hasPrefix(outboundText)) {
@@ -8545,9 +8537,7 @@ class MeshCoreConnector extends ChangeNotifier {
       return MessageCompressionMetadata.fromByteLengths(
         type: MessageCompressionType.mcmp,
         originalBytes: utf8.encode(decoded.text!).length,
-        compressedBytes: McmpAppCodec.compressedTextBytesFromBody(
-          decoded.body,
-        ),
+        compressedBytes: McmpAppCodec.compressedTextBytesFromBody(decoded.body),
       );
     } catch (_) {
       return null;
@@ -8951,9 +8941,7 @@ class MeshCoreConnector extends ChangeNotifier {
             replyToSenderName: replyReference?.senderName,
             replyToText: replyReference?.text,
           );
-          final message = await _verifyInboundChannelMessage(
-            unverifiedMessage,
-          );
+          final message = await _verifyInboundChannelMessage(unverifiedMessage);
 
           _updateContactLastMessageAtByName(
             parsed.senderName,
@@ -10693,9 +10681,7 @@ class MeshCoreConnector extends ChangeNotifier {
     } else {
       // On overflow drop the oldest entry to make room for the newest.
       if (_activeRepeaters.length >= _maxActiveRepeaters) {
-        _activeRepeaters.sort(
-          (a, b) => a.lastUpdated.compareTo(b.lastUpdated),
-        );
+        _activeRepeaters.sort((a, b) => a.lastUpdated.compareTo(b.lastUpdated));
         _activeRepeaters.removeAt(0);
       }
       _activeRepeaters.add(
@@ -10981,7 +10967,14 @@ class MeshCoreConnector extends ChangeNotifier {
         stalestIndex = i;
       }
     }
-    _discoveredContacts.removeAt(stalestIndex);
+    final removed = _discoveredContacts.removeAt(stalestIndex);
+    final syncIndexes = _discoveredContactSyncIndexes;
+    if (syncIndexes != null) {
+      syncIndexes.remove(removed.publicKeyHex);
+      for (var i = stalestIndex; i < _discoveredContacts.length; i++) {
+        syncIndexes[_discoveredContacts[i].publicKeyHex] = i;
+      }
+    }
   }
 
   void removeAllDiscoveredContacts() {

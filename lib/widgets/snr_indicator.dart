@@ -307,7 +307,9 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
               );
 
               final name = contact?.name;
-              final prefixLabel = PathHelper.formatHopHex(repeater.pubkeyPrefix);
+              final prefixLabel = PathHelper.formatHopHex(
+                repeater.pubkeyPrefix,
+              );
               final snrColor = MeshTheme.snrColor(repeater.snr, blocked: false);
 
               return Padding(
@@ -333,7 +335,10 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                           ),
                           Text(
                             '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
-                            style: MeshTheme.mono(fontSize: 11, color: snrColor),
+                            style: MeshTheme.mono(
+                              fontSize: 11,
+                              color: snrColor,
+                            ),
                           ),
                         ],
                       ),

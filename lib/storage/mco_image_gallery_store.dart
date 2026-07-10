@@ -82,11 +82,12 @@ class MCOImageGalleryStore {
   }
 
   Future<void> saveCollapsedGroupIds(Set<String> groupIds) async {
-    final jsonList = groupIds
-        .map((entry) => entry.trim())
-        .where((entry) => entry.isNotEmpty)
-        .toList()
-      ..sort();
+    final jsonList =
+        groupIds
+            .map((entry) => entry.trim())
+            .where((entry) => entry.isNotEmpty)
+            .toList()
+          ..sort();
     await PrefsManager.instance.setString(
       _collapsedGroupsKey,
       jsonEncode(jsonList),
@@ -162,31 +163,27 @@ class MCOImageGalleryStore {
     }
     await packDir.create(recursive: true);
 
-    await File(_joinPath(packDir.path, 'info.json')).writeAsBytes(
-      _archiveFileBytes(infoFile),
-      flush: true,
-    );
+    await File(
+      _joinPath(packDir.path, 'info.json'),
+    ).writeAsBytes(_archiveFileBytes(infoFile), flush: true);
 
     for (final pair in imagePairs) {
       final imageDir = Directory(
         _joinPath(_joinPath(packDir.path, 'images'), pair.directoryName),
       );
       await imageDir.create(recursive: true);
-      await File(_joinPath(imageDir.path, pair.pngFileName)).writeAsBytes(
-        _archiveFileBytes(pair.pngFile),
-        flush: true,
-      );
-      await File(_joinPath(imageDir.path, pair.binFileName)).writeAsBytes(
-        _archiveFileBytes(pair.binFile),
-        flush: true,
-      );
+      await File(
+        _joinPath(imageDir.path, pair.pngFileName),
+      ).writeAsBytes(_archiveFileBytes(pair.pngFile), flush: true);
+      await File(
+        _joinPath(imageDir.path, pair.binFileName),
+      ).writeAsBytes(_archiveFileBytes(pair.binFile), flush: true);
       final md5File = pair.md5File;
       final md5FileName = pair.md5FileName;
       if (md5File != null && md5FileName != null) {
-        await File(_joinPath(imageDir.path, md5FileName)).writeAsBytes(
-          _archiveFileBytes(md5File),
-          flush: true,
-        );
+        await File(
+          _joinPath(imageDir.path, md5FileName),
+        ).writeAsBytes(_archiveFileBytes(md5File), flush: true);
       }
     }
 
@@ -255,7 +252,8 @@ class MCOImageGalleryStore {
             }
           }
           if (hash == null) continue;
-          index[hash] = '$packFolderName/images/$imageDirName/'
+          index[hash] =
+              '$packFolderName/images/$imageDirName/'
               '$originalFileName';
         }
       }
@@ -324,9 +322,7 @@ class MCOImageGalleryStore {
       }
     }
 
-    packs.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    packs.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return packs;
   }
 
@@ -496,8 +492,7 @@ class MCOImageGalleryStore {
         final files = await imageDir.list().where((entity) {
           if (entity is! File) return false;
           final name = _fileNameFromPath(entity.path).toLowerCase();
-          return _isPackPreviewFileName(name) ||
-              name.endsWith('.mcoimg.bin');
+          return _isPackPreviewFileName(name) || name.endsWith('.mcoimg.bin');
         }).toList();
         File? pngFile;
         File? binFile;
@@ -519,8 +514,7 @@ class MCOImageGalleryStore {
           final stat = await binFile.stat();
           items.add(
             MCOImageGalleryItem(
-              id:
-                  'pack:${pack.folderName}:${_fileNameFromPath(imageDir.path)}',
+              id: 'pack:${pack.folderName}:${_fileNameFromPath(imageDir.path)}',
               createdAt: stat.modified,
               groupId: pack.groupId,
               groupName: pack.groupTitle,

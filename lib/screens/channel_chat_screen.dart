@@ -114,6 +114,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final overridden = _mcoVariantOverridden.contains(messageId);
     return defaultLora != overridden;
   }
+
   bool _isLoadingOlder = false;
   bool _communitiesLoaded = false;
   Region region = '';
@@ -1237,12 +1238,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       textScale: textScale,
                                       color: metaColor,
                                       errorColor: scheme.error,
@@ -1340,7 +1339,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       isFailed: showFailureVisual,
                                     ),
                                   ),
-                              ),
+                                ),
                             ],
                           )
                         else if (sharedContact != null)
@@ -1389,12 +1388,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       textScale: textScale,
                                       color: metaColor,
                                       errorColor: scheme.error,
@@ -1459,12 +1456,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       textScale: textScale,
                                       color: metaColor,
                                       errorColor: scheme.error,
@@ -2514,8 +2509,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         unawaited(_pickAndInsertLocationFromMap()),
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
-                    onOpenMcoImageGallery: () =>
-                        _showMcoImageGallery(maxBytes),
+                    onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
                 ),
                 if (settings.translationEnabled)
@@ -2981,9 +2975,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final mcoImage = MCOImageMessage.tryDecode(message.text);
     final hasMcoOriginal = mcoImage == null
         ? false
-        : await McoImagePackOriginals.instance.hasOriginalForText(
-            message.text,
-          );
+        : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
     if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =

@@ -653,8 +653,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
                 onSendSelfContact: () => _insertSelfContact(connector),
-                onSendMyLocation: () =>
-                    unawaited(_insertMyLocation(connector)),
+                onSendMyLocation: () => unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
                 onPickLocationFromMap: () =>
                     unawaited(_pickAndInsertLocationFromMap()),
@@ -1251,7 +1250,9 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
-    int selectedMcmpVersion = connector.contactMcmpVersion(contact.publicKeyHex);
+    int selectedMcmpVersion = connector.contactMcmpVersion(
+      contact.publicKeyHex,
+    );
     bool mcmpUseSign = connector.contactMcmpUseSign(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
@@ -1637,8 +1638,7 @@ class _ChatScreenState extends State<ChatScreen> {
       timestamp: message.timestamp,
       // Room-server posts / outgoing have no receive time → epoch 0 renders
       // as a dash on the path screen; contacts carry the real receivedAt.
-      receivedAt:
-          message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+      receivedAt: message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
@@ -1688,9 +1688,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final mcoImage = MCOImageMessage.tryDecode(message.text);
     final hasMcoOriginal = mcoImage == null
         ? false
-        : await McoImagePackOriginals.instance.hasOriginalForText(
-            message.text,
-          );
+        : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
     if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
@@ -2329,12 +2327,10 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       showFingerprint: false,
                                       textScale: textScale,
                                       color: metaColor,
@@ -2433,7 +2429,7 @@ class _MessageBubble extends StatelessWidget {
                                           MessageStatus.failed,
                                     ),
                                   ),
-                              ),
+                                ),
                             ],
                           )
                         else if (sharedContact != null)
@@ -2487,12 +2483,10 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       showFingerprint: false,
                                       textScale: textScale,
                                       color: metaColor,
@@ -2555,12 +2549,10 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3:
-                                          message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
-                                      nameCollision:
-                                          message.mcmpNameCollision,
+                                      nameCollision: message.mcmpNameCollision,
                                       showFingerprint: false,
                                       textScale: textScale,
                                       color: metaColor,

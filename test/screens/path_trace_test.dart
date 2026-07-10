@@ -14,21 +14,6 @@ import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
-import 'package:meshcore_open/services/path_history_service.dart';
-import 'package:meshcore_open/services/storage_service.dart';
-import 'package:meshcore_open/models/path_history.dart';
-
-class _FakeStorageService extends StorageService {
-  @override
-  Future<void> savePathHistory(
-    String contactPubKeyHex,
-    ContactPathHistory history,
-  ) async {}
-  @override
-  Future<ContactPathHistory?> loadPathHistory(String contactPubKeyHex) async => null;
-  @override
-  Future<void> clearPathHistory(String contactPubKeyHex) async {}
-}
 
 class _FakeMeshCoreConnector extends MeshCoreConnector {
   final StreamController<Uint8List> _receivedFramesController =
@@ -104,9 +89,8 @@ Widget _buildTestApp({
         create: (_) => AppSettingsService(),
       ),
       Provider<MapTileCacheService>(
-        create: (_) => MapTileCacheService(
-          appSettingsService: AppSettingsService(),
-        ),
+        create: (_) =>
+            MapTileCacheService(appSettingsService: AppSettingsService()),
       ),
       ChangeNotifierProvider<PathHistoryService>(
         create: (_) => PathHistoryService(_FakePathStorageService()),

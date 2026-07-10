@@ -93,11 +93,8 @@ class McmpSignatureBadge extends StatelessWidget {
     }
   }
 
-  bool get _visible => isVisible(
-    status: status,
-    isOutgoing: isOutgoing,
-    wasMcmpV3: wasMcmpV3,
-  );
+  bool get _visible =>
+      isVisible(status: status, isOutgoing: isOutgoing, wasMcmpV3: wasMcmpV3);
 
   @override
   Widget build(BuildContext context) {

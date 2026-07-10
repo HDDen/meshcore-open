@@ -50,7 +50,9 @@ class ModSettingsScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     secondary: const Icon(Icons.insights_outlined, size: 20),
-                    title: Text(context.l10n.settings_modSettingsHideRadioStats),
+                    title: Text(
+                      context.l10n.settings_modSettingsHideRadioStats,
+                    ),
                     value: settings.hideRadioStatsButton,
                     onChanged: settingsService.setHideRadioStatsButton,
                   ),
@@ -64,7 +66,9 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                     secondary: const Icon(Icons.cell_tower, size: 20),
                     title: Text(
-                      context.l10n.settings_modSettingsSNRindicatorAllRepActivity,
+                      context
+                          .l10n
+                          .settings_modSettingsSNRindicatorAllRepActivity,
                     ),
                     value: settings.snrIndicatorAllRepActivity,
                     onChanged: settingsService.setSnrIndicatorAllRepActivity,
@@ -190,9 +194,7 @@ class ModSettingsScreen extends StatelessWidget {
                         divisions: 30,
                         label: '${(settings.uiScale * 100).round()}%',
                         onChanged: (value) {
-                          settingsService.setUiScale(
-                            (value * 20).round() / 20,
-                          );
+                          settingsService.setUiScale((value * 20).round() / 20);
                         },
                       ),
                     ],
