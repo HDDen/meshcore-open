@@ -8,6 +8,7 @@ class TranslatedMessageContent extends StatelessWidget {
   final TextStyle style;
   final TextStyle? originalStyle;
   final bool showOriginalFirst;
+  final VoidCallback? onSecondaryTap;
 
   /// Explicit text scale for the linkified body (flutter_linkify ignores the
   /// ambient MediaQuery scaler); used to apply the global UI scale.
@@ -21,6 +22,7 @@ class TranslatedMessageContent extends StatelessWidget {
     this.originalStyle,
     this.showOriginalFirst = true,
     this.textScaler,
+    this.onSecondaryTap,
   });
 
   @override
@@ -42,6 +44,7 @@ class TranslatedMessageContent extends StatelessWidget {
                   fontSize: style.fontSize,
                 ),
             textScaler: textScaler,
+            onSecondaryTap: onSecondaryTap,
           )
         : null;
     final translatedWidget = LinkHandler.buildLinkifyText(
@@ -49,6 +52,7 @@ class TranslatedMessageContent extends StatelessWidget {
       text: trimmedDisplay,
       style: style,
       textScaler: textScaler,
+      onSecondaryTap: onSecondaryTap,
     );
 
     if (!shouldShowOriginal) {

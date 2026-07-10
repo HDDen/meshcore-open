@@ -529,6 +529,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Включи местоположение в обявата';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate =>
+      'Автоматична zero-hop обява при GPS обновяване';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      'Когато GPS местоположението се промени, изпрати zero-hop обява (изисква местоположение в обявата).';
+
+  @override
   String get settings_multiAck => 'Множество ACK';
 
   @override
@@ -1033,6 +1041,28 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get appSettings_lastWeek => 'Миналата седмица';
+
+  @override
+  String get appSettings_rasterTileSource => 'Източник на растерни плочки';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Крайна точка на Stadia';
+
+  @override
+  String get appSettings_stadiaApiKey => 'API ключ за Stadia';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired =>
+      'Задължително за използване на Stadia Maps';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return 'Конфигурирано: $maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      'Въведете своя API ключ за Stadia Maps. Приложението го използва за заявки за растерни плочки.';
 
   @override
   String get appSettings_offlineMapCache => 'Кеш на офлайн карти';
@@ -1574,6 +1604,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Изпрати GIF';
+
+  @override
+  String get chat_receivedGif => 'Received a GIF';
 
   @override
   String get chat_reply => 'Отговори';
@@ -2585,6 +2618,42 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
+  }
+
+  @override
   String mapCache_boundsLabel(
     String north,
     String south,
@@ -3129,6 +3198,41 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       'Байтовете, използвани за кодиране на идентификатора на този повторител в таговете за откриване на потоци/цикли, са: 0=1 байт (256 идентификатора, до 64 скока), 1=2 байта (65 000 идентификатора, до 32 скока), 2=3 байта (16 милиона идентификатора, до 21 скока). Версиите 1.13 и по-старите фърмуери използват многобайтови пътища - само след като мрежата е актуализирана до версия 1.14 или по-нова.';
+
+  @override
+  String get repeater_keySettings => 'Change Identity Keys';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Change the public/private keypair';
+
+  @override
+  String get repeater_prvKey => 'Private key';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'A new private key for the repeater, a 128-character hex string.';
+
+  @override
+  String get repeater_generatePrvKey => 'Generate a random keypair';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+
+  @override
+  String get repeater_pubKey => 'Public key';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Desired prefix';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+  }
 
   @override
   String get repeater_txDelay => 'Забавяне на Flood TX';

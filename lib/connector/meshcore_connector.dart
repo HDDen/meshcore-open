@@ -175,6 +175,12 @@ class MeshCoreConnector extends ChangeNotifier {
   // Message windowing to limit memory usage
   static const int _messageWindowSize = 200;
 
+  // Cap on discovered (non-contact) nodes retained in memory. Adverts arrive
+  // continuously from the whole mesh, so without a bound this list grows for
+  // as long as the app stays connected. When full, the stalest node (oldest
+  // lastSeen) is evicted to make room for a newly heard one.
+  static const int _maxDiscoveredContacts = 500;
+
   MeshCoreConnectionState _state = MeshCoreConnectionState.disconnected;
   BluetoothDevice? _device;
   BluetoothCharacteristic? _rxCharacteristic;
@@ -284,6 +290,9 @@ class MeshCoreConnector extends ChangeNotifier {
   DateTime _lastRadioRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastContactMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastChannelMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastZeroHopAdvertAt = DateTime.fromMillisecondsSinceEpoch(0);
+  double? _lastZeroHopAdvertLatitude;
+  double? _lastZeroHopAdvertLongitude;
   static const int _radioQuietMs = 3000;
   static const int _radioQuietMaxWaitMs = 3000;
 
@@ -1973,6 +1982,13 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> _loadDiscoveredContactCache() async {
     final cached = await _discoveryContactStore.loadContacts();
+    // Trim a previously-saved oversized list down to the freshest entries so a
+    // device that grew unbounded before the cap existed recovers on load.
+    if (cached.length > _maxDiscoveredContacts) {
+      cached.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
+      cached.removeRange(_maxDiscoveredContacts, cached.length);
+      unawaited(_discoveryContactStore.saveContacts(cached));
+    }
     _discoveredContacts
       ..clear()
       ..addAll(cached);
@@ -3563,6 +3579,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _setDefaultRegionScopeCache(null);
     _hasLoadedDefaultRegionScope = false;
     _defaultRegionScopeRefreshFuture = null;
+    _lastZeroHopAdvertLatitude = null;
+    _lastZeroHopAdvertLongitude = null;
     _awaitingSelfInfo = false;
     _webInitialHandshakeRequestSent = false;
     _selfInfoRetryTimer?.cancel();
@@ -3745,6 +3763,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _setDefaultRegionScopeCache(null);
     _hasLoadedDefaultRegionScope = false;
     _defaultRegionScopeRefreshFuture = null;
+    _lastZeroHopAdvertLatitude = null;
+    _lastZeroHopAdvertLongitude = null;
     _clientRepeat = null;
     _rememberedNonRepeatRadioState = null;
     _firmwareVerCode = null;
@@ -4697,6 +4717,7 @@ class MeshCoreConnector extends ChangeNotifier {
           buildSendChannelTextMsgFrame(channel.index, text),
           channelSendQueueId: reactionQueueId,
           expectsGenericAck: true,
+          successCode: respCodeSent,
         );
       }, region: getChannelRegion(channel.index));
       return;
@@ -4936,6 +4957,7 @@ class MeshCoreConnector extends ChangeNotifier {
         ),
         channelSendQueueId: message.messageId,
         expectsGenericAck: true,
+        successCode: respCodeSent,
       );
     }, region: getChannelRegion(channel.index));
   }
@@ -5108,6 +5130,15 @@ class MeshCoreConnector extends ChangeNotifier {
     await prev;
 
     try {
+      // Only touch the global flood scope for region-scoped channels. Plain
+      // channels send exactly as before, which also stays compatible with
+      // firmware that predates CMD_SET_FLOOD_SCOPE. The lock is still held so an
+      // unscoped send can't interleave with (and inherit the scope of) a
+      // concurrent scoped send.
+      if (region.isEmpty) {
+        await action();
+        return;
+      }
       await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
       try {
         await action();
@@ -5121,10 +5152,16 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  // Sends [data] and resolves once the device replies. [successCode] is the
+  // response code that signals success for this frame: SET_FLOOD_SCOPE replies
+  // with RESP_CODE_OK, whereas a channel text send replies with RESP_CODE_SENT.
+  // Waiting for the text send's RESP_CODE_SENT before the scope is reset
+  // guarantees the firmware has already built the packet with the active scope.
   Future<void> _sendFrameAndWaitForCommandAck(
     Uint8List data, {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
+    int successCode = respCodeOk,
   }) async {
     final completer = Completer<void>();
     late final StreamSubscription<Uint8List> subscription;
@@ -5140,7 +5177,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     subscription = receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
-      if (frame[0] == respCodeOk) {
+      if (frame[0] == successCode) {
         complete();
       } else if (frame[0] == respCodeErr) {
         final errCode = frame.length > 1 ? frame[1] : -1;
@@ -5998,6 +6035,11 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> sendSelfAdvert({bool flood = true}) async {
     if (!isConnected) return;
     await sendFrame(buildSendSelfAdvertFrame(flood: flood));
+    if (!flood) {
+      _lastZeroHopAdvertAt = DateTime.now();
+      _lastZeroHopAdvertLatitude = _selfLatitude;
+      _lastZeroHopAdvertLongitude = _selfLongitude;
+    }
   }
 
   Future<void> rebootDevice() async {
@@ -6553,6 +6595,41 @@ class MeshCoreConnector extends ChangeNotifier {
       );
     }
     _completeSelfInfoRefreshWaiters();
+
+    const locationChangeEpsilon = 2.25e-4; // ~25 meters in degrees.
+    final lastAdvertLatitude = _lastZeroHopAdvertLatitude;
+    final lastAdvertLongitude = _lastZeroHopAdvertLongitude;
+    final currentLatitude = _selfLatitude;
+    final currentLongitude = _selfLongitude;
+    final latChanged =
+        lastAdvertLatitude != null &&
+        currentLatitude != null &&
+        (currentLatitude - lastAdvertLatitude).abs() >= locationChangeEpsilon;
+    final lonChanged =
+        lastAdvertLongitude != null &&
+        currentLongitude != null &&
+        (currentLongitude - lastAdvertLongitude).abs() >= locationChangeEpsilon;
+    final gpsSampleChanged =
+        hasValidLocation(currentLatitude, currentLongitude) &&
+        (!hasValidLocation(lastAdvertLatitude, lastAdvertLongitude) ||
+            latChanged ||
+            lonChanged);
+    final effectiveGpsIntervalSeconds =
+        _appSettingsService?.resolvedGpsIntervalSeconds(_currentCustomVars) ??
+        0;
+    final timeSinceLastZeroHopAdvert = DateTime.now().difference(
+      _lastZeroHopAdvertAt,
+    );
+    final shouldAutoSendZeroHopAdvert =
+        (gpsSampleChanged || (_clientRepeat ?? false)) &&
+        _advertLocPolicy == 1 &&
+        (_appSettingsService?.settings.autoSendZeroHopAdvertOnGpsUpdate ??
+            false) &&
+        effectiveGpsIntervalSeconds > 0 &&
+        timeSinceLastZeroHopAdvert.inSeconds >= effectiveGpsIntervalSeconds;
+    if (shouldAutoSendZeroHopAdvert) {
+      unawaited(sendSelfAdvert(flood: false));
+    }
     final selfName = _selfName?.trim();
     if (_activeTransport == MeshCoreTransportType.usb &&
         selfName != null &&
@@ -10869,6 +10946,10 @@ class MeshCoreConnector extends ChangeNotifier {
       isActive: addActive,
       flags: 0,
     );
+
+    if (_discoveredContacts.length >= _maxDiscoveredContacts) {
+      _evictStalestDiscoveredContact();
+    }
     _discoveredContacts.add(disContact);
     if (isDeferredContactSyncUpdate) {
       _discoveredContactSyncIndexes?[contact.publicKeyHex] =
@@ -10888,6 +10969,19 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
     }
+  }
+
+  void _evictStalestDiscoveredContact() {
+    if (_discoveredContacts.isEmpty) return;
+    var stalestIndex = 0;
+    for (int i = 1; i < _discoveredContacts.length; i++) {
+      if (_discoveredContacts[i].lastSeen.isBefore(
+        _discoveredContacts[stalestIndex].lastSeen,
+      )) {
+        stalestIndex = i;
+      }
+    }
+    _discoveredContacts.removeAt(stalestIndex);
   }
 
   void removeAllDiscoveredContacts() {

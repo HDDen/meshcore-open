@@ -14,6 +14,21 @@ import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
+import 'package:meshcore_open/services/path_history_service.dart';
+import 'package:meshcore_open/services/storage_service.dart';
+import 'package:meshcore_open/models/path_history.dart';
+
+class _FakeStorageService extends StorageService {
+  @override
+  Future<void> savePathHistory(
+    String contactPubKeyHex,
+    ContactPathHistory history,
+  ) async {}
+  @override
+  Future<ContactPathHistory?> loadPathHistory(String contactPubKeyHex) async => null;
+  @override
+  Future<void> clearPathHistory(String contactPubKeyHex) async {}
+}
 
 class _FakeMeshCoreConnector extends MeshCoreConnector {
   final StreamController<Uint8List> _receivedFramesController =
@@ -88,7 +103,11 @@ Widget _buildTestApp({
       ChangeNotifierProvider<AppSettingsService>(
         create: (_) => AppSettingsService(),
       ),
-      Provider<MapTileCacheService>(create: (_) => MapTileCacheService()),
+      Provider<MapTileCacheService>(
+        create: (_) => MapTileCacheService(
+          appSettingsService: AppSettingsService(),
+        ),
+      ),
       ChangeNotifierProvider<PathHistoryService>(
         create: (_) => PathHistoryService(_FakePathStorageService()),
       ),
@@ -121,8 +140,8 @@ void main() {
     final sentFrame = connector.sentFrames.first;
     expect(sentFrame[0], cmdSendTracePath);
 
-    // Extract the tag sent in the request (bytes 1-4)
-    final tag = sentFrame.sublist(1, 5);
+    // Extract the tag sent in the request (bytes 2-5)
+    final tag = sentFrame.sublist(2, 6);
 
     // Emit respCodeSent (6)
     final respCodeSentFrame = Uint8List(10);
@@ -160,8 +179,9 @@ void main() {
     pushTraceFrame.setRange(14, 17, [12, 16, 20]); // SNR bytes
 
     connector.emitFrame(pushTraceFrame);
-    // pump multiple times to handle async tasks
-    await tester.pumpAndSettle();
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     // Verify it doesn't show "Path trace not available" or similar
     expect(find.text('Path trace not available.'), findsNothing);
@@ -188,8 +208,8 @@ void main() {
       final sentFrame = connector.sentFrames.first;
       expect(sentFrame[0], cmdSendTracePath);
 
-      // Extract the tag sent in the request (bytes 1-4)
-      final tag = sentFrame.sublist(1, 5);
+      // Extract the tag sent in the request (bytes 2-5)
+      final tag = sentFrame.sublist(2, 6);
 
       // Emit respCodeSent (6)
       final respCodeSentFrame = Uint8List(10);
@@ -224,7 +244,9 @@ void main() {
       pushTraceFrame.setRange(14, 16, [12, 16]); // SNR bytes
 
       connector.emitFrame(pushTraceFrame);
-      await tester.pumpAndSettle();
+      for (int i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       // Verify it parsed correctly (should not show the unavailable message)
       expect(find.text('Path trace not available.'), findsNothing);
@@ -366,7 +388,8 @@ void main() {
 
     expect(connector.sentFrames.length, 1);
     final sentFrame = connector.sentFrames.first;
-    final tag = sentFrame.sublist(1, 5);
+    // Extract the tag sent in the request (bytes 2-5)
+    final tag = sentFrame.sublist(2, 6);
 
     // Emit respCodeSent (6)
     final respCodeSentFrame = Uint8List(10);
@@ -395,7 +418,9 @@ void main() {
     pushTraceFrame.setRange(14, 17, [12, 16, 20]); // SNR bytes
 
     connector.emitFrame(pushTraceFrame);
-    await tester.pumpAndSettle();
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     // Verify it parsed correctly (should not show the unavailable message)
     expect(find.text('Path trace not available.'), findsNothing);

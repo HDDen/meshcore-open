@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
+import 'package:meshcore_open/utils/keys.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +36,7 @@ import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
+import '../helpers/gif_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'community_qr_scanner_screen.dart';
@@ -499,7 +501,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     // Last message preview
     final messages = connector.getChannelMessages(channel);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
-    final lastPreview = lastMessage?.text ?? '';
+    final lastMessageText = lastMessage?.text ?? '';
+    final lastPreview = lastMessageText.isNotEmpty &&
+            GifHelper.parseGif(lastMessageText) != null
+        ? context.l10n.chat_receivedGif
+        : lastMessageText;
     final lastPreviewImage = lastMessage == null
         ? null
         : MCOImageMessage.tryDecode(lastMessage.text);
@@ -1959,11 +1965,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                   return;
                                 }
-                                final random = Random.secure();
-                                final psk = Uint8List(16);
-                                for (int i = 0; i < 16; i++) {
-                                  psk[i] = random.nextInt(256);
-                                }
+                                final psk = randomBytes(16);
                                 Navigator.pop(sheetContext);
                                 await connector.setChannel(
                                   nextIndex,

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -25,6 +26,7 @@ class LinkHandler {
     required TextStyle style,
     TextStyle? linkStyle,
     TextScaler? textScaler,
+    VoidCallback? onSecondaryTap,
   }) {
     final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
@@ -36,7 +38,7 @@ class LinkHandler {
     );
 
     if (PlatformInfo.isDesktop) {
-      return SelectableLinkify(
+      final linkify = SelectableLinkify(
         text: text,
         style: style,
         linkStyle: effectiveLinkStyle,
@@ -44,6 +46,14 @@ class LinkHandler {
         linkifiers: linkifiers,
         onOpen: onOpen,
         textScaleFactor: effectiveTextScaleFactor,
+      );
+      if (onSecondaryTap == null) return linkify;
+      return Listener(
+        onPointerDown: (event) {
+          if (event.buttons & kSecondaryMouseButton != 0) onSecondaryTap();
+        },
+        behavior: HitTestBehavior.translucent,
+        child: linkify,
       );
     }
     return Linkify(

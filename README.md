@@ -48,7 +48,7 @@ MeshCore Open is a cross-platform mobile application for communicating with Mesh
 - **Live Map View**: Real-time visualization of mesh network nodes on an interactive map
 - **Node Filtering**: Filter by node type (chat, repeater, sensor) and time range
 - **Location Sharing**: Share GPS coordinates and custom markers with contacts
-- **Offline Maps**: Download map tiles for offline use in remote areas
+- **Offline Maps**: Download map tiles for offline use in remote areas (with [StadiaMaps](https://stadiamaps.com/pricing/) Free Subscription API-Key)
 - **MGRS Coordinates**: Support for Military Grid Reference System coordinate format
 
 ### Device Management

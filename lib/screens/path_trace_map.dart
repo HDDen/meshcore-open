@@ -20,7 +20,6 @@ import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:meshcore_open/widgets/snr_indicator.dart';
-import 'package:meshcore_open/widgets/themed_map_tile_layer.dart';
 import 'package:provider/provider.dart';
 import '../theme/mesh_theme.dart';
 
@@ -1597,7 +1596,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         },
       ),
       children: [
-        ThemedMapTileLayer(tileCache: tileCache),
+        tileCache.buildTileLayer(context),
         AnimatedBuilder(
           animation: _playback,
           builder: (context, _) {

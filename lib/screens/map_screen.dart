@@ -36,7 +36,6 @@ import '../helpers/wardrive_coverage_helper.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
-import '../widgets/themed_map_tile_layer.dart';
 import '../widgets/wardrive_status_panel.dart';
 import '../icons/los_icon.dart';
 import 'channels_screen.dart';
@@ -1013,7 +1012,7 @@ class _MapScreenState extends State<MapScreen>
                     },
                   ),
                   children: [
-                    ThemedMapTileLayer(tileCache: tileCache),
+                    tileCache.buildTileLayer(context),
                     if (_polylines.isNotEmpty && _isBuildingPathTrace)
                       PolylineLayer(polylines: _polylines),
                     if (sharedMarkerPolylines.isNotEmpty)

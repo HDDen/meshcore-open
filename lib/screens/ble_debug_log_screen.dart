@@ -117,20 +117,32 @@ class _BleDebugLogScreenState extends State<BleDebugLogScreen> {
                               final entry = entries[index];
                               final time =
                                   '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}';
-                              return GestureDetector(
-                                onLongPress: () async {
-                                  await Clipboard.setData(
-                                    ClipboardData(
-                                      text: entry.payload
-                                          .map(
-                                            (b) => b
-                                                .toRadixString(16)
-                                                .padLeft(2, '0'),
-                                          )
-                                          .join(''),
+                              Future<void> copyHex() async {
+                                await Clipboard.setData(
+                                  ClipboardData(
+                                    text: entry.payload
+                                        .map(
+                                          (b) => b
+                                              .toRadixString(16)
+                                              .padLeft(2, '0'),
+                                        )
+                                        .join(''),
+                                  ),
+                                );
+                                if (context.mounted) {
+                                  showDismissibleSnackBar(
+                                    context,
+                                    content: Text(
+                                      context.l10n.debugLog_bleCopied,
                                     ),
                                   );
-                                },
+                                }
+                              }
+
+                              return GestureDetector(
+                                onTap: copyHex,
+                                onLongPress: copyHex,
+                                onSecondaryTap: copyHex,
                                 child: Container(
                                   color: MeshPalette.bg,
                                   padding: const EdgeInsets.symmetric(

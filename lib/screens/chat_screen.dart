@@ -752,7 +752,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       hintText: context.l10n.chat_typeMessage,
                       hintMaxLines: 1,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(MeshRadii.md),
                       ),
                       filled: true,
                       fillColor: Theme.of(
@@ -2521,6 +2521,9 @@ class _MessageBubble extends StatelessWidget {
                                     fontSize: bodyFontSize * textScale,
                                   ),
                                   textScaler: bodyTextScaler,
+                                  onSecondaryTap: PlatformInfo.isDesktop
+                                      ? onLongPress
+                                      : null,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[

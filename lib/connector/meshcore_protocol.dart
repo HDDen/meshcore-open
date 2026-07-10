@@ -210,6 +210,7 @@ const int cmdSendTelemetryReq = 39;
 const int cmdGetCustomVar = 40;
 const int cmdSetCustomVar = 41;
 const int cmdSendBinaryReq = 50;
+const int cmdSetFloodScope = 54;
 const int cmdSendControlData = 55;
 const int cmdGetStats = 56;
 const int cmdSendAnonReq = 57;
@@ -219,7 +220,6 @@ const int cmdSetPathHashMode = 61;
 const int cmdSendChannelData = 62;
 const int cmdSetDefaultFloodScope = 63;
 const int cmdGetDefaultFloodScope = 64;
-const int cmdSetFloodScope = 54;
 
 // Text message types
 const int txtTypePlain = 0;

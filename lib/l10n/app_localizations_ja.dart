@@ -504,6 +504,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_advertLocationSubtitle => '広告に場所を記載してください。';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS更新時にゼロホップ広告を自動送信';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      'GPS位置が変化したときにゼロホップ広告を送信します（広告への位置情報の含有が必要）。';
+
+  @override
   String get settings_multiAck => 'マルチ ACK';
 
   @override
@@ -972,6 +979,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get appSettings_lastWeek => '過去1週間';
+
+  @override
+  String get appSettings_rasterTileSource => 'ラスタタイルのソース';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Stadia エンドポイント';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Stadia API キー';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired => 'Stadia Maps の利用に必要です';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return '設定済み: $maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      'Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。';
 
   @override
   String get appSettings_offlineMapCache => 'オフライン地図キャッシュ';
@@ -1495,6 +1523,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'GIF を送信';
+
+  @override
+  String get chat_receivedGif => 'Received a GIF';
 
   @override
   String get chat_reply => '返信';
@@ -2473,6 +2504,42 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
+  }
+
+  @override
   String mapCache_boundsLabel(
     String north,
     String south,
@@ -2988,6 +3055,41 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       'このリピータのIDをフローパス/ループ検出タグにエンコードするために使用されるバイト数。 0=1バイト (256個のID、最大64ホップ)、1=2バイト (65,000個のID、最大32ホップ)、2=3バイト (160万個のID、最大21ホップ)。 v1.13およびそれ以前のファームウェアでは、マルチバイトパスがサポートされていません。 v1.14以降のバージョンでは、一度ネットワークが起動されると、パスが一度だけ検出されます。';
+
+  @override
+  String get repeater_keySettings => 'Change Identity Keys';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Change the public/private keypair';
+
+  @override
+  String get repeater_prvKey => 'Private key';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'A new private key for the repeater, a 128-character hex string.';
+
+  @override
+  String get repeater_generatePrvKey => 'Generate a random keypair';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+
+  @override
+  String get repeater_pubKey => 'Public key';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Desired prefix';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+  }
 
   @override
   String get repeater_txDelay => 'フロイド・TXでの遅延';

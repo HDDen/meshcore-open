@@ -61,7 +61,9 @@ void main() async {
   final bleDebugLogService = BleDebugLogService();
   final appDebugLogService = AppDebugLogService();
   final backgroundService = BackgroundService();
-  final mapTileCacheService = MapTileCacheService();
+  final mapTileCacheService = MapTileCacheService(
+    appSettingsService: appSettingsService,
+  );
   final chatTextScaleService = ChatTextScaleService();
   final translationService = TranslationService(appSettingsService);
   final uiViewStateService = UiViewStateService();
@@ -256,7 +258,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.translationService),
         ChangeNotifierProvider.value(value: widget.uiViewStateService),
         Provider.value(value: widget.storage),
-        Provider.value(value: widget.mapTileCacheService),
+        ChangeNotifierProvider.value(value: widget.mapTileCacheService),
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
         ChangeNotifierProvider.value(value: widget.wardriveService),
       ],

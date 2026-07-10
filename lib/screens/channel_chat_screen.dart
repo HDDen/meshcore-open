@@ -1811,6 +1811,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         style: textStyle,
         originalStyle: originalStyle,
         textScaler: bodyTextScaler,
+        onSecondaryTap: PlatformInfo.isDesktop
+            ? () => unawaited(_showMessageActions(message))
+            : null,
       );
     }
 
@@ -2590,7 +2593,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           hintText: context.l10n.chat_typeMessage,
                           hintMaxLines: 1,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(MeshRadii.md),
                           ),
                           filled: true,
                           fillColor: scheme.surfaceContainerLow,
@@ -3466,10 +3469,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   String _formatPathPrefixes(Uint8List pathBytes, int pathHashByteWidth) {
+    // Keep the compact comma-separated form while still allowing long paths
+    // to wrap inside the message bubble.
     return PathHelper.splitPathBytes(
       pathBytes,
       pathHashByteWidth,
-    ).map(PathHelper.formatHopHex).join(', ');
+    ).map(PathHelper.formatHopHex).join(',\u200B');
   }
 
   int _displayHopCount(

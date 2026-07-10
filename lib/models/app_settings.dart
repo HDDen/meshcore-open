@@ -168,6 +168,8 @@ class AppSettings {
     'cyrillic_extended',
     'cyrillic_transliteration',
   ];
+  static const String stadiaDemo =
+      '51bd0381-4685-4666-bae8-48940f6d77c0';
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -218,10 +220,15 @@ class AppSettings {
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
+  final String mapRasterSourceId;
+  final String mapTileEndpointId;
+  final String? mapTileApiKey;
   final bool notificationsEnabled;
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
   final bool notifyOnNewAdvert;
+  final bool autoSendZeroHopAdvertOnGpsUpdate;
+  final int gpsIntervalSeconds;
   final bool autoRouteRotationEnabled;
   final double maxRouteWeight;
   final double initialRouteWeight;
@@ -452,6 +459,17 @@ class AppSettings {
         .toInt();
   }
 
+  String get effectiveMapTileApiKey {
+    final apiKey = mapTileApiKey?.trim();
+    if (apiKey == null || apiKey.isEmpty) {
+      return stadiaDemo;
+    }
+    return apiKey;
+  }
+
+  bool get usesstadiaDemo =>
+      effectiveMapTileApiKey == stadiaDemo;
+
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
       (p) => p.id == selectedCyr2latProfileId,
@@ -504,10 +522,15 @@ class AppSettings {
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
+    this.mapRasterSourceId = 'osm_auto',
+    this.mapTileEndpointId = 'standard_2x',
+    this.mapTileApiKey,
     this.notificationsEnabled = true,
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
+    this.autoSendZeroHopAdvertOnGpsUpdate = false,
+    this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = true,
     this.maxRouteWeight = 5.0,
     this.initialRouteWeight = 3.0,
@@ -616,10 +639,16 @@ class AppSettings {
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
+      'map_raster_source_id': mapRasterSourceId,
+      'map_tile_endpoint_id': mapTileEndpointId,
+      'map_tile_api_key': mapTileApiKey,
       'notifications_enabled': notificationsEnabled,
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
       'notify_on_new_advert': notifyOnNewAdvert,
+      'auto_send_zero_hop_advert_on_gps_update':
+          autoSendZeroHopAdvertOnGpsUpdate,
+      'gps_interval_seconds': gpsIntervalSeconds,
       'auto_route_rotation_enabled': autoRouteRotationEnabled,
       'max_route_weight': maxRouteWeight,
       'initial_route_weight': initialRouteWeight,
@@ -749,11 +778,18 @@ class AppSettings {
       ),
       mapCacheMinZoom: json['map_cache_min_zoom'] as int? ?? 10,
       mapCacheMaxZoom: json['map_cache_max_zoom'] as int? ?? 15,
+      mapRasterSourceId: json['map_raster_source_id'] as String? ?? 'osm_auto',
+      mapTileEndpointId: json['map_tile_endpoint_id'] as String? ?? 'standard',
+      mapTileApiKey: json['map_tile_api_key'] as String?,
       notificationsEnabled: json['notifications_enabled'] as bool? ?? true,
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
           json['notify_on_new_channel_message'] as bool? ?? true,
       notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
+      autoSendZeroHopAdvertOnGpsUpdate:
+          json['auto_send_zero_hop_advert_on_gps_update'] as bool? ?? false,
+      gpsIntervalSeconds:
+          (json['gps_interval_seconds'] as num?)?.toInt() ?? 900,
       autoRouteRotationEnabled:
           json['auto_route_rotation_enabled'] as bool? ?? true,
       maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
@@ -905,10 +941,15 @@ class AppSettings {
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
+    String? mapRasterSourceId,
+    String? mapTileEndpointId,
+    Object? mapTileApiKey = _unset,
     bool? notificationsEnabled,
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
     bool? notifyOnNewAdvert,
+    bool? autoSendZeroHopAdvertOnGpsUpdate,
+    int? gpsIntervalSeconds,
     bool? autoRouteRotationEnabled,
     double? maxRouteWeight,
     double? initialRouteWeight,
@@ -1008,11 +1049,20 @@ class AppSettings {
           : mapCacheBounds as Map<String, double>?,
       mapCacheMinZoom: mapCacheMinZoom ?? this.mapCacheMinZoom,
       mapCacheMaxZoom: mapCacheMaxZoom ?? this.mapCacheMaxZoom,
+      mapRasterSourceId: mapRasterSourceId ?? this.mapRasterSourceId,
+      mapTileEndpointId: mapTileEndpointId ?? this.mapTileEndpointId,
+      mapTileApiKey: mapTileApiKey == _unset
+          ? this.mapTileApiKey
+          : mapTileApiKey as String?,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       notifyOnNewMessage: notifyOnNewMessage ?? this.notifyOnNewMessage,
       notifyOnNewChannelMessage:
           notifyOnNewChannelMessage ?? this.notifyOnNewChannelMessage,
       notifyOnNewAdvert: notifyOnNewAdvert ?? this.notifyOnNewAdvert,
+      autoSendZeroHopAdvertOnGpsUpdate:
+          autoSendZeroHopAdvertOnGpsUpdate ??
+          this.autoSendZeroHopAdvertOnGpsUpdate,
+      gpsIntervalSeconds: gpsIntervalSeconds ?? this.gpsIntervalSeconds,
       autoRouteRotationEnabled:
           autoRouteRotationEnabled ?? this.autoRouteRotationEnabled,
       maxRouteWeight: maxRouteWeight ?? this.maxRouteWeight,

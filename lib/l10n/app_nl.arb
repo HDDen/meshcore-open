@@ -100,6 +100,8 @@
   "settings_locationInvalid": "Ongeldige breedtegraad of lengtegraad.",
   "settings_latitude": "Breedtegraad",
   "settings_longitude": "Lengtegraad",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Automatische zero-hop-advertentie bij GPS-update",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Wanneer de GPS-locatie verandert, een zero-hop-advertentie verzenden (vereist locatie in advertentie).",
   "settings_privacyMode": "Privacy-modus",
   "settings_privacyModeSubtitle": "Naam/locatie verbergen in advertenties",
   "settings_privacyModeToggle": "Schakel privacy modus in om je naam en locatie in advertenties te verbergen.",
@@ -265,6 +267,19 @@
   "appSettings_last6Hours": "Afgelopen 6 uur",
   "appSettings_last24Hours": "Afgelopen 24 uur",
   "appSettings_lastWeek": "Afgelopen week",
+  "appSettings_rasterTileSource": "Rastertegelbron",
+  "appSettings_stadiaEndpoint": "Stadia-eindpunt",
+  "appSettings_stadiaApiKey": "Stadia API-sleutel",
+  "appSettings_stadiaApiKeyRequired": "Vereist voor gebruik van Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Geconfigureerd: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Voer je Stadia Maps API-sleutel in. De app gebruikt die voor rastertegelverzoeken.",
   "appSettings_offlineMapCache": "Offline Kaartcache",
   "appSettings_noAreaSelected": "Geen gebied geselecteerd",
   "appSettings_areaSelectedZoom": "Geselecteerd gebied (zoom {minZoom}-{maxZoom})",
@@ -791,6 +806,56 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
       }
     }
   },
