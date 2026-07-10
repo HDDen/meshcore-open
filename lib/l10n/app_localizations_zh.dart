@@ -498,6 +498,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_advertLocationSubtitle => '在广告中包含位置';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS 更新时自动发送零跳广告';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      '当 GPS 位置变化时，发送零跳广告（需要在广告中包含位置）。';
+
+  @override
   String get settings_multiAck => '多重ACK';
 
   @override
@@ -608,6 +615,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_infoChannelCount => '频道数量';
+
+  @override
+  String get settings_infoFirmware => 'Firmware version';
 
   @override
   String get settings_presets => '预设';
@@ -954,6 +964,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSettings_lastWeek => '上周';
+
+  @override
+  String get appSettings_rasterTileSource => '栅格瓦片源';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Stadia 端点';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Stadia API 密钥';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired => '使用 Stadia Maps 时必需';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return '已配置：$maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      '请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。';
 
   @override
   String get appSettings_offlineMapCache => '离线地图缓存';
@@ -1475,6 +1506,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_sendGif => '发送 GIF';
+
+  @override
+  String get chat_receivedGif => 'Received a GIF';
 
   @override
   String get chat_reply => '回复';
@@ -2443,6 +2477,42 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
+  }
+
+  @override
   String mapCache_boundsLabel(
     String north,
     String south,
@@ -2954,6 +3024,41 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       '用于在洪泛路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
+
+  @override
+  String get repeater_keySettings => 'Change Identity Keys';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Change the public/private keypair';
+
+  @override
+  String get repeater_prvKey => 'Private key';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'A new private key for the repeater, a 128-character hex string.';
+
+  @override
+  String get repeater_generatePrvKey => 'Generate a random keypair';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+
+  @override
+  String get repeater_pubKey => 'Public key';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Desired prefix';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+  }
 
   @override
   String get repeater_txDelay => '洪水（德克萨斯州）延误';
@@ -5008,7 +5113,97 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsMessaging => 'Messaging';
 
   @override
+  String get settings_modSettingsMCMP => 'MCMP';
+
+  @override
+  String get settings_mcmp_version => 'Version';
+
+  @override
+  String get settings_mcmp_useSign => 'Message signing';
+
+  @override
+  String get settings_mcmp_signed => 'Using signature verification';
+
+  @override
+  String get settings_mcmp_noSign => 'No signature';
+
+  @override
+  String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
+
+  @override
+  String get chat_mcmpSignatureValid => 'Signature is valid';
+
+  @override
+  String get chat_mcmpSignatureInvalid => 'Invalid signature!';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable =>
+      'Signature can\'t be verified — sender is not in contacts';
+
+  @override
+  String get chat_mcmpSignatureTransport =>
+      'Authenticated by encrypted transport';
+
+  @override
+  String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => 'Signature checking';
+
+  @override
+  String get chat_mcmpSigningFailed => 'Failed to sign the message';
+
+  @override
+  String get chat_timestampPacket => 'Packet timestamp';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
+
+  @override
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Display original images instead of LoRa versions';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Scale original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Scale as Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Sharp original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Attention! Disables GIF animation!';
+
+  @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
+
+  @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'SNR indicator: trigger on all repeater responses, not just adverts';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
@@ -5048,22 +5243,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
       'Hide map zoom panel';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
 
   @override
   String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
@@ -5128,6 +5307,12 @@ class AppLocalizationsZh extends AppLocalizations {
       'Keep TCP-connection alive in background';
 
   @override
+  String get settings_modSettingsDPIchange => 'DPI change';
+
+  @override
+  String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
 
   @override
@@ -5152,6 +5337,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get mcogallery_showLora => 'Show LoRa-variant';
+
+  @override
+  String get mcogallery_showPacked => 'Show improved variant';
 
   @override
   String get chat_sendSelfContact => 'Send self contact';

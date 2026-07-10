@@ -7,6 +7,7 @@ import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/path_selection.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
@@ -93,6 +94,11 @@ class MessageRetryService extends ChangeNotifier {
   final Map<String, Timer> _timeoutTimers = {};
   final Map<String, Message> _pendingMessages = {};
   final Map<String, Contact> _pendingContacts = {};
+
+  /// Exact wire text prepared (and possibly signed) once at compose time.
+  /// Automatic retries must reuse it byte-for-byte: re-encoding a signed MCMP
+  /// container would produce a new timestamp and invalidate the signature.
+  final Map<String, String> _preparedOutboundTexts = {};
   final Map<String, List<PathSelection>> _attemptPathHistory = {};
   final Map<String, AckHashMapping> _ackHashToMessageId = {};
   final Map<String, List<int>> _expectedAckHashes = {};
@@ -151,6 +157,7 @@ class MessageRetryService extends ChangeNotifier {
   Future<void> sendMessageWithRetry({
     required Contact contact,
     required String text,
+    String? preparedOutboundText,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
@@ -158,6 +165,11 @@ class MessageRetryService extends ChangeNotifier {
     int? compressionSavingsPercent,
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
+    int? mcmpTimestamp,
+    String? mcmpSenderName,
+    bool mcmpIsSigned = false,
+    Uint8List? mcmpSignature,
     Uint8List? pathBytes,
     int? pathLength,
   }) async {
@@ -167,19 +179,29 @@ class MessageRetryService extends ChangeNotifier {
         pathBytes ?? Uint8List.fromList(resolved.pathBytes);
     final messagePathLength =
         pathLength ?? (resolved.useFlood ? -1 : resolved.hopCount);
+    final effectiveOutbound =
+        preparedOutboundText ??
+        _config?.prepareContactOutboundText?.call(contact, text) ??
+        text;
     final message = Message(
       senderKey: contact.publicKey,
       text: text,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        _config?.prepareContactOutboundText?.call(contact, text) ?? text,
-      ),
+      wasMcmpCompressed:
+          compressionType == MessageCompressionType.mcmp ||
+          MeshCompressor.instance.hasPrefix(effectiveOutbound) ||
+          McmpAppCodec.isTextPayload(effectiveOutbound),
       compressionType: compressionType,
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
+      mcmpSignatureStatus: mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp,
+      mcmpSenderName: mcmpSenderName,
+      mcmpIsSigned: mcmpIsSigned,
+      mcmpSignature: mcmpSignature,
       timestamp: DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,
@@ -191,6 +213,9 @@ class MessageRetryService extends ChangeNotifier {
 
     _pendingMessages[messageId] = message;
     _pendingContacts[messageId] = contact;
+    if (preparedOutboundText != null) {
+      _preparedOutboundTexts[messageId] = preparedOutboundText;
+    }
 
     _config?.addMessage(contact.publicKeyHex, message);
 
@@ -374,6 +399,7 @@ class MessageRetryService extends ChangeNotifier {
     final selfPubKey = config.getSelfPublicKey?.call();
     if (selfPubKey != null) {
       final outboundText =
+          _preparedOutboundTexts[messageId] ??
           config.prepareContactOutboundText?.call(contact, message.text) ??
           message.text;
       final expectedHash = MessageRetryService.computeExpectedAckHash(
@@ -394,9 +420,12 @@ class MessageRetryService extends ChangeNotifier {
       );
     }
 
+    // Send the exact prepared wire text when available; the connector's
+    // prepare step is a no-op on already-encoded containers, so automatic
+    // retries reuse the signed body byte-for-byte.
     final sentByRadioAt = await config.sendMessage(
       contact,
-      message.text,
+      _preparedOutboundTexts[messageId] ?? message.text,
       attempt,
       timestampSeconds,
     );
@@ -479,6 +508,7 @@ class MessageRetryService extends ChangeNotifier {
     // Calculate timeout: prefer ML prediction, then device-provided, then physics fallback
     final pathLengthValue = message.pathLength ?? contact.pathLength;
     final outboundTextForTimeout =
+        _preparedOutboundTexts[messageId] ??
         config.prepareContactOutboundText?.call(contact, message.text) ??
         message.text;
     final messageBytesForTimeout = utf8.encode(outboundTextForTimeout).length;
@@ -542,6 +572,7 @@ class MessageRetryService extends ChangeNotifier {
     final contactKey = _pendingContacts[messageId]?.publicKeyHex;
     _pendingMessages.remove(messageId);
     _pendingContacts.remove(messageId);
+    _preparedOutboundTexts.remove(messageId);
     _attemptPathHistory.remove(messageId);
     _timeoutTimers.remove(messageId);
     _resolvedMessages.remove(messageId);
@@ -754,12 +785,13 @@ class MessageRetryService extends ChangeNotifier {
             tripTimeMs > 0 &&
             message.pathLength != null) {
           final outboundTextForObserved =
+              _preparedOutboundTexts[matchedMessageId] ??
               config!.prepareContactOutboundText?.call(contact, message.text) ??
               message.text;
           final messageBytesForObserved = utf8
               .encode(outboundTextForObserved)
               .length;
-          config.onDeliveryObserved!(
+          config!.onDeliveryObserved!(
             contact.publicKeyHex,
             message.pathLength!,
             messageBytesForObserved,
@@ -844,6 +876,7 @@ class MessageRetryService extends ChangeNotifier {
     _timeoutTimers.clear();
     _pendingMessages.clear();
     _pendingContacts.clear();
+    _preparedOutboundTexts.clear();
     _attemptPathHistory.clear();
     _expectedAckHashes.clear();
     _ackHistory.clear();

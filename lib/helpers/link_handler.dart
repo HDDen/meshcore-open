@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,25 +16,44 @@ class LinkHandler {
   }
 
   /// Returns a [SelectableLinkify] on desktop or a [Linkify] on mobile.
+  ///
+  /// [textScaler] lets callers scale linkified text explicitly. flutter_linkify
+  /// does not inherit MediaQuery's textScaler, so message bodies must pass one
+  /// to participate in the global UI scale (see the DPI setting).
   static Widget buildLinkifyText({
     required BuildContext context,
     required String text,
     required TextStyle style,
     TextStyle? linkStyle,
+    TextScaler? textScaler,
+    VoidCallback? onSecondaryTap,
   }) {
     final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
     const linkifiers = [UrlLinkifier(), EmailLinkifier()];
     void onOpen(LinkableElement link) => handleLinkTap(context, link.url);
+    // flutter_linkify 6.0.0 exposes textScaleFactor (double), not textScaler.
+    final effectiveTextScaleFactor = (textScaler ?? TextScaler.noScaling).scale(
+      1.0,
+    );
 
     if (PlatformInfo.isDesktop) {
-      return SelectableLinkify(
+      final linkify = SelectableLinkify(
         text: text,
         style: style,
         linkStyle: effectiveLinkStyle,
         options: options,
         linkifiers: linkifiers,
         onOpen: onOpen,
+        textScaleFactor: effectiveTextScaleFactor,
+      );
+      if (onSecondaryTap == null) return linkify;
+      return Listener(
+        onPointerDown: (event) {
+          if (event.buttons & kSecondaryMouseButton != 0) onSecondaryTap();
+        },
+        behavior: HitTestBehavior.translucent,
+        child: linkify,
       );
     }
     return Linkify(
@@ -43,6 +63,7 @@ class LinkHandler {
       options: options,
       linkifiers: linkifiers,
       onOpen: onOpen,
+      textScaleFactor: effectiveTextScaleFactor,
     );
   }
 

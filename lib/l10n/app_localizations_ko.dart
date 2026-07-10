@@ -505,6 +505,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_advertLocationSubtitle => '광고에 위치 정보를 포함하세요.';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate =>
+      'GPS 업데이트 시 제로 홉 광고 자동 전송';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      'GPS 위치가 변경되면 제로 홉 광고를 전송합니다(광고에 위치 포함 필요).';
+
+  @override
   String get settings_multiAck => '다중 ACK';
 
   @override
@@ -615,6 +623,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_infoChannelCount => '채널 수';
+
+  @override
+  String get settings_infoFirmware => 'Firmware version';
 
   @override
   String get settings_presets => '프리셋';
@@ -971,6 +982,27 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appSettings_lastWeek => '지난 주';
+
+  @override
+  String get appSettings_rasterTileSource => '래스터 타일 소스';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Stadia 엔드포인트';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Stadia API 키';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired => 'Stadia Maps를 사용하려면 필요합니다';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return '설정됨: $maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      'Stadia Maps API 키를 입력하세요. 이 앱은 래스터 타일 요청에 이 키를 사용합니다.';
 
   @override
   String get appSettings_offlineMapCache => '오프라인 지도 캐시';
@@ -1493,6 +1525,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'GIF 보내기';
+
+  @override
+  String get chat_receivedGif => 'Received a GIF';
 
   @override
   String get chat_reply => '답변';
@@ -2470,6 +2505,42 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
+  }
+
+  @override
   String mapCache_boundsLabel(
     String north,
     String south,
@@ -2987,6 +3058,41 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       '이 리피터의 ID를 플러드 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수입니다. 0=1바이트(256개 ID, 최대 64홉), 1=2바이트(65,000개 ID, 최대 32홉), 2=3바이트(1,600만 개 ID, 최대 21홉). v1.14 이전 펌웨어는 항상 1바이트 경로를 사용했으며, v1.14 이상은 2바이트 또는 3바이트 경로로 설정할 수 있습니다.';
+
+  @override
+  String get repeater_keySettings => 'Change Identity Keys';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Change the public/private keypair';
+
+  @override
+  String get repeater_prvKey => 'Private key';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'A new private key for the repeater, a 128-character hex string.';
+
+  @override
+  String get repeater_generatePrvKey => 'Generate a random keypair';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+
+  @override
+  String get repeater_pubKey => 'Public key';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Desired prefix';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+  }
 
   @override
   String get repeater_txDelay => '플러드 TX 지연';
@@ -5121,7 +5227,97 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsMessaging => 'Messaging';
 
   @override
+  String get settings_modSettingsMCMP => 'MCMP';
+
+  @override
+  String get settings_mcmp_version => 'Version';
+
+  @override
+  String get settings_mcmp_useSign => 'Message signing';
+
+  @override
+  String get settings_mcmp_signed => 'Using signature verification';
+
+  @override
+  String get settings_mcmp_noSign => 'No signature';
+
+  @override
+  String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
+
+  @override
+  String get chat_mcmpSignatureValid => 'Signature is valid';
+
+  @override
+  String get chat_mcmpSignatureInvalid => 'Invalid signature!';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable =>
+      'Signature can\'t be verified — sender is not in contacts';
+
+  @override
+  String get chat_mcmpSignatureTransport =>
+      'Authenticated by encrypted transport';
+
+  @override
+  String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => 'Signature checking';
+
+  @override
+  String get chat_mcmpSigningFailed => 'Failed to sign the message';
+
+  @override
+  String get chat_timestampPacket => 'Packet timestamp';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: show format version badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: show coding algorythm badge';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: show image weight (bytes)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: show resolution';
+
+  @override
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Display original images instead of LoRa versions';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Scale original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Scale as Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Sharp original images in chats';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Attention! Disables GIF animation!';
+
+  @override
   String get settings_modSettingsHideChInd => 'Hide channel index';
+
+  @override
+  String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
+
+  @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'SNR indicator: trigger on all repeater responses, not just adverts';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
@@ -5161,22 +5357,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
       'Hide map zoom panel';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
 
   @override
   String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
@@ -5241,6 +5421,12 @@ class AppLocalizationsKo extends AppLocalizations {
       'Keep TCP-connection alive in background';
 
   @override
+  String get settings_modSettingsDPIchange => 'DPI change';
+
+  @override
+  String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
 
   @override
@@ -5265,6 +5451,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mcogallery_removeGroup => 'Remove group';
+
+  @override
+  String get mcogallery_showLora => 'Show LoRa-variant';
+
+  @override
+  String get mcogallery_showPacked => 'Show improved variant';
 
   @override
   String get chat_sendSelfContact => 'Send self contact';

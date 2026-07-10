@@ -12,6 +12,7 @@ import '../widgets/popup_menu_row.dart';
 import '../services/repeater_command_service.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../utils/platform_info.dart';
 
 class RepeaterCliScreen extends StatefulWidget {
   final Contact repeater;
@@ -31,6 +32,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   final TextEditingController _commandController = TextEditingController();
   final FocusNode _commandFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _quickCommandsScrollController = ScrollController();
   final List<Map<String, String>> _commandHistory = [];
   int _historyIndex = -1;
   StreamSubscription<Uint8List>? _frameSubscription;
@@ -63,6 +65,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     _commandController.dispose();
     _commandFocusNode.dispose();
     _scrollController.dispose();
+    _quickCommandsScrollController.dispose();
     super.dispose();
   }
 
@@ -332,30 +335,43 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           // Quick commands bar
           Container(
             color: MeshPalette.bg1,
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _quickCommands.map((cmd) {
-                  final label = _quickCommandLabel(cmd['labelKey']!);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ActionChip(
-                      label: Text(
-                        label,
-                        style: MeshTheme.mono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: MeshPalette.blue,
+            padding: EdgeInsets.fromLTRB(
+              8,
+              6,
+              8,
+              PlatformInfo.isDesktop ? 0 : 6,
+            ),
+            child: Scrollbar(
+              controller: _quickCommandsScrollController,
+              thumbVisibility: PlatformInfo.isDesktop,
+              child: SingleChildScrollView(
+                controller: _quickCommandsScrollController,
+                scrollDirection: Axis.horizontal,
+                padding: PlatformInfo.isDesktop
+                    ? const EdgeInsets.only(bottom: 14)
+                    : EdgeInsets.zero,
+                child: Row(
+                  children: _quickCommands.map((cmd) {
+                    final label = _quickCommandLabel(cmd['labelKey']!);
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ActionChip(
+                        label: Text(
+                          label,
+                          style: MeshTheme.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: MeshPalette.blue,
+                          ),
                         ),
+                        backgroundColor: MeshPalette.blueBg,
+                        side: const BorderSide(color: MeshPalette.blueLine),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _useQuickCommand(cmd['command']!),
                       ),
-                      backgroundColor: MeshPalette.blueBg,
-                      side: const BorderSide(color: MeshPalette.blueLine),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => _useQuickCommand(cmd['command']!),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),

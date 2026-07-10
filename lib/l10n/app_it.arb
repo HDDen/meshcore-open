@@ -265,6 +265,19 @@
   "appSettings_last6Hours": "Ultimi 6 ore",
   "appSettings_last24Hours": "Ultime 24 ore",
   "appSettings_lastWeek": "La settimana scorsa",
+  "appSettings_rasterTileSource": "Sorgente tile raster",
+  "appSettings_stadiaEndpoint": "Endpoint Stadia",
+  "appSettings_stadiaApiKey": "Chiave API Stadia",
+  "appSettings_stadiaApiKeyRequired": "Obbligatoria per usare Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Configurata: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Inserisci la chiave API di Stadia Maps. Questa app la usa per le richieste di tile raster.",
   "appSettings_offlineMapCache": "Cache Mappa Offline",
   "appSettings_noAreaSelected": "Nessun'area selezionata",
   "appSettings_areaSelectedZoom": "Area selezionata (zoom {minZoom}-{maxZoom})",
@@ -859,6 +872,56 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
       }
     }
   },
@@ -2236,6 +2299,8 @@
   "settings_telemetryEnvironmentMode": "Modalità di ambiente di telemetria",
   "settings_advertLocation": "Posizione dell'annuncio",
   "settings_advertLocationSubtitle": "Includi la posizione nell'annuncio",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Annuncio zero-hop automatico all'aggiornamento GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Quando la posizione GPS cambia, invia un annuncio zero-hop (richiede la posizione nell'annuncio).",
   "settings_privacy": "Impostazioni sulla privacy",
   "settings_denyAll": "Negare tutto",
   "settings_privacySubtitle": "Controlla le informazioni che vengono condivise.",

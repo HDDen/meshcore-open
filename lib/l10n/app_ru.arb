@@ -89,6 +89,8 @@
   "settings_locationIntervalInvalid": "Интервал должен составлять не менее 60 секунд и не более 86400 секунд.",
   "settings_latitude": "Широта",
   "settings_longitude": "Долгота",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Авто-объявление без хопов при обновлении GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Когда GPS-местоположение меняется, отправлять объявление без хопов (требуется геопозиция в объявлении).",
   "settings_privacyMode": "Режим конфиденциальности",
   "settings_privacyModeSubtitle": "Скрыть имя/местоположение в анонсах",
   "settings_privacyModeToggle": "Включить режим конфиденциальности, чтобы скрыть ваше имя и местоположение в анонсах.",
@@ -126,6 +128,7 @@
   "settings_infoPublicKey": "Публичный ключ",
   "settings_infoContactsCount": "Количество контактов",
   "settings_infoChannelCount": "Количество каналов",
+  "settings_infoFirmware": "Версия прошивки",
   "settings_presets": "Пресеты",
   "settings_frequency": "Частота (МГц)",
   "settings_frequencyHelper": "300.0 – 2500.0",
@@ -216,6 +219,19 @@
   "appSettings_last6Hours": "Последние 6 часов",
   "appSettings_last24Hours": "Последние 24 часа",
   "appSettings_lastWeek": "Последнюю неделю",
+  "appSettings_rasterTileSource": "Источник растровых тайлов",
+  "appSettings_stadiaEndpoint": "Конечная точка Stadia",
+  "appSettings_stadiaApiKey": "Ключ API Stadia",
+  "appSettings_stadiaApiKeyRequired": "Требуется для использования Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Настроено: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Введите свой ключ API Stadia Maps. Приложение использует его для запросов растровых тайлов.",
   "appSettings_offlineMapCache": "Кэш офлайн-карты",
   "appSettings_noAreaSelected": "Область не выбрана",
   "appSettings_areaSelectedZoom": "Область выбрана (масштаб {minZoom}–{maxZoom})",
@@ -475,6 +491,56 @@
   "mapCache_downloadTilesButton": "Загрузить плитки",
   "mapCache_clearCacheButton": "Очистить кэш",
   "mapCache_failedDownloads": "Неудачных загрузок: {count}",
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "С {north}, Ю {south}, В {east}, З {west}",
   "time_justNow": "Только что",
   "time_minutesAgo": "{minutes} мин назад",
@@ -777,7 +843,7 @@
   "channelPath_noHopDetails": "Детали хопов для этого пакета не предоставлены.",
   "channelPath_messageDetails": "Детали сообщения",
   "channelPath_senderLabel": "Отправитель",
-  "channelPath_timeLabel": "Время",
+  "channelPath_timeLabel": "Время получения",
   "channelPath_repeatsLabel": "Повторы",
   "channelPath_pathLabel": "Путь {index}",
   "channelPath_observedLabel": "Наблюдаемый",
@@ -1447,7 +1513,7 @@
   "map_publicKeyPrefixHint": "напр. ab12",
   "channels_mcmpCompression": "Сжатие MCMP",
   "channels_mcmpCompressionDescription": "Используется метод и модель mesh-compressor",
-  "contact_typeChat": "Чат",
+  "contact_typeChat": "Пользователь",
   "contact_typeRepeater": "Репитер",
   "contact_typeRoom": "Комната",
   "contact_typeSensor": "Датчик",
@@ -2248,7 +2314,33 @@
   "settings_modSettingsSubtitle": "В разделе собраны опции, отсутствующие в оригинальном meshcore_open",
   "settings_modSettingsVisual": "Визуал",
   "settings_modSettingsMessaging": "Обмен сообщениями",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "Версия",
+  "settings_mcmp_useSign": "Проверка подписи",
+  "settings_mcmp_signed": "С проверкой подписи",
+  "settings_mcmp_noSign": "Без проверки подписи",
+  "settings_mcmp_senderNameCollision": "Имя отправителя не уникально!",
+  "chat_mcmpSignatureValid": "Подпись действительна",
+  "chat_mcmpSignatureInvalid": "Недействительная подпись!",
+  "chat_mcmpSignatureUnverifiable": "Подпись нельзя проверить — отправителя нет в контактах",
+  "chat_mcmpSignatureTransport": "Подтверждено шифрованием транспорта",
+  "chat_mcmpManualRecheckSign": "Перепроверить подпись",
+  "chat_mcmpSignatureCheckStatus": "Проверка подписи",
+  "chat_mcmpSigningFailed": "Не удалось подписать сообщение",
+  "chat_timestampPacket": "Timestamp пакета",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: отображать бейдж алгоритма кодирования",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: отображать информационный вес картинки (байт)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение",
+  "settings_modSettingsMCOimg_showReplacements": "Отображать оригиналы картинок вместо LoRa-версий",
+  "settings_modSettingsMCOimg_replacementsScale": "Масштабировать оригиналы в чатах",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Масштабировать как Nearest Neighbor",
+  "settings_modSettingsMCOimg_replacementsSharp": "Повысить резкость оригиналов в чатах",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "Внимание! Отключает анимирование GIF!",
   "settings_modSettingsHideChInd": "Скрыть индекс канала",
+  "settings_modSettingsHideRadioStats": "Скрыть статистику радиовещания в шапке",
+  "settings_modSettingsSNRindicatorAllRepActivity": "Индикатор SNR: срабатывать на все ответы репитеров, не только advert",
   "settings_modSettingsIncomingQuoteAsMentions": "Отображать цитаты во входящих сообщениях как упоминания",
   "settings_modSettingsSimplifiedMentions": "Упрощённый стиль упоминаний в сообщениях",
   "settings_modSettingsSharedMsgHistory": "Общая история сообщений",
@@ -2260,10 +2352,6 @@
   "settings_modSettingsMessagingShowCompressionRatio": "Отображать степень сжатия",
   "settings_modSettingsMessagingCompressionRatioWithSendername": "При подсчёте учитывать имя ноды",
   "settings_modSettingsVisualHideMapZoomControls": "Скрыть на карте панель зума",
-  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",
-  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: отображать бейдж алгоритма кодирования",
-  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: отображать информационный вес картинки (байт)",
-  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение",
   "settings_modSettingsVisualShowMsgRegion": "Отображать регион сообщения",
   "channels_messageRegion": "Регион: {region}",
   "channels_messageRegionUnknown": "неизвестно",
@@ -2281,6 +2369,8 @@
   "settings_selfTelemetryShow": "Просмотр датчиков",
   "settings_modSettingsVisualChannelsUnreadSorting": "Сортировка каналов по непрочитанным сообщениям",
   "settings_modSettingsMessagingBackgroundTCP": "Удерживать TCP-соединение в фоне",
+  "settings_modSettingsDPIchange": "Регулировка DPI",
+  "settings_modSettingsDPIchangeToIcons": "Применять к иконкам",
   "chat_MCOimgOpenGallery": "Открыть галерею MCOimg",
   "chat_additionalActions": "Меню действий",
   "mcogallery_common": "Общее",
@@ -2289,6 +2379,8 @@
   "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
   "mcogallery_addGroup": "Добавить группу",
   "mcogallery_removeGroup": "Удалить группу",
+  "mcogallery_showLora": "Отобразить LoRa-вариант",
+  "mcogallery_showPacked": "Отобразить улучшенный вариант",
   "chat_sendSelfContact": "Отправить свой контакт",
   "chat_sendContact": "Поделиться контактом",
   "chat_addContact": "Добавить контакт",

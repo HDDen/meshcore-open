@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/screens/tcp_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
 
 class _FakeMeshCoreConnector extends MeshCoreConnector {
   _FakeMeshCoreConnector();
@@ -62,6 +64,12 @@ Widget _buildTestApp({
 }
 
 void main() {
+  setUp(() async {
+    PrefsManager.reset();
+    SharedPreferences.setMockInitialValues({});
+    await PrefsManager.initialize();
+  });
+
   testWidgets('TcpScreen uses localized TCP copy', (tester) async {
     final connector = _FakeMeshCoreConnector();
 

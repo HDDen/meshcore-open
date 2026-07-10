@@ -3,8 +3,10 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import 'channel_app_data_helper.dart';
+import 'contact_share_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
+import 'mcmp_app_codec.dart';
 import 'mesh_compressor.dart';
 
 enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
@@ -13,6 +15,7 @@ class ChannelBinaryDataOutbound {
   final int dataType;
   final Uint8List payload;
   final ChannelBinaryDataKind kind;
+  final McmpSignatureStatus mcmpSignatureStatus;
 
   /// Canonical text representation of the exact binary payload, when the
   /// binary format also has a text fallback (currently MCOimg v3).
@@ -26,6 +29,7 @@ class ChannelBinaryDataOutbound {
     required this.dataType,
     required this.payload,
     required this.kind,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
     this.canonicalText,
   });
 }
@@ -35,6 +39,7 @@ class ChannelBinaryDataInbound {
   final String text;
   final DateTime timestamp;
   final bool wasMcmpCompressed;
+  final McmpSignatureStatus mcmpSignatureStatus;
   final int payloadLength;
   final ChannelBinaryDataKind kind;
 
@@ -43,6 +48,7 @@ class ChannelBinaryDataInbound {
     required this.text,
     required this.timestamp,
     required this.wasMcmpCompressed,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
     required this.payloadLength,
     required this.kind,
   });
@@ -56,6 +62,10 @@ class ChannelAppDataInbound {
   final Uint8List body;
   final int payloadLength;
   final MCOImage? mcoImage;
+  final DecodedMcmpAppMessage? mcmpMessage;
+  final String? text;
+  final bool wasMcmpCompressed;
+  final McmpSignatureStatus mcmpSignatureStatus;
 
   const ChannelAppDataInbound({
     required this.senderName,
@@ -65,6 +75,10 @@ class ChannelAppDataInbound {
     required this.body,
     required this.payloadLength,
     this.mcoImage,
+    this.mcmpMessage,
+    this.text,
+    this.wasMcmpCompressed = false,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
   });
 
   int get subtypeVersion => ChannelAppDataHelper.packSubtypeVersion(
@@ -85,7 +99,9 @@ class ChannelBinaryDataHelper {
   static const int mcmpDataType = 0xFFF1;
   static const int appDataType = ChannelAppDataHelper.appDataType;
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
+  static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
+  static const int mcmpV3WireVersion = ChannelAppDataHelper.mcmpV3WireVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -97,6 +113,12 @@ class ChannelBinaryDataHelper {
     required String text,
     required String senderName,
     required bool mcmpEnabled,
+    int mcmpVersion = 2,
+    bool mcmpUseSign = true,
+    int? timestamp,
+    Uint8List? signature,
+    String? replyAuthorName,
+    int? replyTimestamp,
   }) {
     if (!canSend) return null;
 
@@ -128,10 +150,25 @@ class ChannelBinaryDataHelper {
       final isStructuredPayload =
           trimmed.startsWith('g:') ||
           trimmed.startsWith('m:') ||
-          trimmed.startsWith('V1|');
+          trimmed.startsWith('V1|') ||
+          // Shared contact payloads (<pubkey:type:name>) must travel as
+          // plain text so receivers can parse them.
+          parseSharedContactText(trimmed) != null;
       if (isStructuredPayload) return null;
 
       if (mcmpEnabled) {
+        if (mcmpVersion == 3) {
+          final hasReply = replyAuthorName != null && replyTimestamp != null;
+          return tryEncodeMcmpV3AppOutbound(
+            text: text,
+            senderName: senderName,
+            timestamp:
+                timestamp ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            signature: mcmpUseSign ? signature : null,
+            replyAuthorName: hasReply ? replyAuthorName : null,
+            replyTimestamp: hasReply ? replyTimestamp : null,
+          );
+        }
         final compressed = MeshCompressor.instance.compressToBytes(text);
         return _encodeEnvelope(
           dataType: mcmpDataType,
@@ -160,6 +197,40 @@ class ChannelBinaryDataHelper {
       kind: ChannelBinaryDataKind.mcoImageV3,
       canonicalText: MCOImageV3Codec.textFromBody(body),
     );
+  }
+
+  static ChannelBinaryDataOutbound? tryEncodeMcmpV3AppOutbound({
+    required String text,
+    required String senderName,
+    required int timestamp,
+    Uint8List? signature,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) {
+    if (!canSend) return null;
+    try {
+      final encoded = McmpAppCodec.encodeBody(
+        text: text,
+        timestamp: timestamp,
+        signature: signature,
+        replyAuthorName: replyAuthorName,
+        replyTimestamp: replyTimestamp,
+      );
+      // Outgoing messages: we produced the signature ourselves, so a present
+      // signature is by definition valid.
+      return _encodeAppEnvelope(
+        subtypeId: mcmpSubtype,
+        version: mcmpV3WireVersion,
+        body: encoded.body,
+        senderName: senderName,
+        kind: ChannelBinaryDataKind.mcmp,
+        mcmpSignatureStatus: encoded.isSigned
+            ? McmpSignatureStatus.valid
+            : McmpSignatureStatus.unsigned,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static int? mcoImagePayloadLength(String text, String senderName) {
@@ -194,6 +265,43 @@ class ChannelBinaryDataHelper {
     );
   }
 
+  /// Estimated binary payload length for an MCMP v3 app envelope. When
+  /// [includeSignature] is true a placeholder of the exact wire size is
+  /// counted, so composer counters reflect the signed container.
+  static int? mcmpV3AppPayloadLength(
+    String text,
+    String senderName, {
+    bool includeSignature = false,
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) {
+    if (!canSend) return null;
+    try {
+      final trimmed = text.trim();
+      if (trimmed.startsWith('g:') ||
+          trimmed.startsWith('m:') ||
+          trimmed.startsWith('V1|') ||
+          trimmed.startsWith(MCOImageCodec.prefix) ||
+          parseSharedContactText(trimmed) != null) {
+        return null;
+      }
+      final hasReply = replyAuthorName != null && replyTimestamp != null;
+      final encoded = McmpAppCodec.encodeBody(
+        text: text,
+        timestamp: 0,
+        signature: includeSignature ? Uint8List(signatureSize) : null,
+        replyAuthorName: hasReply ? replyAuthorName : null,
+        replyTimestamp: hasReply ? replyTimestamp : null,
+      );
+      return ChannelAppDataHelper.envelopeLength(
+        bodyLength: encoded.body.length,
+        senderName: senderName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   static int? mcmpPayloadLength(String text, String senderName) {
     if (!canSend) return null;
     try {
@@ -201,7 +309,8 @@ class ChannelBinaryDataHelper {
       if (trimmed.startsWith('g:') ||
           trimmed.startsWith('m:') ||
           trimmed.startsWith('V1|') ||
-          trimmed.startsWith(MCOImageCodec.prefix)) {
+          trimmed.startsWith(MCOImageCodec.prefix) ||
+          parseSharedContactText(trimmed) != null) {
         return null;
       }
       final compressed = MeshCompressor.instance.compressToBytes(text);
@@ -254,6 +363,17 @@ class ChannelBinaryDataHelper {
         uncompressedPayloadLength(text, senderName);
   }
 
+  static int uncompressedAppBinaryPayloadLength(
+    String text,
+    String senderName,
+  ) {
+    return channelDataHeaderLength +
+        appBinaryEnvelopeLength(
+          bodyLength: 1 + 4 + utf8.encode(text).length,
+          senderName: senderName,
+        );
+  }
+
   static ChannelBinaryDataInbound? tryDecodeInbound({
     required int dataType,
     required Uint8List payload,
@@ -277,6 +397,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: false,
+          mcmpSignatureStatus: McmpSignatureStatus.none,
           payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcoImage,
         );
@@ -289,6 +410,7 @@ class ChannelBinaryDataHelper {
           text: text,
           timestamp: timestamp,
           wasMcmpCompressed: true,
+          mcmpSignatureStatus: McmpSignatureStatus.none,
           payloadLength: payload.length,
           kind: ChannelBinaryDataKind.mcmp,
         );
@@ -331,6 +453,25 @@ class ChannelBinaryDataHelper {
           mcoImage: image,
         );
       case ChannelAppDataSubtype.mcmp:
+        if (envelope.version != mcmpV3WireVersion) return null;
+        final DecodedMcmpAppMessage decoded;
+        try {
+          decoded = McmpAppCodec.decodeBody(envelope.body);
+        } catch (_) {
+          return null;
+        }
+        return ChannelAppDataInbound(
+          senderName: envelope.senderName,
+          subtypeId: envelope.subtypeId,
+          version: envelope.version,
+          subtype: ChannelAppDataSubtype.mcmp,
+          body: envelope.body,
+          payloadLength: payload.length,
+          mcmpMessage: decoded,
+          text: decoded.text,
+          wasMcmpCompressed: true,
+          mcmpSignatureStatus: decoded.signatureStatus,
+        );
       case null:
         return null;
     }
@@ -373,6 +514,7 @@ class ChannelBinaryDataHelper {
     required Uint8List body,
     required String senderName,
     required ChannelBinaryDataKind kind,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
     String? canonicalText,
   }) {
     final Uint8List payload;
@@ -391,6 +533,7 @@ class ChannelBinaryDataHelper {
       dataType: appDataType,
       payload: payload,
       kind: kind,
+      mcmpSignatureStatus: mcmpSignatureStatus,
       canonicalText: canonicalText,
     );
   }

@@ -11,6 +11,7 @@ import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/radio_settings.dart';
+import '../services/app_settings_service.dart';
 import '../services/app_debug_log_service.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/app_bar.dart';
@@ -19,6 +20,7 @@ import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
+import 'companion_radio_stats_screen.dart';
 import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -321,6 +323,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: l10n.settings_infoChannelCount,
                         value: '${connector.channels.length}',
                       ),
+                      if (connector.firmwareVersion != null &&
+                          connector.firmwareVersion!.isNotEmpty)
+                        _infoRow(
+                          context,
+                          label: l10n.settings_infoFirmware,
+                          value:
+                              connector.firmwareBuildDate != null &&
+                                  connector.firmwareBuildDate!.isNotEmpty
+                              ? '${connector.firmwareVersion!} '
+                                    '(${connector.firmwareBuildDate!})'
+                              : connector.firmwareVersion!,
+                        ),
                     ],
                   ),
                 )
@@ -722,6 +736,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
           },
         ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.insights_outlined,
+          title: l10n.radioStats_settingsTile,
+          subtitle: l10n.radioStats_settingsSubtitle,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CompanionRadioStatsScreen(),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -913,6 +942,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _editLocation(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
+    final settingsService = context.read<AppSettingsService>();
     final latController = TextEditingController();
     final lonController = TextEditingController();
     final intervalController = TextEditingController();
@@ -924,9 +954,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final bool hasGPS = customVars.containsKey("gps");
     bool isGPSEnabled = customVars["gps"] == "1";
 
-    // Read current interval or default to 900 (15 minutes)
-    final currentInterval =
-        int.tryParse(customVars["gps_interval"] ?? "") ?? 900;
+    final currentInterval = settingsService.resolvedGpsIntervalSeconds(
+      customVars,
+    );
     intervalController.text = currentInterval.toString();
 
     String? intervalError;
@@ -1024,7 +1054,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pop(context);
 
                 if (interval != null) {
-                  await connector.setCustomVar("gps_interval:$interval");
+                  await settingsService.setGpsIntervalSeconds(
+                    interval,
+                    writeToDevice: (value) =>
+                        connector.setCustomVar("gps_interval:$value"),
+                  );
                   await connector.refreshDeviceInfo();
                   if (!context.mounted) return;
                   showDismissibleSnackBar(
@@ -1337,12 +1371,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 void _privacySettings(BuildContext context, MeshCoreConnector connector) {
   final l10n = context.l10n;
+  final settingsService = context.read<AppSettingsService>();
 
   int telemetryMode = connector.telemetryModeBase;
   int telemetryLocMode = connector.telemetryModeLoc;
   int telemetryEnvMode = connector.telemetryModeEnv;
   bool advertLocPolicy = connector.advertLocationPolicy == 0 ? false : true;
   int multiAcks = connector.multiAcks;
+  bool autoZeroHopAdvertOnGpsUpdate =
+      settingsService.settings.autoSendZeroHopAdvertOnGpsUpdate;
 
   final telemModeBase = [
     DropdownMenuItem(value: teleModeDeny, child: Text(l10n.settings_denyAll)),
@@ -1375,6 +1412,20 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                 onChanged: (value) {
                   setDialogState(() => advertLocPolicy = value);
                 },
+              ),
+              const SizedBox(height: 8),
+              FeatureToggleRow(
+                title: l10n.settings_autoZeroHopAdvertOnGpsUpdate,
+                subtitle: l10n.settings_autoZeroHopAdvertOnGpsUpdateSubtitle,
+                value: autoZeroHopAdvertOnGpsUpdate,
+                enabled: advertLocPolicy,
+                onChanged: advertLocPolicy
+                    ? (value) {
+                        setDialogState(
+                          () => autoZeroHopAdvertOnGpsUpdate = value,
+                        );
+                      }
+                    : null,
               ),
               const SizedBox(height: 8),
               SwitchListTile(
@@ -1444,6 +1495,9 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                 telemetryEnvMode,
                 advertLocPolicy ? 1 : 0,
                 multiAcks,
+              );
+              await settingsService.setAutoSendZeroHopAdvertOnGpsUpdate(
+                autoZeroHopAdvertOnGpsUpdate,
               );
               await connector.refreshDeviceInfo();
               if (!context.mounted) return;

@@ -20,7 +20,6 @@ import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:meshcore_open/widgets/snr_indicator.dart';
-import 'package:meshcore_open/widgets/themed_map_tile_layer.dart';
 import 'package:provider/provider.dart';
 import '../theme/mesh_theme.dart';
 
@@ -280,14 +279,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   }
 
   Widget _buildDesktopMapControls() {
+    final brightness = Theme.of(context).brightness;
+    final iconColor = MeshPalette.inkOn(brightness);
     return Positioned(
       top: 16,
       left: 16,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: MeshPalette.bg1.withValues(alpha: 0.90),
+          color: MeshPalette.bg1On(brightness).withValues(alpha: 0.90),
           borderRadius: BorderRadius.circular(MeshRadii.md),
-          border: Border.all(color: MeshPalette.line2),
+          border: Border.all(color: MeshPalette.line2On(brightness)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(MeshRadii.md),
@@ -296,16 +297,19 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             children: [
               IconButton(
                 icon: const Icon(Icons.add),
+                color: iconColor,
                 tooltip: context.l10n.map_zoomIn,
                 onPressed: () => _zoomMapBy(1),
               ),
               IconButton(
                 icon: const Icon(Icons.remove),
+                color: iconColor,
                 tooltip: context.l10n.map_zoomOut,
                 onPressed: () => _zoomMapBy(-1),
               ),
               IconButton(
                 icon: const Icon(Icons.my_location),
+                color: iconColor,
                 tooltip: context.l10n.map_centerMap,
                 onPressed: _resetMapView,
               ),
@@ -1592,7 +1596,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         },
       ),
       children: [
-        ThemedMapTileLayer(tileCache: tileCache),
+        tileCache.buildTileLayer(context),
         AnimatedBuilder(
           animation: _playback,
           builder: (context, _) {
@@ -1666,8 +1670,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     final l10n = context.l10n;
     final selected = _selectedPath;
     final combined = _viewMode == PathViewMode.combined;
-    final maxHeight =
-        MediaQuery.of(context).size.height * (combined ? 0.45 : 0.35);
+    final maxHeight = MediaQuery.of(context).size.height * 0.6;
 
     double cardHeight;
     if (_panelCollapsed) {
@@ -1689,9 +1692,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         height: cardHeight,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: MeshPalette.bg1.withValues(alpha: 0.95),
+            color: MeshPalette.bg1On(
+              Theme.of(context).brightness,
+            ).withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(MeshRadii.md),
-            border: Border.all(color: MeshPalette.line2),
+            border: Border.all(
+              color: MeshPalette.line2On(Theme.of(context).brightness),
+            ),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(MeshRadii.md),
@@ -1712,7 +1719,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                               style: MeshTheme.mono(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                color: MeshPalette.ink,
+                                color: MeshPalette.inkOn(
+                                  Theme.of(context).brightness,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1809,6 +1818,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   Widget _buildSnrHopList(PathTraceData pathTraceData, int highlightRow) {
     final l10n = context.l10n;
+    final brightness = Theme.of(context).brightness;
     if (pathTraceData.pathData.isEmpty) {
       return Center(child: Text(l10n.channelPath_noHopDetailsAvailable));
     }
@@ -1833,11 +1843,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                 : Icon(Icons.call_made),
             title: Text(
               formatDirectionText(pathTraceData, index),
-              style: MeshTheme.mono(fontSize: 13, color: MeshPalette.ink),
+              style: MeshTheme.mono(
+                fontSize: 13,
+                color: MeshPalette.inkOn(brightness),
+              ),
             ),
             subtitle: Text(
               formatDirectionSubText(pathTraceData, index),
-              style: MeshTheme.mono(fontSize: 12, color: MeshPalette.ink3),
+              style: MeshTheme.mono(
+                fontSize: 12,
+                color: MeshPalette.ink3On(brightness),
+              ),
             ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1862,6 +1878,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   ) {
     final connector = context.read<MeshCoreConnector>();
     final l10n = context.l10n;
+    final brightness = Theme.of(context).brightness;
 
     final hopUseCount = <String, int>{};
     if (_viewMode == PathViewMode.combined) {
@@ -1946,11 +1963,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             ),
             title: Text(
               title,
-              style: MeshTheme.mono(fontSize: 13, color: MeshPalette.ink),
+              style: MeshTheme.mono(
+                fontSize: 13,
+                color: MeshPalette.inkOn(brightness),
+              ),
             ),
             subtitle: Text(
               subtitle,
-              style: MeshTheme.mono(fontSize: 11, color: MeshPalette.ink3),
+              style: MeshTheme.mono(
+                fontSize: 11,
+                color: MeshPalette.ink3On(brightness),
+              ),
             ),
             trailing: trailing,
           );

@@ -218,6 +218,7 @@ App version: `9.5.0+13` — Dart SDK constraint: `^3.9.2`
 |---------|---------|---------|
 | crypto | ^3.0.3 | SHA/HMAC hashing used in message authentication |
 | pointycastle | ^4.0.0 | AES encryption/decryption for channel and direct messages |
+| cryptography | ^2.7.0 | Ed25519 verification of MCMP v3 message signatures (signing happens on the node via CMD_SIGN_*) |
 | uuid | ^4.3.3 | Generates UUIDs for message and contact identity |
 
 **Maps & Location**

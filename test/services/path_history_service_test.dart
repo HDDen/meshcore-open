@@ -545,16 +545,18 @@ void main() {
       expect(paths.first.routeWeight, closeTo(1.5, 0.001));
     });
 
-    test('failure to 0 removes the path', () async {
+    test('failure to 0 removes the path after repeated failures', () async {
       final pubKey = _hex('w004');
       await _seed(svc, pubKey, pathBytes: [0x01], hopCount: 1, weight: 0.3);
 
-      svc.recordPathResult(
-        pubKey,
-        const PathSelection(pathBytes: [0x01], hopCount: 1, useFlood: false),
-        success: false,
-        failureDecrement: 0.5, // 0.3 - 0.5 = -0.2 → remove
-      );
+      for (var i = 0; i < 3; i++) {
+        svc.recordPathResult(
+          pubKey,
+          const PathSelection(pathBytes: [0x01], hopCount: 1, useFlood: false),
+          success: false,
+          failureDecrement: 0.5,
+        );
+      }
       await _flush();
 
       final paths = svc.getRecentPaths(pubKey);

@@ -20,9 +20,7 @@ void main() {
   ChannelRegionStore createStore() {
     final store = ChannelRegionStore()
       ..setPublicKeyHex = '00112233445566778899'
-      ..registerChannel(
-        Channel(index: 1, name: 'Public', psk: Uint8List(16)),
-      );
+      ..registerChannel(Channel(index: 1, name: 'Public', psk: Uint8List(16)));
     return store;
   }
 

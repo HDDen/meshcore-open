@@ -12,6 +12,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/path_hop_resolver.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
@@ -23,7 +24,6 @@ import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/path_map_ui.dart';
-import '../widgets/themed_map_tile_layer.dart';
 
 class ChannelMessagePathScreen extends StatelessWidget {
   final ChannelMessage message;
@@ -149,6 +149,49 @@ class ChannelMessagePathScreen extends StatelessWidget {
     );
   }
 
+  /// Localized signature verification result for the message-details section;
+  /// null when the message carries no verification result (plain payloads).
+  /// Outgoing messages show only "sent signed / unsigned"; incoming ones show
+  /// the verification result with a name-collision note appended when the
+  /// sender name belonged to several contacts at verification time.
+  String? _signatureStatusLabel(AppLocalizations l10n) {
+    if (message.isOutgoing) {
+      // Own messages: only whether they were sent with a signature.
+      if (message.mcmpTimestamp == null) return null;
+      return message.mcmpIsSigned
+          ? l10n.settings_mcmp_signed
+          : l10n.settings_mcmp_noSign;
+    }
+
+    final String? label;
+    switch (message.mcmpSignatureStatus) {
+      case McmpSignatureStatus.valid:
+        label = l10n.chat_mcmpSignatureValid;
+        break;
+      case McmpSignatureStatus.invalid:
+        label = l10n.chat_mcmpSignatureInvalid;
+        break;
+      case McmpSignatureStatus.unverifiable:
+        label = l10n.chat_mcmpSignatureUnverifiable;
+        break;
+      case McmpSignatureStatus.transportAuthenticated:
+        label = l10n.chat_mcmpSignatureTransport;
+        break;
+      case McmpSignatureStatus.unsigned:
+        // MCMP v3 message sent without a signature.
+        label = l10n.settings_mcmp_noSign;
+        break;
+      case McmpSignatureStatus.none:
+        label = null;
+        break;
+    }
+    if (label == null) return null;
+    if (message.mcmpNameCollision) {
+      return '$label (${l10n.settings_mcmp_senderNameCollision})';
+    }
+    return label;
+  }
+
   Widget _buildSummaryCard(
     BuildContext context, {
     String? observedLabel,
@@ -190,7 +233,22 @@ class ChannelMessagePathScreen extends StatelessWidget {
           _buildDetailRow(
             context,
             l10n.channelPath_timeLabel,
-            _formatTime(message.timestamp, l10n),
+            _receivedAtLabel(l10n),
+            scheme: scheme,
+          ),
+          if (_signatureStatusLabel(l10n) != null)
+            _buildDetailRow(
+              context,
+              l10n.chat_mcmpSignatureCheckStatus,
+              _signatureStatusLabel(l10n)!,
+              scheme: scheme,
+            ),
+          _buildDetailRow(
+            context,
+            l10n.chat_timestampPacket,
+            // Timestamp the sender node embedded in the packet (both MCMP v3
+            // and plain group_text carry it) — not our receive time.
+            _packetTimestampLabel(l10n),
             scheme: scheme,
           ),
           if (outgoingRadioWaitLabel != null)
@@ -432,6 +490,26 @@ class ChannelMessagePathScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Timestamp the sender node stamped into the packet (frame timestamp,
+  // present for both MCMP v3 and plain group_text). Distinct from receivedAt.
+  String _packetTimestampLabel(AppLocalizations l10n) {
+    final ts = message.timestamp;
+    final rawSeconds = ts.millisecondsSinceEpoch ~/ 1000;
+    if (rawSeconds == 0) return '—';
+    // Raw packet timestamp (seconds, as stamped by the sender) plus a
+    // human-readable rendering in parentheses.
+    return '$rawSeconds (${_formatTime(ts, l10n)})';
+  }
+
+  // Actual message receive time (receivedAt, stored in milliseconds): raw
+  // value plus a human-readable rendering in parentheses.
+  String _receivedAtLabel(AppLocalizations l10n) {
+    final ts = message.receivedAt;
+    final rawMillis = ts.millisecondsSinceEpoch;
+    if (rawMillis == 0) return '—';
+    return '$rawMillis (${_formatTime(ts, l10n)})';
   }
 
   String _formatTime(DateTime time, AppLocalizations l10n) {
@@ -1039,7 +1117,7 @@ class _ChannelMessagePathMapScreenState
                     },
                   ),
                   children: [
-                    ThemedMapTileLayer(tileCache: tileCache),
+                    tileCache.buildTileLayer(context),
                     AnimatedBuilder(
                       animation: _playback,
                       builder: (context, _) {

@@ -100,6 +100,8 @@
   "settings_locationInvalid": "Neplatná šírka alebo dĺžka.",
   "settings_latitude": "Súradnica",
   "settings_longitude": "Dĺžka",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Automatický zero-hop inzerát pri aktualizácii GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Keď sa GPS poloha zmení, odoslať zero-hop inzerát (vyžaduje polohu v inzeráte).",
   "settings_privacyMode": "Režim ochrany súkromia",
   "settings_privacyModeSubtitle": "Skryť meno/poloha v reklamách",
   "settings_privacyModeToggle": "Prepínač súkromného režimu skryje vaše meno a polohu v reklamách.",
@@ -265,6 +267,19 @@
   "appSettings_last6Hours": "Posledné 6 hodín",
   "appSettings_last24Hours": "Posledných 24 hodín",
   "appSettings_lastWeek": "Minul týždeň",
+  "appSettings_rasterTileSource": "Zdroj rastrových dlaždíc",
+  "appSettings_stadiaEndpoint": "Koncový bod Stadia",
+  "appSettings_stadiaApiKey": "Kľúč API Stadia",
+  "appSettings_stadiaApiKeyRequired": "Vyžaduje sa na používanie Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Nakonfigurované: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Zadajte svoj kľúč API pre Stadia Maps. Aplikácia ho používa na požiadavky na rastrové dlaždice.",
   "appSettings_offlineMapCache": "Offline Mapa Pamäť",
   "appSettings_noAreaSelected": "Neoznačila sa žiadna oblasť",
   "appSettings_areaSelectedZoom": "Vyberená oblasť (zoom {minZoom}-{maxZoom})",
@@ -791,6 +806,56 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
       }
     }
   },

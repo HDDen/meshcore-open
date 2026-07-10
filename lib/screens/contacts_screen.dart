@@ -1625,6 +1625,12 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
+    int selectedMcmpVersion = isRoom
+        ? connector.contactMcmpVersion(contact.publicKeyHex)
+        : 2;
+    bool mcmpUseSign = isRoom
+        ? connector.contactMcmpUseSign(contact.publicKeyHex)
+        : true;
     bool smazEnabled =
         isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled =
@@ -1768,6 +1774,66 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
+                  if (mcmpEnabled) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedMcmpVersion,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.settings_mcmp_version,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text('v2 (legacy)'),
+                          ),
+                          DropdownMenuItem(value: 3, child: Text('v3')),
+                        ],
+                        onChanged: (value) {
+                          final normalized = value == 3 ? 3 : 2;
+                          connector.setContactMcmpVersion(
+                            contact.publicKeyHex,
+                            normalized,
+                          );
+                          setSheetState(() {
+                            selectedMcmpVersion = normalized;
+                          });
+                        },
+                      ),
+                    ),
+                    if (selectedMcmpVersion == 3)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: DropdownButtonFormField<bool>(
+                          initialValue: mcmpUseSign,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.settings_mcmp_useSign,
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: true,
+                              child: Text(context.l10n.settings_mcmp_signed),
+                            ),
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text(context.l10n.settings_mcmp_noSign),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            final normalized = value ?? true;
+                            connector.setContactMcmpUseSign(
+                              contact.publicKeyHex,
+                              normalized,
+                            );
+                            setSheetState(() {
+                              mcmpUseSign = normalized;
+                            });
+                          },
+                        ),
+                      ),
+                  ],
                   SwitchListTile(
                     title: Text(context.l10n.channels_smazCompression),
                     subtitle: Text(context.l10n.chat_compressOutgoingMessages),
@@ -2149,7 +2215,7 @@ class _ContactTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name row + route chip
+                  // Name row + favorite + unread badge
                   Row(
                     children: [
                       Expanded(
@@ -2170,8 +2236,57 @@ class _ContactTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Icon(Icons.star, size: 13, color: MeshPalette.warn),
                       ],
+                      if (unreadCount > 0) ...[
+                        const SizedBox(width: 6),
+                        UnreadBadge(count: unreadCount),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  // Public key of the contact, small monospace. When it does
+                  // not fit, the middle is elided (start…end) so both ends stay
+                  // visible.
+                  _MiddleEllipsisText(
+                    text: contact.publicKeyHex.toUpperCase(),
+                    style: MeshTheme.mono(
+                      fontSize: 9,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  // Path / subtitle row: path label + route chip, then
+                  // location marker and last-seen time (right-aligned).
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                contact.pathLabel(
+                                  context.l10n,
+                                  pathHashByteWidth: pathHashByteWidth,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            if (hasPath) ...[
+                              const SizedBox(width: 6),
+                              RouteChip(
+                                isDirect: isDirect,
+                                hops: isDirect ? displayHopCount : null,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                       if (contact.hasLocation) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Icon(
                           Icons.location_on,
                           size: 13,
@@ -2180,67 +2295,19 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  // Path / subtitle row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          contact.pathLabel(
-                            context.l10n,
-                            pathHashByteWidth: pathHashByteWidth,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatLastSeen(context, lastSeen),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          color: unreadCount > 0
+                              ? MeshPalette.blue
+                              : scheme.onSurfaceVariant,
                         ),
                       ),
-                      if (hasPath) ...[
-                        const SizedBox(width: 6),
-                        RouteChip(
-                          isDirect: isDirect,
-                          hops: isDirect ? displayHopCount : null,
-                        ),
-                      ],
                     ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Trailing: time + unread badge
-            // Clamp text scale to prevent overflow in trailing section.
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (unreadCount > 0) ...[
-                    UnreadBadge(count: unreadCount),
-                    const SizedBox(height: 4),
-                  ],
-                  Text(
-                    _formatLastSeen(context, lastSeen),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.right,
-                    style: MeshTheme.mono(
-                      fontSize: 11,
-                      color: unreadCount > 0
-                          ? MeshPalette.blue
-                          : scheme.onSurfaceVariant,
-                    ),
                   ),
                 ],
               ),
@@ -2309,6 +2376,65 @@ class _ContactTileEntrance extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
       ),
+    );
+  }
+}
+
+/// Single-line text that elides the middle («start…end») when it does not fit
+/// the available width, keeping both ends visible.
+class _MiddleEllipsisText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+
+  const _MiddleEllipsisText({required this.text, required this.style});
+
+  static const String _ellipsis = '…';
+
+  double _measure(String value, TextDirection direction) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      maxLines: 1,
+      textDirection: direction,
+    )..layout();
+    return painter.width;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final direction = Directionality.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        if (!maxWidth.isFinite || _measure(text, direction) <= maxWidth) {
+          return Text(text, maxLines: 1, softWrap: false, style: style);
+        }
+        // Binary search for the largest number of original characters that fit
+        // once the middle is replaced by the ellipsis.
+        var lo = 0;
+        var hi = text.length;
+        var best = _ellipsis;
+        while (lo <= hi) {
+          final keep = (lo + hi) ~/ 2;
+          final head = (keep + 1) ~/ 2;
+          final tail = keep ~/ 2;
+          final candidate =
+              '${text.substring(0, head)}$_ellipsis'
+              '${text.substring(text.length - tail)}';
+          if (_measure(candidate, direction) <= maxWidth) {
+            best = candidate;
+            lo = keep + 1;
+          } else {
+            hi = keep - 1;
+          }
+        }
+        return Text(
+          best,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.clip,
+          style: style,
+        );
+      },
     );
   }
 }

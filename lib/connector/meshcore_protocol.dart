@@ -201,12 +201,16 @@ const int cmdSendStatusReq = 27;
 const int cmdGetContactByKey = 30;
 const int cmdGetChannel = 31;
 const int cmdSetChannel = 32;
+const int cmdSignStart = 33;
+const int cmdSignData = 34;
+const int cmdSignFinish = 35;
 const int cmdSendTracePath = 36;
 const int cmdSetOtherParams = 38;
 const int cmdSendTelemetryReq = 39;
 const int cmdGetCustomVar = 40;
 const int cmdSetCustomVar = 41;
 const int cmdSendBinaryReq = 50;
+const int cmdSetFloodScope = 54;
 const int cmdSendControlData = 55;
 const int cmdGetStats = 56;
 const int cmdSendAnonReq = 57;
@@ -216,7 +220,6 @@ const int cmdSetPathHashMode = 61;
 const int cmdSendChannelData = 62;
 const int cmdSetDefaultFloodScope = 63;
 const int cmdGetDefaultFloodScope = 64;
-const int cmdSetFloodScope = 54;
 
 // Text message types
 const int txtTypePlain = 0;
@@ -238,6 +241,35 @@ Uint8List buildTelemetryBinaryPayload() {
   // Room servers/repeaters read byte 1 as an inverse telemetry permission mask.
   // Zero means "request every telemetry field allowed for this contact".
   return Uint8List.fromList([reqTypeGetTelemetry, 0x00, 0x00, 0x00, 0x00]);
+}
+
+// MCMP signing via the node's identity key (CMD_SIGN_START/DATA/FINISH).
+// The firmware keeps a single global sign buffer, so sessions must be
+// serialized by the caller.
+const int maxSignDataChunkBytes = maxFrameSize - 1;
+const int maxSignDataTotalBytes = 8 * 1024;
+
+Uint8List buildSignStartFrame() {
+  return Uint8List.fromList([cmdSignStart]);
+}
+
+Uint8List buildSignDataFrame(Uint8List chunk) {
+  if (chunk.isEmpty || chunk.length > maxSignDataChunkBytes) {
+    throw RangeError.range(
+      chunk.length,
+      1,
+      maxSignDataChunkBytes,
+      'chunk.length',
+    );
+  }
+  final writer = BufferWriter();
+  writer.writeByte(cmdSignData);
+  writer.writeBytes(chunk);
+  return writer.toBytes();
+}
+
+Uint8List buildSignFinishFrame() {
+  return Uint8List.fromList([cmdSignFinish]);
 }
 
 Uint8List buildSendControlDataFrame(Uint8List payload) {
@@ -287,6 +319,8 @@ const int respCodeDeviceInfo = 13;
 const int respCodeContactMsgRecvV3 = 16;
 const int respCodeChannelMsgRecvV3 = 17;
 const int respCodeChannelInfo = 18;
+const int respCodeSignStart = 19;
+const int respCodeSignature = 20;
 const int respCodeCustomVars = 21;
 const int respCodeAutoAddConfig = 25;
 const int respCodeChannelDataRecv = 27;
@@ -365,15 +399,25 @@ const int signatureSize = 64;
 const int maxPathSize = 64;
 const int pathHashSize = 1;
 const int maxNameSize = 32;
+const int maxFrameSize = 176;
+
+/// Maximum channel-data payload accepted end-to-end.
+///
+/// The serial link would allow MAX_FRAME_SIZE - 9 = 167 bytes
+/// (MAX_CHANNEL_DATA_LENGTH in the companion firmware), but the radio path is
+/// stricter: sendGroupData wraps the payload as [data_type u16][len u8][data]
+/// and rejects data longer than MAX_GROUP_DATA_LENGTH =
+/// MAX_PACKET_PAYLOAD(184) - CIPHER_BLOCK_SIZE(16) - 3 = 165 bytes — the node
+/// answers with an error frame and nothing is transmitted.
+// const int maxChannelDataLength = appProtocolVersion >= 14 ? maxFrameSize - 9 : 165;
+const int maxChannelDataLength = 165; // TODO check for errors!
 const int appProtocolVersion = 14;
-const int legacyMaxFrameSize = 172;
-const int v14MaxFrameSize = 176;
-// Companion protocol v14 matches firmware MAX_FRAME_SIZE.
-const int maxFrameSize =
-    appProtocolVersion >= 14 ? v14MaxFrameSize : legacyMaxFrameSize;
-const int maxChannelDataLength = maxFrameSize - 9;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
+// Room servers store posts in a 151-byte buffer (MAX_POST_TEXT_LEN = 160-9,
+// simple_room_server/MyMesh.h) and silently truncate longer texts when the
+// post is stored, which would destroy an MCMP container and its signature.
+const int maxRoomServerTextBytes = maxTextPayloadBytes - 9;
 const int _sendTextMsgOverheadBytes =
     1 + 1 + 1 + 4 + 6 + 1 + 2; // +2 safety margin
 const int _sendChannelTextMsgOverheadBytes =
@@ -569,8 +613,13 @@ Uint8List buildSendTextMsgFrame(
 // Format: [cmd][txt_type][channel_idx][timestamp x4][text...]
 // Channel text is length-delimited by the frame; unlike direct messages it
 // must not append a trailing null byte.
-Uint8List buildSendChannelTextMsgFrame(int channelIndex, String text) {
-  final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+Uint8List buildSendChannelTextMsgFrame(
+  int channelIndex,
+  String text, {
+  int? timestampSeconds,
+}) {
+  final timestamp =
+      timestampSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
   final writer = BufferWriter();
   writer.writeByte(cmdSendChannelTxtMsg);
   writer.writeByte(txtTypePlain);

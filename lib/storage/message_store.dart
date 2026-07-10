@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../utils/app_logger.dart';
@@ -126,6 +127,7 @@ class MessageStore {
       'senderKey': base64Encode(msg.senderKey),
       'text': msg.text,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'receivedAt': msg.receivedAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'isCli': msg.isCli,
       'status': msg.status.index,
@@ -140,6 +142,20 @@ class MessageStore {
       'compressionSavingsPercent': msg.compressionSavingsPercent,
       'compressionOriginalBytes': msg.compressionOriginalBytes,
       'compressionPayloadBytes': msg.compressionPayloadBytes,
+      'mcmpSignatureStatus': msg.mcmpSignatureStatus.name,
+      'mcmpTimestamp': msg.mcmpTimestamp,
+      'mcmpSenderName': msg.mcmpSenderName,
+      'mcmpIsSigned': msg.mcmpIsSigned,
+      'mcmpSignature': msg.mcmpSignature != null
+          ? base64Encode(msg.mcmpSignature!)
+          : null,
+      'mcmpReplyAuthorName': msg.mcmpReplyAuthorName,
+      'mcmpReplyTimestamp': msg.mcmpReplyTimestamp,
+      'verifiedSenderKeyHex': msg.verifiedSenderKeyHex,
+      'mcmpNameCollision': msg.mcmpNameCollision,
+      'replyToMessageId': msg.replyToMessageId,
+      'replyToSenderName': msg.replyToSenderName,
+      'replyToText': msg.replyToText,
       'retryCount': msg.retryCount,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
@@ -208,6 +224,9 @@ class MessageStore {
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      receivedAt: json['receivedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['receivedAt'] as int)
+          : null,
       isOutgoing: json['isOutgoing'] as bool,
       isCli: isCli,
       status: MessageStatus.values[json['status'] as int],
@@ -233,6 +252,22 @@ class MessageStore {
       compressionPayloadBytes:
           json['compressionPayloadBytes'] as int? ??
           detectedCompression?.payloadBytes,
+      mcmpSignatureStatus: _parseMcmpSignatureStatus(
+        json['mcmpSignatureStatus'],
+      ),
+      mcmpTimestamp: json['mcmpTimestamp'] as int?,
+      mcmpSenderName: json['mcmpSenderName'] as String?,
+      mcmpIsSigned: json['mcmpIsSigned'] as bool? ?? false,
+      mcmpSignature: json['mcmpSignature'] != null
+          ? Uint8List.fromList(base64Decode(json['mcmpSignature'] as String))
+          : null,
+      mcmpReplyAuthorName: json['mcmpReplyAuthorName'] as String?,
+      mcmpReplyTimestamp: json['mcmpReplyTimestamp'] as int?,
+      verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
+      mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
+      replyToMessageId: json['replyToMessageId'] as String?,
+      replyToSenderName: json['replyToSenderName'] as String?,
+      replyToText: json['replyToText'] as String?,
       retryCount: json['retryCount'] as int? ?? 0,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,
@@ -267,6 +302,14 @@ class MessageStore {
             )
           : null,
     );
+  }
+
+  McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
+    if (value is! String) return McmpSignatureStatus.none;
+    for (final status in McmpSignatureStatus.values) {
+      if (status.name == value) return status;
+    }
+    return McmpSignatureStatus.none;
   }
 }
 

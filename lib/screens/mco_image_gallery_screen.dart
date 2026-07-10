@@ -439,13 +439,12 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
             SliverPadding(
               padding: const EdgeInsets.only(bottom: 12),
               sliver: SliverGrid(
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 0.78,
-                    ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.78,
+                ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final item = group.items[index];
                   return _GalleryTile(

@@ -100,6 +100,8 @@
   "settings_locationInvalid": "Ogiltig latitud eller longitud.",
   "settings_latitude": "Latitud",
   "settings_longitude": "Längdgrad",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Automatisk zero-hop-annons vid GPS-uppdatering",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "När GPS-positionen ändras, skicka en zero-hop-annons (kräver plats i annonsen).",
   "settings_privacyMode": "Privatläge",
   "settings_privacyModeSubtitle": "Dölj namn/plats i annonser",
   "settings_privacyModeToggle": "Aktivera privatläge för att dölja ditt namn och din plats i annonser.",
@@ -265,6 +267,19 @@
   "appSettings_last6Hours": "De senaste 6 timmarna",
   "appSettings_last24Hours": "De senaste 24 timmarna",
   "appSettings_lastWeek": "Förra veckan",
+  "appSettings_rasterTileSource": "Källa för rasterplattor",
+  "appSettings_stadiaEndpoint": "Stadia-slutpunkt",
+  "appSettings_stadiaApiKey": "Stadia API-nyckel",
+  "appSettings_stadiaApiKeyRequired": "Krävs för att använda Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Konfigurerad: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Ange din Stadia Maps API-nyckel. Appen använder den för förfrågningar om rasterplattor.",
   "appSettings_offlineMapCache": "Offline Kartcache",
   "appSettings_noAreaSelected": "Ingen area markerad",
   "appSettings_areaSelectedZoom": "Område markerat (zoom {minZoom}-{maxZoom})",
@@ -791,6 +806,56 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
       }
     }
   },

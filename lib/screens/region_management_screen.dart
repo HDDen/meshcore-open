@@ -8,6 +8,8 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/region_store.dart';
+import 'package:meshcore_open/theme/mesh_theme.dart';
+import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:provider/provider.dart';
 
 Future<void> pushRegionManagementScreen(BuildContext context) {
@@ -36,8 +38,6 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   bool _isDefaultScopeBusy = false;
   bool _hasLoadedDefaultScope = false;
 
-  String region = '';
-
   @override
   void initState() {
     super.initState();
@@ -54,8 +54,6 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   void _loadRegions() {
-    context.read<MeshCoreConnector>().loadChannelSettings();
-
     final regions = _regionStore.loadRegions();
     if (mounted) {
       setState(() {
@@ -287,7 +285,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
 
   void _showAddRegionDialog(BuildContext context) {
     final l10n = context.l10n;
-    final controller = TextEditingController(text: region);
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -357,32 +355,48 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                       itemBuilder: (context, index) {
                         final fetchedRegion = sortedRegions[index];
                         final alreadyExists = _regions.contains(fetchedRegion);
-                        return Card(
-                          child: ListTile(
-                            title: Text(fetchedRegion),
-                            trailing: TextButton(
-                              style: alreadyExists
-                                  ? TextButton.styleFrom(
-                                      foregroundColor: Theme.of(
-                                        context,
-                                      ).disabledColor,
-                                    )
-                                  : null,
-                              onPressed: () {
-                                if (alreadyExists) {
-                                  _showDialogSnackBar(
-                                    context,
-                                    l10n.settings_regionFetchRegionsAlreadyExists,
-                                  );
-                                  return;
-                                }
+                        return MeshCard(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.only(left: 14, right: 4),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.landscape,
+                                color: MeshPalette.blue,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  fetchedRegion,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              TextButton(
+                                style: alreadyExists
+                                    ? TextButton.styleFrom(
+                                        foregroundColor: Theme.of(
+                                          context,
+                                        ).disabledColor,
+                                      )
+                                    : null,
+                                onPressed: () {
+                                  if (alreadyExists) {
+                                    _showDialogSnackBar(
+                                      context,
+                                      l10n.settings_regionFetchRegionsAlreadyExists,
+                                    );
+                                    return;
+                                  }
 
-                                _regionStore.addRegion(fetchedRegion);
-                                _loadRegions();
-                                setDialogState(() {});
-                              },
-                              child: Text(l10n.common_add),
-                            ),
+                                  _regionStore.addRegion(fetchedRegion);
+                                  _loadRegions();
+                                  setDialogState(() {});
+                                },
+                                child: Text(l10n.common_add),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -642,10 +656,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   Widget _buildRegionTile(BuildContext context, Region region) {
-    return Card(
+    return MeshCard(
       key: ValueKey(region),
       child: ListTile(
         dense: false,
+        leading: const Icon(Icons.landscape, color: MeshPalette.blue),
         title: Text(region),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -658,6 +673,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                   : () => _setDefaultRegionScopeFromRegion(region),
             ),
             IconButton(
+              tooltip: context.l10n.settings_deleteRegion,
               icon: const Icon(Icons.delete_outline),
               onPressed: _isDefaultScopeBusy
                   ? null
@@ -682,8 +698,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final connector = context.read<MeshCoreConnector>();
               Navigator.pop(dialogContext);
               await _regionStore.removeRegion(region);
+              // Deleting a region clears it from any channels that used it;
+              // refresh the connector's in-memory channel regions to match.
+              await connector.loadChannelSettings();
               _loadRegions();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
@@ -692,7 +712,9 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
             },
             child: Text(
               context.l10n.common_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],

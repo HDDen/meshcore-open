@@ -115,7 +115,7 @@ class BleDebugLogService extends ChangeNotifier {
   ) {
     final label = _codeLabel(code, outgoing: outgoing);
     final prefix = outgoing ? 'TX' : 'RX';
-    final extra = _frameDetail(code, frame);
+    final extra = _frameDetail(code, frame, outgoing);
     final noteText = note != null ? ' • $note' : '';
     return '$prefix $label$extra$noteText';
   }
@@ -174,6 +174,12 @@ class BleDebugLogService extends ChangeNotifier {
         return 'CMD_GET_CHANNEL';
       case cmdSetChannel:
         return 'CMD_SET_CHANNEL';
+      case cmdSignStart:
+        return 'CMD_SIGN_START';
+      case cmdSignData:
+        return 'CMD_SIGN_DATA';
+      case cmdSignFinish:
+        return 'CMD_SIGN_FINISH';
       case cmdSetCustomVar:
         return 'CMD_SET_CUSTOM_VAR';
       case cmdSendTracePath:
@@ -219,6 +225,10 @@ class BleDebugLogService extends ChangeNotifier {
         return 'RESP_CODE_CHANNEL_MSG_RECV_V3';
       case respCodeChannelInfo:
         return 'RESP_CODE_CHANNEL_INFO';
+      case respCodeSignStart:
+        return 'RESP_CODE_SIGN_START';
+      case respCodeSignature:
+        return 'RESP_CODE_SIGNATURE';
       case respCodeAutoAddConfig:
         return 'RESP_CODE_AUTO_ADD_CONFIG';
       case pushCodeTraceData:
@@ -253,7 +263,29 @@ class BleDebugLogService extends ChangeNotifier {
     }
   }
 
-  String _frameDetail(int code, Uint8List frame) {
+  String _frameDetail(int code, Uint8List frame, bool outgoing) {
+    // MCMP v3 signing frames. Some response codes collide numerically with
+    // command codes (RESP_CODE_SIGN_START == CMD_REBOOT, RESP_CODE_SIGNATURE
+    // == CMD_GET_BATT_AND_STORAGE), so these are guarded by direction.
+    if (outgoing) {
+      switch (code) {
+        case cmdSignData:
+          return ' • chunk=${frame.length - 1}B';
+        case cmdSignStart:
+        case cmdSignFinish:
+          return '';
+      }
+    } else {
+      switch (code) {
+        case respCodeSignStart:
+          if (frame.length >= 6) {
+            return ' • maxLen=${readUint32LE(frame, 2)}B';
+          }
+          return '';
+        case respCodeSignature:
+          return ' • sig=${frame.length - 1}B';
+      }
+    }
     switch (code) {
       case cmdDeviceQuery:
         if (frame.length >= 2) {

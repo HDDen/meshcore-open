@@ -61,7 +61,9 @@ void main() async {
   final bleDebugLogService = BleDebugLogService();
   final appDebugLogService = AppDebugLogService();
   final backgroundService = BackgroundService();
-  final mapTileCacheService = MapTileCacheService();
+  final mapTileCacheService = MapTileCacheService(
+    appSettingsService: appSettingsService,
+  );
   final chatTextScaleService = ChatTextScaleService();
   final translationService = TranslationService(appSettingsService);
   final uiViewStateService = UiViewStateService();
@@ -256,7 +258,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.translationService),
         ChangeNotifierProvider.value(value: widget.uiViewStateService),
         Provider.value(value: widget.storage),
-        Provider.value(value: widget.mapTileCacheService),
+        ChangeNotifierProvider.value(value: widget.mapTileCacheService),
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
         ChangeNotifierProvider.value(value: widget.wardriveService),
       ],
@@ -286,9 +288,40 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
               // Update notification service with resolved locale
               final locale = Localizations.localeOf(context);
               NotificationService().setLocale(locale);
+
+              final settings = settingsService.settings;
+              Widget content = child ?? const SizedBox.shrink();
+
+              // Global UI scale: multiply the user's factor on top of the
+              // system text scale so accessibility settings are still honored.
+              // Icons follow when enabled via IconThemeData.applyTextScaling.
+              if (settings.uiScale != 1.0 || settings.uiScaleApplyToIcons) {
+                final mediaQuery = MediaQuery.of(context);
+                final systemScale = mediaQuery.textScaler.scale(1.0);
+                final theme = Theme.of(context);
+                content = MediaQuery(
+                  data: mediaQuery.copyWith(
+                    textScaler: TextScaler.linear(
+                      systemScale * settings.uiScale,
+                    ),
+                  ),
+                  child: Theme(
+                    data: theme.copyWith(
+                      iconTheme: theme.iconTheme.copyWith(
+                        applyTextScaling: settings.uiScaleApplyToIcons,
+                      ),
+                      primaryIconTheme: theme.primaryIconTheme.copyWith(
+                        applyTextScaling: settings.uiScaleApplyToIcons,
+                      ),
+                    ),
+                    child: content,
+                  ),
+                );
+              }
+
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: _systemUiOverlayStyle(context),
-                child: child ?? const SizedBox.shrink(),
+                child: content,
               );
             },
             home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)

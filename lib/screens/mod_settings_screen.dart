@@ -49,6 +49,38 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
+                    secondary: const Icon(Icons.insights_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsHideRadioStats,
+                    ),
+                    value: settings.hideRadioStatsButton,
+                    onChanged: settingsService.setHideRadioStatsButton,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.cell_tower, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsSNRindicatorAllRepActivity,
+                    ),
+                    value: settings.snrIndicatorAllRepActivity,
+                    onChanged: settingsService.setSnrIndicatorAllRepActivity,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     secondary: const Icon(Icons.zoom_out_map, size: 20),
                     title: Text(
                       context
@@ -57,71 +89,6 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                     value: settings.hideMapZoomControls,
                     onChanged: settingsService.setHideMapZoomControls,
-                  ),
-                ),
-                MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    secondary: const Icon(Icons.aspect_ratio, size: 20),
-                    title: Text(
-                      context
-                          .l10n
-                          .settings_modSettingsVisualShowMCOimgResolution,
-                    ),
-                    value: settings.showMcoImageResolution,
-                    onChanged: settingsService.setShowMcoImageResolution,
-                  ),
-                ),
-                MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    secondary: const Icon(Icons.numbers, size: 20),
-                    title: Text(
-                      context.l10n.settings_modSettingsVisualShowMCOimgFormat,
-                    ),
-                    value: settings.showMcoImageFormat,
-                    onChanged: settingsService.setShowMcoImageFormat,
-                  ),
-                ),
-                MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    secondary: const Icon(
-                      Icons.account_tree_outlined,
-                      size: 20,
-                    ),
-                    title: Text(
-                      context.l10n.settings_modSettingsVisualShowMCOimgAlgo,
-                    ),
-                    value: settings.showMcoImageAlgorithm,
-                    onChanged: settingsService.setShowMcoImageAlgorithm,
-                  ),
-                ),
-                MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    secondary: const Icon(Icons.data_usage_outlined, size: 20),
-                    title: Text(
-                      context.l10n.settings_modSettingsVisualShowMCOimgBytes,
-                    ),
-                    value: settings.showMcoImageBytes,
-                    onChanged: settingsService.setShowMcoImageBytes,
                   ),
                 ),
                 MeshCard(
@@ -189,6 +156,48 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                     value: settings.channelsUnreadSorting,
                     onChanged: settingsService.setChannelsUnreadSorting,
+                  ),
+                ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.format_size, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context.l10n.settings_modSettingsDPIchange,
+                            ),
+                          ),
+                          Text(
+                            '${(settings.uiScale * 100).round()}%',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: const Icon(Icons.image_outlined, size: 20),
+                        title: Text(
+                          context.l10n.settings_modSettingsDPIchangeToIcons,
+                        ),
+                        value: settings.uiScaleApplyToIcons,
+                        onChanged: settingsService.setUiScaleApplyToIcons,
+                      ),
+                      Slider(
+                        value: settings.uiScale.clamp(0.5, 2.0).toDouble(),
+                        min: 0.5,
+                        max: 2.0,
+                        divisions: 30,
+                        label: '${(settings.uiScale * 100).round()}%',
+                        onChanged: (value) {
+                          settingsService.setUiScale((value * 20).round() / 20);
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
@@ -360,6 +369,193 @@ class ModSettingsScreen extends StatelessWidget {
                       onChanged: settingsService.setBackgroundTcpEnabled,
                     ),
                   ),
+                SectionHeader(context.l10n.settings_modSettingsMCOimg),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.aspect_ratio, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsVisualShowMCOimgResolution,
+                    ),
+                    value: settings.showMcoImageResolution,
+                    onChanged: settingsService.setShowMcoImageResolution,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.numbers, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgFormat,
+                    ),
+                    value: settings.showMcoImageFormat,
+                    onChanged: settingsService.setShowMcoImageFormat,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(
+                      Icons.account_tree_outlined,
+                      size: 20,
+                    ),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgAlgo,
+                    ),
+                    value: settings.showMcoImageAlgorithm,
+                    onChanged: settingsService.setShowMcoImageAlgorithm,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.data_usage_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsVisualShowMCOimgBytes,
+                    ),
+                    value: settings.showMcoImageBytes,
+                    onChanged: settingsService.setShowMcoImageBytes,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.image_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsMCOimg_showReplacements,
+                    ),
+                    value: settings.showMcoImagePackReplacements,
+                    onChanged: settingsService.setShowMcoImagePackReplacements,
+                  ),
+                ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.zoom_in, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsMCOimg_replacementsScale,
+                            ),
+                          ),
+                          Text(
+                            '${settings.mcoImageReplacementsScale.toStringAsFixed(1)}x',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: settings.mcoImageReplacementsScale
+                            .clamp(1.0, 5.0)
+                            .toDouble(),
+                        min: 1.0,
+                        max: 5.0,
+                        divisions: 40,
+                        label:
+                            '${settings.mcoImageReplacementsScale.toStringAsFixed(1)}x',
+                        onChanged: (value) {
+                          settingsService.setMcoImageReplacementsScale(
+                            (value * 10).round() / 10,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.grid_on, size: 20),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsMCOimg_scaleNearestNeighbor,
+                    ),
+                    value: settings.mcoImageScaleNearestNeighbor,
+                    onChanged: settingsService.setMcoImageScaleNearestNeighbor,
+                  ),
+                ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.deblur, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsMCOimg_replacementsSharp,
+                            ),
+                          ),
+                          Text(
+                            '${settings.mcoImageReplacementsSharpness}',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32),
+                        child: Text(
+                          context
+                              .l10n
+                              .settings_modSettingsMCOimg_replacementsSharpDscr,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      Slider(
+                        value: settings.mcoImageReplacementsSharpness
+                            .clamp(0, 10)
+                            .toDouble(),
+                        min: 0,
+                        max: 10,
+                        divisions: 10,
+                        label: '${settings.mcoImageReplacementsSharpness}',
+                        onChanged: (value) {
+                          settingsService.setMcoImageReplacementsSharpness(
+                            value.round(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ],
             );
           },

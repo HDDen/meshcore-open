@@ -36,6 +36,7 @@ import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
@@ -51,6 +52,8 @@ import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mco_image_original.dart';
+import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
@@ -93,9 +96,23 @@ class _ChatScreenState extends State<ChatScreen> {
   String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
+  StreamSubscription<void>? _mcmpSigningFailedSubscription;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+
+  /// Message ids whose MCOimg variant the user flipped away from the default
+  /// (the default is "show pack original" when the mod setting is enabled,
+  /// otherwise "show received LoRa version").
+  final Set<String> _mcoVariantOverridden = {};
+
+  /// Effective "render the received LoRa version" flag for a message,
+  /// combining the mod setting default with the per-message override.
+  bool _mcoForceLora(String messageId, bool showReplacements) {
+    final defaultLora = !showReplacements;
+    final overridden = _mcoVariantOverridden.contains(messageId);
+    return defaultLora != overridden;
+  }
 
   @override
   void initState() {
@@ -126,6 +143,9 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       connector.setActiveContact(keyHex);
       _connector = connector;
+      _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
+        (_) => _showMcmpSigningFailed(),
+      );
       if (PlatformInfo.isDesktop) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
@@ -217,6 +237,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -228,6 +249,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showMcmpSigningFailed() {
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_mcmpSigningFailed),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
   }
 
   @override
@@ -532,9 +562,14 @@ class _ChatScreenState extends State<ChatScreen> {
                         ? "${contact.name} [$fourByteHex]"
                         : contact.name,
                     sourceId: widget.contact.publicKeyHex,
+                    isRoomChat: resolvedContact.type == advTypeRoom,
+                    mcoVariantOverridden: _mcoVariantOverridden.contains(
+                      message.messageId,
+                    ),
                     textScale: textScale,
                     onTap: () => _openMessagePath(message, contact),
-                    onLongPress: () => _showMessageActions(message, contact),
+                    onLongPress: () =>
+                        unawaited(_showMessageActions(message, contact)),
                     onRetryReaction: (msg, emoji) =>
                         _sendReaction(msg, contact, emoji),
                     onAddSharedContact: _addSharedContact,
@@ -618,8 +653,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
                 onSendSelfContact: () => _insertSelfContact(connector),
-                onSendMyLocation: () =>
-                    unawaited(_insertMyLocation(connector)),
+                onSendMyLocation: () => unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
                 onPickLocationFromMap: () =>
                     unawaited(_pickAndInsertLocationFromMap()),
@@ -717,7 +751,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       hintText: context.l10n.chat_typeMessage,
                       hintMaxLines: 1,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(MeshRadii.md),
                       ),
                       filled: true,
                       fillColor: Theme.of(
@@ -1024,6 +1058,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
           !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          // Shared contact payloads must stay untouched.
+          parseSharedContactText(outgoingText) == null &&
           connector.isContactCyr2LatEnabled(
             _resolveContact(connector).publicKeyHex,
           )) {
@@ -1078,7 +1114,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   int _maxContactInputBytes(MeshCoreConnector connector) {
-    final limit = maxContactMessageBytes();
+    // Room servers store posts in a 151-byte buffer and silently truncate
+    // longer texts, which would destroy an MCMP container and its signature.
+    final limit = _resolveContact(connector).type == advTypeRoom
+        ? math.min(maxContactMessageBytes(), maxRoomServerTextBytes)
+        : maxContactMessageBytes();
     if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex)) {
       return math.max(0, limit - 2);
     }
@@ -1210,6 +1250,10 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
+    int selectedMcmpVersion = connector.contactMcmpVersion(
+      contact.publicKeyHex,
+    );
+    bool mcmpUseSign = connector.contactMcmpUseSign(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
@@ -1274,6 +1318,63 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
+                if (mcmpEnabled) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                    child: DropdownButtonFormField<int>(
+                      initialValue: selectedMcmpVersion,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.settings_mcmp_version,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 2, child: Text('v2 (legacy)')),
+                        DropdownMenuItem(value: 3, child: Text('v3')),
+                      ],
+                      onChanged: (value) {
+                        final normalized = value == 3 ? 3 : 2;
+                        connector.setContactMcmpVersion(
+                          contact.publicKeyHex,
+                          normalized,
+                        );
+                        setDialogState(() {
+                          selectedMcmpVersion = normalized;
+                        });
+                      },
+                    ),
+                  ),
+                  if (contact.type == advTypeRoom && selectedMcmpVersion == 3)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                      child: DropdownButtonFormField<bool>(
+                        initialValue: mcmpUseSign,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.settings_mcmp_useSign,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: true,
+                            child: Text(context.l10n.settings_mcmp_signed),
+                          ),
+                          DropdownMenuItem(
+                            value: false,
+                            child: Text(context.l10n.settings_mcmp_noSign),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          final normalized = value ?? true;
+                          connector.setContactMcmpUseSign(
+                            contact.publicKeyHex,
+                            normalized,
+                          );
+                          setDialogState(() {
+                            mcmpUseSign = normalized;
+                          });
+                        },
+                      ),
+                    ),
+                ],
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -1525,7 +1626,19 @@ class _ChatScreenState extends State<ChatScreen> {
       compressionSavingsPercent: message.compressionSavingsPercent,
       compressionOriginalBytes: message.compressionOriginalBytes,
       compressionPayloadBytes: message.compressionPayloadBytes,
+      mcmpSignatureStatus: message.mcmpSignatureStatus,
+      mcmpTimestamp: message.mcmpTimestamp,
+      mcmpSenderName: message.mcmpSenderName,
+      mcmpIsSigned: message.mcmpIsSigned,
+      mcmpSignature: message.mcmpSignature,
+      mcmpReplyAuthorName: message.mcmpReplyAuthorName,
+      mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+      verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+      mcmpNameCollision: message.mcmpNameCollision,
       timestamp: message.timestamp,
+      // Room-server posts / outgoing have no receive time → epoch 0 renders
+      // as a dash on the path screen; contacts carry the real receivedAt.
+      receivedAt: message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
@@ -1570,9 +1683,13 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _showMessageActions(Message message, Contact contact) {
+  Future<void> _showMessageActions(Message message, Contact contact) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final hasMcoOriginal = mcoImage == null
+        ? false
+        : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
+    if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
@@ -1621,6 +1738,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     _copyMessageText(message.text);
                   },
                 ),
+                if (hasMcoOriginal)
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                      _mcoForceLora(
+                            message.messageId,
+                            settings.showMcoImagePackReplacements,
+                          )
+                          ? context.l10n.mcogallery_showPacked
+                          : context.l10n.mcogallery_showLora,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMcoImageVariant(message.messageId);
+                    },
+                  ),
                 if (mcoImage != null)
                   ListTile(
                     leading: const Icon(Icons.photo_library_outlined),
@@ -1718,6 +1851,19 @@ class _ChatScreenState extends State<ChatScreen> {
                       _openChat(context, contact);
                     },
                   ),
+                if (!message.isOutgoing &&
+                    message.mcmpIsSigned &&
+                    message.mcmpSignature != null &&
+                    _resolveContact(context.read<MeshCoreConnector>()).type ==
+                        advTypeRoom)
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(context.l10n.chat_mcmpManualRecheckSign),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_recheckMessageSignature(message));
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.close),
                   title: Text(context.l10n.common_cancel),
@@ -1728,6 +1874,19 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _recheckMessageSignature(Message message) async {
+    final connector = context.read<MeshCoreConnector>();
+    final status = await connector.recheckContactMessageSignature(
+      _resolveContact(connector).publicKeyHex,
+      message.messageId,
+    );
+    if (!mounted || status == null) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(McmpSignatureBadge.statusLabel(context, status)),
     );
   }
 
@@ -1750,6 +1909,14 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  void _toggleMcoImageVariant(String messageId) {
+    setState(() {
+      if (!_mcoVariantOverridden.add(messageId)) {
+        _mcoVariantOverridden.remove(messageId);
+      }
+    });
   }
 
   Future<void> _saveMcoImageToGallery(String text) async {
@@ -1906,11 +2073,21 @@ class _MessageBubble extends StatelessWidget {
   final double textScale;
   final String sourceId;
 
+  /// Signature badges are shown only in room-server chats; direct messages
+  /// are authenticated by the ECDH transport and show no badge at all.
+  final bool isRoomChat;
+
+  /// Per-message override flipping the MCOimg variant away from the default
+  /// chosen by the mod setting.
+  final bool mcoVariantOverridden;
+
   const _MessageBubble({
     required this.message,
     required this.senderName,
     required this.sourceId,
     required this.textScale,
+    this.isRoomChat = false,
+    this.mcoVariantOverridden = false,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -1924,8 +2101,17 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    // flutter_linkify ignores the ambient MediaQuery scaler, so the message
+    // body must apply the global UI scale explicitly (as an additional
+    // multiplier for backward compatibility with the untouched system scale).
+    final bodyTextScaler = TextScaler.linear(settingsService.settings.uiScale);
     final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
+    // Default is "show pack original" when replacements are enabled; the
+    // per-message override flips it.
+    final mcoForceLora =
+        !settingsService.settings.showMcoImagePackReplacements !=
+        mcoVariantOverridden;
     final isOutgoing = message.isOutgoing;
     final compressionType =
         message.compressionType ??
@@ -1934,9 +2120,15 @@ class _MessageBubble extends StatelessWidget {
         showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
-    final compressionLabel = compressionType == null
+    // MCMP labels carry the format version: "mcmp3" / "mcmp2".
+    final compressionTypeLabel = compressionType == null
         ? null
-        : '$compressionRatioPrefix${compressionType.label}';
+        : compressionType == MessageCompressionType.mcmp
+        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        : compressionType.label;
+    final compressionLabel = compressionTypeLabel == null
+        ? null
+        : '$compressionRatioPrefix$compressionTypeLabel';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
@@ -2119,6 +2311,33 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2173,9 +2392,19 @@ class _MessageBubble extends StatelessWidget {
                         else if (mcoImage != null)
                           Stack(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: MCOImageMessage(image: mcoImage),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: MCOImageOriginalOrFallback(
+                                    text: message.text,
+                                    image: mcoImage,
+                                    forceLora: mcoForceLora,
+                                  ),
+                                ),
                               ),
                               if (!enableTracing && isOutgoing)
                                 Positioned(
@@ -2200,7 +2429,7 @@ class _MessageBubble extends StatelessWidget {
                                           MessageStatus.failed,
                                     ),
                                   ),
-                              ),
+                                ),
                             ],
                           )
                         else if (sharedContact != null)
@@ -2238,6 +2467,33 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2258,6 +2514,10 @@ class _MessageBubble extends StatelessWidget {
                                     color: textColor.withValues(alpha: 0.78),
                                     fontSize: bodyFontSize * textScale,
                                   ),
+                                  textScaler: bodyTextScaler,
+                                  onSecondaryTap: PlatformInfo.isDesktop
+                                      ? onLongPress
+                                      : null,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
@@ -2273,9 +2533,71 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
+                        // Incoming signature badge: room-server chats only,
+                        // on its own line above the message time, independent
+                        // of the message-tracing setting. Direct messages
+                        // never show the badge; outgoing messages show their
+                        // lock in the meta row after the compression label.
+                        if (isRoomChat &&
+                            !isOutgoing &&
+                            McmpSignatureBadge.isVisible(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: isOutgoing,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                            )) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: McmpSignatureBadge(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: isOutgoing,
+                              isSigned: message.mcmpIsSigned,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                              verifiedSenderKeyHex:
+                                  message.verifiedSenderKeyHex,
+                              nameCollision: message.mcmpNameCollision,
+                              // Direct messages never show a fingerprint;
+                              // room posts do.
+                              showFingerprint:
+                                  message.fourByteRoomContactKey.isNotEmpty,
+                              textScale: textScale,
+                              color: metaColor,
+                              errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
                         if (enableTracing) ...[
                           if (isOutgoing && message.retryCount > 0) ...[
                             const SizedBox(height: 4),
@@ -2375,6 +2697,30 @@ class _MessageBubble extends StatelessWidget {
                                       fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
+                                  ),
+                                ],
+                                // Outgoing signing lock (room chats), right
+                                // after the compression-type label.
+                                if (isRoomChat &&
+                                    isOutgoing &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  McmpSignatureBadge(
+                                    status: message.mcmpSignatureStatus,
+                                    isOutgoing: true,
+                                    isSigned: message.mcmpIsSigned,
+                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    verifiedSenderKeyHex:
+                                        message.verifiedSenderKeyHex,
+                                    nameCollision: message.mcmpNameCollision,
+                                    showFingerprint: false,
+                                    textScale: textScale,
+                                    color: metaColor,
+                                    errorColor: scheme.error,
                                   ),
                                 ],
                                 if (sharedHistorySourceName != null &&

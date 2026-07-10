@@ -14,6 +14,14 @@ class AppSettingsService extends ChangeNotifier {
 
   AppSettings get settings => _settings;
 
+  int resolvedGpsIntervalSeconds(Map<String, String>? deviceCustomVars) {
+    final deviceValue = int.tryParse(deviceCustomVars?['gps_interval'] ?? '');
+    if (deviceValue != null && deviceValue >= 0) {
+      return deviceValue;
+    }
+    return _settings.gpsIntervalSeconds;
+  }
+
   String batteryChemistryForDevice(String deviceId) {
     final stored = _settings.batteryChemistryByDeviceId[deviceId];
     if (stored == 'liion') return 'nmc';
@@ -152,6 +160,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setHideRadioStatsButton(bool value) async {
+    await updateSettings(_settings.copyWith(hideRadioStatsButton: value));
+  }
+
+  Future<void> setSnrIndicatorAllRepActivity(bool value) async {
+    await updateSettings(_settings.copyWith(snrIndicatorAllRepActivity: value));
+  }
+
   Future<void> setHideMapZoomControls(bool value) async {
     await updateSettings(_settings.copyWith(hideMapZoomControls: value));
   }
@@ -170,6 +186,36 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setShowMcoImageBytes(bool value) async {
     await updateSettings(_settings.copyWith(showMcoImageBytes: value));
+  }
+
+  Future<void> setShowMcoImagePackReplacements(bool value) async {
+    await updateSettings(
+      _settings.copyWith(showMcoImagePackReplacements: value),
+    );
+  }
+
+  Future<void> setMcoImageReplacementsScale(double value) async {
+    await updateSettings(_settings.copyWith(mcoImageReplacementsScale: value));
+  }
+
+  Future<void> setMcoImageScaleNearestNeighbor(bool value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageScaleNearestNeighbor: value),
+    );
+  }
+
+  Future<void> setMcoImageReplacementsSharpness(int value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageReplacementsSharpness: value),
+    );
+  }
+
+  Future<void> setUiScale(double value) async {
+    await updateSettings(_settings.copyWith(uiScale: value));
+  }
+
+  Future<void> setUiScaleApplyToIcons(bool value) async {
+    await updateSettings(_settings.copyWith(uiScaleApplyToIcons: value));
   }
 
   Future<void> setShowCompressionRatio(bool value) async {
@@ -226,6 +272,25 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMapRasterSourceId(String value) async {
+    await updateSettings(_settings.copyWith(mapRasterSourceId: value));
+  }
+
+  Future<void> setMapTileEndpointId(String value) async {
+    await updateSettings(_settings.copyWith(mapTileEndpointId: value));
+  }
+
+  Future<void> setMapTileApiKey(String? value) async {
+    final normalized = value?.trim();
+    await updateSettings(
+      _settings.copyWith(
+        mapTileApiKey: (normalized == null || normalized.isEmpty)
+            ? null
+            : normalized,
+      ),
+    );
+  }
+
   Future<void> setNotificationsEnabled(bool value) async {
     await updateSettings(_settings.copyWith(notificationsEnabled: value));
   }
@@ -240,6 +305,28 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setNotifyOnNewAdvert(bool value) async {
     await updateSettings(_settings.copyWith(notifyOnNewAdvert: value));
+  }
+
+  Future<void> setAutoSendZeroHopAdvertOnGpsUpdate(bool value) async {
+    await updateSettings(
+      _settings.copyWith(autoSendZeroHopAdvertOnGpsUpdate: value),
+    );
+  }
+
+  Future<void> setGpsIntervalSeconds(
+    int value, {
+    Future<void> Function(int value)? writeToDevice,
+  }) async {
+    await updateSettings(_settings.copyWith(gpsIntervalSeconds: value));
+    if (writeToDevice == null) return;
+    try {
+      await writeToDevice(value);
+    } catch (e) {
+      appLogger.warn(
+        'Failed to write GPS interval to device: $e',
+        tag: 'AppSettings',
+      );
+    }
   }
 
   Future<void> setAutoRouteRotationEnabled(bool value) async {
