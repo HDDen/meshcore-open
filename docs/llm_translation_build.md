@@ -5,13 +5,13 @@ This is useful for regional builds where incoming/outgoing message translation
 is not needed and the native `llamadart`/LiteRT/Gemma libraries make packages
 too large.
 
-This flag does not disable MCMP or MeshCompressor. The MeshCompressor assets:
+This flag does not disable MCMP or MeshCompressor. The current MeshCompressor
+asset:
 
-- `assets/models/model-universal-10lang.json`
 - `assets/models/model-en-ru.json`
 
-remain part of the app because they are used by message compression, not by
-LLM translation.
+remains part of the app because it is used by message compression, not by LLM
+translation.
 
 ## Default build
 

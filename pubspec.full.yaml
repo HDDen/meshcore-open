@@ -119,7 +119,6 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/mcopacks/
-    - assets/models/model-universal-10lang.json
     - assets/models/model-en-ru.json
     - assets/fonts/
 
