@@ -11,6 +11,7 @@ import 'package:meshcore_open/screens/region_management_screen.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:provider/provider.dart';
 
+import '../config/build_features.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
@@ -2512,7 +2513,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
                 ),
-                if (settings.translationEnabled)
+                if (BuildFeatures.llmTranslationEnabled &&
+                    settings.translationEnabled)
                   MessageTranslationButton(
                     enabled: settings.composerTranslationEnabled,
                     languageCode: settings.translationTargetLanguageCode,
@@ -2714,7 +2716,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled && !skipTranslation) {
+    if (BuildFeatures.llmTranslationEnabled &&
+        settings.translationEnabled &&
+        !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );

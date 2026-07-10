@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../config/build_features.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/translation_support.dart';
@@ -99,7 +100,8 @@ class AppSettingsScreen extends StatelessWidget {
                         ),
 
                         // TRANSLATION (non-web only)
-                        if (!kIsWeb) ...[
+                        if (!kIsWeb &&
+                            BuildFeatures.llmTranslationEnabled) ...[
                           SectionHeader(context.l10n.translation_title),
                           MeshCard(
                             padding: EdgeInsets.zero,
