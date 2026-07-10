@@ -6352,8 +6352,8 @@ class MeshCoreConnector extends ChangeNotifier {
         note: 'raw fragment len=${incomingFrame.length}',
       );
     }
-    final isResponseToSyncNextMessage =
-        _queuedFragmentAckTracker.takeSyncResponseContext(incomingFrame);
+    final isResponseToSyncNextMessage = _queuedFragmentAckTracker
+        .takeSyncResponseContext(incomingFrame);
     final result = _frameFragmentReassembler.ingestDetailed(incomingFrame);
     final acceptedFragment = result.acceptedFragment;
     if (isResponseToSyncNextMessage && acceptedFragment != null) {

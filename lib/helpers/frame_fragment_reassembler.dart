@@ -116,7 +116,8 @@ class FrameFragmentReassembler {
     }
 
     final existing = _pending[fragmentId];
-    final set = existing ??
+    final set =
+        existing ??
         _FragmentSet(
           originalFrameType: originalFrameType,
           originalFrameLength: originalFrameLength,
@@ -136,7 +137,8 @@ class FrameFragmentReassembler {
 
     final previous = set.fragments[fragmentIndex];
     if (previous != null) {
-      if (previous.offset == chunkOffset && _bytesEqual(previous.bytes, chunk)) {
+      if (previous.offset == chunkOffset &&
+          _bytesEqual(previous.bytes, chunk)) {
         set.updatedAt = now;
         _pending[fragmentId] = set;
         return _FragmentIngestResult(acceptedFragment: info);
@@ -164,15 +166,10 @@ class FrameFragmentReassembler {
       return const _FragmentIngestResult();
     }
     if (rebuilt.isEmpty || rebuilt[0] != set.originalFrameType) {
-      _warn(
-        'Dropping frame fragment set $fragmentId: original type mismatch',
-      );
+      _warn('Dropping frame fragment set $fragmentId: original type mismatch');
       return const _FragmentIngestResult();
     }
-    return _FragmentIngestResult(
-      rebuiltFrame: rebuilt,
-      acceptedFragment: info,
-    );
+    return _FragmentIngestResult(rebuiltFrame: rebuilt, acceptedFragment: info);
   }
 
   void _pruneExpired(DateTime now) {
@@ -203,10 +200,7 @@ class FrameFragmentReassembler {
 }
 
 class _FragmentIngestResult {
-  const _FragmentIngestResult({
-    this.rebuiltFrame,
-    this.acceptedFragment,
-  });
+  const _FragmentIngestResult({this.rebuiltFrame, this.acceptedFragment});
 
   final Uint8List? rebuiltFrame;
   final FrameFragmentInfo? acceptedFragment;

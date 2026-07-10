@@ -5,10 +5,7 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/frame_fragment_reassembler.dart';
 import 'package:meshcore_open/helpers/queued_fragment_ack_tracker.dart';
 
-FrameFragmentInfo _fragmentInfo({
-  required int id,
-  required int index,
-}) {
+FrameFragmentInfo _fragmentInfo({required int id, required int index}) {
   return FrameFragmentInfo(
     fragmentId: id,
     fragmentIndex: index,
@@ -20,10 +17,7 @@ FrameFragmentInfo _fragmentInfo({
   );
 }
 
-Uint8List _fragmentFrame({
-  required int id,
-  required int index,
-}) {
+Uint8List _fragmentFrame({required int id, required int index}) {
   return Uint8List.fromList(<int>[
     FrameFragmentReassembler.fragmentFrameType,
     id & 0xFF,
@@ -189,7 +183,9 @@ void main() {
       );
       tracker.markSyncRequestSent();
       expect(
-        tracker.takeSyncResponseContext(Uint8List.fromList(<int>[pushCodeLogRxData])),
+        tracker.takeSyncResponseContext(
+          Uint8List.fromList(<int>[pushCodeLogRxData]),
+        ),
         isFalse,
       );
 

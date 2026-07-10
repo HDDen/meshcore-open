@@ -20,9 +20,7 @@ class QueuedFragmentAckTracker {
   PendingQueuedFragmentAck? get pendingAck => _pendingAck;
   bool get awaitingSyncResponse => _awaitingSyncResponse;
 
-  Uint8List buildSyncNextMessageFrameFor({
-    required bool supportsFragmentAck,
-  }) {
+  Uint8List buildSyncNextMessageFrameFor({required bool supportsFragmentAck}) {
     final ack = supportsFragmentAck ? _pendingAck : null;
     if (ack == null) return buildSyncNextMessageFrame();
     return buildSyncNextMessageFrame(

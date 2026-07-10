@@ -7,7 +7,10 @@ void main() {
   });
 
   test('sync next message frame uses old format without fragment ACK', () {
-    expect(buildSyncNextMessageFrame(), orderedEquals(<int>[cmdSyncNextMessage]));
+    expect(
+      buildSyncNextMessageFrame(),
+      orderedEquals(<int>[cmdSyncNextMessage]),
+    );
   });
 
   test('sync next message frame can include queued fragment ACK', () {

@@ -48,12 +48,26 @@ void main() {
 
       expect(
         reassembler.ingest(
-          _fragment(id: 7, index: 0, count: 2, original: original, offset: 0, length: 3),
+          _fragment(
+            id: 7,
+            index: 0,
+            count: 2,
+            original: original,
+            offset: 0,
+            length: 3,
+          ),
         ),
         isEmpty,
       );
       final result = reassembler.ingest(
-        _fragment(id: 7, index: 1, count: 2, original: original, offset: 3, length: 3),
+        _fragment(
+          id: 7,
+          index: 1,
+          count: 2,
+          original: original,
+          offset: 3,
+          length: 3,
+        ),
       );
 
       expect(result, hasLength(1));
@@ -65,7 +79,14 @@ void main() {
       final original = Uint8List.fromList(<int>[0x88, 1, 2, 3, 4, 5]);
 
       final first = reassembler.ingestDetailed(
-        _fragment(id: 0x1234, index: 0, count: 2, original: original, offset: 0, length: 3),
+        _fragment(
+          id: 0x1234,
+          index: 0,
+          count: 2,
+          original: original,
+          offset: 0,
+          length: 3,
+        ),
       );
 
       expect(first.frames, isEmpty);
@@ -74,38 +95,47 @@ void main() {
       expect(first.acceptedFragment!.fragmentIndex, equals(0));
       expect(first.acceptedFragment!.fragmentCount, equals(2));
       expect(first.acceptedFragment!.originalFrameType, equals(0x88));
-      expect(first.acceptedFragment!.originalFrameLength, equals(original.length));
+      expect(
+        first.acceptedFragment!.originalFrameLength,
+        equals(original.length),
+      );
       expect(first.acceptedFragment!.chunkOffset, equals(0));
       expect(first.acceptedFragment!.chunkLength, equals(3));
     });
 
-    test('reports duplicate identical fragment metadata without rebuilding', () {
-      final reassembler = FrameFragmentReassembler();
-      final original = Uint8List.fromList(<int>[0x11, 1, 2, 3]);
-      final first = _fragment(
-        id: 0x2222,
-        index: 0,
-        count: 2,
-        original: original,
-        offset: 0,
-        length: 2,
-      );
+    test(
+      'reports duplicate identical fragment metadata without rebuilding',
+      () {
+        final reassembler = FrameFragmentReassembler();
+        final original = Uint8List.fromList(<int>[0x11, 1, 2, 3]);
+        final first = _fragment(
+          id: 0x2222,
+          index: 0,
+          count: 2,
+          original: original,
+          offset: 0,
+          length: 2,
+        );
 
-      expect(reassembler.ingestDetailed(first).acceptedFragment, isNotNull);
-      final duplicate = reassembler.ingestDetailed(first);
+        expect(reassembler.ingestDetailed(first).acceptedFragment, isNotNull);
+        final duplicate = reassembler.ingestDetailed(first);
 
-      expect(duplicate.frames, isEmpty);
-      expect(duplicate.acceptedFragment, isNotNull);
-      expect(duplicate.acceptedFragment!.fragmentId, equals(0x2222));
-      expect(duplicate.acceptedFragment!.fragmentIndex, equals(0));
-    });
+        expect(duplicate.frames, isEmpty);
+        expect(duplicate.acceptedFragment, isNotNull);
+        expect(duplicate.acceptedFragment!.fragmentId, equals(0x2222));
+        expect(duplicate.acceptedFragment!.fragmentIndex, equals(0));
+      },
+    );
 
     test('does not report metadata for invalid fragment', () {
       final warnings = <String>[];
       final reassembler = FrameFragmentReassembler(onWarning: warnings.add);
 
       final result = reassembler.ingestDetailed(
-        Uint8List.fromList(<int>[FrameFragmentReassembler.fragmentFrameType, 0x01]),
+        Uint8List.fromList(<int>[
+          FrameFragmentReassembler.fragmentFrameType,
+          0x01,
+        ]),
       );
 
       expect(result.frames, isEmpty);
@@ -119,12 +149,26 @@ void main() {
 
       expect(
         reassembler.ingest(
-          _fragment(id: 8, index: 1, count: 2, original: original, offset: 3, length: 3),
+          _fragment(
+            id: 8,
+            index: 1,
+            count: 2,
+            original: original,
+            offset: 3,
+            length: 3,
+          ),
         ),
         isEmpty,
       );
       final result = reassembler.ingest(
-        _fragment(id: 8, index: 0, count: 2, original: original, offset: 0, length: 3),
+        _fragment(
+          id: 8,
+          index: 0,
+          count: 2,
+          original: original,
+          offset: 0,
+          length: 3,
+        ),
       );
 
       expect(result, hasLength(1));
@@ -146,7 +190,14 @@ void main() {
       expect(reassembler.ingest(first), isEmpty);
       expect(reassembler.ingest(first), isEmpty);
       final result = reassembler.ingest(
-        _fragment(id: 9, index: 1, count: 2, original: original, offset: 2, length: 2),
+        _fragment(
+          id: 9,
+          index: 1,
+          count: 2,
+          original: original,
+          offset: 2,
+          length: 2,
+        ),
       );
 
       expect(result, hasLength(1));
@@ -171,7 +222,14 @@ void main() {
       expect(reassembler.ingest(conflict), isEmpty);
       expect(
         reassembler.ingest(
-          _fragment(id: 10, index: 1, count: 2, original: original, offset: 2, length: 2),
+          _fragment(
+            id: 10,
+            index: 1,
+            count: 2,
+            original: original,
+            offset: 2,
+            length: 2,
+          ),
         ),
         isEmpty,
       );
@@ -185,7 +243,14 @@ void main() {
 
       expect(
         reassembler.ingest(
-          _fragment(id: 11, index: 0, count: 2, original: original, offset: 0, length: 2),
+          _fragment(
+            id: 11,
+            index: 0,
+            count: 2,
+            original: original,
+            offset: 0,
+            length: 2,
+          ),
         ),
         isEmpty,
       );
@@ -210,7 +275,10 @@ void main() {
       final reassembler = FrameFragmentReassembler(onWarning: warnings.add);
 
       final result = reassembler.ingest(
-        Uint8List.fromList(<int>[FrameFragmentReassembler.fragmentFrameType, 0x01]),
+        Uint8List.fromList(<int>[
+          FrameFragmentReassembler.fragmentFrameType,
+          0x01,
+        ]),
       );
 
       expect(result, isEmpty);
@@ -279,14 +347,28 @@ void main() {
 
       expect(
         reassembler.ingest(
-          _fragment(id: 13, index: 0, count: 2, original: original, offset: 0, length: 2),
+          _fragment(
+            id: 13,
+            index: 0,
+            count: 2,
+            original: original,
+            offset: 0,
+            length: 2,
+          ),
         ),
         isEmpty,
       );
       reassembler.clear();
       expect(
         reassembler.ingest(
-          _fragment(id: 13, index: 1, count: 2, original: original, offset: 2, length: 2),
+          _fragment(
+            id: 13,
+            index: 1,
+            count: 2,
+            original: original,
+            offset: 2,
+            length: 2,
+          ),
         ),
         isEmpty,
       );
@@ -338,12 +420,26 @@ void main() {
 
       expect(
         reassembler.ingest(
-          _fragment(id: 14, index: 0, count: 2, original: original, offset: 0, length: 2),
+          _fragment(
+            id: 14,
+            index: 0,
+            count: 2,
+            original: original,
+            offset: 0,
+            length: 2,
+          ),
         ),
         isEmpty,
       );
       final result = reassembler.ingest(
-        _fragment(id: 14, index: 1, count: 2, original: original, offset: 2, length: 2),
+        _fragment(
+          id: 14,
+          index: 1,
+          count: 2,
+          original: original,
+          offset: 2,
+          length: 2,
+        ),
       );
 
       expect(result, hasLength(1));
@@ -368,10 +464,24 @@ void main() {
       ]);
 
       final first = reassembler.ingest(
-        _fragment(id: 15, index: 0, count: 2, original: original, offset: 0, length: 6),
+        _fragment(
+          id: 15,
+          index: 0,
+          count: 2,
+          original: original,
+          offset: 0,
+          length: 6,
+        ),
       );
       final second = reassembler.ingest(
-        _fragment(id: 15, index: 1, count: 2, original: original, offset: 6, length: 6),
+        _fragment(
+          id: 15,
+          index: 1,
+          count: 2,
+          original: original,
+          offset: 6,
+          length: 6,
+        ),
       );
 
       expect(first, isEmpty);
