@@ -4944,6 +4944,12 @@ class MeshCoreConnector extends ChangeNotifier {
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       final sentByRadioAt = DateTime.now();
       _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
+      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      _updateChannelMessagePacketTimestamp(
+        channel.index,
+        message.messageId,
+        sentTimestampSeconds,
+      );
       if (binaryFrame != null) {
         await _sendFrameAndWaitForCommandAck(
           binaryFrame,
@@ -4955,12 +4961,6 @@ class MeshCoreConnector extends ChangeNotifier {
       // Stamp the outgoing packet with the actual send time and align the
       // stored message.timestamp to the exact value that went on the air, so
       // replies to our own message resolve by exact-timestamp matching.
-      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
-      _updateChannelMessagePacketTimestamp(
-        channel.index,
-        message.messageId,
-        sentTimestampSeconds,
-      );
       await _sendFrameAndWaitForCommandAck(
         buildSendChannelTextMsgFrame(
           channel.index,
@@ -5082,6 +5082,12 @@ class MeshCoreConnector extends ChangeNotifier {
       await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
       final sentByRadioAt = DateTime.now();
       _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
+      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+      _updateChannelMessagePacketTimestamp(
+        pending.channel.index,
+        pending.messageId,
+        sentTimestampSeconds,
+      );
       if (binaryFrame != null) {
         await _sendFrameAndWaitForCommandAck(
           binaryFrame,
@@ -5090,12 +5096,6 @@ class MeshCoreConnector extends ChangeNotifier {
         );
         return;
       }
-      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
-      _updateChannelMessagePacketTimestamp(
-        pending.channel.index,
-        pending.messageId,
-        sentTimestampSeconds,
-      );
       await _sendFrameAndWaitForCommandAck(
         buildSendChannelTextMsgFrame(
           pending.channel.index,
@@ -8195,13 +8195,13 @@ class MeshCoreConnector extends ChangeNotifier {
 
   /// Resolves a reply anchor ("author name + timestamp" as transmitted in the
   /// MCMP v3 body of the *replying* message) against the channel history. The
-  /// quoted message may be any message that carries a canonical timestamp —
-  /// plain group_text (incl. contact-share) via its outer packet timestamp, or
-  /// MCMP v3 via its body timestamp. MCOimg / legacy binary datagrams carry no
-  /// timestamp on the wire (receiver-local only), so they are skipped. A
-  /// candidate matches when its author is [replyAuthorName] and its canonical
-  /// timestamp equals [replyTimestamp] exactly. When nothing matches exactly,
-  /// returns an author-name-only reference (rendered as an @mention).
+  /// quoted message may be any message that carries a timestamp visible in the
+  /// chat history: plain group_text via its outer packet timestamp, MCMP v3 via
+  /// its body timestamp, or binary payloads such as MCOimg via their stored
+  /// packet/log timestamp. A candidate matches when its author is
+  /// [replyAuthorName] and one of its timestamps equals [replyTimestamp]
+  /// exactly. When nothing matches exactly, returns an author-name-only
+  /// reference (rendered as an @mention).
   _McmpReplyReference? _resolveChannelReplyAnchor(
     int channelIndex,
     String? replyAuthorName,
@@ -8218,11 +8218,6 @@ class MeshCoreConnector extends ChangeNotifier {
     for (var i = messages.length - 1; i >= 0; i--) {
       final message = messages[i];
       if (message.senderName.trim() != replySender) continue;
-      // Binary datagrams without an MCMP body timestamp (MCOimg / legacy) have
-      // only a receiver-local timestamp and cannot be matched reliably.
-      if (message.wasBinaryTransport && message.mcmpTimestamp == null) {
-        continue;
-      }
       final outerTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
       if (outerTimestamp == replyTimestamp ||
           message.mcmpTimestamp == replyTimestamp) {

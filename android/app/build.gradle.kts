@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.util.Base64
 
 plugins {
     id("com.android.application")
@@ -12,6 +13,32 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+
+fun dartDefine(name: String): String? {
+    val encodedDefines = (project.findProperty("dart-defines") as? String)
+        ?.split(",")
+        ?: return null
+    for (encoded in encodedDefines) {
+        if (encoded.isBlank()) continue
+        val decoded = try {
+            String(Base64.getDecoder().decode(encoded))
+        } catch (_: IllegalArgumentException) {
+            continue
+        }
+        val separator = decoded.indexOf('=')
+        if (separator <= 0) continue
+        if (decoded.substring(0, separator) == name) {
+            return decoded.substring(separator + 1)
+        }
+    }
+    return null
+}
+
+val llmTranslationEnabled =
+    dartDefine("MESHCORE_ENABLE_TRANSLATION")?.toBooleanStrictOrNull()
+        ?: (project.findProperty("meshcore.enableLlmTranslation") as? String)
+            ?.toBooleanStrictOrNull()
+        ?: true
 
 android {
     namespace = "com.meshcore.mcoadvanced"
@@ -66,6 +93,21 @@ android {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
+            }
+        }
+    }
+
+    packaging {
+        jniLibs {
+            if (!llmTranslationEnabled) {
+                excludes += listOf(
+                    "**/libGemmaModelConstraintProvider.so",
+                    "**/libLiteRt*.so",
+                    "**/libggml*.so",
+                    "**/libllama*.so",
+                    "**/libllamadart.so",
+                    "**/libmtmd.so"
+                )
             }
         }
     }

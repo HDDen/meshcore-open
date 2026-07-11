@@ -35,6 +35,7 @@ import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/app_route_observer.dart';
+import 'widgets/edge_swipe_pop.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -318,6 +319,12 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
                   ),
                 );
               }
+
+              content = EdgeSwipePop(
+                navigatorKey: MeshCoreApp._navigatorKey,
+                enabled: PlatformInfo.isMobile,
+                child: content,
+              );
 
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: _systemUiOverlayStyle(context),

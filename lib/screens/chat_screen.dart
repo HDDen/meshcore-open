@@ -13,6 +13,7 @@ import '../utils/platform_info.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../config/build_features.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
@@ -663,7 +664,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     _showMcoImageGallery(connector, maxBytes),
               ),
             ),
-            if (settings.translationEnabled)
+            if (BuildFeatures.llmTranslationEnabled &&
+                settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
                 languageCode: settings.translationTargetLanguageCode,
@@ -1017,7 +1019,9 @@ class _ChatScreenState extends State<ChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled && !skipTranslation) {
+    if (BuildFeatures.llmTranslationEnabled &&
+        settings.translationEnabled &&
+        !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -2746,6 +2750,9 @@ class _MessageBubble extends StatelessWidget {
                             delaySeconds: pendingSendDelaySeconds!,
                             onCancel: onCancelPendingSend!,
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),

@@ -11,6 +11,7 @@ import 'package:meshcore_open/screens/region_management_screen.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:provider/provider.dart';
 
+import '../config/build_features.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
@@ -1692,6 +1693,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               message.messageId,
                             ),
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),
@@ -1949,7 +1953,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } else if (mcoImage != null) {
       contentPreview = ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: MCOImageMessage(image: mcoImage, maxSize: 80),
+        child: MCOImageOriginalOrFallback(
+          text: replyText,
+          image: mcoImage,
+          maxSize: 80,
+          forceLora: _mcoForceLora(
+            message.replyToMessageId ?? '${message.messageId}:reply',
+            context
+                .watch<AppSettingsService>()
+                .settings
+                .showMcoImagePackReplacements,
+          ),
+        ),
       );
     } else if (unsupportedMcoImageVersion != null) {
       contentPreview = _buildUnsupportedMcoImageMessage(
@@ -2367,9 +2382,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               child: SizedBox(
                 width: width,
                 height: height,
-                child: MCOImageMessage(
+                child: MCOImageOriginalOrFallback(
+                  text: message.text,
                   image: mcoImage,
                   maxSize: width > height ? width : height,
+                  forceLora: _mcoForceLora(
+                    message.messageId,
+                    context
+                        .watch<AppSettingsService>()
+                        .settings
+                        .showMcoImagePackReplacements,
+                  ),
                 ),
               ),
             ),
@@ -2512,7 +2535,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
                 ),
-                if (settings.translationEnabled)
+                if (BuildFeatures.llmTranslationEnabled &&
+                    settings.translationEnabled)
                   MessageTranslationButton(
                     enabled: settings.composerTranslationEnabled,
                     languageCode: settings.translationTargetLanguageCode,
@@ -2714,7 +2738,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled && !skipTranslation) {
+    if (BuildFeatures.llmTranslationEnabled &&
+        settings.translationEnabled &&
+        !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
