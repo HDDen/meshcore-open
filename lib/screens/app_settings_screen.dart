@@ -100,8 +100,7 @@ class AppSettingsScreen extends StatelessWidget {
                         ),
 
                         // TRANSLATION (non-web only)
-                        if (!kIsWeb &&
-                            BuildFeatures.llmTranslationEnabled) ...[
+                        if (!kIsWeb && BuildFeatures.llmTranslationEnabled) ...[
                           SectionHeader(context.l10n.translation_title),
                           MeshCard(
                             padding: EdgeInsets.zero,
