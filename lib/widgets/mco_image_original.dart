@@ -13,10 +13,8 @@ import 'mco_image_message.dart';
 
 class _ResolvedOriginal {
   final File file;
-  final int width;
-  final int height;
 
-  const _ResolvedOriginal(this.file, this.width, this.height);
+  const _ResolvedOriginal(this.file);
 }
 
 /// Renders a received MCOimg message, preferring the original image
@@ -24,7 +22,10 @@ class _ResolvedOriginal {
 /// payload identity hash matches a pack item. Falls back to rendering the
 /// received LoRa version when the image is unknown or the original file is
 /// missing. The original is shown inside the same box as the LoRa render, so
-/// only the picture changes — not the bubble layout.
+/// only the picture changes, not the bubble layout. Keeping the outer size
+/// stable is important for reverse chat lists: if an async original image load
+/// changes an old message height below the viewport, Flutter may repeatedly
+/// correct the scroll offset while the user scrolls back to newer messages.
 class MCOImageOriginalOrFallback extends StatefulWidget {
   final String text;
   final MCOImage image;
@@ -89,7 +90,7 @@ class _MCOImageOriginalOrFallbackState
       final height = descriptor.height;
       descriptor.dispose();
       if (width <= 0 || height <= 0) return null;
-      return _ResolvedOriginal(file, width, height);
+      return _ResolvedOriginal(file);
     } catch (_) {
       return null;
     }
@@ -168,29 +169,45 @@ class _MCOImageOriginalOrFallbackState
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettingsService>().settings;
+    final imageScale = settings.mcoImageReplacementsScale
+        .clamp(1.0, 5.0)
+        .toDouble();
+    final longestSide = widget.image.width > widget.image.height
+        ? widget.image.width
+        : widget.image.height;
+    final maxDisplayScale = widget.maxSize / longestSide;
+    final displayScale = imageScale > maxDisplayScale
+        ? maxDisplayScale
+        : imageScale;
+    final displayWidth = widget.image.width * displayScale;
+    final displayHeight = widget.image.height * displayScale;
+
+    Widget fallbackLora() {
+      return MCOImageMessage(
+        image: widget.image,
+        maxSize: longestSide * displayScale,
+      );
+    }
+
     return FutureBuilder<_ResolvedOriginal?>(
       future: _originalFuture,
       builder: (context, snapshot) {
         final resolved = snapshot.data;
         if (resolved == null) {
-          return MCOImageMessage(image: widget.image, maxSize: widget.maxSize);
+          return SizedBox(
+            width: displayWidth,
+            height: displayHeight,
+            child: fallbackLora(),
+          );
         }
 
-        final settings = context.watch<AppSettingsService>().settings;
-        // Upscale factor for originals (user setting, 1x–5x), capped so the
-        // longest side never exceeds maxSize.
-        final upscaleFactor = settings.mcoImageReplacementsScale;
-        // Nearest-neighbor keeps hard pixel edges when upscaling.
+        // Nearest-neighbor keeps hard pixel edges when the stable chat box
+        // scales a small pack original up to the LoRa message size.
         final filterQuality = settings.mcoImageScaleNearestNeighbor
             ? FilterQuality.none
             : FilterQuality.medium;
         final sharpness = settings.mcoImageReplacementsSharpness.clamp(0, 10);
-        final longestSide = resolved.width > resolved.height
-            ? resolved.width
-            : resolved.height;
-        final scale = upscaleFactor.clamp(0.0, widget.maxSize / longestSide);
-        final displayWidth = resolved.width * scale;
-        final displayHeight = resolved.height * scale;
 
         Widget fallbackImage() => Image.file(
           resolved.file,
