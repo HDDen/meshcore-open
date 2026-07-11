@@ -200,7 +200,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "de": [
@@ -391,7 +392,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "es": [
@@ -595,7 +597,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "fr": [
@@ -799,7 +802,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "hu": [
@@ -1003,7 +1007,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "it": [
@@ -1287,7 +1292,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "ja": [
@@ -1491,7 +1497,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "ko": [
@@ -1695,7 +1702,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "nl": [
@@ -1979,7 +1987,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "pl": [
@@ -2183,7 +2192,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "pt": [
@@ -2467,7 +2477,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "ru": [
@@ -2685,7 +2696,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "sl": [
@@ -2889,7 +2901,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "sv": [
@@ -3173,7 +3186,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "uk": [
@@ -3377,7 +3391,8 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ],
 
   "zh": [
@@ -3581,6 +3596,7 @@
     "settings_modSettingsRoomServer",
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
-    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
+    "settings_appSettingsCustomChemistry"
   ]
 }

@@ -243,6 +243,8 @@ class AppSettings {
   final bool appDebugLogEnabled;
   final Map<String, String> batteryChemistryByDeviceId;
   final Map<String, String> batteryChemistryByRepeaterId;
+  final Map<String, double> batteryCustomMinVoltsByDeviceId;
+  final Map<String, double> batteryCustomMaxVoltsByDeviceId;
   final UnitSystem unitSystem;
   final Set<String> mutedChannels;
   final bool mapShowDiscoveryContacts;
@@ -547,6 +549,8 @@ class AppSettings {
     this.appDebugLogEnabled = false,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     this.unitSystem = UnitSystem.metric,
     Set<String>? mutedChannels,
     this.mapShowDiscoveryContacts = true,
@@ -573,6 +577,10 @@ class AppSettings {
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
+       batteryCustomMinVoltsByDeviceId =
+           batteryCustomMinVoltsByDeviceId ?? {},
+       batteryCustomMaxVoltsByDeviceId =
+           batteryCustomMaxVoltsByDeviceId ?? {},
        mutedChannels = mutedChannels ?? {},
        tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
@@ -671,6 +679,10 @@ class AppSettings {
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
       'battery_chemistry_by_repeater_id': batteryChemistryByRepeaterId,
+      'battery_custom_min_volts_by_device_id':
+          batteryCustomMinVoltsByDeviceId,
+      'battery_custom_max_volts_by_device_id':
+          batteryCustomMaxVoltsByDeviceId,
       'unit_system': unitSystem.value,
       'muted_channels': mutedChannels.toList(),
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
@@ -725,6 +737,12 @@ class AppSettings {
         }
       }
       return SharedMessageHistoryMode.disabled;
+    }
+
+    double? parseDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value.replaceAll(',', '.'));
+      return null;
     }
 
     return AppSettings(
@@ -830,6 +848,22 @@ class AppSettings {
       batteryChemistryByRepeaterId:
           (json['battery_chemistry_by_repeater_id'] as Map?)?.map(
             (key, value) => MapEntry(key.toString(), value.toString()),
+          ) ??
+          {},
+      batteryCustomMinVoltsByDeviceId:
+          (json['battery_custom_min_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(
+              key.toString(),
+              parseDouble(value) ?? 0.0,
+            ),
+          ) ??
+          {},
+      batteryCustomMaxVoltsByDeviceId:
+          (json['battery_custom_max_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(
+              key.toString(),
+              parseDouble(value) ?? 0.0,
+            ),
           ) ??
           {},
       unitSystem: parseUnitSystem(json['unit_system']),
@@ -983,6 +1017,8 @@ class AppSettings {
     bool? appDebugLogEnabled,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     UnitSystem? unitSystem,
     Set<String>? mutedChannels,
     bool? mapShowDiscoveryContacts,
@@ -1113,6 +1149,12 @@ class AppSettings {
           batteryChemistryByDeviceId ?? this.batteryChemistryByDeviceId,
       batteryChemistryByRepeaterId:
           batteryChemistryByRepeaterId ?? this.batteryChemistryByRepeaterId,
+      batteryCustomMinVoltsByDeviceId:
+          batteryCustomMinVoltsByDeviceId ??
+          this.batteryCustomMinVoltsByDeviceId,
+      batteryCustomMaxVoltsByDeviceId:
+          batteryCustomMaxVoltsByDeviceId ??
+          this.batteryCustomMaxVoltsByDeviceId,
       unitSystem: unitSystem ?? this.unitSystem,
       mutedChannels: mutedChannels ?? this.mutedChannels,
       mapShowDiscoveryContacts:

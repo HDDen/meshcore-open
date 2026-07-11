@@ -2399,5 +2399,6 @@
   "settings_modSettingsRoomServer": "Room-серверы и контакты",
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Отображать серверы с историей в одном экране с каналами",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Отображать контакты с историей в одном экране с каналами",
-  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера"
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
+  "settings_appSettingsCustomChemistry": "Своя"
 }

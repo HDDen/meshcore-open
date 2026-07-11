@@ -5782,4 +5782,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
       'Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера';
+
+  @override
+  String get settings_appSettingsCustomChemistry => 'Своя';
 }

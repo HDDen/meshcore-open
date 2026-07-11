@@ -636,6 +636,7 @@ class MeshCoreConnector extends ChangeNotifier {
       : estimateBatteryPercentFromMillivolts(
           _batteryMillivolts!,
           _batteryChemistryForDevice(),
+          customRange: _batteryVoltageRangeForDevice(),
         );
   RepeaterBatterySnapshot? getRepeaterBatterySnapshot(String contactKeyHex) =>
       _repeaterBatterySnapshots[contactKeyHex];
@@ -664,6 +665,12 @@ class MeshCoreConnector extends ChangeNotifier {
     final deviceId = batteryDeviceKey;
     if (deviceId == null || _appSettingsService == null) return 'nmc';
     return _appSettingsService!.batteryChemistryForDevice(deviceId);
+  }
+
+  BatteryVoltageRange? _batteryVoltageRangeForDevice() {
+    final deviceId = batteryDeviceKey;
+    if (deviceId == null || _appSettingsService == null) return null;
+    return _appSettingsService!.batteryVoltageRangeForDevice(deviceId);
   }
 
   List<Message> getMessages(Contact contact) {

@@ -9891,6 +9891,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers'**
   String get settings_modSettingsRoomServerDisableRoomAndContactsSorting;
+
+  /// No description provided for @settings_appSettingsCustomChemistry.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get settings_appSettingsCustomChemistry;
 }
 
 class _AppLocalizationsDelegate
