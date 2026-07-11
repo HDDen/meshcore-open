@@ -1950,7 +1950,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } else if (mcoImage != null) {
       contentPreview = ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: MCOImageMessage(image: mcoImage, maxSize: 80),
+        child: MCOImageOriginalOrFallback(
+          text: replyText,
+          image: mcoImage,
+          maxSize: 80,
+          forceLora: _mcoForceLora(
+            message.replyToMessageId ?? '${message.messageId}:reply',
+            context
+                .watch<AppSettingsService>()
+                .settings
+                .showMcoImagePackReplacements,
+          ),
+        ),
       );
     } else if (unsupportedMcoImageVersion != null) {
       contentPreview = _buildUnsupportedMcoImageMessage(
@@ -2368,9 +2379,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               child: SizedBox(
                 width: width,
                 height: height,
-                child: MCOImageMessage(
+                child: MCOImageOriginalOrFallback(
+                  text: message.text,
                   image: mcoImage,
                   maxSize: width > height ? width : height,
+                  forceLora: _mcoForceLora(
+                    message.messageId,
+                    context
+                        .watch<AppSettingsService>()
+                        .settings
+                        .showMcoImagePackReplacements,
+                  ),
                 ),
               ),
             ),

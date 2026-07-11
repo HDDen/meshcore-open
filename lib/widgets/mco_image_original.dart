@@ -176,10 +176,11 @@ class _MCOImageOriginalOrFallbackState
     final longestSide = widget.image.width > widget.image.height
         ? widget.image.width
         : widget.image.height;
-    final maxDisplayScale = widget.maxSize / longestSide;
-    final displayScale = imageScale > maxDisplayScale
-        ? maxDisplayScale
-        : imageScale;
+    final displayScale = widget.forceLora
+        ? widget.maxSize / longestSide
+        : (imageScale > widget.maxSize / longestSide
+              ? widget.maxSize / longestSide
+              : imageScale);
     final displayWidth = widget.image.width * displayScale;
     final displayHeight = widget.image.height * displayScale;
 
