@@ -787,7 +787,7 @@ class AppSettingsScreen extends StatelessWidget {
           _CustomBatteryRangeFields(
             deviceId: connectedDeviceId!,
             range: settingsService.batteryCustomRangeForDevice(
-              connectedDeviceId!,
+              connectedDeviceId,
             ),
             onRangeChanged: settingsService.setBatteryCustomRangeForDevice,
           ),
