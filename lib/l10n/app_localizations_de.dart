@@ -5527,6 +5527,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_mcmpSigningFailed => 'Failed to sign the message';
 
   @override
+  String get chat_mcmpAnswerTo => 'MCMPv3 answer to';
+
+  @override
   String get chat_timestampPacket => 'Packet timestamp';
 
   @override

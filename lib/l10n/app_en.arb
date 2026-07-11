@@ -3135,6 +3135,7 @@
   "chat_mcmpManualRecheckSign": "Manually recheck signature",
   "chat_mcmpSignatureCheckStatus": "Signature checking",
   "chat_mcmpSigningFailed": "Failed to sign the message",
+  "chat_mcmpAnswerTo": "MCMPv3 answer to",
   "chat_timestampPacket": "Packet timestamp",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",

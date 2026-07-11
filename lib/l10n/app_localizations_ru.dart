@@ -5529,6 +5529,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_mcmpSigningFailed => 'Не удалось подписать сообщение';
 
   @override
+  String get chat_mcmpAnswerTo => 'MCMPv3 ответ на';
+
+  @override
   String get chat_timestampPacket => 'Timestamp пакета';
 
   @override

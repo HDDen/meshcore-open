@@ -9454,6 +9454,12 @@ abstract class AppLocalizations {
   /// **'Failed to sign the message'**
   String get chat_mcmpSigningFailed;
 
+  /// No description provided for @chat_mcmpAnswerTo.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMPv3 answer to'**
+  String get chat_mcmpAnswerTo;
+
   /// No description provided for @chat_timestampPacket.
   ///
   /// In en, this message translates to:

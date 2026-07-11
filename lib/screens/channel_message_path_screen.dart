@@ -199,6 +199,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
   }) {
     final l10n = context.l10n;
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
+    final mcmpReplyTargetLabel = _mcmpReplyTargetLabel();
     final scheme = Theme.of(context).colorScheme;
     final routeChip = effectiveHopCount == null
         ? null
@@ -251,6 +252,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
             _packetTimestampLabel(l10n),
             scheme: scheme,
           ),
+          if (mcmpReplyTargetLabel != null)
+            _buildDetailRow(
+              context,
+              l10n.chat_mcmpAnswerTo,
+              mcmpReplyTargetLabel,
+              scheme: scheme,
+            ),
           if (outgoingRadioWaitLabel != null)
             _buildDetailRow(
               context,
@@ -501,6 +509,18 @@ class ChannelMessagePathScreen extends StatelessWidget {
     // Raw packet timestamp (seconds, as stamped by the sender) plus a
     // human-readable rendering in parentheses.
     return '$rawSeconds (${_formatTime(ts, l10n)})';
+  }
+
+  String? _mcmpReplyTargetLabel() {
+    if (message.mcmpTimestamp == null) return null;
+    final replyAuthorName = message.mcmpReplyAuthorName?.trim();
+    final replyTimestamp = message.mcmpReplyTimestamp;
+    if (replyAuthorName == null ||
+        replyAuthorName.isEmpty ||
+        replyTimestamp == null) {
+      return null;
+    }
+    return '$replyAuthorName + $replyTimestamp';
   }
 
   // Actual message receive time (receivedAt, stored in milliseconds): raw

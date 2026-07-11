@@ -2327,6 +2327,7 @@
   "chat_mcmpManualRecheckSign": "Перепроверить подпись",
   "chat_mcmpSignatureCheckStatus": "Проверка подписи",
   "chat_mcmpSigningFailed": "Не удалось подписать сообщение",
+  "chat_mcmpAnswerTo": "MCMPv3 ответ на",
   "chat_timestampPacket": "Timestamp пакета",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",
