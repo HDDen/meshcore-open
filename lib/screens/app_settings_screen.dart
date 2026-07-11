@@ -14,6 +14,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/notification_service.dart';
 import '../services/translation_service.dart';
 import '../theme/mesh_theme.dart';
+import '../utils/battery_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -695,8 +696,9 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     final deviceId = connector.batteryDeviceKey;
     final isConnected = connector.isConnected && deviceId != null;
-    final selection = isConnected
-        ? settingsService.batteryChemistryForDevice(deviceId)
+    final connectedDeviceId = isConnected ? deviceId : null;
+    final selection = connectedDeviceId != null
+        ? settingsService.batteryChemistryForDevice(connectedDeviceId)
         : 'nmc';
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -755,7 +757,7 @@ class AppSettingsScreen extends StatelessWidget {
               ? (value) {
                   if (value != null) {
                     settingsService.setBatteryChemistryForDevice(
-                      deviceId,
+                      connectedDeviceId!,
                       value,
                     );
                   }
@@ -774,8 +776,22 @@ class AppSettingsScreen extends StatelessWidget {
               value: 'lipo',
               child: Text(context.l10n.appSettings_batteryLipo),
             ),
+            DropdownMenuItem(
+              value: batteryChemistryCustom,
+              child: Text(context.l10n.settings_appSettingsCustomChemistry),
+            ),
           ],
         ),
+        if (isConnected && selection == batteryChemistryCustom) ...[
+          const SizedBox(height: 12),
+          _CustomBatteryRangeFields(
+            deviceId: connectedDeviceId!,
+            range: settingsService.batteryCustomRangeForDevice(
+              connectedDeviceId,
+            ),
+            onRangeChanged: settingsService.setBatteryCustomRangeForDevice,
+          ),
+        ],
       ],
     );
   }
@@ -3395,6 +3411,150 @@ class _TranslationLanguageDialogContentState
           child: Text(context.l10n.common_close),
         ),
       ],
+    );
+  }
+}
+
+class _CustomBatteryRangeFields extends StatefulWidget {
+  const _CustomBatteryRangeFields({
+    required this.deviceId,
+    required this.range,
+    required this.onRangeChanged,
+  });
+
+  final String deviceId;
+  final ({double minVolts, double maxVolts})? range;
+  final Future<void> Function(String deviceId, double minVolts, double maxVolts)
+  onRangeChanged;
+
+  @override
+  State<_CustomBatteryRangeFields> createState() =>
+      _CustomBatteryRangeFieldsState();
+}
+
+class _CustomBatteryRangeFieldsState extends State<_CustomBatteryRangeFields> {
+  late final TextEditingController _minController;
+  late final TextEditingController _maxController;
+
+  @override
+  void initState() {
+    super.initState();
+    _minController = TextEditingController(
+      text: _formatVolts(widget.range?.minVolts),
+    );
+    _maxController = TextEditingController(
+      text: _formatVolts(widget.range?.maxVolts),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _CustomBatteryRangeFields oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.deviceId != widget.deviceId) {
+      _setControllerText(_minController, _formatVolts(widget.range?.minVolts));
+      _setControllerText(_maxController, _formatVolts(widget.range?.maxVolts));
+    }
+  }
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minVolts = _parseVolts(_minController.text);
+    final maxVolts = _parseVolts(_maxController.text);
+    final hasBoth = minVolts != null && maxVolts != null;
+    final invalidRange = hasBoth && minVolts >= maxVolts;
+    final inputFormatters = [
+      _CommaDecimalTextInputFormatter(),
+      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+    ];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _minController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: inputFormatters,
+            decoration: InputDecoration(
+              labelText: 'Min',
+              suffixText: 'V',
+              isDense: true,
+              errorText: invalidRange ? '' : null,
+            ),
+            onChanged: (_) => _onChanged(),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: invalidRange ? 16 : 13),
+          child: const Text(' – '),
+        ),
+        Expanded(
+          child: TextField(
+            controller: _maxController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: inputFormatters,
+            decoration: InputDecoration(
+              labelText: 'Max',
+              suffixText: 'V',
+              isDense: true,
+              errorText: invalidRange ? '' : null,
+            ),
+            onChanged: (_) => _onChanged(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _onChanged() {
+    setState(() {});
+    final minVolts = _parseVolts(_minController.text);
+    final maxVolts = _parseVolts(_maxController.text);
+    if (minVolts == null || maxVolts == null || minVolts >= maxVolts) {
+      return;
+    }
+    widget.onRangeChanged(widget.deviceId, minVolts, maxVolts);
+  }
+
+  double? _parseVolts(String value) {
+    return double.tryParse(value.replaceAll(',', '.'));
+  }
+
+  String _formatVolts(double? value) {
+    if (value == null) return '';
+    return value.toStringAsFixed(3).replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+
+  void _setControllerText(TextEditingController controller, String text) {
+    if (controller.text == text) return;
+    controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
+class _CommaDecimalTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text.replaceAll(',', '.');
+    if (text == newValue.text) return newValue;
+    final offset = newValue.selection.end < 0
+        ? text.length
+        : newValue.selection.end.clamp(0, text.length).toInt();
+    return newValue.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: offset),
     );
   }
 }

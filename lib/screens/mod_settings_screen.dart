@@ -556,6 +556,49 @@ class ModSettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                SectionHeader(context.l10n.settings_modSettingsRoomServer),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    value: settings.roomServerShowNotemptyOnChatscreen,
+                    onChanged:
+                        settingsService.setRoomServerShowNotemptyOnChatscreen,
+                    secondary: const Icon(Icons.meeting_room_outlined),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsRoomServerShowNotemptyOnChatscreen,
+                    ),
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    value: settings.roomServerShowNotemptyContactsOnChatscreen,
+                    onChanged: settingsService
+                        .setRoomServerShowNotemptyContactsOnChatscreen,
+                    secondary: const Icon(Icons.person_outline),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen,
+                    ),
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    value: settings.roomServerDisableRoomAndContactsSorting,
+                    onChanged: settingsService
+                        .setRoomServerDisableRoomAndContactsSorting,
+                    secondary: const Icon(Icons.low_priority_outlined),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsRoomServerDisableRoomAndContactsSorting,
+                    ),
+                  ),
+                ),
               ],
             );
           },

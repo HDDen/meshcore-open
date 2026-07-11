@@ -2395,5 +2395,10 @@
   "chat_contactTypeRoom": "Рум-сервер",
   "chat_contactTypeSensor": "Сенсор",
   "chat_myLocation": "Отправить моё местоположение",
-  "chat_locationFromMap": "Отправить координаты с карты"
+  "chat_locationFromMap": "Отправить координаты с карты",
+  "settings_modSettingsRoomServer": "Room-серверы и контакты",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Отображать серверы с историей в одном экране с каналами",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Отображать контакты с историей в одном экране с каналами",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
+  "settings_appSettingsCustomChemistry": "Своя"
 }

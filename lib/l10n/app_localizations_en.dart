@@ -5671,4 +5671,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chat_locationFromMap => 'Share location from map';
+
+  @override
+  String get settings_modSettingsRoomServer => 'Room-servers and contacts';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
+      'Show room-servers with messages history against channels in single screen';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
+      'Show contacts with messages history against channels in single screen';
+
+  @override
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
+      'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers';
+
+  @override
+  String get settings_appSettingsCustomChemistry => 'Custom';
 }

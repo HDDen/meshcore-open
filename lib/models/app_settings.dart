@@ -216,6 +216,9 @@ class AppSettings {
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
   final bool backgroundTcpEnabled;
+  final bool roomServerShowNotemptyOnChatscreen;
+  final bool roomServerShowNotemptyContactsOnChatscreen;
+  final bool roomServerDisableRoomAndContactsSorting;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -240,6 +243,8 @@ class AppSettings {
   final bool appDebugLogEnabled;
   final Map<String, String> batteryChemistryByDeviceId;
   final Map<String, String> batteryChemistryByRepeaterId;
+  final Map<String, double> batteryCustomMinVoltsByDeviceId;
+  final Map<String, double> batteryCustomMaxVoltsByDeviceId;
   final UnitSystem unitSystem;
   final Set<String> mutedChannels;
   final bool mapShowDiscoveryContacts;
@@ -517,6 +522,9 @@ class AppSettings {
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
     this.backgroundTcpEnabled = false,
+    this.roomServerShowNotemptyOnChatscreen = false,
+    this.roomServerShowNotemptyContactsOnChatscreen = false,
+    this.roomServerDisableRoomAndContactsSorting = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -541,6 +549,8 @@ class AppSettings {
     this.appDebugLogEnabled = false,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     this.unitSystem = UnitSystem.metric,
     Set<String>? mutedChannels,
     this.mapShowDiscoveryContacts = true,
@@ -567,6 +577,8 @@ class AppSettings {
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
+       batteryCustomMinVoltsByDeviceId = batteryCustomMinVoltsByDeviceId ?? {},
+       batteryCustomMaxVoltsByDeviceId = batteryCustomMaxVoltsByDeviceId ?? {},
        mutedChannels = mutedChannels ?? {},
        tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
@@ -634,6 +646,12 @@ class AppSettings {
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
       'background_tcp_enabled': backgroundTcpEnabled,
+      'room_server_show_notempty_on_chatscreen':
+          roomServerShowNotemptyOnChatscreen,
+      'room_server_show_notempty_contacts_on_chatscreen':
+          roomServerShowNotemptyContactsOnChatscreen,
+      'room_server_disable_room_and_contacts_sorting':
+          roomServerDisableRoomAndContactsSorting,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -659,6 +677,8 @@ class AppSettings {
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
       'battery_chemistry_by_repeater_id': batteryChemistryByRepeaterId,
+      'battery_custom_min_volts_by_device_id': batteryCustomMinVoltsByDeviceId,
+      'battery_custom_max_volts_by_device_id': batteryCustomMaxVoltsByDeviceId,
       'unit_system': unitSystem.value,
       'muted_channels': mutedChannels.toList(),
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
@@ -713,6 +733,12 @@ class AppSettings {
         }
       }
       return SharedMessageHistoryMode.disabled;
+    }
+
+    double? parseDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value.replaceAll(',', '.'));
+      return null;
     }
 
     return AppSettings(
@@ -771,6 +797,14 @@ class AppSettings {
       ),
       noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
       backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
+      roomServerShowNotemptyOnChatscreen:
+          json['room_server_show_notempty_on_chatscreen'] as bool? ?? false,
+      roomServerShowNotemptyContactsOnChatscreen:
+          json['room_server_show_notempty_contacts_on_chatscreen'] as bool? ??
+          false,
+      roomServerDisableRoomAndContactsSorting:
+          json['room_server_disable_room_and_contacts_sorting'] as bool? ??
+          true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -810,6 +844,16 @@ class AppSettings {
       batteryChemistryByRepeaterId:
           (json['battery_chemistry_by_repeater_id'] as Map?)?.map(
             (key, value) => MapEntry(key.toString(), value.toString()),
+          ) ??
+          {},
+      batteryCustomMinVoltsByDeviceId:
+          (json['battery_custom_min_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
+          ) ??
+          {},
+      batteryCustomMaxVoltsByDeviceId:
+          (json['battery_custom_max_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
           ) ??
           {},
       unitSystem: parseUnitSystem(json['unit_system']),
@@ -936,6 +980,9 @@ class AppSettings {
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
     bool? backgroundTcpEnabled,
+    bool? roomServerShowNotemptyOnChatscreen,
+    bool? roomServerShowNotemptyContactsOnChatscreen,
+    bool? roomServerDisableRoomAndContactsSorting,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -960,6 +1007,8 @@ class AppSettings {
     bool? appDebugLogEnabled,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     UnitSystem? unitSystem,
     Set<String>? mutedChannels,
     bool? mapShowDiscoveryContacts,
@@ -1042,6 +1091,15 @@ class AppSettings {
       noRetransmissionWarningSeconds:
           noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
       backgroundTcpEnabled: backgroundTcpEnabled ?? this.backgroundTcpEnabled,
+      roomServerShowNotemptyOnChatscreen:
+          roomServerShowNotemptyOnChatscreen ??
+          this.roomServerShowNotemptyOnChatscreen,
+      roomServerShowNotemptyContactsOnChatscreen:
+          roomServerShowNotemptyContactsOnChatscreen ??
+          this.roomServerShowNotemptyContactsOnChatscreen,
+      roomServerDisableRoomAndContactsSorting:
+          roomServerDisableRoomAndContactsSorting ??
+          this.roomServerDisableRoomAndContactsSorting,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
@@ -1081,6 +1139,12 @@ class AppSettings {
           batteryChemistryByDeviceId ?? this.batteryChemistryByDeviceId,
       batteryChemistryByRepeaterId:
           batteryChemistryByRepeaterId ?? this.batteryChemistryByRepeaterId,
+      batteryCustomMinVoltsByDeviceId:
+          batteryCustomMinVoltsByDeviceId ??
+          this.batteryCustomMinVoltsByDeviceId,
+      batteryCustomMaxVoltsByDeviceId:
+          batteryCustomMaxVoltsByDeviceId ??
+          this.batteryCustomMaxVoltsByDeviceId,
       unitSystem: unitSystem ?? this.unitSystem,
       mutedChannels: mutedChannels ?? this.mutedChannels,
       mapShowDiscoveryContacts:

@@ -7,6 +7,7 @@ import 'prefs_manager.dart';
 class ChannelGroupStore {
   static const String _keyPrefix = 'channel_groups';
   static const String _expandedKeyPrefix = 'channel_groups_expanded';
+  static const String _screenOrderKeyPrefix = 'channel_screen_order';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -14,6 +15,7 @@ class ChannelGroupStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
   String get expandedKeyFor => '$_expandedKeyPrefix$publicKeyHex';
+  String get screenOrderKeyFor => '$_screenOrderKeyPrefix$publicKeyHex';
 
   Future<List<ChannelGroup>> loadGroups() async {
     if (publicKeyHex.isEmpty) {
@@ -91,5 +93,45 @@ class ChannelGroupStore {
 
     final prefs = PrefsManager.instance;
     await prefs.setString(expandedKeyFor, jsonEncode(names.toList()));
+  }
+
+  Future<List<String>> loadScreenOrder() async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel screen order.',
+      );
+      return [];
+    }
+
+    final prefs = PrefsManager.instance;
+    final jsonString = prefs.getString(screenOrderKeyFor);
+    if (jsonString == null || jsonString.isEmpty) {
+      return [];
+    }
+
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is List) {
+        return decoded
+            .map((value) => value.toString().trim())
+            .where((name) => name.isNotEmpty)
+            .toList();
+      }
+    } catch (_) {
+      // Bad UI order should not prevent the channels screen from loading.
+    }
+    return [];
+  }
+
+  Future<void> saveScreenOrder(List<String> order) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save channel screen order.',
+      );
+      return;
+    }
+
+    final prefs = PrefsManager.instance;
+    await prefs.setString(screenOrderKeyFor, jsonEncode(order));
   }
 }

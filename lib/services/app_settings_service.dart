@@ -4,6 +4,7 @@ import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/app_logger.dart';
+import '../utils/battery_utils.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 
@@ -26,6 +27,28 @@ class AppSettingsService extends ChangeNotifier {
     final stored = _settings.batteryChemistryByDeviceId[deviceId];
     if (stored == 'liion') return 'nmc';
     return stored ?? 'nmc';
+  }
+
+  ({double minVolts, double maxVolts})? batteryCustomRangeForDevice(
+    String deviceId,
+  ) {
+    final minVolts = _settings.batteryCustomMinVoltsByDeviceId[deviceId];
+    final maxVolts = _settings.batteryCustomMaxVoltsByDeviceId[deviceId];
+    if (minVolts == null || maxVolts == null) return null;
+    if (minVolts <= 0 || maxVolts <= 0 || minVolts >= maxVolts) return null;
+    return (minVolts: minVolts, maxVolts: maxVolts);
+  }
+
+  BatteryVoltageRange? batteryVoltageRangeForDevice(String deviceId) {
+    if (batteryChemistryForDevice(deviceId) != batteryChemistryCustom) {
+      return null;
+    }
+    final range = batteryCustomRangeForDevice(deviceId);
+    if (range == null) return null;
+    final minMv = (range.minVolts * 1000).round();
+    final maxMv = (range.maxVolts * 1000).round();
+    if (minMv >= maxMv) return null;
+    return (minMv: minMv, maxMv: maxMv);
   }
 
   String batteryChemistryForRepeater(String repeaterPubKeyHex) {
@@ -260,6 +283,24 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(backgroundTcpEnabled: value));
   }
 
+  Future<void> setRoomServerShowNotemptyOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerShowNotemptyContactsOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyContactsOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerDisableRoomAndContactsSorting(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerDisableRoomAndContactsSorting: value),
+    );
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }
@@ -394,6 +435,28 @@ class AppSettingsService extends ChangeNotifier {
     updated[deviceId] = chemistry;
     await updateSettings(
       _settings.copyWith(batteryChemistryByDeviceId: updated),
+    );
+  }
+
+  Future<void> setBatteryCustomRangeForDevice(
+    String deviceId,
+    double minVolts,
+    double maxVolts,
+  ) async {
+    if (minVolts <= 0 || maxVolts <= 0 || minVolts >= maxVolts) return;
+    final updatedMin = Map<String, double>.from(
+      _settings.batteryCustomMinVoltsByDeviceId,
+    );
+    final updatedMax = Map<String, double>.from(
+      _settings.batteryCustomMaxVoltsByDeviceId,
+    );
+    updatedMin[deviceId] = minVolts;
+    updatedMax[deviceId] = maxVolts;
+    await updateSettings(
+      _settings.copyWith(
+        batteryCustomMinVoltsByDeviceId: updatedMin,
+        batteryCustomMaxVoltsByDeviceId: updatedMax,
+      ),
     );
   }
 

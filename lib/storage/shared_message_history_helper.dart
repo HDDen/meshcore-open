@@ -80,6 +80,35 @@ class SharedMessageHistoryHelper {
     return result;
   }
 
+  Future<MessageStoreSummary?> loadSecondaryContactMessageSummary({
+    required String currentPublicKeyHex,
+    required String contactKeyHex,
+  }) async {
+    final currentScope = _scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || contactKeyHex.isEmpty) return null;
+
+    DateTime? latestMessageAt;
+    var messageCount = 0;
+    for (final scope in _knownScopes()) {
+      if (scope == currentScope) continue;
+
+      final messageStore = MessageStore()..setPublicKeyHex = scope;
+      final summary = await messageStore.loadMessageSummary(contactKeyHex);
+      if (summary == null) continue;
+      messageCount += summary.messageCount;
+      if (latestMessageAt == null ||
+          summary.latestMessageAt.isAfter(latestMessageAt)) {
+        latestMessageAt = summary.latestMessageAt;
+      }
+    }
+
+    if (messageCount == 0 || latestMessageAt == null) return null;
+    return MessageStoreSummary(
+      messageCount: messageCount,
+      latestMessageAt: latestMessageAt,
+    );
+  }
+
   Set<String> _knownScopes() {
     final result = <String>{};
     for (final key in PrefsManager.instance.getKeys()) {
