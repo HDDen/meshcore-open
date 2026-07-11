@@ -21,11 +21,13 @@ class _ResolvedOriginal {
 /// (png/jpg/gif, possibly animated) from an installed *.mcoimg.pack when the
 /// payload identity hash matches a pack item. Falls back to rendering the
 /// received LoRa version when the image is unknown or the original file is
-/// missing. The original is shown inside the same box as the LoRa render, so
-/// only the picture changes, not the bubble layout. Keeping the outer size
-/// stable is important for reverse chat lists: if an async original image load
-/// changes an old message height below the viewport, Flutter may repeatedly
-/// correct the scroll offset while the user scrolls back to newer messages.
+/// missing. While the original lookup is pending, the widget reserves the same
+/// box that a found original would use. If no original exists, it falls back to
+/// the normal full-size MCOimg render instead of keeping the replacement scale.
+/// Keeping found originals stable is important for reverse chat lists: if an
+/// async original image load changes an old message height below the viewport,
+/// Flutter may repeatedly correct the scroll offset while the user scrolls
+/// back to newer messages.
 class MCOImageOriginalOrFallback extends StatefulWidget {
   final String text;
   final MCOImage image;
@@ -185,9 +187,17 @@ class _MCOImageOriginalOrFallbackState
     final displayHeight = widget.image.height * displayScale;
 
     Widget fallbackLora() {
-      return MCOImageMessage(
-        image: widget.image,
-        maxSize: longestSide * displayScale,
+      return MCOImageMessage(image: widget.image, maxSize: widget.maxSize);
+    }
+
+    Widget replacementSizedFallback() {
+      return SizedBox(
+        width: displayWidth,
+        height: displayHeight,
+        child: MCOImageMessage(
+          image: widget.image,
+          maxSize: longestSide * displayScale,
+        ),
       );
     }
 
@@ -196,11 +206,9 @@ class _MCOImageOriginalOrFallbackState
       builder: (context, snapshot) {
         final resolved = snapshot.data;
         if (resolved == null) {
-          return SizedBox(
-            width: displayWidth,
-            height: displayHeight,
-            child: fallbackLora(),
-          );
+          return snapshot.connectionState == ConnectionState.done
+              ? fallbackLora()
+              : replacementSizedFallback();
         }
 
         // Nearest-neighbor keeps hard pixel edges when the stable chat box

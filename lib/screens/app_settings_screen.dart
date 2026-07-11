@@ -3480,9 +3480,7 @@ class _CustomBatteryRangeFieldsState extends State<_CustomBatteryRangeFields> {
         Expanded(
           child: TextField(
             controller: _minController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               labelText: 'Min',
@@ -3500,9 +3498,7 @@ class _CustomBatteryRangeFieldsState extends State<_CustomBatteryRangeFields> {
         Expanded(
           child: TextField(
             controller: _maxController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               labelText: 'Max',

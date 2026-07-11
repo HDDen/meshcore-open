@@ -577,10 +577,8 @@ class AppSettings {
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
-       batteryCustomMinVoltsByDeviceId =
-           batteryCustomMinVoltsByDeviceId ?? {},
-       batteryCustomMaxVoltsByDeviceId =
-           batteryCustomMaxVoltsByDeviceId ?? {},
+       batteryCustomMinVoltsByDeviceId = batteryCustomMinVoltsByDeviceId ?? {},
+       batteryCustomMaxVoltsByDeviceId = batteryCustomMaxVoltsByDeviceId ?? {},
        mutedChannels = mutedChannels ?? {},
        tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
@@ -679,10 +677,8 @@ class AppSettings {
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
       'battery_chemistry_by_repeater_id': batteryChemistryByRepeaterId,
-      'battery_custom_min_volts_by_device_id':
-          batteryCustomMinVoltsByDeviceId,
-      'battery_custom_max_volts_by_device_id':
-          batteryCustomMaxVoltsByDeviceId,
+      'battery_custom_min_volts_by_device_id': batteryCustomMinVoltsByDeviceId,
+      'battery_custom_max_volts_by_device_id': batteryCustomMaxVoltsByDeviceId,
       'unit_system': unitSystem.value,
       'muted_channels': mutedChannels.toList(),
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
@@ -852,18 +848,12 @@ class AppSettings {
           {},
       batteryCustomMinVoltsByDeviceId:
           (json['battery_custom_min_volts_by_device_id'] as Map?)?.map(
-            (key, value) => MapEntry(
-              key.toString(),
-              parseDouble(value) ?? 0.0,
-            ),
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
           ) ??
           {},
       batteryCustomMaxVoltsByDeviceId:
           (json['battery_custom_max_volts_by_device_id'] as Map?)?.map(
-            (key, value) => MapEntry(
-              key.toString(),
-              parseDouble(value) ?? 0.0,
-            ),
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
           ) ??
           {},
       unitSystem: parseUnitSystem(json['unit_system']),
