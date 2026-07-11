@@ -235,8 +235,13 @@ class _SNRIndicatorState extends State<SNRIndicator> {
 class _RepeaterDialogList extends StatefulWidget {
   final MeshCoreConnector connector;
   final List<DirectRepeater> repeaters;
+  final bool showRepeaterKeyPrefix;
 
-  const _RepeaterDialogList({required this.connector, required this.repeaters});
+  const _RepeaterDialogList({
+    required this.connector,
+    required this.repeaters,
+    this.showRepeaterKeyPrefix = false,
+  });
 
   @override
   State<_RepeaterDialogList> createState() => _RepeaterDialogListState();
@@ -311,6 +316,10 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                 repeater.pubkeyPrefix,
               );
               final snrColor = MeshTheme.snrColor(repeater.snr, blocked: false);
+              final nameStyle = Theme.of(context).textTheme.bodyMedium;
+              final keyPrefix = widget.showRepeaterKeyPrefix
+                  ? repeater.pubkeyPrefixHex
+                  : null;
 
               return Padding(
                 padding: const EdgeInsets.symmetric(
@@ -331,14 +340,34 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                         children: [
                           Text(
                             name ?? prefixLabel,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: nameStyle,
                           ),
-                          Text(
-                            '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
-                            style: MeshTheme.mono(
-                              fontSize: 11,
-                              color: snrColor,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
+                                style: MeshTheme.mono(
+                                  fontSize: 11,
+                                  color: snrColor,
+                                ),
+                              ),
+                              if (keyPrefix != null) ...[
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    keyPrefix,
+                                    style: MeshTheme.mono(
+                                      fontSize: 11,
+                                      color:
+                                          nameStyle?.color ??
+                                          Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -450,6 +479,7 @@ class _SNRActivityIndicatorState extends State<SNRActivityIndicator> {
         content: _RepeaterDialogList(
           connector: widget.connector,
           repeaters: repeaters,
+          showRepeaterKeyPrefix: true,
         ),
         actions: [
           TextButton(
