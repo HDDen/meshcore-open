@@ -10,6 +10,7 @@ class PendingSendCancelBar extends StatefulWidget {
   final int delaySeconds;
   final VoidCallback onCancel;
   final Color foregroundColor;
+  final EdgeInsetsGeometry contentPadding;
 
   const PendingSendCancelBar({
     super.key,
@@ -17,6 +18,7 @@ class PendingSendCancelBar extends StatefulWidget {
     required this.delaySeconds,
     required this.onCancel,
     required this.foregroundColor,
+    this.contentPadding = EdgeInsets.zero,
   });
 
   @override
@@ -66,7 +68,9 @@ class _PendingSendCancelBarState extends State<PendingSendCancelBar> {
             const SizedBox(height: 10),
             Container(height: 1, color: Colors.black.withValues(alpha: 0.5)),
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
+              padding: widget.contentPadding.add(
+                const EdgeInsets.fromLTRB(0, 8, 0, 6),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

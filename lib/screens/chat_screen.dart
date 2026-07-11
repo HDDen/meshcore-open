@@ -2750,6 +2750,9 @@ class _MessageBubble extends StatelessWidget {
                             delaySeconds: pendingSendDelaySeconds!,
                             onCancel: onCancelPendingSend!,
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),

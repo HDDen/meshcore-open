@@ -1693,6 +1693,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               message.messageId,
                             ),
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),
