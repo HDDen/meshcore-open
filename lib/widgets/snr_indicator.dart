@@ -338,10 +338,7 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            name ?? prefixLabel,
-                            style: nameStyle,
-                          ),
+                          Text(name ?? prefixLabel, style: nameStyle),
                           Row(
                             children: [
                               Text(
@@ -360,7 +357,9 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                                       fontSize: 11,
                                       color:
                                           nameStyle?.color ??
-                                          Theme.of(context).colorScheme.onSurface,
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,

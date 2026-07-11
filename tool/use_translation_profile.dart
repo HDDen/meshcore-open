@@ -2,7 +2,9 @@ import 'dart:io';
 
 void main(List<String> args) {
   if (args.length != 1 || (args.first != 'full' && args.first != 'lite')) {
-    stderr.writeln('Usage: dart run tool/use_translation_profile.dart <full|lite>');
+    stderr.writeln(
+      'Usage: dart run tool/use_translation_profile.dart <full|lite>',
+    );
     exitCode = 64;
     return;
   }
