@@ -485,6 +485,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   ) {
     final l10n = context.l10n;
     final text = _telemetryValueText(value);
+    final electricalText = _telemetryElectricalValueText(value);
 
     switch (key) {
       case 'digitalInput':
@@ -541,12 +542,12 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
               : l10n.telemetry_voltageLabel,
           channel == 1
               ? _batteryText(value)
-              : l10n.telemetry_voltageValue(text),
+              : l10n.telemetry_voltageValue(electricalText),
         );
       case 'current':
         return _TelemetryFieldDisplay(
           l10n.telemetry_currentLabel,
-          l10n.telemetry_currentValue(text),
+          l10n.telemetry_currentValue(electricalText),
         );
       case 'frequency':
         return _TelemetryFieldDisplay(
@@ -566,7 +567,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       case 'power':
         return _TelemetryFieldDisplay(
           l10n.telemetry_powerLabel,
-          l10n.telemetry_powerValue(text),
+          l10n.telemetry_powerValue(electricalText),
         );
       case 'distance':
         return _TelemetryFieldDisplay(
@@ -881,6 +882,12 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     return value.toString();
   }
 
+  String _telemetryElectricalValueText(dynamic value) {
+    if (value == null) return context.l10n.common_notAvailable;
+    if (value is num) return value.toDouble().toStringAsFixed(3);
+    return value.toString();
+  }
+
   String _telemetryAxisText(dynamic value) {
     if (value is! Map) return _telemetryValueText(value);
     final x = _telemetryValueText(value['x']);
@@ -965,7 +972,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     if (batteryMv == null) return l10n.common_notAvailable;
     final chemistry = _batteryChemistry();
     final percent = estimateBatteryPercentFromMillivolts(batteryMv, chemistry);
-    final volts = (batteryMv / 1000).toStringAsFixed(2);
+    final volts = (batteryMv / 1000).toStringAsFixed(3);
     return l10n.telemetry_batteryValue(percent, volts);
   }
 
