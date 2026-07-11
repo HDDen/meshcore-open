@@ -9867,6 +9867,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share location from map'**
   String get chat_locationFromMap;
+
+  /// No description provided for @settings_modSettingsRoomServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Room-servers and contacts'**
+  String get settings_modSettingsRoomServer;
+
+  /// No description provided for @settings_modSettingsRoomServerShowNotemptyOnChatscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Show room-servers with messages history against channels in single screen'**
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen;
+
+  /// No description provided for @settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Show contacts with messages history against channels in single screen'**
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen;
+
+  /// No description provided for @settings_modSettingsRoomServerDisableRoomAndContactsSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers'**
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting;
 }
 
 class _AppLocalizationsDelegate

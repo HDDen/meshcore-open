@@ -260,6 +260,24 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(backgroundTcpEnabled: value));
   }
 
+  Future<void> setRoomServerShowNotemptyOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerShowNotemptyContactsOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyContactsOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerDisableRoomAndContactsSorting(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerDisableRoomAndContactsSorting: value),
+    );
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

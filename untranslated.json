@@ -196,7 +196,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "de": [
@@ -383,7 +387,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "es": [
@@ -583,7 +591,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "fr": [
@@ -783,7 +795,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "hu": [
@@ -983,7 +999,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "it": [
@@ -1263,7 +1283,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "ja": [
@@ -1463,7 +1487,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "ko": [
@@ -1663,7 +1691,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "nl": [
@@ -1943,7 +1975,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "pl": [
@@ -2143,7 +2179,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "pt": [
@@ -2423,7 +2463,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "ru": [
@@ -2637,7 +2681,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "sl": [
@@ -2837,7 +2885,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "sv": [
@@ -3117,7 +3169,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "uk": [
@@ -3317,7 +3373,11 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ],
 
   "zh": [
@@ -3517,6 +3577,10 @@
     "chat_contactTypeRoom",
     "chat_contactTypeSensor",
     "chat_myLocation",
-    "chat_locationFromMap"
+    "chat_locationFromMap",
+    "settings_modSettingsRoomServer",
+    "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
+    "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
+    "settings_modSettingsRoomServerDisableRoomAndContactsSorting"
   ]
 }

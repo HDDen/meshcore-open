@@ -216,6 +216,9 @@ class AppSettings {
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
   final bool backgroundTcpEnabled;
+  final bool roomServerShowNotemptyOnChatscreen;
+  final bool roomServerShowNotemptyContactsOnChatscreen;
+  final bool roomServerDisableRoomAndContactsSorting;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -517,6 +520,9 @@ class AppSettings {
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
     this.backgroundTcpEnabled = false,
+    this.roomServerShowNotemptyOnChatscreen = false,
+    this.roomServerShowNotemptyContactsOnChatscreen = false,
+    this.roomServerDisableRoomAndContactsSorting = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -634,6 +640,12 @@ class AppSettings {
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
       'background_tcp_enabled': backgroundTcpEnabled,
+      'room_server_show_notempty_on_chatscreen':
+          roomServerShowNotemptyOnChatscreen,
+      'room_server_show_notempty_contacts_on_chatscreen':
+          roomServerShowNotemptyContactsOnChatscreen,
+      'room_server_disable_room_and_contacts_sorting':
+          roomServerDisableRoomAndContactsSorting,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -771,6 +783,14 @@ class AppSettings {
       ),
       noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
       backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
+      roomServerShowNotemptyOnChatscreen:
+          json['room_server_show_notempty_on_chatscreen'] as bool? ?? false,
+      roomServerShowNotemptyContactsOnChatscreen:
+          json['room_server_show_notempty_contacts_on_chatscreen'] as bool? ??
+          false,
+      roomServerDisableRoomAndContactsSorting:
+          json['room_server_disable_room_and_contacts_sorting'] as bool? ??
+          true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -936,6 +956,9 @@ class AppSettings {
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
     bool? backgroundTcpEnabled,
+    bool? roomServerShowNotemptyOnChatscreen,
+    bool? roomServerShowNotemptyContactsOnChatscreen,
+    bool? roomServerDisableRoomAndContactsSorting,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -1042,6 +1065,15 @@ class AppSettings {
       noRetransmissionWarningSeconds:
           noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
       backgroundTcpEnabled: backgroundTcpEnabled ?? this.backgroundTcpEnabled,
+      roomServerShowNotemptyOnChatscreen:
+          roomServerShowNotemptyOnChatscreen ??
+          this.roomServerShowNotemptyOnChatscreen,
+      roomServerShowNotemptyContactsOnChatscreen:
+          roomServerShowNotemptyContactsOnChatscreen ??
+          this.roomServerShowNotemptyContactsOnChatscreen,
+      roomServerDisableRoomAndContactsSorting:
+          roomServerDisableRoomAndContactsSorting ??
+          this.roomServerDisableRoomAndContactsSorting,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

@@ -5767,4 +5767,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_locationFromMap => 'Отправить координаты с карты';
+
+  @override
+  String get settings_modSettingsRoomServer => 'Room-серверы и контакты';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
+      'Отображать серверы с историей в одном экране с каналами';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
+      'Отображать контакты с историей в одном экране с каналами';
+
+  @override
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
+      'Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера';
 }

@@ -314,6 +314,7 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _bleInitialSyncStarted = false;
   bool _webInitialHandshakeRequestSent = false;
   bool _preserveContactsOnRefresh = false;
+  final Map<String, DateTime> _contactMessageSummarySnapshot = {};
   bool _autoAddUsers = false;
   bool _autoAddRepeaters = false;
   bool _autoAddRoomServers = false;
@@ -790,34 +791,69 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> _refreshContactMessageSummaries() async {
     if (_contacts.isEmpty && _discoveredContacts.isEmpty) return;
-    final contactKeys = <String>{
-      for (final contact in _contacts)
-        if (_supportsContactMessageSummary(contact)) contact.publicKeyHex,
-      for (final contact in _discoveredContacts)
-        if (_supportsContactMessageSummary(contact)) contact.publicKeyHex,
-    }.toList();
+    final contactKeys = <String, bool>{};
+    for (final contact in _contacts) {
+      if (!_supportsContactMessageSummary(contact)) continue;
+      contactKeys[contact.publicKeyHex] =
+          (contactKeys[contact.publicKeyHex] ?? false) ||
+          _canUseSharedContactHistorySummary(contact);
+    }
+    for (final contact in _discoveredContacts) {
+      if (!_supportsContactMessageSummary(contact)) continue;
+      contactKeys[contact.publicKeyHex] =
+          (contactKeys[contact.publicKeyHex] ?? false) ||
+          _canUseSharedContactHistorySummary(contact);
+    }
+    final contactEntries = contactKeys.entries.toList();
     var changed = false;
-    for (var i = 0; i < contactKeys.length; i++) {
+    for (var i = 0; i < contactEntries.length; i++) {
       if (i > 0 && i % 8 == 0) {
         await Future<void>.delayed(Duration.zero);
       }
-      final contactKeyHex = contactKeys[i];
-      final knownLatest = _knownContactMessageSummaryAt(contactKeyHex);
-      if (knownLatest != null) {
+      final entry = contactEntries[i];
+      final contactKeyHex = entry.key;
+      final loadedLatest = _loadedContactMessageSummaryAt(contactKeyHex);
+      if (loadedLatest != null) {
         changed =
-            _applyContactMessageSummary(contactKeyHex, knownLatest) || changed;
+            _applyContactMessageSummary(contactKeyHex, loadedLatest) || changed;
         continue;
       }
       final summary = await _messageStore.loadMessageSummary(contactKeyHex);
-      if (summary == null) continue;
-      changed =
-          _applyContactMessageSummary(contactKeyHex, summary.latestMessageAt) ||
-          changed;
+      if (summary != null) {
+        changed =
+            _applyContactMessageSummary(
+              contactKeyHex,
+              summary.latestMessageAt,
+            ) ||
+            changed;
+        continue;
+      }
+      if (entry.value && selfPublicKeyHex.isNotEmpty) {
+        final sharedSummary = await _sharedMessageHistoryHelper
+            .loadSecondaryContactMessageSummary(
+              currentPublicKeyHex: selfPublicKeyHex,
+              contactKeyHex: contactKeyHex,
+            );
+        if (sharedSummary != null) {
+          changed =
+              _applyContactMessageSummary(
+                contactKeyHex,
+                sharedSummary.latestMessageAt,
+              ) ||
+              changed;
+          continue;
+        }
+      }
+      changed = _clearContactMessageSummary(contactKeyHex) || changed;
     }
     if (!changed) return;
     unawaited(_persistContacts());
     unawaited(_persistDiscoveredContacts());
     notifyListeners();
+  }
+
+  bool _canUseSharedContactHistorySummary(Contact contact) {
+    return _sharedContactsEnabled && contact.type != advTypeRoom;
   }
 
   void _applyContactMessageSummaryFromMessages(
@@ -840,26 +876,13 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  DateTime? _knownContactMessageSummaryAt(String contactKeyHex) {
+  DateTime? _loadedContactMessageSummaryAt(String contactKeyHex) {
     DateTime? latestMessageAt;
-    for (final contact in _contacts) {
-      if (contact.publicKeyHex == contactKeyHex &&
-          _supportsContactMessageSummary(contact) &&
-          contact.hasMessages) {
-        if (latestMessageAt == null ||
-            contact.lastMessageAt.isAfter(latestMessageAt)) {
-          latestMessageAt = contact.lastMessageAt;
-        }
-      }
-    }
-    for (final contact in _discoveredContacts) {
-      if (contact.publicKeyHex == contactKeyHex &&
-          _supportsContactMessageSummary(contact) &&
-          contact.hasMessages) {
-        if (latestMessageAt == null ||
-            contact.lastMessageAt.isAfter(latestMessageAt)) {
-          latestMessageAt = contact.lastMessageAt;
-        }
+    for (final message in _conversations[contactKeyHex] ?? const <Message>[]) {
+      if (message.isCli) continue;
+      final timestamp = message.timestamp;
+      if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
+        latestMessageAt = timestamp;
       }
     }
     return latestMessageAt;
@@ -901,6 +924,75 @@ class MeshCoreConnector extends ChangeNotifier {
       }
     }
     return changed;
+  }
+
+  bool _clearContactMessageSummary(String contactKeyHex) {
+    var changed = false;
+    for (var i = 0; i < _contacts.length; i++) {
+      final contact = _contacts[i];
+      if (contact.publicKeyHex != contactKeyHex ||
+          !_supportsContactMessageSummary(contact) ||
+          !contact.hasMessages) {
+        continue;
+      }
+      _contacts[i] = contact.copyWith(hasMessages: false);
+      changed = true;
+    }
+    for (var i = 0; i < _discoveredContacts.length; i++) {
+      final contact = _discoveredContacts[i];
+      if (contact.publicKeyHex != contactKeyHex ||
+          !_supportsContactMessageSummary(contact) ||
+          !contact.hasMessages) {
+        continue;
+      }
+      _discoveredContacts[i] = contact.copyWith(hasMessages: false);
+      changed = true;
+    }
+    return changed;
+  }
+
+  ({bool hasMessages, DateTime lastMessageAt}) _mergedContactMessageSummary(
+    Contact existing,
+    Contact contact,
+  ) {
+    final loadedLatest = _loadedContactMessageSummaryAt(existing.publicKeyHex);
+    if (loadedLatest != null) {
+      return (hasMessages: true, lastMessageAt: loadedLatest);
+    }
+    if (contact.hasMessages) {
+      return (
+        hasMessages: true,
+        lastMessageAt: contact.lastMessageAt.isAfter(existing.lastMessageAt)
+            ? contact.lastMessageAt
+            : existing.lastMessageAt,
+      );
+    }
+    return (hasMessages: false, lastMessageAt: existing.lastMessageAt);
+  }
+
+  void _captureContactMessageSummarySnapshot() {
+    _contactMessageSummarySnapshot
+      ..clear()
+      ..addEntries([
+        for (final contact in _contacts)
+          if (_supportsContactMessageSummary(contact) && contact.hasMessages)
+            MapEntry(contact.publicKeyHex, contact.lastMessageAt),
+        for (final contact in _discoveredContacts)
+          if (_supportsContactMessageSummary(contact) && contact.hasMessages)
+            MapEntry(contact.publicKeyHex, contact.lastMessageAt),
+      ]);
+  }
+
+  Contact _withContactMessageSummarySnapshot(Contact contact) {
+    if (!_supportsContactMessageSummary(contact)) return contact;
+    final latestMessageAt =
+        _contactMessageSummarySnapshot[contact.publicKeyHex];
+    if (latestMessageAt == null) return contact;
+    if (contact.hasMessages &&
+        !latestMessageAt.isAfter(contact.lastMessageAt)) {
+      return contact;
+    }
+    return contact.copyWith(hasMessages: true, lastMessageAt: latestMessageAt);
   }
 
   bool _supportsContactMessageSummary(Contact contact) {
@@ -1913,6 +2005,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastSharedMessageHistoryMode = mode;
     _clearSharedMessageHistoryCache();
     _refreshActiveSharedMessageHistory();
+    unawaited(_refreshContactMessageSummaries());
     notifyListeners();
   }
 
@@ -1974,7 +2067,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _contacts
       ..clear()
       ..addAll(cached);
-    unawaited(_refreshContactMessageSummaries());
+    await _refreshContactMessageSummaries();
   }
 
   Future<void> _loadDiscoveredContactCache() async {
@@ -1989,7 +2082,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _discoveredContacts
       ..clear()
       ..addAll(cached);
-    unawaited(_refreshContactMessageSummaries());
+    await _refreshContactMessageSummaries();
   }
 
   Future<void> loadChannelSettings({
@@ -3604,6 +3697,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _hasLoadedContacts = false;
     _contactSyncIndexes = null;
     _discoveredContactSyncIndexes = null;
+    _contactMessageSummarySnapshot.clear();
     _isLoadingChannels = false;
     _hasLoadedChannels = false;
     _isSyncingQueuedMessages = false;
@@ -4117,6 +4211,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSyncUsesSinceFilter = since != null;
     _armContactSyncTimeout();
     if (!preserveExisting) {
+      await _refreshContactMessageSummaries();
+      _captureContactMessageSummarySnapshot();
       _hasLoadedContacts = false;
       _contacts.clear();
     }
@@ -4143,11 +4239,13 @@ class MeshCoreConnector extends ChangeNotifier {
       _contactSyncUsesSinceFilter = false;
       _contactSyncIndexes = null;
       _discoveredContactSyncIndexes = null;
+      _contactMessageSummarySnapshot.clear();
       _unreadStore.saveContactUnreadCount(
         Map<String, int>.from(_contactUnreadCount),
       );
       unawaited(updateKnownDiscovered());
       notifyListeners();
+      unawaited(_refreshContactMessageSummaries());
       unawaited(_persistContacts());
       unawaited(_flushDeferredChannelMessageSends());
       if (PlatformInfo.isWeb &&
@@ -6342,6 +6440,10 @@ class MeshCoreConnector extends ChangeNotifier {
       case respCodeContactsStart:
         debugPrint('Got CONTACTS_START');
         _armContactSyncTimeout();
+        if (!_preserveContactsOnRefresh &&
+            _contactMessageSummarySnapshot.isEmpty) {
+          _captureContactMessageSummarySnapshot();
+        }
         if (!_preserveContactsOnRefresh) {
           _contacts.clear();
         }
@@ -6394,11 +6496,13 @@ class MeshCoreConnector extends ChangeNotifier {
         _contactSyncUsesSinceFilter = false;
         _contactSyncIndexes = null;
         _discoveredContactSyncIndexes = null;
+        _contactMessageSummarySnapshot.clear();
         _unreadStore.saveContactUnreadCount(
           Map<String, int>.from(_contactUnreadCount),
         );
         unawaited(updateKnownDiscovered());
         notifyListeners();
+        unawaited(_refreshContactMessageSummaries());
         unawaited(_persistContacts());
         unawaited(_flushDeferredChannelMessageSends());
         if (PlatformInfo.isWeb &&
@@ -7058,7 +7162,9 @@ class MeshCoreConnector extends ChangeNotifier {
         );
         return;
       }
-      final contact = getFromDiscovered(contactTmp);
+      final contact = _withContactMessageSummarySnapshot(
+        getFromDiscovered(contactTmp),
+      );
       _handleDiscovery(
         contact,
         frame,
@@ -7087,10 +7193,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
       if (existingIndex >= 0) {
         final existing = _contacts[existingIndex];
-        final mergedHasMessages = existing.hasMessages || contact.hasMessages;
-        final mergedLastMessageAt = existing.hasMessages
-            ? existing.lastMessageAt
-            : contact.lastMessageAt;
+        final messageSummary = _mergedContactMessageSummary(existing, contact);
 
         if (!isContactSync) {
           appLogger.info(
@@ -7102,8 +7205,8 @@ class MeshCoreConnector extends ChangeNotifier {
         // Preserve user-selected path settings and previously known GPS when
         // refreshed frames omit coordinates (lat/lon encoded as 0,0).
         _contacts[existingIndex] = contact.copyWith(
-          lastMessageAt: mergedLastMessageAt,
-          hasMessages: mergedHasMessages,
+          lastMessageAt: messageSummary.lastMessageAt,
+          hasMessages: messageSummary.hasMessages,
           pathOverride: existing.pathOverride, // Preserve user's path choice
           pathOverrideBytes: existing.pathOverrideBytes,
           latitude: contact.latitude ?? existing.latitude,
@@ -7194,10 +7297,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (existingIndex >= 0) {
       final existing = _contacts[existingIndex];
-      final mergedHasMessages = existing.hasMessages || contact.hasMessages;
-      final mergedLastMessageAt = existing.hasMessages
-          ? existing.lastMessageAt
-          : contact.lastMessageAt;
+      final messageSummary = _mergedContactMessageSummary(existing, contact);
 
       appLogger.info(
         'Refreshing contact ${contact.name}: devicePath=${contact.pathLength}, existingOverride=${existing.pathOverride}',
@@ -7206,8 +7306,8 @@ class MeshCoreConnector extends ChangeNotifier {
 
       // CRITICAL: Preserve user's path override when contact is refreshed from device
       _contacts[existingIndex] = contact.copyWith(
-        lastMessageAt: mergedLastMessageAt,
-        hasMessages: mergedHasMessages,
+        lastMessageAt: messageSummary.lastMessageAt,
+        hasMessages: messageSummary.hasMessages,
         pathOverride: existing.pathOverride, // Preserve user's path choice
         pathOverrideBytes: existing.pathOverrideBytes,
       );
@@ -7274,7 +7374,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   bool _setContactLastMessageAt(int index, DateTime timestamp) {
     final contact = _contacts[index];
-    if (contact.type != advTypeChat) return false;
+    if (!_supportsContactMessageSummary(contact)) return false;
     if (contact.hasMessages && !timestamp.isAfter(contact.lastMessageAt)) {
       return false;
     }
@@ -10889,10 +10989,7 @@ class MeshCoreConnector extends ChangeNotifier {
     // Update existing contact
     if (existingIndex >= 0) {
       final existing = _discoveredContacts[existingIndex];
-      final mergedHasMessages = existing.hasMessages || contact.hasMessages;
-      final mergedLastMessageAt = existing.hasMessages
-          ? existing.lastMessageAt
-          : contact.lastMessageAt;
+      final messageSummary = _mergedContactMessageSummary(existing, contact);
       _discoveredContacts[existingIndex] = existing.copyWith(
         rawPacket: rawPacket,
         name: contact.name,
@@ -10902,8 +10999,8 @@ class MeshCoreConnector extends ChangeNotifier {
         latitude: contact.latitude,
         longitude: contact.longitude,
         lastSeen: contact.lastSeen,
-        lastMessageAt: mergedLastMessageAt,
-        hasMessages: mergedHasMessages,
+        lastMessageAt: messageSummary.lastMessageAt,
+        hasMessages: messageSummary.hasMessages,
         flags: 0,
         isActive: addActive,
       );

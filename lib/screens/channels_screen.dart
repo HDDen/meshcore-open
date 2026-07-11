@@ -15,9 +15,12 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
+import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_group.dart';
 import '../models/community.dart';
+import '../models/contact.dart';
+import '../connector/meshcore_protocol.dart';
 import '../storage/channel_group_store.dart';
 import '../storage/community_store.dart';
 import '../theme/mesh_theme.dart';
@@ -39,6 +42,7 @@ import '../helpers/channel_group_helper.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
+import 'chat_screen.dart';
 import 'community_qr_scanner_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
@@ -63,6 +67,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   final Set<String> _expandedChannelGroups = <String>{};
   List<Community> _communities = [];
   List<ChannelGroup> _channelGroups = [];
+  List<String> _manualScreenOrder = [];
   String _loadedChannelGroupsForPublicKey = '';
   bool _isLoadingChannelGroups = false;
   Timer? _searchDebounce;
@@ -113,10 +118,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     _channelGroupStore.setPublicKeyHex = publicKeyHex;
     final groups = await _channelGroupStore.loadGroups();
     final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
+    final screenOrder = await _channelGroupStore.loadScreenOrder();
     final currentPublicKeyHex = connector.selfPublicKeyHex;
     if (mounted && currentPublicKeyHex == publicKeyHex) {
       setState(() {
         _channelGroups = orderedChannelGroups(groups);
+        _manualScreenOrder = screenOrder;
         _loadedChannelGroupsForPublicKey = publicKeyHex;
         _isLoadingChannelGroups = false;
         _expandedChannelGroups
@@ -145,6 +152,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         .read<MeshCoreConnector>()
         .selfPublicKeyHex;
     await _channelGroupStore.saveExpandedGroupNames(_expandedChannelGroups);
+  }
+
+  Future<void> _saveManualScreenOrder() async {
+    _channelGroupStore.setPublicKeyHex = context
+        .read<MeshCoreConnector>()
+        .selfPublicKeyHex;
+    await _channelGroupStore.saveScreenOrder(_manualScreenOrder);
   }
 
   Future<void> _loadCommunities() async {
@@ -295,6 +309,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           },
           child: () {
             final channels = connector.channels;
+            final roomServerContacts = _roomServerContactsForChannelsScreen(
+              connector,
+              appSettings,
+              viewState,
+            );
             final waitingForInitialChannels =
                 !connector.hasLoadedChannels && !connector.isLoadingChannels;
             final waitingForFirstChannel =
@@ -311,7 +330,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (channels.isEmpty) {
+            if (channels.isEmpty && roomServerContacts.isEmpty) {
               return ListView(
                 children: [
                   SizedBox(
@@ -398,6 +417,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         channelMessageStore,
                         viewState,
                         filteredChannels,
+                        roomServerContacts,
                         mutedChannelNames,
                         hideChannelIndexIndicator:
                             appSettings.hideChannelIndexIndicator,
@@ -733,6 +753,149 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
+  Widget _buildRoomServerTile(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Contact contact, {
+    bool showDragHandle = false,
+    int? dragIndex,
+    int listIndex = 0,
+    EdgeInsetsGeometry? margin,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final unreadCount = connector.getUnreadCountForContactKey(
+      contact.publicKeyHex,
+    );
+    final messages = connector.getLoadedMessages(contact);
+    final lastMessage = messages.isNotEmpty ? messages.last : null;
+    final lastMessageText = lastMessage?.text ?? '';
+    final lastPreview =
+        lastMessageText.isNotEmpty &&
+            GifHelper.parseGif(lastMessageText) != null
+        ? context.l10n.chat_receivedGif
+        : lastMessageText;
+    final lastPreviewImage = lastMessage == null
+        ? null
+        : MCOImageMessage.tryDecode(lastMessage.text);
+    final lastTime = lastMessage?.timestamp ?? contact.lastMessageAt;
+    final isRoom = contact.type == advTypeRoom;
+    final contactLabel = contact.name.isEmpty
+        ? (isRoom
+              ? context.l10n.chat_contactTypeRoom
+              : context.l10n.chat_contactTypeNode)
+        : contact.name;
+
+    return ListEntrance(
+      key: ValueKey('contact_chat_entrance_${contact.publicKeyHex}'),
+      index: listIndex,
+      child: MeshCard(
+        key: ValueKey('contact_chat_${contact.publicKeyHex}'),
+        margin:
+            margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          connector.markContactRead(contact.publicKeyHex);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ChatScreen(contact: contact, initialUnreadCount: unreadCount),
+            ),
+          );
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            AvatarCircle(
+              name: contactLabel,
+              size: 42,
+              color: isRoom ? MeshPalette.magenta : MeshPalette.blue,
+              icon: isRoom ? Icons.meeting_room : Icons.person,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    contactLabel,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (lastPreviewImage != null) ...[
+                    const SizedBox(height: 2),
+                    MCOImageMessage(
+                      image: lastPreviewImage,
+                      maxSize: max(
+                        lastPreviewImage.width,
+                        lastPreviewImage.height,
+                      ).toDouble(),
+                    ),
+                  ] else if (lastPreview.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      lastPreview,
+                      style: MeshTheme.mono(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      isRoom
+                          ? context.l10n.chat_contactTypeRoom
+                          : context.l10n.chat_contactTypeNode,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _relativeTime(lastTime),
+                  style: MeshTheme.mono(
+                    fontSize: 11,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (unreadCount > 0) UnreadBadge(count: unreadCount),
+              ],
+            ),
+            if (showDragHandle && dragIndex != null) ...[
+              const SizedBox(width: 4),
+              ReorderableDragStartListener(
+                index: dragIndex,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.drag_handle,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   List<String> _channelCompressionLabels(
     MeshCoreConnector connector,
     Channel channel,
@@ -895,30 +1058,236 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     UiViewStateService viewState,
     List<Channel> filteredChannels,
+    List<Contact> roomServerContacts,
     Set<String> mutedChannelNames, {
     required bool hideChannelIndexIndicator,
     required bool sortUnreadFirst,
   }) {
-    final groupedChannelNames = _groupedChannelNames();
+    final disableRoomAndContactsSorting = context
+        .read<AppSettingsService>()
+        .settings
+        .roomServerDisableRoomAndContactsSorting;
+    if (disableRoomAndContactsSorting) {
+      return _buildLegacyChannelsList(
+        context,
+        connector,
+        channelMessageStore,
+        viewState,
+        filteredChannels,
+        roomServerContacts,
+        mutedChannelNames,
+        hideChannelIndexIndicator: hideChannelIndexIndicator,
+        sortUnreadFirst: sortUnreadFirst,
+      );
+    }
+
+    final groupedItemNames = _groupedItemNames();
+    final visibleGroups = _channelGroups.where((group) {
+      if (viewState.channelsSearchText.isEmpty) return true;
+      final query = viewState.channelsSearchText.toLowerCase();
+      return group.name.toLowerCase().contains(query) ||
+          _itemsForGroup(
+            group,
+            filteredChannels,
+            roomServerContacts,
+          ).isNotEmpty;
+    }).toList();
+    final ungroupedItems = [
+      for (final channel in filteredChannels)
+        if (!groupedItemNames.contains(_groupKeyForChannel(channel)))
+          _ChannelScreenItem.channel(channel),
+      for (final room in roomServerContacts)
+        if (!groupedItemNames.contains(_groupKeyForRoom(room)))
+          _ChannelScreenItem.room(room),
+    ];
+    _sortChannelScreenItems(
+      ungroupedItems,
+      connector,
+      viewState.channelsSortOption,
+      sortUnreadFirst: sortUnreadFirst,
+    );
+    final hasVisibleContent =
+        visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty;
+
+    if (!hasVisibleContent) {
+      return ListView(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height - 300,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.l10n.channels_noChannelsFound,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final canReorder =
+        viewState.channelsSortOption == ChannelSortOption.manual &&
+        viewState.channelsSearchText.isEmpty;
+    if (canReorder) {
+      final baseEntries = _buildManualScreenEntries(
+        filteredChannels,
+        roomServerContacts,
+      );
+      final entries = sortUnreadFirst
+          ? _sortManualScreenEntriesUnreadFirst(baseEntries, connector)
+          : baseEntries;
+      return ReorderableListView.builder(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
+        buildDefaultDragHandles: false,
+        itemCount: entries.length,
+        onReorderItem: (oldIndex, newIndex) {
+          final reordered = List<_ChannelScreenListEntry>.from(entries);
+          final item = reordered.removeAt(oldIndex);
+          reordered.insert(newIndex, item);
+          final persistedEntries = sortUnreadFirst
+              ? _restoreUnreadManualScreenEntryPositions(
+                  baseEntries,
+                  reordered,
+                  connector,
+                )
+              : reordered;
+          final reorderedGroups = _channelGroupsFromManualScreenEntries(
+            persistedEntries,
+          );
+          final screenOrder = [
+            for (final entry in persistedEntries)
+              _screenOrderKeyForEntry(entry),
+          ];
+          setState(() {
+            _channelGroups = reorderedGroups;
+            _manualScreenOrder = screenOrder;
+          });
+          unawaited(_saveChannelGroups());
+          unawaited(_saveManualScreenOrder());
+        },
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          final group = entry.group;
+          if (group != null) {
+            return KeyedSubtree(
+              key: ValueKey('channel_group_${group.name}'),
+              child: _buildChannelGroupTile(
+                context,
+                connector,
+                channelMessageStore,
+                group,
+                filteredChannels,
+                roomServerContacts,
+                mutedChannelNames: mutedChannelNames,
+                hideChannelIndexIndicator: hideChannelIndexIndicator,
+                sortUnreadFirst: sortUnreadFirst,
+                showDragHandle: true,
+                dragIndex: index,
+              ),
+            );
+          }
+          final item = entry.item!;
+          final channel = item.channel;
+          final showDragHandle = !_isUnreadSortedItem(
+            connector,
+            item,
+            sortUnreadFirst,
+          );
+          return _buildChannelScreenItem(
+            context,
+            connector,
+            channelMessageStore,
+            item,
+            isMuted: channel == null
+                ? false
+                : mutedChannelNames.contains(channel.name),
+            hideChannelIndexIndicator: hideChannelIndexIndicator,
+            showDragHandle: showDragHandle,
+            dragIndex: index,
+            margin: const EdgeInsets.symmetric(vertical: 4),
+          );
+        },
+      );
+    }
+
+    final children = <Widget>[
+      for (final group in visibleGroups)
+        _buildChannelGroupTile(
+          context,
+          connector,
+          channelMessageStore,
+          group,
+          filteredChannels,
+          roomServerContacts,
+          mutedChannelNames: mutedChannelNames,
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          sortUnreadFirst: sortUnreadFirst,
+          forceExpanded: viewState.channelsSearchText.isNotEmpty,
+        ),
+    ];
+
+    for (var i = 0; i < ungroupedItems.length; i++) {
+      children.add(
+        _buildChannelScreenItem(
+          context,
+          connector,
+          channelMessageStore,
+          ungroupedItems[i],
+          isMuted: ungroupedItems[i].channel == null
+              ? false
+              : mutedChannelNames.contains(ungroupedItems[i].channel!.name),
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          listIndex: i,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
+      children: children,
+    );
+  }
+
+  Widget _buildLegacyChannelsList(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    UiViewStateService viewState,
+    List<Channel> filteredChannels,
+    List<Contact> roomServerContacts,
+    Set<String> mutedChannelNames, {
+    required bool hideChannelIndexIndicator,
+    required bool sortUnreadFirst,
+  }) {
+    final groupedChannelNames = channelGroupByChannelName(_channelGroups).keys;
     final visibleGroups = _channelGroups.where((group) {
       if (viewState.channelsSearchText.isEmpty) return true;
       final query = viewState.channelsSearchText.toLowerCase();
       return group.name.toLowerCase().contains(query) ||
           channelsForGroup(group, filteredChannels).isNotEmpty;
     }).toList();
-    final ungroupedChannels = _sortUnreadChannelsForDisplay(
-      filteredChannels
-          .where(
-            (channel) => !groupedChannelNames.contains(
-              channelNameForGroup(channel).toLowerCase(),
-            ),
-          )
-          .toList(),
-      connector,
-      enabled: sortUnreadFirst,
-    );
+    final ungroupedChannels = filteredChannels
+        .where(
+          (channel) => !groupedChannelNames.contains(
+            channelNameForGroup(channel).toLowerCase(),
+          ),
+        )
+        .toList();
+    final displayUngroupedChannels = sortUnreadFirst
+        ? _sortUnreadChannelsForDisplay(ungroupedChannels, connector)
+        : ungroupedChannels;
+    final detachedItems = _sortedDetachedContactItems(roomServerContacts);
     final hasVisibleContent =
-        visibleGroups.isNotEmpty || ungroupedChannels.isNotEmpty;
+        visibleGroups.isNotEmpty ||
+        ungroupedChannels.isNotEmpty ||
+        detachedItems.isNotEmpty;
 
     if (!hasVisibleContent) {
       return ListView(
@@ -952,75 +1321,92 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         _channelGroups,
       );
       final entries = sortUnreadFirst
-          ? _sortManualEntriesUnreadFirst(baseEntries, connector)
+          ? _sortManualChannelEntriesUnreadFirst(baseEntries, connector)
           : baseEntries;
-      return ReorderableListView.builder(
+      return ListView(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
-        buildDefaultDragHandles: false,
-        itemCount: entries.length,
-        onReorderItem: (oldIndex, newIndex) {
-          final reordered = List<ChannelGroupListEntry>.from(entries);
-          final item = reordered.removeAt(oldIndex);
-          reordered.insert(newIndex, item);
-          final persistedEntries = sortUnreadFirst
-              ? _restoreUnreadManualEntryPositions(
-                  baseEntries,
-                  reordered,
-                  connector,
-                )
-              : reordered;
-          final reorderedGroups = channelGroupsFromManualEntries(
-            persistedEntries,
-          );
-          final orderedChannelIndexes =
-              manualChannelOrderFromEntriesWithChannels(
+        children: [
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            buildDefaultDragHandles: false,
+            itemCount: entries.length,
+            onReorderItem: (oldIndex, newIndex) {
+              final reordered = List<ChannelGroupListEntry>.from(entries);
+              final item = reordered.removeAt(oldIndex);
+              reordered.insert(newIndex, item);
+              final persistedEntries = sortUnreadFirst
+                  ? _restoreUnreadManualChannelEntryPositions(
+                      baseEntries,
+                      reordered,
+                      connector,
+                    )
+                  : reordered;
+              final reorderedGroups = channelGroupsFromManualEntries(
                 persistedEntries,
-                filteredChannels,
               );
-          setState(() {
-            _channelGroups = reorderedGroups;
-          });
-          unawaited(_saveChannelGroups());
-          unawaited(connector.setChannelOrder(orderedChannelIndexes));
-        },
-        itemBuilder: (context, index) {
-          final entry = entries[index];
-          final group = entry.group;
-          if (group != null) {
-            return KeyedSubtree(
-              key: ValueKey('channel_group_${group.name}'),
-              child: _buildChannelGroupTile(
+              final orderedChannelIndexes =
+                  manualChannelOrderFromEntriesWithChannels(
+                    persistedEntries,
+                    filteredChannels,
+                  );
+              setState(() {
+                _channelGroups = reorderedGroups;
+              });
+              unawaited(_saveChannelGroups());
+              unawaited(connector.setChannelOrder(orderedChannelIndexes));
+            },
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              final group = entry.group;
+              if (group != null) {
+                return KeyedSubtree(
+                  key: ValueKey('channel_group_${group.name}'),
+                  child: _buildChannelGroupTile(
+                    context,
+                    connector,
+                    channelMessageStore,
+                    group,
+                    filteredChannels,
+                    const <Contact>[],
+                    mutedChannelNames: mutedChannelNames,
+                    hideChannelIndexIndicator: hideChannelIndexIndicator,
+                    sortUnreadFirst: sortUnreadFirst,
+                    showDragHandle: true,
+                    dragIndex: index,
+                  ),
+                );
+              }
+              final channel = entry.channel!;
+              final showDragHandle =
+                  !sortUnreadFirst ||
+                  connector.getUnreadCountForChannel(channel) == 0;
+              return _buildChannelTile(
                 context,
                 connector,
                 channelMessageStore,
-                group,
-                filteredChannels,
-                mutedChannelNames: mutedChannelNames,
+                channel,
+                isMuted: mutedChannelNames.contains(channel.name),
                 hideChannelIndexIndicator: hideChannelIndexIndicator,
-                sortUnreadFirst: sortUnreadFirst,
-                showDragHandle: true,
+                showDragHandle: showDragHandle,
                 dragIndex: index,
-              ),
-            );
-          }
-          final channel = entry.channel!;
-          final showDragHandle = !_isUnreadSortedChannel(
-            connector,
-            channel,
-            sortUnreadFirst,
-          );
-          return _buildChannelTile(
-            context,
-            connector,
-            channelMessageStore,
-            channel,
-            isMuted: mutedChannelNames.contains(channel.name),
-            hideChannelIndexIndicator: hideChannelIndexIndicator,
-            showDragHandle: showDragHandle,
-            dragIndex: index,
-            margin: const EdgeInsets.symmetric(vertical: 4),
-          );
-        },
+                margin: const EdgeInsets.symmetric(vertical: 4),
+              );
+            },
+          ),
+          for (var i = 0; i < detachedItems.length; i++)
+            _buildChannelScreenItem(
+              context,
+              connector,
+              channelMessageStore,
+              detachedItems[i],
+              isMuted: false,
+              hideChannelIndexIndicator: hideChannelIndexIndicator,
+              listIndex: i,
+              margin: const EdgeInsets.symmetric(vertical: 4),
+            ),
+        ],
       );
     }
 
@@ -1032,6 +1418,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           channelMessageStore,
           group,
           filteredChannels,
+          const <Contact>[],
           mutedChannelNames: mutedChannelNames,
           hideChannelIndexIndicator: hideChannelIndexIndicator,
           sortUnreadFirst: sortUnreadFirst,
@@ -1039,9 +1426,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
     ];
 
-    children.addAll(
-      ungroupedChannels.map(
-        (channel) => _buildChannelTile(
+    for (final channel in displayUngroupedChannels) {
+      children.add(
+        _buildChannelTile(
           context,
           connector,
           channelMessageStore,
@@ -1050,16 +1437,121 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           hideChannelIndexIndicator: hideChannelIndexIndicator,
           margin: const EdgeInsets.symmetric(vertical: 4),
         ),
-      ),
-    );
+      );
+    }
+    for (var i = 0; i < detachedItems.length; i++) {
+      children.add(
+        _buildChannelScreenItem(
+          context,
+          connector,
+          channelMessageStore,
+          detachedItems[i],
+          isMuted: false,
+          hideChannelIndexIndicator: hideChannelIndexIndicator,
+          listIndex: i,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
       children: children,
     );
   }
 
-  Set<String> _groupedChannelNames() {
+  List<_ChannelScreenItem> _sortedDetachedContactItems(
+    List<Contact> roomServerContacts,
+  ) {
+    final rooms = [
+      for (final contact in roomServerContacts)
+        if (contact.type == advTypeRoom) _ChannelScreenItem.room(contact),
+    ]..sort((a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)));
+    final contacts = [
+      for (final contact in roomServerContacts)
+        if (contact.type == advTypeChat) _ChannelScreenItem.room(contact),
+    ]..sort((a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)));
+    return [...rooms, ...contacts];
+  }
+
+  Set<String> _groupedItemNames() {
     return channelGroupByChannelName(_channelGroups).keys.toSet();
+  }
+
+  List<_ChannelScreenListEntry> _buildManualScreenEntries(
+    List<Channel> filteredChannels,
+    List<Contact> roomServerContacts,
+  ) {
+    final groupedItemNames = _groupedItemNames();
+    final entriesByKey = <String, _ChannelScreenListEntry>{
+      for (final group in orderedChannelGroups(_channelGroups))
+        _screenOrderKeyForGroup(group): _ChannelScreenListEntry.group(group),
+      for (final channel in filteredChannels)
+        if (!groupedItemNames.contains(_groupKeyForChannel(channel)))
+          _screenOrderKeyForItem(_ChannelScreenItem.channel(channel)):
+              _ChannelScreenListEntry.item(_ChannelScreenItem.channel(channel)),
+      for (final room in roomServerContacts)
+        if (!groupedItemNames.contains(_groupKeyForRoom(room)))
+          _screenOrderKeyForItem(_ChannelScreenItem.room(room)):
+              _ChannelScreenListEntry.item(_ChannelScreenItem.room(room)),
+    };
+
+    final entries = <_ChannelScreenListEntry>[];
+    final emittedKeys = <String>{};
+    for (final key in _manualScreenOrder) {
+      final entry = entriesByKey[key];
+      if (entry == null) continue;
+      if (emittedKeys.add(key)) entries.add(entry);
+    }
+
+    final remaining = [
+      for (final entry in entriesByKey.entries)
+        if (!emittedKeys.contains(entry.key)) entry.value,
+    ];
+    remaining.sort(_compareManualScreenEntriesFallback);
+    entries.addAll(remaining);
+    return entries;
+  }
+
+  int _compareManualScreenEntriesFallback(
+    _ChannelScreenListEntry a,
+    _ChannelScreenListEntry b,
+  ) {
+    final groupA = a.group;
+    final groupB = b.group;
+    if (groupA != null && groupB != null) {
+      final orderCompare = groupA.sortOrder.compareTo(groupB.sortOrder);
+      if (orderCompare != 0) return orderCompare;
+      return groupA.name.toLowerCase().compareTo(groupB.name.toLowerCase());
+    }
+    if (groupA != null) return -1;
+    if (groupB != null) return 1;
+    return _itemNameForSort(a.item!).compareTo(_itemNameForSort(b.item!));
+  }
+
+  List<ChannelGroup> _channelGroupsFromManualScreenEntries(
+    List<_ChannelScreenListEntry> entries,
+  ) {
+    return [
+      for (var index = 0; index < entries.length; index++)
+        if (entries[index].group != null)
+          entries[index].group!.copyWith(sortOrder: index),
+    ];
+  }
+
+  String _screenOrderKeyForEntry(_ChannelScreenListEntry entry) {
+    final group = entry.group;
+    if (group != null) return _screenOrderKeyForGroup(group);
+    return _screenOrderKeyForItem(entry.item!);
+  }
+
+  String _screenOrderKeyForGroup(ChannelGroup group) {
+    return 'group:${group.name.trim().toLowerCase()}';
+  }
+
+  String _screenOrderKeyForItem(_ChannelScreenItem item) {
+    final channel = item.channel;
+    if (channel != null) return 'channel:${channel.index}';
+    return _groupKeyForRoom(item.room!);
   }
 
   Widget _buildChannelGroupTile(
@@ -1067,7 +1559,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     MeshCoreConnector connector,
     ChannelMessageStore channelMessageStore,
     ChannelGroup group,
-    List<Channel> filteredChannels, {
+    List<Channel> filteredChannels,
+    List<Contact> roomServerContacts, {
     Set<String> mutedChannelNames = const {},
     required bool hideChannelIndexIndicator,
     required bool sortUnreadFirst,
@@ -1077,25 +1570,37 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }) {
     final isExpanded =
         forceExpanded || _expandedChannelGroups.contains(group.name);
-    final baseChannels = channelsForGroup(group, filteredChannels);
-    if (!group.allowOrderingInGroup) {
-      baseChannels.sort(_compareChannelsByName);
-    }
-    final channels = _sortUnreadChannelsForDisplay(
-      baseChannels,
-      connector,
-      enabled: sortUnreadFirst,
+    final baseItems = _itemsForGroup(
+      group,
+      filteredChannels,
+      roomServerContacts,
     );
+    final items = List<_ChannelScreenItem>.from(baseItems);
+    if (!group.allowOrderingInGroup) {
+      _sortChannelScreenItems(
+        items,
+        connector,
+        ChannelSortOption.name,
+        sortUnreadFirst: false,
+      );
+    }
+    if (sortUnreadFirst) {
+      _sortChannelScreenItems(
+        items,
+        connector,
+        ChannelSortOption.unread,
+        sortUnreadFirst: true,
+      );
+    }
     final groupWidgetColor = group.widgetColor == null
         ? null
         : Color(group.widgetColor!);
     final groupWidgetTextColor = group.widgetTextColor == null
         ? null
         : Color(group.widgetTextColor!);
-    final unreadCount = channels.fold<int>(
+    final unreadCount = items.fold<int>(
       0,
-      (sum, channel) =>
-          sum + connector.getUnreadCountForChannelIndex(channel.index),
+      (sum, item) => sum + _unreadCountForItem(connector, item),
     );
 
     return GestureDetector(
@@ -1168,7 +1673,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   connector,
                   channelMessageStore,
                   group,
-                  channels,
+                  items,
                   mutedChannelNames: mutedChannelNames,
                   hideChannelIndexIndicator: hideChannelIndexIndicator,
                   canReorder: showDragHandle && group.allowOrderingInGroup,
@@ -1192,14 +1697,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     MeshCoreConnector connector,
     ChannelMessageStore channelMessageStore,
     ChannelGroup group,
-    List<Channel> channels, {
+    List<_ChannelScreenItem> items, {
     Set<String> mutedChannelNames = const {},
     required bool hideChannelIndexIndicator,
     required bool canReorder,
     required bool sortUnreadFirst,
     Color? emptyTextColor,
   }) {
-    if (channels.isEmpty) {
+    if (items.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Align(
@@ -1215,13 +1720,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     if (!canReorder) {
       return Column(
         children: [
-          for (final channel in channels)
-            _buildChannelTile(
+          for (final channel in items)
+            _buildChannelScreenItem(
               context,
               connector,
               channelMessageStore,
               channel,
-              isMuted: mutedChannelNames.contains(channel.name),
+              isMuted: channel.channel == null
+                  ? false
+                  : mutedChannelNames.contains(channel.channel!.name),
               hideChannelIndexIndicator: hideChannelIndexIndicator,
               margin: const EdgeInsets.symmetric(vertical: 4),
             ),
@@ -1233,30 +1740,33 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
-      itemCount: channels.length,
+      itemCount: items.length,
       onReorderItem: (oldIndex, newIndex) {
-        _reorderChannelsInGroup(
+        _reorderItemsInGroup(
           connector,
           group,
-          channels,
+          items,
           oldIndex,
           newIndex,
           sortUnreadFirst: sortUnreadFirst,
         );
       },
       itemBuilder: (context, index) {
-        final channel = channels[index];
-        final showDragHandle = !_isUnreadSortedChannel(
+        final item = items[index];
+        final channel = item.channel;
+        final showDragHandle = !_isUnreadSortedItem(
           connector,
-          channel,
+          item,
           sortUnreadFirst,
         );
-        return _buildChannelTile(
+        return _buildChannelScreenItem(
           context,
           connector,
           channelMessageStore,
-          channel,
-          isMuted: mutedChannelNames.contains(channel.name),
+          item,
+          isMuted: channel == null
+              ? false
+              : mutedChannelNames.contains(channel.name),
           hideChannelIndexIndicator: hideChannelIndexIndicator,
           showDragHandle: showDragHandle,
           dragIndex: index,
@@ -1266,28 +1776,28 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
-  void _reorderChannelsInGroup(
+  void _reorderItemsInGroup(
     MeshCoreConnector connector,
     ChannelGroup group,
-    List<Channel> displayChannels,
+    List<_ChannelScreenItem> displayItems,
     int oldIndex,
     int newIndex, {
     required bool sortUnreadFirst,
   }) {
-    final reorderedChannels = List<Channel>.from(displayChannels);
-    if (oldIndex < 0 || oldIndex >= reorderedChannels.length) return;
-    final channel = reorderedChannels.removeAt(oldIndex);
-    final insertIndex = max(0, min(newIndex, reorderedChannels.length));
-    reorderedChannels.insert(insertIndex, channel);
-    final persistedChannels = sortUnreadFirst
-        ? _restoreUnreadChannelPositions(
-            channelsForGroup(group, connector.channels),
-            reorderedChannels,
+    final reorderedItems = List<_ChannelScreenItem>.from(displayItems);
+    if (oldIndex < 0 || oldIndex >= reorderedItems.length) return;
+    final item = reorderedItems.removeAt(oldIndex);
+    final insertIndex = max(0, min(newIndex, reorderedItems.length));
+    reorderedItems.insert(insertIndex, item);
+    final persistedItems = sortUnreadFirst
+        ? _restoreUnreadItemPositions(
+            _itemsForGroup(group, connector.channels, _visibleRoomServers()),
+            reorderedItems,
             connector,
           )
-        : reorderedChannels;
+        : reorderedItems;
     final reorderedNames = [
-      for (final channel in persistedChannels) channelNameForGroup(channel),
+      for (final item in persistedItems) _groupNameForItem(item),
     ];
     final updatedGroups = [
       for (final item in _channelGroups)
@@ -1301,13 +1811,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       _channelGroups = updatedGroups;
     });
     unawaited(_saveChannelGroups());
-
-    // Keep the device-level manual channel order aligned with local group order.
-    final orderedChannelIndexes = manualChannelOrderForGroups(
-      connector.channels,
-      updatedGroups,
-    );
-    unawaited(connector.setChannelOrder(orderedChannelIndexes));
+    if (context
+        .read<AppSettingsService>()
+        .settings
+        .roomServerDisableRoomAndContactsSorting) {
+      unawaited(
+        connector.setChannelOrder(
+          manualChannelOrderForGroups(connector.channels, updatedGroups),
+        ),
+      );
+    }
   }
 
   void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
@@ -1344,7 +1857,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   void _showEditChannelGroupDialog(BuildContext context, ChannelGroup group) {
     final connector = context.read<MeshCoreConnector>();
-    final groupedNames = _groupedChannelNames();
+    final groupedNames = _groupedItemNames();
     final nameController = TextEditingController(text: group.name);
     final selectedNames = {
       for (final name in group.channelNames) name.trim().toLowerCase(),
@@ -1352,28 +1865,25 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool allowOrderingInGroup = group.allowOrderingInGroup;
     int? selectedWidgetColor = group.widgetColor;
     int? selectedWidgetTextColor = group.widgetTextColor;
-    final editableChannels =
-        connector.channels
-            .where(
-              (channel) =>
-                  selectedNames.contains(
-                    channelNameForGroup(channel).toLowerCase(),
-                  ) ||
-                  !groupedNames.contains(
-                    channelNameForGroup(channel).toLowerCase(),
-                  ),
-            )
-            .toList()
-          ..sort((a, b) {
-            final aSelected = selectedNames.contains(
-              channelNameForGroup(a).toLowerCase(),
-            );
-            final bSelected = selectedNames.contains(
-              channelNameForGroup(b).toLowerCase(),
-            );
-            if (aSelected != bSelected) return aSelected ? -1 : 1;
-            return _normalizeChannelName(a).compareTo(_normalizeChannelName(b));
-          });
+    final editableItems =
+        [
+          for (final channel in connector.channels)
+            if (selectedNames.contains(_groupKeyForChannel(channel)) ||
+                !groupedNames.contains(_groupKeyForChannel(channel)))
+              _ChannelScreenItem.channel(channel),
+          for (final room in _visibleRoomServers())
+            if (selectedNames.contains(_groupKeyForRoom(room)) ||
+                !groupedNames.contains(_groupKeyForRoom(room)))
+              _ChannelScreenItem.room(room),
+        ]..sort((a, b) {
+          final aSelected = selectedNames.contains(_groupNameForItemKey(a));
+          final bSelected = selectedNames.contains(_groupNameForItemKey(b));
+          if (aSelected != bSelected) return aSelected ? -1 : 1;
+          return _itemDisplayName(
+            context,
+            a,
+          ).toLowerCase().compareTo(_itemDisplayName(context, b).toLowerCase());
+        });
 
     showDialog(
       context: context,
@@ -1427,35 +1937,36 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: editableChannels.isEmpty
+                      child: editableItems.isEmpty
                           ? Center(
                               child: Text(
                                 context.l10n.channels_changeGroupEmpty,
                               ),
                             )
                           : ListView.builder(
-                              itemCount: editableChannels.length,
+                              itemCount: editableItems.length,
                               itemBuilder: (context, index) {
-                                final channel = editableChannels[index];
-                                final channelName = channelNameForGroup(
-                                  channel,
-                                );
-                                final channelNameKey = channelName
-                                    .toLowerCase();
+                                final item = editableItems[index];
+                                final itemNameKey = _groupNameForItemKey(item);
                                 final isSelected = selectedNames.contains(
-                                  channelNameKey,
+                                  itemNameKey,
                                 );
                                 return CheckboxListTile(
                                   value: isSelected,
-                                  title: Text(
-                                    _channelDisplayName(context, channel),
+                                  title: Text(_itemDisplayName(context, item)),
+                                  secondary: Icon(
+                                    item.channel != null
+                                        ? Icons.tag
+                                        : item.room!.type == advTypeRoom
+                                        ? Icons.meeting_room
+                                        : Icons.person,
                                   ),
                                   onChanged: (value) {
                                     setDialogState(() {
                                       if (value == true) {
-                                        selectedNames.add(channelNameKey);
+                                        selectedNames.add(itemNameKey);
                                       } else {
-                                        selectedNames.remove(channelNameKey);
+                                        selectedNames.remove(itemNameKey);
                                       }
                                     });
                                   },
@@ -1506,21 +2017,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     );
                     return;
                   }
+                  final syncChannelOrderWithNode = context
+                      .read<AppSettingsService>()
+                      .settings
+                      .roomServerDisableRoomAndContactsSorting;
                   setState(() {
                     _channelGroups = _channelGroups.map((item) {
                       if (item.name != group.name) return item;
                       return item.copyWith(
                         name: name,
                         channelNames: allowOrderingInGroup
-                            ? selectedChannelNamesForGroupEdit(
+                            ? _selectedItemNamesForGroupEdit(
                                 group,
-                                editableChannels,
+                                editableItems,
                                 selectedNames,
                               )
-                            : selectedChannelNamesForGroupEditSorted(
-                                editableChannels,
+                            : _selectedItemNamesForGroupEditSorted(
+                                editableItems,
                                 selectedNames,
-                                _compareChannelsByName,
                               ),
                         widgetColor: selectedWidgetColor,
                         widgetTextColor: selectedWidgetTextColor,
@@ -1533,6 +2047,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   });
                   await _saveChannelGroups();
                   await _saveExpandedChannelGroups();
+                  if (syncChannelOrderWithNode) {
+                    unawaited(
+                      connector.setChannelOrder(
+                        manualChannelOrderForGroups(
+                          connector.channels,
+                          _channelGroups,
+                        ),
+                      ),
+                    );
+                  }
                   if (dialogContext.mounted) {
                     Navigator.pop(dialogContext);
                   }
@@ -1552,6 +2076,44 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         : channel.name;
   }
 
+  Widget _buildChannelScreenItem(
+    BuildContext context,
+    MeshCoreConnector connector,
+    ChannelMessageStore channelMessageStore,
+    _ChannelScreenItem item, {
+    required bool isMuted,
+    required bool hideChannelIndexIndicator,
+    bool showDragHandle = false,
+    int? dragIndex,
+    int listIndex = 0,
+    EdgeInsetsGeometry? margin,
+  }) {
+    final channel = item.channel;
+    if (channel != null) {
+      return _buildChannelTile(
+        context,
+        connector,
+        channelMessageStore,
+        channel,
+        isMuted: isMuted,
+        hideChannelIndexIndicator: hideChannelIndexIndicator,
+        showDragHandle: showDragHandle,
+        dragIndex: dragIndex,
+        listIndex: listIndex,
+        margin: margin,
+      );
+    }
+    return _buildRoomServerTile(
+      context,
+      connector,
+      item.room!,
+      showDragHandle: showDragHandle,
+      dragIndex: dragIndex,
+      listIndex: listIndex,
+      margin: margin,
+    );
+  }
+
   void _deleteChannelGroup(ChannelGroup group) {
     setState(() {
       _channelGroups = _channelGroups
@@ -1561,6 +2123,237 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     });
     unawaited(_saveChannelGroups());
     unawaited(_saveExpandedChannelGroups());
+  }
+
+  List<Contact> _visibleRoomServers() {
+    final settings = context.read<AppSettingsService>().settings;
+    if (settings.roomServerDisableRoomAndContactsSorting) {
+      return const <Contact>[];
+    }
+    if (!settings.roomServerShowNotemptyOnChatscreen &&
+        !settings.roomServerShowNotemptyContactsOnChatscreen) {
+      return const <Contact>[];
+    }
+    return context.read<MeshCoreConnector>().contacts.where((contact) {
+      if (!contact.hasMessages) return false;
+      if (settings.roomServerShowNotemptyOnChatscreen &&
+          contact.type == advTypeRoom) {
+        return true;
+      }
+      return settings.roomServerShowNotemptyContactsOnChatscreen &&
+          contact.type == advTypeChat;
+    }).toList();
+  }
+
+  List<_ChannelScreenItem> _itemsForGroup(
+    ChannelGroup group,
+    List<Channel> filteredChannels,
+    List<Contact> roomServerContacts,
+  ) {
+    final channelsByName = {
+      for (final channel in filteredChannels)
+        _groupKeyForChannel(channel): _ChannelScreenItem.channel(channel),
+    };
+    final roomsByName = {
+      for (final room in roomServerContacts)
+        _groupKeyForRoom(room): _ChannelScreenItem.room(room),
+    };
+    return [
+      for (final name in group.channelNames)
+        if (channelsByName[name.trim().toLowerCase()] != null)
+          channelsByName[name.trim().toLowerCase()]!
+        else if (roomsByName[name.trim().toLowerCase()] != null)
+          roomsByName[name.trim().toLowerCase()]!,
+    ];
+  }
+
+  String _groupKeyForChannel(Channel channel) {
+    return channelNameForGroup(channel).toLowerCase();
+  }
+
+  String _groupKeyForRoom(Contact room) {
+    if (room.type == advTypeRoom) {
+      return 'room:${room.publicKeyHex.toLowerCase()}';
+    }
+    return 'contact:${room.publicKeyHex.toLowerCase()}';
+  }
+
+  String _groupNameForItem(_ChannelScreenItem item) {
+    final channel = item.channel;
+    if (channel != null) return channelNameForGroup(channel);
+    return _groupKeyForRoom(item.room!);
+  }
+
+  String _groupNameForItemKey(_ChannelScreenItem item) {
+    return _groupNameForItem(item).trim().toLowerCase();
+  }
+
+  String _itemDisplayName(BuildContext context, _ChannelScreenItem item) {
+    final channel = item.channel;
+    if (channel != null) return _channelDisplayName(context, channel);
+    final room = item.room!;
+    if (room.name.isNotEmpty) return room.name;
+    return room.type == advTypeRoom
+        ? context.l10n.chat_contactTypeRoom
+        : context.l10n.chat_contactTypeNode;
+  }
+
+  int _unreadCountForItem(
+    MeshCoreConnector connector,
+    _ChannelScreenItem item,
+  ) {
+    final channel = item.channel;
+    if (channel != null) return connector.getUnreadCountForChannel(channel);
+    return connector.getUnreadCountForContactKey(item.room!.publicKeyHex);
+  }
+
+  DateTime _latestTimeForItem(
+    MeshCoreConnector connector,
+    _ChannelScreenItem item,
+  ) {
+    final channel = item.channel;
+    if (channel != null) {
+      final messages = connector.getChannelMessages(channel);
+      return messages.isEmpty ? DateTime(1970) : messages.last.timestamp;
+    }
+    final room = item.room!;
+    final messages = connector.getLoadedMessages(room);
+    return messages.isEmpty ? room.lastMessageAt : messages.last.timestamp;
+  }
+
+  void _sortChannelScreenItems(
+    List<_ChannelScreenItem> items,
+    MeshCoreConnector connector,
+    ChannelSortOption sortOption, {
+    required bool sortUnreadFirst,
+  }) {
+    if (sortUnreadFirst) {
+      items.sort((a, b) {
+        final unreadCompare = _unreadCountForItem(
+          connector,
+          b,
+        ).compareTo(_unreadCountForItem(connector, a));
+        if (unreadCompare != 0) return unreadCompare;
+        return _itemNameForSort(a).compareTo(_itemNameForSort(b));
+      });
+      return;
+    }
+
+    switch (sortOption) {
+      case ChannelSortOption.manual:
+        break;
+      case ChannelSortOption.latestMessages:
+        items.sort((a, b) {
+          final timeCompare = _latestTimeForItem(
+            connector,
+            b,
+          ).compareTo(_latestTimeForItem(connector, a));
+          if (timeCompare != 0) return timeCompare;
+          return _itemNameForSort(a).compareTo(_itemNameForSort(b));
+        });
+        break;
+      case ChannelSortOption.unread:
+        items.sort((a, b) {
+          final unreadCompare = _unreadCountForItem(
+            connector,
+            b,
+          ).compareTo(_unreadCountForItem(connector, a));
+          if (unreadCompare != 0) return unreadCompare;
+          return _itemNameForSort(a).compareTo(_itemNameForSort(b));
+        });
+        break;
+      case ChannelSortOption.name:
+        items.sort(
+          (a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)),
+        );
+        break;
+    }
+  }
+
+  String _itemNameForSort(_ChannelScreenItem item) {
+    final channel = item.channel;
+    if (channel != null) return _normalizeChannelName(channel).toLowerCase();
+    final room = item.room!;
+    return room.name.trim().toLowerCase();
+  }
+
+  List<_ChannelScreenItem> _restoreUnreadItemPositions(
+    List<_ChannelScreenItem> baseItems,
+    List<_ChannelScreenItem> displayItems,
+    MeshCoreConnector connector,
+  ) {
+    final movableItems = displayItems
+        .where((item) => _unreadCountForItem(connector, item) == 0)
+        .toList();
+    var movableIndex = 0;
+    return [
+      for (final baseItem in baseItems)
+        if (_unreadCountForItem(connector, baseItem) > 0)
+          baseItem
+        else if (movableIndex < movableItems.length)
+          movableItems[movableIndex++]
+        else
+          baseItem,
+    ];
+  }
+
+  List<String> _selectedItemNamesForGroupEdit(
+    ChannelGroup group,
+    List<_ChannelScreenItem> editableItems,
+    Set<String> selectedNames,
+  ) {
+    final orderedNames = <String>[
+      for (final name in group.channelNames)
+        if (selectedNames.contains(name.trim().toLowerCase())) name,
+    ];
+    final existingNames = orderedNames
+        .map((name) => name.trim().toLowerCase())
+        .toSet();
+    for (final item in editableItems) {
+      final name = _groupNameForItem(item);
+      final key = name.trim().toLowerCase();
+      if (selectedNames.contains(key) && !existingNames.contains(key)) {
+        orderedNames.add(name);
+      }
+    }
+    return orderedNames;
+  }
+
+  List<String> _selectedItemNamesForGroupEditSorted(
+    List<_ChannelScreenItem> editableItems,
+    Set<String> selectedNames,
+  ) {
+    final selectedItems = [
+      for (final item in editableItems)
+        if (selectedNames.contains(_groupNameForItemKey(item))) item,
+    ]..sort((a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)));
+    return [for (final item in selectedItems) _groupNameForItem(item)];
+  }
+
+  List<Contact> _roomServerContactsForChannelsScreen(
+    MeshCoreConnector connector,
+    AppSettings appSettings,
+    UiViewStateService viewState,
+  ) {
+    if (!appSettings.roomServerShowNotemptyOnChatscreen) {
+      if (!appSettings.roomServerShowNotemptyContactsOnChatscreen) {
+        return const <Contact>[];
+      }
+    }
+    final query = viewState.channelsSearchText.trim().toLowerCase();
+    return connector.contacts.where((contact) {
+      final canShowRoom =
+          appSettings.roomServerShowNotemptyOnChatscreen &&
+          contact.type == advTypeRoom;
+      final canShowContact =
+          appSettings.roomServerShowNotemptyContactsOnChatscreen &&
+          contact.type == advTypeChat;
+      if ((!canShowRoom && !canShowContact) || !contact.hasMessages) {
+        return false;
+      }
+      if (query.isEmpty) return true;
+      return contact.name.toLowerCase().contains(query);
+    }).toList();
   }
 
   Future<void> _removeChannelNamesFromGroups(
@@ -1636,36 +2429,50 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return filtered;
   }
 
-  List<ChannelGroupListEntry> _sortManualEntriesUnreadFirst(
-    List<ChannelGroupListEntry> entries,
+  List<_ChannelScreenListEntry> _sortManualScreenEntriesUnreadFirst(
+    List<_ChannelScreenListEntry> entries,
     MeshCoreConnector connector,
   ) {
-    final unreadChannels = <ChannelGroupListEntry>[];
-    final rest = <ChannelGroupListEntry>[];
+    final unreadEntries = <_ChannelScreenListEntry>[];
+    final rest = <_ChannelScreenListEntry>[];
     for (final entry in entries) {
-      final channel = entry.channel;
-      if (channel != null &&
-          connector.getUnreadCountForChannelIndex(channel.index) > 0) {
-        unreadChannels.add(entry);
+      if (_unreadCountForScreenEntry(connector, entry) > 0) {
+        unreadEntries.add(entry);
       } else {
         rest.add(entry);
       }
     }
-    return [...unreadChannels, ...rest];
+    return [...unreadEntries, ...rest];
   }
 
-  List<ChannelGroupListEntry> _restoreUnreadManualEntryPositions(
-    List<ChannelGroupListEntry> baseEntries,
-    List<ChannelGroupListEntry> displayEntries,
+  List<ChannelGroupListEntry> _sortManualChannelEntriesUnreadFirst(
+    List<ChannelGroupListEntry> entries,
+    MeshCoreConnector connector,
+  ) {
+    final unreadEntries = <ChannelGroupListEntry>[];
+    final rest = <ChannelGroupListEntry>[];
+    for (final entry in entries) {
+      if (_unreadCountForChannelEntry(connector, entry) > 0) {
+        unreadEntries.add(entry);
+      } else {
+        rest.add(entry);
+      }
+    }
+    return [...unreadEntries, ...rest];
+  }
+
+  List<_ChannelScreenListEntry> _restoreUnreadManualScreenEntryPositions(
+    List<_ChannelScreenListEntry> baseEntries,
+    List<_ChannelScreenListEntry> displayEntries,
     MeshCoreConnector connector,
   ) {
     final movableEntries = displayEntries
-        .where((entry) => !_isUnreadManualEntry(connector, entry))
+        .where((entry) => _unreadCountForScreenEntry(connector, entry) == 0)
         .toList();
     var movableIndex = 0;
     return [
       for (final baseEntry in baseEntries)
-        if (_isUnreadManualEntry(connector, baseEntry))
+        if (_unreadCountForScreenEntry(connector, baseEntry) > 0)
           baseEntry
         else if (movableIndex < movableEntries.length)
           movableEntries[movableIndex++]
@@ -1674,44 +2481,51 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ];
   }
 
-  List<Channel> _restoreUnreadChannelPositions(
-    List<Channel> baseChannels,
-    List<Channel> displayChannels,
+  List<ChannelGroupListEntry> _restoreUnreadManualChannelEntryPositions(
+    List<ChannelGroupListEntry> baseEntries,
+    List<ChannelGroupListEntry> displayEntries,
     MeshCoreConnector connector,
   ) {
-    final movableChannels = displayChannels
-        .where((channel) => !_isUnreadChannel(connector, channel))
+    final movableEntries = displayEntries
+        .where((entry) => _unreadCountForChannelEntry(connector, entry) == 0)
         .toList();
     var movableIndex = 0;
     return [
-      for (final baseChannel in baseChannels)
-        if (_isUnreadChannel(connector, baseChannel))
-          baseChannel
-        else if (movableIndex < movableChannels.length)
-          movableChannels[movableIndex++]
+      for (final baseEntry in baseEntries)
+        if (_unreadCountForChannelEntry(connector, baseEntry) > 0)
+          baseEntry
+        else if (movableIndex < movableEntries.length)
+          movableEntries[movableIndex++]
         else
-          baseChannel,
+          baseEntry,
     ];
   }
 
-  bool _isUnreadManualEntry(
+  int _unreadCountForChannelEntry(
     MeshCoreConnector connector,
     ChannelGroupListEntry entry,
   ) {
+    final group = entry.group;
+    if (group != null) {
+      return channelsForGroup(group, connector.channels).fold<int>(
+        0,
+        (sum, channel) => sum + connector.getUnreadCountForChannel(channel),
+      );
+    }
     final channel = entry.channel;
-    return channel != null && _isUnreadChannel(connector, channel);
+    if (channel == null) return 0;
+    return connector.getUnreadCountForChannel(channel);
   }
 
   List<Channel> _sortUnreadChannelsForDisplay(
     List<Channel> channels,
-    MeshCoreConnector connector, {
-    required bool enabled,
-  }) {
-    if (!enabled || channels.length < 2) return channels;
+    MeshCoreConnector connector,
+  ) {
+    if (channels.length < 2) return channels;
     final unread = <Channel>[];
     final read = <Channel>[];
     for (final channel in channels) {
-      if (connector.getUnreadCountForChannelIndex(channel.index) > 0) {
+      if (connector.getUnreadCountForChannel(channel) > 0) {
         unread.add(channel);
       } else {
         read.add(channel);
@@ -1720,16 +2534,27 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return [...unread, ...read];
   }
 
-  bool _isUnreadSortedChannel(
+  int _unreadCountForScreenEntry(
     MeshCoreConnector connector,
-    Channel channel,
-    bool sortUnreadFirst,
+    _ChannelScreenListEntry entry,
   ) {
-    return sortUnreadFirst && _isUnreadChannel(connector, channel);
+    final group = entry.group;
+    if (group != null) {
+      return _itemsForGroup(
+        group,
+        connector.channels,
+        _visibleRoomServers(),
+      ).fold<int>(0, (sum, item) => sum + _unreadCountForItem(connector, item));
+    }
+    return _unreadCountForItem(connector, entry.item!);
   }
 
-  bool _isUnreadChannel(MeshCoreConnector connector, Channel channel) {
-    return connector.getUnreadCountForChannelIndex(channel.index) > 0;
+  bool _isUnreadSortedItem(
+    MeshCoreConnector connector,
+    _ChannelScreenItem item,
+    bool sortUnreadFirst,
+  ) {
+    return sortUnreadFirst && _unreadCountForItem(connector, item) > 0;
   }
 
   int _compareChannelsByName(Channel a, Channel b) {
@@ -2850,4 +3675,28 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       ),
     );
   }
+}
+
+class _ChannelScreenItem {
+  const _ChannelScreenItem._({this.channel, this.room});
+
+  const _ChannelScreenItem.channel(Channel channel) : this._(channel: channel);
+
+  const _ChannelScreenItem.room(Contact room) : this._(room: room);
+
+  final Channel? channel;
+  final Contact? room;
+}
+
+class _ChannelScreenListEntry {
+  const _ChannelScreenListEntry._({this.group, this.item});
+
+  const _ChannelScreenListEntry.group(ChannelGroup group)
+    : this._(group: group);
+
+  const _ChannelScreenListEntry.item(_ChannelScreenItem item)
+    : this._(item: item);
+
+  final ChannelGroup? group;
+  final _ChannelScreenItem? item;
 }
