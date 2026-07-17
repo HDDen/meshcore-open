@@ -11,21 +11,13 @@ import '../theme/mesh_theme.dart';
 import 'mesh_ui.dart';
 import 'signal_ui.dart';
 
-Contact? _getRepeaterPrefixMatchNearLocation(
+({Contact? contact, bool ambiguous}) _getRepeaterPrefixMatchNearLocation(
   List<Contact> contacts,
   List<int> pubkeyPrefix, {
   String? contactKeyHex,
   LatLng? searchPoint,
   bool preferFavorites = false,
 }) {
-  if (contactKeyHex != null) {
-    for (final c in contacts) {
-      if (c.publicKeyHex == contactKeyHex) {
-        return c;
-      }
-    }
-  }
-
   final candidates = contacts
       .where(
         (c) =>
@@ -37,8 +29,19 @@ Contact? _getRepeaterPrefixMatchNearLocation(
             (c.type == advTypeRepeater || c.type == advTypeRoom),
       )
       .toList();
+  // With a 1-byte path hash several contacts can share the prefix, so the
+  // resolved name is only a best guess.
+  final ambiguous = candidates.length > 1;
 
-  if (candidates.isEmpty) return null;
+  if (contactKeyHex != null) {
+    for (final c in contacts) {
+      if (c.publicKeyHex == contactKeyHex) {
+        return (contact: c, ambiguous: ambiguous);
+      }
+    }
+  }
+
+  if (candidates.isEmpty) return (contact: null, ambiguous: false);
 
   candidates.sort((a, b) {
     if (preferFavorites) {
@@ -55,7 +58,7 @@ Contact? _getRepeaterPrefixMatchNearLocation(
   });
 
   if (searchPoint == null) {
-    return candidates.first;
+    return (contact: candidates.first, ambiguous: ambiguous);
   }
 
   final distance = Distance();
@@ -72,7 +75,7 @@ Contact? _getRepeaterPrefixMatchNearLocation(
     }
   }
 
-  return best;
+  return (contact: best, ambiguous: ambiguous);
 }
 
 class SNRUi {
@@ -303,7 +306,7 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                 selfPoint = LatLng(selfLat, selfLon);
               }
 
-              final contact = _getRepeaterPrefixMatchNearLocation(
+              final match = _getRepeaterPrefixMatchNearLocation(
                 allContacts,
                 repeater.pubkeyPrefix,
                 contactKeyHex: repeater.contactKeyHex,
@@ -311,7 +314,10 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                 preferFavorites: true,
               );
 
-              final name = contact?.name;
+              final contact = match.contact;
+              final name = contact == null
+                  ? null
+                  : (match.ambiguous ? '(?) ${contact.name}' : contact.name);
               final prefixLabel = PathHelper.formatHopHex(
                 repeater.pubkeyPrefix,
               );
@@ -329,7 +335,7 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                 child: Row(
                   children: [
                     AvatarCircle(
-                      name: name ?? prefixLabel,
+                      name: contact?.name ?? prefixLabel,
                       size: 36,
                       color: snrColor,
                     ),
