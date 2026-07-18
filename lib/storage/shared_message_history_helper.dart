@@ -88,6 +88,7 @@ class SharedMessageHistoryHelper {
     if (currentScope.isEmpty || contactKeyHex.isEmpty) return null;
 
     DateTime? latestMessageAt;
+    String latestMessageText = '';
     var messageCount = 0;
     for (final scope in _knownScopes()) {
       if (scope == currentScope) continue;
@@ -99,6 +100,7 @@ class SharedMessageHistoryHelper {
       if (latestMessageAt == null ||
           summary.latestMessageAt.isAfter(latestMessageAt)) {
         latestMessageAt = summary.latestMessageAt;
+        latestMessageText = summary.latestMessageText;
       }
     }
 
@@ -106,6 +108,7 @@ class SharedMessageHistoryHelper {
     return MessageStoreSummary(
       messageCount: messageCount,
       latestMessageAt: latestMessageAt,
+      latestMessageText: latestMessageText,
     );
   }
 

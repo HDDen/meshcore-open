@@ -447,6 +447,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, List<ChannelMessage>> _sharedChannelSecondaryMessages = {};
   final Map<int, String> _sharedChannelSecondaryIdentityKeys = {};
   final Map<String, List<Message>> _sharedContactSecondaryMessages = {};
+  final Map<String, ({String text, DateTime timestamp})>
+  _contactMessagePreviews = {};
   final Set<int> _loadingSharedChannelIndexes = {};
   final Set<String> _loadingSharedContactKeys = {};
   final Map<int, String> _hiddenSharedChannelIdentityKeys = {};
@@ -706,6 +708,12 @@ class MeshCoreConnector extends ChangeNotifier {
     return _conversations[contact.publicKeyHex] ?? const [];
   }
 
+  ({String text, DateTime timestamp})? getContactMessagePreview(
+    Contact contact,
+  ) {
+    return _contactMessagePreviews[contact.publicKeyHex];
+  }
+
   List<ChannelMessage> getLoadedChannelMessages(Channel channel) {
     // Side-effect-free read for aggregate screens; getChannelMessages() may
     // trigger shared-history loading and should only be used for a focused chat.
@@ -812,7 +820,13 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> _refreshContactMessageSummaries() async {
-    if (_contacts.isEmpty && _discoveredContacts.isEmpty) return;
+    if (_contacts.isEmpty && _discoveredContacts.isEmpty) {
+      if (_contactMessagePreviews.isNotEmpty) {
+        _contactMessagePreviews.clear();
+        notifyListeners();
+      }
+      return;
+    }
     final contactKeys = <String, bool>{};
     for (final contact in _contacts) {
       if (!_supportsContactMessageSummary(contact)) continue;
@@ -826,19 +840,23 @@ class MeshCoreConnector extends ChangeNotifier {
           (contactKeys[contact.publicKeyHex] ?? false) ||
           _canUseSharedContactHistorySummary(contact);
     }
+    final stalePreviewKeys = _contactMessagePreviews.keys
+        .where((key) => !contactKeys.containsKey(key))
+        .toList();
+    for (final key in stalePreviewKeys) {
+      _contactMessagePreviews.remove(key);
+    }
     final contactEntries = contactKeys.entries.toList();
     var changed = false;
+    var previewChanged = stalePreviewKeys.isNotEmpty;
     for (var i = 0; i < contactEntries.length; i++) {
       if (i > 0 && i % 8 == 0) {
         await Future<void>.delayed(Duration.zero);
       }
       final entry = contactEntries[i];
       final contactKeyHex = entry.key;
-      var latestMessageAt = _loadedContactMessageSummaryAt(contactKeyHex);
-      if (latestMessageAt == null) {
-        final summary = await _messageStore.loadMessageSummary(contactKeyHex);
-        latestMessageAt = summary?.latestMessageAt;
-      }
+      var latestSummary = _loadedContactMessageSummary(contactKeyHex);
+      latestSummary ??= await _messageStore.loadMessageSummary(contactKeyHex);
       if (entry.value && selfPublicKeyHex.isNotEmpty) {
         final sharedSummary = await _sharedMessageHistoryHelper
             .loadSecondaryContactMessageSummary(
@@ -846,23 +864,36 @@ class MeshCoreConnector extends ChangeNotifier {
               contactKeyHex: contactKeyHex,
             );
         if (sharedSummary != null &&
-            (latestMessageAt == null ||
-                sharedSummary.latestMessageAt.isAfter(latestMessageAt))) {
-          latestMessageAt = sharedSummary.latestMessageAt;
+            (latestSummary == null ||
+                sharedSummary.latestMessageAt.isAfter(
+                  latestSummary.latestMessageAt,
+                ))) {
+          latestSummary = sharedSummary;
         }
       }
-      if (latestMessageAt == null) {
+      previewChanged =
+          _cacheContactMessagePreview(
+            contactKeyHex,
+            latestSummary,
+            replace: true,
+          ) ||
+          previewChanged;
+      if (latestSummary == null) {
         changed = _clearContactMessageSummary(contactKeyHex) || changed;
       } else {
         changed =
-            _applyContactMessageSummary(contactKeyHex, latestMessageAt) ||
+            _applyContactMessageSummary(
+              contactKeyHex,
+              latestSummary.latestMessageAt,
+            ) ||
             changed;
       }
     }
-    if (!changed) return;
-    unawaited(_persistContacts());
-    unawaited(_persistDiscoveredContacts());
-    notifyListeners();
+    if (changed) {
+      unawaited(_persistContacts());
+      unawaited(_persistDiscoveredContacts());
+    }
+    if (changed || previewChanged) notifyListeners();
   }
 
   bool _canUseSharedContactHistorySummary(Contact contact) {
@@ -873,32 +904,79 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex,
     List<Message> messages,
   ) {
-    DateTime? latestMessageAt;
-    for (final message in messages) {
-      if (message.isCli) continue;
-      final timestamp = message.timestamp;
-      if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
-        latestMessageAt = timestamp;
-      }
-    }
-    if (latestMessageAt == null) return;
-    if (_applyContactMessageSummary(contactKeyHex, latestMessageAt)) {
+    final summary = _messageSummaryFromMessages(messages);
+    if (summary == null) return;
+    final previewChanged = _cacheContactMessagePreview(
+      contactKeyHex,
+      summary,
+    );
+    final summaryChanged = _applyContactMessageSummary(
+      contactKeyHex,
+      summary.latestMessageAt,
+    );
+    if (summaryChanged) {
       unawaited(_persistContacts());
       unawaited(_persistDiscoveredContacts());
+    }
+    if (summaryChanged || previewChanged) {
       notifyListeners();
     }
   }
 
   DateTime? _loadedContactMessageSummaryAt(String contactKeyHex) {
-    DateTime? latestMessageAt;
-    for (final message in _conversations[contactKeyHex] ?? const <Message>[]) {
+    return _loadedContactMessageSummary(contactKeyHex)?.latestMessageAt;
+  }
+
+  MessageStoreSummary? _loadedContactMessageSummary(String contactKeyHex) {
+    return _messageSummaryFromMessages(
+      _conversations[contactKeyHex] ?? const <Message>[],
+    );
+  }
+
+  MessageStoreSummary? _messageSummaryFromMessages(
+    Iterable<Message> messages,
+  ) {
+    Message? latestMessage;
+    var messageCount = 0;
+    for (final message in messages) {
       if (message.isCli) continue;
-      final timestamp = message.timestamp;
-      if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
-        latestMessageAt = timestamp;
+      messageCount++;
+      if (latestMessage == null ||
+          message.timestamp.isAfter(latestMessage.timestamp)) {
+        latestMessage = message;
       }
     }
-    return latestMessageAt;
+    if (latestMessage == null) return null;
+    return MessageStoreSummary(
+      messageCount: messageCount,
+      latestMessageAt: latestMessage.timestamp,
+      latestMessageText: latestMessage.text,
+    );
+  }
+
+  bool _cacheContactMessagePreview(
+    String contactKeyHex,
+    MessageStoreSummary? summary, {
+    bool replace = false,
+  }) {
+    if (summary == null) {
+      return _contactMessagePreviews.remove(contactKeyHex) != null;
+    }
+    final current = _contactMessagePreviews[contactKeyHex];
+    if (!replace &&
+        current != null &&
+        current.timestamp.isAfter(summary.latestMessageAt)) {
+      return false;
+    }
+    if (current?.timestamp == summary.latestMessageAt &&
+        current?.text == summary.latestMessageText) {
+      return false;
+    }
+    _contactMessagePreviews[contactKeyHex] = (
+      text: summary.latestMessageText,
+      timestamp: summary.latestMessageAt,
+    );
+    return true;
   }
 
   bool _applyContactMessageSummary(
@@ -2041,6 +2119,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _sharedChannelSecondaryMessages.clear();
     _sharedChannelSecondaryIdentityKeys.clear();
     _sharedContactSecondaryMessages.clear();
+    _contactMessagePreviews.clear();
     _loadingSharedChannelIndexes.clear();
     _loadingSharedContactKeys.clear();
   }
@@ -5932,6 +6011,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     await sendFrame(buildRemoveContactFrame(contact.publicKey));
     _contacts.removeWhere((c) => c.publicKeyHex == contact.publicKeyHex);
+    _contactMessagePreviews.remove(contact.publicKeyHex);
     _knownContactKeys.remove(contact.publicKeyHex);
     unawaited(updateKnownDiscovered());
     unawaited(_persistContacts());
@@ -11250,10 +11330,13 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void clearMessagesForContact(Contact contact) {
     final contactKeyHex = contact.publicKeyHex;
-    final messages = _conversations[contactKeyHex];
-    if (messages == null) return;
+    final messages = _conversations.putIfAbsent(
+      contactKeyHex,
+      () => <Message>[],
+    );
     messages.clear();
     _sharedContactSecondaryMessages.remove(contactKeyHex);
+    _contactMessagePreviews.remove(contactKeyHex);
     _hiddenSharedContactKeys.add(contactKeyHex);
     unawaited(_messageStore.saveMessages(contactKeyHex, messages));
     markContactRead(contactKeyHex);

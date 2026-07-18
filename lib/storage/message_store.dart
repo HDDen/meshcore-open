@@ -90,6 +90,7 @@ class MessageStore {
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       DateTime? latestMessageAt;
+      String latestRawMessageText = '';
       var messageCount = 0;
       for (final entry in jsonList) {
         if (entry is! Map<String, dynamic>) continue;
@@ -100,12 +101,18 @@ class MessageStore {
         final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
         if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
           latestMessageAt = timestamp;
+          final rawText = entry['text'];
+          latestRawMessageText = rawText is String ? rawText : '';
         }
       }
       if (messageCount == 0 || latestMessageAt == null) return null;
+      final latestMessageText =
+          MessageTextCodec.tryDecodeKnownCompression(latestRawMessageText) ??
+          latestRawMessageText;
       return MessageStoreSummary(
         messageCount: messageCount,
         latestMessageAt: latestMessageAt,
+        latestMessageText: latestMessageText,
       );
     } catch (_) {
       return null;
@@ -317,8 +324,10 @@ class MessageStoreSummary {
   const MessageStoreSummary({
     required this.messageCount,
     required this.latestMessageAt,
+    required this.latestMessageText,
   });
 
   final int messageCount;
   final DateTime latestMessageAt;
+  final String latestMessageText;
 }

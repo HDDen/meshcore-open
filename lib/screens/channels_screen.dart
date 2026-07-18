@@ -804,16 +804,27 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
     final messages = connector.getLoadedMessages(contact);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
-    final lastMessageText = lastMessage?.text ?? '';
+    final cachedPreview = connector.getContactMessagePreview(contact);
+    final selectedCachedPreview =
+        cachedPreview != null &&
+        (lastMessage == null ||
+            cachedPreview.timestamp.isAfter(lastMessage.timestamp))
+        ? cachedPreview
+        : null;
+    final lastMessageText =
+        selectedCachedPreview?.text ?? lastMessage?.text ?? '';
     final lastPreview =
         lastMessageText.isNotEmpty &&
             GifHelper.parseGif(lastMessageText) != null
         ? context.l10n.chat_receivedGif
         : lastMessageText;
-    final lastPreviewImage = lastMessage == null
+    final lastPreviewImage = lastMessageText.isEmpty
         ? null
-        : MCOImageMessage.tryDecode(lastMessage.text);
-    final lastTime = lastMessage?.timestamp ?? contact.lastMessageAt;
+        : MCOImageMessage.tryDecode(lastMessageText);
+    final lastTime =
+        selectedCachedPreview?.timestamp ??
+        lastMessage?.timestamp ??
+        contact.lastMessageAt;
     final isRoom = contact.type == advTypeRoom;
     final contactLabel = contact.name.isEmpty
         ? (isRoom
