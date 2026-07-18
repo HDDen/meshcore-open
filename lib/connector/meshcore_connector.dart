@@ -21,6 +21,7 @@ import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/contact_merge_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
@@ -203,6 +204,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final List<ScanResult> _linuxSystemScanResults = [];
   final List<Contact> _contacts = [];
   final List<Contact> _discoveredContacts = [];
+  Future<void>? _contactCacheLoadFuture;
+  int _contactCacheLoadGeneration = 0;
   final List<Channel> _channels = [];
   final Map<String, List<Message>> _conversations = {};
   final Map<int, List<ChannelMessage>> _channelMessages = {};
@@ -831,21 +834,10 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       final entry = contactEntries[i];
       final contactKeyHex = entry.key;
-      final loadedLatest = _loadedContactMessageSummaryAt(contactKeyHex);
-      if (loadedLatest != null) {
-        changed =
-            _applyContactMessageSummary(contactKeyHex, loadedLatest) || changed;
-        continue;
-      }
-      final summary = await _messageStore.loadMessageSummary(contactKeyHex);
-      if (summary != null) {
-        changed =
-            _applyContactMessageSummary(
-              contactKeyHex,
-              summary.latestMessageAt,
-            ) ||
-            changed;
-        continue;
+      var latestMessageAt = _loadedContactMessageSummaryAt(contactKeyHex);
+      if (latestMessageAt == null) {
+        final summary = await _messageStore.loadMessageSummary(contactKeyHex);
+        latestMessageAt = summary?.latestMessageAt;
       }
       if (entry.value && selfPublicKeyHex.isNotEmpty) {
         final sharedSummary = await _sharedMessageHistoryHelper
@@ -853,17 +845,19 @@ class MeshCoreConnector extends ChangeNotifier {
               currentPublicKeyHex: selfPublicKeyHex,
               contactKeyHex: contactKeyHex,
             );
-        if (sharedSummary != null) {
-          changed =
-              _applyContactMessageSummary(
-                contactKeyHex,
-                sharedSummary.latestMessageAt,
-              ) ||
-              changed;
-          continue;
+        if (sharedSummary != null &&
+            (latestMessageAt == null ||
+                sharedSummary.latestMessageAt.isAfter(latestMessageAt))) {
+          latestMessageAt = sharedSummary.latestMessageAt;
         }
       }
-      changed = _clearContactMessageSummary(contactKeyHex) || changed;
+      if (latestMessageAt == null) {
+        changed = _clearContactMessageSummary(contactKeyHex) || changed;
+      } else {
+        changed =
+            _applyContactMessageSummary(contactKeyHex, latestMessageAt) ||
+            changed;
+      }
     }
     if (!changed) return;
     unawaited(_persistContacts());
@@ -2078,15 +2072,52 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<void> loadContactCache() async {
-    final cached = await _contactStore.loadContacts();
+  Future<void> loadContactCache({
+    String? publicKeyHex,
+    int? loadGeneration,
+  }) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
+    final store = publicKeyHex == null
+        ? _contactStore
+        : (ContactStore()..setPublicKeyHex = publicKeyHex);
+    final storedContacts = await store.loadContacts();
+    final cached = deduplicateContactsByPublicKey(storedContacts);
+    if (expectedPublicKeyHex != selfPublicKeyHex ||
+        (loadGeneration != null &&
+            loadGeneration != _contactCacheLoadGeneration)) {
+      return;
+    }
     _knownContactKeys
       ..clear()
       ..addAll(cached.map((c) => c.publicKeyHex));
     _contacts
       ..clear()
       ..addAll(cached);
+    if (cached.length != storedContacts.length) {
+      await store.saveContacts(cached);
+    }
     await _refreshContactMessageSummaries();
+  }
+
+  Future<void> _loadContactCacheForNode(
+    String publicKeyHex,
+    int loadGeneration,
+  ) async {
+    try {
+      await loadContactCache(
+        publicKeyHex: publicKeyHex,
+        loadGeneration: loadGeneration,
+      );
+    } catch (error, stackTrace) {
+      _appDebugLogService?.error(
+        'Failed to load contact cache: $error',
+        tag: 'Contact storage',
+      );
+      appLogger.error(
+        'Failed to load contact cache: $error\n$stackTrace',
+        tag: 'Contact storage',
+      );
+    }
   }
 
   Future<void> _loadDiscoveredContactCache() async {
@@ -3683,6 +3714,8 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _resetConnectionHandshakeState() {
+    _contactCacheLoadGeneration++;
+    _contactCacheLoadFuture = null;
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -4290,6 +4323,12 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> getContacts({int? since, bool preserveExisting = false}) async {
     if (!isConnected) return;
 
+    final contactCacheLoad = _contactCacheLoadFuture;
+    if (contactCacheLoad != null) {
+      await contactCacheLoad;
+      if (!isConnected) return;
+    }
+
     _isLoadingContacts = true;
     _preserveContactsOnRefresh = preserveExisting;
     _contactSyncTotal = null;
@@ -4712,11 +4751,17 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     // Save to storage
-    await _contactStore.saveContacts(_contacts);
+    await _persistContacts();
     appLogger.info('Saved contacts to storage', tag: 'Connector');
 
     // Update any in-flight retries so they use the new path override
-    _retryService?.updatePendingContact(_contacts[index]);
+    final updatedContact = _contacts.cast<Contact?>().firstWhere(
+      (entry) => entry?.publicKeyHex == contact.publicKeyHex,
+      orElse: () => null,
+    );
+    if (updatedContact != null) {
+      _retryService?.updatePendingContact(updatedContact);
+    }
 
     // If setting a specific path (not flood, not auto), also sync with device
     if (pathLen != null && pathLen >= 0 && pathBytes != null) {
@@ -6858,7 +6903,11 @@ class MeshCoreConnector extends ChangeNotifier {
     // different node cannot apply stale channel state to the new node.
     final storagePublicKeyHex = selfPublicKeyHex;
     _loadChannelOrder(publicKeyHex: storagePublicKeyHex);
-    loadContactCache();
+    final contactCacheLoadGeneration = ++_contactCacheLoadGeneration;
+    _contactCacheLoadFuture = _loadContactCacheForNode(
+      storagePublicKeyHex,
+      contactCacheLoadGeneration,
+    );
     unawaited(_prepareCachedChannelStorage(storagePublicKeyHex));
     loadUnreadState();
     _loadDiscoveredContactCache();
@@ -7229,6 +7278,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return physicsMax.clamp(0, _hardMaxTimeoutMs);
   }
 
+  void _registerContactInActiveSync(String publicKeyHex, int index) {
+    if (!_isLoadingContacts || index < 0 || index >= _contacts.length) return;
+    _contactSyncIndexes?[publicKeyHex] = index;
+  }
+
   void _handleContact(Uint8List frame, {bool isContact = true}) {
     final contactTmp = Contact.fromFrame(frame);
     if (contactTmp != null) {
@@ -7278,7 +7332,11 @@ class MeshCoreConnector extends ChangeNotifier {
       // Check if this is a new contact
       final isNewContact = !_knownContactKeys.contains(contact.publicKeyHex);
       final existingIndex = isContactSync
-          ? (_contactSyncIndexes?[contact.publicKeyHex] ?? -1)
+          ? findAndRepairContactIndex(
+              contacts: _contacts,
+              indexesByPublicKey: _contactSyncIndexes,
+              publicKeyHex: contact.publicKeyHex,
+            )
           : _contacts.indexWhere((c) => c.publicKeyHex == contact.publicKeyHex);
 
       if (existingIndex >= 0) {
@@ -7302,6 +7360,7 @@ class MeshCoreConnector extends ChangeNotifier {
           latitude: contact.latitude ?? existing.latitude,
           longitude: contact.longitude ?? existing.longitude,
         );
+        _registerContactInActiveSync(contact.publicKeyHex, existingIndex);
 
         if (!isContactSync) {
           appLogger.info(
@@ -7316,9 +7375,10 @@ class MeshCoreConnector extends ChangeNotifier {
             (_autoAddSensors && contact.type == advTypeSensor) ||
             isContact) {
           _contacts.add(contact);
-          if (isContactSync) {
-            _contactSyncIndexes?[contact.publicKeyHex] = _contacts.length - 1;
-          }
+          _registerContactInActiveSync(
+            contact.publicKeyHex,
+            _contacts.length - 1,
+          );
           if (!isContactSync) {
             appLogger.info(
               'Added new contact ${contact.name}: pathLen=${contact.pathLength}',
@@ -7401,6 +7461,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathOverride: existing.pathOverride, // Preserve user's path choice
         pathOverrideBytes: existing.pathOverrideBytes,
       );
+      _registerContactInActiveSync(contact.publicKeyHex, existingIndex);
 
       appLogger.info(
         'After merge: pathOverride=${_contacts[existingIndex].pathOverride}, devicePath=${_contacts[existingIndex].pathLength}',
@@ -7408,6 +7469,10 @@ class MeshCoreConnector extends ChangeNotifier {
       );
     } else {
       _contacts.add(contact);
+      _registerContactInActiveSync(
+        contact.publicKeyHex,
+        _contacts.length - 1,
+      );
       appLogger.info(
         'Added new contact ${contact.name}: pathLen=${contact.pathLength}',
         tag: 'Connector',
@@ -7441,6 +7506,15 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> _persistContacts() async {
+    final normalizedContacts = deduplicateContactsByPublicKey(_contacts);
+    if (normalizedContacts.length != _contacts.length) {
+      _contacts
+        ..clear()
+        ..addAll(normalizedContacts);
+      _knownContactKeys
+        ..clear()
+        ..addAll(_contacts.map((contact) => contact.publicKeyHex));
+    }
     await _contactStore.saveContacts(_contacts);
   }
 
