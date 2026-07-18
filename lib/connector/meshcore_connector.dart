@@ -226,6 +226,10 @@ class MeshCoreConnector extends ChangeNotifier {
   Timer? _selfInfoRetryTimer;
   Timer? _reconnectTimer;
   Timer? _batteryPollTimer;
+  Timer? _rxWatchdogTimer;
+  DateTime _rxSilenceAnchor = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime? _lastRxWatchdogTickAt;
+  int _rxWatchdogReconnects = 0;
   Timer? _gpsLocationPollTimer;
   static const _gpsLocationPollInterval = Duration(minutes: 1);
   final List<Completer<void>> _selfInfoRefreshWaiters = [];
@@ -382,6 +386,14 @@ class MeshCoreConnector extends ChangeNotifier {
   static const int _maxChannelSyncRetries = 3;
   static const int _channelSyncTimeoutMs = 2000; // 2 second timeout per channel
   static const Duration _batteryPollInterval = Duration(seconds: 120);
+  static const Duration _rxWatchdogCheckInterval = Duration(seconds: 60);
+  // Battery polling is expected to produce request-response traffic every
+  // poll interval, which makes prolonged RX silence anomalous on a quiet mesh.
+  // Threshold = two missed battery cycles plus one check window, and must
+  // keep tracking the polling cadence if it ever changes.
+  static final Duration _rxWatchdogSilence =
+      _batteryPollInterval * 2 + _rxWatchdogCheckInterval;
+  static const int _rxWatchdogMaxConsecutive = 3;
 
   // Services
   MessageRetryService? _retryService;
@@ -3386,6 +3398,8 @@ class MeshCoreConnector extends ChangeNotifier {
       );
 
       _setState(MeshCoreConnectionState.connected);
+      _rxSilenceAnchor = DateTime.now();
+      _startRxWatchdog();
       if (_shouldGateInitialChannelSync) {
         _hasReceivedDeviceInfo = false;
         _pendingInitialChannelSync = true;
@@ -3797,6 +3811,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
     unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
     if (manual) {
+      // A deliberate reconnect starts a fresh watchdog recovery budget.
+      // Automatic watchdog reconnects use manual=false and retain the count.
+      _rxWatchdogReconnects = 0;
       _manualDisconnect = true;
       _lastManualDisconnectTransport = transportAtDisconnect;
       _cancelReconnectTimer();
@@ -3808,6 +3825,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _setState(MeshCoreConnectionState.disconnecting);
     _stopBatteryPolling();
     _stopRadioStatsPolling();
+    _stopRxWatchdog();
 
     await _usbFrameSubscription?.cancel();
     _usbFrameSubscription = null;
@@ -3981,6 +3999,66 @@ class MeshCoreConnector extends ChangeNotifier {
   void _stopBatteryPolling() {
     _batteryPollTimer?.cancel();
     _batteryPollTimer = null;
+  }
+
+  // BLE-only: detects a dead notify stream (connected link, writes succeed,
+  // but no inbound frames despite expected battery-poll traffic) and
+  // recovers through the normal disconnect → auto-reconnect path.
+  void _startRxWatchdog() {
+    // Web BLE reconnects need a user gesture, so a forced reconnect is moot.
+    if (PlatformInfo.isWeb) return;
+    _rxWatchdogTimer?.cancel();
+    // Seed the first tick so a background/doze gap immediately after connect
+    // is detected just like a gap between subsequent ticks.
+    _lastRxWatchdogTickAt = DateTime.now();
+    _rxWatchdogTimer = Timer.periodic(_rxWatchdogCheckInterval, (_) {
+      _handleRxWatchdogTick();
+    });
+  }
+
+  void _stopRxWatchdog() {
+    _rxWatchdogTimer?.cancel();
+    _rxWatchdogTimer = null;
+  }
+
+  void _handleRxWatchdogTick() {
+    final now = DateTime.now();
+    final previousTick = _lastRxWatchdogTickAt;
+    _lastRxWatchdogTickAt = now;
+    if (!isConnected || _activeTransport != MeshCoreTransportType.bluetooth) {
+      return;
+    }
+    // A large gap between ticks means timers were suspended (background /
+    // doze) or the event loop stalled; polling needs a fresh window before
+    // silence is meaningful again.
+    if (previousTick != null &&
+        now.difference(previousTick) >= _rxWatchdogCheckInterval * 2) {
+      _rxSilenceAnchor = now;
+      return;
+    }
+    final anchor = _lastRxTime.isAfter(_rxSilenceAnchor)
+        ? _lastRxTime
+        : _rxSilenceAnchor;
+    final silence = now.difference(anchor);
+    if (silence < _rxWatchdogSilence) return;
+    if (_rxWatchdogReconnects >= _rxWatchdogMaxConsecutive) {
+      _appDebugLogService?.warn(
+        'RX watchdog: reconnect limit reached after '
+        '$_rxWatchdogMaxConsecutive automatic recovery attempts; '
+        'current session is still mute, stopping until a manual reconnect',
+        tag: 'Watchdog',
+      );
+      _stopRxWatchdog();
+      return;
+    }
+    _rxWatchdogReconnects++;
+    _appDebugLogService?.warn(
+      'RX watchdog: connected but no inbound frames for '
+      '${silence.inSeconds}s, forcing reconnect '
+      '($_rxWatchdogReconnects/$_rxWatchdogMaxConsecutive)',
+      tag: 'Watchdog',
+    );
+    unawaited(disconnect(manual: false));
   }
 
   /// Start polling the radio's GPS-backed self-info every minute.
@@ -6426,6 +6504,10 @@ class MeshCoreConnector extends ChangeNotifier {
     if (data.isEmpty) return;
     _lastRxBeforeFrame = _lastRxTime;
     _lastRxTime = DateTime.now();
+    // Any inbound frame proves the notify stream is alive.
+    if (_rxWatchdogReconnects != 0) {
+      _rxWatchdogReconnects = 0;
+    }
 
     final frame = Uint8List.fromList(data);
     _receivedFramesController.add(frame);
@@ -10268,6 +10350,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _stopBatteryPolling();
     _stopGpsLocationPolling();
     _stopRadioStatsPolling();
+    _stopRxWatchdog();
     _latestRadioStats = null;
     radioStatsNotifier.value = null;
     _prevTotalAirSecs = 0;
@@ -10452,6 +10535,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _notifyListenersTimer?.cancel();
     _reconnectTimer?.cancel();
     _batteryPollTimer?.cancel();
+    _rxWatchdogTimer?.cancel();
     _gpsLocationPollTimer?.cancel();
     _radioStatsPollTimer?.cancel();
     for (final pending in _pendingContactSends.values) {
