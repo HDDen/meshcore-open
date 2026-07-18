@@ -5785,4 +5785,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_appSettingsCustomChemistry => 'Своя';
+
+  @override
+  String get map_clearDiscoveredContactsCache => 'Очистить локальный кэш узлов';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclamer =>
+      'Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.';
 }

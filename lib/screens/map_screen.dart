@@ -892,6 +892,16 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     PopupMenuItem(
                       child: PopupMenuRow(
+                        icon: Icons.delete_sweep_outlined,
+                        text: context.l10n.map_clearDiscoveredContactsCache,
+                      ),
+                      onTap: () => _clearDiscoveredContactsCache(
+                        context,
+                        connector,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
                         text: context.l10n.common_disconnect,
@@ -4762,6 +4772,38 @@ class _MapScreenState extends State<MapScreen>
 
     if (confirmed == true) {
       await connector.disconnect();
+    }
+  }
+
+  Future<void> _clearDiscoveredContactsCache(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.map_clearDiscoveredContactsCache),
+        content: Text(
+          context.l10n.map_clearDiscoveredContactsCacheDisclamer,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.common_deleteAll),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      connector.removeAllDiscoveredContacts();
     }
   }
 

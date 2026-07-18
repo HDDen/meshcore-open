@@ -201,7 +201,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "de": [
@@ -393,7 +395,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "es": [
@@ -598,7 +602,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "fr": [
@@ -803,7 +809,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "hu": [
@@ -1008,7 +1016,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "it": [
@@ -1293,7 +1303,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "ja": [
@@ -1498,7 +1510,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "ko": [
@@ -1703,7 +1717,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "nl": [
@@ -1988,7 +2004,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "pl": [
@@ -2193,7 +2211,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "pt": [
@@ -2478,7 +2498,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "ru": [
@@ -2697,7 +2719,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "sl": [
@@ -2902,7 +2926,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "sv": [
@@ -3187,7 +3213,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "uk": [
@@ -3392,7 +3420,9 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ],
 
   "zh": [
@@ -3597,6 +3627,8 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer"
   ]
 }

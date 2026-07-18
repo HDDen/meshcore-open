@@ -3236,5 +3236,7 @@
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Show room-servers with messages history against channels in single screen",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Show contacts with messages history against channels in single screen",
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers",
-  "settings_appSettingsCustomChemistry": "Custom"
+  "settings_appSettingsCustomChemistry": "Custom",
+  "map_clearDiscoveredContactsCache": "Clear nodes local cache",
+  "map_clearDiscoveredContactsCacheDisclamer": "Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself."
 }

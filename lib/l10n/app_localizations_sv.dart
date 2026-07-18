@@ -5720,4 +5720,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_appSettingsCustomChemistry => 'Custom';
+
+  @override
+  String get map_clearDiscoveredContactsCache => 'Clear nodes local cache';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclamer =>
+      'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
 }
