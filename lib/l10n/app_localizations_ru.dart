@@ -5792,4 +5792,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get map_clearDiscoveredContactsCacheDisclamer =>
       'Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Активность репитеров';
 }

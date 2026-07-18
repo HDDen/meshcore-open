@@ -203,7 +203,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "de": [
@@ -397,7 +398,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "es": [
@@ -604,7 +606,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "fr": [
@@ -811,7 +814,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "hu": [
@@ -1018,7 +1022,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "it": [
@@ -1305,7 +1310,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "ja": [
@@ -1512,7 +1518,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "ko": [
@@ -1719,7 +1726,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "nl": [
@@ -2006,7 +2014,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "pl": [
@@ -2213,7 +2222,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "pt": [
@@ -2500,7 +2510,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "ru": [
@@ -2721,7 +2732,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "sl": [
@@ -2928,7 +2940,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "sv": [
@@ -3215,7 +3228,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "uk": [
@@ -3422,7 +3436,8 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ],
 
   "zh": [
@@ -3629,6 +3644,7 @@
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
-    "map_clearDiscoveredContactsCacheDisclamer"
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters"
   ]
 }

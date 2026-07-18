@@ -2402,5 +2402,6 @@
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
   "settings_appSettingsCustomChemistry": "Своя",
   "map_clearDiscoveredContactsCache": "Очистить локальный кэш узлов",
-  "map_clearDiscoveredContactsCacheDisclamer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде."
+  "map_clearDiscoveredContactsCacheDisclamer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.",
+  "snrIndicator_v2_nearByRepeaters": "Активность репитеров"
 }

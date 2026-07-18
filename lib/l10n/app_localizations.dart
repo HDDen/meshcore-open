@@ -9909,6 +9909,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.'**
   String get map_clearDiscoveredContactsCacheDisclamer;
+
+  /// No description provided for @snrIndicator_v2_nearByRepeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater\'s activity'**
+  String get snrIndicator_v2_nearByRepeaters;
 }
 
 class _AppLocalizationsDelegate

@@ -5771,4 +5771,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get map_clearDiscoveredContactsCacheDisclamer =>
       'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Repeater\'s activity';
 }

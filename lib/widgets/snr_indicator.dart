@@ -480,7 +480,7 @@ class _SNRActivityIndicatorState extends State<SNRActivityIndicator> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.snrIndicator_nearByRepeaters),
+        title: Text(l10n.snrIndicator_v2_nearByRepeaters),
         content: _RepeaterDialogList(
           connector: widget.connector,
           repeaters: repeaters,
