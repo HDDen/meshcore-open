@@ -994,7 +994,9 @@ class MeshCoreConnector extends ChangeNotifier {
           latestMessageAt.isAfter(contact.lastMessageAt)) {
         _contacts[i] = contact.copyWith(
           hasMessages: true,
-          lastMessageAt: latestMessageAt,
+          lastMessageAt: latestMessageAt.isAfter(contact.lastMessageAt)
+              ? latestMessageAt
+              : contact.lastMessageAt,
         );
         changed = true;
       }
@@ -1009,7 +1011,9 @@ class MeshCoreConnector extends ChangeNotifier {
           latestMessageAt.isAfter(contact.lastMessageAt)) {
         _discoveredContacts[i] = contact.copyWith(
           hasMessages: true,
-          lastMessageAt: latestMessageAt,
+          lastMessageAt: latestMessageAt.isAfter(contact.lastMessageAt)
+              ? latestMessageAt
+              : contact.lastMessageAt,
         );
         changed = true;
       }
@@ -1048,7 +1052,12 @@ class MeshCoreConnector extends ChangeNotifier {
   ) {
     final loadedLatest = _loadedContactMessageSummaryAt(existing.publicKeyHex);
     if (loadedLatest != null) {
-      return (hasMessages: true, lastMessageAt: loadedLatest);
+      return (
+        hasMessages: true,
+        lastMessageAt: loadedLatest.isAfter(existing.lastMessageAt)
+            ? loadedLatest
+            : existing.lastMessageAt,
+      );
     }
     if (contact.hasMessages) {
       return (
@@ -1083,7 +1092,12 @@ class MeshCoreConnector extends ChangeNotifier {
         !latestMessageAt.isAfter(contact.lastMessageAt)) {
       return contact;
     }
-    return contact.copyWith(hasMessages: true, lastMessageAt: latestMessageAt);
+    return contact.copyWith(
+      hasMessages: true,
+      lastMessageAt: latestMessageAt.isAfter(contact.lastMessageAt)
+          ? latestMessageAt
+          : contact.lastMessageAt,
+    );
   }
 
   bool _supportsContactMessageSummary(Contact contact) {
@@ -7616,15 +7630,19 @@ class MeshCoreConnector extends ChangeNotifier {
     return latest;
   }
 
-  bool _setContactLastMessageAt(int index, DateTime timestamp) {
+  bool _setContactLastMessageAt(
+    int index,
+    DateTime timestamp, {
+    bool markHasMessages = true,
+  }) {
     final contact = _contacts[index];
     if (!_supportsContactMessageSummary(contact)) return false;
-    if (contact.hasMessages && !timestamp.isAfter(contact.lastMessageAt)) {
-      return false;
-    }
+    final timestampChanged = timestamp.isAfter(contact.lastMessageAt);
+    final hasMessagesChanged = markHasMessages && !contact.hasMessages;
+    if (!timestampChanged && !hasMessagesChanged) return false;
     _contacts[index] = contact.copyWith(
-      lastMessageAt: timestamp,
-      hasMessages: true,
+      lastMessageAt: timestampChanged ? timestamp : contact.lastMessageAt,
+      hasMessages: contact.hasMessages || markHasMessages,
     );
     return true;
   }
@@ -7646,27 +7664,49 @@ class MeshCoreConnector extends ChangeNotifier {
   void _updateContactLastMessageAtByName(
     String senderName,
     DateTime timestamp, {
+    String? authenticatedSenderKeyHex,
     Uint8List? pathBytes,
     int? pathHashWidth,
     bool notify = false,
   }) {
+    int? matchedIndex;
+    final authenticatedKey = authenticatedSenderKeyHex?.trim().toLowerCase();
+    if (authenticatedKey != null && authenticatedKey.isNotEmpty) {
+      final index = _contacts.indexWhere(
+        (contact) =>
+            contact.type == advTypeChat &&
+            contact.publicKeyHex.toLowerCase() == authenticatedKey,
+      );
+      if (index < 0) return;
+      matchedIndex = index;
+    }
+
     final normalized = senderName.trim().toLowerCase();
     final hasName = normalized.isNotEmpty && normalized != 'unknown';
-    var updated = false;
     var matchedByName = false;
 
-    if (hasName) {
+    if (matchedIndex == null && hasName) {
+      final matches = <int>[];
       for (var i = 0; i < _contacts.length; i++) {
         final contact = _contacts[i];
         if (contact.type != advTypeChat) continue;
         if (contact.name.trim().toLowerCase() == normalized) {
-          matchedByName = true;
-          updated = _setContactLastMessageAt(i, timestamp) || updated;
+          matches.add(i);
         }
+      }
+      matchedByName = matches.isNotEmpty;
+      if (matches.length == 1) {
+        matchedIndex = matches.single;
       }
     }
 
-    if (!matchedByName && pathBytes != null && pathBytes.isNotEmpty) {
+    final effectivePathHashWidth =
+        (pathHashWidth ?? _pathHashByteWidth).clamp(1, 4).toInt();
+    if (matchedIndex == null &&
+        !matchedByName &&
+        effectivePathHashWidth >= 2 &&
+        pathBytes != null &&
+        pathBytes.isNotEmpty) {
       final matches = <int>[];
       for (var i = 0; i < _contacts.length; i++) {
         final contact = _contacts[i];
@@ -7674,21 +7714,27 @@ class MeshCoreConnector extends ChangeNotifier {
         if (_pathMatchesContact(
           pathBytes,
           contact.publicKey,
-          pathHashWidth: pathHashWidth,
+          pathHashWidth: effectivePathHashWidth,
         )) {
           matches.add(i);
         }
       }
       if (matches.length == 1) {
-        updated = _setContactLastMessageAt(matches.first, timestamp) || updated;
+        matchedIndex = matches.single;
       }
     }
 
-    if (updated) {
-      unawaited(_persistContacts());
-      if (notify) {
-        notifyListeners();
-      }
+    if (matchedIndex == null ||
+        !_setContactLastMessageAt(
+          matchedIndex,
+          timestamp,
+          markHasMessages: false,
+        )) {
+      return;
+    }
+    unawaited(_persistContacts());
+    if (notify) {
+      notifyListeners();
     }
   }
 
@@ -8992,6 +9038,10 @@ class MeshCoreConnector extends ChangeNotifier {
       _updateContactLastMessageAtByName(
         message.senderName,
         message.receivedAt,
+        authenticatedSenderKeyHex:
+            message.mcmpSignatureStatus == McmpSignatureStatus.valid
+            ? message.verifiedSenderKeyHex
+            : null,
         pathBytes: message.pathBytes,
         pathHashWidth: message.pathHashWidth,
       );
@@ -9118,6 +9168,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _updateContactLastMessageAtByName(
       message.senderName,
       message.receivedAt,
+      authenticatedSenderKeyHex:
+          message.mcmpSignatureStatus == McmpSignatureStatus.valid
+          ? message.verifiedSenderKeyHex
+          : null,
       pathHashWidth: message.pathHashWidth,
     );
     final isNew = _addChannelMessage(dataFrame.channelIndex, message);
@@ -9183,6 +9237,10 @@ class MeshCoreConnector extends ChangeNotifier {
             _updateContactLastMessageAtByName(
               message.senderName,
               message.receivedAt,
+              authenticatedSenderKeyHex:
+                  message.mcmpSignatureStatus == McmpSignatureStatus.valid
+                  ? message.verifiedSenderKeyHex
+                  : null,
               pathBytes: message.pathBytes,
               pathHashWidth: message.pathHashWidth,
             );
@@ -9285,6 +9343,10 @@ class MeshCoreConnector extends ChangeNotifier {
           _updateContactLastMessageAtByName(
             parsed.senderName,
             message.receivedAt,
+            authenticatedSenderKeyHex:
+                message.mcmpSignatureStatus == McmpSignatureStatus.valid
+                ? message.verifiedSenderKeyHex
+                : null,
             pathBytes: message.pathBytes,
             pathHashWidth: message.pathHashWidth,
           );

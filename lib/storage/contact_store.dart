@@ -138,9 +138,7 @@ class ContactStore {
       lastMessageAt: DateTime.fromMillisecondsSinceEpoch(
         lastMessageMs ?? lastSeenMs,
       ),
-      hasMessages:
-          json['hasMessages'] as bool? ??
-          (lastMessageMs != null && lastMessageMs != lastSeenMs),
+      hasMessages: json['hasMessages'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
       rawPacket: json['rawPacket'] != null
           ? Uint8List.fromList(base64Decode(json['rawPacket'] as String))
