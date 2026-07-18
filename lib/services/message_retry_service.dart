@@ -113,6 +113,8 @@ class MessageRetryService extends ChangeNotifier {
   final Set<String> _activeMessages = {};
   final Set<String> _resolvedMessages = {};
   final Map<String, String> _expectedHashToMessageId = {};
+  bool _sendingPaused = false;
+  int _sendingGeneration = 0;
 
   RetryServiceConfig? _config;
 
@@ -124,6 +126,48 @@ class MessageRetryService extends ChangeNotifier {
 
   void setMaxRetries(int value) {
     _maxRetries = value.clamp(2, 10);
+  }
+
+  void setSendingPaused(bool paused) {
+    if (_sendingPaused == paused) return;
+    _sendingPaused = paused;
+    if (paused) {
+      _sendingGeneration++;
+      for (final timer in _timeoutTimers.values) {
+        timer.cancel();
+      }
+      _timeoutTimers.clear();
+      return;
+    }
+
+    for (final messageId in List<String>.from(_activeMessages)) {
+      final pendingMessage = _pendingMessages[messageId];
+      if (pendingMessage == null) continue;
+      if (pendingMessage.status == MessageStatus.sent) {
+        _startTimeoutTimer(
+          messageId,
+          pendingMessage.estimatedTimeoutMs ?? _sentRespFallbackMs,
+        );
+        continue;
+      }
+      unawaited(_attemptSend(messageId).catchError((e) {
+        debugPrint('_attemptSend threw for $messageId after resume: $e');
+        if (_sendingPaused) return;
+        final message = _pendingMessages[messageId];
+        final contactKey = _pendingContacts[messageId]?.publicKeyHex;
+        if (message != null) {
+          final failed = message.copyWith(status: MessageStatus.failed);
+          _pendingMessages[messageId] = failed;
+          _config?.updateMessage(failed);
+        }
+        if (contactKey != null) {
+          _onMessageResolved(messageId, contactKey);
+        }
+      }));
+    }
+    for (final contactKey in List<String>.from(_sendQueue.keys)) {
+      _sendNextForContact(contactKey);
+    }
   }
 
   /// Compute expected ACK hash using same algorithm as firmware:
@@ -163,6 +207,8 @@ class MessageRetryService extends ChangeNotifier {
   Future<void> sendMessageWithRetry({
     required Contact contact,
     required String text,
+    String? messageId,
+    DateTime? timestamp,
     String? preparedOutboundText,
     String? originalText,
     String? translatedLanguageCode,
@@ -179,7 +225,7 @@ class MessageRetryService extends ChangeNotifier {
     Uint8List? pathBytes,
     int? pathLength,
   }) async {
-    final messageId = const Uuid().v4();
+    final resolvedMessageId = messageId ?? const Uuid().v4();
     final resolved = resolvePathSelection(contact);
     final messagePathBytes =
         pathBytes ?? Uint8List.fromList(resolved.pathBytes);
@@ -208,19 +254,19 @@ class MessageRetryService extends ChangeNotifier {
       mcmpSenderName: mcmpSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,
-      messageId: messageId,
+      messageId: resolvedMessageId,
       retryCount: 0,
       pathLength: messagePathLength,
       pathBytes: messagePathBytes,
     );
 
-    _pendingMessages[messageId] = message;
-    _pendingContacts[messageId] = contact;
+    _pendingMessages[resolvedMessageId] = message;
+    _pendingContacts[resolvedMessageId] = contact;
     if (preparedOutboundText != null) {
-      _preparedOutboundTexts[messageId] = preparedOutboundText;
+      _preparedOutboundTexts[resolvedMessageId] = preparedOutboundText;
     }
 
     _config?.addMessage(contact.publicKeyHex, message);
@@ -230,7 +276,7 @@ class MessageRetryService extends ChangeNotifier {
     // overflow the firmware's 8-entry global expected_ack_table.
     final contactKey = contact.publicKeyHex;
     _sendQueue[contactKey] ??= [];
-    _sendQueue[contactKey]!.add(messageId);
+    _sendQueue[contactKey]!.add(resolvedMessageId);
 
     if (!_activeMessages.any(
       (id) => _pendingContacts[id]?.publicKeyHex == contactKey,
@@ -240,6 +286,12 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _sendNextForContact(String contactKey) {
+    if (_sendingPaused) return;
+    if (_activeMessages.any(
+      (id) => _pendingContacts[id]?.publicKeyHex == contactKey,
+    )) {
+      return;
+    }
     // Enforce the global in-flight cap before starting a new send.
     // The firmware's expected_ack_table is a single 8-entry circular buffer
     // shared across all contacts; exceeding it silently evicts an older slot.
@@ -255,6 +307,7 @@ class MessageRetryService extends ChangeNotifier {
         _activeMessages.add(messageId);
         _attemptSend(messageId).catchError((e) {
           debugPrint('_attemptSend threw for $messageId: $e');
+          if (_sendingPaused) return;
           final msg = _pendingMessages[messageId];
           if (msg != null) {
             final failed = msg.copyWith(status: MessageStatus.failed);
@@ -322,6 +375,8 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   Future<void> _attemptSend(String messageId) async {
+    if (_sendingPaused) return;
+    final sendingGeneration = _sendingGeneration;
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
     final config = _config;
@@ -392,6 +447,7 @@ class MessageRetryService extends ChangeNotifier {
       );
       return;
     }
+    if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
 
     if (currentSelection != null) {
       _recordAttemptPathHistory(messageId, currentSelection);
@@ -435,6 +491,7 @@ class MessageRetryService extends ChangeNotifier {
       attempt,
       timestampSeconds,
     );
+    if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
     if (sentByRadioAt != null) {
       final currentMessage = _pendingMessages[messageId];
       if (currentMessage != null) {
@@ -574,6 +631,7 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _startTimeoutTimer(String messageId, int timeoutMs) {
+    if (_sendingPaused) return;
     _timeoutTimers[messageId]?.cancel();
     _timeoutTimers[messageId] = Timer(Duration(milliseconds: timeoutMs), () {
       _handleTimeout(messageId);
@@ -606,6 +664,7 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _handleTimeout(String messageId) {
+    if (_sendingPaused) return;
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
     final config = _config;
@@ -653,9 +712,11 @@ class MessageRetryService extends ChangeNotifier {
       );
 
       _timeoutTimers[messageId] = Timer(Duration(milliseconds: backoffMs), () {
+        if (_sendingPaused) return;
         if (!_pendingMessages.containsKey(messageId)) return;
         _attemptSend(messageId).catchError((e) {
           debugPrint('_attemptSend threw for $messageId: $e');
+          if (_sendingPaused) return;
           final msg = _pendingMessages[messageId];
           if (msg != null) {
             final failed = msg.copyWith(status: MessageStatus.failed);

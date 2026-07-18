@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../connector/meshcore_connector.dart';
 
-/// Mixin that automatically navigates back to scanner when disconnected.
+/// Mixin that returns to the scanner when the connection cannot recover in
+/// place (for example, after a manual disconnect or an unexpected USB/TCP
+/// disconnect).
 /// Use in State classes for screens that require active connection.
 mixin DisconnectNavigationMixin<T extends StatefulWidget> on State<T> {
-  /// Call this in your Widget build method to enable auto-navigation.
-  /// Returns true if still connected, false if navigation was triggered.
+  /// A recoverable BLE loss keeps the current route and its unsaved state alive
+  /// while the connector reconnects in the background.
   bool checkConnectionAndNavigate(MeshCoreConnector connector) {
-    if (!connector.isConnected) {
+    if (!connector.isConnected && !connector.isRecoveringConnection) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.popUntil(context, (route) => route.isFirst);

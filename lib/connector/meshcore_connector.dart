@@ -192,6 +192,7 @@ class MeshCoreConnector extends ChangeNotifier {
   String? _lastDeviceId;
   String? _lastDeviceDisplayName;
   bool _manualDisconnect = false;
+  bool _isRecoveringConnection = false;
   MeshCoreTransportType? _lastManualDisconnectTransport;
   final MeshCoreUsbManager _usbManager = MeshCoreUsbManager();
   final LinuxBlePairingService _linuxBlePairingService =
@@ -458,6 +459,7 @@ class MeshCoreConnector extends ChangeNotifier {
   int _lastNoRetransmissionWarningSeconds = 0;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  bool _isFlushingPendingOutgoingMessages = false;
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
   bool _isFlushingDeferredChannelMessageSends = false;
@@ -553,10 +555,22 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<Channel> get channels => List.unmodifiable(_channels);
   bool get isConnected => _state == MeshCoreConnectionState.connected;
+  bool get wasManuallyDisconnected => _manualDisconnect;
+  bool get isRecoveringConnection => _isRecoveringConnection;
   bool get isLoadingContacts => _isLoadingContacts;
   bool get hasLoadedContacts => _hasLoadedContacts;
   bool get isLoadingChannels => _isLoadingChannels;
   bool get hasLoadedChannels => _hasLoadedChannels;
+  bool get isSessionReady =>
+      isConnected &&
+      _hasLoadedContacts &&
+      _hasLoadedChannels &&
+      !_isInitialBacklogDrain &&
+      !_deferQueuedContactMessagesUntilContacts &&
+      !_isProcessingDeferredQueuedContactMessages &&
+      !_pendingInitialChannelSync &&
+      !_pendingInitialContactsSync &&
+      !_pendingInitialQueuedMessageSync;
   Stream<Uint8List> get receivedFrames => _receivedFramesController.stream;
 
   /// Broadcast of MCMP v3 channel/room signing failures; see
@@ -721,6 +735,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> deleteMessage(Message message) async {
+    final pending = _pendingContactSends.remove(message.messageId);
+    if (pending != null) {
+      pending.timer?.cancel();
+      notifyListeners();
+      return;
+    }
     final contactKeyHex = message.senderKeyHex;
     final messages = _conversations[contactKeyHex];
     if (messages == null) return;
@@ -1282,6 +1302,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> deleteChannelMessage(ChannelMessage message) async {
+    final pending = _pendingChannelSends.remove(message.messageId);
+    if (pending != null) {
+      pending.timer?.cancel();
+      notifyListeners();
+      return;
+    }
     final channelIndex = message.channelIndex;
     if (channelIndex == null) return;
     final messages = _channelMessages[channelIndex];
@@ -3941,14 +3967,19 @@ class MeshCoreConnector extends ChangeNotifier {
       // Automatic watchdog reconnects use manual=false and retain the count.
       _rxWatchdogReconnects = 0;
       _manualDisconnect = true;
+      _isRecoveringConnection = false;
       _lastManualDisconnectTransport = transportAtDisconnect;
       _cancelReconnectTimer();
       unawaited(_backgroundService?.stop());
     } else {
       _manualDisconnect = false;
       _lastManualDisconnectTransport = null;
+      _isRecoveringConnection =
+          transportAtDisconnect == MeshCoreTransportType.bluetooth &&
+          _lastDeviceId != null;
     }
     _setState(MeshCoreConnectionState.disconnecting);
+    pausePendingOutgoingMessages();
     _stopBatteryPolling();
     _stopRadioStatsPolling();
     _stopRxWatchdog();
@@ -4501,8 +4532,25 @@ class MeshCoreConnector extends ChangeNotifier {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    String? pendingMessageId,
+    DateTime? pendingTimestamp,
   }) async {
-    if (!isConnected || text.isEmpty) return;
+    if (text.isEmpty) return;
+    if (!isSessionReady) {
+      if (pendingMessageId == null) {
+        scheduleContactMessage(
+          contact,
+          text,
+          inputText: originalText ?? text,
+          uncompressedText: uncompressedText,
+          delaySeconds: 0,
+          originalText: originalText,
+          translatedLanguageCode: translatedLanguageCode,
+          translationModelId: translationModelId,
+        );
+      }
+      return;
+    }
     await _loadMessagesForContact(contact.publicKeyHex);
 
     // Room-server messages sign via the node (a few seconds). Show a pending
@@ -4516,7 +4564,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _isMcmpSignableText(text) &&
         ReactionHelper.parseReaction(text) == null;
     Message? signingPlaceholder;
-    if (willSignRoomMcmp) {
+    if (willSignRoomMcmp && pendingMessageId == null) {
       signingPlaceholder = Message.outgoing(
         contact.publicKey,
         text,
@@ -4567,6 +4615,10 @@ class MeshCoreConnector extends ChangeNotifier {
               ? McmpSignatureStatus.valid
               : McmpSignatureStatus.unsigned);
 
+    if (pendingMessageId != null) {
+      _pendingContactSends.remove(pendingMessageId)?.timer?.cancel();
+    }
+
     // Check if this is a reaction - apply locally with pending status and route through retry service
     final reactionInfo = ReactionHelper.parseReaction(text);
     if (reactionInfo != null) {
@@ -4586,7 +4638,12 @@ class MeshCoreConnector extends ChangeNotifier {
       // Route through retry service (same as normal messages)
       // Don't use auto-rotation for reactions — just send directly
       if (_retryService != null) {
-        _retryService!.sendMessageWithRetry(contact: contact, text: text);
+        _retryService!.sendMessageWithRetry(
+          contact: contact,
+          text: text,
+          messageId: pendingMessageId,
+          timestamp: pendingTimestamp,
+        );
       } else {
         final outboundText = prepareContactOutboundText(contact, text);
         await sendFrame(buildSendTextMsgFrame(contact.publicKey, outboundText));
@@ -4598,6 +4655,8 @@ class MeshCoreConnector extends ChangeNotifier {
       await _retryService!.sendMessageWithRetry(
         contact: contact,
         text: text,
+        messageId: pendingMessageId,
+        timestamp: pendingTimestamp,
         preparedOutboundText: outboundText,
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
@@ -4618,6 +4677,8 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = Message.outgoing(
         contact.publicKey,
         text,
+        messageId: pendingMessageId,
+        timestamp: pendingTimestamp,
         wasMcmpCompressed: _isMcmpEncodedText(outboundText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
@@ -4989,8 +5050,31 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
     int? replyToTimestamp,
     ChannelBinaryDataOutbound? preparedMcoImageV3Outbound,
+    String? pendingMessageId,
+    DateTime? pendingTimestamp,
+    DateTime? pendingReceivedAt,
   }) async {
-    if (!isConnected || text.isEmpty) return;
+    if (text.isEmpty) return;
+    if (!isSessionReady) {
+      if (pendingMessageId == null) {
+        scheduleChannelMessage(
+          channel,
+          text,
+          inputText: originalText ?? text,
+          mcoImageV3: mcoImageV3,
+          uncompressedText: uncompressedText,
+          delaySeconds: 0,
+          originalText: originalText,
+          translatedLanguageCode: translatedLanguageCode,
+          translationModelId: translationModelId,
+          replyToMessageId: replyToMessageId,
+          replyToSenderName: replyToSenderName,
+          replyToText: replyToText,
+          replyToTimestamp: replyToTimestamp,
+        );
+      }
+      return;
+    }
     final shouldDeferForSync = _shouldDeferChannelSendForSync;
     final hasExplicitMcoImageV3 =
         preparedMcoImageV3Outbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
@@ -5066,21 +5150,24 @@ class MeshCoreConnector extends ChangeNotifier {
       // message right away in the pending state so it does not visually
       // disappear while we wait; it is finalized (badges/state) below once
       // the signature result is known, and only then actually transmitted.
-      final pending = ChannelMessage.outgoing(
-        text,
-        _selfName ?? 'Me',
-        channel.index,
-        originalText: originalText,
-        translatedLanguageCode: translatedLanguageCode,
-        translationModelId: translationModelId,
-        replyToMessageId: replyToMessageId,
-        replyToSenderName: replyToSenderName,
-        replyToText: replyToText,
-        packetRegion: _displayPacketRegion(outgoingRegion),
-        packetRegionInfoAvailable: true,
-      );
-      _addChannelMessage(channel.index, pending);
-      notifyListeners();
+      ChannelMessage? signingPlaceholder;
+      if (pendingMessageId == null) {
+        signingPlaceholder = ChannelMessage.outgoing(
+          text,
+          _selfName ?? 'Me',
+          channel.index,
+          originalText: originalText,
+          translatedLanguageCode: translatedLanguageCode,
+          translationModelId: translationModelId,
+          replyToMessageId: replyToMessageId,
+          replyToSenderName: replyToSenderName,
+          replyToText: replyToText,
+          packetRegion: _displayPacketRegion(outgoingRegion),
+          packetRegionInfoAvailable: true,
+        );
+        _addChannelMessage(channel.index, signingPlaceholder);
+        notifyListeners();
+      }
 
       mcmpSignature = await _signMcmpCanonical(
         context: McmpSigningContext.channel,
@@ -5095,9 +5182,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
       // Drop the placeholder; the finalized message is (re-)added below in the
       // same synchronous pass, so the bubble never leaves the list.
-      _channelMessages[channel.index]?.removeWhere(
-        (m) => m.messageId == pending.messageId,
-      );
+      if (signingPlaceholder != null) {
+        _channelMessages[channel.index]?.removeWhere(
+          (m) => m.messageId == signingPlaceholder!.messageId,
+        );
+      }
       if (!isConnected) {
         notifyListeners();
         return;
@@ -5175,10 +5264,16 @@ class MeshCoreConnector extends ChangeNotifier {
             binaryOutbound.payload,
           );
     final packetRegion = _displayPacketRegion(outgoingRegion);
+    if (pendingMessageId != null) {
+      _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
+    }
     final baseMessage = ChannelMessage.outgoing(
       messageText,
       _selfName ?? 'Me',
       channel.index,
+      messageId: pendingMessageId,
+      timestamp: pendingTimestamp,
+      receivedAt: pendingReceivedAt,
       wasMcmpCompressed:
           (!isMcoImageV3Binary && _isMcmpEncodedText(outboundText)) ||
           isBinaryMcmpTransport,
@@ -5675,19 +5770,71 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   DateTime? pendingContactSendAt(String messageId) {
-    return _pendingContactSends[messageId]?.sendAt;
+    final pending = _pendingContactSends[messageId];
+    return pending == null || pending.delaySeconds <= 0 ? null : pending.sendAt;
   }
 
   int? pendingContactSendDelaySeconds(String messageId) {
-    return _pendingContactSends[messageId]?.delaySeconds;
+    final delay = _pendingContactSends[messageId]?.delaySeconds;
+    return delay == null || delay <= 0 ? null : delay;
   }
 
   DateTime? pendingChannelSendAt(String messageId) {
-    return _pendingChannelSends[messageId]?.sendAt;
+    final pending = _pendingChannelSends[messageId];
+    return pending == null || pending.delaySeconds <= 0 ? null : pending.sendAt;
   }
 
   int? pendingChannelSendDelaySeconds(String messageId) {
-    return _pendingChannelSends[messageId]?.delaySeconds;
+    final delay = _pendingChannelSends[messageId]?.delaySeconds;
+    return delay == null || delay <= 0 ? null : delay;
+  }
+
+  void pausePendingOutgoingMessages() {
+    _retryService?.setSendingPaused(true);
+  }
+
+  Future<void> resumePendingOutgoingMessages() async {
+    if (!isSessionReady || _isFlushingPendingOutgoingMessages) return;
+    _isFlushingPendingOutgoingMessages = true;
+    try {
+      final now = DateTime.now();
+      final contactIds = List<String>.from(_pendingContactSends.keys);
+      for (final messageId in contactIds) {
+        final pending = _pendingContactSends[messageId];
+        if (pending == null) continue;
+        if (pending.delaySeconds > 0 && pending.sendAt.isAfter(now)) {
+          pending.timer?.cancel();
+          pending.timer = Timer(
+            pending.sendAt.difference(now),
+            () => _commitPendingContactSend(messageId),
+          );
+          continue;
+        }
+        await _commitPendingContactSend(messageId);
+        if (!isSessionReady) return;
+      }
+
+      final channelIds = List<String>.from(_pendingChannelSends.keys);
+      for (final messageId in channelIds) {
+        final pending = _pendingChannelSends[messageId];
+        if (pending == null) continue;
+        if (pending.delaySeconds > 0 && pending.sendAt.isAfter(now)) {
+          pending.timer?.cancel();
+          pending.timer = Timer(
+            pending.sendAt.difference(now),
+            () => _commitPendingChannelSend(messageId),
+          );
+          continue;
+        }
+        await _commitPendingChannelSend(messageId);
+        if (!isSessionReady) return;
+      }
+    } finally {
+      _isFlushingPendingOutgoingMessages = false;
+      if (isSessionReady) {
+        _retryService?.setSendingPaused(false);
+      }
+    }
   }
 
   void scheduleContactMessage(
@@ -5700,7 +5847,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? translatedLanguageCode,
     String? translationModelId,
   }) {
-    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    if (text.isEmpty || delaySeconds < 0) return;
     final resolved = resolvePathSelection(contact);
     // Preview only: the real send re-prepares (and re-signs) at commit time.
     final outboundText = prepareContactOutboundText(contact, text);
@@ -5738,10 +5885,12 @@ class MeshCoreConnector extends ChangeNotifier {
       delaySeconds: delaySeconds,
       sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
     );
-    pending.timer = Timer(
-      Duration(seconds: delaySeconds),
-      () => _commitPendingContactSend(message.messageId),
-    );
+    if (delaySeconds > 0) {
+      pending.timer = Timer(
+        Duration(seconds: delaySeconds),
+        () => _commitPendingContactSend(message.messageId),
+      );
+    }
     _pendingContactSends[message.messageId] = pending;
     notifyListeners();
   }
@@ -5750,6 +5899,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Channel channel,
     String text, {
     required String inputText,
+    EncodedMCOImageV3? mcoImageV3,
     String? uncompressedText,
     required int delaySeconds,
     String? originalText,
@@ -5760,18 +5910,23 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
     int? replyToTimestamp,
   }) {
-    if (!isConnected || text.isEmpty || delaySeconds <= 0) return;
+    if (text.isEmpty || delaySeconds < 0) return;
     final outboundText = prepareChannelOutboundText(channel.index, text);
-    final binaryOutbound = ChannelBinaryDataHelper.tryEncodeOutbound(
-      text: text,
-      senderName: _selfName ?? 'Me',
-      mcmpEnabled: isChannelMcmpEnabled(channel.index),
-      mcmpVersion: channelMcmpVersion(channel.index),
-      mcmpUseSign: channelMcmpUseSign(channel.index),
-      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      replyAuthorName: replyToSenderName,
-      replyTimestamp: replyToTimestamp,
-    );
+    final binaryOutbound = mcoImageV3 != null
+        ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
+            image: mcoImageV3,
+            senderName: _selfName ?? 'Me',
+          )
+        : ChannelBinaryDataHelper.tryEncodeOutbound(
+            text: text,
+            senderName: _selfName ?? 'Me',
+            mcmpEnabled: isChannelMcmpEnabled(channel.index),
+            mcmpVersion: channelMcmpVersion(channel.index),
+            mcmpUseSign: channelMcmpUseSign(channel.index),
+            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            replyAuthorName: replyToSenderName,
+            replyTimestamp: replyToTimestamp,
+          );
     final binaryFrame = binaryOutbound == null
         ? null
         : buildSendChannelDataFrame(
@@ -5831,6 +5986,7 @@ class MeshCoreConnector extends ChangeNotifier {
       channel: channel,
       message: message,
       text: messageText,
+      mcoImageV3: mcoImageV3,
       mcoImageV3Outbound:
           binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3
           ? binaryOutbound
@@ -5847,10 +6003,12 @@ class MeshCoreConnector extends ChangeNotifier {
       delaySeconds: delaySeconds,
       sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
     );
-    pending.timer = Timer(
-      Duration(seconds: delaySeconds),
-      () => _commitPendingChannelSend(message.messageId),
-    );
+    if (delaySeconds > 0) {
+      pending.timer = Timer(
+        Duration(seconds: delaySeconds),
+        () => _commitPendingChannelSend(message.messageId),
+      );
+    }
     _pendingChannelSends[message.messageId] = pending;
     notifyListeners();
   }
@@ -5872,36 +6030,79 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> _commitPendingContactSend(String messageId) async {
-    final pending = _pendingContactSends.remove(messageId);
+    final pending = _pendingContactSends[messageId];
     if (pending == null) return;
-    notifyListeners();
-    await sendMessage(
-      pending.contact,
-      pending.text,
-      uncompressedText: pending.uncompressedText,
-      originalText: pending.originalText,
-      translatedLanguageCode: pending.translatedLanguageCode,
-      translationModelId: pending.translationModelId,
+    if (!isSessionReady) return;
+    pending.timer?.cancel();
+    final liveContactIndex = _contacts.indexWhere(
+      (contact) => contact.publicKeyHex == pending.contact.publicKeyHex,
     );
+    final contact = liveContactIndex < 0
+        ? pending.contact
+        : _contacts[liveContactIndex];
+    try {
+      await sendMessage(
+        contact,
+        pending.text,
+        uncompressedText: pending.uncompressedText,
+        originalText: pending.originalText,
+        translatedLanguageCode: pending.translatedLanguageCode,
+        translationModelId: pending.translationModelId,
+        pendingMessageId: pending.message.messageId,
+        pendingTimestamp: pending.message.timestamp,
+      );
+    } catch (error) {
+      appLogger.warn(
+        'Deferred contact send failed before retry tracking: $error',
+        tag: 'Connector',
+      );
+    }
   }
 
   Future<void> _commitPendingChannelSend(String messageId) async {
-    final pending = _pendingChannelSends.remove(messageId);
+    final pending = _pendingChannelSends[messageId];
     if (pending == null) return;
-    notifyListeners();
-    await sendChannelMessage(
-      pending.channel,
-      pending.text,
-      uncompressedText: pending.uncompressedText,
-      originalText: pending.originalText,
-      translatedLanguageCode: pending.translatedLanguageCode,
-      translationModelId: pending.translationModelId,
-      replyToMessageId: pending.replyToMessageId,
-      replyToSenderName: pending.replyToSenderName,
-      replyToText: pending.replyToText,
-      replyToTimestamp: pending.replyToTimestamp,
-      preparedMcoImageV3Outbound: pending.mcoImageV3Outbound,
+    if (!isSessionReady) return;
+    pending.timer?.cancel();
+    final liveChannelIndex = _channels.indexWhere(
+      (channel) => channel.index == pending.channel.index,
     );
+    if (liveChannelIndex < 0) {
+      _pendingChannelSends.remove(messageId);
+      _addChannelMessage(
+        pending.channel.index,
+        pending.message.copyWith(status: ChannelMessageStatus.failed),
+      );
+      return;
+    }
+    final channel = _channels[liveChannelIndex];
+    try {
+      await sendChannelMessage(
+        channel,
+        pending.text,
+        mcoImageV3: pending.mcoImageV3,
+        uncompressedText: pending.uncompressedText,
+        originalText: pending.originalText,
+        translatedLanguageCode: pending.translatedLanguageCode,
+        translationModelId: pending.translationModelId,
+        replyToMessageId: pending.replyToMessageId,
+        replyToSenderName: pending.replyToSenderName,
+        replyToText: pending.replyToText,
+        replyToTimestamp: pending.replyToTimestamp,
+        preparedMcoImageV3Outbound: pending.mcoImageV3Outbound,
+        pendingMessageId: pending.message.messageId,
+        pendingTimestamp: pending.message.timestamp,
+        pendingReceivedAt: pending.message.receivedAt,
+      );
+    } catch (error) {
+      appLogger.warn(
+        'Deferred channel send failed: $error',
+        tag: 'Connector',
+      );
+      if (!_pendingChannelSends.containsKey(messageId)) {
+        _markPendingChannelMessageFailedById(messageId);
+      }
+    }
   }
 
   void _markChannelMessageSentByRadio(
@@ -10563,6 +10764,8 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _handleDisconnection() {
+    _isRecoveringConnection = _shouldAutoReconnect;
+    pausePendingOutgoingMessages();
     _stopBatteryPolling();
     _stopGpsLocationPolling();
     _stopRadioStatsPolling();
@@ -10700,6 +10903,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_state != newState) {
       _state = newState;
       if (newState == MeshCoreConnectionState.connected) {
+        _isRecoveringConnection = false;
         unawaited(_transportPreferenceStore.save(_activeTransport.name));
       }
       notifyListeners();
@@ -11568,6 +11772,7 @@ class _PendingChannelSend {
   final Channel channel;
   final ChannelMessage message;
   final String text;
+  final EncodedMCOImageV3? mcoImageV3;
   final ChannelBinaryDataOutbound? mcoImageV3Outbound;
   final String inputText;
   final String uncompressedText;
@@ -11586,6 +11791,7 @@ class _PendingChannelSend {
     required this.channel,
     required this.message,
     required this.text,
+    required this.mcoImageV3,
     required this.mcoImageV3Outbound,
     required this.inputText,
     required this.uncompressedText,

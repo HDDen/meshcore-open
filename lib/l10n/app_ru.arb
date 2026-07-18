@@ -2403,5 +2403,7 @@
   "settings_appSettingsCustomChemistry": "Своя",
   "map_clearDiscoveredContactsCache": "Очистить локальный кэш узлов",
   "map_clearDiscoveredContactsCacheDisclamer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.",
-  "snrIndicator_v2_nearByRepeaters": "Активность репитеров"
+  "snrIndicator_v2_nearByRepeaters": "Активность репитеров",
+  "app_connectionLostReconnect": "Потеряно соединение с нодой, выполняется переподключение...",
+  "app_connectionLostReconnected": "Соединение с нодой восстановлено"
 }

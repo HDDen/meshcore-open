@@ -9915,6 +9915,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Repeater\'s activity'**
   String get snrIndicator_v2_nearByRepeaters;
+
+  /// No description provided for @app_connectionLostReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to node is lost; reconnecting...'**
+  String get app_connectionLostReconnect;
+
+  /// No description provided for @app_connectionLostReconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnected to node'**
+  String get app_connectionLostReconnected;
 }
 
 class _AppLocalizationsDelegate

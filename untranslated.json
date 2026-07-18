@@ -204,7 +204,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "de": [
@@ -399,7 +401,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "es": [
@@ -607,7 +611,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "fr": [
@@ -815,7 +821,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "hu": [
@@ -1023,7 +1031,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "it": [
@@ -1311,7 +1321,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "ja": [
@@ -1519,7 +1531,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "ko": [
@@ -1727,7 +1741,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "nl": [
@@ -2015,7 +2031,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "pl": [
@@ -2223,7 +2241,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "pt": [
@@ -2511,7 +2531,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "ru": [
@@ -2733,7 +2755,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "sl": [
@@ -2941,7 +2965,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "sv": [
@@ -3229,7 +3255,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "uk": [
@@ -3437,7 +3465,9 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ],
 
   "zh": [
@@ -3645,6 +3675,8 @@
     "settings_appSettingsCustomChemistry",
     "map_clearDiscoveredContactsCache",
     "map_clearDiscoveredContactsCacheDisclamer",
-    "snrIndicator_v2_nearByRepeaters"
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected"
   ]
 }

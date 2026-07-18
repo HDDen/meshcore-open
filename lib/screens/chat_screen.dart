@@ -2022,6 +2022,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _retryMessage(Message message) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    connector.cancelPendingContactSend(message.messageId);
     // Retry using the contact's current path override setting
     connector.sendMessage(_resolveContact(connector), message.text);
     showDismissibleSnackBar(

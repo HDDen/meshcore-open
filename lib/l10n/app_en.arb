@@ -3239,5 +3239,7 @@
   "settings_appSettingsCustomChemistry": "Custom",
   "map_clearDiscoveredContactsCache": "Clear nodes local cache",
   "map_clearDiscoveredContactsCacheDisclamer": "Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.",
-  "snrIndicator_v2_nearByRepeaters": "Repeater's activity"
+  "snrIndicator_v2_nearByRepeaters": "Repeater's activity",
+  "app_connectionLostReconnect": "Connection to node is lost; reconnecting...",
+  "app_connectionLostReconnected": "Reconnected to node"
 }

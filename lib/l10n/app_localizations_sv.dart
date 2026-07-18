@@ -5730,4 +5730,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get snrIndicator_v2_nearByRepeaters => 'Repeater\'s activity';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Connection to node is lost; reconnecting...';
+
+  @override
+  String get app_connectionLostReconnected => 'Reconnected to node';
 }

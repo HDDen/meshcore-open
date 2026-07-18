@@ -5795,4 +5795,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get snrIndicator_v2_nearByRepeaters => 'Активность репитеров';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Потеряно соединение с нодой, выполняется переподключение...';
+
+  @override
+  String get app_connectionLostReconnected =>
+      'Соединение с нодой восстановлено';
 }

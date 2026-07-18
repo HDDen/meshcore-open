@@ -2815,6 +2815,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         widget.channel,
         messageText,
         inputText: text,
+        mcoImageV3: mcoImageV3,
         uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
@@ -3400,6 +3401,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    connector.cancelPendingChannelSend(message.messageId);
     _lastChannelSendAt = DateTime.now();
     final mcoImageV3 = _mcoImageV3ForResend(message.text);
     final resendText = mcoImageV3 == null
