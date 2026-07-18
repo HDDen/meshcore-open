@@ -4891,7 +4891,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.';
 
   @override
-  String get discoveredContacts_Title => 'Обнаруженные контакты';
+  String get discoveredContacts_Title => 'Добавить обнаруженные контакты';
 
   @override
   String get discoveredContacts_noMatching => 'Нет совпадающих контактов';

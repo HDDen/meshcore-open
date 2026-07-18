@@ -8377,7 +8377,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveredContacts_Title.
   ///
   /// In en, this message translates to:
-  /// **'Discovered Contacts'**
+  /// **'Add discovered contacts'**
   String get discoveredContacts_Title;
 
   /// No description provided for @discoveredContacts_noMatching.

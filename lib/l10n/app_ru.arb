@@ -1227,7 +1227,7 @@
   "discoveredContacts_contactAdded": "Контакт добавлен",
   "discoveredContacts_copyContact": "Копировать контакт в буфер обмена",
   "discoveredContacts_addContact": "Добавить контакт",
-  "discoveredContacts_Title": "Обнаруженные контакты",
+  "discoveredContacts_Title": "Добавить обнаруженные контакты",
   "discoveredContacts_deleteContact": "Удалить контакт",
   "contactsSettings_overwriteOldestSubtitle": "Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.",
   "common_deleteAll": "Удалить все",

@@ -4809,7 +4809,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'When the contact list is full, the oldest non-favorited contact will be replaced.';
 
   @override
-  String get discoveredContacts_Title => 'Discovered Contacts';
+  String get discoveredContacts_Title => 'Add discovered contacts';
 
   @override
   String get discoveredContacts_noMatching => 'No matching contacts';
