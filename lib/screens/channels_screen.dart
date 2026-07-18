@@ -978,61 +978,69 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
     showModalBottomSheet(
       context: parentContext,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(sheetContext.l10n.channels_editChannel),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await Future.delayed(const Duration(milliseconds: 100));
-                if (parentContext.mounted) {
-                  showChannelEditSheet(parentContext, connector, channel);
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                isMuted
-                    ? Icons.notifications_outlined
-                    : Icons.notifications_off_outlined,
-              ),
-              title: Text(
-                isMuted
-                    ? sheetContext.l10n.channels_unmuteChannel
-                    : sheetContext.l10n.channels_muteChannel,
-              ),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                if (isMuted) {
-                  await settingsService.unmuteChannel(channel.name);
-                } else {
-                  await settingsService.muteChannel(channel.name);
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(sheetContext).colorScheme.error,
-              ),
-              title: Text(
-                sheetContext.l10n.channels_deleteChannel,
-                style: TextStyle(
-                  color: Theme.of(sheetContext).colorScheme.error,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(sheetContext.l10n.channels_editChannel),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    if (parentContext.mounted) {
+                      showChannelEditSheet(parentContext, connector, channel);
+                    }
+                  },
                 ),
-              ),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await Future.delayed(const Duration(milliseconds: 100));
-                if (parentContext.mounted) {
-                  _confirmDeleteChannel(parentContext, connector, channel);
-                }
-              },
+                ListTile(
+                  leading: Icon(
+                    isMuted
+                        ? Icons.notifications_outlined
+                        : Icons.notifications_off_outlined,
+                  ),
+                  title: Text(
+                    isMuted
+                        ? sheetContext.l10n.channels_unmuteChannel
+                        : sheetContext.l10n.channels_muteChannel,
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    if (isMuted) {
+                      await settingsService.unmuteChannel(channel.name);
+                    } else {
+                      await settingsService.muteChannel(channel.name);
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(sheetContext).colorScheme.error,
+                  ),
+                  title: Text(
+                    sheetContext.l10n.channels_deleteChannel,
+                    style: TextStyle(
+                      color: Theme.of(sheetContext).colorScheme.error,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    if (parentContext.mounted) {
+                      _confirmDeleteChannel(parentContext, connector, channel);
+                    }
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1873,30 +1881,38 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(context.l10n.contacts_editGroup),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _showEditChannelGroupDialog(context, group);
-              },
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(context.l10n.contacts_editGroup),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showEditChannelGroupDialog(context, group);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    context.l10n.contacts_deleteGroup,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _deleteChannelGroup(group);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: Text(
-                context.l10n.contacts_deleteGroup,
-                style: const TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _deleteChannelGroup(group);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
