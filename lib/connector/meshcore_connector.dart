@@ -3424,10 +3424,12 @@ class MeshCoreConnector extends ChangeNotifier {
           device,
           onRequestPin: linuxPairingPinProvider,
         );
+      } else if (PlatformInfo.isWindows) {
+        await _ensureWindowsBleBond(device);
       }
 
-      // Request larger MTU only where the platform path supports it.
-      if (!PlatformInfo.isWeb && !PlatformInfo.isLinux) {
+      // flutter_blue_plus only supports explicit MTU requests on Android.
+      if (PlatformInfo.isAndroid) {
         try {
           final mtu = await device.requestMtu(185);
           _appDebugLogService?.info('MTU set to: $mtu', tag: 'BLE Connect');
@@ -3497,6 +3499,14 @@ class MeshCoreConnector extends ChangeNotifier {
         throw Exception("MeshCore characteristics not found");
       }
 
+      final txProperties = _txCharacteristic!.properties;
+      _appDebugLogService?.info(
+        'NUS TX properties: notify=${txProperties.notify} '
+        'indicate=${txProperties.indicate} '
+        'descriptors=${_txCharacteristic!.descriptors.length}',
+        tag: 'BLE Connect',
+      );
+
       if (PlatformInfo.isWeb) {
         _appDebugLogService?.info(
           'Starting setNotifyValue(true)',
@@ -3525,14 +3535,27 @@ class MeshCoreConnector extends ChangeNotifier {
           tag: 'BLE Connect',
         );
       } else {
+        // WinRT may report the link as connected before descriptor writes are
+        // ready. Let service discovery settle before the first CCCD write;
+        // retrying only after an immediate failed write is less reliable.
+        if (PlatformInfo.isWindows) {
+          await Future<void>.delayed(const Duration(milliseconds: 750));
+        }
         bool notifySet = false;
         for (int attempt = 0; attempt < 3 && !notifySet; attempt++) {
           try {
             if (attempt > 0) {
-              await Future.delayed(Duration(milliseconds: 500 * attempt));
+              final retryDelay = PlatformInfo.isWindows
+                  ? Duration(milliseconds: 1000 * attempt)
+                  : Duration(milliseconds: 500 * attempt);
+              await Future<void>.delayed(retryDelay);
             }
             await _txCharacteristic!.setNotifyValue(true);
             notifySet = true;
+            _appDebugLogService?.info(
+              'NUS TX notifications enabled on attempt ${attempt + 1}/3',
+              tag: 'BLE Connect',
+            );
           } catch (e) {
             _appDebugLogService?.warn('notify failure: $e', tag: 'BLE Connect');
             _appDebugLogService?.warn(
@@ -3568,11 +3591,16 @@ class MeshCoreConnector extends ChangeNotifier {
       final isConnectTimeoutFailure =
           isConnectFailure && lowerErrorText.contains('timed out');
       final isLinuxConnectFailure = PlatformInfo.isLinux && isConnectFailure;
+      final isWindowsPairingFailure =
+          PlatformInfo.isWindows &&
+          lowerErrorText.contains('windows ble pairing failed');
       // Linux pairing failures should not enter auto-reconnect loops; user
       // needs to retry manually so they can re-enter PIN / resolve pairing.
-      if (isLinuxPairingFailure) {
+      if (isLinuxPairingFailure || isWindowsPairingFailure) {
         _appDebugLogService?.warn(
-          isLikelyPairingTimeout
+          isWindowsPairingFailure
+              ? 'Windows pairing failure: stopping reconnect until user retries manually'
+              : isLikelyPairingTimeout
               ? 'Linux pairing timed out: stopping reconnect until user retries manually'
               : 'Linux pairing failure: stopping reconnect until user retries manually',
           tag: 'BLE Connect',
@@ -3655,6 +3683,53 @@ class MeshCoreConnector extends ChangeNotifier {
       return error;
     }
     return StateError('Linux connect stage failure: $error');
+  }
+
+  Future<void> _ensureWindowsBleBond(BluetoothDevice device) async {
+    final remoteId = device.remoteId;
+    BmBondStateEnum? bondState;
+    try {
+      final response = await FlutterBluePlusPlatform.instance.getBondState(
+        BmBondStateRequest(remoteId: remoteId),
+      );
+      bondState = response.bondState;
+      _appDebugLogService?.info(
+        'Windows BLE bond state before NUS setup: $bondState',
+        tag: 'BLE Pair',
+      );
+    } catch (error) {
+      _appDebugLogService?.warn(
+        'Windows getBondState failed; attempting pairing: $error',
+        tag: 'BLE Pair',
+      );
+    }
+
+    if (bondState == BmBondStateEnum.bonded) {
+      return;
+    }
+
+    _appDebugLogService?.info(
+      'Windows BLE device is not bonded; requesting system pairing',
+      tag: 'BLE Pair',
+    );
+    try {
+      final paired = await FlutterBluePlusPlatform.instance.createBond(
+        BmCreateBondRequest(remoteId: remoteId, pin: null),
+      );
+      if (!paired) {
+        throw StateError('Windows pairing request was rejected or cancelled');
+      }
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        StateError('Windows BLE pairing failed: $error'),
+        stackTrace,
+      );
+    }
+
+    _appDebugLogService?.info(
+      'Windows BLE pairing completed',
+      tag: 'BLE Pair',
+    );
   }
 
   Future<BmBondStateEnum?> _getLinuxPluginBondState(
