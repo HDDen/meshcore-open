@@ -88,6 +88,12 @@ class MessageRetryService extends ChangeNotifier {
   /// shared globally; cap at 6 to leave two slots of headroom.
   static const int _maxGlobalInFlight = 6;
 
+  /// Fallback timeouts for attempts that never got RESP_CODE_SENT: a quick
+  /// retry when the transport write never happened, and a generous ceiling
+  /// for a lost node response (normally answered in well under a second).
+  static const int _failedSendRetryMs = 2000;
+  static const int _sentRespFallbackMs = 15000;
+
   int _maxRetries = 5;
   int get maxRetries => _maxRetries;
 
@@ -448,6 +454,22 @@ class MessageRetryService extends ChangeNotifier {
         config.updateMessage(updatedMessage);
       }
     }
+
+    // updateMessageFromSent (RESP_CODE_SENT) is the only place that arms the
+    // retry timer. If the send silently failed or the response was lost to a
+    // disconnect, the message would stay pending forever and leak its
+    // in-flight slot — arm a fallback so every pending message always has a
+    // live timer.
+    final finalMessage = _pendingMessages[messageId];
+    if (finalMessage != null &&
+        !_resolvedMessages.contains(messageId) &&
+        finalMessage.status == MessageStatus.pending &&
+        finalMessage.retryCount == attempt) {
+      _startTimeoutTimer(
+        messageId,
+        sentByRadioAt == null ? _failedSendRetryMs : _sentRespFallbackMs,
+      );
+    }
   }
 
   bool updateMessageFromSent(int ackHash, int timeoutMs) {
@@ -631,9 +653,17 @@ class MessageRetryService extends ChangeNotifier {
       );
 
       _timeoutTimers[messageId] = Timer(Duration(milliseconds: backoffMs), () {
-        if (_pendingMessages.containsKey(messageId)) {
-          _attemptSend(messageId);
-        }
+        if (!_pendingMessages.containsKey(messageId)) return;
+        _attemptSend(messageId).catchError((e) {
+          debugPrint('_attemptSend threw for $messageId: $e');
+          final msg = _pendingMessages[messageId];
+          if (msg != null) {
+            final failed = msg.copyWith(status: MessageStatus.failed);
+            _pendingMessages[messageId] = failed;
+            _config?.updateMessage(failed);
+          }
+          _onMessageResolved(messageId, contact.publicKeyHex);
+        });
       });
     } else {
       // Max retries reached - mark as failed

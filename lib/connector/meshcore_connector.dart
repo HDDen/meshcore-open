@@ -3872,6 +3872,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _repeaterBatterySnapshots.clear();
     _batteryRequested = false;
     _awaitingSelfInfo = false;
+    _lastSentWasCliCommand = false;
     _hasReceivedDeviceInfo = false;
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
@@ -10289,6 +10290,13 @@ class MeshCoreConnector extends ChangeNotifier {
     // Preserve deviceId and displayName for UI display during reconnection
     // They're only cleared on manual disconnect via disconnect() method
     _hasReceivedDeviceInfo = false;
+    // Handshake flags must not survive an unexpected drop: a stale
+    // _awaitingSelfInfo makes _requestDeviceInfo a no-op on the next connect,
+    // and a stale CLI flag swallows the next real RESP_CODE_SENT.
+    _awaitingSelfInfo = false;
+    _selfInfoRetryTimer?.cancel();
+    _selfInfoRetryTimer = null;
+    _lastSentWasCliCommand = false;
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
     _resetSyncProgressState();
