@@ -1301,10 +1301,11 @@ class _ContactsScreenState extends State<ContactsScreen>
     final screenWidth = MediaQuery.sizeOf(context).width;
     final searchControlsMinWidth = widget.batchOperationsMode ? 146.0 : 97.0;
     final searchControlsMaxWidth = widget.batchOperationsMode ? 169.0 : 120.0;
-    final searchExpandedWidth = (screenWidth * 0.52).clamp(
+    final compactGroupWidth = (screenWidth * 0.21).clamp(76.0, 128.0);
+    final searchExpandedWidth = (screenWidth - 24 - compactGroupWidth).clamp(
       searchControlsMinWidth,
-      double.infinity,
-    ); // allow expansion up to 52% of screen width, but not less than the collapsed width
+      520.0,
+    );
     final searchCollapsedWidth = (screenWidth * 0.22).clamp(
       searchControlsMinWidth,
       searchControlsMaxWidth,
