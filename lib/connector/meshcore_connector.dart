@@ -4061,6 +4061,9 @@ class MeshCoreConnector extends ChangeNotifier {
       _isRecoveringConnection =
           transportAtDisconnect == MeshCoreTransportType.bluetooth &&
           _lastDeviceId != null;
+      if (_isRecoveringConnection) {
+        unawaited(_backgroundService?.setConnectionLost(true));
+      }
     }
     _setState(MeshCoreConnectionState.disconnecting);
     pausePendingOutgoingMessages();
@@ -7400,6 +7403,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
     _awaitingSelfInfo = false;
     _hasCompletedSelfInfoHandshake = parsedSelfInfo;
+    if (parsedSelfInfo) {
+      unawaited(_backgroundService?.setConnectionLost(false));
+    }
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     notifyListeners();
@@ -10953,6 +10959,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _handleDisconnection() {
     _isRecoveringConnection = _shouldAutoReconnect;
+    if (_isRecoveringConnection) {
+      unawaited(_backgroundService?.setConnectionLost(true));
+    }
     pausePendingOutgoingMessages();
     _stopBatteryPolling();
     _stopGpsLocationPolling();
