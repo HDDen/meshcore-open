@@ -98,7 +98,7 @@
   "settings_privacyModeDisabled": "Режим конфиденциальности выключен",
   "settings_actions": "Действия",
   "settings_deleteAllPaths": "Удалить все маршруты",
-  "settings_deleteAllPathsSubtitle": "Очистить все данные о маршрутах в контактах.",
+  "settings_deleteAllPathsSubtitle": "Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.",
   "settings_sendAdvertisement": "Отправить анонс",
   "settings_sendAdvertisementSubtitle": "Анонсировать присутствие сейчас",
   "settings_advertisementSent": "Анонс отправлен",

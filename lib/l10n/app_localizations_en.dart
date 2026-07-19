@@ -540,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_deleteAllPathsSubtitle =>
-      'Clear all path data from contacts.';
+      'Clear all local route data from contacts. Routes on the node will not be affected.';
 
   @override
   String get settings_sendAdvertisement => 'Send Advertisement';

@@ -1139,9 +1139,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(l10n.common_cancel),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              connector.deleteAllPaths();
+              await connector.deleteAllPaths();
             },
             child: Text(
               l10n.common_deleteAll,

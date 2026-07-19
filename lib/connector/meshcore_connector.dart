@@ -11806,8 +11806,25 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteAllPaths() {
-    _pathHistoryService?.clearAllHistories();
+  Future<void> deleteAllPaths() async {
+    var contactsChanged = false;
+    for (var index = 0; index < _contacts.length; index++) {
+      final contact = _contacts[index];
+      if (contact.pathOverride == null && contact.pathOverrideBytes == null) {
+        continue;
+      }
+      final updatedContact = contact.copyWith(clearPathOverride: true);
+      _contacts[index] = updatedContact;
+      _retryService?.updatePendingContact(updatedContact);
+      contactsChanged = true;
+    }
+
+    _retryService?.clearPathAttemptHistory();
+    if (contactsChanged) {
+      await _persistContacts();
+    }
+    await _pathHistoryService?.clearAllHistories();
+    notifyListeners();
   }
 }
 

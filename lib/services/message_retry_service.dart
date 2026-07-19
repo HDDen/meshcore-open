@@ -630,6 +630,10 @@ class MessageRetryService extends ChangeNotifier {
     }
   }
 
+  void clearPathAttemptHistory() {
+    _attemptPathHistory.clear();
+  }
+
   void _startTimeoutTimer(String messageId, int timeoutMs) {
     if (_sendingPaused) return;
     _timeoutTimers[messageId]?.cancel();

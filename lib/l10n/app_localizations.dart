@@ -1111,7 +1111,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_deleteAllPathsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Clear all path data from contacts.'**
+  /// **'Clear all local route data from contacts. Routes on the node will not be affected.'**
   String get settings_deleteAllPathsSubtitle;
 
   /// No description provided for @settings_sendAdvertisement.

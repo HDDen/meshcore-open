@@ -550,7 +550,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_deleteAllPathsSubtitle =>
-      'Очистить все данные о маршрутах в контактах.';
+      'Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.';
 
   @override
   String get settings_sendAdvertisement => 'Отправить анонс';
