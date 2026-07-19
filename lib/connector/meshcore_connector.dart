@@ -463,8 +463,8 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isFlushingPendingOutgoingMessages = false;
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
-  final Map<String, _DeferredChannelMessageSend>
-      _retriableChannelMessageSends = {};
+  final Map<String, _DeferredChannelMessageSend> _retriableChannelMessageSends =
+      {};
   bool _isFlushingDeferredChannelMessageSends = false;
   bool _isFlushingRetriableChannelMessageSends = false;
   final Map<int, bool> _channelSendingDelayEnabled = {};
@@ -932,10 +932,7 @@ class MeshCoreConnector extends ChangeNotifier {
   ) {
     final summary = _messageSummaryFromMessages(messages);
     if (summary == null) return;
-    final previewChanged = _cacheContactMessagePreview(
-      contactKeyHex,
-      summary,
-    );
+    final previewChanged = _cacheContactMessagePreview(contactKeyHex, summary);
     final summaryChanged = _applyContactMessageSummary(
       contactKeyHex,
       summary.latestMessageAt,
@@ -959,9 +956,7 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
-  MessageStoreSummary? _messageSummaryFromMessages(
-    Iterable<Message> messages,
-  ) {
+  MessageStoreSummary? _messageSummaryFromMessages(Iterable<Message> messages) {
     Message? latestMessage;
     var messageCount = 0;
     for (final message in messages) {
@@ -3734,10 +3729,7 @@ class MeshCoreConnector extends ChangeNotifier {
       );
     }
 
-    _appDebugLogService?.info(
-      'Windows BLE pairing completed',
-      tag: 'BLE Pair',
-    );
+    _appDebugLogService?.info('Windows BLE pairing completed', tag: 'BLE Pair');
   }
 
   Future<BmBondStateEnum?> _getLinuxPluginBondState(
@@ -5538,9 +5530,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _clearRetriableChannelMessageSends({required bool markFailed}) {
-    final messageIds = List<String>.from(
-      _retriableChannelMessageSends.keys,
-    );
+    final messageIds = List<String>.from(_retriableChannelMessageSends.keys);
     _retriableChannelMessageSends.clear();
     if (!markFailed) return;
     for (final messageId in messageIds) {
@@ -6274,10 +6264,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pendingReceivedAt: pending.message.receivedAt,
       );
     } catch (error) {
-      appLogger.warn(
-        'Deferred channel send failed: $error',
-        tag: 'Connector',
-      );
+      appLogger.warn('Deferred channel send failed: $error', tag: 'Connector');
       if (!_pendingChannelSends.containsKey(messageId)) {
         _markPendingChannelMessageFailedById(messageId);
       }
@@ -6396,10 +6383,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<void> removeContact(
-    Contact contact, {
-    bool waitForAck = false,
-  }) async {
+  Future<void> removeContact(Contact contact, {bool waitForAck = false}) async {
     if (!isConnected) {
       if (waitForAck) {
         throw Exception('Not connected to a MeshCore device');
@@ -7962,10 +7946,7 @@ class MeshCoreConnector extends ChangeNotifier {
       );
     } else {
       _contacts.add(contact);
-      _registerContactInActiveSync(
-        contact.publicKeyHex,
-        _contacts.length - 1,
-      );
+      _registerContactInActiveSync(contact.publicKeyHex, _contacts.length - 1);
       appLogger.info(
         'Added new contact ${contact.name}: pathLen=${contact.pathLength}',
         tag: 'Connector',
@@ -8099,8 +8080,9 @@ class MeshCoreConnector extends ChangeNotifier {
       }
     }
 
-    final effectivePathHashWidth =
-        (pathHashWidth ?? _pathHashByteWidth).clamp(1, 4).toInt();
+    final effectivePathHashWidth = (pathHashWidth ?? _pathHashByteWidth)
+        .clamp(1, 4)
+        .toInt();
     if (matchedIndex == null &&
         !matchedByName &&
         effectivePathHashWidth >= 2 &&

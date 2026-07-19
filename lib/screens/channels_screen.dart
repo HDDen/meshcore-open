@@ -807,8 +807,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final cachedPreview = connector.getContactMessagePreview(contact);
     final selectedCachedPreview =
         cachedPreview != null &&
-        (lastMessage == null ||
-            cachedPreview.timestamp.isAfter(lastMessage.timestamp))
+            (lastMessage == null ||
+                cachedPreview.timestamp.isAfter(lastMessage.timestamp))
         ? cachedPreview
         : null;
     final lastMessageText =
@@ -2193,10 +2193,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     if (settings.roomServerDisableRoomAndContactsSorting) {
       return const <Contact>[];
     }
-    return _visiblePeerContacts(
-      context.read<MeshCoreConnector>(),
-      settings,
-    );
+    return _visiblePeerContacts(context.read<MeshCoreConnector>(), settings);
   }
 
   List<Contact> _visiblePeerContacts(

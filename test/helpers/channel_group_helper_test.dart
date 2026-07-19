@@ -121,10 +121,7 @@ void main() {
     test('migrates legacy room and contact keys to one peer identity', () {
       final publicKey = List.filled(32, 'ab').join();
       final groups = normalizeChannelGroupsForPeers([
-        ChannelGroup(
-          name: 'First',
-          channelNames: ['room:$publicKey', 'Alpha'],
-        ),
+        ChannelGroup(name: 'First', channelNames: ['room:$publicKey', 'Alpha']),
         ChannelGroup(
           name: 'Second',
           channelNames: ['contact:${publicKey.toUpperCase()}', 'Beta'],

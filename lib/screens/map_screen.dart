@@ -895,10 +895,8 @@ class _MapScreenState extends State<MapScreen>
                         icon: Icons.delete_sweep_outlined,
                         text: context.l10n.map_clearDiscoveredContactsCache,
                       ),
-                      onTap: () => _clearDiscoveredContactsCache(
-                        context,
-                        connector,
-                      ),
+                      onTap: () =>
+                          _clearDiscoveredContactsCache(context, connector),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(
@@ -4783,9 +4781,7 @@ class _MapScreenState extends State<MapScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.map_clearDiscoveredContactsCache),
-        content: Text(
-          context.l10n.map_clearDiscoveredContactsCacheDisclamer,
-        ),
+        content: Text(context.l10n.map_clearDiscoveredContactsCacheDisclamer),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -4954,9 +4950,7 @@ class _MapScreenState extends State<MapScreen>
                     );
                     await connector.refreshDeviceInfo();
                     if (!mounted) return;
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(successMsg)),
-                    );
+                    messenger.showSnackBar(SnackBar(content: Text(successMsg)));
                   },
                 ),
                 ListTile(
@@ -5085,9 +5079,7 @@ class _MapScreenState extends State<MapScreen>
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                           child: Text(
                             context.l10n.map_sendToContact,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         Padding(
@@ -5135,9 +5127,7 @@ class _MapScreenState extends State<MapScreen>
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                           child: Text(
                             context.l10n.map_sendToChannel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         if (liveConnector.isLoadingChannels)

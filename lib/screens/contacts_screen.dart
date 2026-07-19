@@ -420,8 +420,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
     final allowBack = widget.batchOperationsMode || !connector.isConnected;
     final canPop =
-        allowBack &&
-        (!_batchOperationInProgress || _allowBatchOperationPop);
+        allowBack && (!_batchOperationInProgress || _allowBatchOperationPop);
     final lockContactList =
         _batchOperationInProgress ||
         (connector.isLoadingContacts && connector.contacts.isNotEmpty);
@@ -470,100 +469,100 @@ class _ContactsScreenState extends State<ContactsScreen>
               PopupMenuButton(
                 tooltip: context.l10n.contacts_moreOptions,
                 itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.person_add_rounded,
-                    text: context.l10n.discoveredContacts_Title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DiscoveryScreen(),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.person_add_rounded,
+                      text: context.l10n.discoveredContacts_Title,
                     ),
-                  ),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.vpn_key,
-                    text: context.l10n.contacts_addContactByPubkey,
-                  ),
-                  onTap: () => _showAddContactByPubkeyDialog(context),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.paste,
-                    text: context.l10n.contacts_addContactFromClipboard,
-                  ),
-                  onTap: () => _contactImport(),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.checklist,
-                    text: context.l10n.contacts_batchOperations,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const ContactsBatchOperationsScreen(),
-                    ),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.connect_without_contact,
-                    text: context.l10n.contacts_zeroHopAdvert,
-                  ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: false),
-                    showDismissibleSnackBar(
+                    onTap: () => Navigator.push(
                       context,
-                      content: Text(context.l10n.settings_advertisementSent),
+                      MaterialPageRoute(
+                        builder: (context) => const DiscoveryScreen(),
+                      ),
                     ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.cell_tower,
-                    text: context.l10n.contacts_floodAdvert,
                   ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: true),
-                    showDismissibleSnackBar(
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.vpn_key,
+                      text: context.l10n.contacts_addContactByPubkey,
+                    ),
+                    onTap: () => _showAddContactByPubkeyDialog(context),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.paste,
+                      text: context.l10n.contacts_addContactFromClipboard,
+                    ),
+                    onTap: () => _contactImport(),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.checklist,
+                      text: context.l10n.contacts_batchOperations,
+                    ),
+                    onTap: () => Navigator.push(
                       context,
-                      content: Text(context.l10n.settings_advertisementSent),
-                    ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.copy,
-                    text: context.l10n.contacts_copyAdvertToClipboard,
-                  ),
-                  onTap: () => _contactExport(Uint8List.fromList([])),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.logout,
-                    iconColor: Theme.of(context).colorScheme.error,
-                    text: context.l10n.common_disconnect,
-                  ),
-                  onTap: () => _disconnect(context, connector),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.settings,
-                    text: context.l10n.settings_title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsScreen(),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const ContactsBatchOperationsScreen(),
+                      ),
                     ),
                   ),
-                ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.connect_without_contact,
+                      text: context.l10n.contacts_zeroHopAdvert,
+                    ),
+                    onTap: () => {
+                      connector.sendSelfAdvert(flood: false),
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.settings_advertisementSent),
+                      ),
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.cell_tower,
+                      text: context.l10n.contacts_floodAdvert,
+                    ),
+                    onTap: () => {
+                      connector.sendSelfAdvert(flood: true),
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.settings_advertisementSent),
+                      ),
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.copy,
+                      text: context.l10n.contacts_copyAdvertToClipboard,
+                    ),
+                    onTap: () => _contactExport(Uint8List.fromList([])),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.logout,
+                      iconColor: Theme.of(context).colorScheme.error,
+                      text: context.l10n.common_disconnect,
+                    ),
+                    onTap: () => _disconnect(context, connector),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.settings,
+                      text: context.l10n.settings_title,
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    ),
+                  ),
                 ],
                 icon: const Icon(Icons.more_vert),
               ),
@@ -640,8 +639,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<Contact> _selectedBatchContacts(MeshCoreConnector connector) {
     return connector.contacts
         .where(
-          (contact) =>
-              _selectedBatchContactKeys.contains(contact.publicKeyHex),
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
         )
         .toList(growable: false);
   }
@@ -681,16 +679,13 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
     if (confirmed != true || !context.mounted) return;
 
-    final successMessage =
-        context.l10n.contacts_batchOperations_removeSuccess;
+    final successMessage = context.l10n.contacts_batchOperations_removeSuccess;
     final failureMessage = context.l10n.contacts_batchOperations_removeFail;
 
     await _runBatchOperation(
       contacts: selectedContacts,
-      operation: (contact) => connector.removeContact(
-        contact,
-        waitForAck: true,
-      ),
+      operation: (contact) =>
+          connector.removeContact(contact, waitForAck: true),
       successMessage: successMessage,
       failureMessage: failureMessage,
     );
@@ -1242,8 +1237,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     final allFilteredBatchContactsSelected =
         batchSelectableContacts.isNotEmpty &&
         batchSelectableContacts.every(
-          (contact) =>
-              _selectedBatchContactKeys.contains(contact.publicKeyHex),
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
         );
 
     String hintText = "";
@@ -1572,18 +1566,20 @@ class _ContactsScreenState extends State<ContactsScreen>
     final selfPubKeyHex = connector.selfPublicKey == null
         ? null
         : pubKeyToHex(connector.selfPublicKey!);
-    return contacts.where((contact) {
-      if (contact.publicKeyHex == selfPubKeyHex) return false;
-      if (viewState.contactsTypeFilter != ContactTypeFilter.all &&
-          !_matchesTypeFilter(contact, viewState.contactsTypeFilter)) {
-        return false;
-      }
-      if (viewState.contactsShowUnreadOnly &&
-          connector.getUnreadCountForContact(contact) == 0) {
-        return false;
-      }
-      return true;
-    }).toList(growable: false);
+    return contacts
+        .where((contact) {
+          if (contact.publicKeyHex == selfPubKeyHex) return false;
+          if (viewState.contactsTypeFilter != ContactTypeFilter.all &&
+              !_matchesTypeFilter(contact, viewState.contactsTypeFilter)) {
+            return false;
+          }
+          if (viewState.contactsShowUnreadOnly &&
+              connector.getUnreadCountForContact(contact) == 0) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   bool _matchesTypeFilter(Contact contact, ContactTypeFilter typeFilter) {

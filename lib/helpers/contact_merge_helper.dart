@@ -45,9 +45,7 @@ Contact mergeDuplicateContacts(Contact existing, Contact incoming) {
   final pathOverrideBytes = preferred.pathOverride != null
       ? preferred.pathOverrideBytes
       : fallback.pathOverrideBytes;
-  final latestMessageAt = incoming.lastMessageAt.isAfter(
-    existing.lastMessageAt,
-  )
+  final latestMessageAt = incoming.lastMessageAt.isAfter(existing.lastMessageAt)
       ? incoming.lastMessageAt
       : existing.lastMessageAt;
   final latestLastSeen = incoming.lastSeen.isAfter(existing.lastSeen)

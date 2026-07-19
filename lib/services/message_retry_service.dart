@@ -150,20 +150,22 @@ class MessageRetryService extends ChangeNotifier {
         );
         continue;
       }
-      unawaited(_attemptSend(messageId).catchError((e) {
-        debugPrint('_attemptSend threw for $messageId after resume: $e');
-        if (_sendingPaused) return;
-        final message = _pendingMessages[messageId];
-        final contactKey = _pendingContacts[messageId]?.publicKeyHex;
-        if (message != null) {
-          final failed = message.copyWith(status: MessageStatus.failed);
-          _pendingMessages[messageId] = failed;
-          _config?.updateMessage(failed);
-        }
-        if (contactKey != null) {
-          _onMessageResolved(messageId, contactKey);
-        }
-      }));
+      unawaited(
+        _attemptSend(messageId).catchError((e) {
+          debugPrint('_attemptSend threw for $messageId after resume: $e');
+          if (_sendingPaused) return;
+          final message = _pendingMessages[messageId];
+          final contactKey = _pendingContacts[messageId]?.publicKeyHex;
+          if (message != null) {
+            final failed = message.copyWith(status: MessageStatus.failed);
+            _pendingMessages[messageId] = failed;
+            _config?.updateMessage(failed);
+          }
+          if (contactKey != null) {
+            _onMessageResolved(messageId, contactKey);
+          }
+        }),
+      );
     }
     for (final contactKey in List<String>.from(_sendQueue.keys)) {
       _sendNextForContact(contactKey);

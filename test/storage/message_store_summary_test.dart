@@ -17,25 +17,27 @@ void main() {
 
   tearDown(PrefsManager.reset);
 
-  test('message summary includes text from the latest non-CLI message', () async {
-    final store = MessageStore()
-      ..setPublicKeyHex = '00112233445566778899';
-    await PrefsManager.instance.setString(
-      'messages_0011223344$contactKey',
-      jsonEncode([
-        {'text': 'older', 'timestamp': 1000, 'isCli': false},
-        {'text': 'ignored CLI', 'timestamp': 3000, 'isCli': true},
-        {'text': 'newest', 'timestamp': 2000, 'isCli': false},
-      ]),
-    );
+  test(
+    'message summary includes text from the latest non-CLI message',
+    () async {
+      final store = MessageStore()..setPublicKeyHex = '00112233445566778899';
+      await PrefsManager.instance.setString(
+        'messages_0011223344$contactKey',
+        jsonEncode([
+          {'text': 'older', 'timestamp': 1000, 'isCli': false},
+          {'text': 'ignored CLI', 'timestamp': 3000, 'isCli': true},
+          {'text': 'newest', 'timestamp': 2000, 'isCli': false},
+        ]),
+      );
 
-    final summary = await store.loadMessageSummary(contactKey);
+      final summary = await store.loadMessageSummary(contactKey);
 
-    expect(summary, isNotNull);
-    expect(summary!.messageCount, 2);
-    expect(summary.latestMessageAt.millisecondsSinceEpoch, 2000);
-    expect(summary.latestMessageText, 'newest');
-  });
+      expect(summary, isNotNull);
+      expect(summary!.messageCount, 2);
+      expect(summary.latestMessageAt.millisecondsSinceEpoch, 2000);
+      expect(summary.latestMessageText, 'newest');
+    },
+  );
 
   test('shared summary keeps text paired with the newest timestamp', () async {
     await PrefsManager.instance.setString(
