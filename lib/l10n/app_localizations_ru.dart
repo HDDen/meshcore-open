@@ -5125,7 +5125,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get background_serviceTitle => 'MeshCore работает';
 
   @override
-  String get background_serviceText => 'Поддерживает BLE-соединение';
+  String get background_serviceText => 'Поддерживаем соединение с нодой';
 
   @override
   String appSettings_translationModelDeleted(String name) {

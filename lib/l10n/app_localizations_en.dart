@@ -5039,7 +5039,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get background_serviceTitle => 'MeshCore running';
 
   @override
-  String get background_serviceText => 'Keeping BLE connected';
+  String get background_serviceText => 'Keeping node connected';
 
   @override
   String appSettings_translationModelDeleted(String name) {

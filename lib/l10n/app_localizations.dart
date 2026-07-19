@@ -8773,7 +8773,7 @@ abstract class AppLocalizations {
   /// No description provided for @background_serviceText.
   ///
   /// In en, this message translates to:
-  /// **'Keeping BLE connected'**
+  /// **'Keeping node connected'**
   String get background_serviceText;
 
   /// No description provided for @appSettings_translationModelDeleted.
