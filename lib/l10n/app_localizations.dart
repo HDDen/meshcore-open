@@ -9927,6 +9927,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reconnected to node'**
   String get app_connectionLostReconnected;
+
+  /// No description provided for @contacts_batchOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch operations'**
+  String get contacts_batchOperations;
+
+  /// No description provided for @contacts_batchOperations_notSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not selected any contacts for processing!'**
+  String get contacts_batchOperations_notSelected;
+
+  /// No description provided for @contacts_batchOperations_removeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove selected contacts from node?'**
+  String get contacts_batchOperations_removeConfirm;
+
+  /// No description provided for @contacts_batchOperations_removeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected contacts have been removed'**
+  String get contacts_batchOperations_removeSuccess;
+
+  /// No description provided for @contacts_batchOperations_removeFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing contacts is failed – please check contacts again'**
+  String get contacts_batchOperations_removeFail;
+
+  /// No description provided for @contacts_batchOperations_commonSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation is successfull'**
+  String get contacts_batchOperations_commonSuccess;
+
+  /// No description provided for @contacts_batchOperations_commonFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation is failed'**
+  String get contacts_batchOperations_commonFail;
+
+  /// No description provided for @contacts_batchOperations_selectFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Select filtered'**
+  String get contacts_batchOperations_selectFiltered;
 }
 
 class _AppLocalizationsDelegate

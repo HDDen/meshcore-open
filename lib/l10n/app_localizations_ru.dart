@@ -5803,4 +5803,35 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get app_connectionLostReconnected =>
       'Соединение с нодой восстановлено';
+
+  @override
+  String get contacts_batchOperations => 'Массовые операции';
+
+  @override
+  String get contacts_batchOperations_notSelected =>
+      'Вы не выбрали контакты для обработки!';
+
+  @override
+  String get contacts_batchOperations_removeConfirm =>
+      'Удалить выбранные контакты из памяти ноды?';
+
+  @override
+  String get contacts_batchOperations_removeSuccess =>
+      'Выбранные контакты удалены';
+
+  @override
+  String get contacts_batchOperations_removeFail =>
+      'Не удалось удалить контакты - проверьте их список снова';
+
+  @override
+  String get contacts_batchOperations_commonSuccess =>
+      'Операция прошла успешно';
+
+  @override
+  String get contacts_batchOperations_commonFail =>
+      'Не удалось завершить операцию';
+
+  @override
+  String get contacts_batchOperations_selectFiltered =>
+      'Выбрать отфильтрованные';
 }

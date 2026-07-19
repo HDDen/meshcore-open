@@ -6393,16 +6393,27 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<void> removeContact(Contact contact) async {
-    if (!isConnected) return;
+  Future<void> removeContact(
+    Contact contact, {
+    bool waitForAck = false,
+  }) async {
+    if (!isConnected) {
+      if (waitForAck) {
+        throw Exception('Not connected to a MeshCore device');
+      }
+      return;
+    }
+
+    await sendFrame(
+      buildRemoveContactFrame(contact.publicKey),
+      waitForGenericAck: waitForAck,
+    );
 
     _handleDiscovery(
       contact,
       contact.rawPacket ?? Uint8List(0),
       noNotify: true,
     );
-
-    await sendFrame(buildRemoveContactFrame(contact.publicKey));
     _contacts.removeWhere((c) => c.publicKeyHex == contact.publicKeyHex);
     _contactMessagePreviews.remove(contact.publicKeyHex);
     _knownContactKeys.remove(contact.publicKeyHex);

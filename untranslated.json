@@ -206,7 +206,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "de": [
@@ -403,7 +411,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "es": [
@@ -613,7 +629,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "fr": [
@@ -823,7 +847,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "hu": [
@@ -1033,7 +1065,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "it": [
@@ -1323,7 +1363,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ja": [
@@ -1533,7 +1581,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ko": [
@@ -1743,7 +1799,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "nl": [
@@ -2033,7 +2097,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pl": [
@@ -2243,7 +2315,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pt": [
@@ -2533,7 +2613,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ru": [
@@ -2757,7 +2845,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sl": [
@@ -2967,7 +3063,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sv": [
@@ -3257,7 +3361,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "uk": [
@@ -3467,7 +3579,15 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "zh": [
@@ -3677,6 +3797,14 @@
     "map_clearDiscoveredContactsCacheDisclamer",
     "snrIndicator_v2_nearByRepeaters",
     "app_connectionLostReconnect",
-    "app_connectionLostReconnected"
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ]
 }

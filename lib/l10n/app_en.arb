@@ -3241,5 +3241,13 @@
   "map_clearDiscoveredContactsCacheDisclamer": "Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.",
   "snrIndicator_v2_nearByRepeaters": "Repeater's activity",
   "app_connectionLostReconnect": "Connection to node is lost; reconnecting...",
-  "app_connectionLostReconnected": "Reconnected to node"
+  "app_connectionLostReconnected": "Reconnected to node",
+  "contacts_batchOperations": "Batch operations",
+  "contacts_batchOperations_notSelected": "You have not selected any contacts for processing!",
+  "contacts_batchOperations_removeConfirm": "Remove selected contacts from node?",
+  "contacts_batchOperations_removeSuccess": "Selected contacts have been removed",
+  "contacts_batchOperations_removeFail": "Removing contacts is failed – please check contacts again",
+  "contacts_batchOperations_commonSuccess": "Operation is successfull",
+  "contacts_batchOperations_commonFail": "Operation is failed",
+  "contacts_batchOperations_selectFiltered": "Select filtered"
 }
