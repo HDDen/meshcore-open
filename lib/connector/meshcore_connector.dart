@@ -467,6 +467,7 @@ class MeshCoreConnector extends ChangeNotifier {
       {};
   bool _isFlushingDeferredChannelMessageSends = false;
   bool _isFlushingRetriableChannelMessageSends = false;
+  bool _shouldReplayRetriableChannelMessageSends = false;
   final Map<int, bool> _channelSendingDelayEnabled = {};
   final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
@@ -4138,6 +4139,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingGenericAckQueue.clear();
     final preserveChannelSendsForReconnect =
         !manual && transportAtDisconnect == MeshCoreTransportType.bluetooth;
+    _shouldReplayRetriableChannelMessageSends =
+        preserveChannelSendsForReconnect &&
+        _retriableChannelMessageSends.isNotEmpty;
     if (!preserveChannelSendsForReconnect) {
       _clearDeferredChannelMessageSends(markFailed: true);
       _clearRetriableChannelMessageSends(markFailed: true);
@@ -5956,7 +5960,10 @@ class MeshCoreConnector extends ChangeNotifier {
         if (!isSessionReady) return;
       }
 
-      await _flushRetriableChannelMessageSends();
+      if (_shouldReplayRetriableChannelMessageSends) {
+        _shouldReplayRetriableChannelMessageSends = false;
+        await _flushRetriableChannelMessageSends();
+      }
     } finally {
       _isFlushingPendingOutgoingMessages = false;
       if (isSessionReady) {
@@ -10944,6 +10951,8 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_isRecoveringConnection) {
       unawaited(_backgroundService?.setConnectionLost(true));
     }
+    _shouldReplayRetriableChannelMessageSends =
+        _isRecoveringConnection && _retriableChannelMessageSends.isNotEmpty;
     pausePendingOutgoingMessages();
     _stopBatteryPolling();
     _stopGpsLocationPolling();
