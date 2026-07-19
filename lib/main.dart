@@ -273,16 +273,17 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       return;
     }
 
+    if (connector.hasCompletedSelfInfoHandshake && _recoveringConnection) {
+      _recoveringConnection = false;
+      _showConnectionSnackBar(
+        isError: false,
+        text: (l10n) => l10n.app_connectionLostReconnected,
+      );
+    }
+
     if (connector.isSessionReady) {
       _hadReadyConnection = true;
       unawaited(connector.resumePendingOutgoingMessages());
-      if (_recoveringConnection) {
-        _recoveringConnection = false;
-        _showConnectionSnackBar(
-          isError: false,
-          text: (l10n) => l10n.app_connectionLostReconnected,
-        );
-      }
     }
   }
 

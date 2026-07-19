@@ -311,6 +311,7 @@ class MeshCoreConnector extends ChangeNotifier {
   int _pollingInterval = 30;
   bool _batteryRequested = false;
   bool _awaitingSelfInfo = false;
+  bool _hasCompletedSelfInfoHandshake = false;
   bool _hasReceivedDeviceInfo = false;
   bool _hasLoadedCachedChannelStorage = false;
   // Initial sync is serialized for predictable progress. Firmware exposes one
@@ -462,7 +463,10 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isFlushingPendingOutgoingMessages = false;
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
+  final Map<String, _DeferredChannelMessageSend>
+      _retriableChannelMessageSends = {};
   bool _isFlushingDeferredChannelMessageSends = false;
+  bool _isFlushingRetriableChannelMessageSends = false;
   final Map<int, bool> _channelSendingDelayEnabled = {};
   final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
@@ -561,6 +565,8 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get hasLoadedContacts => _hasLoadedContacts;
   bool get isLoadingChannels => _isLoadingChannels;
   bool get hasLoadedChannels => _hasLoadedChannels;
+  bool get hasCompletedSelfInfoHandshake =>
+      isConnected && _hasCompletedSelfInfoHandshake;
   bool get isSessionReady =>
       isConnected &&
       _hasLoadedContacts &&
@@ -1302,6 +1308,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> deleteChannelMessage(ChannelMessage message) async {
+    _retriableChannelMessageSends.remove(message.messageId);
     final pending = _pendingChannelSends.remove(message.messageId);
     if (pending != null) {
       pending.timer?.cancel();
@@ -3210,6 +3217,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _manualDisconnect = false;
     _cancelReconnectTimer();
     _bleInitialSyncStarted = false;
+    _hasCompletedSelfInfoHandshake = false;
     if (PlatformInfo.isWeb) {
       _resetConnectionHandshakeState();
     }
@@ -3920,6 +3928,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastZeroHopAdvertLatitude = null;
     _lastZeroHopAdvertLongitude = null;
     _awaitingSelfInfo = false;
+    _hasCompletedSelfInfoHandshake = false;
     _webInitialHandshakeRequestSent = false;
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
@@ -4122,6 +4131,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _repeaterBatterySnapshots.clear();
     _batteryRequested = false;
     _awaitingSelfInfo = false;
+    _hasCompletedSelfInfoHandshake = false;
     _lastSentWasCliCommand = false;
     _hasReceivedDeviceInfo = false;
     _maxContacts = _defaultMaxContacts;
@@ -4131,7 +4141,12 @@ class MeshCoreConnector extends ChangeNotifier {
     _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
-    _clearDeferredChannelMessageSends(markFailed: true);
+    final preserveChannelSendsForReconnect =
+        !manual && transportAtDisconnect == MeshCoreTransportType.bluetooth;
+    if (!preserveChannelSendsForReconnect) {
+      _clearDeferredChannelMessageSends(markFailed: true);
+      _clearRetriableChannelMessageSends(markFailed: true);
+    }
     _reactionSendQueueSequence = 0;
 
     _activeTransport = MeshCoreTransportType.bluetooth;
@@ -5413,6 +5428,22 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    _retriableChannelMessageSends[message.messageId] =
+        _DeferredChannelMessageSend(
+          channel: channel,
+          messageId: message.messageId,
+          text: messageText,
+          binaryOutbound: binaryOutbound,
+          preparedOutboundText: isMcoImageV3Binary ? null : outboundText,
+          uncompressedText: uncompressedText,
+          originalText: originalText,
+          translatedLanguageCode: translatedLanguageCode,
+          translationModelId: translationModelId,
+          replyToMessageId: replyToMessageId,
+          replyToSenderName: replyToSenderName,
+          replyToText: replyToText,
+          replyToTimestamp: replyToTimestamp,
+        );
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
@@ -5425,6 +5456,13 @@ class MeshCoreConnector extends ChangeNotifier {
         channel.index,
         message.messageId,
         sentTimestampSeconds,
+        packetHash: binaryFrame == null
+            ? _computeContentHash(
+                channel.index,
+                sentTimestampSeconds,
+                '${_selfName ?? 'Me'}: $messageText',
+              )
+            : null,
       );
       if (binaryFrame != null) {
         await _sendFrameAndWaitForCommandAck(
@@ -5496,6 +5534,17 @@ class MeshCoreConnector extends ChangeNotifier {
     _deferredChannelMessageSends.clear();
   }
 
+  void _clearRetriableChannelMessageSends({required bool markFailed}) {
+    final messageIds = List<String>.from(
+      _retriableChannelMessageSends.keys,
+    );
+    _retriableChannelMessageSends.clear();
+    if (!markFailed) return;
+    for (final messageId in messageIds) {
+      _markPendingChannelMessageFailedById(messageId);
+    }
+  }
+
   Future<void> _flushDeferredChannelMessageSends() async {
     if (_isFlushingDeferredChannelMessageSends ||
         _deferredChannelMessageSends.isEmpty ||
@@ -5551,6 +5600,8 @@ class MeshCoreConnector extends ChangeNotifier {
             binaryOutbound.payload,
           );
 
+    _retriableChannelMessageSends[pending.messageId] = pending;
+    _pendingChannelSentQueue.remove(pending.messageId);
     _pendingChannelSentQueue.add(pending.messageId);
     notifyListeners();
 
@@ -5563,6 +5614,13 @@ class MeshCoreConnector extends ChangeNotifier {
         pending.channel.index,
         pending.messageId,
         sentTimestampSeconds,
+        packetHash: binaryFrame == null
+            ? _computeContentHash(
+                pending.channel.index,
+                sentTimestampSeconds,
+                '${_selfName ?? 'Me'}: ${pending.text}',
+              )
+            : null,
       );
       if (binaryFrame != null) {
         await _sendFrameAndWaitForCommandAck(
@@ -5904,11 +5962,53 @@ class MeshCoreConnector extends ChangeNotifier {
         await _commitPendingChannelSend(messageId);
         if (!isSessionReady) return;
       }
+
+      await _flushRetriableChannelMessageSends();
     } finally {
       _isFlushingPendingOutgoingMessages = false;
       if (isSessionReady) {
         _retryService?.setSendingPaused(false);
       }
+    }
+  }
+
+  Future<void> _flushRetriableChannelMessageSends() async {
+    if (_isFlushingRetriableChannelMessageSends || !isSessionReady) return;
+    _isFlushingRetriableChannelMessageSends = true;
+    try {
+      final pendingSends = List<_DeferredChannelMessageSend>.from(
+        _retriableChannelMessageSends.values,
+      );
+      for (final pending in pendingSends) {
+        if (!isSessionReady) return;
+        final messages = _channelMessages[pending.channel.index];
+        ChannelMessage? message;
+        if (messages != null) {
+          for (final candidate in messages) {
+            if (candidate.messageId == pending.messageId) {
+              message = candidate;
+              break;
+            }
+          }
+        }
+        if (message == null ||
+            !message.isOutgoing ||
+            message.status != ChannelMessageStatus.pending) {
+          _retriableChannelMessageSends.remove(pending.messageId);
+          continue;
+        }
+        try {
+          await _sendDeferredChannelMessage(pending);
+        } catch (error) {
+          _appDebugLogService?.warn(
+            'Retryable channel send failed: $error',
+            tag: 'Channel Send',
+          );
+          if (!isSessionReady) return;
+        }
+      }
+    } finally {
+      _isFlushingRetriableChannelMessageSends = false;
     }
   }
 
@@ -6097,6 +6197,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   String? cancelPendingChannelSend(String messageId) {
+    _retriableChannelMessageSends.remove(messageId);
     final pending = _pendingChannelSends.remove(messageId);
     if (pending == null) return null;
     pending.timer?.cancel();
@@ -6192,7 +6293,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (index < 0) continue;
 
       final message = channelMessages[index];
-      if (!message.isOutgoing || message.sentByRadioAt != null) return;
+      if (!message.isOutgoing) return;
 
       // Keep the visible message timestamp unchanged; sentByRadioAt is only
       // for matching late log-rx repeats after radio backoff/quiet waits.
@@ -6213,8 +6314,9 @@ class MeshCoreConnector extends ChangeNotifier {
   void _updateChannelMessagePacketTimestamp(
     int channelIndex,
     String messageId,
-    int timestampSeconds,
-  ) {
+    int timestampSeconds, {
+    String? packetHash,
+  }) {
     final channelMessages = _channelMessages[channelIndex];
     if (channelMessages == null) return;
     final index = channelMessages.indexWhere(
@@ -6225,6 +6327,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!message.isOutgoing) return;
     channelMessages[index] = message.copyWith(
       timestamp: DateTime.fromMillisecondsSinceEpoch(timestampSeconds * 1000),
+      packetHash: packetHash,
     );
     unawaited(
       _channelMessageStore.saveChannelMessages(channelIndex, channelMessages),
@@ -7168,6 +7271,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final wasAwaitingSelfInfo = _awaitingSelfInfo;
     final previousSelfPublicKeyHex = selfPublicKeyHex;
     final reader = BufferReader(frame);
+    var parsedSelfInfo = false;
     try {
       reader.skipBytes(2);
       _currentTxPower = reader.readInt8();
@@ -7190,6 +7294,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _currentCr = reader.readByte();
 
       _selfName = reader.readCString();
+      parsedSelfInfo = true;
     } catch (e) {
       _appDebugLogService?.error(
         'Error parsing SELF_INFO frame: $e',
@@ -7283,6 +7388,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _loadDiscoveredContactCache();
 
     _awaitingSelfInfo = false;
+    _hasCompletedSelfInfoHandshake = parsedSelfInfo;
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     notifyListeners();
@@ -9577,9 +9683,10 @@ class MeshCoreConnector extends ChangeNotifier {
             return;
           }
 
-          final pktHash = _computePacketHash(
-            packet.payloadType,
-            packet.payload,
+          final contentHash = _computeContentHash(
+            channel.index,
+            timestampRaw,
+            '${parsed.senderName}: $decodedText',
           );
 
           final logRxMcmpMessage = decoded?.mcmpMessage;
@@ -9609,7 +9716,7 @@ class MeshCoreConnector extends ChangeNotifier {
             channelIndex: channel.index,
             packetRegion: _resolvePacketRegion(packet),
             packetRegionInfoAvailable: true,
-            packetHash: pktHash,
+            packetHash: contentHash,
             replyToMessageId: replyReference?.messageId,
             replyToSenderName: replyReference?.senderName,
             replyToText: replyReference?.text,
@@ -9682,7 +9789,11 @@ class MeshCoreConnector extends ChangeNotifier {
     if (decoded == null && appDecoded == null) return null;
     final appData = appDecoded;
 
-    final pktHash = _computePacketHash(packet.payloadType, packet.payload);
+    final contentHash = _computeChannelDataHash(
+      channelIndex,
+      dataType,
+      dataPayload,
+    );
     final compression = decoded != null
         ? _incomingBinaryCompression(decoded)
         : _incomingAppDataCompression(appData!);
@@ -9727,7 +9838,7 @@ class MeshCoreConnector extends ChangeNotifier {
       channelIndex: channelIndex,
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
-      packetHash: pktHash,
+      packetHash: contentHash,
       replyToMessageId: replyReference?.messageId,
       replyToSenderName: replyReference?.senderName,
       replyToText: replyReference?.text,
@@ -9812,6 +9923,7 @@ class MeshCoreConnector extends ChangeNotifier {
         channelMessages[i] = message.copyWith(
           status: ChannelMessageStatus.sent,
         );
+        _retriableChannelMessageSends.remove(messageId);
         _pendingChannelSentQueue.remove(messageId);
         unawaited(
           _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
@@ -9824,6 +9936,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _markPendingChannelMessageFailedById(String messageId) {
+    _retriableChannelMessageSends.remove(messageId);
     for (final entry in _channelMessages.entries) {
       final channelMessages = entry.value;
       for (int i = channelMessages.length - 1; i >= 0; i--) {
@@ -10353,18 +10466,6 @@ class MeshCoreConnector extends ChangeNotifier {
     return digest[0];
   }
 
-  /// Firmware-compatible packet hash: SHA256(payloadType + payload) -> first 8 bytes as hex.
-  String _computePacketHash(int payloadType, Uint8List payload) {
-    final input = Uint8List(1 + payload.length);
-    input[0] = payloadType;
-    input.setRange(1, input.length, payload);
-    final digest = crypto.sha256.convert(input).bytes;
-    return digest
-        .sublist(0, 8)
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
-  }
-
   String? _resolvePacketRegion(_RawPacket packet) {
     final transportCode = packet.transportCode1;
     if (transportCode == null || transportCode == 0) return null;
@@ -10640,6 +10741,7 @@ class MeshCoreConnector extends ChangeNotifier {
         noRetransmissionWarningSeconds: null,
       );
       if (promotedFromPending) {
+        _retriableChannelMessageSends.remove(existing.messageId);
         _pendingChannelSentQueue.remove(existing.messageId);
       }
     } else {
@@ -10871,6 +10973,7 @@ class MeshCoreConnector extends ChangeNotifier {
     // _awaitingSelfInfo makes _requestDeviceInfo a no-op on the next connect,
     // and a stale CLI flag swallows the next real RESP_CODE_SENT.
     _awaitingSelfInfo = false;
+    _hasCompletedSelfInfoHandshake = false;
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     _lastSentWasCliCommand = false;
@@ -10880,7 +10983,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
-    _clearDeferredChannelMessageSends(markFailed: true);
+    // Keep pending and already-started channel sends across an unexpected BLE
+    // drop. They are replayed only after the replacement session is ready.
     _reactionSendQueueSequence = 0;
 
     _setState(MeshCoreConnectionState.disconnected);
