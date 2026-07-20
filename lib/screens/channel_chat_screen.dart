@@ -2265,11 +2265,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     int maxTextChars,
     MCOImageGalleryItem item,
   ) async {
-    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    final useRasterOriginal = item.showPngFallback && !item.originalIsLottie;
+    final image = useRasterOriginal ? null : item.tryDecodeImage();
     await _showCanvasEditor(
       maxTextChars,
       initialImage: image,
-      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageBytes: image == null && !item.originalIsLottie
+          ? item.pngBytes
+          : null,
       initialImageWidth: item.width,
       initialImageHeight: item.height,
       initialPaletteProfile: item.paletteProfile,

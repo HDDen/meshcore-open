@@ -42,6 +42,59 @@ class MCOImageFileSaver {
     }
   }
 
+  static Future<bool> saveOriginalBytes(
+    Uint8List bytes,
+    String originalFileName,
+  ) async {
+    final lower = originalFileName.toLowerCase();
+    final (suffix, extension, mimeType, uti, label) =
+        lower.endsWith('.lottie.json')
+        ? (
+            '.mcoimg.lottie.json',
+            'json',
+            'application/json',
+            'public.json',
+            'Lottie JSON animation',
+          )
+        : lower.endsWith('.lottie')
+        ? (
+            '.mcoimg.lottie',
+            'lottie',
+            'application/zip',
+            'public.zip-archive',
+            'dotLottie animation',
+          )
+        : lower.endsWith('.gif')
+        ? ('.mcoimg.gif', 'gif', 'image/gif', 'com.compuserve.gif', 'GIF image')
+        : lower.endsWith('.jpg') || lower.endsWith('.jpeg')
+        ? ('.mcoimg.jpg', 'jpg', 'image/jpeg', 'public.jpeg', 'JPEG image')
+        : ('.mcoimg.png', 'png', 'image/png', 'public.png', 'PNG image');
+    final fileName = '${_timestampFileStem()}$suffix';
+    try {
+      final location = await file_selector.getSaveLocation(
+        suggestedName: fileName,
+        acceptedTypeGroups: [
+          file_selector.XTypeGroup(
+            label: label,
+            extensions: [extension],
+            mimeTypes: [mimeType],
+            uniformTypeIdentifiers: [uti],
+          ),
+        ],
+      );
+      if (location == null) return false;
+      await XFile.fromData(
+        bytes,
+        mimeType: mimeType,
+        name: fileName,
+      ).saveTo(location.path);
+      return true;
+    } catch (_) {
+      await _shareBytes(bytes, fileName, mimeType: mimeType);
+      return true;
+    }
+  }
+
   static Future<bool> saveBinaryPayloadFromText(String text) async {
     final trimmed = text.trimLeft();
     final payload = MCOImageV3Codec.isTextPayload(trimmed)

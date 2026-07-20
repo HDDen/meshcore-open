@@ -8,8 +8,10 @@ import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../models/mco_image_pack.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../storage/mco_image_gallery_store.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mco_image_original.dart';
 
 enum MCOImageGalleryAction { send, edit }
 
@@ -62,11 +64,46 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     await _store.saveItems(_items);
   }
 
-  void _selectItem(MCOImageGalleryItem item) {
+  Future<void> _selectItem(MCOImageGalleryItem item) async {
     final action = item.showPngFallback || item.tryDecodeImage() == null
         ? MCOImageGalleryAction.edit
         : MCOImageGalleryAction.send;
-    Navigator.pop(context, MCOImageGalleryResult(action: action, item: item));
+    final resultItem = action == MCOImageGalleryAction.edit
+        ? await _itemForEdit(item)
+        : item;
+    if (!mounted) return;
+    Navigator.pop(
+      context,
+      MCOImageGalleryResult(action: action, item: resultItem),
+    );
+  }
+
+  Future<MCOImageGalleryItem?> _resolvePackOriginal(
+    MCOImageGalleryItem item,
+  ) async {
+    if (!item.isPackItem || item.originalRelativePaths.isEmpty) return item;
+    final resolved = await McoImagePackOriginals.instance
+        .resolveOriginalCandidates(item.originalRelativePaths);
+    if (resolved == null) return null;
+    try {
+      return item.copyWith(
+        pngBytes: await resolved.file.readAsBytes(),
+        originalFileName: resolved.file.path,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<MCOImageGalleryItem> _itemForEdit(
+    MCOImageGalleryItem item,
+  ) async {
+    if (!item.showPngFallback) return item;
+    final resolved = await _resolvePackOriginal(item);
+    if (resolved == null || resolved.originalIsLottie) {
+      return item.copyWith(showPngFallback: false);
+    }
+    return resolved;
   }
 
   Future<void> _showItemActions(MCOImageGalleryItem item) async {
@@ -97,13 +134,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
               title: Text(context.l10n.chat_canvasSendToEdit),
               onTap: () {
                 Navigator.pop(sheetContext);
-                Navigator.pop(
-                  context,
-                  MCOImageGalleryResult(
-                    action: MCOImageGalleryAction.edit,
-                    item: item,
-                  ),
-                );
+                unawaited(_editItem(item));
               },
             ),
             ListTile(
@@ -135,6 +166,18 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     );
   }
 
+  Future<void> _editItem(MCOImageGalleryItem item) async {
+    final resultItem = await _itemForEdit(item);
+    if (!mounted) return;
+    Navigator.pop(
+      context,
+      MCOImageGalleryResult(
+        action: MCOImageGalleryAction.edit,
+        item: resultItem,
+      ),
+    );
+  }
+
   void _toggleItemDisplay(MCOImageGalleryItem item) {
     setState(() {
       _items = [
@@ -151,7 +194,16 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
   Future<void> _saveItem(MCOImageGalleryItem item) async {
     try {
       if (item.showPngFallback) {
-        await MCOImageFileSaver.savePngBytes(item.pngBytes);
+        final resolved = await _resolvePackOriginal(item);
+        if (resolved != null) {
+          await MCOImageFileSaver.saveOriginalBytes(
+            resolved.pngBytes,
+            resolved.originalFileName,
+          );
+        } else {
+          final image = item.tryDecodeImage();
+          if (image != null) await MCOImageFileSaver.savePng(image);
+        }
       } else {
         await MCOImageFileSaver.saveBinaryPayload(item.binaryPayload);
       }
@@ -449,7 +501,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
                   final item = group.items[index];
                   return _GalleryTile(
                     item: item,
-                    onTap: () => _selectItem(item),
+                    onTap: () => unawaited(_selectItem(item)),
                     onLongPress: () => _showItemActions(item),
                   );
                 }, childCount: group.items.length),
@@ -551,6 +603,38 @@ class _GalleryTile extends StatelessWidget {
     final image = item.tryDecodeImage();
     final showPng = item.showPngFallback || image == null;
     final scheme = Theme.of(context).colorScheme;
+    final Widget preview;
+    if (!showPng) {
+      preview = FittedBox(
+        fit: BoxFit.contain,
+        child: MCOImageMessage(
+          image: image,
+          maxSize: (item.previewMaxSize ?? 96).toDouble(),
+        ),
+      );
+    } else if (image != null && item.isPackItem) {
+      preview = MCOImageOriginalOrFallback(
+        text: item.textPayload,
+        image: image,
+        maxSize: (item.previewMaxSize ?? 96).toDouble(),
+        expandOriginalToMaxSize: true,
+        originalRelativePaths: item.originalRelativePaths,
+      );
+    } else if (item.pngBytes.isNotEmpty) {
+      preview = Image.memory(
+        item.pngBytes,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.broken_image_outlined,
+          color: scheme.onSurfaceVariant,
+        ),
+      );
+    } else {
+      preview = Icon(
+        Icons.broken_image_outlined,
+        color: scheme.onSurfaceVariant,
+      );
+    }
 
     return Material(
       color: scheme.surfaceContainerHighest,
@@ -565,15 +649,7 @@ class _GalleryTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Center(
-                  child: showPng
-                      ? Image.memory(item.pngBytes, fit: BoxFit.contain)
-                      : FittedBox(
-                          fit: BoxFit.contain,
-                          child: MCOImageMessage(
-                            image: image,
-                            maxSize: (item.previewMaxSize ?? 96).toDouble(),
-                          ),
-                        ),
+                  child: preview,
                 ),
               ),
               const SizedBox(height: 8),
