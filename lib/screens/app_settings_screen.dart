@@ -816,6 +816,16 @@ class AppSettingsScreen extends StatelessWidget {
         onChanged: (value) => settingsService.setMapShowOtherNodes(value),
       ),
       const Divider(height: 1, indent: 16),
+      SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: const Icon(Icons.more_time_outlined, size: 20),
+        title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
+        value: settingsService.settings.pathTraceHighTimeoutEnabled,
+        onChanged: (value) {
+          settingsService.setPathTraceHighTimeoutEnabled(value);
+        },
+      ),
+      const Divider(height: 1, indent: 16),
       InkWell(
         onTap: () => _showTimeFilterSheet(context, settingsService),
         child: Padding(
@@ -1002,19 +1012,6 @@ class AppSettingsScreen extends StatelessWidget {
 
     if (_isStadiaSource(settingsService.settings)) {
       children.addAll([
-        const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ),
-          secondary: const Icon(Icons.more_time_outlined, size: 20),
-          title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
-          value: settingsService.settings.pathTraceHighTimeoutEnabled,
-          onChanged: (value) {
-            settingsService.setPathTraceHighTimeoutEnabled(value);
-          },
-        ),
         const Divider(height: 1, indent: 16),
         InkWell(
           onTap: () => _showMapRasterEndpointDialog(context, settingsService),
