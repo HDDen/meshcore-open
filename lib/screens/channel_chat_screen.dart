@@ -2265,11 +2265,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     int maxTextChars,
     MCOImageGalleryItem item,
   ) async {
-    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    final useRasterOriginal = item.showPngFallback && !item.originalIsLottie;
+    final image = useRasterOriginal ? null : item.tryDecodeImage();
     await _showCanvasEditor(
       maxTextChars,
       initialImage: image,
-      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageBytes: image == null && !item.originalIsLottie
+          ? item.pngBytes
+          : null,
       initialImageWidth: item.width,
       initialImageHeight: item.height,
       initialPaletteProfile: item.paletteProfile,
@@ -2815,6 +2818,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         widget.channel,
         messageText,
         inputText: text,
+        mcoImageV3: mcoImageV3,
         uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
@@ -3400,12 +3404,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    connector.cancelPendingChannelSend(message.messageId);
     _lastChannelSendAt = DateTime.now();
-    _lastChannelSentText = message.text;
     final mcoImageV3 = _mcoImageV3ForResend(message.text);
+    final resendText = mcoImageV3 == null
+        ? _restoreReplyMentionForResend(message)
+        : message.text;
+    _lastChannelSentText = resendText;
     connector.sendChannelMessage(
       widget.channel,
-      message.text,
+      resendText,
       mcoImageV3: mcoImageV3,
       originalText: message.originalText,
       translatedLanguageCode: message.translatedLanguageCode,
@@ -3421,6 +3429,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       context,
       content: Text(context.l10n.chat_retryingMessage),
     );
+  }
+
+  String _restoreReplyMentionForResend(ChannelMessage message) {
+    if (ChannelMessage.parseReplyMention(message.text) != null) {
+      return message.text;
+    }
+    final replySenderName =
+        (message.replyToSenderName ?? message.mcmpReplyAuthorName)?.trim();
+    if (replySenderName == null || replySenderName.isEmpty) {
+      return message.text;
+    }
+    return '@[$replySenderName] ${message.text}';
   }
 
   EncodedMCOImageV3? _mcoImageV3ForResend(String text) {

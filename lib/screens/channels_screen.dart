@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
+import '../helpers/contact_merge_helper.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
@@ -116,9 +117,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     _channelGroupStore.setPublicKeyHex = publicKeyHex;
-    final groups = await _channelGroupStore.loadGroups();
+    final storedGroups = await _channelGroupStore.loadGroups();
+    final groups = normalizeChannelGroupsForPeers(storedGroups);
     final expandedGroups = await _channelGroupStore.loadExpandedGroupNames();
-    final screenOrder = await _channelGroupStore.loadScreenOrder();
+    final storedScreenOrder = await _channelGroupStore.loadScreenOrder();
+    final screenOrder = normalizeChannelScreenOrderForPeers(storedScreenOrder);
+    final groupsChanged = !_sameChannelGroups(storedGroups, groups);
+    final screenOrderChanged = !_sameStrings(storedScreenOrder, screenOrder);
     final currentPublicKeyHex = connector.selfPublicKeyHex;
     if (mounted && currentPublicKeyHex == publicKeyHex) {
       setState(() {
@@ -135,9 +140,40 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           );
       });
+      if (groupsChanged) {
+        unawaited(_channelGroupStore.saveGroups(groups));
+      }
+      if (screenOrderChanged) {
+        unawaited(_channelGroupStore.saveScreenOrder(screenOrder));
+      }
     } else {
       _isLoadingChannelGroups = false;
     }
+  }
+
+  bool _sameChannelGroups(List<ChannelGroup> a, List<ChannelGroup> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      final left = a[i];
+      final right = b[i];
+      if (left.name != right.name ||
+          left.sortOrder != right.sortOrder ||
+          left.widgetColor != right.widgetColor ||
+          left.widgetTextColor != right.widgetTextColor ||
+          left.allowOrderingInGroup != right.allowOrderingInGroup ||
+          !_sameStrings(left.channelNames, right.channelNames)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _sameStrings(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<void> _saveChannelGroups() async {
@@ -768,16 +804,27 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
     final messages = connector.getLoadedMessages(contact);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
-    final lastMessageText = lastMessage?.text ?? '';
+    final cachedPreview = connector.getContactMessagePreview(contact);
+    final selectedCachedPreview =
+        cachedPreview != null &&
+            (lastMessage == null ||
+                cachedPreview.timestamp.isAfter(lastMessage.timestamp))
+        ? cachedPreview
+        : null;
+    final lastMessageText =
+        selectedCachedPreview?.text ?? lastMessage?.text ?? '';
     final lastPreview =
         lastMessageText.isNotEmpty &&
             GifHelper.parseGif(lastMessageText) != null
         ? context.l10n.chat_receivedGif
         : lastMessageText;
-    final lastPreviewImage = lastMessage == null
+    final lastPreviewImage = lastMessageText.isEmpty
         ? null
-        : MCOImageMessage.tryDecode(lastMessage.text);
-    final lastTime = lastMessage?.timestamp ?? contact.lastMessageAt;
+        : MCOImageMessage.tryDecode(lastMessageText);
+    final lastTime =
+        selectedCachedPreview?.timestamp ??
+        lastMessage?.timestamp ??
+        contact.lastMessageAt;
     final isRoom = contact.type == advTypeRoom;
     final contactLabel = contact.name.isEmpty
         ? (isRoom
@@ -931,61 +978,69 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
     showModalBottomSheet(
       context: parentContext,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(sheetContext.l10n.channels_editChannel),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await Future.delayed(const Duration(milliseconds: 100));
-                if (parentContext.mounted) {
-                  showChannelEditSheet(parentContext, connector, channel);
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                isMuted
-                    ? Icons.notifications_outlined
-                    : Icons.notifications_off_outlined,
-              ),
-              title: Text(
-                isMuted
-                    ? sheetContext.l10n.channels_unmuteChannel
-                    : sheetContext.l10n.channels_muteChannel,
-              ),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                if (isMuted) {
-                  await settingsService.unmuteChannel(channel.name);
-                } else {
-                  await settingsService.muteChannel(channel.name);
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(sheetContext).colorScheme.error,
-              ),
-              title: Text(
-                sheetContext.l10n.channels_deleteChannel,
-                style: TextStyle(
-                  color: Theme.of(sheetContext).colorScheme.error,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(sheetContext.l10n.channels_editChannel),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    if (parentContext.mounted) {
+                      showChannelEditSheet(parentContext, connector, channel);
+                    }
+                  },
                 ),
-              ),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await Future.delayed(const Duration(milliseconds: 100));
-                if (parentContext.mounted) {
-                  _confirmDeleteChannel(parentContext, connector, channel);
-                }
-              },
+                ListTile(
+                  leading: Icon(
+                    isMuted
+                        ? Icons.notifications_outlined
+                        : Icons.notifications_off_outlined,
+                  ),
+                  title: Text(
+                    isMuted
+                        ? sheetContext.l10n.channels_unmuteChannel
+                        : sheetContext.l10n.channels_muteChannel,
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    if (isMuted) {
+                      await settingsService.unmuteChannel(channel.name);
+                    } else {
+                      await settingsService.muteChannel(channel.name);
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(sheetContext).colorScheme.error,
+                  ),
+                  title: Text(
+                    sheetContext.l10n.channels_deleteChannel,
+                    style: TextStyle(
+                      color: Theme.of(sheetContext).colorScheme.error,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    if (parentContext.mounted) {
+                      _confirmDeleteChannel(parentContext, connector, channel);
+                    }
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1826,30 +1881,38 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _showChannelGroupActions(BuildContext context, ChannelGroup group) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(context.l10n.contacts_editGroup),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _showEditChannelGroupDialog(context, group);
-              },
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(context.l10n.contacts_editGroup),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showEditChannelGroupDialog(context, group);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    context.l10n.contacts_deleteGroup,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _deleteChannelGroup(group);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: Text(
-                context.l10n.contacts_deleteGroup,
-                style: const TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _deleteChannelGroup(group);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -2130,19 +2193,41 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     if (settings.roomServerDisableRoomAndContactsSorting) {
       return const <Contact>[];
     }
+    return _visiblePeerContacts(context.read<MeshCoreConnector>(), settings);
+  }
+
+  List<Contact> _visiblePeerContacts(
+    MeshCoreConnector connector,
+    AppSettings settings, {
+    String query = '',
+  }) {
     if (!settings.roomServerShowNotemptyOnChatscreen &&
         !settings.roomServerShowNotemptyContactsOnChatscreen) {
       return const <Contact>[];
     }
-    return context.read<MeshCoreConnector>().contacts.where((contact) {
-      if (!contact.hasMessages) return false;
-      if (settings.roomServerShowNotemptyOnChatscreen &&
-          contact.type == advTypeRoom) {
-        return true;
-      }
-      return settings.roomServerShowNotemptyContactsOnChatscreen &&
+    final normalizedQuery = query.trim().toLowerCase();
+    final contactsByPublicKey = <String, Contact>{};
+    for (final contact in connector.contacts) {
+      final canShowRoom =
+          settings.roomServerShowNotemptyOnChatscreen &&
+          contact.type == advTypeRoom;
+      final canShowContact =
+          settings.roomServerShowNotemptyContactsOnChatscreen &&
           contact.type == advTypeChat;
-    }).toList();
+      if ((!canShowRoom && !canShowContact) || !contact.hasMessages) {
+        continue;
+      }
+      if (normalizedQuery.isNotEmpty &&
+          !contact.name.toLowerCase().contains(normalizedQuery)) {
+        continue;
+      }
+      final key = contact.publicKeyHex.toLowerCase();
+      final existing = contactsByPublicKey[key];
+      contactsByPublicKey[key] = existing == null
+          ? contact
+          : mergeDuplicateContacts(existing, contact);
+    }
+    return contactsByPublicKey.values.toList();
   }
 
   List<_ChannelScreenItem> _itemsForGroup(
@@ -2172,10 +2257,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   String _groupKeyForRoom(Contact room) {
-    if (room.type == advTypeRoom) {
-      return 'room:${room.publicKeyHex.toLowerCase()}';
-    }
-    return 'contact:${room.publicKeyHex.toLowerCase()}';
+    return 'peer:${room.publicKeyHex.toLowerCase()}';
   }
 
   String _groupNameForItem(_ChannelScreenItem item) {
@@ -2282,6 +2364,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<_ChannelScreenItem> displayItems,
     MeshCoreConnector connector,
   ) {
+    if (!_sameScreenItemMultiset(baseItems, displayItems)) {
+      debugPrint(
+        'Skipping in-group reorder because visible items changed during drag',
+      );
+      return List<_ChannelScreenItem>.from(baseItems);
+    }
     final movableItems = displayItems
         .where((item) => _unreadCountForItem(connector, item) == 0)
         .toList();
@@ -2295,6 +2383,29 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         else
           baseItem,
     ];
+  }
+
+  bool _sameScreenItemMultiset(
+    List<_ChannelScreenItem> a,
+    List<_ChannelScreenItem> b,
+  ) {
+    if (a.length != b.length) return false;
+    final counts = <String, int>{};
+    for (final item in a) {
+      final key = _screenOrderKeyForItem(item);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    for (final item in b) {
+      final key = _screenOrderKeyForItem(item);
+      final remaining = counts[key];
+      if (remaining == null || remaining == 0) return false;
+      if (remaining == 1) {
+        counts.remove(key);
+      } else {
+        counts[key] = remaining - 1;
+      }
+    }
+    return counts.isEmpty;
   }
 
   List<String> _selectedItemNamesForGroupEdit(
@@ -2340,20 +2451,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         return const <Contact>[];
       }
     }
-    final query = viewState.channelsSearchText.trim().toLowerCase();
-    return connector.contacts.where((contact) {
-      final canShowRoom =
-          appSettings.roomServerShowNotemptyOnChatscreen &&
-          contact.type == advTypeRoom;
-      final canShowContact =
-          appSettings.roomServerShowNotemptyContactsOnChatscreen &&
-          contact.type == advTypeChat;
-      if ((!canShowRoom && !canShowContact) || !contact.hasMessages) {
-        return false;
-      }
-      if (query.isEmpty) return true;
-      return contact.name.toLowerCase().contains(query);
-    }).toList();
+    return _visiblePeerContacts(
+      connector,
+      appSettings,
+      query: viewState.channelsSearchText,
+    );
   }
 
   Future<void> _removeChannelNamesFromGroups(

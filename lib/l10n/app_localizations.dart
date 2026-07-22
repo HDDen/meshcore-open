@@ -1111,7 +1111,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_deleteAllPathsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Clear all path data from contacts.'**
+  /// **'Clear all local route data from contacts. Routes on the node will not be affected.'**
   String get settings_deleteAllPathsSubtitle;
 
   /// No description provided for @settings_sendAdvertisement.
@@ -8377,7 +8377,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveredContacts_Title.
   ///
   /// In en, this message translates to:
-  /// **'Discovered Contacts'**
+  /// **'Add discovered contacts'**
   String get discoveredContacts_Title;
 
   /// No description provided for @discoveredContacts_noMatching.
@@ -8773,7 +8773,7 @@ abstract class AppLocalizations {
   /// No description provided for @background_serviceText.
   ///
   /// In en, this message translates to:
-  /// **'Keeping BLE connected'**
+  /// **'Keeping node connected'**
   String get background_serviceText;
 
   /// No description provided for @appSettings_translationModelDeleted.
@@ -9897,6 +9897,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom'**
   String get settings_appSettingsCustomChemistry;
+
+  /// No description provided for @map_clearDiscoveredContactsCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear nodes local cache'**
+  String get map_clearDiscoveredContactsCache;
+
+  /// No description provided for @map_clearDiscoveredContactsCacheDisclamer.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.'**
+  String get map_clearDiscoveredContactsCacheDisclamer;
+
+  /// No description provided for @snrIndicator_v2_nearByRepeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater\'s activity'**
+  String get snrIndicator_v2_nearByRepeaters;
+
+  /// No description provided for @app_connectionLostReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to node is lost; reconnecting...'**
+  String get app_connectionLostReconnect;
+
+  /// No description provided for @app_connectionLostReconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnected to node'**
+  String get app_connectionLostReconnected;
+
+  /// No description provided for @contacts_batchOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch operations'**
+  String get contacts_batchOperations;
+
+  /// No description provided for @contacts_batchOperations_notSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not selected any contacts for processing!'**
+  String get contacts_batchOperations_notSelected;
+
+  /// No description provided for @contacts_batchOperations_removeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove selected contacts from node?'**
+  String get contacts_batchOperations_removeConfirm;
+
+  /// No description provided for @contacts_batchOperations_removeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected contacts have been removed'**
+  String get contacts_batchOperations_removeSuccess;
+
+  /// No description provided for @contacts_batchOperations_removeFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing contacts is failed – please check contacts again'**
+  String get contacts_batchOperations_removeFail;
+
+  /// No description provided for @contacts_batchOperations_commonSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation is successfull'**
+  String get contacts_batchOperations_commonSuccess;
+
+  /// No description provided for @contacts_batchOperations_commonFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation is failed'**
+  String get contacts_batchOperations_commonFail;
+
+  /// No description provided for @contacts_batchOperations_selectFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Select filtered'**
+  String get contacts_batchOperations_selectFiltered;
 }
 
 class _AppLocalizationsDelegate

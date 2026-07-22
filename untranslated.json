@@ -201,7 +201,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "de": [
@@ -393,7 +406,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "es": [
@@ -598,7 +624,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "fr": [
@@ -803,7 +842,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "hu": [
@@ -1008,7 +1060,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "it": [
@@ -1293,7 +1358,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ja": [
@@ -1498,7 +1576,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ko": [
@@ -1703,7 +1794,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "nl": [
@@ -1988,7 +2092,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pl": [
@@ -2193,7 +2310,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pt": [
@@ -2478,7 +2608,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ru": [
@@ -2697,7 +2840,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sl": [
@@ -2902,7 +3058,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sv": [
@@ -3187,7 +3356,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "uk": [
@@ -3392,7 +3574,20 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "zh": [
@@ -3597,6 +3792,19 @@
     "settings_modSettingsRoomServerShowNotemptyOnChatscreen",
     "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen",
     "settings_modSettingsRoomServerDisableRoomAndContactsSorting",
-    "settings_appSettingsCustomChemistry"
+    "settings_appSettingsCustomChemistry",
+    "map_clearDiscoveredContactsCache",
+    "map_clearDiscoveredContactsCacheDisclamer",
+    "snrIndicator_v2_nearByRepeaters",
+    "app_connectionLostReconnect",
+    "app_connectionLostReconnected",
+    "contacts_batchOperations",
+    "contacts_batchOperations_notSelected",
+    "contacts_batchOperations_removeConfirm",
+    "contacts_batchOperations_removeSuccess",
+    "contacts_batchOperations_removeFail",
+    "contacts_batchOperations_commonSuccess",
+    "contacts_batchOperations_commonFail",
+    "contacts_batchOperations_selectFiltered"
   ]
 }

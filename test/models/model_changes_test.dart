@@ -486,6 +486,7 @@ void main() {
 
         // Let's create a contact with legacy 64 path length (mode 1, 0 hops)
         final rawPath = Uint8List(64); // 64 bytes of zeroes
+        final lastSeen = DateTime.now();
         final contactJson = [
           {
             'publicKey': base64Encode(Uint8List(32)..[0] = 0xAA),
@@ -494,8 +495,10 @@ void main() {
             'flags': 0,
             'pathLength': 64, // encoded pathLength (mode 1, 0 hops)
             'path': base64Encode(rawPath),
-            'lastSeen': DateTime.now().millisecondsSinceEpoch,
-            'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
+            'lastSeen': lastSeen.millisecondsSinceEpoch,
+            'lastMessageAt': lastSeen
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch,
             'isActive': true,
           },
         ];
@@ -507,6 +510,7 @@ void main() {
         expect(contacts, hasLength(1));
         expect(contacts.first.pathLength, equals(0));
         expect(contacts.first.path, isEmpty);
+        expect(contacts.first.hasMessages, isFalse);
       },
     );
 
@@ -666,6 +670,7 @@ void main() {
         final rawPath = Uint8List(64)
           ..[0] = 0x11
           ..[1] = 0x22;
+        final lastSeen = DateTime.now();
         final contactJson = [
           {
             'publicKey': base64Encode(Uint8List(32)..[0] = 0xBB),
@@ -674,8 +679,10 @@ void main() {
             'flags': 0,
             'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
             'path': base64Encode(rawPath),
-            'lastSeen': DateTime.now().millisecondsSinceEpoch,
-            'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
+            'lastSeen': lastSeen.millisecondsSinceEpoch,
+            'lastMessageAt': lastSeen
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch,
           },
         ];
 
@@ -686,6 +693,7 @@ void main() {
         expect(contacts, hasLength(1));
         expect(contacts.first.pathLength, equals(1));
         expect(contacts.first.path, equals(Uint8List.fromList([0x11, 0x22])));
+        expect(contacts.first.hasMessages, isFalse);
       },
     );
   });

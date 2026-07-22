@@ -5773,4 +5773,50 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_appSettingsCustomChemistry => 'Custom';
+
+  @override
+  String get map_clearDiscoveredContactsCache => 'Clear nodes local cache';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclamer =>
+      'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Repeater\'s activity';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Connection to node is lost; reconnecting...';
+
+  @override
+  String get app_connectionLostReconnected => 'Reconnected to node';
+
+  @override
+  String get contacts_batchOperations => 'Batch operations';
+
+  @override
+  String get contacts_batchOperations_notSelected =>
+      'You have not selected any contacts for processing!';
+
+  @override
+  String get contacts_batchOperations_removeConfirm =>
+      'Remove selected contacts from node?';
+
+  @override
+  String get contacts_batchOperations_removeSuccess =>
+      'Selected contacts have been removed';
+
+  @override
+  String get contacts_batchOperations_removeFail =>
+      'Removing contacts is failed – please check contacts again';
+
+  @override
+  String get contacts_batchOperations_commonSuccess =>
+      'Operation is successfull';
+
+  @override
+  String get contacts_batchOperations_commonFail => 'Operation is failed';
+
+  @override
+  String get contacts_batchOperations_selectFiltered => 'Select filtered';
 }

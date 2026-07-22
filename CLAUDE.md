@@ -161,6 +161,18 @@ All stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton
 
 Wardrive data (samples, sessions, per-endpoint uploaded IDs, ignore list) is persisted in SharedPreferences via `wardrive_sample_store` / `wardrive_ignore_store`. The disabled translation subsystem still exposes a `translation_file_store` file path for model removal only.
 
+### Contact message summaries and channel-screen visibility
+
+`Contact.hasMessages` means that an actual direct-message history exists for the contact in either the current node's store or an enabled shared-history scope. Channel posts, adverts, and discovery activity must not set this flag. Missing `hasMessages` values in legacy `contact_store` / `contact_discovery_store` records are treated as `false`; `_refreshContactMessageSummaries()` rebuilds the flag from real local/shared message summaries and clears stale values. When summaries are merged, `lastMessageAt` remains monotonic and keeps the newest known timestamp.
+
+Incoming channel activity may still advance a known contact's `lastMessageAt` for activity sorting, but `_updateContactLastMessageAtByName()` calls `_setContactLastMessageAt(..., markHasMessages: false)`, so this never makes an empty direct conversation appear on the channels screen. Channel-author attribution follows this order:
+
+1. A valid MCMP v3 signature uses the verified full public key for an exact contact match.
+2. Otherwise, the sender name is used only when it matches exactly one chat contact.
+3. With no name match, the packet path may be used only when the negotiated path-hash width is at least two bytes and exactly one contact matches.
+
+Never trust `ChannelMessage.verifiedSenderKeyHex` without also requiring `mcmpSignatureStatus == McmpSignatureStatus.valid`: failed verification may expose the single candidate key that was checked, which is diagnostic information rather than authenticated identity.
+
 ### Theming
 - Material 3 design (`useMaterial3: true`)
 - Light/dark selected via `AppSettings.themeMode` (`system` / `light` / `dark`)

@@ -4,21 +4,17 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../helpers/mcoimg_codec.dart';
 import '../services/app_settings_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import 'mco_image_message.dart';
 
-class _ResolvedOriginal {
-  final File file;
-
-  const _ResolvedOriginal(this.file);
-}
-
 /// Renders a received MCOimg message, preferring the original image
-/// (png/jpg/gif, possibly animated) from an installed *.mcoimg.pack when the
+/// (Lottie/png/gif/jpg) from an installed *.mcoimg.pack when the
 /// payload identity hash matches a pack item. Falls back to rendering the
 /// received LoRa version when the image is unknown or the original file is
 /// missing. While the original lookup is pending, the widget reserves the same
@@ -36,6 +32,8 @@ class MCOImageOriginalOrFallback extends StatefulWidget {
   /// When true, always render the received LoRa version even if a pack
   /// original exists (per-message user override).
   final bool forceLora;
+  final bool expandOriginalToMaxSize;
+  final List<String> originalRelativePaths;
 
   const MCOImageOriginalOrFallback({
     super.key,
@@ -43,6 +41,8 @@ class MCOImageOriginalOrFallback extends StatefulWidget {
     required this.image,
     this.maxSize = 200,
     this.forceLora = false,
+    this.expandOriginalToMaxSize = false,
+    this.originalRelativePaths = const [],
   });
 
   @override
@@ -52,7 +52,8 @@ class MCOImageOriginalOrFallback extends StatefulWidget {
 
 class _MCOImageOriginalOrFallbackState
     extends State<MCOImageOriginalOrFallback> {
-  late Future<_ResolvedOriginal?> _originalFuture;
+  late Future<ResolvedMcoImageOriginal?> _originalFuture;
+  final Set<String> _rejectedOriginalPaths = {};
 
   // Memoized sharpened still, keyed by "<text>|<sharpness>". Sharpening runs a
   // CPU unsharp mask over the decoded pixels, so it uses a single (first)
@@ -70,32 +71,39 @@ class _MCOImageOriginalOrFallbackState
   void didUpdateWidget(covariant MCOImageOriginalOrFallback oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.text != widget.text ||
-        oldWidget.forceLora != widget.forceLora) {
+        oldWidget.forceLora != widget.forceLora ||
+        oldWidget.originalRelativePaths != widget.originalRelativePaths) {
+      _rejectedOriginalPaths.clear();
       _originalFuture = _resolve();
       _sharpenKey = null;
       _sharpenFuture = null;
     }
   }
 
-  Future<_ResolvedOriginal?> _resolve() async {
+  Future<ResolvedMcoImageOriginal?> _resolve() async {
     if (widget.forceLora) return null;
-    final file = await McoImagePackOriginals.instance.resolveOriginalForText(
-      widget.text,
-    );
-    if (file == null) return null;
-    try {
-      final bytes = await file.readAsBytes();
-      final descriptor = await ui.ImageDescriptor.encoded(
-        await ui.ImmutableBuffer.fromUint8List(bytes),
+    if (widget.originalRelativePaths.isNotEmpty) {
+      return McoImagePackOriginals.instance.resolveOriginalCandidates(
+        widget.originalRelativePaths,
+        excludedRelativePaths: _rejectedOriginalPaths,
       );
-      final width = descriptor.width;
-      final height = descriptor.height;
-      descriptor.dispose();
-      if (width <= 0 || height <= 0) return null;
-      return _ResolvedOriginal(file);
-    } catch (_) {
-      return null;
     }
+    return McoImagePackOriginals.instance.resolveOriginalForText(
+      widget.text,
+      excludedRelativePaths: _rejectedOriginalPaths,
+    );
+  }
+
+  void _rejectOriginal(ResolvedMcoImageOriginal original) {
+    if (!_rejectedOriginalPaths.add(original.relativePath)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _originalFuture = _resolve();
+        _sharpenKey = null;
+        _sharpenFuture = null;
+      });
+    });
   }
 
   /// Builds a sharpened still image using an unsharp-mask 3x3 convolution.
@@ -178,7 +186,7 @@ class _MCOImageOriginalOrFallbackState
     final longestSide = widget.image.width > widget.image.height
         ? widget.image.width
         : widget.image.height;
-    final displayScale = widget.forceLora
+    final displayScale = widget.forceLora || widget.expandOriginalToMaxSize
         ? widget.maxSize / longestSide
         : (imageScale > widget.maxSize / longestSide
               ? widget.maxSize / longestSide
@@ -201,7 +209,7 @@ class _MCOImageOriginalOrFallbackState
       );
     }
 
-    return FutureBuilder<_ResolvedOriginal?>(
+    return FutureBuilder<ResolvedMcoImageOriginal?>(
       future: _originalFuture,
       builder: (context, snapshot) {
         final resolved = snapshot.data;
@@ -211,6 +219,13 @@ class _MCOImageOriginalOrFallbackState
               : replacementSizedFallback();
         }
 
+        final resolvedDisplayScale = resolved.isLottie
+            ? widget.maxSize / longestSide
+            : displayScale;
+        final resolvedDisplayWidth = widget.image.width * resolvedDisplayScale;
+        final resolvedDisplayHeight =
+            widget.image.height * resolvedDisplayScale;
+
         // Nearest-neighbor keeps hard pixel edges when the stable chat box
         // scales a small pack original up to the LoRa message size.
         final filterQuality = settings.mcoImageScaleNearestNeighbor
@@ -218,18 +233,32 @@ class _MCOImageOriginalOrFallbackState
             : FilterQuality.medium;
         final sharpness = settings.mcoImageReplacementsSharpness.clamp(0, 10);
 
-        Widget fallbackImage() => Image.file(
-          resolved.file,
-          fit: BoxFit.contain,
-          filterQuality: filterQuality,
-          gaplessPlayback: true,
-          errorBuilder: (context, error, stackTrace) =>
-              MCOImageMessage(image: widget.image, maxSize: widget.maxSize),
+        Widget fallbackImage() => _ViewportAwareRaster(
+          child: Image.file(
+            resolved.file,
+            fit: BoxFit.contain,
+            filterQuality: filterQuality,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) {
+              _rejectOriginal(resolved);
+              return replacementSizedFallback();
+            },
+          ),
         );
 
         Widget imageWidget;
-        if (sharpness > 0) {
-          final key = '${widget.text}|$sharpness';
+        if (resolved.isLottie) {
+          final composition = resolved.lottieComposition;
+          if (composition == null) {
+            _rejectOriginal(resolved);
+            imageWidget = replacementSizedFallback();
+          } else {
+            imageWidget = _ViewportAwareLottie(
+              composition: composition,
+            );
+          }
+        } else if (sharpness > 0) {
+          final key = '${resolved.relativePath}|$sharpness';
           if (_sharpenKey != key) {
             _sharpenKey = key;
             _sharpenFuture = _buildSharpened(resolved.file, sharpness);
@@ -253,11 +282,134 @@ class _MCOImageOriginalOrFallbackState
         }
 
         return SizedBox(
-          width: displayWidth,
-          height: displayHeight,
+          width: resolvedDisplayWidth,
+          height: resolvedDisplayHeight,
           child: imageWidget,
         );
       },
+    );
+  }
+}
+
+class _ViewportAwareRaster extends StatefulWidget {
+  final Widget child;
+
+  const _ViewportAwareRaster({required this.child});
+
+  @override
+  State<_ViewportAwareRaster> createState() => _ViewportAwareRasterState();
+}
+
+class _ViewportAwareRasterState extends State<_ViewportAwareRaster> {
+  final Key _visibilityKey = UniqueKey();
+  bool _visible = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return VisibilityDetector(
+      key: _visibilityKey,
+      onVisibilityChanged: (info) {
+        final visible = info.visibleFraction > 0;
+        if (visible == _visible || !mounted) return;
+        setState(() => _visible = visible);
+      },
+      child: TickerMode(
+        enabled: _visible,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _ViewportAwareLottie extends StatefulWidget {
+  final LottieComposition composition;
+
+  const _ViewportAwareLottie({required this.composition});
+
+  @override
+  State<_ViewportAwareLottie> createState() => _ViewportAwareLottieState();
+}
+
+class _ViewportAwareLottieState extends State<_ViewportAwareLottie>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late final AnimationController _controller;
+  final Key _visibilityKey = UniqueKey();
+  bool _visible = true;
+  bool _tickerEnabled = true;
+  bool _appResumed = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _appResumed = WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.composition.duration,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
+    _syncPlayback();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ViewportAwareLottie oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.composition != widget.composition) {
+      _controller.duration = widget.composition.duration;
+    }
+    _syncPlayback();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appResumed = state == AppLifecycleState.resumed;
+    _syncPlayback();
+  }
+
+  void _syncPlayback() {
+    if (!mounted) return;
+    if ((_controller.duration ?? Duration.zero) <= Duration.zero) {
+      if (_controller.isAnimating) _controller.stop(canceled: false);
+      return;
+    }
+    final shouldPlay = _visible && _tickerEnabled && _appResumed;
+    if (shouldPlay) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else if (_controller.isAnimating) {
+      _controller.stop(canceled: false);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return VisibilityDetector(
+      key: _visibilityKey,
+      onVisibilityChanged: (info) {
+        final visible = info.visibleFraction > 0;
+        if (visible == _visible) return;
+        _visible = visible;
+        _syncPlayback();
+      },
+      child: Lottie(
+        composition: widget.composition,
+        controller: _controller,
+        fit: BoxFit.contain,
+        frameRate: FrameRate.composition,
+        addRepaintBoundary: true,
+      ),
     );
   }
 }

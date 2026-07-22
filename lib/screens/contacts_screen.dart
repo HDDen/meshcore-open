@@ -50,14 +50,27 @@ enum RoomLoginDestination { chat, management }
 
 enum ContactOperationType { import, export, zeroHopShare }
 
+enum _BatchContactOperation { delete }
+
+class ContactsBatchOperationsScreen extends StatelessWidget {
+  const ContactsBatchOperationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ContactsScreen(batchOperationsMode: true);
+  }
+}
+
 class ContactsScreen extends StatefulWidget {
   final bool hideBackButton;
   final bool selectionMode;
+  final bool batchOperationsMode;
 
   const ContactsScreen({
     super.key,
     this.hideBackButton = false,
     this.selectionMode = false,
+    this.batchOperationsMode = false,
   });
 
   @override
@@ -75,6 +88,11 @@ class _ContactsScreenState extends State<ContactsScreen>
   Timer? _searchDebounce;
 
   final List<ContactOperationType> _pendingOperations = [];
+  final Set<String> _selectedBatchContactKeys = {};
+  bool _batchOperationInProgress = false;
+  bool _batchOperationCancellationRequested = false;
+  bool _allowBatchOperationPop = false;
+  String? _activeBatchFailureMessage;
 
   StreamSubscription<Uint8List>? _frameSubscription;
 
@@ -112,6 +130,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   @override
   void dispose() {
+    _batchOperationCancellationRequested = true;
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -126,6 +145,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop ||
         widget.selectionMode ||
+        widget.batchOperationsMode ||
         event is! KeyDownEvent ||
         event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
@@ -398,131 +418,351 @@ class _ContactsScreenState extends State<ContactsScreen>
       return const SizedBox.shrink();
     }
 
-    final allowBack = !connector.isConnected;
+    final allowBack = widget.batchOperationsMode || !connector.isConnected;
+    final canPop =
+        allowBack && (!_batchOperationInProgress || _allowBatchOperationPop);
     final lockContactList =
-        connector.isLoadingContacts && connector.contacts.isNotEmpty;
+        _batchOperationInProgress ||
+        (connector.isLoadingContacts && connector.contacts.isNotEmpty);
     return PopScope(
-      canPop: allowBack,
+      canPop: canPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop &&
+            widget.batchOperationsMode &&
+            _batchOperationInProgress) {
+          _cancelBatchOperationAndPop();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
-          title: AppBarTitle(context.l10n.contacts_title),
-          automaticallyImplyLeading: false,
+          title: AppBarTitle(
+            widget.batchOperationsMode
+                ? context.l10n.contacts_batchOperations
+                : context.l10n.contacts_title,
+          ),
+          automaticallyImplyLeading: widget.batchOperationsMode,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
-            PopupMenuButton(
-              tooltip: context.l10n.contacts_moreOptions,
-              itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.person_add_rounded,
-                    text: context.l10n.discoveredContacts_Title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DiscoveryScreen(),
+            if (widget.batchOperationsMode)
+              PopupMenuButton<_BatchContactOperation>(
+                enabled: !_batchOperationInProgress,
+                tooltip: context.l10n.contacts_moreOptions,
+                onSelected: (operation) {
+                  switch (operation) {
+                    case _BatchContactOperation.delete:
+                      unawaited(_confirmBatchDelete(context, connector));
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _BatchContactOperation.delete,
+                    child: PopupMenuRow(
+                      icon: Icons.delete_outline,
+                      iconColor: Theme.of(context).colorScheme.error,
+                      text: context.l10n.common_delete,
                     ),
                   ),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.vpn_key,
-                    text: context.l10n.contacts_addContactByPubkey,
-                  ),
-                  onTap: () => _showAddContactByPubkeyDialog(context),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.paste,
-                    text: context.l10n.contacts_addContactFromClipboard,
-                  ),
-                  onTap: () => _contactImport(),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.connect_without_contact,
-                    text: context.l10n.contacts_zeroHopAdvert,
-                  ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: false),
-                    showDismissibleSnackBar(
+                ],
+                icon: const Icon(Icons.more_vert),
+              )
+            else
+              PopupMenuButton(
+                tooltip: context.l10n.contacts_moreOptions,
+                itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.person_add_rounded,
+                      text: context.l10n.discoveredContacts_Title,
+                    ),
+                    onTap: () => Navigator.push(
                       context,
-                      content: Text(context.l10n.settings_advertisementSent),
+                      MaterialPageRoute(
+                        builder: (context) => const DiscoveryScreen(),
+                      ),
                     ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.cell_tower,
-                    text: context.l10n.contacts_floodAdvert,
                   ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: true),
-                    showDismissibleSnackBar(
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.vpn_key,
+                      text: context.l10n.contacts_addContactByPubkey,
+                    ),
+                    onTap: () => _showAddContactByPubkeyDialog(context),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.paste,
+                      text: context.l10n.contacts_addContactFromClipboard,
+                    ),
+                    onTap: () => _contactImport(),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.checklist,
+                      text: context.l10n.contacts_batchOperations,
+                    ),
+                    onTap: () => Navigator.push(
                       context,
-                      content: Text(context.l10n.settings_advertisementSent),
-                    ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.copy,
-                    text: context.l10n.contacts_copyAdvertToClipboard,
-                  ),
-                  onTap: () => _contactExport(Uint8List.fromList([])),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.logout,
-                    iconColor: Theme.of(context).colorScheme.error,
-                    text: context.l10n.common_disconnect,
-                  ),
-                  onTap: () => _disconnect(context, connector),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.settings,
-                    text: context.l10n.settings_title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsScreen(),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const ContactsBatchOperationsScreen(),
+                      ),
                     ),
                   ),
-                ),
-              ],
-              icon: const Icon(Icons.more_vert),
-            ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.connect_without_contact,
+                      text: context.l10n.contacts_zeroHopAdvert,
+                    ),
+                    onTap: () => {
+                      connector.sendSelfAdvert(flood: false),
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.settings_advertisementSent),
+                      ),
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.cell_tower,
+                      text: context.l10n.contacts_floodAdvert,
+                    ),
+                    onTap: () => {
+                      connector.sendSelfAdvert(flood: true),
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.settings_advertisementSent),
+                      ),
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.copy,
+                      text: context.l10n.contacts_copyAdvertToClipboard,
+                    ),
+                    onTap: () => _contactExport(Uint8List.fromList([])),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.logout,
+                      iconColor: Theme.of(context).colorScheme.error,
+                      text: context.l10n.common_disconnect,
+                    ),
+                    onTap: () => _disconnect(context, connector),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.settings,
+                      text: context.l10n.settings_title,
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    ),
+                  ),
+                ],
+                icon: const Icon(Icons.more_vert),
+              ),
           ],
         ),
         body: IgnorePointer(
           ignoring: lockContactList,
-          child: AnimatedOpacity(
-            opacity: lockContactList ? 0.45 : 1,
-            duration: const Duration(milliseconds: 160),
-            child: _buildContactsBody(context, connector),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: lockContactList ? 0.45 : 1,
+                  duration: const Duration(milliseconds: 160),
+                  child: _buildContactsBody(context, connector),
+                ),
+              ),
+              if (_batchOperationInProgress)
+                const Positioned.fill(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: connector.isLoadingContacts
-              ? null
-              : () => _showAddContactSheet(context),
-          child: const Icon(Icons.person_add),
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: QuickSwitchBar(
-            selectedIndex: 0,
-            onDestinationSelected: (index) =>
-                _handleQuickSwitch(index, context),
-            contactsUnreadCount: connector.getTotalContactsUnreadCount(),
-            channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
-          ),
-        ),
+        floatingActionButton: widget.batchOperationsMode
+            ? null
+            : FloatingActionButton(
+                onPressed: connector.isLoadingContacts
+                    ? null
+                    : () => _showAddContactSheet(context),
+                child: const Icon(Icons.person_add),
+              ),
+        bottomNavigationBar: widget.batchOperationsMode
+            ? null
+            : SafeArea(
+                top: false,
+                child: QuickSwitchBar(
+                  selectedIndex: 0,
+                  onDestinationSelected: (index) =>
+                      _handleQuickSwitch(index, context),
+                  contactsUnreadCount: connector.getTotalContactsUnreadCount(),
+                  channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
+                ),
+              ),
       ),
+    );
+  }
+
+  void _toggleBatchContact(Contact contact) {
+    if (_batchOperationInProgress) return;
+    setState(() {
+      if (!_selectedBatchContactKeys.add(contact.publicKeyHex)) {
+        _selectedBatchContactKeys.remove(contact.publicKeyHex);
+      }
+    });
+  }
+
+  void _toggleAllFilteredBatchContacts(List<Contact> filteredContacts) {
+    if (_batchOperationInProgress || filteredContacts.isEmpty) return;
+    final filteredKeys = filteredContacts
+        .map((contact) => contact.publicKeyHex)
+        .toSet();
+    final allFilteredSelected = filteredKeys.every(
+      _selectedBatchContactKeys.contains,
+    );
+    setState(() {
+      if (allFilteredSelected) {
+        _selectedBatchContactKeys.removeAll(filteredKeys);
+      } else {
+        _selectedBatchContactKeys.addAll(filteredKeys);
+      }
+    });
+  }
+
+  List<Contact> _selectedBatchContacts(MeshCoreConnector connector) {
+    return connector.contacts
+        .where(
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
+        )
+        .toList(growable: false);
+  }
+
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final selectedContacts = _selectedBatchContacts(connector);
+    if (selectedContacts.isEmpty) {
+      _showBatchResult(
+        context,
+        context.l10n.contacts_batchOperations_notSelected,
+        isError: true,
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(context.l10n.contacts_batchOperations_removeConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              context.l10n.common_delete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final successMessage = context.l10n.contacts_batchOperations_removeSuccess;
+    final failureMessage = context.l10n.contacts_batchOperations_removeFail;
+
+    await _runBatchOperation(
+      contacts: selectedContacts,
+      operation: (contact) =>
+          connector.removeContact(contact, waitForAck: true),
+      successMessage: successMessage,
+      failureMessage: failureMessage,
+    );
+  }
+
+  Future<void> _runBatchOperation({
+    required List<Contact> contacts,
+    required Future<void> Function(Contact contact) operation,
+    required String successMessage,
+    required String failureMessage,
+  }) async {
+    if (_batchOperationInProgress) return;
+    setState(() {
+      _batchOperationInProgress = true;
+      _batchOperationCancellationRequested = false;
+      _allowBatchOperationPop = false;
+      _activeBatchFailureMessage = failureMessage;
+    });
+
+    final failedKeys = <String>{};
+    for (final contact in contacts) {
+      if (_batchOperationCancellationRequested) break;
+      try {
+        await operation(contact);
+      } catch (error) {
+        failedKeys.add(contact.publicKeyHex);
+        appLogger.error(
+          'Batch contact operation failed for ${contact.publicKeyHex}: $error',
+          tag: 'ContactsScreen',
+          noNotify: true,
+        );
+      }
+    }
+
+    if (_batchOperationCancellationRequested) return;
+    if (!mounted) return;
+    setState(() {
+      _batchOperationInProgress = false;
+      _activeBatchFailureMessage = null;
+      _selectedBatchContactKeys
+        ..clear()
+        ..addAll(failedKeys);
+    });
+    _showBatchResult(
+      context,
+      failedKeys.isEmpty ? successMessage : failureMessage,
+      isError: failedKeys.isNotEmpty,
+    );
+  }
+
+  void _cancelBatchOperationAndPop() {
+    if (_batchOperationCancellationRequested || !mounted) return;
+    final failureMessage =
+        _activeBatchFailureMessage ??
+        context.l10n.contacts_batchOperations_commonFail;
+    setState(() {
+      _batchOperationCancellationRequested = true;
+      _allowBatchOperationPop = true;
+    });
+    _showBatchResult(context, failureMessage, isError: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(Navigator.of(context).maybePop());
+    });
+  }
+
+  void _showBatchResult(
+    BuildContext context,
+    String message, {
+    required bool isError,
+  }) {
+    showDismissibleSnackBar(
+      context,
+      content: Text(message),
+      backgroundColor: isError
+          ? Theme.of(context).colorScheme.error
+          : MeshPalette.signal,
     );
   }
 
@@ -989,6 +1229,16 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector,
       viewState,
     );
+    final batchSelectableContacts = _contactsMatchingBatchFilter(
+      contacts,
+      connector,
+      viewState,
+    );
+    final allFilteredBatchContactsSelected =
+        batchSelectableContacts.isNotEmpty &&
+        batchSelectableContacts.every(
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
+        );
 
     String hintText = "";
 
@@ -1043,14 +1293,17 @@ class _ContactsScreenState extends State<ContactsScreen>
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final searchExpandedWidth = (screenWidth * 0.52).clamp(
-      97.0,
-      double.infinity,
-    ); // allow expansion up to 52% of screen width, but not less than the collapsed width
+    final searchControlsMinWidth = widget.batchOperationsMode ? 146.0 : 97.0;
+    final searchControlsMaxWidth = widget.batchOperationsMode ? 169.0 : 120.0;
+    final compactGroupWidth = (screenWidth * 0.21).clamp(76.0, 128.0);
+    final searchExpandedWidth = (screenWidth - 24 - compactGroupWidth).clamp(
+      searchControlsMinWidth,
+      520.0,
+    );
     final searchCollapsedWidth = (screenWidth * 0.22).clamp(
-      97.0,
-      120.0,
-    ); //two 48px icon buttons + 1px divider
+      searchControlsMinWidth,
+      searchControlsMaxWidth,
+    );
 
     return Column(
       children: [
@@ -1144,6 +1397,31 @@ class _ContactsScreenState extends State<ContactsScreen>
                         height: 48,
                         child: _buildFilterButton(context, viewState),
                       ),
+                      if (widget.batchOperationsMode) ...[
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: IconButton(
+                            tooltip: context.l10n.listFilter_all,
+                            isSelected: allFilteredBatchContactsSelected,
+                            onPressed: batchSelectableContacts.isEmpty
+                                ? null
+                                : () => _toggleAllFilteredBatchContacts(
+                                    batchSelectableContacts,
+                                  ),
+                            icon: const Icon(Icons.done_all),
+                            selectedIcon: Icon(
+                              Icons.done_all,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1188,9 +1466,23 @@ class _ContactsScreenState extends State<ContactsScreen>
                         lastSeen: _resolveLastSeen(contact),
                         unreadCount: unreadCount,
                         isFavorite: contact.isFavorite,
-                        onTap: () => widget.selectionMode
-                            ? Navigator.pop(context, contact)
-                            : _openChat(context, contact),
+                        isSelected: widget.batchOperationsMode
+                            ? _selectedBatchContactKeys.contains(
+                                contact.publicKeyHex,
+                              )
+                            : null,
+                        onSelectionChanged: widget.batchOperationsMode
+                            ? (_) => _toggleBatchContact(contact)
+                            : null,
+                        onTap: () {
+                          if (widget.batchOperationsMode) {
+                            _toggleBatchContact(contact);
+                          } else if (widget.selectionMode) {
+                            Navigator.pop(context, contact);
+                          } else {
+                            _openChat(context, contact);
+                          }
+                        },
                         onLongPress: () =>
                             _showContactOptions(context, connector, contact),
                       );
@@ -1264,6 +1556,30 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
 
     return filtered;
+  }
+
+  List<Contact> _contactsMatchingBatchFilter(
+    List<Contact> contacts,
+    MeshCoreConnector connector,
+    UiViewStateService viewState,
+  ) {
+    final selfPubKeyHex = connector.selfPublicKey == null
+        ? null
+        : pubKeyToHex(connector.selfPublicKey!);
+    return contacts
+        .where((contact) {
+          if (contact.publicKeyHex == selfPubKeyHex) return false;
+          if (viewState.contactsTypeFilter != ContactTypeFilter.all &&
+              !_matchesTypeFilter(contact, viewState.contactsTypeFilter)) {
+            return false;
+          }
+          if (viewState.contactsShowUnreadOnly &&
+              connector.getUnreadCountForContact(contact) == 0) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   bool _matchesTypeFilter(Contact contact, ContactTypeFilter typeFilter) {
@@ -2123,6 +2439,8 @@ class _ContactTile extends StatelessWidget {
   final DateTime lastSeen;
   final int unreadCount;
   final bool isFavorite;
+  final bool? isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -2132,6 +2450,8 @@ class _ContactTile extends StatelessWidget {
     required this.lastSeen,
     required this.unreadCount,
     required this.isFavorite,
+    this.isSelected,
+    this.onSelectionChanged,
     required this.onTap,
     required this.onLongPress,
   });
@@ -2312,6 +2632,13 @@ class _ContactTile extends StatelessWidget {
                 ],
               ),
             ),
+            if (onSelectionChanged != null) ...[
+              const SizedBox(width: 4),
+              Checkbox(
+                value: isSelected ?? false,
+                onChanged: onSelectionChanged,
+              ),
+            ],
           ],
         ),
       ),
@@ -2349,6 +2676,8 @@ class _ContactTileEntrance extends StatelessWidget {
   final DateTime lastSeen;
   final int unreadCount;
   final bool isFavorite;
+  final bool? isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -2359,6 +2688,8 @@ class _ContactTileEntrance extends StatelessWidget {
     required this.lastSeen,
     required this.unreadCount,
     required this.isFavorite,
+    this.isSelected,
+    this.onSelectionChanged,
     required this.onTap,
     required this.onLongPress,
   });
@@ -2373,6 +2704,8 @@ class _ContactTileEntrance extends StatelessWidget {
         lastSeen: lastSeen,
         unreadCount: unreadCount,
         isFavorite: isFavorite,
+        isSelected: isSelected,
+        onSelectionChanged: onSelectionChanged,
         onTap: onTap,
         onLongPress: onLongPress,
       ),

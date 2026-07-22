@@ -656,20 +656,6 @@ class AppSettingsScreen extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
         const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ),
-          secondary: const Icon(Icons.location_searching, size: 20),
-          title: Text(context.l10n.appSettings_enableMessageTracing),
-          subtitle: Text(context.l10n.appSettings_enableMessageTracingSubtitle),
-          value: settingsService.settings.enableMessageTracing,
-          onChanged: (value) {
-            settingsService.setEnableMessageTracing(value);
-          },
-        ),
-        const Divider(height: 1, indent: 16),
         _buildChannelResendTimeoutTile(context, settingsService),
         const Divider(height: 1, indent: 16),
         _buildSendingDelayTile(context, settingsService),

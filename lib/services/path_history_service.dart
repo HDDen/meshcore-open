@@ -11,6 +11,8 @@ class PathHistoryService extends ChangeNotifier {
   final Map<String, _FloodStats> _floodStats = {};
   final Set<String> _pendingLoads = {};
   final Map<String, List<_DeferredPathRecord>> _deferredRecords = {};
+  int _historyGeneration = 0;
+  bool _isClearingAllHistories = false;
 
   // LRU cache eviction tracking
   static const int _maxCachedContacts = 50;
@@ -225,6 +227,7 @@ class PathHistoryService extends ChangeNotifier {
     double routeWeight = 1.0,
     DateTime? timestamp,
   }) {
+    if (_isClearingAllHistories) return;
     var history = _cache[contactPubKeyHex];
 
     if (history == null) {
@@ -246,8 +249,10 @@ class PathHistoryService extends ChangeNotifier {
         return;
       }
 
+      final loadGeneration = _historyGeneration;
       _pendingLoads.add(contactPubKeyHex);
       _loadHistoryFromStorage(contactPubKeyHex).then((loaded) {
+        if (loadGeneration != _historyGeneration) return;
         _cache[contactPubKeyHex] =
             loaded ??
             ContactPathHistory(
@@ -362,13 +367,16 @@ class PathHistoryService extends ChangeNotifier {
   }
 
   List<PathRecord> getRecentPaths(String contactPubKeyHex) {
+    if (_isClearingAllHistories) return [];
     final history = _cache[contactPubKeyHex];
     if (history != null) {
       _trackAccess(contactPubKeyHex);
       return history.recentPaths;
     }
 
+    final loadGeneration = _historyGeneration;
     _loadHistoryFromStorage(contactPubKeyHex).then((loaded) {
+      if (loadGeneration != _historyGeneration) return;
       if (loaded != null) {
         _cache[contactPubKeyHex] = loaded;
         _trackAccess(contactPubKeyHex);
@@ -568,14 +576,22 @@ class PathHistoryService extends ChangeNotifier {
     }
   }
 
-  void clearAllHistories() {
+  Future<void> clearAllHistories() async {
+    _isClearingAllHistories = true;
+    _historyGeneration++;
     _cache.clear();
     _cacheAccessOrder.clear();
     _autoRotationIndex.clear();
     _floodStats.clear();
-    _storage.clearAllPathHistories();
-    _version = 0;
+    _pendingLoads.clear();
+    _deferredRecords.clear();
+    _version++;
     notifyListeners();
+    try {
+      await _storage.clearAllPathHistories();
+    } finally {
+      _isClearingAllHistories = false;
+    }
   }
 }
 

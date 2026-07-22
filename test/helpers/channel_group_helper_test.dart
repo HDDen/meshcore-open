@@ -117,5 +117,32 @@ void main() {
 
       expect(reordered, ['Beta', 'Gamma', 'Alpha']);
     });
+
+    test('migrates legacy room and contact keys to one peer identity', () {
+      final publicKey = List.filled(32, 'ab').join();
+      final groups = normalizeChannelGroupsForPeers([
+        ChannelGroup(name: 'First', channelNames: ['room:$publicKey', 'Alpha']),
+        ChannelGroup(
+          name: 'Second',
+          channelNames: ['contact:${publicKey.toUpperCase()}', 'Beta'],
+        ),
+      ]);
+
+      expect(groups[0].channelNames, ['peer:$publicKey', 'Alpha']);
+      expect(groups[1].channelNames, ['Beta']);
+    });
+
+    test('migrates and deduplicates persisted manual screen order', () {
+      final publicKey = List.filled(32, 'cd').join();
+
+      final order = normalizeChannelScreenOrderForPeers([
+        'room:$publicKey',
+        'contact:${publicKey.toUpperCase()}',
+        'channel:2',
+        'channel:2',
+      ]);
+
+      expect(order, ['peer:$publicKey', 'channel:2']);
+    });
   });
 }

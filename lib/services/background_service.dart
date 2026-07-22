@@ -10,6 +10,8 @@ class BackgroundService {
   // Stop it only after the last active feature releases its reason.
   final Set<String> _keepAliveReasons = {};
   String? Function()? _languageOverrideProvider;
+  bool _connectionLost = false;
+  int _notificationRevision = 0;
 
   /// Allows the app to expose its current language override (e.g. from
   /// AppSettingsService) so the foreground notification matches the app UI
@@ -52,8 +54,26 @@ class BackgroundService {
     final l10n = await _loadLocalizations();
     await FlutterForegroundTask.startService(
       notificationTitle: l10n.background_serviceTitle,
-      notificationText: l10n.background_serviceText,
+      notificationText: _connectionLost
+          ? l10n.app_connectionLostReconnect
+          : l10n.background_serviceText,
       callback: startCallback,
+    );
+  }
+
+  Future<void> setConnectionLost(bool connectionLost) async {
+    if (!PlatformInfo.isAndroid) return;
+    _connectionLost = connectionLost;
+    final revision = ++_notificationRevision;
+    final running = await FlutterForegroundTask.isRunningService;
+    if (!running) return;
+    final l10n = await _loadLocalizations();
+    if (revision != _notificationRevision) return;
+    await FlutterForegroundTask.updateService(
+      notificationTitle: l10n.background_serviceTitle,
+      notificationText: connectionLost
+          ? l10n.app_connectionLostReconnect
+          : l10n.background_serviceText,
     );
   }
 
@@ -77,6 +97,10 @@ class BackgroundService {
   Future<void> stop({String reason = 'connection'}) async {
     if (!PlatformInfo.isAndroid) return;
     _keepAliveReasons.remove(reason);
+    if (reason == 'connection') {
+      _connectionLost = false;
+      _notificationRevision++;
+    }
     if (_keepAliveReasons.isNotEmpty) return;
 
     final running = await FlutterForegroundTask.isRunningService;

@@ -550,7 +550,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_deleteAllPathsSubtitle =>
-      'Очистить все данные о маршрутах в контактах.';
+      'Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.';
 
   @override
   String get settings_sendAdvertisement => 'Отправить анонс';
@@ -4891,7 +4891,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.';
 
   @override
-  String get discoveredContacts_Title => 'Обнаруженные контакты';
+  String get discoveredContacts_Title => 'Добавить обнаруженные контакты';
 
   @override
   String get discoveredContacts_noMatching => 'Нет совпадающих контактов';
@@ -5125,7 +5125,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get background_serviceTitle => 'MeshCore работает';
 
   @override
-  String get background_serviceText => 'Поддерживает BLE-соединение';
+  String get background_serviceText => 'Поддерживаем соединение с нодой';
 
   @override
   String appSettings_translationModelDeleted(String name) {
@@ -5785,4 +5785,53 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_appSettingsCustomChemistry => 'Своя';
+
+  @override
+  String get map_clearDiscoveredContactsCache => 'Очистить локальный кэш узлов';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclamer =>
+      'Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Активность репитеров';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Потеряно соединение с нодой, выполняется переподключение...';
+
+  @override
+  String get app_connectionLostReconnected =>
+      'Соединение с нодой восстановлено';
+
+  @override
+  String get contacts_batchOperations => 'Массовые операции';
+
+  @override
+  String get contacts_batchOperations_notSelected =>
+      'Вы не выбрали контакты для обработки!';
+
+  @override
+  String get contacts_batchOperations_removeConfirm =>
+      'Удалить выбранные контакты из памяти ноды?';
+
+  @override
+  String get contacts_batchOperations_removeSuccess =>
+      'Выбранные контакты удалены';
+
+  @override
+  String get contacts_batchOperations_removeFail =>
+      'Не удалось удалить контакты - проверьте их список снова';
+
+  @override
+  String get contacts_batchOperations_commonSuccess =>
+      'Операция прошла успешно';
+
+  @override
+  String get contacts_batchOperations_commonFail =>
+      'Не удалось завершить операцию';
+
+  @override
+  String get contacts_batchOperations_selectFiltered =>
+      'Выбрать отфильтрованные';
 }

@@ -175,6 +175,8 @@ https://creativecommons.org/licenses/by/4.0/
 class MeshCoreApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> _navigatorKey =
       GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   final MeshCoreConnector connector;
   final MessageRetryService retryService;
@@ -212,16 +214,126 @@ class MeshCoreApp extends StatefulWidget {
 }
 
 class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
+  bool _hadReadyConnection = false;
+  bool _recoveringConnection = false;
+  bool _scannerNavigationScheduled = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.connector.addListener(_handleConnectionStateChanged);
+    _hadReadyConnection = widget.connector.isSessionReady;
+    if (_hadReadyConnection) {
+      unawaited(widget.connector.resumePendingOutgoingMessages());
+    } else {
+      widget.connector.pausePendingOutgoingMessages();
+    }
   }
 
   @override
   void dispose() {
+    widget.connector.removeListener(_handleConnectionStateChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handleConnectionStateChanged() {
+    final connector = widget.connector;
+    if (connector.wasManuallyDisconnected) {
+      _hadReadyConnection = false;
+      _recoveringConnection = false;
+      _scheduleScannerNavigation();
+      return;
+    }
+    if (connector.isConnected) {
+      _scannerNavigationScheduled = false;
+    }
+
+    if (_hadReadyConnection &&
+        !connector.isConnected &&
+        !connector.isRecoveringConnection) {
+      _hadReadyConnection = false;
+      _recoveringConnection = false;
+      MeshCoreApp._scaffoldMessengerKey.currentState?.clearSnackBars();
+      _scheduleScannerNavigation();
+      return;
+    }
+
+    if (_hadReadyConnection &&
+        !connector.isConnected &&
+        connector.isRecoveringConnection &&
+        !_recoveringConnection) {
+      _recoveringConnection = true;
+      connector.pausePendingOutgoingMessages();
+      _showConnectionSnackBar(
+        isError: true,
+        text: (l10n) => l10n.app_connectionLostReconnect,
+      );
+      return;
+    }
+
+    if (connector.hasCompletedSelfInfoHandshake && _recoveringConnection) {
+      _recoveringConnection = false;
+      _showConnectionSnackBar(
+        isError: false,
+        text: (l10n) => l10n.app_connectionLostReconnected,
+      );
+    }
+
+    if (connector.isSessionReady) {
+      _hadReadyConnection = true;
+      unawaited(connector.resumePendingOutgoingMessages());
+    }
+  }
+
+  void _scheduleScannerNavigation() {
+    if (_scannerNavigationScheduled) return;
+    _scannerNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      MeshCoreApp._navigatorKey.currentState?.popUntil(
+        (route) => route.isFirst,
+      );
+    });
+  }
+
+  void _showConnectionSnackBar({
+    required bool isError,
+    required String Function(AppLocalizations l10n) text,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = MeshCoreApp._navigatorKey.currentContext;
+      final messenger = MeshCoreApp._scaffoldMessengerKey.currentState;
+      if (context == null || messenger == null) return;
+      final l10n = AppLocalizations.of(context);
+      final content = Text(text(l10n));
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: isError
+                ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: messenger.hideCurrentSnackBar,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: content,
+                    ),
+                  )
+                : content,
+            backgroundColor: isError ? Colors.red : Colors.green,
+            padding: isError ? EdgeInsets.zero : null,
+            duration: isError
+                ? const Duration(days: 1)
+                : const Duration(seconds: 4),
+          ),
+        );
+    });
   }
 
   @override
@@ -268,6 +380,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           return MaterialApp(
             title: 'MeshCore Open (Advanced mod)',
             navigatorKey: MeshCoreApp._navigatorKey,
+            scaffoldMessengerKey: MeshCoreApp._scaffoldMessengerKey,
             navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [

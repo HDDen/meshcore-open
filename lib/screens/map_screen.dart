@@ -892,6 +892,14 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     PopupMenuItem(
                       child: PopupMenuRow(
+                        icon: Icons.delete_sweep_outlined,
+                        text: context.l10n.map_clearDiscoveredContactsCache,
+                      ),
+                      onTap: () =>
+                          _clearDiscoveredContactsCache(context, connector),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
                         text: context.l10n.common_disconnect,
@@ -4765,6 +4773,36 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  Future<void> _clearDiscoveredContactsCache(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.map_clearDiscoveredContactsCache),
+        content: Text(context.l10n.map_clearDiscoveredContactsCacheDisclamer),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.common_deleteAll),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      connector.removeAllDiscoveredContacts();
+    }
+  }
+
   void _showMarkerInfo(_SharedMarker marker) {
     showDialog(
       context: context,
@@ -4874,47 +4912,55 @@ class _MapScreenState extends State<MapScreen>
   }) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.place),
-              title: Text(context.l10n.map_shareMarkerHere),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _shareMarker(
-                  context: context,
-                  connector: connector,
-                  position: position,
-                  defaultLabel: context.l10n.map_pointOfInterest,
-                  flags: 'poi',
-                );
-              },
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.place),
+                  title: Text(context.l10n.map_shareMarkerHere),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _shareMarker(
+                      context: context,
+                      connector: connector,
+                      position: position,
+                      defaultLabel: context.l10n.map_pointOfInterest,
+                      flags: 'poi',
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.my_location),
+                  title: Text(context.l10n.map_setAsMyLocation),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final successMsg = context.l10n.settings_locationUpdated;
+                    Navigator.pop(sheetContext);
+                    if (!connector.isConnected) return;
+                    await connector.setNodeLocation(
+                      lat: position.latitude,
+                      lon: position.longitude,
+                    );
+                    await connector.refreshDeviceInfo();
+                    if (!mounted) return;
+                    messenger.showSnackBar(SnackBar(content: Text(successMsg)));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.close),
+                  title: Text(context.l10n.common_cancel),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.my_location),
-              title: Text(context.l10n.map_setAsMyLocation),
-              onTap: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final successMsg = context.l10n.settings_locationUpdated;
-                Navigator.pop(sheetContext);
-                if (!connector.isConnected) return;
-                await connector.setNodeLocation(
-                  lat: position.latitude,
-                  lon: position.longitude,
-                );
-                await connector.refreshDeviceInfo();
-                if (!mounted) return;
-                messenger.showSnackBar(SnackBar(content: Text(successMsg)));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: Text(context.l10n.common_cancel),
-              onTap: () => Navigator.pop(sheetContext),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -5007,6 +5053,7 @@ class _MapScreenState extends State<MapScreen>
 
     await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) {
           return Consumer<MeshCoreConnector>(
@@ -5019,112 +5066,123 @@ class _MapScreenState extends State<MapScreen>
                   )
                   .toList();
               return SafeArea(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                        child: Text(
-                          context.l10n.map_sendToContact,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText:
-                                context.l10n.contacts_searchContactsNoNumber,
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setSheetState(() {
-                              query = value.toLowerCase();
-                            });
-                          },
-                        ),
-                      ),
-                      ...allContacts
-                          .where(
-                            (contact) =>
-                                query.isEmpty ||
-                                matchesContactQuery(contact, query),
-                          )
-                          .map((contact) {
-                            return ListTile(
-                              leading: const Icon(Icons.person),
-                              title: Text(contact.name),
-                              onTap: () {
-                                Navigator.pop(sheetContext);
-                                liveConnector.sendMessage(contact, markerText);
-                              },
-                            );
-                          }),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                        child: Text(
-                          context.l10n.map_sendToChannel,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      if (liveConnector.isLoadingChannels)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: LinearProgressIndicator(),
-                        )
-                      else if (liveConnector.channels
-                          .where((c) => !c.isEmpty)
-                          .isEmpty)
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: Text(
+                            context.l10n.map_sendToContact,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          child: Text(context.l10n.map_noChannelsAvailable),
-                        )
-                      else
-                        ...liveConnector.channels.where((c) => !c.isEmpty).map((
-                          channel,
-                        ) {
-                          final isPublic = _isPublicChannel(channel);
-                          final label = channel.name.isEmpty
-                              ? 'Channel ${channel.index}'
-                              : channel.name;
-                          return ListTile(
-                            leading: Icon(
-                              isPublic ? Icons.public : Icons.tag,
-                              color: isPublic
-                                  ? MapPalette.cluster
-                                  : MapPalette.repeater,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText:
+                                  context.l10n.contacts_searchContactsNoNumber,
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
-                            title: Text(label),
-                            onTap: () async {
-                              Navigator.pop(sheetContext);
-                              final canSend = isPublic
-                                  ? await _confirmPublicShare(context, label)
-                                  : true;
-                              if (canSend) {
-                                liveConnector.sendChannelMessage(
-                                  channel,
-                                  markerText,
-                                );
-                              }
+                            onChanged: (value) {
+                              setSheetState(() {
+                                query = value.toLowerCase();
+                              });
                             },
-                          );
-                        }),
-                    ],
+                          ),
+                        ),
+                        ...allContacts
+                            .where(
+                              (contact) =>
+                                  query.isEmpty ||
+                                  matchesContactQuery(contact, query),
+                            )
+                            .map((contact) {
+                              return ListTile(
+                                leading: const Icon(Icons.person),
+                                title: Text(contact.name),
+                                onTap: () {
+                                  Navigator.pop(sheetContext);
+                                  liveConnector.sendMessage(
+                                    contact,
+                                    markerText,
+                                  );
+                                },
+                              );
+                            }),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: Text(
+                            context.l10n.map_sendToChannel,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (liveConnector.isLoadingChannels)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: LinearProgressIndicator(),
+                          )
+                        else if (liveConnector.channels
+                            .where((c) => !c.isEmpty)
+                            .isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(context.l10n.map_noChannelsAvailable),
+                          )
+                        else
+                          ...liveConnector.channels
+                              .where((c) => !c.isEmpty)
+                              .map((channel) {
+                                final isPublic = _isPublicChannel(channel);
+                                final label = channel.name.isEmpty
+                                    ? 'Channel ${channel.index}'
+                                    : channel.name;
+                                return ListTile(
+                                  leading: Icon(
+                                    isPublic ? Icons.public : Icons.tag,
+                                    color: isPublic
+                                        ? MapPalette.cluster
+                                        : MapPalette.repeater,
+                                  ),
+                                  title: Text(label),
+                                  onTap: () async {
+                                    Navigator.pop(sheetContext);
+                                    final canSend = isPublic
+                                        ? await _confirmPublicShare(
+                                            context,
+                                            label,
+                                          )
+                                        : true;
+                                    if (canSend) {
+                                      liveConnector.sendChannelMessage(
+                                        channel,
+                                        markerText,
+                                      );
+                                    }
+                                  },
+                                );
+                              }),
+                      ],
+                    ),
                   ),
                 ),
               );

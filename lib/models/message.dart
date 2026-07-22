@@ -310,6 +310,8 @@ class Message {
   static Message outgoing(
     Uint8List recipientKey,
     String text, {
+    String? messageId,
+    DateTime? timestamp,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
@@ -342,10 +344,11 @@ class Message {
       mcmpSenderName: mcmpSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       isCli: false,
       status: MessageStatus.pending,
+      messageId: messageId,
       pathLength: pathLength,
       pathBytes: pathBytes,
     );

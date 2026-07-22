@@ -98,7 +98,7 @@
   "settings_privacyModeDisabled": "Режим конфиденциальности выключен",
   "settings_actions": "Действия",
   "settings_deleteAllPaths": "Удалить все маршруты",
-  "settings_deleteAllPathsSubtitle": "Очистить все данные о маршрутах в контактах.",
+  "settings_deleteAllPathsSubtitle": "Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.",
   "settings_sendAdvertisement": "Отправить анонс",
   "settings_sendAdvertisementSubtitle": "Анонсировать присутствие сейчас",
   "settings_advertisementSent": "Анонс отправлен",
@@ -1227,7 +1227,7 @@
   "discoveredContacts_contactAdded": "Контакт добавлен",
   "discoveredContacts_copyContact": "Копировать контакт в буфер обмена",
   "discoveredContacts_addContact": "Добавить контакт",
-  "discoveredContacts_Title": "Обнаруженные контакты",
+  "discoveredContacts_Title": "Добавить обнаруженные контакты",
   "discoveredContacts_deleteContact": "Удалить контакт",
   "contactsSettings_overwriteOldestSubtitle": "Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.",
   "common_deleteAll": "Удалить все",
@@ -1480,7 +1480,7 @@
   "repeater_guestTools": "Инструменты для гостей",
   "common_done": "Готово",
   "background_serviceTitle": "MeshCore работает",
-  "background_serviceText": "Поддерживает BLE-соединение",
+  "background_serviceText": "Поддерживаем соединение с нодой",
   "appSettings_translationModelDeleted": "Удалено {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
@@ -2400,5 +2400,18 @@
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Отображать серверы с историей в одном экране с каналами",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Отображать контакты с историей в одном экране с каналами",
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
-  "settings_appSettingsCustomChemistry": "Своя"
+  "settings_appSettingsCustomChemistry": "Своя",
+  "map_clearDiscoveredContactsCache": "Очистить локальный кэш узлов",
+  "map_clearDiscoveredContactsCacheDisclamer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.",
+  "snrIndicator_v2_nearByRepeaters": "Активность репитеров",
+  "app_connectionLostReconnect": "Потеряно соединение с нодой, выполняется переподключение...",
+  "app_connectionLostReconnected": "Соединение с нодой восстановлено",
+  "contacts_batchOperations": "Массовые операции",
+  "contacts_batchOperations_notSelected": "Вы не выбрали контакты для обработки!",
+  "contacts_batchOperations_removeConfirm": "Удалить выбранные контакты из памяти ноды?",
+  "contacts_batchOperations_removeSuccess": "Выбранные контакты удалены",
+  "contacts_batchOperations_removeFail": "Не удалось удалить контакты - проверьте их список снова",
+  "contacts_batchOperations_commonSuccess": "Операция прошла успешно",
+  "contacts_batchOperations_commonFail": "Не удалось завершить операцию",
+  "contacts_batchOperations_selectFiltered": "Выбрать отфильтрованные"
 }
