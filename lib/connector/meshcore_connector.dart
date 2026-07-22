@@ -8843,8 +8843,11 @@ class MeshCoreConnector extends ChangeNotifier {
     String text, {
     bool estimateSignatureOverhead = true,
   }) {
+    final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
     final isStructuredPayload =
+        MCOImageV3Codec.isTextPayload(trimmedLeft) ||
+        trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|') ||
@@ -8907,8 +8910,11 @@ class MeshCoreConnector extends ChangeNotifier {
     String text, {
     bool estimateSignatureOverhead = true,
   }) {
+    final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
     final isStructuredPayload =
+        MCOImageV3Codec.isTextPayload(trimmedLeft) ||
+        trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         parseSharedContactText(trimmed) != null ||
