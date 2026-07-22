@@ -29,6 +29,8 @@ import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcmp_signature_verifier.dart';
+import '../helpers/south_frame_fragment_reassembler.dart';
+import '../helpers/south_queued_fragment_ack_tracker.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -247,6 +249,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
   final StreamController<Uint8List> _receivedFramesController =
       StreamController<Uint8List>.broadcast();
+  final SouthFrameFragmentReassembler _southFrameFragmentReassembler =
+      SouthFrameFragmentReassembler();
+  final SouthQueuedFragmentAckTracker _southQueuedFragmentAckTracker =
+      SouthQueuedFragmentAckTracker();
 
   /// Emits when a signed MCMP v3 channel/room message could not be signed by
   /// the node (message signing was requested but the signature came back
@@ -404,6 +410,7 @@ class MeshCoreConnector extends ChangeNotifier {
   MessageRetryService? _retryService;
   PathHistoryService? _pathHistoryService;
   AppSettingsService? _appSettingsService;
+  bool _lastSouthNodeEnableFragmentedFrames = true;
   BackgroundService? _backgroundService;
   final NotificationService _notificationService = NotificationService();
   BleDebugLogService? _bleDebugLogService;
@@ -2051,10 +2058,15 @@ class MeshCoreConnector extends ChangeNotifier {
         SharedMessageHistoryMode.disabled;
     _lastNoRetransmissionWarningSeconds =
         appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
+    _lastSouthNodeEnableFragmentedFrames =
+        appSettingsService?.settings.southNodeEnableFragmentedFrames ?? true;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
     _translationService = translationService;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
+    _southFrameFragmentReassembler.onWarning = (message) {
+      _appDebugLogService?.warn(message, tag: 'Protocol');
+    };
     _backgroundService = backgroundService;
     _timeoutPredictionService = timeoutPredictionService;
     _usbManager.setDebugLogService(_appDebugLogService);
@@ -2125,6 +2137,14 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleAppSettingsChanged() {
     final settings = _appSettingsService?.settings;
     _syncBackgroundTcpService();
+    final fragmentedFramesEnabled =
+        settings?.southNodeEnableFragmentedFrames ?? true;
+    if (fragmentedFramesEnabled != _lastSouthNodeEnableFragmentedFrames) {
+      _lastSouthNodeEnableFragmentedFrames = fragmentedFramesEnabled;
+      _southFrameFragmentReassembler.clear();
+      _southQueuedFragmentAckTracker.clear();
+      if (isConnected) unawaited(_renegotiateSouthFrameFragments());
+    }
     final noRetransmissionWarningSeconds =
         settings?.noRetransmissionWarningSeconds ?? 0;
     if (noRetransmissionWarningSeconds != _lastNoRetransmissionWarningSeconds) {
@@ -2141,6 +2161,31 @@ class MeshCoreConnector extends ChangeNotifier {
     _refreshActiveSharedMessageHistory();
     unawaited(_refreshContactMessageSummaries());
     notifyListeners();
+  }
+
+  bool get _southFrameFragmentsEnabled =>
+      _appSettingsService?.settings.southNodeEnableFragmentedFrames ?? true;
+
+  Uint8List _buildAppStartFrame() {
+    // Firmware treats every APP_START as a fresh fragmentation session.
+    _southFrameFragmentReassembler.clear();
+    _southQueuedFragmentAckTracker.clear();
+    return buildAppStartFrame(
+      appName: buildMeshCoreOpenAppName(
+        enableSouthFrameFragments: _southFrameFragmentsEnabled,
+      ),
+    );
+  }
+
+  Future<void> _renegotiateSouthFrameFragments() async {
+    try {
+      await sendFrame(_buildAppStartFrame());
+    } catch (error) {
+      _appDebugLogService?.warn(
+        'Could not renegotiate FR01 support: $error',
+        tag: 'Protocol',
+      );
+    }
   }
 
   bool get _shouldKeepTcpInBackground {
@@ -3911,6 +3956,8 @@ class MeshCoreConnector extends ChangeNotifier {
   void _resetConnectionHandshakeState() {
     _contactCacheLoadGeneration++;
     _contactCacheLoadFuture = null;
+    _southFrameFragmentReassembler.clear();
+    _southQueuedFragmentAckTracker.clear();
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -4063,6 +4110,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _stopBatteryPolling();
     _stopRadioStatsPolling();
     _stopRxWatchdog();
+    _southFrameFragmentReassembler.clear();
+    _southQueuedFragmentAckTracker.clear();
 
     await _usbFrameSubscription?.cancel();
     _usbFrameSubscription = null;
@@ -4317,7 +4366,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _gpsLocationPollTimer = null;
         return;
       }
-      unawaited(sendFrame(buildAppStartFrame()));
+      unawaited(sendFrame(_buildAppStartFrame()));
     });
   }
 
@@ -4419,7 +4468,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _webInitialHandshakeRequestSent = true;
     }
     await sendFrame(buildDeviceQueryFrame());
-    await sendFrame(buildAppStartFrame());
+    await sendFrame(_buildAppStartFrame());
     await requestBatteryStatus(force: true);
     await sendFrame(buildGetCustomVarsFrame());
     await sendFrame(buildGetAutoAddFlagsFrame());
@@ -4435,7 +4484,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final waiter = Completer<void>();
     _selfInfoRefreshWaiters.add(waiter);
     try {
-      await sendFrame(buildAppStartFrame());
+      await sendFrame(_buildAppStartFrame());
       await waiter.future.timeout(timeout, onTimeout: () {});
     } catch (_) {
       // Return the latest cached location below; menu actions should not throw.
@@ -4468,7 +4517,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _webInitialHandshakeRequestSent = true;
     }
     await sendFrame(buildDeviceQueryFrame());
-    await sendFrame(buildAppStartFrame());
+    await sendFrame(_buildAppStartFrame());
     await sendFrame(buildGetCustomVarsFrame());
     await requestBatteryStatus();
     await sendFrame(buildGetAutoAddFlagsFrame());
@@ -4492,7 +4541,7 @@ class MeshCoreConnector extends ChangeNotifier {
           return;
         }
         attempts += 1;
-        unawaited(sendFrame(buildAppStartFrame()));
+        unawaited(sendFrame(_buildAppStartFrame()));
         if (attempts >= maxAttempts) {
           timer.cancel();
         }
@@ -4510,7 +4559,7 @@ class MeshCoreConnector extends ChangeNotifier {
         timer.cancel();
         return;
       }
-      unawaited(sendFrame(buildAppStartFrame()));
+      unawaited(sendFrame(_buildAppStartFrame()));
     });
   }
 
@@ -6659,8 +6708,14 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     try {
-      await sendFrame(buildSyncNextMessageFrame());
+      final frame = _southQueuedFragmentAckTracker
+          .buildSyncNextMessageFrameFor(enabled: _southFrameFragmentsEnabled);
+      if (_southFrameFragmentsEnabled) {
+        _southQueuedFragmentAckTracker.markSyncRequestSent();
+      }
+      await sendFrame(frame);
     } catch (e) {
+      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
       debugPrint('[QueueSync] Error sending sync request: $e');
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
@@ -6681,6 +6736,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // Retry
       _queueSyncRetries++;
       _queuedMessageSyncInFlight = false;
+      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
       _requestNextQueuedMessage();
     } else {
       // Max retries reached, give up
@@ -6688,6 +6744,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _queuedMessageSyncInFlight = false;
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
+      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
       _queueSyncRetries = 0;
       notifyListeners();
       _continueAfterQueuedMessageSync();
@@ -7032,7 +7089,45 @@ class MeshCoreConnector extends ChangeNotifier {
       _rxWatchdogReconnects = 0;
     }
 
-    final frame = Uint8List.fromList(data);
+    final incomingFrame = Uint8List.fromList(data);
+    if (!_southFrameFragmentsEnabled ||
+        incomingFrame[0] != SouthFrameFragmentReassembler.fragmentFrameType) {
+      if (_southFrameFragmentsEnabled) {
+        _southQueuedFragmentAckTracker.takeSyncResponseContext(
+          incomingFrame,
+          isAcceptedQueuedFragment: false,
+        );
+      }
+      _handleCompanionFrame(incomingFrame);
+      return;
+    }
+
+    _bleDebugLogService?.logFrame(
+      incomingFrame,
+      outgoing: false,
+      note: 'raw FR01 fragment len=${incomingFrame.length}',
+    );
+    final result = _southFrameFragmentReassembler.ingestDetailed(incomingFrame);
+    final acceptedFragment = result.acceptedFragment;
+    final isResponseToSyncNextMessage = _southQueuedFragmentAckTracker
+        .takeSyncResponseContext(
+          incomingFrame,
+          isAcceptedQueuedFragment: acceptedFragment?.isQueued == true,
+        );
+    if (isResponseToSyncNextMessage && acceptedFragment != null) {
+      _southQueuedFragmentAckTracker.recordQueuedFragment(
+        acceptedFragment,
+        enabled: true,
+      );
+      if (result.frames.isEmpty) _handleQueuedMessageReceived();
+    }
+    for (final frame in result.frames) {
+      _handleCompanionFrame(frame);
+    }
+  }
+
+  void _handleCompanionFrame(Uint8List frame) {
+    if (frame.isEmpty) return;
     _receivedFramesController.add(frame);
     _bleDebugLogService?.logFrame(frame, outgoing: false);
 
@@ -10958,6 +11053,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _stopGpsLocationPolling();
     _stopRadioStatsPolling();
     _stopRxWatchdog();
+    _southFrameFragmentReassembler.clear();
+    _southQueuedFragmentAckTracker.clear();
     _latestRadioStats = null;
     radioStatsNotifier.value = null;
     _prevTotalAirSecs = 0;

@@ -710,6 +710,12 @@ Uint8List buildRemoveContactFrame(Uint8List pubKey) {
 
 // Build CMD_APP_START frame
 // Format: [cmd][app_ver][reserved x6][app_name...]
+String buildMeshCoreOpenAppName({required bool enableSouthFrameFragments}) {
+  return enableSouthFrameFragments
+      ? 'MeshCoreOpen;cap=frmfrg1'
+      : 'MeshCoreOpen';
+}
+
 Uint8List buildAppStartFrame({
   String appName = 'MeshCoreOpen',
   int appVersion = 1,
@@ -801,8 +807,20 @@ Uint8List buildRebootFrame() {
 }
 
 // Build CMD_SYNC_NEXT_MESSAGE frame
-Uint8List buildSyncNextMessageFrame() {
-  return Uint8List.fromList([cmdSyncNextMessage]);
+Uint8List buildSyncNextMessageFrame({
+  int? ackFragmentId,
+  int? ackFragmentIndex,
+}) {
+  if (ackFragmentId == null || ackFragmentIndex == null) {
+    return Uint8List.fromList([cmdSyncNextMessage]);
+  }
+  return Uint8List.fromList(<int>[
+    cmdSyncNextMessage,
+    0x01,
+    ackFragmentId & 0xFF,
+    (ackFragmentId >> 8) & 0xFF,
+    ackFragmentIndex & 0xFF,
+  ]);
 }
 
 // Build CMD_GET_CHANNEL frame
