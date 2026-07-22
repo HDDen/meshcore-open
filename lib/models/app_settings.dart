@@ -219,6 +219,7 @@ class AppSettings {
   final bool roomServerShowNotemptyOnChatscreen;
   final bool roomServerShowNotemptyContactsOnChatscreen;
   final bool roomServerDisableRoomAndContactsSorting;
+  final bool southNodeEnableFragmentedFrames;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -525,6 +526,7 @@ class AppSettings {
     this.roomServerShowNotemptyOnChatscreen = false,
     this.roomServerShowNotemptyContactsOnChatscreen = false,
     this.roomServerDisableRoomAndContactsSorting = true,
+    this.southNodeEnableFragmentedFrames = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -652,6 +654,7 @@ class AppSettings {
           roomServerShowNotemptyContactsOnChatscreen,
       'room_server_disable_room_and_contacts_sorting':
           roomServerDisableRoomAndContactsSorting,
+      'south_node_enable_fragmented_frames': southNodeEnableFragmentedFrames,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -805,6 +808,8 @@ class AppSettings {
       roomServerDisableRoomAndContactsSorting:
           json['room_server_disable_room_and_contacts_sorting'] as bool? ??
           true,
+      southNodeEnableFragmentedFrames:
+          json['south_node_enable_fragmented_frames'] as bool? ?? true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -983,6 +988,7 @@ class AppSettings {
     bool? roomServerShowNotemptyOnChatscreen,
     bool? roomServerShowNotemptyContactsOnChatscreen,
     bool? roomServerDisableRoomAndContactsSorting,
+    bool? southNodeEnableFragmentedFrames,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -1100,6 +1106,9 @@ class AppSettings {
       roomServerDisableRoomAndContactsSorting:
           roomServerDisableRoomAndContactsSorting ??
           this.roomServerDisableRoomAndContactsSorting,
+      southNodeEnableFragmentedFrames:
+          southNodeEnableFragmentedFrames ??
+          this.southNodeEnableFragmentedFrames,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,

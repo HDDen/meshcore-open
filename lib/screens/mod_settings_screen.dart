@@ -599,6 +599,26 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                SectionHeader(context.l10n.settings_modSettingsSouthNode),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    value: settings.southNodeEnableFragmentedFrames,
+                    onChanged:
+                        settingsService.setSouthNodeEnableFragmentedFrames,
+                    secondary: const Icon(Icons.call_split_outlined),
+                    title: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsSouthNode_enableFragmentedFrames,
+                    ),
+                    subtitle: Text(
+                      context
+                          .l10n
+                          .settings_modSettingsSouthNode_enableFragmentedFramesDscr,
+                    ),
+                  ),
+                ),
               ],
             );
           },

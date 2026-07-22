@@ -2413,5 +2413,8 @@
   "contacts_batchOperations_removeFail": "Не удалось удалить контакты - проверьте их список снова",
   "contacts_batchOperations_commonSuccess": "Операция прошла успешно",
   "contacts_batchOperations_commonFail": "Не удалось завершить операцию",
-  "contacts_batchOperations_selectFiltered": "Выбрать отфильтрованные"
+  "contacts_batchOperations_selectFiltered": "Выбрать отфильтрованные",
+  "settings_modSettingsSouthNode": "Улучшенная работа с South Edition",
+  "settings_modSettingsSouthNode_enableFragmentedFrames": "Включить фрагментирование node-to-companion пакетов",
+  "settings_modSettingsSouthNode_enableFragmentedFramesDscr": "Например, позволяет слышать подтверждения ретрансляций для длинных пакетов"
 }

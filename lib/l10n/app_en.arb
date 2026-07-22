@@ -3249,5 +3249,8 @@
   "contacts_batchOperations_removeFail": "Removing contacts is failed – please check contacts again",
   "contacts_batchOperations_commonSuccess": "Operation is successfull",
   "contacts_batchOperations_commonFail": "Operation is failed",
-  "contacts_batchOperations_selectFiltered": "Select filtered"
+  "contacts_batchOperations_selectFiltered": "Select filtered",
+  "settings_modSettingsSouthNode": "Improved compatibility with South Edition",
+  "settings_modSettingsSouthNode_enableFragmentedFrames": "Enable fragmentation of node-to-companion packets",
+  "settings_modSettingsSouthNode_enableFragmentedFramesDscr": "For example, it allows you to hear long packets retranslations"
 }
