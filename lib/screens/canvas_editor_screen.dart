@@ -459,232 +459,242 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .watch<AppSettingsService>()
         .settings
         .canvasShowLockButton;
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.chat_canvas)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: showLockButton && _canvasInputLocked
-              ? const NeverScrollableScrollPhysics()
-              : null,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.chat_canvasChangeSize,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSizeInput(
-                      controller: _widthController,
-                      label: context.l10n.chat_canvasWidth,
-                      fallbackValue: _width,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSizeInput(
-                      controller: _heightController,
-                      label: context.l10n.chat_canvasHeight,
-                      fallbackValue: _height,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.l10n.chat_canvasUnlockSize),
-                value: _unlockCanvasSize,
-                onChanged: _setCanvasSizeUnlocked,
-              ),
-              const SizedBox(height: 8),
-              _buildSizeActions(),
-              const SizedBox(height: 8),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.l10n.chat_canvasGridShow),
-                value: _showGrid,
-                onChanged: _setCanvasGridShown,
-              ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.l10n.chat_canvasRulerShow),
-                value: _showRuler,
-                onChanged: _setCanvasRulerShown,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<MCOImageEncodingVersion>(
-                key: ValueKey(_encodingVersion),
-                initialValue: _encodingVersion,
-                decoration: InputDecoration(
-                  labelText: context.l10n.chat_canvasFormatVer,
-                  border: const OutlineInputBorder(),
+    // Drawing strokes must not trigger the platform back-swipe gesture and
+    // close the editor; leaving is via the app bar button or Cancel/Send.
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.l10n.chat_canvas),
+          leading: BackButton(onPressed: () => Navigator.pop(context)),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: showLockButton && _canvasInputLocked
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.chat_canvasChangeSize,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                items: [
-                  for (final version in _availableEncodingVersions)
-                    DropdownMenuItem(
-                      value: version,
-                      child: Text(_encodingVersionLabel(version)),
-                    ),
-                ],
-                onChanged: (version) {
-                  if (version == null) return;
-                  _changeEncodingVersion(version);
-                },
-              ),
-              if (_supportsCompressionLevelSelection) ...[
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  key: ValueKey(_compressionLevel),
-                  initialValue: _compressionLevel,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.chat_canvasCompressionLevel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem<int>(
-                      value: MCOImageCodec.compressionLevelExtreme,
-                      child: Text(
-                        context.l10n.chat_canvasCompressionLevelExtreme,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSizeInput(
+                        controller: _widthController,
+                        label: context.l10n.chat_canvasWidth,
+                        fallbackValue: _width,
                       ),
                     ),
-                    DropdownMenuItem<int>(
-                      value: MCOImageCodec.compressionLevelHigh,
-                      child: Text(context.l10n.chat_canvasCompressionLevelHigh),
-                    ),
-                    DropdownMenuItem<int>(
-                      value: MCOImageCodec.compressionLevelNormal,
-                      child: Text(
-                        context.l10n.chat_canvasCompressionLevelNormal,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildSizeInput(
+                        controller: _heightController,
+                        label: context.l10n.chat_canvasHeight,
+                        fallbackValue: _height,
                       ),
                     ),
                   ],
-                  onChanged: _setCompressionLevel,
                 ),
-              ],
-              const SizedBox(height: 16),
-              DropdownButtonFormField<Object>(
-                key: ValueKey(
-                  _paletteProfile.isDynamic
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.chat_canvasUnlockSize),
+                  value: _unlockCanvasSize,
+                  onChanged: _setCanvasSizeUnlocked,
+                ),
+                const SizedBox(height: 8),
+                _buildSizeActions(),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.chat_canvasGridShow),
+                  value: _showGrid,
+                  onChanged: _setCanvasGridShown,
+                ),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.chat_canvasRulerShow),
+                  value: _showRuler,
+                  onChanged: _setCanvasRulerShown,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<MCOImageEncodingVersion>(
+                  key: ValueKey(_encodingVersion),
+                  initialValue: _encodingVersion,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.chat_canvasFormatVer,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final version in _availableEncodingVersions)
+                      DropdownMenuItem(
+                        value: version,
+                        child: Text(_encodingVersionLabel(version)),
+                      ),
+                  ],
+                  onChanged: (version) {
+                    if (version == null) return;
+                    _changeEncodingVersion(version);
+                  },
+                ),
+                if (_supportsCompressionLevelSelection) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    key: ValueKey(_compressionLevel),
+                    initialValue: _compressionLevel,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.chat_canvasCompressionLevel,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem<int>(
+                        value: MCOImageCodec.compressionLevelExtreme,
+                        child: Text(
+                          context.l10n.chat_canvasCompressionLevelExtreme,
+                        ),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: MCOImageCodec.compressionLevelHigh,
+                        child: Text(
+                          context.l10n.chat_canvasCompressionLevelHigh,
+                        ),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: MCOImageCodec.compressionLevelNormal,
+                        child: Text(
+                          context.l10n.chat_canvasCompressionLevelNormal,
+                        ),
+                      ),
+                    ],
+                    onChanged: _setCompressionLevel,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                DropdownButtonFormField<Object>(
+                  key: ValueKey(
+                    _paletteProfile.isDynamic
+                        ? _PaletteSelectorValue.dynamic
+                        : _paletteProfile,
+                  ),
+                  initialValue: _paletteProfile.isDynamic
                       ? _PaletteSelectorValue.dynamic
                       : _paletteProfile,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.chat_canvasPaletteMode,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    if (_supportsDynamicPalettes)
+                      DropdownMenuItem<Object>(
+                        value: _PaletteSelectorValue.dynamic,
+                        child: Text(context.l10n.chat_canvasPaletteDynamic),
+                      ),
+                    for (final profile in _paletteProfileOptions)
+                      DropdownMenuItem<Object>(
+                        value: profile,
+                        child: Text(_paletteLabel(profile)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    if (value == _PaletteSelectorValue.dynamic) {
+                      _changePaletteProfile(_dynamicPaletteProfile);
+                      return;
+                    }
+                    if (value is PaletteProfile) {
+                      _changePaletteProfile(value);
+                    }
+                  },
                 ),
-                initialValue: _paletteProfile.isDynamic
-                    ? _PaletteSelectorValue.dynamic
-                    : _paletteProfile,
-                decoration: InputDecoration(
-                  labelText: context.l10n.chat_canvasPaletteMode,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  if (_supportsDynamicPalettes)
-                    DropdownMenuItem<Object>(
-                      value: _PaletteSelectorValue.dynamic,
-                      child: Text(context.l10n.chat_canvasPaletteDynamic),
-                    ),
-                  for (final profile in _paletteProfileOptions)
-                    DropdownMenuItem<Object>(
-                      value: profile,
-                      child: Text(_paletteLabel(profile)),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value == null) return;
-                  if (value == _PaletteSelectorValue.dynamic) {
-                    _changePaletteProfile(_dynamicPaletteProfile);
-                    return;
-                  }
-                  if (value is PaletteProfile) {
-                    _changePaletteProfile(value);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              if (_paletteProfile.isDynamic)
-                _buildDynamicPaletteControls()
-              else
-                _buildPalette(palette),
-              const SizedBox(height: 16),
-              Text(
-                context.l10n.chat_canvasPaletteDynamicUsed,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              _buildUsedPalette(),
-              if (_supportsAlphaTransparency) ...[
                 const SizedBox(height: 12),
-                _buildPaletteAlphaControl(),
-              ],
-              const SizedBox(height: 16),
-              _buildTools(),
-              const SizedBox(height: 20),
-              _buildCanvas(palette, showLockButton: showLockButton),
-              const SizedBox(height: 8),
-              _buildPayloadInfo(context, showLockButton: showLockButton),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loadCanvasFromFile,
-                      icon: const Icon(Icons.file_open_outlined),
-                      label: Text(
-                        _canvasLoadLabel(context),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                if (_paletteProfile.isDynamic)
+                  _buildDynamicPaletteControls()
+                else
+                  _buildPalette(palette),
+                const SizedBox(height: 16),
+                Text(
+                  context.l10n.chat_canvasPaletteDynamicUsed,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                _buildUsedPalette(),
+                if (_supportsAlphaTransparency) ...[
+                  const SizedBox(height: 12),
+                  _buildPaletteAlphaControl(),
+                ],
+                const SizedBox(height: 16),
+                _buildTools(),
+                const SizedBox(height: 20),
+                _buildCanvas(palette, showLockButton: showLockButton),
+                const SizedBox(height: 8),
+                _buildPayloadInfo(context, showLockButton: showLockButton),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _loadCanvasFromFile,
+                        icon: const Icon(Icons.file_open_outlined),
+                        label: Text(
+                          _canvasLoadLabel(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _saveCanvasToPng,
-                      icon: const Icon(Icons.save_alt_outlined),
-                      label: Text(
-                        context.l10n.chat_canvasSave,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _saveCanvasToPng,
+                        icon: const Icon(Icons.save_alt_outlined),
+                        label: Text(
+                          context.l10n.chat_canvasSave,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                    ),
+                  ],
+                ),
+                if (ChannelBinaryDataHelper.isAvailable) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _saveCanvasToBinary,
+                      icon: const Icon(Icons.data_object_outlined),
+                      label: Text(context.l10n.chat_canvasSaveBinary),
                     ),
                   ),
                 ],
-              ),
-              if (ChannelBinaryDataHelper.isAvailable) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _saveCanvasToBinary,
-                    icon: const Icon(Icons.data_object_outlined),
-                    label: Text(context.l10n.chat_canvasSaveBinary),
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _clearCanvas,
+                      child: Text(context.l10n.common_clear),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(context.l10n.common_cancel),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _sendCanvas,
+                      child: Text(context.l10n.common_send),
+                    ),
+                  ],
                 ),
               ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _clearCanvas,
-                    child: Text(context.l10n.common_clear),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(context.l10n.common_cancel),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _sendCanvas,
-                    child: Text(context.l10n.common_send),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
