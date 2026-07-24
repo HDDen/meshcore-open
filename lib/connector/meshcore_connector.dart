@@ -11202,8 +11202,12 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleCustomVars(Uint8List frame) {
     final buf = BufferReader(frame.sublist(1));
     try {
-      _currentCustomVars = _parseKeyValueString(buf.readCString());
-      _settingsSectionsService?.setDeviceRawVars(_currentCustomVars);
+      final rawVars = buf.readCString();
+      _currentCustomVars = _parseKeyValueString(rawVars);
+      _settingsSectionsService?.setDeviceRawVars(
+        _currentCustomVars,
+        raw: rawVars,
+      );
       // Reflect current GPS state in the polling timer (handles initial
       // device state on connect as well as external CLI/USB toggles).
       if (_currentCustomVars?['gps'] == '1') {

@@ -11,7 +11,7 @@ class SettingsSectionsService extends ChangeNotifier {
 
   void onAboutDialogDismissed(BuildContext context) {}
 
-  void setDeviceRawVars(Map<String, String>? vars) {}
+  void setDeviceRawVars(Map<String, String>? vars, {String? raw}) {}
 
   void setDeviceVarsRequester(Future<void> Function()? requester) {}
 
