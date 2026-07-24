@@ -9,9 +9,13 @@ class SettingsSectionsService extends ChangeNotifier {
 
   bool tryEnServ(String input) => false;
 
-  void setDeviceOverride(bool value) {}
-
   void onAboutDialogDismissed(BuildContext context) {}
+
+  void setDeviceRawVars(Map<String, String>? vars) {}
+
+  void setDeviceVarsRequester(Future<void> Function()? requester) {}
+
+  void setActiveDeviceKey(String? publicKeyHex) {}
 
   bool get southFrameFragmentsEnabled => false;
 

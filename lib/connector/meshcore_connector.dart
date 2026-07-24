@@ -2064,6 +2064,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _appSettingsService?.addListener(_handleAppSettingsChanged);
     _settingsSectionsService?.removeListener(_handleSettingsSectionsChanged);
     _settingsSectionsService = settingsSectionsService;
+    settingsSectionsService?.setDeviceVarsRequester(() async {
+      if (!isConnected) return;
+      await sendFrame(buildGetCustomVarsFrame());
+    });
     _lastSouthNodeEnableFragmentedFrames =
         settingsSectionsService?.southFrameFragmentsEnabled ?? false;
     _settingsSectionsService?.addListener(_handleSettingsSectionsChanged);
@@ -4160,6 +4164,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _txCharacteristic = null;
     _deviceDisplayName = null;
     _deviceId = null;
+    // Device capability flags must not leak into the next connection.
+    _currentCustomVars = null;
+    _settingsSectionsService?.setDeviceRawVars(null);
+    _settingsSectionsService?.setActiveDeviceKey(null);
     _contacts.clear();
     _discoveredContacts.clear();
     _conversations.clear();
@@ -7476,6 +7484,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelStore.setPublicKeyHex = selfPublicKeyHex;
     _nodeIdentityStore.setPublicKeyHex = selfPublicKeyHex;
     _unreadStore.setPublicKeyHex = selfPublicKeyHex;
+    _settingsSectionsService?.setActiveDeviceKey(selfPublicKeyHex);
     _channelMessageStore.beginLegacyIndexMigration();
     _channelSettingsStore.beginLegacyIndexMigration();
     _channelRegionStore.beginLegacyIndexMigration();
@@ -11092,6 +11101,11 @@ class MeshCoreConnector extends ChangeNotifier {
     // Preserve deviceId and displayName for UI display during reconnection
     // They're only cleared on manual disconnect via disconnect() method
     _hasReceivedDeviceInfo = false;
+    // Device capability flags must not leak into the next connection; they
+    // are re-fetched with custom vars during the replacement handshake.
+    _currentCustomVars = null;
+    _settingsSectionsService?.setDeviceRawVars(null);
+    _settingsSectionsService?.setActiveDeviceKey(null);
     // Handshake flags must not survive an unexpected drop: a stale
     // _awaitingSelfInfo makes _requestDeviceInfo a no-op on the next connect,
     // and a stale CLI flag swallows the next real RESP_CODE_SENT.
@@ -11189,6 +11203,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final buf = BufferReader(frame.sublist(1));
     try {
       _currentCustomVars = _parseKeyValueString(buf.readCString());
+      _settingsSectionsService?.setDeviceRawVars(_currentCustomVars);
       // Reflect current GPS state in the polling timer (handles initial
       // device state on connect as well as external CLI/USB toggles).
       if (_currentCustomVars?['gps'] == '1') {
