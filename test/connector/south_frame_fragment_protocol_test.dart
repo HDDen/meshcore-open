@@ -29,10 +29,7 @@ void main() {
 
   test('queued FR01 ACK uses the extended SYNC_NEXT layout', () {
     expect(
-      buildSyncNextMessageFrame(
-        ackFragmentId: 0x1234,
-        ackFragmentIndex: 1,
-      ),
+      buildSyncNextMessageFrame(ackFragmentId: 0x1234, ackFragmentIndex: 1),
       orderedEquals(<int>[cmdSyncNextMessage, 0x01, 0x34, 0x12, 0x01]),
     );
     expect(

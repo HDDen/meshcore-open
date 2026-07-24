@@ -214,10 +214,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "de": [
@@ -422,10 +419,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "es": [
@@ -643,10 +637,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "fr": [
@@ -864,10 +855,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "hu": [
@@ -1085,10 +1073,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "it": [
@@ -1386,10 +1371,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ja": [
@@ -1607,10 +1589,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ko": [
@@ -1828,10 +1807,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "nl": [
@@ -2129,10 +2105,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pl": [
@@ -2350,10 +2323,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "pt": [
@@ -2651,10 +2621,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "ru": [
@@ -2886,10 +2853,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sl": [
@@ -3107,10 +3071,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "sv": [
@@ -3408,10 +3369,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "uk": [
@@ -3629,10 +3587,7 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ],
 
   "zh": [
@@ -3850,9 +3805,6 @@
     "contacts_batchOperations_removeFail",
     "contacts_batchOperations_commonSuccess",
     "contacts_batchOperations_commonFail",
-    "contacts_batchOperations_selectFiltered",
-    "settings_modSettingsSouthNode",
-    "settings_modSettingsSouthNode_enableFragmentedFrames",
-    "settings_modSettingsSouthNode_enableFragmentedFramesDscr"
+    "contacts_batchOperations_selectFiltered"
   ]
 }

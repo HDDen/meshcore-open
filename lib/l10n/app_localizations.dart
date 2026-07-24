@@ -9975,24 +9975,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select filtered'**
   String get contacts_batchOperations_selectFiltered;
-
-  /// No description provided for @settings_modSettingsSouthNode.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved compatibility with South Edition'**
-  String get settings_modSettingsSouthNode;
-
-  /// No description provided for @settings_modSettingsSouthNode_enableFragmentedFrames.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable fragmentation of node-to-companion packets'**
-  String get settings_modSettingsSouthNode_enableFragmentedFrames;
-
-  /// No description provided for @settings_modSettingsSouthNode_enableFragmentedFramesDscr.
-  ///
-  /// In en, this message translates to:
-  /// **'For example, it allows you to hear long packets retranslations'**
-  String get settings_modSettingsSouthNode_enableFragmentedFramesDscr;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:pointycastle/export.dart';
 import 'package:flutter/foundation.dart';
@@ -410,7 +411,8 @@ class MeshCoreConnector extends ChangeNotifier {
   MessageRetryService? _retryService;
   PathHistoryService? _pathHistoryService;
   AppSettingsService? _appSettingsService;
-  bool _lastSouthNodeEnableFragmentedFrames = true;
+  SettingsSectionsService? _settingsSectionsService;
+  bool _lastSouthNodeEnableFragmentedFrames = false;
   BackgroundService? _backgroundService;
   final NotificationService _notificationService = NotificationService();
   BleDebugLogService? _bleDebugLogService;
@@ -2043,6 +2045,7 @@ class MeshCoreConnector extends ChangeNotifier {
     required MessageRetryService retryService,
     required PathHistoryService pathHistoryService,
     AppSettingsService? appSettingsService,
+    SettingsSectionsService? settingsSectionsService,
     TranslationService? translationService,
     BleDebugLogService? bleDebugLogService,
     AppDebugLogService? appDebugLogService,
@@ -2058,9 +2061,12 @@ class MeshCoreConnector extends ChangeNotifier {
         SharedMessageHistoryMode.disabled;
     _lastNoRetransmissionWarningSeconds =
         appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
-    _lastSouthNodeEnableFragmentedFrames =
-        appSettingsService?.settings.southNodeEnableFragmentedFrames ?? true;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
+    _settingsSectionsService?.removeListener(_handleSettingsSectionsChanged);
+    _settingsSectionsService = settingsSectionsService;
+    _lastSouthNodeEnableFragmentedFrames =
+        settingsSectionsService?.southFrameFragmentsEnabled ?? false;
+    _settingsSectionsService?.addListener(_handleSettingsSectionsChanged);
     _translationService = translationService;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
@@ -2134,17 +2140,19 @@ class MeshCoreConnector extends ChangeNotifier {
     _retryService?.setMaxRetries(maxRetries);
   }
 
-  void _handleAppSettingsChanged() {
-    final settings = _appSettingsService?.settings;
-    _syncBackgroundTcpService();
-    final fragmentedFramesEnabled =
-        settings?.southNodeEnableFragmentedFrames ?? true;
+  void _handleSettingsSectionsChanged() {
+    final fragmentedFramesEnabled = _southFrameFragmentsEnabled;
     if (fragmentedFramesEnabled != _lastSouthNodeEnableFragmentedFrames) {
       _lastSouthNodeEnableFragmentedFrames = fragmentedFramesEnabled;
       _southFrameFragmentReassembler.clear();
       _southQueuedFragmentAckTracker.clear();
       if (isConnected) unawaited(_renegotiateSouthFrameFragments());
     }
+  }
+
+  void _handleAppSettingsChanged() {
+    final settings = _appSettingsService?.settings;
+    _syncBackgroundTcpService();
     final noRetransmissionWarningSeconds =
         settings?.noRetransmissionWarningSeconds ?? 0;
     if (noRetransmissionWarningSeconds != _lastNoRetransmissionWarningSeconds) {
@@ -2164,7 +2172,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool get _southFrameFragmentsEnabled =>
-      _appSettingsService?.settings.southNodeEnableFragmentedFrames ?? true;
+      _settingsSectionsService?.southFrameFragmentsEnabled ?? false;
 
   Uint8List _buildAppStartFrame() {
     // Firmware treats every APP_START as a fresh fragmentation session.
@@ -6708,8 +6716,9 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     try {
-      final frame = _southQueuedFragmentAckTracker
-          .buildSyncNextMessageFrameFor(enabled: _southFrameFragmentsEnabled);
+      final frame = _southQueuedFragmentAckTracker.buildSyncNextMessageFrameFor(
+        enabled: _southFrameFragmentsEnabled,
+      );
       if (_southFrameFragmentsEnabled) {
         _southQueuedFragmentAckTracker.markSyncRequestSent();
       }

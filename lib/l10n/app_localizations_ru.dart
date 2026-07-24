@@ -5834,16 +5834,4 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get contacts_batchOperations_selectFiltered =>
       'Выбрать отфильтрованные';
-
-  @override
-  String get settings_modSettingsSouthNode =>
-      'Улучшенная работа с South Edition';
-
-  @override
-  String get settings_modSettingsSouthNode_enableFragmentedFrames =>
-      'Включить фрагментирование node-to-companion пакетов';
-
-  @override
-  String get settings_modSettingsSouthNode_enableFragmentedFramesDscr =>
-      'Например, позволяет слышать подтверждения ретрансляций для длинных пакетов';
 }

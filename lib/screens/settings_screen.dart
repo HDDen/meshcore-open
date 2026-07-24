@@ -13,6 +13,7 @@ import '../models/contact.dart';
 import '../models/radio_settings.dart';
 import '../services/app_settings_service.dart';
 import '../services/app_debug_log_service.dart';
+import 'package:mco_service/mco_service.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -1180,28 +1181,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showAbout(BuildContext context) {
+  Future<void> _showAbout(BuildContext context) async {
     final l10n = context.l10n;
-    showAboutDialog(
+    // showAboutDialog has no completion future, so show the same AboutDialog
+    // through showDialog to observe when it gets dismissed (by any means).
+    await showDialog<void>(
       context: context,
-      applicationName: l10n.appTitle,
-      applicationVersion: _appVersion.isEmpty
-          ? l10n.common_loading
-          : _appVersion,
-      applicationLegalese: l10n.settings_aboutLegalese,
-      children: [
-        const SizedBox(height: 16),
-        Text(l10n.settings_aboutDescription),
-        const SizedBox(height: 12),
-        LinkHandler.buildLinkifyText(
-          context: context,
-          text: _formatAboutModLink(l10n.settings_aboutModLink),
-          style: DefaultTextStyle.of(context).style,
-        ),
-        const SizedBox(height: 8),
-        Text(l10n.settings_aboutModDescription),
-      ],
+      builder: (dialogContext) => AboutDialog(
+        applicationName: l10n.appTitle,
+        applicationVersion: _appVersion.isEmpty
+            ? l10n.common_loading
+            : _appVersion,
+        applicationLegalese: l10n.settings_aboutLegalese,
+        children: [
+          const SizedBox(height: 16),
+          Text(l10n.settings_aboutDescription),
+          const SizedBox(height: 12),
+          LinkHandler.buildLinkifyText(
+            context: context,
+            text: _formatAboutModLink(l10n.settings_aboutModLink),
+            style: DefaultTextStyle.of(context).style,
+          ),
+          const SizedBox(height: 8),
+          Text(l10n.settings_aboutModDescription),
+        ],
+      ),
     );
+    if (!context.mounted) return;
+    context.read<SettingsSectionsService>().onAboutDialogDismissed(context);
   }
 
   String _formatAboutModLink(String text) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import 'package:mco_service/mco_service.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
@@ -599,25 +600,8 @@ class ModSettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SectionHeader(context.l10n.settings_modSettingsSouthNode),
-                MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: SwitchListTile(
-                    value: settings.southNodeEnableFragmentedFrames,
-                    onChanged:
-                        settingsService.setSouthNodeEnableFragmentedFrames,
-                    secondary: const Icon(Icons.call_split_outlined),
-                    title: Text(
-                      context
-                          .l10n
-                          .settings_modSettingsSouthNode_enableFragmentedFrames,
-                    ),
-                    subtitle: Text(
-                      context
-                          .l10n
-                          .settings_modSettingsSouthNode_enableFragmentedFramesDscr,
-                    ),
-                  ),
+                ...context.watch<SettingsSectionsService>().modSettingsSections(
+                  context,
                 ),
               ],
             );

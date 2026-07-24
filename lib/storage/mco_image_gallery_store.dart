@@ -464,8 +464,7 @@ class MCOImageGalleryStore {
         groupName: groupName,
         binaryPayload: binaryPayload,
         pngBytes: pngBytes,
-        originalFileName:
-            json['originalFileName'] as String? ?? 'mcoimg.png',
+        originalFileName: json['originalFileName'] as String? ?? 'mcoimg.png',
         originalRelativePaths: [
           for (final path
               in json['originalRelativePaths'] as List<dynamic>? ?? const [])

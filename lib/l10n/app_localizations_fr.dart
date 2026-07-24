@@ -5847,16 +5847,4 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contacts_batchOperations_selectFiltered => 'Select filtered';
-
-  @override
-  String get settings_modSettingsSouthNode =>
-      'Improved compatibility with South Edition';
-
-  @override
-  String get settings_modSettingsSouthNode_enableFragmentedFrames =>
-      'Enable fragmentation of node-to-companion packets';
-
-  @override
-  String get settings_modSettingsSouthNode_enableFragmentedFramesDscr =>
-      'For example, it allows you to hear long packets retranslations';
 }

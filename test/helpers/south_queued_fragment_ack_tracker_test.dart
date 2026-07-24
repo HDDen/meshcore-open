@@ -38,10 +38,7 @@ void main() {
       tracker.markSyncRequestSent();
 
       expect(
-        tracker.takeSyncResponseContext(
-          frame,
-          isAcceptedQueuedFragment: true,
-        ),
+        tracker.takeSyncResponseContext(frame, isAcceptedQueuedFragment: true),
         isTrue,
       );
       tracker.recordQueuedFragment(_info(queued: true), enabled: true);
@@ -60,10 +57,7 @@ void main() {
       tracker.markSyncRequestSent();
 
       expect(
-        tracker.takeSyncResponseContext(
-          frame,
-          isAcceptedQueuedFragment: false,
-        ),
+        tracker.takeSyncResponseContext(frame, isAcceptedQueuedFragment: false),
         isFalse,
       );
       expect(tracker.awaitingSyncResponse, isTrue);

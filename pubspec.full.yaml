@@ -44,6 +44,8 @@ dependencies:
       url: https://github.com/MeshEnvy/flserial.git
       ref: 48216310061efc8d5d217cc18014fc2cb501646e
   provider: ^6.1.5+1
+  mco_service:
+    path: packages/mco_service_stub
   shared_preferences: ^2.2.2
   uuid: ^4.3.3
   flutter_map: ^8.2.2

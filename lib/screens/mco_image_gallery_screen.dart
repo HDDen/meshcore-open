@@ -95,9 +95,7 @@ class _MCOImageGalleryScreenState extends State<MCOImageGalleryScreen> {
     }
   }
 
-  Future<MCOImageGalleryItem> _itemForEdit(
-    MCOImageGalleryItem item,
-  ) async {
+  Future<MCOImageGalleryItem> _itemForEdit(MCOImageGalleryItem item) async {
     if (!item.showPngFallback) return item;
     final resolved = await _resolvePackOriginal(item);
     if (resolved == null || resolved.originalIsLottie) {
@@ -624,10 +622,8 @@ class _GalleryTile extends StatelessWidget {
       preview = Image.memory(
         item.pngBytes,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.broken_image_outlined,
-          color: scheme.onSurfaceVariant,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant),
       );
     } else {
       preview = Icon(
@@ -647,11 +643,7 @@ class _GalleryTile extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           child: Column(
             children: [
-              Expanded(
-                child: Center(
-                  child: preview,
-                ),
-              ),
+              Expanded(child: Center(child: preview)),
               const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,

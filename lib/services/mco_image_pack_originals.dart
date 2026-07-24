@@ -30,9 +30,9 @@ bool isMcoImageOriginalFileName(String fileName) {
 }
 
 int compareMcoImageOriginalFileNames(String left, String right) {
-  final byFormat = mcoImageOriginalPriority(left).compareTo(
-    mcoImageOriginalPriority(right),
-  );
+  final byFormat = mcoImageOriginalPriority(
+    left,
+  ).compareTo(mcoImageOriginalPriority(right));
   if (byFormat != 0) return byFormat;
   return _compareNaturalStrings(left, right);
 }
@@ -150,7 +150,7 @@ class McoImagePackOriginals {
   Future<void>? _loading;
   final Map<String, String?> _hashByText = {};
   final LinkedHashMap<String, Future<ResolvedMcoImageOriginal?>>
-      _resolvedByPath = LinkedHashMap();
+  _resolvedByPath = LinkedHashMap();
   final LinkedHashSet<String> _lottiePaths = LinkedHashSet();
 
   void replaceIndex(Map<String, List<String>> index) {
@@ -347,5 +347,4 @@ class McoImagePackOriginals {
       _loading = null;
     }
   }
-
 }

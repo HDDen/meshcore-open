@@ -26,6 +26,7 @@ import 'services/window_activation_service.dart';
 import 'services/map_tile_cache_service.dart';
 import 'services/chat_text_scale_service.dart';
 import 'services/translation_service.dart';
+import 'package:mco_service/mco_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
@@ -68,6 +69,7 @@ void main() async {
   final chatTextScaleService = ChatTextScaleService();
   final translationService = TranslationService(appSettingsService);
   final uiViewStateService = UiViewStateService();
+  final settingsSectionsService = SettingsSectionsService();
   final timeoutPredictionService = TimeoutPredictionService(storage);
   final wardriveService = WardriveService(
     connector,
@@ -76,6 +78,7 @@ void main() async {
 
   // Load settings
   await appSettingsService.loadSettings();
+  await settingsSectionsService.initialize();
 
   // Initialize app logger
   appLogger.initialize(
@@ -117,6 +120,7 @@ void main() async {
     retryService: retryService,
     pathHistoryService: pathHistoryService,
     appSettingsService: appSettingsService,
+    settingsSectionsService: settingsSectionsService,
     translationService: translationService,
     bleDebugLogService: bleDebugLogService,
     appDebugLogService: appDebugLogService,
@@ -145,6 +149,7 @@ void main() async {
       chatTextScaleService: chatTextScaleService,
       translationService: translationService,
       uiViewStateService: uiViewStateService,
+      settingsSectionsService: settingsSectionsService,
       timeoutPredictionService: timeoutPredictionService,
       wardriveService: wardriveService,
     ),
@@ -189,6 +194,7 @@ class MeshCoreApp extends StatefulWidget {
   final ChatTextScaleService chatTextScaleService;
   final TranslationService translationService;
   final UiViewStateService uiViewStateService;
+  final SettingsSectionsService settingsSectionsService;
   final TimeoutPredictionService timeoutPredictionService;
   final WardriveService wardriveService;
 
@@ -205,6 +211,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.chatTextScaleService,
     required this.translationService,
     required this.uiViewStateService,
+    required this.settingsSectionsService,
     required this.timeoutPredictionService,
     required this.wardriveService,
   });
@@ -370,6 +377,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.chatTextScaleService),
         ChangeNotifierProvider.value(value: widget.translationService),
         ChangeNotifierProvider.value(value: widget.uiViewStateService),
+        ChangeNotifierProvider.value(value: widget.settingsSectionsService),
         Provider.value(value: widget.storage),
         ChangeNotifierProvider.value(value: widget.mapTileCacheService),
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
@@ -383,8 +391,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
             scaffoldMessengerKey: MeshCoreApp._scaffoldMessengerKey,
             navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
-            localizationsDelegates: const [
+            localizationsDelegates: [
               AppLocalizations.delegate,
+              ...widget.settingsSectionsService.localizationsDelegates,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

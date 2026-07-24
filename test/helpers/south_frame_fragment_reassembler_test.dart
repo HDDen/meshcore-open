@@ -13,15 +13,16 @@ Uint8List _fragment({
   int? count,
   int? offset,
 }) {
-  final chunkOffset = offset ??
-      index * SouthFrameFragmentReassembler.chunkLength;
+  final chunkOffset =
+      offset ?? index * SouthFrameFragmentReassembler.chunkLength;
   final end = (chunkOffset + SouthFrameFragmentReassembler.chunkLength)
       .clamp(0, original.length)
       .toInt();
   final chunk = chunkOffset <= original.length
       ? original.sublist(chunkOffset, end)
       : <int>[];
-  final fragmentCount = count ??
+  final fragmentCount =
+      count ??
       (original.length + SouthFrameFragmentReassembler.chunkLength - 1) ~/
           SouthFrameFragmentReassembler.chunkLength;
   return Uint8List.fromList(<int>[

@@ -47,8 +47,13 @@ class MCOImageFileSaver {
     String originalFileName,
   ) async {
     final lower = originalFileName.toLowerCase();
-    final (suffix, extension, mimeType, uti, label) =
-        lower.endsWith('.lottie.json')
+    final (
+      suffix,
+      extension,
+      mimeType,
+      uti,
+      label,
+    ) = lower.endsWith('.lottie.json')
         ? (
             '.mcoimg.lottie.json',
             'json',

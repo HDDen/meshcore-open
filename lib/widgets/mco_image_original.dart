@@ -253,9 +253,7 @@ class _MCOImageOriginalOrFallbackState
             _rejectOriginal(resolved);
             imageWidget = replacementSizedFallback();
           } else {
-            imageWidget = _ViewportAwareLottie(
-              composition: composition,
-            );
+            imageWidget = _ViewportAwareLottie(composition: composition);
           }
         } else if (sharpness > 0) {
           final key = '${resolved.relativePath}|$sharpness';
@@ -313,10 +311,7 @@ class _ViewportAwareRasterState extends State<_ViewportAwareRaster> {
         if (visible == _visible || !mounted) return;
         setState(() => _visible = visible);
       },
-      child: TickerMode(
-        enabled: _visible,
-        child: widget.child,
-      ),
+      child: TickerMode(enabled: _visible, child: widget.child),
     );
   }
 }
@@ -342,7 +337,8 @@ class _ViewportAwareLottieState extends State<_ViewportAwareLottie>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _appResumed = WidgetsBinding.instance.lifecycleState == null ||
+    _appResumed =
+        WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _controller = AnimationController(
       vsync: this,
