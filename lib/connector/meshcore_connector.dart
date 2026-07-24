@@ -5850,10 +5850,12 @@ class MeshCoreConnector extends ChangeNotifier {
     // Signing shares the broadcast frame stream with all other command
     // traffic (battery/stats polling, flood-scope, channel-data sends, the
     // channel sync loop) and RESP_CODE_OK is emitted by many of those. So we
-    // never correlate on the ambiguous OK: we wait only for the sign-unique
-    // codes (RESP_CODE_SIGN_START / RESP_CODE_SIGNATURE) or RESP_CODE_ERR, and
-    // skip everything else. Data chunks are streamed back-to-back and the
-    // FINISH result is the authoritative gate.
+    // correlate the session boundaries on the sign-unique codes
+    // (RESP_CODE_SIGN_START / RESP_CODE_SIGNATURE). Each data chunk must still
+    // receive its OK before FINISH is sent: otherwise a rejected DATA followed
+    // by FINISH produces two ERR frames, and the second one can poison the next
+    // retry. RESP_CODE_OK is shared with other commands, so signing sessions
+    // should remain serialized and short.
     final buffered = <Uint8List>[];
     Completer<Uint8List>? waiter;
     Set<int>? waitCodes;
@@ -5919,9 +5921,10 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
 
-      // Stream the data chunks. Per-chunk OK acks are not correlated (the code
-      // is ambiguous); the transport preserves order and the node accumulates
-      // the chunks before FINISH.
+      // Confirm every chunk before advancing. In particular, do not send
+      // FINISH after a rejected DATA: the firmware would emit another ERR for
+      // the same failed session and that stale response could be mistaken for
+      // the result of the next retry.
       for (
         var offset = 0;
         offset < data.length;
@@ -5933,6 +5936,11 @@ class MeshCoreConnector extends ChangeNotifier {
         await sendFrame(
           buildSignDataFrame(Uint8List.sublistView(data, offset, end)),
         );
+        final dataResp = await waitForCodes({respCodeOk, respCodeErr});
+        if (dataResp[0] == respCodeErr) {
+          final errCode = dataResp.length > 1 ? dataResp[1] : -1;
+          throw Exception('Sign data rejected with error code $errCode');
+        }
       }
 
       await sendFrame(buildSignFinishFrame());
