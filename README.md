@@ -131,12 +131,50 @@ MeshCore Open is a cross-platform mobile application for communicating with Mesh
    flutter run
    ```
 
+### Build Profiles: lite / full (LLM translation)
+
+The app can be built in two profiles that differ in on-device LLM message
+translation support:
+
+- **lite** — no LLM translation, fewer dependencies, smaller binary
+  (this is how the checkout builds by default)
+- **full** — includes on-device LLM translation (`llamadart`)
+
+Switch the active profile with the bundled tool, then re-resolve dependencies:
+
+```bash
+# lite (no LLM translation):
+flutter clean
+dart run tool/use_translation_profile.dart lite
+flutter pub get
+```
+
+```bash
+# full (with LLM translation):
+flutter clean
+dart run tool/use_translation_profile.dart full
+flutter pub get
+```
+
+The tool copies `pubspec.lite.yaml` / `pubspec.full.yaml` over `pubspec.yaml`
+and swaps `lib/services/translation_service.dart` to the matching variant.
+The selected profile is sticky — it stays active for every subsequent build
+until you switch again. Always run `flutter pub get` after switching; when
+changing dependencies, edit all three pubspec files so a profile switch does
+not overwrite your change.
+
 ### Building for Release
 
 **Android APK:**
 
 ```bash
 flutter build apk --release
+```
+
+**Android APK, one per CPU architecture (smaller downloads):**
+
+```bash
+flutter build apk --release --split-per-abi
 ```
 
 **iOS:**
