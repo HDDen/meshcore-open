@@ -229,6 +229,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.settingsSectionsService.setUiContextProvider(
+      () => MeshCoreApp._navigatorKey.currentContext,
+    );
     widget.connector.addListener(_handleConnectionStateChanged);
     _hadReadyConnection = widget.connector.isSessionReady;
     if (_hadReadyConnection) {

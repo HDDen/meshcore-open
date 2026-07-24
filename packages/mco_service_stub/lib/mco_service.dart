@@ -15,6 +15,8 @@ class SettingsSectionsService extends ChangeNotifier {
 
   void setDeviceVarsRequester(Future<void> Function()? requester) {}
 
+  void setUiContextProvider(BuildContext? Function()? provider) {}
+
   void setActiveDeviceKey(String? publicKeyHex) {}
 
   bool get southFrameFragmentsEnabled => false;
