@@ -7,6 +7,10 @@ The older v1/v2 formats are intentionally not specified here. They remain in
 the project for compatibility with old messages and clients, but new
 implementations should target v3.
 
+A browser-oriented JavaScript implementation of the v3 encoder/decoder is also
+available in `docs/mcoimg-js/`. It is useful as a porting reference,
+cross-runtime test target and web integration example.
+
 ## Reference implementation
 
 The normative implementation files are:
@@ -1812,6 +1816,135 @@ text:
 The canvas itself can continue rendering and editing ordinary indexed pixels
 while compression runs in the background. Encoding progress and payload size
 are UI state; they are not part of the MCOimg v3 format.
+
+The same screen also demonstrates reusable `.mcoimg.bin` import/export. Export
+stores the canonical app payload without sender, not a channel transport
+envelope. For v3 this is:
+
+```text
+0x13 | packetNonce | imageHeader | dimensions | containerContext | image data
+```
+
+When that file is imported back into the editor, the app decodes it for the
+canvas but also adopts the imported binary body as the current encoded
+candidate. As long as the user does not change pixels, dimensions, palette,
+transparency, output target or compression settings, the editor can reuse that
+exact compressed representation instead of running the candidate search again.
+Before a later send, only the one-byte v3 `packetNonce` is refreshed; the
+compressed image bitstream remains byte-for-byte intact.
+
+### Built-in MCOimg gallery pattern
+
+`lib/screens/mco_image_gallery_screen.dart` and
+`lib/storage/mco_image_gallery_store.dart` are the reference app-side gallery
+integration. The gallery is not part of the wire format; it is a convenience UI
+for selecting already encoded MCOimg payloads.
+
+The app keeps two sources of gallery items:
+
+- user/imported items stored in app preferences;
+- installed image packs stored under the app support directory in
+  `mcoimg_packs/`.
+
+Every gallery item carries the `.mcoimg.bin` bytes that will be sent over the
+network. Pack items can also carry ordered "original" candidates, such as
+Lottie, PNG, GIF or JPEG files, which are used only for local preview and for
+replacing received LoRa-quality MCOimg messages with a higher-quality original
+when the receiver has the same pack installed.
+
+On gallery open, pack groups are loaded as ordinary collapsible gallery groups.
+The required default group for non-pack imports is the localized "common"
+group. Bundled packs may be shipped as Flutter assets under `assets/mcopacks/`;
+on startup/gallery access the store installs missing bundled `.mcoimg.pack`
+archives into the same app-support pack directory.
+
+### `*.mcoimg.pack` image packs
+
+An MCOimg image pack is a ZIP archive with the extension `*.mcoimg.pack`. The
+archive root contains `info.json` and an `images/` directory. Each direct
+subdirectory of `images/` represents one gallery item:
+
+```text
+/
+  info.json
+  images/
+    arbitrary-folder-name-1/
+      arbitrary-name.lottie.json | arbitrary-name.lottie |
+      arbitrary-name.png | arbitrary-name.gif |
+      arbitrary-name.jpg | arbitrary-name.jpeg
+      arbitrary-name.mcoimg.bin
+      arbitrary-name.md5?
+    arbitrary-folder-name-2/
+      ...
+```
+
+Every image folder must contain:
+
+- one `*.mcoimg.bin` file: the canonical MCOimg payload sent over the network;
+- at least one supported original file:
+  `*.lottie.json`, `*.lottie`, `*.png`, `*.gif`, `*.jpg` or `*.jpeg`.
+
+An image folder without a valid original file or without a `*.mcoimg.bin` file
+is skipped. Folder and file names are arbitrary, but import sanitizes them for
+safe filesystem storage. Items are ordered by the natural/alphanumeric order of
+their image folder names, so folders named `1`, `2`, `10` display in that order.
+
+If multiple original files are present for one item, the receiver tries them in
+this priority order:
+
+```text
+.lottie.json, .lottie, .png, .gif, .jpg, .jpeg
+```
+
+Files with the same format priority are ordered by natural filename order. If a
+higher-priority original cannot be loaded, the renderer falls back to the next
+candidate. If no original candidate works, the decoded MCOimg image is shown.
+
+The optional `*.md5` file stores the identity hash used to match a received
+MCOimg message to the pack original. Its content is a 32-character hexadecimal
+MD5 string. The canonical formula is implemented by
+`lib/helpers/mco_image_identity.dart`: lowercase MD5 of the `.mcoimg.bin` bytes,
+with the v3 body nonce byte zeroed before hashing. If the `*.md5` file is
+missing, the app computes the same hash from the `.mcoimg.bin` file while
+building the pack-originals index.
+
+`info.json` contains pack metadata:
+
+```json
+{
+  "name": "Pack name, for example Smiles",
+  "id": "Internal pack id, for example smiles",
+  "ver": "Pack version, for example 1.0.0",
+  "author": "Author name, for example Aiwan",
+  "authorUrl": "Optional author website URL",
+  "packUrl": "Optional URL where this pack can be downloaded",
+  "maxImageSize": 48
+}
+```
+
+Required fields are `name`, `id` and `ver`. `author`, `authorUrl`, `packUrl`
+and `maxImageSize` are optional. `maxImageSize`, when present and positive,
+limits the longest side of the gallery preview for that pack.
+
+The installed folder name is derived from metadata:
+
+```text
+mcoimgpack_<author-or-unknown>_<id>_<ver>
+```
+
+If a pack with the same derived folder name is imported again, the old installed
+folder is deleted and replaced by the new archive contents. Installed packs are
+listed alphabetically by `name`; the gallery group title is:
+
+```text
+name (author, ver. version)
+```
+
+or, when the author is absent:
+
+```text
+name (ver. version)
+```
 
 ## Encoder candidate search
 
