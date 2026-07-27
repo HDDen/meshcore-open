@@ -794,7 +794,7 @@
   "neighbors_receivedData": "Полученные данные о соседях",
   "neighbors_requestTimedOut": "Время ожидания данных о соседях истекло.",
   "neighbors_errorLoading": "Ошибка загрузки соседей: {error}",
-  "neighbors_repeatersNeighbors": "Соседи репитеров",
+  "neighbors_repeatersNeighbors": "Соседи репитера",
   "neighbors_noData": "Данные о соседях недоступны.",
   "neighbors_unknownContact": "Неизвестный {pubkey}",
   "channelPath_title": "Путь пакета",

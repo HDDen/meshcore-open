@@ -4121,7 +4121,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Ретранслятори-сусіди';
+  String get neighbors_repeatersNeighbors => 'Ретранслятор-сусіди';
 
   @override
   String get neighbors_noData => 'Дані про сусідів недоступні.';

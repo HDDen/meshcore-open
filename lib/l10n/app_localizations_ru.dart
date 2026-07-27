@@ -4119,7 +4119,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Соседи репитеров';
+  String get neighbors_repeatersNeighbors => 'Соседи репитера';
 
   @override
   String get neighbors_noData => 'Данные о соседях недоступны.';

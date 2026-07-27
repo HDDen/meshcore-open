@@ -1562,7 +1562,7 @@
   "neighbors_receivedData": "Дані сусідів отримано",
   "neighbors_requestTimedOut": "Час запиту сусідів вичерпано.",
   "neighbors_errorLoading": "Помилка завантаження сусідів: {error}",
-  "neighbors_repeatersNeighbors": "Ретранслятори-сусіди",
+  "neighbors_repeatersNeighbors": "Ретранслятор-сусіди",
   "neighbors_noData": "Дані про сусідів недоступні.",
   "channels_createPrivateChannelDesc": "Захищено секретним ключем.",
   "channels_joinPrivateChannel": "Приєднатись до приватного каналу",
