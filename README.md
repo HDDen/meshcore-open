@@ -1,263 +1,224 @@
-# MeshCore Open
+# MeshCore Open Advanced (MCOa)
 
-Open-source Flutter client for MeshCore LoRa mesh networking devices.
+Open-source Flutter client for MeshCore LoRa mesh networking devices — an extended fork of
+[MeshCore Open](https://github.com/zjs81/meshcore-open).
 
 ## Overview
 
-MeshCore Open is a cross-platform mobile application for communicating with MeshCore LoRa mesh network devices via Bluetooth Low Energy (BLE). The app enables long-range, off-grid communication through peer-to-peer messaging, public channels, and mesh networking capabilities.
+MeshCore Open Advanced (short: **MCOa**) is a fork of cross-platform client for MeshCore LoRa mesh
+network devices. It connects to a companion radio over **BLE, USB serial or TCP** and provides
+direct and channel chat, contact and channel management, on-map node tracking and repeater
+administration.
 
-**Website:** [meshcoreopen.org](https://meshcoreopen.org/)
+The fork started as a small experiment: adding **cyr2lat**, an alternative way of packing text,
+in which two-byte Cyrillic characters are replaced with visually similar single-byte Latin ones,
+saving around 20–30% of the packet payload. That single feature grew into a separate fork with a
+whole set of additions — about throughput, about what you can actually say over the mesh, and
+about bringing useful functionality together in one app:
 
-<a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/zjs81/meshcore-open">
-        <img src="assets/badges/badge_obtainium.png" height="80" align="center" alt="Get it on Obtainium"/>
-</a>
+1. **Compression via mesh-compressor** (credits [dimapanov](https://github.com/dimapanov/mesh-compressor/)), and — starting with the v3 format — signing of channel
+   messages, so authorship can be established reliably.
+2. **Self-contained images** that fit entirely into a single LoRa packet, with a bundled smileys
+   pack and an image gallery.
+3. **Built-in wardrive** — building a coverage map of the network.
+4. **DPI-adjusting** — allows you to scale the elements of the application interface.
+5. **Channel grouping**, delayed message sending with the option to cancel, and quick answers.
+6. **Multi-byte path hashes and regions** — these have recently appeared in the original
+   MeshCore Open as well.
+7. **Windows/iOS builds** — ready-to-install packages are available not only for Android and Linux, 
+but also for Windows and iOS (as .ipa files)
 
-## Screenshots
+- **Repository:** <https://github.com/HDDen/meshcore-open>
+- **Telegram group:** <https://t.me/mcoadvanced>
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/contacts.jpg" width="200"/><br/><p align="center"><b>Contacts</b></p></td>
-    <td><img src="docs/screenshots/chat1.jpg" width="200"/><br/><p align="center"><b>Chat</b></p></td>
-    <td><img src="docs/screenshots/chat2.jpg" width="200"/><br/><p align="center"><b>Reactions</b></p></td>
-    <td><img src="docs/screenshots/map.jpg" width="200"/><br/><p align="center"><b>Map</b></p></td>
-    <td><img src="docs/screenshots/channels.jpg" width="200"/><br/><p align="center"><b>Channels</b></p></td>
-  </tr>
-</table>
+## What MCOa adds - detailed
 
-## Features
+### Text compression — two additional selectable schemes
 
-### Core Functionality
+Compression is chosen per contact and per channel:
 
-- **Direct Messaging**: Private encrypted conversations with individual contacts
-- **Public Channels**: Broadcast messages to channel subscribers on the mesh network
-- **Contact Management**: Organize contacts, track last seen times, and manage conversation history
-- **Contact Groups**: Create custom groups to organize your mesh network contacts
-- **Message Reactions**: React to messages with emoji responses
-- **Message Replies**: Thread conversations with inline reply functionality
+- **cyr2lat** — not real compression: two-byte Cyrillic characters are replaced with visually
+  similar single-byte Latin ones, which saves around 20–30% of the packet payload. What makes the
+  method notable is that it is fully backwards compatible with every MeshCore application, since
+  it needs no decompression on the receiving side; the caveat is that it only applies to
+  non-English messages (Cyrillic, for example).
+- **MCMP** — the [mesh-compressor](https://dimapanov.github.io/mesh-compressor/) algorithm by
+  dimapanov: an arithmetic coder driven by a bundled statistical 9-gram language model. 
+  On typical chat text it reaches up to ~70% compression, so
+  a message roughly three times longer than usual still fits into a single packet.
 
-### Mesh Network
+### Signed messages (MCMP v3, Ed25519)
 
-- **Path Visualization**: View routing paths and signal quality for each contact
-- **Route Management**: Manual path overriding and automatic route rotation
-- **Signal Metrics**: Real-time SNR (Signal-to-Noise Ratio) tracking
-- **Node Discovery**: Automatic detection of nearby mesh nodes
-- **Repeater Support**: Connect to and manage repeater nodes for extended range
+MCMPv3 messages can carry an Ed25519 signature. Signing is performed by the node itself
+(`CMD_SIGN_START/DATA/FINISH`): the app assembles a canonical byte string — a domain separator,
+a context tag (channel or room), a binding value that ties the signature to that exact
+conversation (an HMAC of the channel PSK, or the room server's public key), the sender name, the
+message timestamp, the container flags, the reply anchor for replies, and the message text — and
+hands it to the node. The node signs that data with its own private key and returns only the
+resulting signature, without ever revealing the private key. The signature is placed inside the
+message and sent over the mesh; pairing it with text compression means those extra 64 bytes do
+not have to be paid for out of the text the user actually writes.
 
-### Map & Location
+**Verification happens entirely inside the app** against the public keys of known contacts — the
+firmware never verifies anything. The result is shown as a
+signature badge next to the message, and sender-name collisions are resolved by the verified key
+rather than by the displayed name.
 
-- **Live Map View**: Real-time visualization of mesh network nodes on an interactive map
-- **Node Filtering**: Filter by node type (chat, repeater, sensor) and time range
-- **Location Sharing**: Share GPS coordinates and custom markers with contacts
-- **Offline Maps**: Download map tiles for offline use in remote areas (with [StadiaMaps](https://stadiamaps.com/pricing/) Free Subscription API-Key)
-- **MGRS Coordinates**: Support for Military Grid Reference System coordinate format
+### Precise replies (MCMP v3)
 
-### Device Management
+You can now see exactly which message a participant is replying to, as long as they use MCMP v3.
+The packet carries a reply anchor: the name of the author of the quoted message and that
+message's timestamp. On the receiving side the anchor is matched against the local history — the
+author must be the same and the timestamp must match exactly, either the outer packet timestamp
+or the MCMP body timestamp — and the quoted message is then shown above the reply.
 
-- **BLE, USB, TCP Connection**: Scan and connect to MeshCore devices via Bluetooth, USB or TCP
-- **Device Settings**: Configure radio parameters, power settings, and network options
-- **Battery Monitoring**: Real-time battery status with chemistry-specific voltage curves
-- **Firmware Updates**: Over-the-air firmware updates via BLE (coming soon)
+If the original message never reached us, there is nothing to quote, so the reply degrades
+gracefully into a plain **@mention** of the quoted author — the same thing older clients show,
+and no worse than the classic "@name" convention that has no way of telling apart several
+messages from the same person.
 
-### Repeater Hub
+### MCOimg — small images over LoRa, in one packet payload
 
-- **CLI Access**: Full command-line interface to repeater nodes
-- **Settings Management**: Configure repeater behavior, power limits, and network settings
-- **Statistics Dashboard**: View repeater traffic, connected clients, and system health
-- **Remote Management**: Administer repeaters from anywhere on the mesh network
+A purpose-built lossless raster format that squeezes a very small but recognisable picture 
+(mainly pixel art) into a LoRa-sized (~160 bytes) payload:
+quantisation to fixed or dynamic palettes (up to 512 colours) and a brute-force search across
+many encoders, keeping whichever output is smallest. A typical image size is 30x30 px with 
+6 different colours, or up to around 40x40 px with a monochrome palette
 
-## Technical Details
+Around it:
 
-### Architecture
+- a built-in **canvas editor** for drawing and sending a picture directly from the app;
+- an on-device **gallery** with installable `.mcoimg.pack` image sets;
+- **original-quality playback**: when a received image's identity hash matches an installed pack,
+  the app shows the original file instead of the degraded transmitted copy.
 
-- **Framework**: Flutter 3.38.5 / Dart 3.10.4
-- **State Management**: Provider pattern with ChangeNotifier
-- **BLE Protocol**: Nordic UART Service (NUS) over Bluetooth Low Energy
-- **Storage**: Local SQLite database for messages and contact data
-- **Encryption**: End-to-end encryption for private messages using the MeshCore protocol
+The format is documented in [docs/mcoimg_v3_reference.md](docs/mcoimg_v3_reference.md)
+(Russian version: [docs/mcoimg_v3_reference_RU.md](docs/mcoimg_v3_reference_RU.md)), with a
+reference JavaScript decoder in [docs/mcoimg-js](docs/mcoimg-js) so other clients can display
+MCOa images too.
 
-### Platform Support
+### Built-in wardriving / coverage mapping
 
-| Feature            | Android (API 21+) | iOS (12+) | Linux | Windows | macOS |                Web                |
-|--------------------|:-----------------:|:---------:|:-----:|:-------:|:-----:|:---------------------------------:|
-| BLE companion      | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
-| USB companion      | ✅                | 🚧        | ✅   | ✅      | ✅    | ✅                                |
-| TCP companion      | ✅                | 🚧        | ✅   | ✅      | ✅    | ❌<br>(requires websocket bridge) |
-| Core Functionality | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
-| Mesh Network       | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
-| Map & Location     | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
-| Device Management  | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
-| Repeater Hub       | ✅                | ✅        | ✅   | ✅      | ✅    | ✅                                |
+Ported from [Meshcore-Wardrive-Android](https://github.com/mintylinux/Meshcore-Wardrive-Android). Turns the phone plus radio into a mesh coverage scanner, with no extra hardware or software. On
+each cycle (25 s by default, 5–300 s configurable) the app takes a GPS fix, sends 
+a zero-hop discovery request, then listens for responses; every responder becomes a
+GPS-tagged sample with SNR, RSSI, node key and response time, and cycles with no answer are
+recorded as "dead zone" samples. Samples can be uploaded to a configurable coverage map service
+(de-duplicated per endpoint), and on Android an optional foreground service keeps sampling
+running with the screen off.
 
-### Dependencies
+### DPI-adjusting
 
-| Package | Purpose |
-|---------|---------|
-| flutter_blue_plus | Bluetooth Low Energy communication |
-| provider | State management |
-| shared_preferences | Local key-value storage (scoped per device) |
-| flutter_map | Interactive map display |
-| latlong2 | Geographic coordinate handling |
-| flutter_local_notifications | Background notification support |
-| pointycastle | Cryptographic operations |
-| llamadart | On-device LLM message translation |
-| intl | Internationalization and date formatting |
+The app carries its own interface scale, independent of the system one. A slider in the mod
+settings sets a factor from **50% to 200%** in 5% steps, which is multiplied on top of the
+system text scale — so the OS accessibility setting is still honoured, and the app can be made
+denser or larger than the system allows. A separate switch decides whether icons scale along
+with the text. On top of that, text inside chats has its own persistent scale (0.8×–1.8×) that
+is remembered between sessions.
 
-## Getting Started
+### Region / flood-scope routing
 
-### Prerequisites
+Channels can be tagged with a named region, which is hashed into a flood scope and pushed to the
+node. This keeps regional channel traffic inside its own scope instead of flooding the whole
+mesh. Regions are managed in a dedicated screen and stored per channel. The same goes for
+multi-byte path hashes (a configurable 1–4 byte per-hop hash width). Both have recently appeared
+in the original MeshCore Open as well.
 
-- Flutter SDK 3.38.5 or later
-- Android Studio / Xcode (for mobile development)
-- A MeshCore-compatible LoRa device
+### Smaller additions
 
-### Installation
+- **Channel groups** and custom channel ordering, plus contact groups
+- **Sending delay** — schedule, review and cancel a queued outgoing message per conversation
+- **Quick answers** — canned replies available straight from the composer
+- **Per-conversation settings** — compression, signing, delay, quick answers and channel colour
+- Numerous smaller layout, readability and navigation corrections throughout the app
 
-1. **Clone the repository**
+## Downloads
 
-   ```bash
-   git clone https://github.com/zjs81/meshcore-open.git
-   cd meshcore-open
-   ```
+Ready-made builds are published in the
+[Releases](https://github.com/HDDen/meshcore-open/releases) section — not only for Android:
 
-2. **Install dependencies**
+- **Android** — APKs split per CPU architecture (`arm64-v8a`, `armeabi-v7a`, `x86_64`) so the
+  download stays small
+- **iOS** — `.ipa` packages
+- **Windows** — desktop build
+- **Linux** — desktop build
 
-   ```bash
-   flutter pub get
-   ```
+## Platform support
 
-3. **Run the app**
+| Feature            | Android (API 21+) | iOS (12+) | Linux | Windows |
+|--------------------|:-----------------:|:---------:|:-----:|:-------:|
+| BLE companion      | ✅                | ✅        | ✅   | ✅      |
+| USB companion      | ✅                | 🚧        | ✅   | ✅      |
+| TCP companion      | ✅                | 🚧        | ✅   | ✅      |
 
-   ```bash
-   flutter run
-   ```
+## Building from source
 
-### Building for Release
+Requires the Flutter SDK (3.38.5 or later) and a MeshCore-compatible LoRa device.
 
-**Android APK:**
+Two branches matter:
+
+- [`rename-mco-advanced`](https://github.com/HDDen/meshcore-open/tree/rename-mco-advanced) — the
+  main stable branch, this is what released builds are made from
+- [`rename-mco-advanced-alfa-build`](https://github.com/HDDen/meshcore-open/tree/rename-mco-advanced-alfa-build)
+  — the main testing branch, carrying the latest changes
 
 ```bash
-flutter build apk --release
+git clone https://github.com/HDDen/meshcore-open.git
+cd meshcore-open
+git checkout rename-mco-advanced
+flutter pub get
+flutter run
 ```
 
-**iOS:**
+Release builds:
 
 ```bash
+flutter build apk --release --split-per-abi
 flutter build ios --release
+flutter build windows --release
+flutter build linux --release
 ```
 
-## Project Structure
+### Build profiles: lite / full
 
-```
-lib/
-├── main.dart                    # App entry point
-├── connector/
-│   ├── meshcore_connector.dart  # BLE communication & state management
-│   ├── meshcore_protocol.dart   # Protocol definitions & frame parsing
-│   └── meshcore_uuids.dart      # Device names and IDs (add prefixes here!)
-├── screens/
-│   ├── scanner_screen.dart      # Device scanning (home screen)
-│   ├── contacts_screen.dart     # Contact list
-│   ├── chat_screen.dart         # Direct messaging
-│   ├── channels_screen.dart     # Public channels
-│   ├── map_screen.dart          # Network visualization map
-│   ├── settings_screen.dart     # Device settings
-│   └── repeater_hub_screen.dart # Repeater management
-├── models/
-│   ├── contact.dart             # Contact data model
-│   ├── message.dart             # Message data structure
-│   └── channel.dart             # Channel definitions
-├── services/
-│   ├── notification_service.dart      # Push notifications
-│   ├── message_retry_service.dart     # Automatic message retry
-│   ├── background_service.dart        # Background BLE connection
-│   └── map_tile_cache_service.dart    # Offline map storage
-└── storage/
-    ├── message_store.dart       # Message persistence
-    ├── contact_store.dart       # Contact database
-    └── unread_store.dart        # Unread message tracking
+The app can be built in two profiles that differ in on-device LLM message translation support:
+
+- **lite** — no LLM translation, fewer dependencies, smaller binary (the default, and how
+  released builds are produced)
+- **full** — includes on-device LLM translation (`llamadart`)
+
+```bash
+flutter clean
+dart run tool/use_translation_profile.dart lite   # or: full
+flutter pub get
+...
+flutter build apk --release --split-per-abi --dart-define=MESHCORE_ENABLE_TRANSLATION=false # adds «MESHCORE_ENABLE_TRANSLATION»-flag; Android apk for example
 ```
 
-## BLE Protocol
+The tool copies `pubspec.lite.yaml` / `pubspec.full.yaml` over `pubspec.yaml` and swaps
+`lib/services/translation_service.dart` to the matching variant. The selected profile is sticky —
+it stays active for every subsequent build until you switch again. When changing dependencies,
+edit all three pubspec files so a profile switch does not overwrite your change.
 
-### Nordic UART Service (NUS)
+## Contact and support
 
-- **Service UUID**: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
-- **RX Characteristic**: `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (Write to device)
-- **TX Characteristic**: `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Notify from device)
+Questions, bug reports, feature requests and ideas for the modification are all welcome:
 
-### Device Discovery
+- **GitHub** — open an [issue](https://github.com/HDDen/meshcore-open/issues) or send a pull
+  request to <https://github.com/HDDen/meshcore-open> (see
+  [CONTRIBUTING.md](CONTRIBUTING.md))
+- **Telegram** — the official group of the fork: <https://t.me/mcoadvanced>
 
-Devices are discovered by scanning for BLE advertisements with known MeshCore device name prefixes. These are currently:
-    - `MeshCore-`
-    - `Whisper-`
-    - `WisCore-`
-    - `HT-`
-    - `LowMesh_MC_`
-    - `NRF52`
-
-New device prefixes can be added in `lib/connector/meshcore_uuids.dart`.
-
-
-### Message Format
-
-Messages are transmitted as binary frames using a custom protocol optimized for LoRa transmission. See `meshcore_protocol.dart` for frame structure definitions.
-
-## Configuration
-
-### App Settings
-
-- **Theme**: System default, light, or dark mode
-- **Language**: Use one of 15 languages (English, Chinese, French, Spanish, Portuguese, German, Dutch, Polish, Swedish, Italian, Slovak, Slovene, Bulgarian, Russian, Ukrainian)
-- **Notifications**: Configurable for messages, channels, and node advertisements
-- **Battery Chemistry**: Support for NMC, LiFePO4, and LiPo battery types
-- **Message Retry**: Automatic retry with configurable path clearing
-
-### Device Settings
-
-- **Radio Power**: Transmit power adjustment (10-30 dBm)
-- **Frequency**: LoRa frequency configuration
-- **Bandwidth**: Channel bandwidth selection
-- **Spreading Factor**: Range vs. speed trade-off
-- **Network ID**: Mesh network identifier
-
-## Contributing
-
-This is an open-source project. Contributions are welcome!
-
-### Development Guidelines
-
-- Follow the Flutter style guide
-- Use Material 3 design components
-- Write clear commit messages
-- Test on both Android and iOS before submitting PRs
-
-### Code Style
-
-- Prefer `StatelessWidget` with `Consumer` for reactive UI
-- Use `const` constructors where possible
-- Keep functions small and focused
-- Avoid premature abstractions
-- Run dart format on all changes before submitting
-
-## Support
-
-For issues, questions, or feature requests, please open an issue on GitHub:
-<https://github.com/zjs81/meshcore-open/issues>
-
-## Donate
-
-If you find MeshCore Open useful and would like to support development, you can donate Solana or other Solana tokens:
-
-**Solana Address:** `F15YanjZj96YTBtKJYgNa8RLQLCZkx5CEwogPWkqXeoQ`
-
-
-**Monero Address:** `453TxnpUqjkJtXxzdjMsrgERNkBRXEGamPbpC45ENrvKAk9tH7kZbxWF82Hz66etgDZyXFPEBU2JUEqhLeJyWt9kBvTVy5m`
-
-**Bitcoin Address:** `bc1qh45x28v8dslcg4v4upmqd9g0mvc3lnyffmyzr5`
-
-Your support helps maintain and improve this open-source project!
+Issues that concern the base client rather than the modification are better reported upstream at
+<https://github.com/zjs81/meshcore-open/issues>.
 
 ## Acknowledgments
 
+- A big thank you to **[zjs81](https://github.com/zjs81)**, the author of the original
+  [MeshCore Open](https://github.com/zjs81/meshcore-open) client. MCOa exists only because there
+  was an excellent, well-structured open client to build on — everything listed above was added
+  on top of that foundation.
+- **[dimapanov](https://github.com/dimapanov)** for the
+  [mesh-compressor](https://dimapanov.github.io/mesh-compressor/) algorithm behind MCMP
 - Built with [Flutter](https://flutter.dev/)
 - Map tiles from [OpenStreetMap](https://www.openstreetmap.org/)
