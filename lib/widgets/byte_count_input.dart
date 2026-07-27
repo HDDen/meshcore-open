@@ -146,15 +146,18 @@ class ByteCountedTextField extends StatelessWidget {
                             onSubmitted!(controller.text),
                         const SingleActivator(
                           LogicalKeyboardKey.numpadEnter,
-                        ): () => onSubmitted!(controller.text),
+                        ): () =>
+                            onSubmitted!(controller.text),
                         const SingleActivator(
                           LogicalKeyboardKey.enter,
                           shift: true,
-                        ): () => _insertText('\n'),
+                        ): () =>
+                            _insertText('\n'),
                         const SingleActivator(
                           LogicalKeyboardKey.numpadEnter,
                           shift: true,
-                        ): () => _insertText('\n'),
+                        ): () =>
+                            _insertText('\n'),
                       }
                     : const <ShortcutActivator, VoidCallback>{},
                 child: TextField(
