@@ -3199,7 +3199,7 @@
   "mcogallery_common": "Common",
   "mcogallery_addPack": "Add package",
   "mcogallery_removePack": "Remove package",
-  "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
+  "mcogallery_removePackConfirm": "Confirm removal of the «{name}» pack?",
   "@mcogallery_removePackConfirm": {
     "placeholders": {
       "name": {

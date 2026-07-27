@@ -2413,5 +2413,16 @@
   "contacts_batchOperations_removeFail": "Не удалось удалить контакты - проверьте их список снова",
   "contacts_batchOperations_commonSuccess": "Операция прошла успешно",
   "contacts_batchOperations_commonFail": "Не удалось завершить операцию",
-  "contacts_batchOperations_selectFiltered": "Выбрать отфильтрованные"
+  "contacts_batchOperations_selectFiltered": "Выбрать отфильтрованные",
+  "chat_receivedGif": "Получен GIF",
+  "repeater_keySettings": "Смена ключей узла",
+  "repeater_keySettingsSubtitle": "Изменить пару публичного и приватного ключей",
+  "repeater_prvKey": "Приватный ключ",
+  "repeater_prvKeyHelper": "Новый приватный ключ ретранслятора — hex-строка из 128 символов.",
+  "repeater_generatePrvKey": "Сгенерировать случайную пару ключей",
+  "repeater_stopGeneratingPrvKey": "Прервать поиск пары ключей",
+  "repeater_pubKey": "Публичный ключ",
+  "repeater_pubKeyHelper": "Это публичный ключ, соответствующий сгенерированному приватному. Задать его напрямую нельзя.",
+  "repeater_pubKeyPrefix": "Желаемый префикс",
+  "repeater_pubKeyPrefixHelper": "Поиск публичного ключа, начинающегося с этих hex-символов. Ожидаемое число попыток: {tries}."
 }
