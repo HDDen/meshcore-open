@@ -25,6 +25,7 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/wardrive_foreground_service.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_upload_service.dart';
@@ -1406,6 +1407,7 @@ class _MapScreenState extends State<MapScreen>
         !wardrive.runInBackgroundEnabled,
       );
     } catch (error) {
+      if (error is WardriveRequirementNotCompletedException) return;
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
