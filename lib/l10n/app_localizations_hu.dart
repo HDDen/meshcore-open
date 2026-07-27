@@ -136,16 +136,16 @@ class AppLocalizationsHu extends AppLocalizations {
   String get common_interval => 'Intervallum';
 
   @override
-  String get common_default => 'Default';
+  String get common_default => 'Alapértelmezett';
 
   @override
   String get common_clear => 'Világos';
 
   @override
-  String get common_send => 'Send';
+  String get common_send => 'Küldés';
 
   @override
-  String get common_apply => 'Apply';
+  String get common_apply => 'Alkalmaz';
 
   @override
   String get scanner_title => 'MeshCore Open';
@@ -388,42 +388,42 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'A rádió beállításai frissítve';
 
   @override
-  String get settings_regionSettings => 'Regions';
+  String get settings_regionSettings => 'Régiók';
 
   @override
-  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+  String get settings_regionSettingsSubtitle => 'A mentett régiók kezelése';
 
   @override
-  String get settings_regionManagement_screenTitle => 'Region Management';
+  String get settings_regionManagement_screenTitle => 'Régiók kezelése';
 
   @override
-  String get settings_regionNameHint => 'Enter region name';
+  String get settings_regionNameHint => 'Adja meg a régió nevét';
 
   @override
-  String get settings_regionAddRegion => 'Add region';
+  String get settings_regionAddRegion => 'Régió hozzáadása';
 
   @override
-  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+  String get settings_regionFetchRegions => 'Régiók lekérése az átjátszóktól';
 
   @override
-  String get settings_regionFetchRegionsFail => 'No regions were found';
+  String get settings_regionFetchRegionsFail => 'Nem található régió';
 
   @override
   String get settings_regionFetchRegionsAlreadyExists =>
-      'This region has already been added';
+      'Ez a régió már hozzá van adva';
 
   @override
-  String get settings_regionName => 'Region Name';
+  String get settings_regionName => 'A régió neve';
 
   @override
-  String get settings_regionDeleted => 'Region deleted';
+  String get settings_regionDeleted => 'A régió törölve';
 
   @override
-  String get settings_deleteRegion => 'Delete Region';
+  String get settings_deleteRegion => 'Régió törlése';
 
   @override
   String settings_deleteRegionConfirm(String region) {
-    return 'Remove \"$region\" from region list?';
+    return 'Eltávolítja a(z) \"$region\" régiót a listából?';
   }
 
   @override
@@ -618,11 +618,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_aboutModDescription =>
-      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+      'Az «Advanced» módosítás az eredeti meshcore_open alapjain készült, és olyan változtatásokat tartalmaz, amelyeket az eredeti alkalmazás tárolójában javasoltak, vagy amelyek a felhasználási területre jellemzők, ezért nem pull requestként lettek beküldve.';
 
   @override
   String get settings_aboutModLink =>
-      'Mod group on Telegram: https://t.me/mcoadvanced';
+      'A módosítás csoportja Telegramon: https://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -650,7 +650,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_infoChannelCount => 'Csatornaszám';
 
   @override
-  String get settings_infoFirmware => 'Firmware version';
+  String get settings_infoFirmware => 'Firmware-verzió';
 
   @override
   String get settings_presets => 'Előbeállítások';
@@ -1248,7 +1248,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contact_clearChat => 'Csevegés törlése';
 
   @override
-  String get contact_clearChatConfirm => 'Confirm chat clear';
+  String get contact_clearChatConfirm => 'Törli az üzeneteket a csevegésből?';
 
   @override
   String get contact_teleBase => 'Telemetriai bázis';
@@ -1526,17 +1526,17 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String channels_regionSetTo(String region) {
-    return 'Region: $region';
+    return 'Régió: $region';
   }
 
   @override
-  String get channels_regionNotSet => 'Region: none';
+  String get channels_regionNotSet => 'Régió: nincs';
 
   @override
-  String get channels_regionSelect_Title => 'Select a region';
+  String get channels_regionSelect_Title => 'Régió hozzárendelése';
 
   @override
-  String get channels_clearRegion => 'Clear region';
+  String get channels_clearRegion => 'Régió törlése';
 
   @override
   String get chat_noMessages => 'Még nincsenek üzenetek';
@@ -1599,7 +1599,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_sendGif => 'GIF küldése';
 
   @override
-  String get chat_receivedGif => 'Received a GIF';
+  String get chat_receivedGif => 'GIF érkezett';
 
   @override
   String get chat_reply => 'Válasz';
@@ -2242,7 +2242,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Automatikus feltöltés';
 
   @override
-  String get map_wardriveReUpload => 'Reupload';
+  String get map_wardriveReUpload => 'Feltöltés újra';
 
   @override
   String get map_wardriveScreenWakelock => 'Képernyő ébren tartása';
@@ -2260,7 +2260,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get map_wardriveSecondsSuffix => 'mp';
 
   @override
-  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+  String get map_wardriveSamplesNoNew => 'Nincs új minta a feltöltéshez';
 
   @override
   String map_wardriveSamplesSaved(int count) {
@@ -2283,41 +2283,42 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+  String get map_wardriveCoverageResolution => 'A lefedettség részletessége';
 
   @override
   String get map_wardriveCoverageResolutionPrompt =>
-      'Choose the size of coverage squares (size = block side length):';
+      'Válassza ki a lefedettségi blokkok méretét (méret = a blokk oldala):';
 
   @override
-  String get map_wardriveCoverageRegional => 'Regional';
+  String get map_wardriveCoverageRegional => 'Regionális';
 
   @override
-  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+  String get map_wardriveCoverageRegionalSubtitle => '~20 km (pontosság 4)';
 
   @override
-  String get map_wardriveCoverageCity => 'City-level';
+  String get map_wardriveCoverageCity => 'Városi szint';
 
   @override
-  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+  String get map_wardriveCoverageCitySubtitle => '~5 km (pontosság 5)';
 
   @override
-  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+  String get map_wardriveCoverageNeighborhood => 'Városrész';
 
   @override
-  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+  String get map_wardriveCoverageNeighborhoodSubtitle =>
+      '~1,2 km (pontosság 6)';
 
   @override
-  String get map_wardriveCoverageStreet => 'Street-level';
+  String get map_wardriveCoverageStreet => 'Utcaszint';
 
   @override
-  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+  String get map_wardriveCoverageStreetSubtitle => '~153 m (pontosság 7)';
 
   @override
-  String get map_wardriveCoverageBuilding => 'Building-level';
+  String get map_wardriveCoverageBuilding => 'Épületszint';
 
   @override
-  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+  String get map_wardriveCoverageBuildingSubtitle => '~38 m (pontosság 8)';
 
   @override
   String get map_wardriveAutoUploadEnabled =>
@@ -2507,32 +2508,33 @@ class AppLocalizationsHu extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive minták törölve.';
 
   @override
-  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+  String get map_wardriveRepNoLocation =>
+      'Az átjátszó nem adta meg a helyzetét';
 
   @override
   String map_wardriveDiscoveryWait(Object seconds) {
-    return 'Please wait $seconds seconds before retrying discovery';
+    return 'Várjon $seconds másodpercet az újrapróbálkozás előtt';
   }
 
   @override
-  String get map_wardriveFollowMe => 'Follow my location';
+  String get map_wardriveFollowMe => 'Kövesse a helyzetemet';
 
   @override
-  String get map_wardriveDeleteBlock => 'Delete block';
+  String get map_wardriveDeleteBlock => 'Blokk törlése';
 
   @override
-  String get map_wardriveInBackground => 'Run in background';
+  String get map_wardriveInBackground => 'Futtatás a háttérben';
 
   @override
-  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+  String get map_wardriveContinuousGPS => 'Folyamatos GPS-helymeghatározás';
 
   @override
   String get map_wardriveShowRepeaterCoverage =>
-      'Show wardrive\'s coverage blocks';
+      'Lefedettségi blokkok megjelenítése';
 
   @override
   String get map_wardriveHideRepeaterCoverage =>
-      'Hide wardrive\'s coverage blocks';
+      'Lefedettségi blokkok elrejtése';
 
   @override
   String get mapCache_title => 'Offline térképgyorsítótár';
@@ -3189,38 +3191,39 @@ class AppLocalizationsHu extends AppLocalizations {
       'Az átjátszó azonosítójának elárasztási útvonal/hurokészlelési címkékbe való kódolására használt bájtok. 0 = 1 bájt (256 azonosító, legfeljebb 64 ugrás), 1 = 2 bájt (65 000 azonosító, legfeljebb 32 ugrás), 2 = 3 bájt (16 millió azonosító, legfeljebb 21 ugrás). A v1.13 és régebbi firmware eldobja a többbájtos elérési utat – csak akkor emelje meg, ha a hálózat a v1.14+ verziót használja.';
 
   @override
-  String get repeater_keySettings => 'Change Identity Keys';
+  String get repeater_keySettings => 'A csomópont kulcsainak cseréje';
 
   @override
   String get repeater_keySettingsSubtitle =>
-      'Change the public/private keypair';
+      'A nyilvános/privát kulcspár módosítása';
 
   @override
-  String get repeater_prvKey => 'Private key';
+  String get repeater_prvKey => 'Privát kulcs';
 
   @override
   String get repeater_prvKeyHelper =>
-      'A new private key for the repeater, a 128-character hex string.';
+      'Új privát kulcs az átjátszóhoz — 128 karakteres hexadecimális karakterlánc.';
 
   @override
-  String get repeater_generatePrvKey => 'Generate a random keypair';
+  String get repeater_generatePrvKey => 'Véletlenszerű kulcspár létrehozása';
 
   @override
-  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+  String get repeater_stopGeneratingPrvKey =>
+      'A kulcspár keresésének megszakítása';
 
   @override
-  String get repeater_pubKey => 'Public key';
+  String get repeater_pubKey => 'Nyilvános kulcs';
 
   @override
   String get repeater_pubKeyHelper =>
-      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+      'Ez a létrehozott privát kulcshoz tartozó nyilvános kulcs. Közvetlenül nem állítható be.';
 
   @override
-  String get repeater_pubKeyPrefix => 'Desired prefix';
+  String get repeater_pubKeyPrefix => 'Kívánt előtag';
 
   @override
   String repeater_pubKeyPrefixHelper(int tries) {
-    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+    return 'Olyan nyilvános kulcs keresése, amely ezekkel a hexadecimális karakterekkel kezdődik. Várható próbálkozások száma: $tries.';
   }
 
   @override
@@ -4150,7 +4153,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHopsHighTimeout =>
-      'Increased path trace timeout (10s*hops)';
+      'Megnövelt időkorlát az útvonalkövetéshez (10 mp × ugrások)';
 
   @override
   String get channelPath_noHopDetails =>
@@ -4448,10 +4451,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'Eltávolítás a kedvencek közül';
 
   @override
-  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+  String get listFilter_removeFromWardrive =>
+      'Figyelmen kívül hagyás a Wardrive-ban';
 
   @override
-  String get listFilter_returnToWardrive => 'Return to Wardrive';
+  String get listFilter_returnToWardrive => 'Figyelembevétel a Wardrive-ban';
 
   @override
   String get listFilter_users => 'Felhasználók';
@@ -5144,45 +5148,48 @@ class AppLocalizationsHu extends AppLocalizations {
       'mesh-compressor modell használata';
 
   @override
-  String get channels_copyPath => 'Copy message path';
+  String get channels_copyPath => 'Üzenet útvonalának másolása';
 
   @override
-  String get channels_copyPathExtended => 'Copy message path (extended)';
+  String get channels_copyPathExtended =>
+      'Üzenet útvonalának másolása (bővített)';
 
   @override
-  String get channels_copiedPath => 'Message path copied';
+  String get channels_copiedPath => 'Az üzenet útvonala másolva';
 
   @override
-  String get channels_copyPathFailed => 'Copying message path failed';
+  String get channels_copyPathFailed =>
+      'Az üzenet útvonalát nem sikerült másolni';
 
   @override
-  String get settings_copyMsgPathTitle => 'Configure message path copying';
+  String get settings_copyMsgPathTitle =>
+      'Az üzenetútvonal másolásának beállítása';
 
   @override
   String get settings_copyMsgPathDscr =>
-      'Edit the template for generating message path information from the channel';
+      'A csatornaüzenet útvonalinformációit összeállító sablon szerkesztése';
 
   @override
-  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+  String get settings_copyMsgPathEditTemplateTitle => 'Sablon szerkesztése';
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+      'Használja a helyettesítő sablonokat:\n%hopInd% - az ugrás sorszáma\n%hopKey% - az ugrás kulcsa\n%hopName% - az ugrás neve\n%collisionMarker% - átjátszóütközés jelölése\n%div% - elválasztó (az utolsó ugrásnál kimarad)\n%hops% - ugrások száma\n\\n - sortörés';
 
   @override
-  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+  String get settings_copyMsgPathEditFinalTitle => 'Végleges üzenet';
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+      'Elérhető sablonok:\n%senderName% - a küldő neve\n%path% - az összeállított útvonal\n%hops% - ugrások száma\n\\n - sortörés';
 
   @override
   String get settings_channelsSendAsBinary =>
-      'Send extended data as binary (channels)';
+      'Bővített formátumok küldése binárisan (csatornák)';
 
   @override
   String get settings_dmSendAsBinary =>
-      'Send extended data as binary (direct messages)';
+      'Bővített formátumok küldése binárisan (közvetlen üzenetek)';
 
   @override
   String get contact_typeChat => 'Csevegés';
@@ -5332,488 +5339,495 @@ class AppLocalizationsHu extends AppLocalizations {
   String get pathMap_unfollowPacket => 'A nézet feloldása a csomagból';
 
   @override
-  String get chat_canvas => 'MCOimg canvas';
+  String get chat_canvas => 'MCOimg vászon';
 
   @override
-  String get chat_canvasCrop => 'Crop/expand';
+  String get chat_canvasCrop => 'Vágás/bővítés';
 
   @override
-  String get chat_canvasResize => 'Scale';
+  String get chat_canvasResize => 'Zsugorítás/nyújtás';
 
   @override
-  String get chat_canvasUnlockSize => 'Unlock canvas size';
+  String get chat_canvasUnlockSize => 'A vászon méretének feloldása';
 
   @override
-  String get chat_canvasFormatVer => 'Codec version';
+  String get chat_canvasFormatVer => 'Kodekverzió';
 
   @override
-  String get chat_canvasPalette => 'Palette';
+  String get chat_canvasPalette => 'Paletta';
 
   @override
-  String get chat_canvasPaletteShow => 'Show palette';
+  String get chat_canvasPaletteShow => 'Paletta megjelenítése';
 
   @override
-  String get chat_canvasPaletteMode => 'Palette preset';
+  String get chat_canvasPaletteMode => 'Palettaprofil';
 
   @override
-  String get chat_canvasPaletteDynamic => 'Dynamic';
+  String get chat_canvasPaletteDynamic => 'Dinamikus';
 
   @override
-  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+  String get chat_canvasPaletteDynamicProfile =>
+      'Alapkészlet a dinamikus palettához';
 
   @override
-  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+  String get chat_canvasPaletteDynamicUsed => 'Ténylegesen használt színek';
 
   @override
   String get chat_canvasPaletteDynamicDscr =>
-      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+      'Figyelem! A dinamikus palettát megfontoltan használja! Elsősorban átmenetes képekhez készült, hogy kisebb palettát lehessen felépíteni és olyan színeket használni, amelyek nem tartoznak ugyanahhoz az alappalettához. Tájékoztatásul: a kisebb alappaletta csökkenti a használt árnyalatokról szóló információ kódolásának költségét, a kisebb összes színszám pedig csökkenti a vászon minden egyes képpontjának költségét.';
 
   @override
-  String get chat_canvasPaletteAlpha => 'Transparency color';
+  String get chat_canvasPaletteAlpha => 'Átlátszóság színe';
 
   @override
-  String get chat_canvasChangeSize => 'Change canvas size';
+  String get chat_canvasChangeSize => 'A vászon méretének módosítása';
 
   @override
-  String get chat_canvasTrim => 'Trim empty';
+  String get chat_canvasTrim => 'Üres rész levágása';
 
   @override
-  String get chat_canvasWidth => 'Width';
+  String get chat_canvasWidth => 'Szélesség';
 
   @override
-  String get chat_canvasHeight => 'Height';
+  String get chat_canvasHeight => 'Magasság';
 
   @override
-  String get chat_canvasGridShow => 'Show grid';
+  String get chat_canvasGridShow => 'Rács megjelenítése';
 
   @override
-  String get chat_canvasRulerShow => 'Show ruler';
+  String get chat_canvasRulerShow => 'Vonalzó megjelenítése';
 
   @override
-  String get chat_canvasGridColor => 'Grid color';
+  String get chat_canvasGridColor => 'A rács színe';
 
   @override
-  String get chat_canvasSave => 'Save to file';
+  String get chat_canvasSave => 'Mentés fájlba';
 
   @override
-  String get chat_canvasLoad => 'Load from file';
+  String get chat_canvasLoad => 'Betöltés fájlból';
 
   @override
   String chat_canvasSendPayloadExceed(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+    return 'A küldés nem sikerült — a payload $count bájttal túllépve. Csökkentse a részletek számát vagy a vászon méretét.';
   }
 
   @override
   String chat_canvasCurrentPayload(int payload) {
-    return 'Current payload: $payload';
+    return 'Jelenlegi payload: $payload';
   }
 
   @override
-  String get chat_canvasActive => 'Show canvas';
+  String get chat_canvasActive => 'Vászon megjelenítése';
 
   @override
-  String get chat_canvasShowLockBtn => 'Show canvas block button';
+  String get chat_canvasShowLockBtn =>
+      'A vászon zárolás gombjának megjelenítése';
 
   @override
-  String get chat_canvasSendToEdit => 'Send to canvas';
+  String get chat_canvasSendToEdit => 'Küldés a vászonra';
 
   @override
-  String get chat_canvasSendToGallery => 'Save to gallery';
+  String get chat_canvasSendToGallery => 'Mentés a galériába';
 
   @override
-  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+  String get chat_canvasGalleryShowPNG => 'Eredeti megjelenítése (PNG)';
 
   @override
-  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+  String get chat_canvasGalleryShowBIN => 'Megjelenítés Binként';
 
   @override
-  String get chat_canvasGalleryRemove => 'Remove';
+  String get chat_canvasGalleryRemove => 'Eltávolítás';
 
   @override
-  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+  String get chat_canvasGalleryRemoveConfirm =>
+      'Eltávolítja a képet a galériából?';
 
   @override
   String chat_canvasFormatNotSupported(int received, int current) {
-    return 'MCOimg format version: $received, current codec supports up to $current';
+    return 'MCOimg-verzió: $received, a jelenlegi kodek eddig támogatja: $current';
   }
 
   @override
-  String get chat_canvasSaveBinary => 'Save fo binary file';
+  String get chat_canvasSaveBinary => 'Mentés bináris fájlba';
 
   @override
   String chat_canvasCannotSend(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+    return 'A küldés nem sikerült — a payload $count bájttal túllépve. Szerkessze a képet, és próbálja újra.';
   }
 
   @override
-  String get chat_canvasCompressionLevel => 'Compression level';
+  String get chat_canvasCompressionLevel => 'Tömörítési szint';
 
   @override
-  String get chat_canvasCompressionLevelNormal => 'Normal';
+  String get chat_canvasCompressionLevelNormal => 'Normál';
 
   @override
-  String get chat_canvasCompressionLevelHigh => 'High';
+  String get chat_canvasCompressionLevelHigh => 'Magas';
 
   @override
-  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+  String get chat_canvasCompressionLevelExtreme => 'Extrém';
 
   @override
-  String get chat_showHops => 'Show hops';
+  String get chat_showHops => 'Ugrások megjelenítése';
 
   @override
-  String get settings_modSettings => 'Modification Settings';
+  String get settings_modSettings => 'A módosítás beállításai';
 
   @override
   String get settings_modSettingsSubtitle =>
-      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+      'Ebben a szakaszban azok a beállítások szerepelnek, amelyek az eredeti meshcore_openből hiányoznak';
 
   @override
-  String get settings_modSettingsVisual => 'Visual';
+  String get settings_modSettingsVisual => 'Megjelenés';
 
   @override
-  String get settings_modSettingsMessaging => 'Messaging';
+  String get settings_modSettingsMessaging => 'Üzenetküldés';
 
   @override
   String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_mcmp_version => 'Version';
+  String get settings_mcmp_version => 'Verzió';
 
   @override
-  String get settings_mcmp_useSign => 'Message signing';
+  String get settings_mcmp_useSign => 'Aláírás ellenőrzése';
 
   @override
-  String get settings_mcmp_signed => 'Using signature verification';
+  String get settings_mcmp_signed => 'Aláírás-ellenőrzéssel';
 
   @override
-  String get settings_mcmp_noSign => 'No signature';
+  String get settings_mcmp_noSign => 'Aláírás-ellenőrzés nélkül';
 
   @override
-  String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
+  String get settings_mcmp_senderNameCollision => 'A küldő neve nem egyedi!';
 
   @override
-  String get chat_mcmpSignatureValid => 'Signature is valid';
+  String get chat_mcmpSignatureValid => 'Az aláírás érvényes';
 
   @override
-  String get chat_mcmpSignatureInvalid => 'Invalid signature!';
+  String get chat_mcmpSignatureInvalid => 'Érvénytelen aláírás!';
 
   @override
   String get chat_mcmpSignatureUnverifiable =>
-      'Signature can\'t be verified — sender is not in contacts';
+      'Az aláírás nem ellenőrizhető — a küldő nincs a névjegyek között';
 
   @override
   String get chat_mcmpSignatureTransport =>
-      'Authenticated by encrypted transport';
+      'A szállítási réteg titkosítása igazolta';
 
   @override
-  String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
+  String get chat_mcmpManualRecheckSign => 'Aláírás ismételt ellenőrzése';
 
   @override
-  String get chat_mcmpSignatureCheckStatus => 'Signature checking';
+  String get chat_mcmpSignatureCheckStatus => 'Aláírás ellenőrzése';
 
   @override
-  String get chat_mcmpSigningFailed => 'Failed to sign the message';
+  String get chat_mcmpSigningFailed => 'Az üzenetet nem sikerült aláírni';
 
   @override
-  String get chat_mcmpAnswerTo => 'MCMPv3 answer to';
+  String get chat_mcmpAnswerTo => 'MCMPv3 válasz erre:';
 
   @override
-  String get chat_timestampPacket => 'Packet timestamp';
+  String get chat_timestampPacket => 'A csomag időbélyege';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
   String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
+      'MCOimg: a formátumverzió jelvényének megjelenítése';
 
   @override
   String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
+      'MCOimg: a kódolási algoritmus jelvényének megjelenítése';
 
   @override
   String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
+      'MCOimg: a kép méretének megjelenítése (bájt)';
 
   @override
   String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
+      'MCOimg: a felbontás megjelenítése';
 
   @override
   String get settings_modSettingsMCOimg_showReplacements =>
-      'Display original images instead of LoRa versions';
+      'A képek eredetijének megjelenítése a LoRa-változatok helyett';
 
   @override
   String get settings_modSettingsMCOimg_replacementsScale =>
-      'Scale original images in chats';
+      'Az eredetik átméretezése a csevegésekben';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
-      'Scale as Nearest Neighbor';
+      'Átméretezés Nearest Neighbor módszerrel';
 
   @override
   String get settings_modSettingsMCOimg_replacementsSharp =>
-      'Sharp original images in chats';
+      'Az eredetik élesítése a csevegésekben';
 
   @override
   String get settings_modSettingsMCOimg_replacementsSharpDscr =>
-      'Attention! Disables GIF animation!';
+      'Figyelem! Kikapcsolja a GIF-animációt!';
 
   @override
-  String get settings_modSettingsHideChInd => 'Hide channel index';
+  String get settings_modSettingsHideChInd => 'A csatorna indexének elrejtése';
 
   @override
-  String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
+  String get settings_modSettingsHideRadioStats =>
+      'A rádióstatisztika elrejtése a fejlécben';
 
   @override
   String get settings_modSettingsSNRindicatorAllRepActivity =>
-      'SNR indicator: trigger on all repeater responses, not just adverts';
+      'SNR-jelző: minden átjátszóválaszra reagáljon, ne csak az advertre';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
-      'Show quotes in incoming messages as mentions';
+      'Az idézetek megjelenítése a bejövő üzenetekben említésként';
 
   @override
   String get settings_modSettingsSimplifiedMentions =>
-      'Simplified style of mentions in messages visual';
+      'Az említések egyszerűsített stílusa az üzenetekben';
 
   @override
-  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+  String get settings_modSettingsSharedMsgHistory => 'Közös üzenetelőzmények';
 
   @override
   String get settings_modSettingsSharedMsgHistoryDscr =>
-      'Combining the history of messages received from different devices; the final history is stored only in the application';
+      'A különböző eszközökről kapott üzenetelőzmények egyesítése; a végleges előzmények csak az alkalmazásban tárolódnak';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Kikapcsolva';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Csak csatornák';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Csak névjegyek';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+  String get settings_modSettingsSharedMsgHistoryAll => 'Minden csevegés';
 
   @override
   String get settings_modSettingsMessagingShowCompressionRatio =>
-      'Show compression ratio';
+      'A tömörítés mértékének megjelenítése';
 
   @override
   String get settings_modSettingsMessagingCompressionRatioWithSendername =>
-      'Also take into account senderName';
+      'A csomópont nevének figyelembevétele is';
 
   @override
   String get settings_modSettingsVisualHideMapZoomControls =>
-      'Hide map zoom panel';
+      'A nagyítási panel elrejtése a térképen';
 
   @override
-  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+  String get settings_modSettingsVisualShowMsgRegion =>
+      'Az üzenet régiójának megjelenítése';
 
   @override
   String channels_messageRegion(String region) {
-    return 'Region: $region';
+    return 'Régió: $region';
   }
 
   @override
-  String get channels_messageRegionUnknown => 'unknown';
+  String get channels_messageRegionUnknown => 'ismeretlen';
 
   @override
-  String get channels_messageRegionEmpty => 'unset';
+  String get channels_messageRegionEmpty => 'nincs beállítva';
 
   @override
-  String get settings_defaultRegionScope => 'Default region scope';
+  String get settings_defaultRegionScope =>
+      'A csomópont alapértelmezett régiója';
 
   @override
   String get settings_defaultRegionScopeChanged =>
-      'Default region scope changed';
+      'Az alapértelmezett régió módosítva';
 
   @override
   String get settings_defaultRegionScopeChangeFailed =>
-      'Change default region scope failed';
+      'A régiót nem sikerült módosítani';
 
   @override
-  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+  String get settings_defaultRegionScopeEmpty => 'Nincs beállítva';
 
   @override
   String get settings_defaultRegionScopeWaitForSync =>
-      'Please wait until synchronization complete';
+      'Várja meg a szinkronizálás végét';
 
   @override
-  String get common_reset => 'Reset';
+  String get common_reset => 'Visszaállítás';
 
   @override
-  String get connection_autoconnect => 'Autoconnect';
+  String get connection_autoconnect => 'Automatikus csatlakozás';
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'No retranslations heard for $time seconds.';
+    return '$time másodperce nem hallható újrasugárzás.';
   }
 
   @override
   String get settings_modSettingsNoRetraHeading =>
-      'Display messages as unsent if no retranslations heard within seconds:';
+      'Jelölje az üzeneteket elküldetlenként, ha ennyi másodpercen belül nem hallható újrasugárzás:';
 
   @override
   String get settings_modSettingsNoRetraDscr =>
-      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+      'Figyelem! A csomópont firmware-ének egyik mechanizmusa miatt a ~133 bájtnál nagyobb csatornaüzenetek fizikailag nem kaphatnak visszaigazolást, és mindig sikertelenként lesznek megjelölve! Ezt a beállítást a payload alkalmazásbeli korlátjával együtt használja!';
 
   @override
-  String get settings_selfTelemetryShow => 'Check sensors';
+  String get settings_selfTelemetryShow => 'Érzékelők megtekintése';
 
   @override
   String get settings_modSettingsVisualChannelsUnreadSorting =>
-      'Channels sorting by unread messages';
+      'Csatornák rendezése olvasatlan üzenetek szerint';
 
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
-      'Keep TCP-connection alive in background';
+      'A TCP-kapcsolat fenntartása a háttérben';
 
   @override
-  String get settings_modSettingsDPIchange => 'DPI change';
+  String get settings_modSettingsDPIchange => 'DPI-beállítás';
 
   @override
-  String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
+  String get settings_modSettingsDPIchangeToIcons => 'Alkalmazás az ikonokra';
 
   @override
-  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+  String get chat_MCOimgOpenGallery => 'MCOimg galéria megnyitása';
 
   @override
-  String get chat_additionalActions => 'Chat actions menu';
+  String get chat_additionalActions => 'Műveletek menü';
 
   @override
-  String get mcogallery_common => 'Common';
+  String get mcogallery_common => 'Általános';
 
   @override
-  String get mcogallery_addPack => 'Add package';
+  String get mcogallery_addPack => 'Csomag hozzáadása';
 
   @override
-  String get mcogallery_removePack => 'Remove package';
+  String get mcogallery_removePack => 'Csomag eltávolítása';
 
   @override
   String mcogallery_removePackConfirm(String name) {
-    return 'Подтвердите удаление пакета «$name»';
+    return 'Erősítse meg a(z) «$name» csomag eltávolítását';
   }
 
   @override
-  String get mcogallery_addGroup => 'Add group';
+  String get mcogallery_addGroup => 'Csoport hozzáadása';
 
   @override
-  String get mcogallery_removeGroup => 'Remove group';
+  String get mcogallery_removeGroup => 'Csoport eltávolítása';
 
   @override
-  String get mcogallery_showLora => 'Show LoRa-variant';
+  String get mcogallery_showLora => 'A LoRa-változat megjelenítése';
 
   @override
-  String get mcogallery_showPacked => 'Show improved variant';
+  String get mcogallery_showPacked => 'A javított változat megjelenítése';
 
   @override
-  String get chat_sendSelfContact => 'Send self contact';
+  String get chat_sendSelfContact => 'Saját névjegy küldése';
 
   @override
-  String get chat_sendContact => 'Share contact';
+  String get chat_sendContact => 'Névjegy megosztása';
 
   @override
-  String get chat_addContact => 'Add contact';
+  String get chat_addContact => 'Névjegy hozzáadása';
 
   @override
-  String get chat_sureToReplaceContact =>
-      'Contact is already exists, replace it?';
+  String get chat_sureToReplaceContact => 'A névjegy már létezik, lecseréli?';
 
   @override
-  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+  String get contacts_addContactByPubkey => 'Névjegy hozzáadása kulcs alapján';
 
   @override
-  String get contacts_addContactByPubkey_contactType => 'Contact type';
+  String get contacts_addContactByPubkey_contactType => 'Névjegy típusa';
 
   @override
-  String get chat_contactIsYou => 'It is you';
+  String get chat_contactIsYou => 'Ez a saját névjegye';
 
   @override
   String chat_contactType(String contacttype) {
-    return 'Contact type: $contacttype';
+    return 'Névjegy típusa: $contacttype';
   }
 
   @override
-  String get chat_contactTypeNode => 'Node';
+  String get chat_contactTypeNode => 'Csomópont';
 
   @override
-  String get chat_contactTypeRepeater => 'Repeater';
+  String get chat_contactTypeRepeater => 'Átjátszó';
 
   @override
-  String get chat_contactTypeRoom => 'Room-server';
+  String get chat_contactTypeRoom => 'Room-szerver';
 
   @override
-  String get chat_contactTypeSensor => 'Sensor';
+  String get chat_contactTypeSensor => 'Érzékelő';
 
   @override
-  String get chat_myLocation => 'Share my location';
+  String get chat_myLocation => 'A helyzetem elküldése';
 
   @override
-  String get chat_locationFromMap => 'Share location from map';
+  String get chat_locationFromMap => 'Koordináták küldése a térképről';
 
   @override
-  String get settings_modSettingsRoomServer => 'Room-servers and contacts';
+  String get settings_modSettingsRoomServer => 'Room-szerverek és névjegyek';
 
   @override
   String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
-      'Show room-servers with messages history against channels in single screen';
+      'Az előzményekkel rendelkező szerverek megjelenítése a csatornákkal egy képernyőn';
 
   @override
   String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
-      'Show contacts with messages history against channels in single screen';
+      'Az előzményekkel rendelkező névjegyek megjelenítése a csatornákkal egy képernyőn';
 
   @override
   String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
-      'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers';
+      'A korábbi fogd-és-vidd működés megtartása: a csatornák sorrendjének módosítása a csomóponton is módosítja a sorrendjüket, a névjegyek és szerverek pedig nem rendezhetők';
 
   @override
-  String get settings_appSettingsCustomChemistry => 'Custom';
+  String get settings_appSettingsCustomChemistry => 'Egyéni';
 
   @override
-  String get map_clearDiscoveredContactsCache => 'Clear nodes local cache';
+  String get map_clearDiscoveredContactsCache =>
+      'A csomópontok helyi gyorsítótárának törlése';
 
   @override
-  String get map_clearDiscoveredContactsCacheDisclamer =>
-      'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
+      'Biztosan törli a felfedezett névjegyek gyorsítótárát? Ez nem érinti a csomóponton lévő névjegyeket.';
 
   @override
-  String get snrIndicator_v2_nearByRepeaters => 'Repeater\'s activity';
+  String get snrIndicator_v2_nearByRepeaters => 'Átjátszók aktivitása';
 
   @override
   String get app_connectionLostReconnect =>
-      'Connection to node is lost; reconnecting...';
+      'A kapcsolat a csomóponttal megszakadt, újracsatlakozás folyamatban...';
 
   @override
-  String get app_connectionLostReconnected => 'Reconnected to node';
+  String get app_connectionLostReconnected =>
+      'A kapcsolat a csomóponttal helyreállt';
 
   @override
-  String get contacts_batchOperations => 'Batch operations';
+  String get contacts_batchOperations => 'Kötegelt műveletek';
 
   @override
   String get contacts_batchOperations_notSelected =>
-      'You have not selected any contacts for processing!';
+      'Nem választott ki névjegyeket a feldolgozáshoz!';
 
   @override
   String get contacts_batchOperations_removeConfirm =>
-      'Remove selected contacts from node?';
+      'Eltávolítja a kijelölt névjegyeket a csomópont memóriájából?';
 
   @override
   String get contacts_batchOperations_removeSuccess =>
-      'Selected contacts have been removed';
+      'A kijelölt névjegyek eltávolítva';
 
   @override
   String get contacts_batchOperations_removeFail =>
-      'Removing contacts is failed – please check contacts again';
+      'A névjegyeket nem sikerült eltávolítani — ellenőrizze újra a listát';
 
   @override
-  String get contacts_batchOperations_commonSuccess =>
-      'Operation is successfull';
+  String get contacts_batchOperations_commonSuccess => 'A művelet sikeres volt';
 
   @override
-  String get contacts_batchOperations_commonFail => 'Operation is failed';
+  String get contacts_batchOperations_commonFail =>
+      'A műveletet nem sikerült befejezni';
 
   @override
-  String get contacts_batchOperations_selectFiltered => 'Select filtered';
+  String get contacts_batchOperations_selectFiltered => 'Szűrtek kijelölése';
 }

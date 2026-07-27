@@ -5319,7 +5319,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chat_canvasSendPayloadExceed(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+    return 'Failed to send – payload exceeded by $count bytes. Please reduce the number of details or the canvas size.';
   }
 
   @override
@@ -5357,11 +5357,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get chat_canvasSaveBinary => 'Save fo binary file';
+  String get chat_canvasSaveBinary => 'Save to binary file';
 
   @override
   String chat_canvasCannotSend(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+    return 'Failed to send – payload exceeded by $count bytes. Please edit the image and try again.';
   }
 
   @override
@@ -5384,7 +5384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+      'This section contains options added by MCOa that are not part of the original meshcore_open';
 
   @override
   String get settings_modSettingsVisual => 'Visual';
@@ -5448,7 +5448,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
+      'MCOimg: show coding algorithm badge';
 
   @override
   String get settings_modSettingsVisualShowMCOimgBytes =>
@@ -5612,7 +5612,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String mcogallery_removePackConfirm(String name) {
-    return 'Подтвердите удаление пакета «$name»';
+    return 'Confirm removal of the «$name» pack?';
   }
 
   @override
@@ -5694,7 +5694,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map_clearDiscoveredContactsCache => 'Clear nodes local cache';
 
   @override
-  String get map_clearDiscoveredContactsCacheDisclamer =>
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
       'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
 
   @override
@@ -5724,14 +5724,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contacts_batchOperations_removeFail =>
-      'Removing contacts is failed – please check contacts again';
+      'Failed to remove contacts – please check the contact list again';
 
   @override
   String get contacts_batchOperations_commonSuccess =>
-      'Operation is successfull';
+      'Operation completed successfully';
 
   @override
-  String get contacts_batchOperations_commonFail => 'Operation is failed';
+  String get contacts_batchOperations_commonFail => 'Operation failed';
 
   @override
   String get contacts_batchOperations_selectFiltered => 'Select filtered';

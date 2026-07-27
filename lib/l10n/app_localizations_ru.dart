@@ -1603,7 +1603,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_sendGif => 'Отправить GIF';
 
   @override
-  String get chat_receivedGif => 'Received a GIF';
+  String get chat_receivedGif => 'Получен GIF';
 
   @override
   String get chat_reply => 'Ответить';
@@ -3189,38 +3189,38 @@ class AppLocalizationsRu extends AppLocalizations {
       'Байты, используемые для кодирования идентификатора этого ретранслятора в тегах flood-маршрута/обнаружения циклов. 0 = 1 байт (256 идентификаторов, до 64 переходов), 1 = 2 байта (65 000 идентификаторов, до 32 переходов), 2 = 3 байта (16 миллионов идентификаторов, до 21 перехода). Прошивки до v1.14 всегда использовали 1-байтовые маршруты; v1.14 и новее можно настроить на 2- или 3-байтовые маршруты.';
 
   @override
-  String get repeater_keySettings => 'Change Identity Keys';
+  String get repeater_keySettings => 'Смена ключей узла';
 
   @override
   String get repeater_keySettingsSubtitle =>
-      'Change the public/private keypair';
+      'Изменить пару публичного и приватного ключей';
 
   @override
-  String get repeater_prvKey => 'Private key';
+  String get repeater_prvKey => 'Приватный ключ';
 
   @override
   String get repeater_prvKeyHelper =>
-      'A new private key for the repeater, a 128-character hex string.';
+      'Новый приватный ключ ретранслятора — hex-строка из 128 символов.';
 
   @override
-  String get repeater_generatePrvKey => 'Generate a random keypair';
+  String get repeater_generatePrvKey => 'Сгенерировать случайную пару ключей';
 
   @override
-  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+  String get repeater_stopGeneratingPrvKey => 'Прервать поиск пары ключей';
 
   @override
-  String get repeater_pubKey => 'Public key';
+  String get repeater_pubKey => 'Публичный ключ';
 
   @override
   String get repeater_pubKeyHelper =>
-      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+      'Это публичный ключ, соответствующий сгенерированному приватному. Задать его напрямую нельзя.';
 
   @override
-  String get repeater_pubKeyPrefix => 'Desired prefix';
+  String get repeater_pubKeyPrefix => 'Желаемый префикс';
 
   @override
   String repeater_pubKeyPrefixHelper(int tries) {
-    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+    return 'Поиск публичного ключа, начинающегося с этих hex-символов. Ожидаемое число попыток: $tries.';
   }
 
   @override
@@ -5790,7 +5790,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_clearDiscoveredContactsCache => 'Очистить локальный кэш узлов';
 
   @override
-  String get map_clearDiscoveredContactsCacheDisclamer =>
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
       'Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.';
 
   @override

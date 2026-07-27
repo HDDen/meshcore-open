@@ -9247,7 +9247,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSendPayloadExceed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.'**
+  /// **'Failed to send – payload exceeded by {count} bytes. Please reduce the number of details or the canvas size.'**
   String chat_canvasSendPayloadExceed(int count);
 
   /// No description provided for @chat_canvasCurrentPayload.
@@ -9313,13 +9313,13 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSaveBinary.
   ///
   /// In en, this message translates to:
-  /// **'Save fo binary file'**
+  /// **'Save to binary file'**
   String get chat_canvasSaveBinary;
 
   /// No description provided for @chat_canvasCannotSend.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.'**
+  /// **'Failed to send – payload exceeded by {count} bytes. Please edit the image and try again.'**
   String chat_canvasCannotSend(int count);
 
   /// No description provided for @chat_canvasCompressionLevel.
@@ -9361,7 +9361,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_modSettingsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'This section contains options that are brings by MCOa and not included in the original meshcore_open'**
+  /// **'This section contains options added by MCOa that are not part of the original meshcore_open'**
   String get settings_modSettingsSubtitle;
 
   /// No description provided for @settings_modSettingsVisual.
@@ -9481,7 +9481,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
   ///
   /// In en, this message translates to:
-  /// **'MCOimg: show coding algorythm badge'**
+  /// **'MCOimg: show coding algorithm badge'**
   String get settings_modSettingsVisualShowMCOimgAlgo;
 
   /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
@@ -9757,7 +9757,7 @@ abstract class AppLocalizations {
   /// No description provided for @mcogallery_removePackConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Подтвердите удаление пакета «{name}»'**
+  /// **'Confirm removal of the «{name}» pack?'**
   String mcogallery_removePackConfirm(String name);
 
   /// No description provided for @mcogallery_addGroup.
@@ -9904,11 +9904,11 @@ abstract class AppLocalizations {
   /// **'Clear nodes local cache'**
   String get map_clearDiscoveredContactsCache;
 
-  /// No description provided for @map_clearDiscoveredContactsCacheDisclamer.
+  /// No description provided for @map_clearDiscoveredContactsCacheDisclaimer.
   ///
   /// In en, this message translates to:
   /// **'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.'**
-  String get map_clearDiscoveredContactsCacheDisclamer;
+  String get map_clearDiscoveredContactsCacheDisclaimer;
 
   /// No description provided for @snrIndicator_v2_nearByRepeaters.
   ///
@@ -9955,19 +9955,19 @@ abstract class AppLocalizations {
   /// No description provided for @contacts_batchOperations_removeFail.
   ///
   /// In en, this message translates to:
-  /// **'Removing contacts is failed – please check contacts again'**
+  /// **'Failed to remove contacts – please check the contact list again'**
   String get contacts_batchOperations_removeFail;
 
   /// No description provided for @contacts_batchOperations_commonSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Operation is successfull'**
+  /// **'Operation completed successfully'**
   String get contacts_batchOperations_commonSuccess;
 
   /// No description provided for @contacts_batchOperations_commonFail.
   ///
   /// In en, this message translates to:
-  /// **'Operation is failed'**
+  /// **'Operation failed'**
   String get contacts_batchOperations_commonFail;
 
   /// No description provided for @contacts_batchOperations_selectFiltered.

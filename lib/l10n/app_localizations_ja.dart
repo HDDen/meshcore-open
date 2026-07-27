@@ -136,16 +136,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_interval => '間隔';
 
   @override
-  String get common_default => 'Default';
+  String get common_default => 'デフォルト';
 
   @override
   String get common_clear => 'クリア';
 
   @override
-  String get common_send => 'Send';
+  String get common_send => '送信';
 
   @override
-  String get common_apply => 'Apply';
+  String get common_apply => '適用';
 
   @override
   String get scanner_title => 'MeshCore Open';
@@ -375,42 +375,41 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'ラジオの設定が更新されました';
 
   @override
-  String get settings_regionSettings => 'Regions';
+  String get settings_regionSettings => 'リージョン';
 
   @override
-  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+  String get settings_regionSettingsSubtitle => '保存済みリージョンの管理';
 
   @override
-  String get settings_regionManagement_screenTitle => 'Region Management';
+  String get settings_regionManagement_screenTitle => 'リージョン管理';
 
   @override
-  String get settings_regionNameHint => 'Enter region name';
+  String get settings_regionNameHint => 'リージョン名を入力';
 
   @override
-  String get settings_regionAddRegion => 'Add region';
+  String get settings_regionAddRegion => 'リージョンを追加';
 
   @override
-  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+  String get settings_regionFetchRegions => 'リピーターからリージョンを取得';
 
   @override
-  String get settings_regionFetchRegionsFail => 'No regions were found';
+  String get settings_regionFetchRegionsFail => 'リージョンが見つかりません';
 
   @override
-  String get settings_regionFetchRegionsAlreadyExists =>
-      'This region has already been added';
+  String get settings_regionFetchRegionsAlreadyExists => 'このリージョンは既に追加されています';
 
   @override
-  String get settings_regionName => 'Region Name';
+  String get settings_regionName => 'リージョン名';
 
   @override
-  String get settings_regionDeleted => 'Region deleted';
+  String get settings_regionDeleted => 'リージョンを削除しました';
 
   @override
-  String get settings_deleteRegion => 'Delete Region';
+  String get settings_deleteRegion => 'リージョンを削除';
 
   @override
   String settings_deleteRegionConfirm(String region) {
-    return 'Remove \"$region\" from region list?';
+    return '「$region」をリージョン一覧から削除しますか？';
   }
 
   @override
@@ -592,11 +591,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_aboutModDescription =>
-      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+      '「Advanced」改造版はオリジナルの meshcore_open をベースに、オリジナルアプリのリポジトリに提案された変更や利用地域に固有の変更を取り込んでおり、そのため PR としては提出されていません。';
 
   @override
   String get settings_aboutModLink =>
-      'Mod group on Telegram: https://t.me/mcoadvanced';
+      '改造版の Telegram グループ: https://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -624,7 +623,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_infoChannelCount => 'チャンネル数';
 
   @override
-  String get settings_infoFirmware => 'Firmware version';
+  String get settings_infoFirmware => 'ファームウェアのバージョン';
 
   @override
   String get settings_presets => 'プリセット';
@@ -1189,7 +1188,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contact_clearChat => 'チャットのクリア';
 
   @override
-  String get contact_clearChatConfirm => 'Confirm chat clear';
+  String get contact_clearChatConfirm => 'チャットからメッセージを削除しますか？';
 
   @override
   String get contact_teleBase => 'テレメトリ基地';
@@ -1452,17 +1451,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String channels_regionSetTo(String region) {
-    return 'Region: $region';
+    return 'リージョン: $region';
   }
 
   @override
-  String get channels_regionNotSet => 'Region: none';
+  String get channels_regionNotSet => 'リージョン: なし';
 
   @override
-  String get channels_regionSelect_Title => 'Select a region';
+  String get channels_regionSelect_Title => 'リージョンを割り当て';
 
   @override
-  String get channels_clearRegion => 'Clear region';
+  String get channels_clearRegion => 'リージョンをクリア';
 
   @override
   String get chat_noMessages => 'まだメッセージは届いていません';
@@ -1525,7 +1524,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_sendGif => 'GIF を送信';
 
   @override
-  String get chat_receivedGif => 'Received a GIF';
+  String get chat_receivedGif => 'GIF を受信しました';
 
   @override
   String get chat_reply => '返信';
@@ -2149,7 +2148,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_wardriveAutoUpload => '自動アップロード';
 
   @override
-  String get map_wardriveReUpload => 'Reupload';
+  String get map_wardriveReUpload => '再アップロード';
 
   @override
   String get map_wardriveScreenWakelock => '画面をスリープさせない';
@@ -2167,7 +2166,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_wardriveSecondsSuffix => '秒';
 
   @override
-  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+  String get map_wardriveSamplesNoNew => 'アップロードする新しいサンプルはありません';
 
   @override
   String map_wardriveSamplesSaved(int count) {
@@ -2190,41 +2189,41 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+  String get map_wardriveCoverageResolution => 'カバレッジの詳細度';
 
   @override
   String get map_wardriveCoverageResolutionPrompt =>
-      'Choose the size of coverage squares (size = block side length):';
+      'カバレッジブロックのサイズを選択してください（サイズ = ブロックの一辺）:';
 
   @override
-  String get map_wardriveCoverageRegional => 'Regional';
+  String get map_wardriveCoverageRegional => '地域レベル';
 
   @override
-  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+  String get map_wardriveCoverageRegionalSubtitle => '約20 km（精度 4）';
 
   @override
-  String get map_wardriveCoverageCity => 'City-level';
+  String get map_wardriveCoverageCity => '都市レベル';
 
   @override
-  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+  String get map_wardriveCoverageCitySubtitle => '約5 km（精度 5）';
 
   @override
-  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+  String get map_wardriveCoverageNeighborhood => '地区';
 
   @override
-  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+  String get map_wardriveCoverageNeighborhoodSubtitle => '約1.2 km（精度 6）';
 
   @override
-  String get map_wardriveCoverageStreet => 'Street-level';
+  String get map_wardriveCoverageStreet => '街路レベル';
 
   @override
-  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+  String get map_wardriveCoverageStreetSubtitle => '約153 m（精度 7）';
 
   @override
-  String get map_wardriveCoverageBuilding => 'Building-level';
+  String get map_wardriveCoverageBuilding => '建物レベル';
 
   @override
-  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+  String get map_wardriveCoverageBuildingSubtitle => '約38 m（精度 8）';
 
   @override
   String get map_wardriveAutoUploadEnabled => '自動アップロードを有効にしました。';
@@ -2404,32 +2403,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive サンプルを削除しました。';
 
   @override
-  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+  String get map_wardriveRepNoLocation => 'リピーターの位置情報が提供されていません';
 
   @override
   String map_wardriveDiscoveryWait(Object seconds) {
-    return 'Please wait $seconds seconds before retrying discovery';
+    return '再試行まで $seconds 秒お待ちください';
   }
 
   @override
-  String get map_wardriveFollowMe => 'Follow my location';
+  String get map_wardriveFollowMe => '現在地を追従';
 
   @override
-  String get map_wardriveDeleteBlock => 'Delete block';
+  String get map_wardriveDeleteBlock => 'ブロックを削除';
 
   @override
-  String get map_wardriveInBackground => 'Run in background';
+  String get map_wardriveInBackground => 'バックグラウンドで実行';
 
   @override
-  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+  String get map_wardriveContinuousGPS => 'GPS 位置情報を継続取得';
 
   @override
-  String get map_wardriveShowRepeaterCoverage =>
-      'Show wardrive\'s coverage blocks';
+  String get map_wardriveShowRepeaterCoverage => 'カバレッジブロックを表示';
 
   @override
-  String get map_wardriveHideRepeaterCoverage =>
-      'Hide wardrive\'s coverage blocks';
+  String get map_wardriveHideRepeaterCoverage => 'カバレッジブロックを非表示';
 
   @override
   String get mapCache_title => 'オフライン用地図キャッシュ';
@@ -3057,38 +3054,35 @@ class AppLocalizationsJa extends AppLocalizations {
       'このリピータのIDをフローパス/ループ検出タグにエンコードするために使用されるバイト数。 0=1バイト (256個のID、最大64ホップ)、1=2バイト (65,000個のID、最大32ホップ)、2=3バイト (160万個のID、最大21ホップ)。 v1.13およびそれ以前のファームウェアでは、マルチバイトパスがサポートされていません。 v1.14以降のバージョンでは、一度ネットワークが起動されると、パスが一度だけ検出されます。';
 
   @override
-  String get repeater_keySettings => 'Change Identity Keys';
+  String get repeater_keySettings => 'ノードの鍵を変更';
 
   @override
-  String get repeater_keySettingsSubtitle =>
-      'Change the public/private keypair';
+  String get repeater_keySettingsSubtitle => '公開鍵／秘密鍵のペアを変更';
 
   @override
-  String get repeater_prvKey => 'Private key';
+  String get repeater_prvKey => '秘密鍵';
 
   @override
-  String get repeater_prvKeyHelper =>
-      'A new private key for the repeater, a 128-character hex string.';
+  String get repeater_prvKeyHelper => 'リピーター用の新しい秘密鍵。128 文字の 16 進文字列です。';
 
   @override
-  String get repeater_generatePrvKey => 'Generate a random keypair';
+  String get repeater_generatePrvKey => 'ランダムな鍵ペアを生成';
 
   @override
-  String get repeater_stopGeneratingPrvKey => 'Interrupt search for keypair';
+  String get repeater_stopGeneratingPrvKey => '鍵ペアの探索を中断';
 
   @override
-  String get repeater_pubKey => 'Public key';
+  String get repeater_pubKey => '公開鍵';
 
   @override
-  String get repeater_pubKeyHelper =>
-      'This is the public key that goes with the generated private key. You can\'t set this directly.';
+  String get repeater_pubKeyHelper => '生成された秘密鍵に対応する公開鍵です。直接設定することはできません。';
 
   @override
-  String get repeater_pubKeyPrefix => 'Desired prefix';
+  String get repeater_pubKeyPrefix => '希望するプレフィックス';
 
   @override
   String repeater_pubKeyPrefixHelper(int tries) {
-    return 'Find a public key that starts with these hex digits. Expected tries needed: $tries.';
+    return 'これらの 16 進文字で始まる公開鍵を探索します。予想試行回数: $tries。';
   }
 
   @override
@@ -3949,7 +3943,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHopsHighTimeout =>
-      'Increased path trace timeout (10s*hops)';
+      '経路トレースのタイムアウトを延長（10秒 × ホップ数）';
 
   @override
   String get channelPath_noHopDetails => 'このパッケージに関する詳細な情報は提供されていません。';
@@ -4235,10 +4229,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'お気に入りから削除';
 
   @override
-  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+  String get listFilter_removeFromWardrive => 'Wardrive で無視';
 
   @override
-  String get listFilter_returnToWardrive => 'Return to Wardrive';
+  String get listFilter_returnToWardrive => 'Wardrive で考慮';
 
   @override
   String get listFilter_users => '利用者';
@@ -4893,45 +4887,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_mcmpCompressionDescription => 'mesh-compressorモデルを使用';
 
   @override
-  String get channels_copyPath => 'Copy message path';
+  String get channels_copyPath => 'メッセージの経路をコピー';
 
   @override
-  String get channels_copyPathExtended => 'Copy message path (extended)';
+  String get channels_copyPathExtended => 'メッセージの経路をコピー（詳細）';
 
   @override
-  String get channels_copiedPath => 'Message path copied';
+  String get channels_copiedPath => 'メッセージの経路をコピーしました';
 
   @override
-  String get channels_copyPathFailed => 'Copying message path failed';
+  String get channels_copyPathFailed => 'メッセージの経路をコピーできませんでした';
 
   @override
-  String get settings_copyMsgPathTitle => 'Configure message path copying';
+  String get settings_copyMsgPathTitle => 'メッセージ経路のコピー設定';
 
   @override
-  String get settings_copyMsgPathDscr =>
-      'Edit the template for generating message path information from the channel';
+  String get settings_copyMsgPathDscr => 'チャンネルのメッセージ経路情報を組み立てるテンプレートを編集します';
 
   @override
-  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+  String get settings_copyMsgPathEditTemplateTitle => 'テンプレートの編集';
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+      '置換テンプレートを使用してください:\n%hopInd% - ホップの順番\n%hopKey% - ホップの鍵\n%hopName% - ホップの名前\n%collisionMarker% - リピーター衝突のマーク\n%div% - 区切り文字（最後のホップでは省略）\n%hops% - ホップ数\n\\n - 改行';
 
   @override
-  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+  String get settings_copyMsgPathEditFinalTitle => '最終メッセージ';
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+      '利用できるテンプレート:\n%senderName% - 送信者名\n%path% - 組み立てられた経路\n%hops% - ホップ数\n\\n - 改行';
 
   @override
-  String get settings_channelsSendAsBinary =>
-      'Send extended data as binary (channels)';
+  String get settings_channelsSendAsBinary => '拡張フォーマットをバイナリで送信（チャンネル）';
 
   @override
-  String get settings_dmSendAsBinary =>
-      'Send extended data as binary (direct messages)';
+  String get settings_dmSendAsBinary => '拡張フォーマットをバイナリで送信（ダイレクトメッセージ）';
 
   @override
   String get contact_typeChat => 'チャット';
@@ -5080,488 +5071,472 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pathMap_unfollowPacket => 'パケットの追跡を解除';
 
   @override
-  String get chat_canvas => 'MCOimg canvas';
+  String get chat_canvas => 'MCOimg キャンバス';
 
   @override
-  String get chat_canvasCrop => 'Crop/expand';
+  String get chat_canvasCrop => '切り抜き／拡張';
 
   @override
-  String get chat_canvasResize => 'Scale';
+  String get chat_canvasResize => '縮小／拡大';
 
   @override
-  String get chat_canvasUnlockSize => 'Unlock canvas size';
+  String get chat_canvasUnlockSize => 'キャンバスサイズのロックを解除';
 
   @override
-  String get chat_canvasFormatVer => 'Codec version';
+  String get chat_canvasFormatVer => 'コーデックのバージョン';
 
   @override
-  String get chat_canvasPalette => 'Palette';
+  String get chat_canvasPalette => 'パレット';
 
   @override
-  String get chat_canvasPaletteShow => 'Show palette';
+  String get chat_canvasPaletteShow => 'パレットを表示';
 
   @override
-  String get chat_canvasPaletteMode => 'Palette preset';
+  String get chat_canvasPaletteMode => 'パレットのプロファイル';
 
   @override
-  String get chat_canvasPaletteDynamic => 'Dynamic';
+  String get chat_canvasPaletteDynamic => 'ダイナミック';
 
   @override
-  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+  String get chat_canvasPaletteDynamicProfile => 'ダイナミックパレットの基本セット';
 
   @override
-  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+  String get chat_canvasPaletteDynamicUsed => '実際に使用されている色';
 
   @override
   String get chat_canvasPaletteDynamicDscr =>
-      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+      'ご注意ください。ダイナミックパレットは慎重に使用してください。主にグラデーションのある画像向けで、より小さなパレットを作り、同じ基本パレットに属さない色を使うためのものです。参考: 基本パレットが小さいほど使用した色調の情報を符号化するコストが下がり、色数の合計が少ないほどキャンバスの各ピクセルのコストが下がります。';
 
   @override
-  String get chat_canvasPaletteAlpha => 'Transparency color';
+  String get chat_canvasPaletteAlpha => '透過色';
 
   @override
-  String get chat_canvasChangeSize => 'Change canvas size';
+  String get chat_canvasChangeSize => 'キャンバスサイズを変更';
 
   @override
-  String get chat_canvasTrim => 'Trim empty';
+  String get chat_canvasTrim => '余白を切り取る';
 
   @override
-  String get chat_canvasWidth => 'Width';
+  String get chat_canvasWidth => '幅';
 
   @override
-  String get chat_canvasHeight => 'Height';
+  String get chat_canvasHeight => '高さ';
 
   @override
-  String get chat_canvasGridShow => 'Show grid';
+  String get chat_canvasGridShow => 'グリッドを表示';
 
   @override
-  String get chat_canvasRulerShow => 'Show ruler';
+  String get chat_canvasRulerShow => 'ルーラーを表示';
 
   @override
-  String get chat_canvasGridColor => 'Grid color';
+  String get chat_canvasGridColor => 'グリッドの色';
 
   @override
-  String get chat_canvasSave => 'Save to file';
+  String get chat_canvasSave => 'ファイルに保存';
 
   @override
-  String get chat_canvasLoad => 'Load from file';
+  String get chat_canvasLoad => 'ファイルから読み込む';
 
   @override
   String chat_canvasSendPayloadExceed(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+    return '送信できません — ペイロードが $count バイト超過しています。ディテールの数かキャンバスサイズを減らしてください。';
   }
 
   @override
   String chat_canvasCurrentPayload(int payload) {
-    return 'Current payload: $payload';
+    return '現在のペイロード: $payload';
   }
 
   @override
-  String get chat_canvasActive => 'Show canvas';
+  String get chat_canvasActive => 'キャンバスを表示';
 
   @override
-  String get chat_canvasShowLockBtn => 'Show canvas block button';
+  String get chat_canvasShowLockBtn => 'キャンバスのロックボタンを表示';
 
   @override
-  String get chat_canvasSendToEdit => 'Send to canvas';
+  String get chat_canvasSendToEdit => 'キャンバスへ送る';
 
   @override
-  String get chat_canvasSendToGallery => 'Save to gallery';
+  String get chat_canvasSendToGallery => 'ギャラリーに保存';
 
   @override
-  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+  String get chat_canvasGalleryShowPNG => '元画像を表示（PNG）';
 
   @override
-  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+  String get chat_canvasGalleryShowBIN => 'Bin として表示';
 
   @override
-  String get chat_canvasGalleryRemove => 'Remove';
+  String get chat_canvasGalleryRemove => '削除';
 
   @override
-  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+  String get chat_canvasGalleryRemoveConfirm => 'ギャラリーから画像を削除しますか？';
 
   @override
   String chat_canvasFormatNotSupported(int received, int current) {
-    return 'MCOimg format version: $received, current codec supports up to $current';
+    return 'MCOimg のバージョン: $received、現在のコーデックは $current まで対応しています';
   }
 
   @override
-  String get chat_canvasSaveBinary => 'Save fo binary file';
+  String get chat_canvasSaveBinary => 'バイナリファイルに保存';
 
   @override
   String chat_canvasCannotSend(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+    return '送信できません — ペイロードが $count バイト超過しています。画像を編集して再度お試しください。';
   }
 
   @override
-  String get chat_canvasCompressionLevel => 'Compression level';
+  String get chat_canvasCompressionLevel => '圧縮レベル';
 
   @override
-  String get chat_canvasCompressionLevelNormal => 'Normal';
+  String get chat_canvasCompressionLevelNormal => '標準';
 
   @override
-  String get chat_canvasCompressionLevelHigh => 'High';
+  String get chat_canvasCompressionLevelHigh => '高';
 
   @override
-  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+  String get chat_canvasCompressionLevelExtreme => '最高';
 
   @override
-  String get chat_showHops => 'Show hops';
+  String get chat_showHops => 'ホップを表示';
 
   @override
-  String get settings_modSettings => 'Modification Settings';
+  String get settings_modSettings => '改造版の設定';
 
   @override
   String get settings_modSettingsSubtitle =>
-      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+      'オリジナルの meshcore_open にはない項目をまとめたセクションです';
 
   @override
-  String get settings_modSettingsVisual => 'Visual';
+  String get settings_modSettingsVisual => '表示';
 
   @override
-  String get settings_modSettingsMessaging => 'Messaging';
+  String get settings_modSettingsMessaging => 'メッセージ';
 
   @override
   String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_mcmp_version => 'Version';
+  String get settings_mcmp_version => 'バージョン';
 
   @override
-  String get settings_mcmp_useSign => 'Message signing';
+  String get settings_mcmp_useSign => '署名の検証';
 
   @override
-  String get settings_mcmp_signed => 'Using signature verification';
+  String get settings_mcmp_signed => '署名の検証あり';
 
   @override
-  String get settings_mcmp_noSign => 'No signature';
+  String get settings_mcmp_noSign => '署名の検証なし';
 
   @override
-  String get settings_mcmp_senderNameCollision => 'Sender isn\'t unique!';
+  String get settings_mcmp_senderNameCollision => '送信者名が一意ではありません！';
 
   @override
-  String get chat_mcmpSignatureValid => 'Signature is valid';
+  String get chat_mcmpSignatureValid => '署名は有効です';
 
   @override
-  String get chat_mcmpSignatureInvalid => 'Invalid signature!';
+  String get chat_mcmpSignatureInvalid => '署名が無効です！';
 
   @override
-  String get chat_mcmpSignatureUnverifiable =>
-      'Signature can\'t be verified — sender is not in contacts';
+  String get chat_mcmpSignatureUnverifiable => '署名を検証できません — 送信者が連絡先にありません';
 
   @override
-  String get chat_mcmpSignatureTransport =>
-      'Authenticated by encrypted transport';
+  String get chat_mcmpSignatureTransport => 'トランスポートの暗号化により確認済み';
 
   @override
-  String get chat_mcmpManualRecheckSign => 'Manually recheck signature';
+  String get chat_mcmpManualRecheckSign => '署名を再検証';
 
   @override
-  String get chat_mcmpSignatureCheckStatus => 'Signature checking';
+  String get chat_mcmpSignatureCheckStatus => '署名の検証';
 
   @override
-  String get chat_mcmpSigningFailed => 'Failed to sign the message';
+  String get chat_mcmpSigningFailed => 'メッセージに署名できませんでした';
 
   @override
-  String get chat_mcmpAnswerTo => 'MCMPv3 answer to';
+  String get chat_mcmpAnswerTo => 'MCMPv3 の返信先';
 
   @override
-  String get chat_timestampPacket => 'Packet timestamp';
+  String get chat_timestampPacket => 'パケットのタイムスタンプ';
 
   @override
   String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
   String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
+      'MCOimg: フォーマットバージョンのバッジを表示';
 
   @override
   String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
+      'MCOimg: 符号化アルゴリズムのバッジを表示';
 
   @override
   String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
+      'MCOimg: 画像のサイズを表示（バイト）';
 
   @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
+  String get settings_modSettingsVisualShowMCOimgResolution => 'MCOimg: 解像度を表示';
 
   @override
   String get settings_modSettingsMCOimg_showReplacements =>
-      'Display original images instead of LoRa versions';
+      'LoRa 版の代わりに画像の原本を表示';
 
   @override
-  String get settings_modSettingsMCOimg_replacementsScale =>
-      'Scale original images in chats';
+  String get settings_modSettingsMCOimg_replacementsScale => 'チャットで原本を拡大縮小';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
-      'Scale as Nearest Neighbor';
+      'Nearest Neighbor で拡大縮小';
 
   @override
-  String get settings_modSettingsMCOimg_replacementsSharp =>
-      'Sharp original images in chats';
+  String get settings_modSettingsMCOimg_replacementsSharp => 'チャットで原本をシャープ化';
 
   @override
   String get settings_modSettingsMCOimg_replacementsSharpDscr =>
-      'Attention! Disables GIF animation!';
+      '注意！ GIF のアニメーションが無効になります！';
 
   @override
-  String get settings_modSettingsHideChInd => 'Hide channel index';
+  String get settings_modSettingsHideChInd => 'チャンネル番号を非表示';
 
   @override
-  String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
+  String get settings_modSettingsHideRadioStats => 'ヘッダーの無線統計を非表示';
 
   @override
   String get settings_modSettingsSNRindicatorAllRepActivity =>
-      'SNR indicator: trigger on all repeater responses, not just adverts';
+      'SNR インジケーター: advert だけでなく、リピーターのすべての応答で反応する';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
-      'Show quotes in incoming messages as mentions';
+      '受信メッセージの引用をメンションとして表示';
 
   @override
-  String get settings_modSettingsSimplifiedMentions =>
-      'Simplified style of mentions in messages visual';
+  String get settings_modSettingsSimplifiedMentions => 'メッセージ内のメンションを簡略表示';
 
   @override
-  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+  String get settings_modSettingsSharedMsgHistory => '共有メッセージ履歴';
 
   @override
   String get settings_modSettingsSharedMsgHistoryDscr =>
-      'Combining the history of messages received from different devices; the final history is stored only in the application';
+      '異なる端末から受信したメッセージ履歴の統合。最終的な履歴はアプリ内にのみ保存されます';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+  String get settings_modSettingsSharedMsgHistoryDisabled => '無効';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+  String get settings_modSettingsSharedMsgHistoryChannels => 'チャンネルのみ';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+  String get settings_modSettingsSharedMsgHistoryContacts => '連絡先のみ';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+  String get settings_modSettingsSharedMsgHistoryAll => 'すべてのチャット';
 
   @override
-  String get settings_modSettingsMessagingShowCompressionRatio =>
-      'Show compression ratio';
+  String get settings_modSettingsMessagingShowCompressionRatio => '圧縮率を表示';
 
   @override
   String get settings_modSettingsMessagingCompressionRatioWithSendername =>
-      'Also take into account senderName';
+      'ノード名も計算に含める';
 
   @override
-  String get settings_modSettingsVisualHideMapZoomControls =>
-      'Hide map zoom panel';
+  String get settings_modSettingsVisualHideMapZoomControls => '地図のズームパネルを非表示';
 
   @override
-  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+  String get settings_modSettingsVisualShowMsgRegion => 'メッセージのリージョンを表示';
 
   @override
   String channels_messageRegion(String region) {
-    return 'Region: $region';
+    return 'リージョン: $region';
   }
 
   @override
-  String get channels_messageRegionUnknown => 'unknown';
+  String get channels_messageRegionUnknown => '不明';
 
   @override
-  String get channels_messageRegionEmpty => 'unset';
+  String get channels_messageRegionEmpty => '未設定';
 
   @override
-  String get settings_defaultRegionScope => 'Default region scope';
+  String get settings_defaultRegionScope => 'ノードの既定リージョン';
 
   @override
-  String get settings_defaultRegionScopeChanged =>
-      'Default region scope changed';
+  String get settings_defaultRegionScopeChanged => '既定のリージョンを変更しました';
 
   @override
-  String get settings_defaultRegionScopeChangeFailed =>
-      'Change default region scope failed';
+  String get settings_defaultRegionScopeChangeFailed => 'リージョンを変更できませんでした';
 
   @override
-  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+  String get settings_defaultRegionScopeEmpty => '未設定';
 
   @override
-  String get settings_defaultRegionScopeWaitForSync =>
-      'Please wait until synchronization complete';
+  String get settings_defaultRegionScopeWaitForSync => '同期が完了するまでお待ちください';
 
   @override
-  String get common_reset => 'Reset';
+  String get common_reset => 'リセット';
 
   @override
-  String get connection_autoconnect => 'Autoconnect';
+  String get connection_autoconnect => '自動接続';
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'No retranslations heard for $time seconds.';
+    return '$time 秒間、再送信が確認できません。';
   }
 
   @override
   String get settings_modSettingsNoRetraHeading =>
-      'Display messages as unsent if no retranslations heard within seconds:';
+      'この秒数の間に再送信が確認できない場合、メッセージを未送信として表示する:';
 
   @override
   String get settings_modSettingsNoRetraDscr =>
-      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+      '注意！ ノードのファームウェアの仕組みにより、約133バイトを超えるチャンネルメッセージは物理的に確認応答を受け取れず、常に失敗として表示されます。このオプションはアプリ設定のペイロード制限と併用してください。';
 
   @override
-  String get settings_selfTelemetryShow => 'Check sensors';
+  String get settings_selfTelemetryShow => 'センサーを表示';
 
   @override
   String get settings_modSettingsVisualChannelsUnreadSorting =>
-      'Channels sorting by unread messages';
+      '未読メッセージでチャンネルを並べ替え';
 
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
-      'Keep TCP-connection alive in background';
+      'バックグラウンドで TCP 接続を維持';
 
   @override
-  String get settings_modSettingsDPIchange => 'DPI change';
+  String get settings_modSettingsDPIchange => 'DPI の調整';
 
   @override
-  String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
+  String get settings_modSettingsDPIchangeToIcons => 'アイコンにも適用';
 
   @override
-  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+  String get chat_MCOimgOpenGallery => 'MCOimg ギャラリーを開く';
 
   @override
-  String get chat_additionalActions => 'Chat actions menu';
+  String get chat_additionalActions => 'アクションメニュー';
 
   @override
-  String get mcogallery_common => 'Common';
+  String get mcogallery_common => '共通';
 
   @override
-  String get mcogallery_addPack => 'Add package';
+  String get mcogallery_addPack => 'パックを追加';
 
   @override
-  String get mcogallery_removePack => 'Remove package';
+  String get mcogallery_removePack => 'パックを削除';
 
   @override
   String mcogallery_removePackConfirm(String name) {
-    return 'Подтвердите удаление пакета «$name»';
+    return 'パック「$name」の削除を確認してください';
   }
 
   @override
-  String get mcogallery_addGroup => 'Add group';
+  String get mcogallery_addGroup => 'グループを追加';
 
   @override
-  String get mcogallery_removeGroup => 'Remove group';
+  String get mcogallery_removeGroup => 'グループを削除';
 
   @override
-  String get mcogallery_showLora => 'Show LoRa-variant';
+  String get mcogallery_showLora => 'LoRa 版を表示';
 
   @override
-  String get mcogallery_showPacked => 'Show improved variant';
+  String get mcogallery_showPacked => '高品質版を表示';
 
   @override
-  String get chat_sendSelfContact => 'Send self contact';
+  String get chat_sendSelfContact => '自分の連絡先を送信';
 
   @override
-  String get chat_sendContact => 'Share contact';
+  String get chat_sendContact => '連絡先を共有';
 
   @override
-  String get chat_addContact => 'Add contact';
+  String get chat_addContact => '連絡先を追加';
 
   @override
-  String get chat_sureToReplaceContact =>
-      'Contact is already exists, replace it?';
+  String get chat_sureToReplaceContact => '連絡先は既に存在します。置き換えますか？';
 
   @override
-  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+  String get contacts_addContactByPubkey => '鍵から連絡先を追加';
 
   @override
-  String get contacts_addContactByPubkey_contactType => 'Contact type';
+  String get contacts_addContactByPubkey_contactType => '連絡先の種類';
 
   @override
-  String get chat_contactIsYou => 'It is you';
+  String get chat_contactIsYou => 'これはあなた自身の連絡先です';
 
   @override
   String chat_contactType(String contacttype) {
-    return 'Contact type: $contacttype';
+    return '連絡先の種類: $contacttype';
   }
 
   @override
-  String get chat_contactTypeNode => 'Node';
+  String get chat_contactTypeNode => 'ノード';
 
   @override
-  String get chat_contactTypeRepeater => 'Repeater';
+  String get chat_contactTypeRepeater => 'リピーター';
 
   @override
-  String get chat_contactTypeRoom => 'Room-server';
+  String get chat_contactTypeRoom => 'ルームサーバー';
 
   @override
-  String get chat_contactTypeSensor => 'Sensor';
+  String get chat_contactTypeSensor => 'センサー';
 
   @override
-  String get chat_myLocation => 'Share my location';
+  String get chat_myLocation => '現在地を送信';
 
   @override
-  String get chat_locationFromMap => 'Share location from map';
+  String get chat_locationFromMap => '地図から座標を送信';
 
   @override
-  String get settings_modSettingsRoomServer => 'Room-servers and contacts';
+  String get settings_modSettingsRoomServer => 'ルームサーバーと連絡先';
 
   @override
   String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
-      'Show room-servers with messages history against channels in single screen';
+      '履歴のあるサーバーをチャンネルと同じ画面に表示';
 
   @override
   String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
-      'Show contacts with messages history against channels in single screen';
+      '履歴のある連絡先をチャンネルと同じ画面に表示';
 
   @override
   String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
-      'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers';
+      '従来のドラッグ＆ドロップの動作を維持する: チャンネルの並べ替えはノード上の並び順も変更し、連絡先やサーバーは並べ替えできません';
 
   @override
-  String get settings_appSettingsCustomChemistry => 'Custom';
+  String get settings_appSettingsCustomChemistry => 'カスタム';
 
   @override
-  String get map_clearDiscoveredContactsCache => 'Clear nodes local cache';
+  String get map_clearDiscoveredContactsCache => 'ノードのローカルキャッシュを消去';
 
   @override
-  String get map_clearDiscoveredContactsCacheDisclamer =>
-      'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.';
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
+      '検出された連絡先のキャッシュを消去してもよろしいですか？ ノード本体の連絡先には影響しません。';
 
   @override
-  String get snrIndicator_v2_nearByRepeaters => 'Repeater\'s activity';
+  String get snrIndicator_v2_nearByRepeaters => 'リピーターの活動';
 
   @override
-  String get app_connectionLostReconnect =>
-      'Connection to node is lost; reconnecting...';
+  String get app_connectionLostReconnect => 'ノードとの接続が切断されました。再接続しています...';
 
   @override
-  String get app_connectionLostReconnected => 'Reconnected to node';
+  String get app_connectionLostReconnected => 'ノードとの接続が復旧しました';
 
   @override
-  String get contacts_batchOperations => 'Batch operations';
+  String get contacts_batchOperations => '一括操作';
 
   @override
-  String get contacts_batchOperations_notSelected =>
-      'You have not selected any contacts for processing!';
+  String get contacts_batchOperations_notSelected => '処理する連絡先が選択されていません！';
 
   @override
   String get contacts_batchOperations_removeConfirm =>
-      'Remove selected contacts from node?';
+      '選択した連絡先をノードのメモリーから削除しますか？';
 
   @override
-  String get contacts_batchOperations_removeSuccess =>
-      'Selected contacts have been removed';
+  String get contacts_batchOperations_removeSuccess => '選択した連絡先を削除しました';
 
   @override
   String get contacts_batchOperations_removeFail =>
-      'Removing contacts is failed – please check contacts again';
+      '連絡先を削除できませんでした — 一覧をもう一度確認してください';
 
   @override
-  String get contacts_batchOperations_commonSuccess =>
-      'Operation is successfull';
+  String get contacts_batchOperations_commonSuccess => '操作は正常に完了しました';
 
   @override
-  String get contacts_batchOperations_commonFail => 'Operation is failed';
+  String get contacts_batchOperations_commonFail => '操作を完了できませんでした';
 
   @override
-  String get contacts_batchOperations_selectFiltered => 'Select filtered';
+  String get contacts_batchOperations_selectFiltered => '絞り込み結果を選択';
 }

@@ -4783,7 +4783,7 @@ class _MapScreenState extends State<MapScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.map_clearDiscoveredContactsCache),
-        content: Text(context.l10n.map_clearDiscoveredContactsCacheDisclamer),
+        content: Text(context.l10n.map_clearDiscoveredContactsCacheDisclaimer),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),

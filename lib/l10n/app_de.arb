@@ -122,8 +122,6 @@
   "settings_rebootDeviceSubtitle": "MeshCore-Gerät neu starten",
   "settings_rebootDeviceConfirm": "Sind Sie sicher, dass Sie das Gerät neu starten möchten? Sie werden getrennt.",
   "settings_debug": "Fehlerbehebung",
-  "settings_bleDebugLog": "BLE-Debug-Protokoll",
-  "settings_bleDebugLogSubtitle": "BLE-, TCP- und USB-Befehle, Antworten und Rohdaten",
   "settings_appDebugLog": "App-Debug-Protokoll",
   "settings_appDebugLogSubtitle": "App-Debug-Nachrichten",
   "settings_about": "Über",
@@ -621,14 +619,6 @@
     }
   },
   "debugFrame_hexDump": "Hex-Dump:",
-  "chat_pathManagement": "Pfadverwaltung",
-  "chat_routingMode": "Routenmodus",
-  "chat_autoUseSavedPath": "Automatisch (gespeicherten Pfad verwenden)",
-  "chat_forceFloodMode": "Flut-Modus erzwingen",
-  "chat_recentAckPaths": "Aktuelle ACK-Pfade (antippen, um zu verwenden):",
-  "chat_pathHistoryFull": "Die Pfadhistorie ist voll. Entferne Einträge, um neue hinzuzufügen.",
-  "chat_hopSingular": "Sprung",
-  "chat_hopPlural": "Sprünge",
   "chat_hopsCount": "{count} {count, plural, =1{Sprung} other{Sprünge}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -637,30 +627,10 @@
       }
     }
   },
-  "chat_successes": "Erfolgreich",
   "chat_removePath": "Pfad entfernen",
   "chat_noPathHistoryYet": "Keine Pfadhistorie vorhanden.\nSende eine Nachricht, um Pfade zu entdecken.",
-  "chat_pathActions": "Pfadaktionen:",
-  "chat_setCustomPath": "Lege benutzerdefinierten Pfad fest",
-  "chat_setCustomPathSubtitle": "Manuellen Routenpfad festlegen",
-  "chat_clearPath": "Pfad zurücksetzen",
-  "chat_clearPathSubtitle": "Setze Pfad zurück, erkenne neuen Pfad bei nächster Sendung.",
   "chat_pathCleared": "Pfad zurückgesetzt. Nächste Nachricht wird Route neu entdecken.",
-  "chat_floodModeSubtitle": "Verwende den Routingschalter in der App-Leiste",
-  "chat_floodModeEnabled": "Flutmodus aktiviert.",
   "chat_fullPath": "Vollständiger Pfad",
-  "chat_pathDetailsNotAvailable": "Die Pfaddetails sind noch nicht verfügbar. Versuchen Sie, eine Nachricht zu senden, um zu aktualisieren.",
-  "chat_pathSetHops": "Pfad gesetzt: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "Lokal Gespeichert. Bitte Verbinden zum Synchronisieren.",
   "chat_pathDeviceConfirmed": "Gerät bestätigt.",
   "chat_pathDeviceNotConfirmed": "Gerät noch nicht bestätigt.",
@@ -971,41 +941,8 @@
   "login_failedMessage": "Anmeldung fehlgeschlagen. Entweder ist das Passwort falsch oder der Repeater ist nicht erreichbar.",
   "common_reload": "Neu laden",
   "common_clear": "Leeren",
-  "path_currentPath": "Aktueller Pfad: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Pfad mit {count} {count, plural, =1{Hop} other{Hops}} verwenden",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Pfad eingeben",
   "path_currentPathLabel": "Aktueller Pfad",
-  "path_hexPrefixInstructions": "Geben Sie für jeden Zwischen-Hop das zweistellige Hex-Präfix ein, getrennt durch Kommas.",
-  "path_hexPrefixExample": "Beispiel: A1,F2,3C (jeder Knoten verwendet das erste Byte seines öffentlichen Schlüssels)",
-  "path_labelHexPrefixes": "Pfad (Hex-Präfixe)",
-  "path_helperMaxHops": "Maximal 64 Sprünge. Jedes Präfix besteht aus 2 Hex-Zeichen (1 Byte).",
-  "path_selectFromContacts": "Oder aus Kontakten auswählen:",
   "path_noRepeatersFound": "Keine Repeater oder Raumserver gefunden.",
-  "path_customPathsRequire": "Benutzerdefinierte Pfade erfordern Zwischen-Hops, die Nachrichten weiterleiten können.",
-  "path_invalidHexPrefixes": "Ungültige Hex-Präfixe: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "Pfad zu lang. Maximal 64 Sprünge erlaubt.",
-  "path_setPath": "Pfad festlegen",
   "repeater_management": "Repeater-Verwaltung",
   "repeater_managementTools": "Verwaltungstools",
   "repeater_status": "Status",
@@ -1018,9 +955,6 @@
   "repeater_settingsSubtitle": "Repeater-Parameter konfigurieren",
   "repeater_statusTitle": "Repeater-Status",
   "repeater_routingMode": "Routing-Modus",
-  "repeater_autoUseSavedPath": "Automatisch (gespeicherten Pfad verwenden)",
-  "repeater_forceFloodMode": "Flut-Modus erzwingen",
-  "repeater_pathManagement": "Pfadverwaltung",
   "repeater_refresh": "Aktualisieren",
   "repeater_statusRequestTimeout": "Statusanfrage abgelaufen.",
   "repeater_errorLoadingStatus": "Fehler beim Laden des Status: {error}",
@@ -1962,7 +1896,6 @@
   "scanner_enableBluetooth": "Bluetooth aktivieren",
   "snrIndicator_lastSeen": "Zuletzt gesehen",
   "snrIndicator_nearByRepeaters": "In der Nähe befindliche Repeater",
-  "chat_ShowAllPaths": "Alle Pfade anzeigen",
   "settings_clientRepeat": "Weiterleitung ohne Netzstrom",
   "settings_clientRepeatFreqWarning": "Weiterleitung ohne Netzstrom erfordert 433, 869 oder 918 MHz",
   "settings_clientRepeatSubtitle": "Dieses Gerät kann Mesh-Pakete für andere weiterleiten",
@@ -2238,16 +2171,6 @@
   "tcpConnectionFailed": "TCP-Verbindung fehlgeschlagen: {error}",
   "map_showDiscoveryContacts": "Entdeckte Kontakte anzeigen",
   "map_setAsMyLocation": "Als meine aktuelle Position festlegen",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "settings_allowByContact": "Nach Kontakt-Flags zulassen",
   "settings_privacy": "Datenschutzeinstellungen",
   "settings_allowAll": "Alles zulassen",
@@ -2280,7 +2203,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Gewicht, das nach einem fehlgeschlagenen Versand von einem Weg entfernt wurde",
   "appSettings_maxMessageRetries": "Maximale Anzahl an Wiederholungsversuchen",
   "appSettings_maxMessageRetriesSubtitle": "Anzahl der Versuche, eine Nachricht erneut zu senden, bevor sie als fehlgeschlagen markiert wird.",
-  "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetriemodus aktualisiert",
   "map_showOverlaps": "Repeater-Schlüsselüberlappungen",
   "map_runTraceWithReturnPath": "Auf dem gleichen Pfad zurückkehren.",
@@ -2534,7 +2456,6 @@
       }
     }
   },
-  "chat_score": "Punktzahl",
   "settings_multiAck": "Mehrfach-ACKs",
   "map_sharedAt": "Geteilt am",
   "@losBlockedSpotChip": {
@@ -3278,7 +3199,7 @@
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Bestehende Drag-and-drop-Funktion beibehalten: die Reihenfolge der Kanäle ändert deren Reihenfolge auf dem Knoten, Kontakte und Server lassen sich nicht sortieren",
   "settings_appSettingsCustomChemistry": "Benutzerdefiniert",
   "map_clearDiscoveredContactsCache": "Lokalen Knoten-Cache leeren",
-  "map_clearDiscoveredContactsCacheDisclamer": "Möchten Sie den Cache der entdeckten Kontakte wirklich leeren? Die Kontakte auf dem Knoten selbst sind davon nicht betroffen.",
+  "map_clearDiscoveredContactsCacheDisclaimer": "Möchten Sie den Cache der entdeckten Kontakte wirklich leeren? Die Kontakte auf dem Knoten selbst sind davon nicht betroffen.",
   "snrIndicator_v2_nearByRepeaters": "Repeater-Aktivität",
   "app_connectionLostReconnect": "Verbindung zum Knoten verloren; Verbindung wird wiederhergestellt...",
   "app_connectionLostReconnected": "Wieder mit dem Knoten verbunden",
