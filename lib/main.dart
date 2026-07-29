@@ -79,6 +79,27 @@ void main() async {
   // Load settings
   await appSettingsService.loadSettings();
   await settingsSectionsService.initialize();
+  appSettingsService.setExtraBatteryProfilesProvider(
+    (deviceId) =>
+        settingsSectionsService.batteryChemistryProfilesForDevice(deviceId),
+  );
+  settingsSectionsService.setBatteryProfileApplier((
+    deviceKey,
+    chemistry,
+    minVolts,
+    maxVolts,
+  ) async {
+    final batteryDeviceKey = connector.batteryDeviceKey ?? deviceKey;
+    await appSettingsService.setBatteryChemistryForDevice(
+      batteryDeviceKey,
+      chemistry,
+    );
+    await appSettingsService.setBatteryCustomRangeForDevice(
+      batteryDeviceKey,
+      minVolts,
+      maxVolts,
+    );
+  });
 
   // Initialize app logger
   appLogger.initialize(

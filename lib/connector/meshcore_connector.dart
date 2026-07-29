@@ -5229,9 +5229,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       return;
     }
-    final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(
-      channel.name,
-    );
+    final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(channel.name);
     final shouldDeferForSync =
         !shouldBypassAckAndRetry && _shouldDeferChannelSendForSync;
     final hasExplicitMcoImageV3 =
@@ -5498,33 +5496,37 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     if (shouldBypassAckAndRetry) {
       notifyListeners();
-      await _runScopedChannelSend(() async {
-        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-        final sentByRadioAt = DateTime.now();
-        final sentTimestampSeconds =
-            sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
-        _updateChannelMessagePacketTimestamp(
-          channel.index,
-          message.messageId,
-          sentTimestampSeconds,
-          packetHash: binaryFrame == null
-              ? _computeContentHash(
+      await _runScopedChannelSend(
+        () async {
+          await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+          final sentByRadioAt = DateTime.now();
+          final sentTimestampSeconds =
+              sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+          _updateChannelMessagePacketTimestamp(
+            channel.index,
+            message.messageId,
+            sentTimestampSeconds,
+            packetHash: binaryFrame == null
+                ? _computeContentHash(
+                    channel.index,
+                    sentTimestampSeconds,
+                    '${_selfName ?? 'Me'}: $messageText',
+                  )
+                : null,
+          );
+          _markPendingChannelMessageSentById(message.messageId);
+          await sendFrame(
+            binaryFrame ??
+                buildSendChannelTextMsgFrame(
                   channel.index,
-                  sentTimestampSeconds,
-                  '${_selfName ?? 'Me'}: $messageText',
-                )
-              : null,
-        );
-        _markPendingChannelMessageSentById(message.messageId);
-        await sendFrame(
-          binaryFrame ??
-              buildSendChannelTextMsgFrame(
-                channel.index,
-                outboundText,
-                timestampSeconds: sentTimestampSeconds,
-              ),
-        );
-      }, region: getChannelRegion(channel.index), waitForScopeReset: false);
+                  outboundText,
+                  timestampSeconds: sentTimestampSeconds,
+                ),
+          );
+        },
+        region: getChannelRegion(channel.index),
+        waitForScopeReset: false,
+      );
       return;
     }
     _retriableChannelMessageSends[message.messageId] =

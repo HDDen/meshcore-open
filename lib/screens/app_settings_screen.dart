@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mco_service/mco_service.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
@@ -36,10 +37,11 @@ class AppSettingsScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child:
-            Consumer3<
+            Consumer4<
               AppSettingsService,
               MeshCoreConnector,
-              TranslationService
+              TranslationService,
+              SettingsSectionsService
             >(
               builder:
                   (
@@ -47,6 +49,7 @@ class AppSettingsScreen extends StatelessWidget {
                     settingsService,
                     connector,
                     translationService,
+                    settingsSectionsService,
                     child,
                   ) {
                     return ListView(
@@ -90,6 +93,7 @@ class AppSettingsScreen extends StatelessWidget {
                             context,
                             settingsService,
                             connector,
+                            settingsSectionsService,
                           ),
                         ),
 
@@ -679,6 +683,7 @@ class AppSettingsScreen extends StatelessWidget {
     BuildContext context,
     AppSettingsService settingsService,
     MeshCoreConnector connector,
+    SettingsSectionsService settingsSectionsService,
   ) {
     final deviceId = connector.batteryDeviceKey;
     final isConnected = connector.isConnected && deviceId != null;
@@ -686,6 +691,26 @@ class AppSettingsScreen extends StatelessWidget {
     final selection = connectedDeviceId != null
         ? settingsService.batteryChemistryForDevice(connectedDeviceId)
         : 'nmc';
+    final rawExtraProfiles = settingsSectionsService
+        .batteryChemistryProfilesForDevice(connectedDeviceId, context: context);
+    final extraProfiles = <McoBatteryChemistryProfile>[];
+    final extraProfileIds = <String, int>{};
+    for (final profile in rawExtraProfiles) {
+      final existingIndex = extraProfileIds[profile.id];
+      if (existingIndex == null) {
+        extraProfileIds[profile.id] = extraProfiles.length;
+        extraProfiles.add(profile);
+      } else {
+        extraProfiles[existingIndex] = profile;
+      }
+    }
+    final knownChemistries = <String>{
+      'nmc',
+      'lifepo4',
+      'lipo',
+      batteryChemistryCustom,
+      for (final profile in extraProfiles) profile.id,
+    };
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -762,10 +787,14 @@ class AppSettingsScreen extends StatelessWidget {
               value: 'lipo',
               child: Text(context.l10n.appSettings_batteryLipo),
             ),
+            for (final profile in extraProfiles)
+              DropdownMenuItem(value: profile.id, child: Text(profile.label)),
             DropdownMenuItem(
               value: batteryChemistryCustom,
               child: Text(context.l10n.settings_appSettingsCustomChemistry),
             ),
+            if (!knownChemistries.contains(selection))
+              DropdownMenuItem(value: selection, child: Text(selection)),
           ],
         ),
         if (isConnected && selection == batteryChemistryCustom) ...[

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
@@ -12,8 +13,29 @@ class AppSettingsService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
 
   AppSettings _settings = AppSettings();
+  List<McoBatteryChemistryProfile> Function(String deviceId)?
+  _extraBatteryProfilesForDevice;
 
   AppSettings get settings => _settings;
+
+  void setExtraBatteryProfilesProvider(
+    List<McoBatteryChemistryProfile> Function(String deviceId)? provider,
+  ) {
+    _extraBatteryProfilesForDevice = provider;
+  }
+
+  McoBatteryChemistryProfile? _extraBatteryProfileForDevice(
+    String deviceId,
+    String chemistry,
+  ) {
+    final profiles = _extraBatteryProfilesForDevice?.call(deviceId);
+    if (profiles == null) return null;
+    McoBatteryChemistryProfile? match;
+    for (final profile in profiles) {
+      if (profile.id == chemistry) match = profile;
+    }
+    return match;
+  }
 
   int resolvedGpsIntervalSeconds(Map<String, String>? deviceCustomVars) {
     final deviceValue = int.tryParse(deviceCustomVars?['gps_interval'] ?? '');
@@ -40,15 +62,22 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   BatteryVoltageRange? batteryVoltageRangeForDevice(String deviceId) {
-    if (batteryChemistryForDevice(deviceId) != batteryChemistryCustom) {
-      return null;
+    final chemistry = batteryChemistryForDevice(deviceId);
+    if (chemistry != batteryChemistryCustom) {
+      final profile = _extraBatteryProfileForDevice(deviceId, chemistry);
+      if (profile == null) return null;
+      final minMv = (profile.minVolts * 1000).round();
+      final maxMv = (profile.maxVolts * 1000).round();
+      if (minMv >= maxMv) return null;
+      return (minMv: minMv, maxMv: maxMv);
+    } else {
+      final range = batteryCustomRangeForDevice(deviceId);
+      if (range == null) return null;
+      final minMv = (range.minVolts * 1000).round();
+      final maxMv = (range.maxVolts * 1000).round();
+      if (minMv >= maxMv) return null;
+      return (minMv: minMv, maxMv: maxMv);
     }
-    final range = batteryCustomRangeForDevice(deviceId);
-    if (range == null) return null;
-    final minMv = (range.minVolts * 1000).round();
-    final maxMv = (range.maxVolts * 1000).round();
-    if (minMv >= maxMv) return null;
-    return (minMv: minMv, maxMv: maxMv);
   }
 
   String batteryChemistryForRepeater(String repeaterPubKeyHex) {
