@@ -1453,7 +1453,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne filtriraj lastnih sporočil v kanalih';
+      'Ne filtriraj lastnih paketov sporočil v teh kanalih in obravnavaj sporočila kot brezpogojno dostavljena';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

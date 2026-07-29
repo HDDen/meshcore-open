@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Забавяне на изпращането за отмяна",
   "settings_useSendingDelay": "Използване на забавяне при изпращане",
   "chat_cancelSend": "отмяна на изпращането",
-  "settings_doNotFilterMessagesOnChannels": "Не филтрирай собствените съобщения в каналите",
+  "settings_doNotFilterMessagesOnChannels": "Не филтрирай собствените пакети със съобщения в тези канали и считай съобщенията за безусловно доставени",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "По подразбиране собствените съобщения от вашата нода се игнорират. Това създава проблеми при някои фърмуери с вграден TerminalCLI",
   "chat_retryingMessageWait": "Моля, изчакайте {seconds} секунди преди повторно изпращане",
   "channels_mcmpCompression": "MCMP компресия",

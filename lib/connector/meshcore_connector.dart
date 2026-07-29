@@ -5229,7 +5229,11 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       return;
     }
-    final shouldDeferForSync = _shouldDeferChannelSendForSync;
+    final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(
+      channel.name,
+    );
+    final shouldDeferForSync =
+        !shouldBypassAckAndRetry && _shouldDeferChannelSendForSync;
     final hasExplicitMcoImageV3 =
         preparedMcoImageV3Outbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
         (mcoImageV3 != null && ChannelBinaryDataHelper.canSend);
@@ -5492,6 +5496,37 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    if (shouldBypassAckAndRetry) {
+      notifyListeners();
+      await _runScopedChannelSend(() async {
+        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+        final sentByRadioAt = DateTime.now();
+        final sentTimestampSeconds =
+            sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+        _updateChannelMessagePacketTimestamp(
+          channel.index,
+          message.messageId,
+          sentTimestampSeconds,
+          packetHash: binaryFrame == null
+              ? _computeContentHash(
+                  channel.index,
+                  sentTimestampSeconds,
+                  '${_selfName ?? 'Me'}: $messageText',
+                )
+              : null,
+        );
+        _markPendingChannelMessageSentById(message.messageId);
+        await sendFrame(
+          binaryFrame ??
+              buildSendChannelTextMsgFrame(
+                channel.index,
+                outboundText,
+                timestampSeconds: sentTimestampSeconds,
+              ),
+        );
+      }, region: getChannelRegion(channel.index), waitForScopeReset: false);
+      return;
+    }
     _retriableChannelMessageSends[message.messageId] =
         _DeferredChannelMessageSend(
           channel: channel,
@@ -5662,46 +5697,68 @@ class MeshCoreConnector extends ChangeNotifier {
             binaryOutbound.payload,
           );
 
-    _retriableChannelMessageSends[pending.messageId] = pending;
-    _pendingChannelSentQueue.remove(pending.messageId);
-    _pendingChannelSentQueue.add(pending.messageId);
+    final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(
+      pending.channel.name,
+    );
+    if (!shouldBypassAckAndRetry) {
+      _retriableChannelMessageSends[pending.messageId] = pending;
+      _pendingChannelSentQueue.remove(pending.messageId);
+      _pendingChannelSentQueue.add(pending.messageId);
+    }
     notifyListeners();
 
-    await _runScopedChannelSend(() async {
-      await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-      final sentByRadioAt = DateTime.now();
-      _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
-      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
-      _updateChannelMessagePacketTimestamp(
-        pending.channel.index,
-        pending.messageId,
-        sentTimestampSeconds,
-        packetHash: binaryFrame == null
-            ? _computeContentHash(
-                pending.channel.index,
-                sentTimestampSeconds,
-                '${_selfName ?? 'Me'}: ${pending.text}',
-              )
-            : null,
-      );
-      if (binaryFrame != null) {
+    await _runScopedChannelSend(
+      () async {
+        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+        final sentByRadioAt = DateTime.now();
+        final sentTimestampSeconds =
+            sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+        _updateChannelMessagePacketTimestamp(
+          pending.channel.index,
+          pending.messageId,
+          sentTimestampSeconds,
+          packetHash: binaryFrame == null
+              ? _computeContentHash(
+                  pending.channel.index,
+                  sentTimestampSeconds,
+                  '${_selfName ?? 'Me'}: ${pending.text}',
+                )
+              : null,
+        );
+        if (shouldBypassAckAndRetry) {
+          _markPendingChannelMessageSentById(pending.messageId);
+          await sendFrame(
+            binaryFrame ??
+                buildSendChannelTextMsgFrame(
+                  pending.channel.index,
+                  outboundText,
+                  timestampSeconds: sentTimestampSeconds,
+                ),
+          );
+          return;
+        }
+        _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
+        if (binaryFrame != null) {
+          await _sendFrameAndWaitForCommandAck(
+            binaryFrame,
+            channelSendQueueId: pending.messageId,
+            expectsGenericAck: true,
+          );
+          return;
+        }
         await _sendFrameAndWaitForCommandAck(
-          binaryFrame,
+          buildSendChannelTextMsgFrame(
+            pending.channel.index,
+            outboundText,
+            timestampSeconds: sentTimestampSeconds,
+          ),
           channelSendQueueId: pending.messageId,
           expectsGenericAck: true,
         );
-        return;
-      }
-      await _sendFrameAndWaitForCommandAck(
-        buildSendChannelTextMsgFrame(
-          pending.channel.index,
-          outboundText,
-          timestampSeconds: sentTimestampSeconds,
-        ),
-        channelSendQueueId: pending.messageId,
-        expectsGenericAck: true,
-      );
-    }, region: getChannelRegion(pending.channel.index));
+      },
+      region: getChannelRegion(pending.channel.index),
+      waitForScopeReset: !shouldBypassAckAndRetry,
+    );
   }
 
   void _updatePendingChannelMessageRegion(String messageId, String? region) {
@@ -5730,6 +5787,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _runScopedChannelSend(
     Future<void> Function() action, {
     required String region,
+    bool waitForScopeReset = true,
   }) async {
     final prev = _channelScopedSendLock;
     final completer = Completer<void>();
@@ -5746,7 +5804,19 @@ class MeshCoreConnector extends ChangeNotifier {
         await action();
       } finally {
         if (isConnected) {
-          await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(''));
+          final clearScopeFrame = buildSetFloodScopeFrame('');
+          if (waitForScopeReset) {
+            await _sendFrameAndWaitForCommandAck(clearScopeFrame);
+          } else {
+            unawaited(
+              sendFrame(clearScopeFrame).catchError((error) {
+                appLogger.warn(
+                  'Best-effort flood scope reset failed: $error',
+                  tag: 'Channel Send',
+                );
+              }),
+            );
+          }
         }
       }
     } finally {
@@ -11008,6 +11078,14 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool _isSelfChannelFilterBypassed(String? channelName) {
+    return _isChannelListedInDoNotFilterSetting(channelName);
+  }
+
+  bool _isChannelAckAndRetryBypassed(String? channelName) {
+    return _isChannelListedInDoNotFilterSetting(channelName);
+  }
+
+  bool _isChannelListedInDoNotFilterSetting(String? channelName) {
     final normalizedChannelName = channelName?.trim();
     if (normalizedChannelName == null || normalizedChannelName.isEmpty) {
       return false;

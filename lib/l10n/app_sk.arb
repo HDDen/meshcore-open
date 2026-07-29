@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Oneskorenie odoslania na zrušenie",
   "settings_useSendingDelay": "Použiť oneskorenie odoslania",
   "chat_cancelSend": "zrušiť odoslanie",
-  "settings_doNotFilterMessagesOnChannels": "Nefiltrovať vlastné správy v kanáloch",
+  "settings_doNotFilterMessagesOnChannels": "Nefiltrovať vlastné pakety správ v týchto kanáloch a považovať správy za bezpodmienečne doručené",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Predvolene sa vlastné správy z vášho uzla ignorujú. To spôsobuje problémy v niektorých firmvéroch so vstavaným TerminalCLI",
   "chat_retryingMessageWait": "Pred opätovným odoslaním počkajte {seconds} sekúnd",
   "channels_mcmpCompression": "Kompresia MCMP",

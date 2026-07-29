@@ -1458,7 +1458,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne szűrje a saját üzeneteket a csatornákon';
+      'Ne szűrje a saját üzenetcsomagokat ezekben a csatornákban, és tekintse az üzeneteket feltétel nélkül kézbesítettnek';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

@@ -2695,7 +2695,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_doNotFilterMessagesOnChannels.
   ///
   /// In en, this message translates to:
-  /// **'Do not filter selfmessages on channels'**
+  /// **'Do not filter selfmessages on channels and consider messages as definitely delivered'**
   String get settings_doNotFilterMessagesOnChannels;
 
   /// No description provided for @settings_doNotFilterMessagesOnChannelsSubtitle.

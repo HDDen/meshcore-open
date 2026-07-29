@@ -185,7 +185,7 @@
   "settings_sendingDelayForCancellation": "用于取消的发送延迟",
   "settings_useSendingDelay": "使用发送延迟",
   "chat_cancelSend": "取消发送",
-  "settings_doNotFilterMessagesOnChannels": "不要过滤频道中的自己消息",
+  "settings_doNotFilterMessagesOnChannels": "不过滤这些频道中自己的消息包，并将消息视为无条件已送达",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题",
   "chat_retryingMessageWait": "请等待 {seconds} 秒后再重新发送",
   "channels_mcmpCompression": "MCMP 压缩",

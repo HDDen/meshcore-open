@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Zakasnitev pošiljanja za preklic",
   "settings_useSendingDelay": "Uporabi zakasnitev pošiljanja",
   "chat_cancelSend": "prekliči pošiljanje",
-  "settings_doNotFilterMessagesOnChannels": "Ne filtriraj lastnih sporočil v kanalih",
+  "settings_doNotFilterMessagesOnChannels": "Ne filtriraj lastnih paketov sporočil v teh kanalih in obravnavaj sporočila kot brezpogojno dostavljena",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Privzeto se lastna sporočila iz vaše node prezrejo. To povzroča težave pri nekaterih firmware z vgrajenim TerminalCLI",
   "chat_retryingMessageWait": "Pred ponovnim pošiljanjem počakajte {seconds} sekund",
   "channels_mcmpCompression": "Stiskanje MCMP",

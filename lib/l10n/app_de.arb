@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Sendeverzögerung zum Abbrechen",
   "settings_useSendingDelay": "Sendeverzögerung verwenden",
   "chat_cancelSend": "Senden abbrechen",
-  "settings_doNotFilterMessagesOnChannels": "Eigene Nachrichten in Kanälen nicht filtern",
+  "settings_doNotFilterMessagesOnChannels": "Eigene Nachrichtenpakete in diesen Kanälen nicht filtern und Nachrichten als bedingungslos zugestellt betrachten",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Standardmäßig werden eigene Nachrichten deines Knotens ignoriert. Das verursacht bei einigen Firmwares mit integriertem TerminalCLI Probleme",
   "chat_retryingMessageWait": "Bitte warte {seconds} Sekunden vor dem erneuten Senden",
   "channels_mcmpCompression": "MCMP-Komprimierung",

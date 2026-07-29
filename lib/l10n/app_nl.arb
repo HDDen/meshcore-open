@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Verzendvertraging voor annuleren",
   "settings_useSendingDelay": "Verzendvertraging gebruiken",
   "chat_cancelSend": "verzenden annuleren",
-  "settings_doNotFilterMessagesOnChannels": "Eigen berichten in kanalen niet filteren",
+  "settings_doNotFilterMessagesOnChannels": "Eigen berichtpakketten in deze kanalen niet filteren en berichten als onvoorwaardelijk afgeleverd beschouwen",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Standaard worden eigen berichten van je node genegeerd. Dit veroorzaakt problemen bij sommige firmwares met ingebouwde TerminalCLI",
   "chat_retryingMessageWait": "Wacht {seconds} seconden voordat je opnieuw verzendt",
   "channels_mcmpCompression": "MCMP-compressie",

@@ -1372,7 +1372,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_cancelSend => '取消发送';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels => '不要过滤频道中的自己消息';
+  String get settings_doNotFilterMessagesOnChannels =>
+      '不过滤这些频道中自己的消息包，并将消息视为无条件已送达';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

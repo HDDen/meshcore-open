@@ -1459,7 +1459,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не фільтрувати власні повідомлення в каналах';
+      'Не фільтрувати власні пакети повідомлень на цих каналах і вважати повідомлення безумовно доставленими';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

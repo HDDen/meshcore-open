@@ -2589,7 +2589,7 @@
   "settings_sendingDelayForCancellation": "Küldési késleltetés visszavonáshoz",
   "settings_useSendingDelay": "Küldési késleltetés használata",
   "chat_cancelSend": "küldés megszakítása",
-  "settings_doNotFilterMessagesOnChannels": "Ne szűrje a saját üzeneteket a csatornákon",
+  "settings_doNotFilterMessagesOnChannels": "Ne szűrje a saját üzenetcsomagokat ezekben a csatornákban, és tekintse az üzeneteket feltétel nélkül kézbesítettnek",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Alapértelmezés szerint a saját csomópont üzeneteit figyelmen kívül hagyja az alkalmazás. Ez problémákat okoz néhány beépített TerminalCLI-t használó firmware esetén",
   "chat_retryingMessageWait": "Újraküldés előtt várjon {seconds} másodpercet",
   "channels_mcmpCompression": "MCMP tömörítés",

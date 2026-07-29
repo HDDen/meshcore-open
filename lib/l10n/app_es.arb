@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Retardo de envío para cancelación",
   "settings_useSendingDelay": "Usar retardo de envío",
   "chat_cancelSend": "cancelar envío",
-  "settings_doNotFilterMessagesOnChannels": "No filtrar mensajes propios en canales",
+  "settings_doNotFilterMessagesOnChannels": "No filtrar los paquetes de mensajes propios en estos canales y considerar los mensajes como entregados incondicionalmente",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Por defecto, se ignoran los mensajes propios de tu nodo. Esto causa problemas en algunos firmwares con TerminalCLI integrado",
   "chat_retryingMessageWait": "Espera {seconds} segundos antes de reenviar",
   "channels_mcmpCompression": "Compresión MCMP",

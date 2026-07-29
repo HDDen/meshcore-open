@@ -1390,7 +1390,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_cancelSend => '전송 취소';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels => '채널에서 내 메시지를 필터링하지 않음';
+  String get settings_doNotFilterMessagesOnChannels =>
+      '이 채널에서 자신의 메시지 패킷을 필터링하지 않고 메시지를 무조건 전달된 것으로 간주';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

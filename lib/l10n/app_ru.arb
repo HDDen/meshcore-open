@@ -317,7 +317,7 @@
   "settings_sendingDelayForCancellation": "Задержка отправки для её отмены",
   "settings_useSendingDelay": "Отправлять с задержкой",
   "chat_cancelSend": "отменить отправку",
-  "settings_doNotFilterMessagesOnChannels": "Не фильтровать собственные пакеты сообщений на этих каналах",
+  "settings_doNotFilterMessagesOnChannels": "Не фильтровать собственные пакеты сообщений на этих каналах и считать сообщения безусловно доставленными",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "По умолчанию, сообщения от своей же ноды игнорируются. Это делает невозможным работу встроенного терминала (TerminalCLI) на некоторых прошивках",
   "channels_channelUpdated": "Канал \"{name}\" обновлён",
   "channels_publicChannelAdded": "Публичный канал добавлен",

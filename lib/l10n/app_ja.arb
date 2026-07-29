@@ -253,7 +253,7 @@
   "settings_sendingDelayForCancellation": "キャンセル用の送信遅延",
   "settings_useSendingDelay": "送信遅延を使用",
   "chat_cancelSend": "送信をキャンセル",
-  "settings_doNotFilterMessagesOnChannels": "チャンネルで自分のメッセージをフィルターしない",
+  "settings_doNotFilterMessagesOnChannels": "これらのチャンネルで自分のメッセージパケットをフィルターせず、メッセージを無条件に配信済みとみなす",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "既定では、自分のノードからのメッセージは無視されます。組み込みTerminalCLIを持つ一部のファームウェアでは問題が発生します",
   "chat_retryingMessageWait": "再送信する前に{seconds}秒待ってください",
   "channels_mcmpCompression": "MCMP圧縮",

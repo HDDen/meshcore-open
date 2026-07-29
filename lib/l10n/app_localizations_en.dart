@@ -1438,7 +1438,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels';
+      'Do not filter selfmessages on channels and consider messages as definitely delivered';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

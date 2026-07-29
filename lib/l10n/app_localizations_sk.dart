@@ -1454,7 +1454,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Nefiltrovať vlastné správy v kanáloch';
+      'Nefiltrovať vlastné pakety správ v týchto kanáloch a považovať správy za bezpodmienečne doručené';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

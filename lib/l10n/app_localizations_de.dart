@@ -1465,7 +1465,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Eigene Nachrichten in Kanälen nicht filtern';
+      'Eigene Nachrichtenpakete in diesen Kanälen nicht filtern und Nachrichten als bedingungslos zugestellt betrachten';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

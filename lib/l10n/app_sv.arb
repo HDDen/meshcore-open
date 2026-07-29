@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Sändningsfördröjning för avbrytning",
   "settings_useSendingDelay": "Använd sändningsfördröjning",
   "chat_cancelSend": "avbryt sändning",
-  "settings_doNotFilterMessagesOnChannels": "Filtrera inte egna meddelanden i kanaler",
+  "settings_doNotFilterMessagesOnChannels": "Filtrera inte egna meddelandepaket i dessa kanaler och betrakta meddelanden som ovillkorligt levererade",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Som standard ignoreras egna meddelanden från din nod. Detta orsakar problem på vissa firmware med inbyggd TerminalCLI",
   "chat_retryingMessageWait": "Vänta {seconds} sekunder innan du skickar igen",
   "channels_mcmpCompression": "MCMP-komprimering",

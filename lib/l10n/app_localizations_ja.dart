@@ -1389,7 +1389,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'チャンネルで自分のメッセージをフィルターしない';
+      'これらのチャンネルで自分のメッセージパケットをフィルターせず、メッセージを無条件に配信済みとみなす';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>

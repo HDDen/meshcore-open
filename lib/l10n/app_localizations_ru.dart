@@ -1464,7 +1464,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не фильтровать собственные пакеты сообщений на этих каналах';
+      'Не фильтровать собственные пакеты сообщений на этих каналах и считать сообщения безусловно доставленными';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
