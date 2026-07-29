@@ -1877,6 +1877,7 @@ subdirectory внутри `images/` представляет один gallery it
   images/
     arbitrary-folder-name-1/
       arbitrary-name.lottie.json | arbitrary-name.lottie |
+      arbitrary-name.webp |
       arbitrary-name.png | arbitrary-name.gif |
       arbitrary-name.jpg | arbitrary-name.jpeg
       arbitrary-name.mcoimg.bin
@@ -1889,7 +1890,8 @@ subdirectory внутри `images/` представляет один gallery it
 
 - один файл `*.mcoimg.bin`: канонический MCOimg payload, отправляемый по сети;
 - минимум один поддерживаемый original file:
-  `*.lottie.json`, `*.lottie`, `*.png`, `*.gif`, `*.jpg` или `*.jpeg`.
+  `*.lottie.json`, `*.lottie`, `*.webp`, `*.png`, `*.gif`, `*.jpg` или
+  `*.jpeg`.
 
 Image folder без валидного original file или без файла `*.mcoimg.bin`
 пропускается. Folder и file names произвольные, но import sanitizes их для
@@ -1901,7 +1903,7 @@ natural/alphanumeric order имён image folders, поэтому folders `1`, `
 в таком порядке приоритета:
 
 ```text
-.lottie.json, .lottie, .png, .gif, .jpg, .jpeg
+.lottie.json, .lottie, .webp, .png, .gif, .jpg, .jpeg
 ```
 
 Files с одинаковым format priority упорядочиваются по natural filename order.

@@ -10,7 +10,7 @@ import '../helpers/mco_image_identity.dart';
 import '../storage/mco_image_gallery_store.dart';
 import '../storage/prefs_manager.dart';
 
-enum McoImageOriginalFormat { lottieJson, lottie, png, gif, jpg, jpeg }
+enum McoImageOriginalFormat { lottieJson, lottie, webp, png, gif, jpg, jpeg }
 
 McoImageOriginalFormat? mcoImageOriginalFormatForFileName(String fileName) {
   final lower = fileName.toLowerCase();
@@ -18,6 +18,7 @@ McoImageOriginalFormat? mcoImageOriginalFormatForFileName(String fileName) {
     return McoImageOriginalFormat.lottieJson;
   }
   if (lower.endsWith('.lottie')) return McoImageOriginalFormat.lottie;
+  if (lower.endsWith('.webp')) return McoImageOriginalFormat.webp;
   if (lower.endsWith('.png')) return McoImageOriginalFormat.png;
   if (lower.endsWith('.gif')) return McoImageOriginalFormat.gif;
   if (lower.endsWith('.jpg')) return McoImageOriginalFormat.jpg;
@@ -82,11 +83,12 @@ int mcoImageOriginalPriority(String fileName) {
   return switch (mcoImageOriginalFormatForFileName(fileName)) {
     McoImageOriginalFormat.lottieJson => 0,
     McoImageOriginalFormat.lottie => 1,
-    McoImageOriginalFormat.png => 2,
-    McoImageOriginalFormat.gif => 3,
-    McoImageOriginalFormat.jpg => 4,
-    McoImageOriginalFormat.jpeg => 5,
-    null => 6,
+    McoImageOriginalFormat.webp => 2,
+    McoImageOriginalFormat.png => 3,
+    McoImageOriginalFormat.gif => 4,
+    McoImageOriginalFormat.jpg => 5,
+    McoImageOriginalFormat.jpeg => 6,
+    null => 7,
   };
 }
 
@@ -122,12 +124,14 @@ class ResolvedMcoImageOriginal {
   final String relativePath;
   final McoImageOriginalFormat format;
   final LottieComposition? lottieComposition;
+  final bool isAnimatedRaster;
 
   const ResolvedMcoImageOriginal({
     required this.file,
     required this.relativePath,
     required this.format,
     this.lottieComposition,
+    this.isAnimatedRaster = false,
   });
 
   bool get isLottie =>
@@ -291,12 +295,23 @@ class McoImagePackOriginals {
       }
 
       final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+      var isAnimatedRaster = false;
       try {
         final descriptor = await ui.ImageDescriptor.encoded(buffer);
         try {
           if (descriptor.width <= 0 || descriptor.height <= 0) return null;
         } finally {
           descriptor.dispose();
+        }
+        if (format == McoImageOriginalFormat.webp ||
+            format == McoImageOriginalFormat.gif ||
+            format == McoImageOriginalFormat.png) {
+          final codec = await ui.instantiateImageCodec(bytes);
+          try {
+            isAnimatedRaster = codec.frameCount > 1;
+          } finally {
+            codec.dispose();
+          }
         }
       } finally {
         buffer.dispose();
@@ -305,6 +320,7 @@ class McoImagePackOriginals {
         file: file,
         relativePath: relativePath,
         format: format,
+        isAnimatedRaster: isAnimatedRaster,
       );
     } catch (_) {
       return null;

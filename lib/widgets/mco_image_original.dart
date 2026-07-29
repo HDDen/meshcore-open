@@ -14,7 +14,7 @@ import '../services/mco_image_pack_originals.dart';
 import 'mco_image_message.dart';
 
 /// Renders a received MCOimg message, preferring the original image
-/// (Lottie/png/gif/jpg) from an installed *.mcoimg.pack when the
+/// (Lottie/webp/png/gif/jpg) from an installed *.mcoimg.pack when the
 /// payload identity hash matches a pack item. Falls back to rendering the
 /// received LoRa version when the image is unknown or the original file is
 /// missing. While the original lookup is pending, the widget reserves the same
@@ -238,18 +238,14 @@ class _MCOImageOriginalOrFallbackState
             ? FilterQuality.none
             : FilterQuality.medium;
         final sharpness = settings.mcoImageReplacementsSharpness.clamp(0, 10);
+        final canSharpen = !resolved.isAnimatedRaster;
 
         Widget fallbackImage() => _ViewportAwareRaster(
-          child: Image.file(
-            resolved.file,
-            fit: BoxFit.contain,
-            filterQuality: filterQuality,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stackTrace) {
-              _rejectOriginal(resolved);
-              return replacementSizedFallback();
-            },
-          ),
+          file: resolved.file,
+          fit: BoxFit.contain,
+          filterQuality: filterQuality,
+          onError: () => _rejectOriginal(resolved),
+          fallback: replacementSizedFallback(),
         );
 
         Widget imageWidget;
@@ -261,7 +257,7 @@ class _MCOImageOriginalOrFallbackState
           } else {
             imageWidget = _ViewportAwareLottie(composition: composition);
           }
-        } else if (sharpness > 0) {
+        } else if (sharpness > 0 && canSharpen) {
           final key = '${resolved.relativePath}|$sharpness';
           if (_sharpenKey != key) {
             _sharpenKey = key;
@@ -296,17 +292,123 @@ class _MCOImageOriginalOrFallbackState
 }
 
 class _ViewportAwareRaster extends StatefulWidget {
-  final Widget child;
+  final File file;
+  final BoxFit fit;
+  final FilterQuality filterQuality;
+  final VoidCallback onError;
+  final Widget fallback;
 
-  const _ViewportAwareRaster({required this.child});
+  const _ViewportAwareRaster({
+    required this.file,
+    required this.fit,
+    required this.filterQuality,
+    required this.onError,
+    required this.fallback,
+  });
 
   @override
   State<_ViewportAwareRaster> createState() => _ViewportAwareRasterState();
 }
 
-class _ViewportAwareRasterState extends State<_ViewportAwareRaster> {
+class _ViewportAwareRasterState extends State<_ViewportAwareRaster>
+    with WidgetsBindingObserver {
   final Key _visibilityKey = UniqueKey();
   bool _visible = true;
+  bool _tickerEnabled = true;
+  bool _appResumed = true;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+  ui.Image? _image;
+  Object? _error;
+
+  bool get _shouldListen => _visible && _tickerEnabled && _appResumed;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _appResumed =
+        WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
+    _syncStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ViewportAwareRaster oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.file.path != widget.file.path) {
+      _stopListening();
+      _image = null;
+      _error = null;
+    }
+    _syncStream();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appResumed = state == AppLifecycleState.resumed;
+    _syncStream();
+  }
+
+  void _syncStream() {
+    if (!mounted) return;
+    if (!_shouldListen) {
+      _stopListening();
+      return;
+    }
+
+    final provider = FileImage(widget.file);
+    final stream = provider.resolve(createLocalImageConfiguration(context));
+    final existingListener = _listener;
+    if (_stream?.key == stream.key && existingListener != null) return;
+
+    _stopListening();
+    final listener = ImageStreamListener(
+      (imageInfo, synchronousCall) {
+        if (!mounted) return;
+        if (synchronousCall) {
+          _image = imageInfo.image;
+          _error = null;
+          return;
+        }
+        setState(() {
+          _image = imageInfo.image;
+          _error = null;
+        });
+      },
+      onError: (error, stackTrace) {
+        if (!mounted) return;
+        widget.onError();
+        setState(() => _error = error);
+      },
+    );
+    _stream = stream;
+    _listener = listener;
+    stream.addListener(listener);
+  }
+
+  void _stopListening() {
+    final stream = _stream;
+    final listener = _listener;
+    if (stream != null && listener != null) {
+      stream.removeListener(listener);
+    }
+    _stream = null;
+    _listener = null;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopListening();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,9 +417,18 @@ class _ViewportAwareRasterState extends State<_ViewportAwareRaster> {
       onVisibilityChanged: (info) {
         final visible = info.visibleFraction > 0;
         if (visible == _visible || !mounted) return;
-        setState(() => _visible = visible);
+        _visible = visible;
+        _syncStream();
       },
-      child: TickerMode(enabled: _visible, child: widget.child),
+      child: _error != null
+          ? widget.fallback
+          : RepaintBoundary(
+              child: RawImage(
+                image: _image,
+                fit: widget.fit,
+                filterQuality: widget.filterQuality,
+              ),
+            ),
     );
   }
 }

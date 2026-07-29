@@ -1870,6 +1870,7 @@ subdirectory of `images/` represents one gallery item:
   images/
     arbitrary-folder-name-1/
       arbitrary-name.lottie.json | arbitrary-name.lottie |
+      arbitrary-name.webp |
       arbitrary-name.png | arbitrary-name.gif |
       arbitrary-name.jpg | arbitrary-name.jpeg
       arbitrary-name.mcoimg.bin
@@ -1882,7 +1883,8 @@ Every image folder must contain:
 
 - one `*.mcoimg.bin` file: the canonical MCOimg payload sent over the network;
 - at least one supported original file:
-  `*.lottie.json`, `*.lottie`, `*.png`, `*.gif`, `*.jpg` or `*.jpeg`.
+  `*.lottie.json`, `*.lottie`, `*.webp`, `*.png`, `*.gif`, `*.jpg` or
+  `*.jpeg`.
 
 An image folder without a valid original file or without a `*.mcoimg.bin` file
 is skipped. Folder and file names are arbitrary, but import sanitizes them for
@@ -1893,7 +1895,7 @@ If multiple original files are present for one item, the receiver tries them in
 this priority order:
 
 ```text
-.lottie.json, .lottie, .png, .gif, .jpg, .jpeg
+.lottie.json, .lottie, .webp, .png, .gif, .jpg, .jpeg
 ```
 
 Files with the same format priority are ordered by natural filename order. If a
