@@ -1940,7 +1940,7 @@ Required fields: `name`, `id` и `ver`. `author`, `authorUrl`, `packUrl` и
 Installed folder name выводится из metadata:
 
 ```text
-mcoimgpack_<author-or-unknown>_<id>_<ver>
+mcoimgpack_<id>_<author-or-unknown>_<ver>
 ```
 
 Если pack с тем же derived folder name импортируется повторно, старая installed

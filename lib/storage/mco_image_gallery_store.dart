@@ -614,8 +614,8 @@ class MCOImageGalleryStore {
     }
     final author = (infoJson['author'] as String?)?.trim();
     return 'mcoimgpack_'
-        '${_sanitizePathSegment(author?.isNotEmpty == true ? author! : 'unknown')}_'
         '${_sanitizePathSegment(id)}_'
+        '${_sanitizePathSegment(author?.isNotEmpty == true ? author! : 'unknown')}_'
         '${_sanitizePathSegment(version)}';
   }
 

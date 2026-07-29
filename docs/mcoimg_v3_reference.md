@@ -1931,7 +1931,7 @@ limits the longest side of the gallery preview for that pack.
 The installed folder name is derived from metadata:
 
 ```text
-mcoimgpack_<author-or-unknown>_<id>_<ver>
+mcoimgpack_<id>_<author-or-unknown>_<ver>
 ```
 
 If a pack with the same derived folder name is imported again, the old installed
