@@ -1447,7 +1447,7 @@
   "channelPath_noHopDetails": "Szczegóły dotyczące tego pakietu nie zostały podane.",
   "channelPath_messageDetails": "Szczegóły wiadomości",
   "channelPath_senderLabel": "Nadawca",
-  "channelPath_timeLabel": "Czas",
+  "channelPath_timeLabel": "Czas odebrania/utworzenia",
   "channelPath_repeatsLabel": "Powtórzenia",
   "channelPath_pathLabel": "Ścieżka {index}",
   "channelPath_observedLabel": "Obserwowane",

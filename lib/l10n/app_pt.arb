@@ -1402,7 +1402,7 @@
   "channelPath_noHopDetails": "Os detalhes do pacote não estão disponíveis.",
   "channelPath_messageDetails": "Detalhes da Mensagem",
   "channelPath_senderLabel": "Remetente",
-  "channelPath_timeLabel": "Tempo",
+  "channelPath_timeLabel": "Hora de recepção/criação",
   "channelPath_repeatsLabel": "Repete",
   "channelPath_pathLabel": "Caminho {index}",
   "channelPath_observedLabel": "Observado",

@@ -4154,7 +4154,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channelPath_senderLabel => 'Afzender';
 
   @override
-  String get channelPath_timeLabel => 'Tijd';
+  String get channelPath_timeLabel => 'Tijd van ontvangst/aanmaak';
 
   @override
   String get channelPath_repeatsLabel => 'Herhaalt';

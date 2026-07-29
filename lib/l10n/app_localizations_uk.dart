@@ -4163,7 +4163,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelPath_senderLabel => 'Відправник';
 
   @override
-  String get channelPath_timeLabel => 'Час';
+  String get channelPath_timeLabel => 'Час отримання/створення';
 
   @override
   String get channelPath_repeatsLabel => 'Повторення';

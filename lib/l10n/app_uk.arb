@@ -1446,7 +1446,7 @@
   "channelPath_noHopDetails": "Деталі відправки не надані для цього пакету.",
   "channelPath_messageDetails": "Деталі повідомлення",
   "channelPath_senderLabel": "Відправник",
-  "channelPath_timeLabel": "Час",
+  "channelPath_timeLabel": "Час отримання/створення",
   "channelPath_repeatsLabel": "Повторення",
   "channelPath_pathLabel": "Шлях {index}",
   "channelPath_observedLabel": "Спостережено",

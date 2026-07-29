@@ -1501,7 +1501,7 @@
   "channelPath_noHopDetails": "Die Detailangaben für dieses Paket sind nicht verfügbar.",
   "channelPath_messageDetails": "Nachrichtendetails",
   "channelPath_senderLabel": "Sender",
-  "channelPath_timeLabel": "Zeit",
+  "channelPath_timeLabel": "Empfangs-/Erstellungszeit",
   "channelPath_repeatsLabel": "Wiederholungen",
   "channelPath_pathLabel": "Pfad {index}",
   "channelPath_observedLabel": "Beobachtet",

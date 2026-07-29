@@ -1501,7 +1501,7 @@
   "channelPath_noHopDetails": "Les détails de l'envoi ne sont pas fournis pour ce paquet.",
   "channelPath_messageDetails": "Détails du message",
   "channelPath_senderLabel": "Expéditeur",
-  "channelPath_timeLabel": "Temps",
+  "channelPath_timeLabel": "Heure de réception/création",
   "channelPath_repeatsLabel": "Répétitions",
   "channelPath_pathLabel": "Chemin {index}",
   "channelPath_observedLabel": "Observé",

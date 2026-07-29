@@ -1494,7 +1494,7 @@
   "channelPath_noHopDetails": "此数据包未提供详细信息",
   "channelPath_messageDetails": "消息详情",
   "channelPath_senderLabel": "发送者",
-  "channelPath_timeLabel": "时间",
+  "channelPath_timeLabel": "接收/创建时间",
   "channelPath_repeatsLabel": "重复",
   "channelPath_pathLabel": "路径 {index}",
   "channelPath_observedLabel": "观察到的",

@@ -1545,7 +1545,7 @@
   "channelPath_noHopDetails": "I dettagli relativi a questo pacchetto non sono forniti.",
   "channelPath_messageDetails": "Dettagli messaggio",
   "channelPath_senderLabel": "Mittente",
-  "channelPath_timeLabel": "Ora",
+  "channelPath_timeLabel": "Ora di ricezione/creazione",
   "channelPath_repeatsLabel": "Ripetizioni",
   "channelPath_pathLabel": "Percorso {index}",
   "channelPath_observedLabel": "Osservato",

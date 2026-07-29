@@ -1402,7 +1402,7 @@
   "channelPath_noHopDetails": "De details van de pakket zijn niet verstrekt.",
   "channelPath_messageDetails": "Details Bericht",
   "channelPath_senderLabel": "Afzender",
-  "channelPath_timeLabel": "Tijd",
+  "channelPath_timeLabel": "Tijd van ontvangst/aanmaak",
   "channelPath_repeatsLabel": "Herhaalt",
   "channelPath_pathLabel": "Pad {index}",
   "channelPath_observedLabel": "Waargenomen",

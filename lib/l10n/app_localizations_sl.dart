@@ -4147,7 +4147,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channelPath_senderLabel => 'Pošiljatelj';
 
   @override
-  String get channelPath_timeLabel => 'Ura';
+  String get channelPath_timeLabel => 'Čas prejema/nastanka';
 
   @override
   String get channelPath_repeatsLabel => 'Ponovitve';

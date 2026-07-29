@@ -1583,7 +1583,7 @@
   "channelPath_noHopDetails": "Ennél a csomagnál a komlórészletek nincsenek megadva.",
   "channelPath_messageDetails": "Üzenet részletei",
   "channelPath_senderLabel": "Feladó",
-  "channelPath_timeLabel": "Idő",
+  "channelPath_timeLabel": "Fogadás/létrehozás ideje",
   "channelPath_repeatsLabel": "Ismétlődik",
   "channelPath_pathLabel": "{index} elérési út",
   "channelPath_observedLabel": "Megfigyelt",

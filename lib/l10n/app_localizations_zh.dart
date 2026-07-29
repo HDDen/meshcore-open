@@ -3874,7 +3874,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_senderLabel => '发送者';
 
   @override
-  String get channelPath_timeLabel => '时间';
+  String get channelPath_timeLabel => '接收/创建时间';
 
   @override
   String get channelPath_repeatsLabel => '重复';

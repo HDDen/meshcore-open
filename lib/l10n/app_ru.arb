@@ -805,7 +805,7 @@
   "channelPath_noHopDetails": "Детали хопов для этого пакета не предоставлены.",
   "channelPath_messageDetails": "Детали сообщения",
   "channelPath_senderLabel": "Отправитель",
-  "channelPath_timeLabel": "Время получения",
+  "channelPath_timeLabel": "Время получения/создания",
   "channelPath_repeatsLabel": "Повторы",
   "channelPath_pathLabel": "Путь {index}",
   "channelPath_observedLabel": "Наблюдаемый",

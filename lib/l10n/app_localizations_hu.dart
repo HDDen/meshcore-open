@@ -4166,7 +4166,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channelPath_senderLabel => 'Feladó';
 
   @override
-  String get channelPath_timeLabel => 'Idő';
+  String get channelPath_timeLabel => 'Fogadás/létrehozás ideje';
 
   @override
   String get channelPath_repeatsLabel => 'Ismétlődik';

@@ -4149,7 +4149,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channelPath_senderLabel => 'Posielateľ';
 
   @override
-  String get channelPath_timeLabel => 'Čas';
+  String get channelPath_timeLabel => 'Čas prijatia/vytvorenia';
 
   @override
   String get channelPath_repeatsLabel => 'Opakovanie';

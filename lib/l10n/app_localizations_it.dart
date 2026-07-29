@@ -4176,7 +4176,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channelPath_senderLabel => 'Mittente';
 
   @override
-  String get channelPath_timeLabel => 'Ora';
+  String get channelPath_timeLabel => 'Ora di ricezione/creazione';
 
   @override
   String get channelPath_repeatsLabel => 'Ripetizioni';

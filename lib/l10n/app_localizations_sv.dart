@@ -4131,7 +4131,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channelPath_senderLabel => 'Avsändare';
 
   @override
-  String get channelPath_timeLabel => 'Tid';
+  String get channelPath_timeLabel => 'Tid för mottagande/skapande';
 
   @override
   String get channelPath_repeatsLabel => 'Upprepa';

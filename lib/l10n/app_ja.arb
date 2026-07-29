@@ -1703,7 +1703,7 @@
   "channelPath_noHopDetails": "このパッケージに関する詳細な情報は提供されていません。",
   "channelPath_messageDetails": "メッセージの詳細",
   "channelPath_senderLabel": "送信者",
-  "channelPath_timeLabel": "時間",
+  "channelPath_timeLabel": "受信/作成時刻",
   "channelPath_repeatsLabel": "リピータ",
   "channelPath_pathLabel": "{index} 番目の経路",
   "channelPath_observedLabel": "観察",

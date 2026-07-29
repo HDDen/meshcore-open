@@ -1501,7 +1501,7 @@
   "channelPath_noHopDetails": "Los detalles del paquete no están disponibles.",
   "channelPath_messageDetails": "Detalles del mensaje",
   "channelPath_senderLabel": "Remitente",
-  "channelPath_timeLabel": "Hora",
+  "channelPath_timeLabel": "Hora de recepción/creación",
   "channelPath_repeatsLabel": "Repetir",
   "channelPath_pathLabel": "Ruta {index}",
   "channelPath_observedLabel": "Observado",

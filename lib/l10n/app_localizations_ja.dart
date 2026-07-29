@@ -3955,7 +3955,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channelPath_senderLabel => '送信者';
 
   @override
-  String get channelPath_timeLabel => '時間';
+  String get channelPath_timeLabel => '受信/作成時刻';
 
   @override
   String get channelPath_repeatsLabel => 'リピータ';

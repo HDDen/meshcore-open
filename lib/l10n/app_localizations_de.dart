@@ -4170,7 +4170,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelPath_senderLabel => 'Sender';
 
   @override
-  String get channelPath_timeLabel => 'Zeit';
+  String get channelPath_timeLabel => 'Empfangs-/Erstellungszeit';
 
   @override
   String get channelPath_repeatsLabel => 'Wiederholungen';

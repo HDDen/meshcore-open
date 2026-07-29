@@ -3960,7 +3960,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelPath_senderLabel => '발신자';
 
   @override
-  String get channelPath_timeLabel => '시간';
+  String get channelPath_timeLabel => '수신/생성 시각';
 
   @override
   String get channelPath_repeatsLabel => '반복';

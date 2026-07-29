@@ -4175,7 +4175,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channelPath_senderLabel => 'Изпращач';
 
   @override
-  String get channelPath_timeLabel => 'Време';
+  String get channelPath_timeLabel => 'Време на получаване/създаване';
 
   @override
   String get channelPath_repeatsLabel => 'Повтаря';

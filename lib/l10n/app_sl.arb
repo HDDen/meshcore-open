@@ -1437,7 +1437,7 @@
   "channelPath_noHopDetails": "Podrobnosti o paketu za dostavo niso navedene.",
   "channelPath_messageDetails": "Podrobnosti sporočila",
   "channelPath_senderLabel": "Pošiljatelj",
-  "channelPath_timeLabel": "Ura",
+  "channelPath_timeLabel": "Čas prejema/nastanka",
   "channelPath_repeatsLabel": "Ponovitve",
   "channelPath_pathLabel": "Pot {index}",
   "channelPath_observedLabel": "Opazovani",

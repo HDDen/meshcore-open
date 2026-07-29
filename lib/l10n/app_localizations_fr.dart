@@ -4189,7 +4189,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channelPath_senderLabel => 'Expéditeur';
 
   @override
-  String get channelPath_timeLabel => 'Temps';
+  String get channelPath_timeLabel => 'Heure de réception/création';
 
   @override
   String get channelPath_repeatsLabel => 'Répétitions';

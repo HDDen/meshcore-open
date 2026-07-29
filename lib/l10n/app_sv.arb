@@ -1402,7 +1402,7 @@
   "channelPath_noHopDetails": "Detaljer för denna paket är inte angivna.",
   "channelPath_messageDetails": "Meddelandets detaljer",
   "channelPath_senderLabel": "Avsändare",
-  "channelPath_timeLabel": "Tid",
+  "channelPath_timeLabel": "Tid för mottagande/skapande",
   "channelPath_repeatsLabel": "Upprepa",
   "channelPath_pathLabel": "Sökväg {index}",
   "channelPath_observedLabel": "Observerat",

@@ -1437,7 +1437,7 @@
   "channelPath_noHopDetails": "Детайлите за пакета не са предоставени.",
   "channelPath_messageDetails": "Подробности на съобщението",
   "channelPath_senderLabel": "Изпращач",
-  "channelPath_timeLabel": "Време",
+  "channelPath_timeLabel": "Време на получаване/създаване",
   "channelPath_repeatsLabel": "Повтаря",
   "channelPath_pathLabel": "Път {index}",
   "channelPath_observedLabel": "Наблюдавано",

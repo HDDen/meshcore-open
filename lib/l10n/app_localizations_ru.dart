@@ -4161,7 +4161,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_senderLabel => 'Отправитель';
 
   @override
-  String get channelPath_timeLabel => 'Время получения';
+  String get channelPath_timeLabel => 'Время получения/создания';
 
   @override
   String get channelPath_repeatsLabel => 'Повторы';

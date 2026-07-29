@@ -1437,7 +1437,7 @@
   "channelPath_noHopDetails": "Podrobnosti o balíčku zatiaľ nie sú dostupné.",
   "channelPath_messageDetails": "Podrobnosti o zprávach",
   "channelPath_senderLabel": "Posielateľ",
-  "channelPath_timeLabel": "Čas",
+  "channelPath_timeLabel": "Čas prijatia/vytvorenia",
   "channelPath_repeatsLabel": "Opakovanie",
   "channelPath_pathLabel": "Cesta {index}",
   "channelPath_observedLabel": "Pozorované",
