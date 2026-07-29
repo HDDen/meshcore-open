@@ -3402,6 +3402,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         optionIndex: -1,
                         icon: Icons.create_new_folder_outlined,
                         title: sheetContext.l10n.contacts_newGroup,
+                        subtitle: sheetContext.l10n.contacts_newGroupDescription,
                       ),
                       if (selectedOption == -1)
                         buildExpandedContent(_channelMessageStore)!,

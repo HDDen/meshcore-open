@@ -1170,6 +1170,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get contacts_newGroup => 'Nova skupina';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => 'Več možnosti';
 
   @override

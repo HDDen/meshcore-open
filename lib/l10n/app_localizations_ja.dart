@@ -1117,6 +1117,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_newGroup => '新しいグループ';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => 'さらに多くの選択肢';
 
   @override

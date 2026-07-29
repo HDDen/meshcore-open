@@ -1181,6 +1181,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contacts_newGroup => 'Novo Grupo';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => 'Mais opções';
 
   @override

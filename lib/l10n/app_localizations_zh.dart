@@ -1101,6 +1101,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_newGroup => '新建群聊';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => '更多选择';
 
   @override

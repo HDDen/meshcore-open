@@ -1174,6 +1174,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get contacts_newGroup => 'Nieuwe Groep';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => 'Meer opties';
 
   @override

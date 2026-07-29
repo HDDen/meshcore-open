@@ -511,6 +511,7 @@
     }
   },
   "contacts_newGroup": "New Group",
+  "contacts_newGroupDescription": "Combines channels/contacts into a folder",
   "contacts_moreOptions": "More options",
   "contacts_searchOpen": "Search contacts",
   "contacts_searchClose": "Close search",

@@ -1182,6 +1182,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contacts_newGroup => 'Новая группа';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Объединяет каналы/контакты в папку';
+
+  @override
   String get contacts_moreOptions => 'Больше вариантов';
 
   @override

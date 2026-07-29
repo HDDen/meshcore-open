@@ -254,6 +254,7 @@
   "contacts_deleteGroup": "Удалить группу",
   "contacts_deleteGroupConfirm": "Удалить \"{groupName}\"?",
   "contacts_newGroup": "Новая группа",
+  "contacts_newGroupDescription": "Объединяет каналы/контакты в папку",
   "contacts_groupName": "Имя группы",
   "contacts_groupNameRequired": "Имя группы обязательно",
   "contacts_groupNameReserved": "Это имя группы зарезервировано",

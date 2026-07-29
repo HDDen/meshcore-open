@@ -2206,6 +2206,12 @@ abstract class AppLocalizations {
   /// **'New Group'**
   String get contacts_newGroup;
 
+  /// No description provided for @contacts_newGroupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines channels/contacts into a folder'**
+  String get contacts_newGroupDescription;
+
   /// No description provided for @contacts_moreOptions.
   ///
   /// In en, this message translates to:

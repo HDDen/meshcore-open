@@ -1176,6 +1176,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_newGroup => 'Új csoport';
 
   @override
+  String get contacts_newGroupDescription =>
+      'Combines channels/contacts into a folder';
+
+  @override
   String get contacts_moreOptions => 'További lehetőségek';
 
   @override
