@@ -9811,12 +9811,14 @@ class MeshCoreConnector extends ChangeNotifier {
           final decryptedBytes = _decryptPayload(channel.psk, encrypted);
           if (decryptedBytes == null) return;
           if (packet.payloadType == _payloadTypeGroupData) {
+            final packetRegion = _resolvePacketRegion(packet);
             final parsedMessage = _parseLogRxChannelData(
               packet,
               channel.index,
               decryptedBytes,
-              packetRegion: _resolvePacketRegion(packet),
+              packetRegion: packetRegion.region,
               packetRegionInfoAvailable: true,
+              packetRegionNotMatched: packetRegion.notMatched,
             );
             if (parsedMessage == null) return;
             final message = await _verifyInboundChannelMessage(parsedMessage);
@@ -9895,6 +9897,7 @@ class MeshCoreConnector extends ChangeNotifier {
           );
 
           final logRxMcmpMessage = decoded?.mcmpMessage;
+          final packetRegion = _resolvePacketRegion(packet);
           final unverifiedMessage = ChannelMessage(
             senderKey: null,
             senderName: parsed.senderName,
@@ -9919,8 +9922,9 @@ class MeshCoreConnector extends ChangeNotifier {
             pathHashWidth: packet.pathHashWidth,
             pathBytes: packet.pathBytes,
             channelIndex: channel.index,
-            packetRegion: _resolvePacketRegion(packet),
+            packetRegion: packetRegion.region,
             packetRegionInfoAvailable: true,
+            packetRegionNotMatched: packetRegion.notMatched,
             packetHash: contentHash,
             replyToMessageId: replyReference?.messageId,
             replyToSenderName: replyReference?.senderName,
@@ -9974,6 +9978,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Uint8List decryptedBytes, {
     String? packetRegion,
     bool packetRegionInfoAvailable = false,
+    bool packetRegionNotMatched = false,
   }) {
     if (decryptedBytes.length < 3) return null;
     final decrypted = BufferReader(decryptedBytes);
@@ -10043,6 +10048,7 @@ class MeshCoreConnector extends ChangeNotifier {
       channelIndex: channelIndex,
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
+      packetRegionNotMatched: packetRegionNotMatched,
       packetHash: contentHash,
       replyToMessageId: replyReference?.messageId,
       replyToSenderName: replyReference?.senderName,
@@ -10671,9 +10677,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return digest[0];
   }
 
-  String? _resolvePacketRegion(_RawPacket packet) {
+  _PacketRegionResolution _resolvePacketRegion(_RawPacket packet) {
     final transportCode = packet.transportCode1;
-    if (transportCode == null || transportCode == 0) return null;
+    if (transportCode == null || transportCode == 0) {
+      return const _PacketRegionResolution();
+    }
 
     for (final region in RegionStore().loadRegions()) {
       final normalized = region.trim();
@@ -10684,10 +10692,12 @@ class MeshCoreConnector extends ChangeNotifier {
         packet.payload,
       );
       if (regionTransportCode == transportCode) {
-        return _displayPacketRegion(normalized);
+        return _PacketRegionResolution(
+          region: _displayPacketRegion(normalized),
+        );
       }
     }
-    return null;
+    return const _PacketRegionResolution(notMatched: true);
   }
 
   String? _displayPacketRegion(String region) {
@@ -10895,6 +10905,7 @@ class MeshCoreConnector extends ChangeNotifier {
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
         packetRegionInfoAvailable: message.packetRegionInfoAvailable,
+        packetRegionNotMatched: message.packetRegionNotMatched,
         noRetransmissionWarningSeconds: message.noRetransmissionWarningSeconds,
         messageId: message.messageId,
         packetHash: message.packetHash,
@@ -10938,6 +10949,9 @@ class MeshCoreConnector extends ChangeNotifier {
         packetRegionInfoAvailable:
             existing.packetRegionInfoAvailable ||
             processedMessage.packetRegionInfoAvailable,
+        packetRegionNotMatched:
+            existing.packetRegionNotMatched ||
+            processedMessage.packetRegionNotMatched,
         packetHash: existing.packetHash ?? processedMessage.packetHash,
         // Mark as sent when first repeat is heard
         status: promotedFromPending
@@ -12135,6 +12149,13 @@ class _RawPacket {
 
   int get hopCount => pathLenRaw & 63;
   int get pathHashWidth => ((pathLenRaw >> 6) & 0x03) + 1;
+}
+
+class _PacketRegionResolution {
+  final String? region;
+  final bool notMatched;
+
+  const _PacketRegionResolution({this.region, this.notMatched = false});
 }
 
 class _ParsedText {

@@ -1,65 +1,81 @@
 {
   "bg": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "de": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "es": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "fr": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "hu": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "it": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "ja": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "ko": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "nl": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "pl": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "pt": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "sk": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "sl": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "sv": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "uk": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ],
 
   "zh": [
-    "contacts_newGroupDescription"
+    "contacts_newGroupDescription",
+    "channels_messageRegionNotMatchesWithKnown"
   ]
 }

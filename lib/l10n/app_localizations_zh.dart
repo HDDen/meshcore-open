@@ -5239,6 +5239,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_messageRegionUnknown => '未知';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => '未设置';
 
   @override

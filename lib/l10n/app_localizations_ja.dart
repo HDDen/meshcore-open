@@ -5355,6 +5355,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_messageRegionUnknown => '不明';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => '未設定';
 
   @override

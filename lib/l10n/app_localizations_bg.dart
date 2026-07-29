@@ -5641,6 +5641,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_messageRegionUnknown => 'неизвестен';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'незададен';
 
   @override

@@ -167,6 +167,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'pathVariants': msg.pathVariants.map(base64Encode).toList(),
       'packetRegion': msg.packetRegion,
       'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
+      'packetRegionNotMatched': msg.packetRegionNotMatched,
       'noRetransmissionWarningSeconds': msg.noRetransmissionWarningSeconds,
       'repeats': msg.repeats.map(_repeatToJson).toList(),
       'messageId': msg.messageId,
@@ -283,6 +284,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       packetRegion: json['packetRegion'] as String?,
       packetRegionInfoAvailable:
           json['packetRegionInfoAvailable'] as bool? ?? false,
+      packetRegionNotMatched: json['packetRegionNotMatched'] as bool? ?? false,
       noRetransmissionWarningSeconds:
           json['noRetransmissionWarningSeconds'] as int?,
       repeats:

@@ -5651,6 +5651,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_messageRegionUnknown => 'невідомо';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'відсутній';
 
   @override

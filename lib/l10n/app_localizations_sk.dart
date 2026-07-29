@@ -5609,6 +5609,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_messageRegionUnknown => 'neznámy';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'nenastavený';
 
   @override

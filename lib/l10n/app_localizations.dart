@@ -9634,6 +9634,12 @@ abstract class AppLocalizations {
   /// **'unknown'**
   String get channels_messageRegionUnknown;
 
+  /// No description provided for @channels_messageRegionNotMatchesWithKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'no matches'**
+  String get channels_messageRegionNotMatchesWithKnown;
+
   /// No description provided for @channels_messageRegionEmpty.
   ///
   /// In en, this message translates to:

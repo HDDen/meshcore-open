@@ -5648,6 +5648,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channels_messageRegionUnknown => 'unbekannt';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'nicht gesetzt';
 
   @override

@@ -5636,6 +5636,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_messageRegionUnknown => 'ismeretlen';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'nincs beállítva';
 
   @override

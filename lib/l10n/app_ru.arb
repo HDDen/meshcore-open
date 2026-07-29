@@ -2306,6 +2306,7 @@
   "settings_modSettingsVisualShowMsgRegion": "Отображать регион сообщения",
   "channels_messageRegion": "Регион: {region}",
   "channels_messageRegionUnknown": "неизвестно",
+  "channels_messageRegionNotMatchesWithKnown": "не знаком",
   "channels_messageRegionEmpty": "отсутствует",
   "settings_defaultRegionScope": "Регион ноды по умолчанию",
   "settings_defaultRegionScopeChanged": "Регион по умолчанию изменён",

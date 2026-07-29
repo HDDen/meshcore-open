@@ -5361,6 +5361,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_messageRegionUnknown => '알 수 없음';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => '설정되지 않음';
 
   @override

@@ -79,6 +79,7 @@ class ChannelMessage {
   final int? channelIndex;
   final String? packetRegion;
   final bool packetRegionInfoAvailable;
+  final bool packetRegionNotMatched;
   final int? noRetransmissionWarningSeconds;
   final String messageId;
   final String? packetHash;
@@ -128,6 +129,7 @@ class ChannelMessage {
     this.channelIndex,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
+    this.packetRegionNotMatched = false,
     this.noRetransmissionWarningSeconds,
     String? messageId,
     this.packetHash,
@@ -163,6 +165,7 @@ class ChannelMessage {
     int? channelIndex,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
+    bool? packetRegionNotMatched,
     Object? noRetransmissionWarningSeconds = _unset,
     String? packetHash,
     String? replyToMessageId,
@@ -274,6 +277,8 @@ class ChannelMessage {
           : packetRegion as String?,
       packetRegionInfoAvailable:
           packetRegionInfoAvailable ?? this.packetRegionInfoAvailable,
+      packetRegionNotMatched:
+          packetRegionNotMatched ?? this.packetRegionNotMatched,
       noRetransmissionWarningSeconds: noRetransmissionWarningSeconds == _unset
           ? this.noRetransmissionWarningSeconds
           : noRetransmissionWarningSeconds as int?,
@@ -430,6 +435,7 @@ class ChannelMessage {
     int? binaryPacketBytes,
     String? packetRegion,
     bool packetRegionInfoAvailable = false,
+    bool packetRegionNotMatched = false,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -463,6 +469,7 @@ class ChannelMessage {
       channelIndex: channelIndex,
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
+      packetRegionNotMatched: packetRegionNotMatched,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,

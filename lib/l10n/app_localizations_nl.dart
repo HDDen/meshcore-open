@@ -5624,6 +5624,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_messageRegionUnknown => 'onbekend';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'niet ingesteld';
 
   @override

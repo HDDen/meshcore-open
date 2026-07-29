@@ -1012,11 +1012,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : (translatedDisplayText != message.text ? message.text : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final packetRegion = message.packetRegion?.trim();
-    final packetRegionLabel = packetRegion != null && packetRegion.isNotEmpty
-        ? packetRegion
-        : (message.packetRegionInfoAvailable
-              ? context.l10n.channels_messageRegionEmpty
-              : context.l10n.channels_messageRegionUnknown);
+    final String packetRegionLabel;
+    if (packetRegion != null && packetRegion.isNotEmpty) {
+      packetRegionLabel = packetRegion;
+    } else if (message.packetRegionNotMatched) {
+      packetRegionLabel =
+          context.l10n.channels_messageRegionNotMatchesWithKnown;
+    } else if (message.packetRegionInfoAvailable) {
+      packetRegionLabel = context.l10n.channels_messageRegionEmpty;
+    } else {
+      packetRegionLabel = context.l10n.channels_messageRegionUnknown;
+    }
     final displayPath = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty

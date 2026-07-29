@@ -5593,6 +5593,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_messageRegionUnknown => 'okänd';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+
+  @override
   String get channels_messageRegionEmpty => 'inte angiven';
 
   @override

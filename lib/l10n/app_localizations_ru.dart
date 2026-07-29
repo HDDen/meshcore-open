@@ -5640,6 +5640,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_messageRegionUnknown => 'неизвестно';
 
   @override
+  String get channels_messageRegionNotMatchesWithKnown => 'не знаком';
+
+  @override
   String get channels_messageRegionEmpty => 'отсутствует';
 
   @override
