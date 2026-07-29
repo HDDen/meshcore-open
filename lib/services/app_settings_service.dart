@@ -250,6 +250,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(mcoImageReplacementsScale: value));
   }
 
+  Future<void> setMcoImageReplacementsLottieScalePercent(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        mcoImageReplacementsLottieScalePercent: value.clamp(10, 100).toInt(),
+      ),
+    );
+  }
+
   Future<void> setMcoImageScaleNearestNeighbor(bool value) async {
     await updateSettings(
       _settings.copyWith(mcoImageScaleNearestNeighbor: value),

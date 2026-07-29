@@ -5573,6 +5573,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Originalbilder im Chat skalieren';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Mit Nearest Neighbor skalieren';
 

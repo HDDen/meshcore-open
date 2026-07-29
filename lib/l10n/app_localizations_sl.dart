@@ -5541,6 +5541,10 @@ class AppLocalizationsSl extends AppLocalizations {
       'Prilagodi velikost izvirnikov v klepetih';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Prilagodi velikost z Nearest Neighbor';
 

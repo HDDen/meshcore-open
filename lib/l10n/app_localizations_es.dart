@@ -5566,6 +5566,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Escalar los originales en los chats';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Escalar como Nearest Neighbor';
 

@@ -5292,6 +5292,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsMCOimg_replacementsScale => '채팅에서 원본 크기 조정';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Nearest Neighbor로 크기 조정';
 

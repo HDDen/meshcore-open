@@ -197,6 +197,7 @@ class AppSettings {
   final bool showMcoImageBytes;
   final bool showMcoImagePackReplacements;
   final double mcoImageReplacementsScale;
+  final int mcoImageReplacementsLottieScalePercent;
   final bool mcoImageScaleNearestNeighbor;
   final int mcoImageReplacementsSharpness;
 
@@ -509,6 +510,7 @@ class AppSettings {
     this.showMcoImageBytes = true,
     this.showMcoImagePackReplacements = true,
     this.mcoImageReplacementsScale = 1.0,
+    this.mcoImageReplacementsLottieScalePercent = 50,
     this.mcoImageScaleNearestNeighbor = true,
     this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
@@ -633,6 +635,8 @@ class AppSettings {
       'show_mco_image_bytes': showMcoImageBytes,
       'show_mco_image_pack_replacements': showMcoImagePackReplacements,
       'mco_image_replacements_scale': mcoImageReplacementsScale,
+      'mco_image_replacements_lottie_scale_percent':
+          mcoImageReplacementsLottieScalePercent,
       'mco_image_scale_nearest_neighbor': mcoImageScaleNearestNeighbor,
       'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
@@ -778,6 +782,12 @@ class AppSettings {
           json['show_mco_image_pack_replacements'] as bool? ?? true,
       mcoImageReplacementsScale:
           (json['mco_image_replacements_scale'] as num?)?.toDouble() ?? 1.0,
+      mcoImageReplacementsLottieScalePercent:
+          ((json['mco_image_replacements_lottie_scale_percent'] as num?)
+                      ?.toInt() ??
+                  50)
+              .clamp(10, 100)
+              .toInt(),
       mcoImageScaleNearestNeighbor:
           json['mco_image_scale_nearest_neighbor'] as bool? ?? true,
       mcoImageReplacementsSharpness:
@@ -967,6 +977,7 @@ class AppSettings {
     bool? showMcoImageBytes,
     bool? showMcoImagePackReplacements,
     double? mcoImageReplacementsScale,
+    int? mcoImageReplacementsLottieScalePercent,
     bool? mcoImageScaleNearestNeighbor,
     int? mcoImageReplacementsSharpness,
     double? uiScale,
@@ -1071,6 +1082,9 @@ class AppSettings {
           showMcoImagePackReplacements ?? this.showMcoImagePackReplacements,
       mcoImageReplacementsScale:
           mcoImageReplacementsScale ?? this.mcoImageReplacementsScale,
+      mcoImageReplacementsLottieScalePercent:
+          mcoImageReplacementsLottieScalePercent ??
+          this.mcoImageReplacementsLottieScalePercent,
       mcoImageScaleNearestNeighbor:
           mcoImageScaleNearestNeighbor ?? this.mcoImageScaleNearestNeighbor,
       mcoImageReplacementsSharpness:

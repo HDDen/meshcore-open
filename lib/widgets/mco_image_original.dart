@@ -183,9 +183,15 @@ class _MCOImageOriginalOrFallbackState
     final imageScale = settings.mcoImageReplacementsScale
         .clamp(1.0, 5.0)
         .toDouble();
+    final lottieScalePercent = settings.mcoImageReplacementsLottieScalePercent
+        .clamp(10, 100)
+        .toInt();
     final longestSide = widget.image.width > widget.image.height
         ? widget.image.width
         : widget.image.height;
+    final lottieMaxSize = widget.maxSize <= 20
+        ? widget.maxSize
+        : 20 + (widget.maxSize - 20) * ((lottieScalePercent - 10) / 90);
     final displayScale = widget.forceLora || widget.expandOriginalToMaxSize
         ? widget.maxSize / longestSide
         : (imageScale > widget.maxSize / longestSide
@@ -220,7 +226,7 @@ class _MCOImageOriginalOrFallbackState
         }
 
         final resolvedDisplayScale = resolved.isLottie
-            ? widget.maxSize / longestSide
+            ? lottieMaxSize / longestSide
             : displayScale;
         final resolvedDisplayWidth = widget.image.width * resolvedDisplayScale;
         final resolvedDisplayHeight =

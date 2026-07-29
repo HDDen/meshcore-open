@@ -5596,6 +5596,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Mettre à l\'échelle les originaux dans les discussions';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Mettre à l\'échelle en Nearest Neighbor';
 

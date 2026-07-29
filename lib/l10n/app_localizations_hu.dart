@@ -5562,6 +5562,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Az eredetik átméretezése a csevegésekben';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Átméretezés Nearest Neighbor módszerrel';
 

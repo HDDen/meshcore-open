@@ -3145,6 +3145,7 @@
   "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution",
   "settings_modSettingsMCOimg_showReplacements": "Display original images instead of LoRa versions",
   "settings_modSettingsMCOimg_replacementsScale": "Scale original images in chats",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Limiting of lottie-replacements size",
   "settings_modSettingsMCOimg_scaleNearestNeighbor": "Scale as Nearest Neighbor",
   "settings_modSettingsMCOimg_replacementsSharp": "Sharp original images in chats",
   "settings_modSettingsMCOimg_replacementsSharpDscr": "Attention! Disables GIF animation!",

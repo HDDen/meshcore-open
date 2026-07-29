@@ -5535,6 +5535,10 @@ class AppLocalizationsSk extends AppLocalizations {
       'Škálovať originály v chatoch';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Škálovať ako Nearest Neighbor';
 

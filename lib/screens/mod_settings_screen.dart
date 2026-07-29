@@ -492,6 +492,47 @@ class ModSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.animation, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context
+                                  .l10n
+                                  .settings_modSettingsMCOimg_replacementsLottieScale,
+                            ),
+                          ),
+                          Text(
+                            '${settings.mcoImageReplacementsLottieScalePercent}%',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: settings.mcoImageReplacementsLottieScalePercent
+                            .clamp(10, 100)
+                            .toDouble(),
+                        min: 10,
+                        max: 100,
+                        divisions: 9,
+                        label:
+                            '${settings.mcoImageReplacementsLottieScalePercent}%',
+                        onChanged: (value) {
+                          settingsService
+                              .setMcoImageReplacementsLottieScalePercent(
+                                value.round(),
+                              );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                MeshCard(
                   padding: EdgeInsets.zero,
                   child: SwitchListTile(
                     contentPadding: const EdgeInsets.symmetric(

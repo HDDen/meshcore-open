@@ -5172,6 +5172,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsMCOimg_replacementsScale => '在聊天中缩放原图';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       '使用 Nearest Neighbor 缩放';
 

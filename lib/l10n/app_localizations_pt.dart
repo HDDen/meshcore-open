@@ -5561,6 +5561,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Redimensionar os originais nos chats';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Redimensionar como Nearest Neighbor';
 

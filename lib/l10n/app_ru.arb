@@ -2286,6 +2286,7 @@
   "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: отображать разрешение",
   "settings_modSettingsMCOimg_showReplacements": "Отображать оригиналы картинок вместо LoRa-версий",
   "settings_modSettingsMCOimg_replacementsScale": "Масштабировать оригиналы в чатах",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Ограничение размеров lottie-замен",
   "settings_modSettingsMCOimg_scaleNearestNeighbor": "Масштабировать как Nearest Neighbor",
   "settings_modSettingsMCOimg_replacementsSharp": "Повысить резкость оригиналов в чатах",
   "settings_modSettingsMCOimg_replacementsSharpDscr": "Внимание! Отключает анимирование GIF!",

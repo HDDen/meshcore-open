@@ -5576,6 +5576,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Масштабувати оригінали в чатах';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Масштабувати як Nearest Neighbor';
 

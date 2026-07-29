@@ -5287,6 +5287,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsMCOimg_replacementsScale => 'チャットで原本を拡大縮小';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Nearest Neighbor で拡大縮小';
 

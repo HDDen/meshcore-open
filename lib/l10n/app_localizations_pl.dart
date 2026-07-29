@@ -5590,6 +5590,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Skaluj oryginały na czatach';
 
   @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Limiting of lottie-replacements size';
+
+  @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
       'Skaluj jako Nearest Neighbor';
 

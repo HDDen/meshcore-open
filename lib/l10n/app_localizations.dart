@@ -9514,6 +9514,12 @@ abstract class AppLocalizations {
   /// **'Scale original images in chats'**
   String get settings_modSettingsMCOimg_replacementsScale;
 
+  /// No description provided for @settings_modSettingsMCOimg_replacementsLottieScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Limiting of lottie-replacements size'**
+  String get settings_modSettingsMCOimg_replacementsLottieScale;
+
   /// No description provided for @settings_modSettingsMCOimg_scaleNearestNeighbor.
   ///
   /// In en, this message translates to:
