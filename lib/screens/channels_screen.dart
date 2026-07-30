@@ -269,12 +269,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             final channel = result.channel;
             if (channel == null) return;
             final connector = context.read<MeshCoreConnector>();
+            final unread = connector.getUnreadCountForChannelIndex(
+              channel.index,
+            );
             connector.markChannelRead(channel.index);
             await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChannelChatScreen(
                   channel: channel,
+                  initialUnreadCount: unread,
                   initialMessageId: result.messageId,
                 ),
               ),
@@ -285,12 +289,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             final contact = result.contact;
             if (contact == null) return;
             final connector = context.read<MeshCoreConnector>();
+            final unread = connector.getUnreadCountForContactKey(
+              contact.publicKeyHex,
+            );
             connector.markContactRead(contact.publicKeyHex);
             await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChatScreen(
                   contact: contact,
+                  initialUnreadCount: unread,
                   initialMessageId: result.messageId,
                 ),
               ),

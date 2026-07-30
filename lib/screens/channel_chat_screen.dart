@@ -123,6 +123,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Region region = '';
   String? _highlightedMessageId;
   int _highlightSequence = 0;
+  int _messageScrollGeneration = 0;
   String? _replyReturnMessageId;
 
   MeshCoreConnector? _connector;
@@ -157,6 +158,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       final idx = widget.channel.index;
       final unread = widget.initialUnreadCount;
       final messages = connector.getChannelMessages(widget.channel);
+      final initialMessageId = widget.initialMessageId;
       _loadCommunities();
       ChannelMessage? anchor;
       if (unread > 0) {
@@ -175,7 +177,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         _textFieldFocusNode.requestFocus();
         _keyboardNavigationActive = true;
       }
-      if (anchor != null && settings.jumpToOldestUnread) {
+      if (initialMessageId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToMessage(
+            initialMessageId,
+            highlightOnSuccess: true,
+            quiet: true,
+            animate: false,
+            stabilize: true,
+          );
+        });
+      } else if (anchor != null && settings.jumpToOldestUnread) {
         _channelSkipNextBottomSnap = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -186,17 +199,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               if (!mounted) return;
               _scrollToMessage(anchor!.messageId, quiet: true);
             },
-          );
-        });
-      } else if (widget.initialMessageId != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _scrollToMessage(
-            widget.initialMessageId!,
-            highlightOnSuccess: true,
-            quiet: true,
-            animate: false,
-            stabilize: true,
           );
         });
       }
@@ -506,12 +508,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     bool animate = true,
     bool stabilize = false,
   }) async {
+    final scrollGeneration = ++_messageScrollGeneration;
     final messenger = ScaffoldMessenger.of(context);
     final originalMessageNotFoundText =
         context.l10n.chat_originalMessageNotFound;
     final targetContext = await _materializeMessageContext(messageId);
 
-    if (!mounted) return false;
+    if (!mounted || scrollGeneration != _messageScrollGeneration) return false;
 
     if (targetContext == null) {
       if (quiet) return false;
@@ -538,6 +541,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       initialContext: targetContext,
       animate: animate,
       stabilize: stabilize,
+      scrollGeneration: scrollGeneration,
       onInitialPositioned: highlightOnSuccess
           ? () => _highlightMessage(messageId)
           : null,
@@ -550,6 +554,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required BuildContext initialContext,
     required bool animate,
     required bool stabilize,
+    required int scrollGeneration,
     VoidCallback? onInitialPositioned,
   }) async {
     await Scrollable.ensureVisible(
@@ -572,13 +577,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ];
     for (final delay in checks) {
       await Future<void>.delayed(delay);
-      if (!mounted) return;
+      if (!mounted || scrollGeneration != _messageScrollGeneration) return;
       await WidgetsBinding.instance.endOfFrame;
+      if (scrollGeneration != _messageScrollGeneration) return;
       var context = _tryGetMessageContext(messageId);
       if (context == null || !context.mounted) {
         context = await _materializeMessageContext(messageId);
       }
-      if (context == null || !context.mounted || !mounted) return;
+      if (context == null ||
+          !context.mounted ||
+          !mounted ||
+          scrollGeneration != _messageScrollGeneration) {
+        return;
+      }
       await Scrollable.ensureVisible(
         context,
         duration: Duration.zero,
@@ -586,6 +597,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
       await WidgetsBinding.instance.endOfFrame;
     }
+  }
+
+  void _cancelMessageScrollStabilization() {
+    _messageScrollGeneration++;
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
@@ -850,8 +865,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           builder: (context, padding, bottomReservedExtent) {
                             final hasBottomSpacer = bottomReservedExtent > 0;
                             final spacerItemCount = hasBottomSpacer ? 1 : 0;
-                            return ChatZoomWrapper(
-                              child: ListView.builder(
+                            return Listener(
+                              onPointerDown: (_) =>
+                                  _cancelMessageScrollStabilization(),
+                              onPointerSignal: (_) =>
+                                  _cancelMessageScrollStabilization(),
+                              child: ChatZoomWrapper(
+                                child: ListView.builder(
                                 reverse: true, // List grows from bottom up
                                 controller: _scrollController,
                                 padding: padding,
@@ -923,6 +943,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   );
                                 },
+                                ),
                               ),
                             );
                           },
@@ -979,12 +1000,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   bool _scrollMessagesByPage(int direction) {
     if (!_scrollController.hasClients) return false;
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(
       _scrollController.position.viewportDimension * 0.85 * direction,
     );
   }
 
   bool _scrollMessagesByLine(int direction) {
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(72.0 * direction);
   }
 

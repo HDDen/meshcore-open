@@ -66,9 +66,7 @@ class MessageStore {
     var jsonString = prefs.getString(key);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyUnscoped) {
-      jsonString =
-          prefs.getString('$_keyPrefix$contactKeyHex') ??
-          prefs.getString(keyFor);
+      jsonString = prefs.getString('$_keyPrefix$contactKeyHex');
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
