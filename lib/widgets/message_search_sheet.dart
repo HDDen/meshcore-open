@@ -32,6 +32,7 @@ class MessageSearchResult {
   final String senderName;
   final String text;
   final String dedupeKey;
+  final String sourceId;
 
   const MessageSearchResult({
     required this.type,
@@ -40,6 +41,7 @@ class MessageSearchResult {
     required this.senderName,
     required this.text,
     required this.dedupeKey,
+    required this.sourceId,
     this.channel,
     this.contact,
   });
@@ -49,29 +51,37 @@ class _MessageSearchSourceDescriptor {
   final StoredMessageSearchSource workerSource;
   final MessageSearchEntryType type;
   final Channel? channel;
+  final List<Channel> channelCandidates;
   final Contact? contact;
 
   const _MessageSearchSourceDescriptor({
     required this.workerSource,
     required this.type,
     this.channel,
+    this.channelCandidates = const [],
     this.contact,
   });
 }
 
 class MessageSearchSheet extends StatefulWidget {
   final MessageSearchScope scope;
+  final Channel? channelFilter;
+  final Contact? contactFilter;
   final Future<void> Function(MessageSearchResult result) onOpenResult;
 
   const MessageSearchSheet({
     super.key,
     required this.scope,
+    this.channelFilter,
+    this.contactFilter,
     required this.onOpenResult,
   });
 
   static Future<void> show(
     BuildContext context, {
     required MessageSearchScope scope,
+    Channel? channelFilter,
+    Contact? contactFilter,
     required Future<void> Function(MessageSearchResult result) onOpenResult,
   }) {
     return showModalBottomSheet<void>(
@@ -79,6 +89,8 @@ class MessageSearchSheet extends StatefulWidget {
       isScrollControlled: true,
       builder: (_) => MessageSearchSheet(
         scope: scope,
+        channelFilter: channelFilter,
+        contactFilter: contactFilter,
         onOpenResult: onOpenResult,
       ),
     );
@@ -187,7 +199,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     final normalizedQuery = query.toLowerCase();
     var published = <MessageSearchResult>[];
     final pending = <MessageSearchResult>[];
-    final seen = <String>{};
+    final seenSourceMessages = <String>{};
+    final dedupeOwners = <String, String>{};
     Timer? publishTimer;
 
     void publishResults() {
@@ -202,7 +215,13 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     void addResults(Iterable<MessageSearchResult> results) {
       if (generation != _generation || !mounted) return;
       for (final result in results) {
-        if (seen.add(result.dedupeKey)) pending.add(result);
+        final sourceMessageKey = '${result.sourceId}|${result.messageId}';
+        if (!seenSourceMessages.add(sourceMessageKey)) continue;
+        final owner = dedupeOwners.putIfAbsent(
+          result.dedupeKey,
+          () => result.sourceId,
+        );
+        if (owner == result.sourceId) pending.add(result);
       }
       if (pending.isEmpty) return;
       publishTimer ??= Timer(const Duration(milliseconds: 250), () {
@@ -219,10 +238,12 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             connector: connector,
             settings: settings,
             generation: generation,
+            channelFilter: widget.channelFilter,
           ),
         );
         if (!mounted || generation != _generation) return;
-        if (settings.roomServerShowNotemptyContactsOnChatscreen) {
+        if (widget.channelFilter == null &&
+            settings.roomServerShowNotemptyContactsOnChatscreen) {
           sources.addAll(
             await _collectContactSources(
               connector: connector,
@@ -234,7 +255,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
           );
         }
         if (!mounted || generation != _generation) return;
-        if (settings.roomServerShowNotemptyOnChatscreen) {
+        if (widget.channelFilter == null &&
+            settings.roomServerShowNotemptyOnChatscreen) {
           sources.addAll(
             await _collectContactSources(
               connector: connector,
@@ -253,6 +275,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             includeContacts: true,
             includeRooms: true,
             generation: generation,
+            contactFilter: widget.contactFilter,
           ),
         );
       }
@@ -296,16 +319,21 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         for (final hit in hits) {
           final descriptor = descriptorsById[hit.sourceId];
           if (descriptor == null) continue;
+          final channelTarget =
+              descriptor.type == MessageSearchEntryType.channel
+              ? _channelTargetForSearchHit(connector, descriptor, hit)
+              : null;
           resultBatch.add(
             MessageSearchResult(
               type: descriptor.type,
-              channel: descriptor.channel,
+              channel: channelTarget?.channel ?? descriptor.channel,
               contact: descriptor.contact,
-              messageId: hit.messageId,
+              messageId: channelTarget?.messageId ?? hit.messageId,
               timestamp: DateTime.fromMillisecondsSinceEpoch(hit.timestampMs),
               senderName: hit.senderName,
               text: hit.text,
-              dedupeKey: '${hit.sourceId}|${hit.messageId}',
+              dedupeKey: _resultDedupeKey(descriptor, hit),
+              sourceId: hit.sourceId,
             ),
           );
           if (resultBatch.length >= 200) {
@@ -330,22 +358,36 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required MeshCoreConnector connector,
     required AppSettings settings,
     required int generation,
+    Channel? channelFilter,
   }) async {
     final currentScope = SharedMessageHistoryHelper.scopeFor(
       connector.selfPublicKeyHex,
     );
     if (currentScope.isEmpty) return const [];
-    final channels = connector.channels.where((c) => !c.isEmpty).toList();
+    final channels = channelFilter == null
+        ? connector.channels.where((channel) => !channel.isEmpty).toList()
+        : connector.channels
+              .where(
+                (channel) =>
+                    !channel.isEmpty && channel.index == channelFilter.index,
+              )
+              .toList();
+    if (channels.isEmpty && channelFilter != null && !channelFilter.isEmpty) {
+      channels.add(channelFilter);
+    }
     if (channels.isEmpty) return const [];
+    final channelGroups = _channelStorageGroups(channels);
     final result = <_MessageSearchSourceDescriptor>[];
 
     final currentStore = ChannelMessageStore()..setPublicKeyHex = currentScope;
     currentStore.replaceChannels(channels);
-    for (final channel in channels) {
+    for (final candidates in channelGroups) {
       if (generation != _generation) return result;
+      final channel = _preferredChannel(connector, candidates);
       final source = await _loadChannelSource(
         store: currentStore,
         channel: channel,
+        channelCandidates: candidates,
         channelIndex: channel.index,
         scope: currentScope,
         includeLegacyIndexFallback: true,
@@ -366,7 +408,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
       messageStore.replaceChannels(secondaryChannels);
 
-      for (final channel in channels) {
+      for (final candidates in channelGroups) {
+        final channel = _preferredChannel(connector, candidates);
         final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
           secondaryChannels,
           name: channel.name,
@@ -376,6 +419,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         final source = await _loadChannelSource(
           store: messageStore,
           channel: channel,
+          channelCandidates: candidates,
           channelIndex: matchedIndex,
           scope: scope,
         );
@@ -388,6 +432,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
   Future<_MessageSearchSourceDescriptor?> _loadChannelSource({
     required ChannelMessageStore store,
     required Channel channel,
+    required List<Channel> channelCandidates,
     required int channelIndex,
     required String scope,
     bool includeLegacyIndexFallback = false,
@@ -399,13 +444,93 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     if (jsonString == null) return null;
     return _MessageSearchSourceDescriptor(
       workerSource: StoredMessageSearchSource(
-        sourceId:
-            'channel|$scope|${channel.pskHex}|${channel.name}|$channelIndex',
+        sourceId: 'channel|$scope|${channel.name.trim()}',
         jsonString: jsonString,
         type: StoredMessageSearchType.channel,
       ),
       type: MessageSearchEntryType.channel,
       channel: channel,
+      channelCandidates: channelCandidates,
+    );
+  }
+
+  List<List<Channel>> _channelStorageGroups(Iterable<Channel> channels) {
+    final groups = <String, List<Channel>>{};
+    for (final channel in channels) {
+      final storageName = channel.name.trim();
+      if (storageName.isEmpty) continue;
+      groups.putIfAbsent(storageName, () => <Channel>[]).add(channel);
+    }
+    return groups.values.toList();
+  }
+
+  Channel _preferredChannel(
+    MeshCoreConnector connector,
+    List<Channel> candidates,
+  ) {
+    var preferred = candidates.first;
+    var preferredCount = _loadedChannelMessageCount(connector, preferred);
+    for (final candidate in candidates.skip(1)) {
+      final count = _loadedChannelMessageCount(connector, candidate);
+      if (count > preferredCount) {
+        preferred = candidate;
+        preferredCount = count;
+      }
+    }
+    return preferred;
+  }
+
+  int _loadedChannelMessageCount(
+    MeshCoreConnector connector,
+    Channel channel,
+  ) {
+    return connector.getLoadedChannelMessages(channel).length +
+        connector.getPendingChannelMessages(channel.index).length;
+  }
+
+  ({Channel channel, String messageId})? _channelTargetForSearchHit(
+    MeshCoreConnector connector,
+    _MessageSearchSourceDescriptor descriptor,
+    StoredMessageSearchHit hit,
+  ) {
+    final candidates = descriptor.channelCandidates;
+    if (candidates.isEmpty) {
+      final channel = descriptor.channel;
+      return channel == null
+          ? null
+          : (channel: channel, messageId: hit.messageId);
+    }
+
+    for (final channel in candidates) {
+      final hasLocalMessage = connector
+              .getLoadedChannelMessages(channel)
+              .any((message) => message.messageId == hit.messageId) ||
+          connector
+              .getPendingChannelMessages(channel.index)
+              .any((message) => message.messageId == hit.messageId);
+      if (hasLocalMessage) {
+        return (channel: channel, messageId: hit.messageId);
+      }
+    }
+    for (final channel in candidates) {
+      final messages = connector.getChannelMessages(channel);
+      if (messages.any((message) => message.messageId == hit.messageId)) {
+        return (channel: channel, messageId: hit.messageId);
+      }
+      for (final message in messages) {
+        if (message.senderName.trim().toLowerCase() !=
+                hit.senderName.trim().toLowerCase() ||
+            message.text != hit.text ||
+            _channelHourKey(message.timestamp.millisecondsSinceEpoch) !=
+                _channelHourKey(hit.identityTimestampMs)) {
+          continue;
+        }
+        return (channel: channel, messageId: message.messageId);
+      }
+    }
+    return (
+      channel: _preferredChannel(connector, candidates),
+      messageId: hit.messageId,
     );
   }
 
@@ -415,13 +540,25 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required bool includeContacts,
     required bool includeRooms,
     required int generation,
+    Contact? contactFilter,
   }) async {
     final currentScope = SharedMessageHistoryHelper.scopeFor(
       connector.selfPublicKeyHex,
     );
     if (currentScope.isEmpty) return const [];
+    final contactCandidates = contactFilter == null
+        ? connector.contacts
+        : connector.contacts
+              .where(
+                (contact) =>
+                    contact.publicKeyHex == contactFilter.publicKeyHex,
+              )
+              .toList();
+    if (contactCandidates.isEmpty && contactFilter != null) {
+      contactCandidates.add(contactFilter);
+    }
     final contacts = _searchableContacts(
-      connector.contacts,
+      contactCandidates,
       includeContacts: includeContacts,
       includeRooms: includeRooms,
     );
@@ -567,6 +704,39 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       );
     }
     return result;
+  }
+
+  String _resultDedupeKey(
+    _MessageSearchSourceDescriptor descriptor,
+    StoredMessageSearchHit hit,
+  ) {
+    final channelTimeKey = descriptor.type == MessageSearchEntryType.channel
+        ? _channelHourKey(hit.identityTimestampMs)
+        : hit.identityTimestampMs.toString();
+    final conversationKey = switch (descriptor.type) {
+      MessageSearchEntryType.channel =>
+        '${descriptor.channel?.name.trim().toLowerCase() ?? ''}|'
+            '${descriptor.channel?.pskHex.toLowerCase() ?? ''}',
+      MessageSearchEntryType.room =>
+        descriptor.contact?.publicKeyHex.toLowerCase() ?? '',
+      MessageSearchEntryType.contact =>
+        descriptor.contact?.publicKeyHex.toLowerCase() ?? '',
+    };
+    return [
+      descriptor.type.name,
+      conversationKey,
+      channelTimeKey,
+      hit.senderName.trim().toLowerCase(),
+      hit.text,
+    ].join('\u001f');
+  }
+
+  String _channelHourKey(int timestampMs) {
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+    return '${timestamp.year.toString().padLeft(4, '0')}-'
+        '${timestamp.month.toString().padLeft(2, '0')}-'
+        '${timestamp.day.toString().padLeft(2, '0')}-'
+        '${timestamp.hour.toString().padLeft(2, '0')}';
   }
 
   Future<void> _openResult(MessageSearchResult result) async {

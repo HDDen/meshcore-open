@@ -56,6 +56,7 @@ import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
@@ -202,6 +203,13 @@ class _ChatScreenState extends State<ChatScreen> {
     return key?.currentContext;
   }
 
+  List<Message> _messagesForDisplay(MeshCoreConnector connector) {
+    return [
+      ...connector.getMessages(widget.contact),
+      ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
+    ];
+  }
+
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
     final connector = context.read<MeshCoreConnector>();
     var emptyOlderLoads = 0;
@@ -213,7 +221,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return targetContext;
       }
 
-      final messages = connector.getMessages(widget.contact);
+      final messages = _messagesForDisplay(connector);
       final targetIndex = messages.indexWhere(
         (message) => message.messageId == messageId,
       );
@@ -263,6 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return null;
   }
 
+  // Keep in sync with ChannelChatScreen._probeMessageContextAroundOffset.
   Future<BuildContext?> _probeMessageContextAroundOffset(
     String messageId,
     double estimatedOffset,
@@ -328,6 +337,28 @@ class _ChatScreenState extends State<ChatScreen> {
     return true;
   }
 
+  Future<void> _showMessageSearch() {
+    final connector = context.read<MeshCoreConnector>();
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.contacts,
+      contactFilter: _resolveContact(connector),
+      onOpenResult: (result) async {
+        if (!mounted || result.type == MessageSearchEntryType.channel) return;
+        Navigator.of(context).pop();
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        await _scrollToMessage(
+          result.messageId,
+          highlightOnSuccess: true,
+          animate: false,
+          stabilize: true,
+        );
+      },
+    );
+  }
+
+  // Keep in sync with ChannelChatScreen._ensureMessageVisible.
   Future<void> _ensureMessageVisible(
     String messageId, {
     required BuildContext initialContext,
@@ -551,27 +582,34 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, connector, _) {
                 return PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
-                  onSelected: (value) async {
-                    if (value == 'info') {
-                      _showContactInfo(context);
-                    }
-                    if (value == 'settings') {
-                      _showContactSettings(context);
-                    }
-                    if (value == 'telemetry') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TelemetryScreen(contact: widget.contact),
-                        ),
-                      );
-                    }
-                    if (value == 'clearChat') {
-                      _confirmClearChat(context, connector);
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'searchMessages':
+                        unawaited(_showMessageSearch());
+                      case 'info':
+                        _showContactInfo(context);
+                      case 'settings':
+                        _showContactSettings(context);
+                      case 'telemetry':
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TelemetryScreen(contact: widget.contact),
+                          ),
+                        );
+                      case 'clearChat':
+                        _confirmClearChat(context, connector);
                     }
                   },
                   itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'searchMessages',
+                      child: PopupMenuRow(
+                        icon: Icons.search,
+                        text: context.l10n.chat_searchMessages,
+                      ),
+                    ),
                     PopupMenuItem(
                       value: 'info',
                       child: PopupMenuRow(
@@ -610,12 +648,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Consumer<MeshCoreConnector>(
           builder: (context, connector, child) {
-            final messages = [
-              ...connector.getMessages(widget.contact),
-              ...connector.getPendingContactMessages(
-                widget.contact.publicKeyHex,
-              ),
-            ];
+            final messages = _messagesForDisplay(connector);
             return Column(
               children: [
                 Expanded(

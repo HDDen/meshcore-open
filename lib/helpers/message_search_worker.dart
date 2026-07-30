@@ -37,6 +37,7 @@ class StoredMessageSearchHit {
   final String sourceId;
   final String messageId;
   final int timestampMs;
+  final int identityTimestampMs;
   final String senderName;
   final String text;
 
@@ -44,6 +45,7 @@ class StoredMessageSearchHit {
     required this.sourceId,
     required this.messageId,
     required this.timestampMs,
+    required this.identityTimestampMs,
     required this.senderName,
     required this.text,
   });
@@ -107,6 +109,10 @@ void _searchStoredMessages({
             text,
           ),
           timestampMs: timestampMs,
+          identityTimestampMs:
+              source.type == StoredMessageSearchType.channel
+              ? entry['timestamp'] as int? ?? timestampMs
+              : timestampMs,
           senderName: senderName,
           text: text,
         ),
@@ -126,7 +132,7 @@ String _decodeStoredTextIfNeeded(String text) {
   final trimmed = text.trimLeft();
   final isKnownCompressedText =
       trimmed.startsWith(McmpAppCodec.textPrefix) ||
-      trimmed.startsWith(MeshCompressor.prefix) ||
+      MeshCompressor.instance.hasPrefix(trimmed) ||
       Smaz.hasPrefix(trimmed);
   if (!isKnownCompressedText) return text;
   return MessageTextCodec.tryDecodeKnownCompression(text) ?? text;

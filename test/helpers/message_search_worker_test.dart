@@ -42,6 +42,7 @@ void main() {
     expect(hits.single.sourceId, 'first');
     expect(hits.single.messageId, 'message-1');
     expect(hits.single.timestampMs, 2000);
+    expect(hits.single.identityTimestampMs, 1000);
   });
 
   test('legacy channel id uses packet timestamp instead of received time', () {
@@ -76,6 +77,7 @@ void main() {
       '${packetTimestamp}_${senderName.hashCode}_${text.hashCode}',
     );
     expect(hits.single.timestampMs, receivedAt);
+    expect(hits.single.identityTimestampMs, packetTimestamp);
   });
 
   test('MCOimg text transports are excluded from text results', () {

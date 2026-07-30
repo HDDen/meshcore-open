@@ -58,6 +58,7 @@ import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
@@ -183,7 +184,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           _scrollToMessage(
             initialMessageId,
             highlightOnSuccess: true,
-            quiet: true,
             animate: false,
             stabilize: true,
           );
@@ -381,6 +381,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return key?.currentContext;
   }
 
+  List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
+    return [
+      ...connector.getChannelMessages(widget.channel),
+      ...connector.getPendingChannelMessages(widget.channel.index),
+    ];
+  }
+
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
     final connector = context.read<MeshCoreConnector>();
     var emptyOlderLoads = 0;
@@ -392,7 +399,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         return targetContext;
       }
 
-      final messages = connector.getChannelMessages(widget.channel);
+      final messages = _messagesForDisplay(connector);
       final targetIndex = messages.indexWhere(
         (message) => message.messageId == messageId,
       );
@@ -440,6 +447,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     return null;
   }
+  // Keep in sync with ChatScreen._probeMessageContextAroundOffset.
   Future<BuildContext?> _probeMessageContextAroundOffset(
     String messageId,
     double estimatedOffset,
@@ -549,6 +557,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return true;
   }
 
+  Future<void> _showMessageSearch() {
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.channels,
+      channelFilter: widget.channel,
+      onOpenResult: (result) async {
+        if (!mounted || result.type != MessageSearchEntryType.channel) return;
+        Navigator.of(context).pop();
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        await _scrollToMessage(
+          result.messageId,
+          highlightOnSuccess: true,
+          animate: false,
+          stabilize: true,
+        );
+      },
+    );
+  }
+
+  // Keep in sync with ChatScreen._ensureMessageVisible.
   Future<void> _ensureMessageVisible(
     String messageId, {
     required BuildContext initialContext,
@@ -741,16 +770,25 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             const RadioStatsIconButton(),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
-              onSelected: (value) async {
-                if (value == 'editChannel') {
-                  final connector = context.read<MeshCoreConnector>();
-                  showChannelEditSheet(context, connector, widget.channel);
-                }
-                if (value == 'clearChat') {
-                  _confirmClearChat();
+              onSelected: (value) {
+                switch (value) {
+                  case 'searchMessages':
+                    unawaited(_showMessageSearch());
+                  case 'editChannel':
+                    final connector = context.read<MeshCoreConnector>();
+                    showChannelEditSheet(context, connector, widget.channel);
+                  case 'clearChat':
+                    _confirmClearChat();
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'searchMessages',
+                  child: PopupMenuRow(
+                    icon: Icons.search,
+                    text: context.l10n.chat_searchMessages,
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'editChannel',
                   child: PopupMenuRow(
@@ -778,12 +816,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               Expanded(
                 child: Consumer<MeshCoreConnector>(
                   builder: (context, connector, child) {
-                    final messages = [
-                      ...connector.getChannelMessages(widget.channel),
-                      ...connector.getPendingChannelMessages(
-                        widget.channel.index,
-                      ),
-                    ];
+                    final messages = _messagesForDisplay(connector);
 
                     if (messages.isEmpty) {
                       return Center(
