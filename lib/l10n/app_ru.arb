@@ -2376,5 +2376,12 @@
   "repeater_pubKey": "Публичный ключ",
   "repeater_pubKeyHelper": "Это публичный ключ, соответствующий сгенерированному приватному. Задать его напрямую нельзя.",
   "repeater_pubKeyPrefix": "Желаемый префикс",
-  "repeater_pubKeyPrefixHelper": "Поиск публичного ключа, начинающегося с этих hex-символов. Ожидаемое число попыток: {tries}."
+  "repeater_pubKeyPrefixHelper": "Поиск публичного ключа, начинающегося с этих hex-символов. Ожидаемое число попыток: {tries}.",
+  "chat_serchMessages": "Поиск сообщений",
+  "chat_serchMessages_placeholder": "От 3 символов, регистронезависимо",
+  "chat_serchMessages_results": "Результаты поиска",
+  "chat_serchMessages_results_found": "Найдено {count} сообщений",
+  "chat_serchMessages_results_channel": "Канал {name}",
+  "chat_serchMessages_results_room": "Комната {name}",
+  "chat_serchMessages_results_contact": "Диалог с {name}"
 }

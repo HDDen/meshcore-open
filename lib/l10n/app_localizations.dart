@@ -9993,6 +9993,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select filtered'**
   String get contacts_batchOperations_selectFiltered;
+
+  /// No description provided for @chat_serchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get chat_serchMessages;
+
+  /// No description provided for @chat_serchMessages_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'From 3 characters, case-insensitive'**
+  String get chat_serchMessages_placeholder;
+
+  /// No description provided for @chat_serchMessages_results.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get chat_serchMessages_results;
+
+  /// No description provided for @chat_serchMessages_results_found.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} messages found'**
+  String chat_serchMessages_results_found(int count);
+
+  /// No description provided for @chat_serchMessages_results_channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {name}'**
+  String chat_serchMessages_results_channel(String name);
+
+  /// No description provided for @chat_serchMessages_results_room.
+  ///
+  /// In en, this message translates to:
+  /// **'Room {name}'**
+  String chat_serchMessages_results_room(String name);
+
+  /// No description provided for @chat_serchMessages_results_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with {name}'**
+  String chat_serchMessages_results_contact(String name);
 }
 
 class _AppLocalizationsDelegate

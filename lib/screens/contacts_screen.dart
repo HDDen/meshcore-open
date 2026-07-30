@@ -31,6 +31,7 @@ import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
@@ -180,6 +181,29 @@ class _ContactsScreenState extends State<ContactsScreen>
       ),
     );
     return true;
+  }
+
+  Future<void> _showMessageSearch(BuildContext context) {
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.contacts,
+      onOpenResult: (result) async {
+        if (!context.mounted) return;
+        final contact = result.contact;
+        if (contact == null) return;
+        final connector = context.read<MeshCoreConnector>();
+        connector.markContactRead(contact.publicKeyHex);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              contact: contact,
+              initialMessageId: result.messageId,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _handleConnectorScopeChange() {
@@ -507,6 +531,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                             const ContactsBatchOperationsScreen(),
                       ),
                     ),
+                  ),
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.search,
+                      text: context.l10n.chat_serchMessages,
+                    ),
+                    onTap: () => _showMessageSearch(this.context),
                   ),
                   const PopupMenuDivider(),
                   PopupMenuItem(

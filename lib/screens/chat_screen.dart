@@ -75,11 +75,13 @@ import '../widgets/pending_send_cancel_bar.dart';
 class ChatScreen extends StatefulWidget {
   final Contact contact;
   final int initialUnreadCount;
+  final String? initialMessageId;
 
   const ChatScreen({
     super.key,
     required this.contact,
     this.initialUnreadCount = 0,
+    this.initialMessageId,
   });
 
   @override
@@ -92,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
+  final Map<String, GlobalKey> _messageKeys = {};
   bool _keyboardNavigationActive = true;
   bool _ignoreNextTextFieldFocus = false;
   String _lastTextFieldText = '';
@@ -101,6 +104,8 @@ class _ChatScreenState extends State<ChatScreen> {
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+  String? _highlightedMessageId;
+  int _highlightSequence = 0;
 
   /// Message ids whose MCOimg variant the user flipped away from the default
   /// (the default is "show pack original" when the mod setting is enabled,
@@ -174,8 +179,227 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           );
         });
+      } else if (widget.initialMessageId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToMessage(
+            widget.initialMessageId!,
+            quiet: true,
+            animate: false,
+            stabilize: true,
+            highlightOnSuccess: true,
+          );
+        });
       }
     });
+  }
+
+  BuildContext? _tryGetMessageContext(String messageId) {
+    final key = _messageKeys[messageId];
+    return key?.currentContext;
+  }
+
+  Future<BuildContext?> _materializeMessageContext(String messageId) async {
+    final connector = context.read<MeshCoreConnector>();
+    var emptyOlderLoads = 0;
+    var loadedTargetRetries = 0;
+
+    while (mounted) {
+      final targetContext = _tryGetMessageContext(messageId);
+      if (targetContext != null && targetContext.mounted) {
+        return targetContext;
+      }
+
+      final messages = connector.getMessages(widget.contact);
+      final targetIndex = messages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (targetIndex >= 0) {
+        if (_scrollController.hasClients) {
+          final targetOffset = messages.length > 1
+              ? _scrollController.position.maxScrollExtent *
+                    ((messages.length - 1 - targetIndex) /
+                        (messages.length - 1))
+              : 0.0;
+          final materializedContext = await _probeMessageContextAroundOffset(
+            messageId,
+            targetOffset,
+          );
+          if (materializedContext != null && materializedContext.mounted) {
+            return materializedContext;
+          }
+        }
+        if (loadedTargetRetries < 2) {
+          loadedTargetRetries++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        // The message is already loaded, so loading older history cannot make
+        // it materialize.
+        return null;
+      }
+      loadedTargetRetries = 0;
+
+      final olderMessages = await connector.loadOlderMessages(
+        widget.contact.publicKeyHex,
+      );
+      if (olderMessages.isEmpty) {
+        if (emptyOlderLoads < 5) {
+          emptyOlderLoads++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        return null;
+      }
+      emptyOlderLoads = 0;
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    return null;
+  }
+
+  Future<BuildContext?> _probeMessageContextAroundOffset(
+    String messageId,
+    double estimatedOffset,
+  ) async {
+    if (!_scrollController.hasClients) return null;
+    final position = _scrollController.position;
+    final viewport = position.viewportDimension;
+    final offsetsInViewports = <double>[
+      0,
+      -0.75,
+      0.75,
+      -1.5,
+      1.5,
+      -2.5,
+      2.5,
+      -4,
+      4,
+    ];
+    for (final multiplier in offsetsInViewports) {
+      if (!mounted || !_scrollController.hasClients) return null;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = (estimatedOffset + viewport * multiplier).clamp(
+        0.0,
+        maxExtent,
+      );
+      _scrollController.jumpTo(offset);
+      await WidgetsBinding.instance.endOfFrame;
+      final context = _tryGetMessageContext(messageId);
+      if (context != null && context.mounted) return context;
+    }
+    return null;
+  }
+
+  Future<bool> _scrollToMessage(
+    String messageId, {
+    bool quiet = false,
+    bool animate = true,
+    bool stabilize = false,
+    bool highlightOnSuccess = false,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final originalMessageNotFoundText =
+        context.l10n.chat_originalMessageNotFound;
+    final targetContext = await _materializeMessageContext(messageId);
+
+    if (!mounted) return false;
+
+    if (targetContext == null) {
+      if (quiet) return false;
+      messenger.showSnackBar(
+        SnackBar(
+          content: GestureDetector(
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(originalMessageNotFoundText),
+          ),
+          duration: const Duration(seconds: 2),
+          dismissDirection: DismissDirection.down,
+          clipBehavior: Clip.hardEdge,
+        ),
+      );
+      return false;
+    }
+
+    if (!targetContext.mounted) {
+      return false;
+    }
+
+    await _ensureMessageVisible(
+      messageId,
+      initialContext: targetContext,
+      animate: animate,
+      stabilize: stabilize,
+      onInitialPositioned: highlightOnSuccess
+          ? () => _highlightMessage(messageId)
+          : null,
+    );
+    return true;
+  }
+
+  Future<void> _ensureMessageVisible(
+    String messageId, {
+    required BuildContext initialContext,
+    required bool animate,
+    required bool stabilize,
+    VoidCallback? onInitialPositioned,
+  }) async {
+    await Scrollable.ensureVisible(
+      initialContext,
+      duration: animate
+          ? const Duration(milliseconds: 300)
+          : Duration.zero,
+      curve: Curves.easeInOut,
+      alignment: 0.3,
+    );
+    await WidgetsBinding.instance.endOfFrame;
+    onInitialPositioned?.call();
+    if (!stabilize) return;
+
+    const checks = [
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 500),
+      Duration(milliseconds: 1000),
+    ];
+    for (final delay in checks) {
+      await Future<void>.delayed(delay);
+      if (!mounted) return;
+      await WidgetsBinding.instance.endOfFrame;
+      var context = _tryGetMessageContext(messageId);
+      if (context == null || !context.mounted) {
+        context = await _materializeMessageContext(messageId);
+      }
+      if (context == null || !context.mounted || !mounted) return;
+      await Scrollable.ensureVisible(
+        context,
+        duration: Duration.zero,
+        alignment: 0.3,
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  void _highlightMessage(String messageId) {
+    final sequence = ++_highlightSequence;
+    if (mounted) {
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+    }
+
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 1000)).then((_) {
+        if (!mounted || _highlightSequence != sequence) return;
+        setState(() {
+          if (_highlightedMessageId == messageId) {
+            _highlightedMessageId = null;
+          }
+        });
+      }),
+    );
   }
 
   Message? _findOldestUnreadAnchor(List<Message> messages, int unreadCount) {
@@ -490,6 +714,15 @@ class _ChatScreenState extends State<ChatScreen> {
     // Reverse messages so newest appear at bottom with reverse: true
     final reversedMessages = messages.reversed.toList();
     final itemCount = reversedMessages.length + (_isLoadingOlder ? 1 : 0);
+    final liveIds = reversedMessages.map((message) => message.messageId).toSet();
+    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+    final seenIds = <String>{};
+    final keyedIndices = <int>{};
+    for (var i = 0; i < reversedMessages.length; i++) {
+      if (seenIds.add(reversedMessages[i].messageId)) {
+        keyedIndices.add(i);
+      }
+    }
 
     // Auto-scroll to bottom if user is already at bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -532,6 +765,9 @@ class _ChatScreenState extends State<ChatScreen> {
               final messageIndex = adjustedIndex;
               Contact contact = _resolveContact(connector);
               final message = reversedMessages[messageIndex];
+              final messageKey = keyedIndices.contains(messageIndex)
+                  ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
+                  : GlobalKey();
               String fourByteHex = '';
               if (contact.type == advTypeRoom) {
                 // Room-server messages carry the original author's 4-byte prefix
@@ -559,6 +795,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   final resolvedContact = _resolveContact(connector);
                   final bubble = _MessageBubble(
                     message: message,
+                    isHighlighted:
+                        _highlightedMessageId == message.messageId,
                     senderName: resolvedContact.type == advTypeRoom
                         ? "${contact.name} [$fourByteHex]"
                         : contact.name,
@@ -594,7 +832,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   if (identical(message, _pendingUnreadScrollTarget)) {
                     return KeyedSubtree(key: _unreadScrollKey, child: child);
                   }
-                  return child;
+                  return KeyedSubtree(key: messageKey, child: child);
                 },
               );
             },
@@ -2080,6 +2318,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onCancelPendingSend;
   final double textScale;
   final String sourceId;
+  final bool isHighlighted;
 
   /// Signature badges are shown only in room-server chats; direct messages
   /// are authenticated by the ECDH transport and show no badge at all.
@@ -2094,6 +2333,7 @@ class _MessageBubble extends StatelessWidget {
     required this.senderName,
     required this.sourceId,
     required this.textScale,
+    this.isHighlighted = false,
     this.isRoomChat = false,
     this.mcoVariantOverridden = false,
     this.onTap,
@@ -2228,7 +2468,9 @@ class _MessageBubble extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 Flexible(
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeInOut,
                     padding: isMediaMessage
                         ? const EdgeInsets.all(4)
                         : const EdgeInsets.symmetric(
@@ -2239,7 +2481,12 @@ class _MessageBubble extends StatelessWidget {
                       maxWidth: MediaQuery.of(context).size.width * 0.72,
                     ),
                     decoration: BoxDecoration(
-                      color: bubbleColor,
+                      color: isHighlighted
+                          ? Color.alphaBlend(
+                              Colors.green.withValues(alpha: 0.5),
+                              bubbleColor,
+                            )
+                          : bubbleColor,
                       borderRadius: borderRadius,
                       border: Border.all(color: bubbleBorder, width: 1),
                     ),

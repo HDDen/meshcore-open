@@ -34,6 +34,7 @@ import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/channel_edit_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
@@ -257,6 +258,49 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return true;
   }
 
+  Future<void> _showMessageSearch(BuildContext context) {
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.channels,
+      onOpenResult: (result) async {
+        if (!context.mounted) return;
+        switch (result.type) {
+          case MessageSearchEntryType.channel:
+            final channel = result.channel;
+            if (channel == null) return;
+            final connector = context.read<MeshCoreConnector>();
+            connector.markChannelRead(channel.index);
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChannelChatScreen(
+                  channel: channel,
+                  initialMessageId: result.messageId,
+                ),
+              ),
+            );
+            break;
+          case MessageSearchEntryType.room:
+          case MessageSearchEntryType.contact:
+            final contact = result.contact;
+            if (contact == null) return;
+            final connector = context.read<MeshCoreConnector>();
+            connector.markContactRead(contact.publicKeyHex);
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  contact: contact,
+                  initialMessageId: result.messageId,
+                ),
+              ),
+            );
+            break;
+        }
+      },
+    );
+  }
+
   String _relativeTime(DateTime t) {
     final diff = DateTime.now().difference(t);
     if (diff.inMinutes < 1) return 'now';
@@ -321,6 +365,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     text: menuContext.l10n.community_manageCommunities,
                   ),
                   onTap: () => _showManageCommunitiesDialog(context),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
+                    icon: Icons.search,
+                    text: menuContext.l10n.chat_serchMessages,
+                  ),
+                  onTap: () => _showMessageSearch(context),
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(

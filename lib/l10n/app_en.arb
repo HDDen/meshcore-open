@@ -3252,5 +3252,40 @@
   "contacts_batchOperations_removeFail": "Failed to remove contacts – please check the contact list again",
   "contacts_batchOperations_commonSuccess": "Operation completed successfully",
   "contacts_batchOperations_commonFail": "Operation failed",
-  "contacts_batchOperations_selectFiltered": "Select filtered"
+  "contacts_batchOperations_selectFiltered": "Select filtered",
+  "chat_serchMessages": "Search messages",
+  "chat_serchMessages_placeholder": "From 3 characters, case-insensitive",
+  "chat_serchMessages_results": "Search results",
+  "chat_serchMessages_results_found": "{count} messages found",
+  "@chat_serchMessages_results_found": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_serchMessages_results_channel": "Channel {name}",
+  "@chat_serchMessages_results_channel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_serchMessages_results_room": "Room {name}",
+  "@chat_serchMessages_results_room": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_serchMessages_results_contact": "Chat with {name}",
+  "@chat_serchMessages_results_contact": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

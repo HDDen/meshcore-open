@@ -79,11 +79,13 @@ import '../widgets/pending_send_cancel_bar.dart';
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
   final int initialUnreadCount;
+  final String? initialMessageId;
 
   const ChannelChatScreen({
     super.key,
     required this.channel,
     this.initialUnreadCount = 0,
+    this.initialMessageId,
   });
 
   @override
@@ -184,6 +186,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               if (!mounted) return;
               _scrollToMessage(anchor!.messageId, quiet: true);
             },
+          );
+        });
+      } else if (widget.initialMessageId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToMessage(
+            widget.initialMessageId!,
+            highlightOnSuccess: true,
+            quiet: true,
+            animate: false,
+            stabilize: true,
           );
         });
       }
@@ -368,6 +381,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
     final connector = context.read<MeshCoreConnector>();
+    var emptyOlderLoads = 0;
+    var loadedTargetRetries = 0;
 
     while (mounted) {
       final targetContext = _tryGetMessageContext(messageId);
@@ -379,32 +394,80 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       final targetIndex = messages.indexWhere(
         (message) => message.messageId == messageId,
       );
-      if (targetIndex >= 0 &&
-          _scrollController.hasClients &&
-          messages.length > 1) {
-        final reversedIndex = messages.length - 1 - targetIndex;
-        final targetOffset =
-            _scrollController.position.maxScrollExtent *
-            (reversedIndex / (messages.length - 1));
-        _scrollController.jumpTo(
-          targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        );
-        await WidgetsBinding.instance.endOfFrame;
-        final materializedContext = _tryGetMessageContext(messageId);
-        if (materializedContext != null && materializedContext.mounted) {
-          return materializedContext;
+      if (targetIndex >= 0) {
+        if (_scrollController.hasClients) {
+          final targetOffset = messages.length > 1
+              ? _scrollController.position.maxScrollExtent *
+                    ((messages.length - 1 - targetIndex) /
+                        (messages.length - 1))
+              : 0.0;
+          final materializedContext = await _probeMessageContextAroundOffset(
+            messageId,
+            targetOffset,
+          );
+          if (materializedContext != null && materializedContext.mounted) {
+            return materializedContext;
+          }
         }
+        if (loadedTargetRetries < 2) {
+          loadedTargetRetries++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        // The message is already loaded, so loading older history cannot make
+        // it materialize.
+        return null;
       }
-
+      loadedTargetRetries = 0;
       final olderMessages = await connector.loadOlderChannelMessages(
         widget.channel.index,
       );
       if (olderMessages.isEmpty) {
+        if (emptyOlderLoads < 5) {
+          emptyOlderLoads++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
         return null;
       }
+      emptyOlderLoads = 0;
       await WidgetsBinding.instance.endOfFrame;
     }
 
+    return null;
+  }
+  Future<BuildContext?> _probeMessageContextAroundOffset(
+    String messageId,
+    double estimatedOffset,
+  ) async {
+    if (!_scrollController.hasClients) return null;
+    final position = _scrollController.position;
+    final viewport = position.viewportDimension;
+    final offsetsInViewports = <double>[
+      0,
+      -0.75,
+      0.75,
+      -1.5,
+      1.5,
+      -2.5,
+      2.5,
+      -4,
+      4,
+    ];
+    for (final multiplier in offsetsInViewports) {
+      if (!mounted || !_scrollController.hasClients) return null;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = (estimatedOffset + viewport * multiplier).clamp(
+        0.0,
+        maxExtent,
+      );
+      _scrollController.jumpTo(offset);
+      await WidgetsBinding.instance.endOfFrame;
+      final context = _tryGetMessageContext(messageId);
+      if (context != null && context.mounted) return context;
+    }
     return null;
   }
 
@@ -440,6 +503,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String messageId, {
     bool highlightOnSuccess = false,
     bool quiet = false,
+    bool animate = true,
+    bool stabilize = false,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final originalMessageNotFoundText =
@@ -468,16 +533,59 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return false;
     }
 
-    Scrollable.ensureVisible(
-      targetContext,
-      duration: const Duration(milliseconds: 300),
+    await _ensureMessageVisible(
+      messageId,
+      initialContext: targetContext,
+      animate: animate,
+      stabilize: stabilize,
+      onInitialPositioned: highlightOnSuccess
+          ? () => _highlightMessage(messageId)
+          : null,
+    );
+    return true;
+  }
+
+  Future<void> _ensureMessageVisible(
+    String messageId, {
+    required BuildContext initialContext,
+    required bool animate,
+    required bool stabilize,
+    VoidCallback? onInitialPositioned,
+  }) async {
+    await Scrollable.ensureVisible(
+      initialContext,
+      duration: animate
+          ? const Duration(milliseconds: 300)
+          : Duration.zero,
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
-    if (highlightOnSuccess) {
-      _highlightMessage(messageId);
+    await WidgetsBinding.instance.endOfFrame;
+    onInitialPositioned?.call();
+    if (!stabilize) return;
+
+    const checks = [
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 500),
+      Duration(milliseconds: 1000),
+    ];
+    for (final delay in checks) {
+      await Future<void>.delayed(delay);
+      if (!mounted) return;
+      await WidgetsBinding.instance.endOfFrame;
+      var context = _tryGetMessageContext(messageId);
+      if (context == null || !context.mounted) {
+        context = await _materializeMessageContext(messageId);
+      }
+      if (context == null || !context.mounted || !mounted) return;
+      await Scrollable.ensureVisible(
+        context,
+        duration: Duration.zero,
+        alignment: 0.3,
+      );
+      await WidgetsBinding.instance.endOfFrame;
     }
-    return true;
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {

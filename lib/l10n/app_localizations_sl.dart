@@ -5822,4 +5822,34 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get contacts_batchOperations_selectFiltered => 'Izberi filtrirane';
+
+  @override
+  String get chat_serchMessages => 'Search messages';
+
+  @override
+  String get chat_serchMessages_placeholder =>
+      'From 3 characters, case-insensitive';
+
+  @override
+  String get chat_serchMessages_results => 'Search results';
+
+  @override
+  String chat_serchMessages_results_found(int count) {
+    return '$count messages found';
+  }
+
+  @override
+  String chat_serchMessages_results_channel(String name) {
+    return 'Channel $name';
+  }
+
+  @override
+  String chat_serchMessages_results_room(String name) {
+    return 'Room $name';
+  }
+
+  @override
+  String chat_serchMessages_results_contact(String name) {
+    return 'Chat with $name';
+  }
 }

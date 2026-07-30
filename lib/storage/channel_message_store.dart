@@ -52,15 +52,39 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
   /// Load messages for a specific channel
   Future<List<ChannelMessage>> loadChannelMessages(int channelIndex) async {
+    final jsonString = await _loadChannelMessagesJson(channelIndex);
+    if (jsonString == null) return [];
+
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      return _orderedMessages(
+        jsonList
+            .map(
+              (json) =>
+                  _messageFromJson(json).copyWith(channelIndex: channelIndex),
+            )
+            .toList(),
+      );
+    } catch (e) {
+      // If parsing fails, return empty list
+      return [];
+    }
+  }
+
+  Future<String?> loadChannelMessagesJsonForSearch(int channelIndex) {
+    return _loadChannelMessagesJson(channelIndex);
+  }
+
+  Future<String?> _loadChannelMessagesJson(int channelIndex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load channel messages.',
       );
-      return [];
+      return null;
     }
     final prefs = PrefsManager.instance;
     final key = channelStorageKey(keyFor, channelIndex);
-    if (key == null) return [];
+    if (key == null) return null;
     final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
@@ -79,22 +103,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       }
     }
     if (jsonString == null || jsonString.isEmpty) {
-      return [];
+      return null;
     }
-    try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return _orderedMessages(
-        jsonList
-            .map(
-              (json) =>
-                  _messageFromJson(json).copyWith(channelIndex: channelIndex),
-            )
-            .toList(),
-      );
-    } catch (e) {
-      // If parsing fails, return empty list
-      return [];
-    }
+    return jsonString;
   }
 
   List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {

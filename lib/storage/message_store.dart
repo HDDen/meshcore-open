@@ -33,9 +33,25 @@ class MessageStore {
   }
 
   Future<List<Message>> loadMessages(String contactKeyHex) async {
+    final jsonString = await _loadMessagesJson(contactKeyHex);
+    if (jsonString == null) return [];
+
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      return jsonList.map((json) => _messageFromJson(json)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<String?> loadMessagesJsonForSearch(String contactKeyHex) {
+    return _loadMessagesJson(contactKeyHex);
+  }
+
+  Future<String?> _loadMessagesJson(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
-      return [];
+      return null;
     }
     final prefs = PrefsManager.instance;
     final key = '$keyFor$contactKeyHex';
@@ -57,15 +73,9 @@ class MessageStore {
       jsonString = prefs.getString(keyFor);
     }
     if (jsonString == null || jsonString.isEmpty) {
-      return [];
+      return null;
     }
-
-    try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
-    } catch (e) {
-      return [];
-    }
+    return jsonString;
   }
 
   Future<MessageStoreSummary?> loadMessageSummary(String contactKeyHex) async {
