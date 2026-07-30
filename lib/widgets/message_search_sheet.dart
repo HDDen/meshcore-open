@@ -84,6 +84,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
 
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
+  Future<void>? _activeSearch;
+  String _lastSearchText = '';
   int _generation = 0;
   bool _hasSearched = false;
   bool _isSearching = false;
@@ -105,9 +107,12 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
   }
 
   void _scheduleSearch() {
+    final rawText = _controller.text;
+    if (rawText == _lastSearchText) return;
+    _lastSearchText = rawText;
     _generation++;
     _debounce?.cancel();
-    final query = _controller.text.trim();
+    final query = rawText.trim();
     if (query.length < _minimumQueryLength) {
       setState(() {
         _hasSearched = false;
@@ -125,8 +130,35 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
 
     final generation = _generation;
     _debounce = Timer(_debounceDuration, () {
-      _runSearch(query, generation);
+      _queueSearch(query, generation);
     });
+  }
+
+  void _queueSearch(String query, int generation) {
+    final previousSearch = _activeSearch;
+    final queuedSearch = () async {
+      if (previousSearch != null) {
+        try {
+          await previousSearch;
+        } catch (_) {
+          // A failed stale search must not block the latest query.
+        }
+      }
+      if (!mounted || generation != _generation) return;
+      try {
+        await _runSearch(query, generation);
+      } catch (_) {
+        // Keep the sheet responsive if one stored scope is unreadable.
+      }
+    }();
+    _activeSearch = queuedSearch;
+    unawaited(
+      queuedSearch.whenComplete(() {
+        if (identical(_activeSearch, queuedSearch)) {
+          _activeSearch = null;
+        }
+      }),
+    );
   }
 
   Future<void> _runSearch(String query, int generation) async {

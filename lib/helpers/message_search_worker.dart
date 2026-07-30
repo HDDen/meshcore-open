@@ -25,16 +25,20 @@ Future<List<StoredMessageSearchHit>> searchStoredMessages({
   required StoredMessageSearchType type,
   String contactName = '',
   Map<String, String> roomSenderNamesByPrefix = const {},
-}) {
-  return Isolate.run(
-    () => _searchStoredMessages(
-      jsonString: jsonString,
-      normalizedQuery: normalizedQuery,
-      type: type,
-      contactName: contactName,
-      roomSenderNamesByPrefix: roomSenderNamesByPrefix,
-    ),
-  );
+}) async {
+  try {
+    return await Isolate.run(
+      () => _searchStoredMessages(
+        jsonString: jsonString,
+        normalizedQuery: normalizedQuery,
+        type: type,
+        contactName: contactName,
+        roomSenderNamesByPrefix: roomSenderNamesByPrefix,
+      ),
+    );
+  } catch (_) {
+    return const [];
+  }
 }
 
 List<StoredMessageSearchHit> _searchStoredMessages({
