@@ -586,8 +586,6 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         height: maxHeight,
         child: Padding(
           padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
             top: 16,
             bottom: 16 + MediaQuery.viewInsetsOf(context).bottom,
           ),
@@ -595,49 +593,58 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.chat_searchMessages,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.chat_searchMessages,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: context.l10n.chat_searchMessages_placeholder,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _isSearching
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : null,
-                  border: const OutlineInputBorder(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: context.l10n.chat_searchMessages_placeholder,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _isSearching
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               if (_hasSearched)
-                Text(
-                  context.l10n.chat_searchMessages_results_found(
-                    _results.length,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    context.l10n.chat_searchMessages_results_found(
+                      _results.length,
+                    ),
+                    style: theme.textTheme.bodySmall,
                   ),
-                  style: theme.textTheme.bodySmall,
                 ),
               const SizedBox(height: 8),
               Expanded(
@@ -646,12 +653,22 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                         child: Text(context.l10n.chat_searchMessages_results),
                       )
                     : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         itemCount: _results.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(
+                          height: 1,
+                          indent: 4,
+                          endIndent: 4,
+                        ),
                         itemBuilder: (context, index) {
                           final result = _results[index];
                           return ListTile(
-                            contentPadding: EdgeInsets.zero,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                             title: Row(
                               children: [
                                 Expanded(
