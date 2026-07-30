@@ -177,7 +177,7 @@ class MeshCoreRadioStateSnapshot {
 
 class MeshCoreConnector extends ChangeNotifier {
   // Message windowing to limit memory usage
-  static const int _messageWindowSize = 200;
+  static const int _messageWindowSize = 500;
 
   // Cap on discovered (non-contact) nodes retained in memory. Adverts arrive
   // continuously from the whole mesh, so without a bound this list grows for
